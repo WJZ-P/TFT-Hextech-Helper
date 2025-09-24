@@ -4,6 +4,7 @@ import cp from 'child_process';
 import path from "node:path";
 import fs from 'fs-extra'; // 增强版的 fs 模块，用于文件系统操作，比如检查文件是否存在
 import chokidar, {ChokidarOptions, FSWatcher} from 'chokidar'; // 一个高效的文件系统监听库，用于监控文件变化
+import LockfileParser from "./LockfileParser.ts";
 
 //  参考自https://github.com/Pupix/lcu-connector/blob/master/lib/index.js
 
@@ -152,15 +153,8 @@ class LCUConnector extends EventEmitter {
     onFileCreated(path) {
         // 读取 lockfile 的内容并解析
         lockfile.read(path).then(data => {
-            const result = {
-                protocol: data.protocol,
-                address: '127.0.0.1', // 默认本地地址
-                port: data.port,
-                username: 'riot', // 默认用户名
-                password: data.password
-            };
             // 触发 'connect' 事件，并附带解析后的凭据
-            this.emit('connect', result);
+            this.emit('connect', data);
         });
     }
 
