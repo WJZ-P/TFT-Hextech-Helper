@@ -82,10 +82,18 @@ app.whenReady().then(()=>{
   init()
 })
 
-function init(){
+function init() {
+
   //  启动LCUConnector
   const connector = new LCUConnector()
-  connector.on('connect',(data)=>{
-    console.log()
+
+  connector.on('connect', (data) => {
+    console.log("LOL客户端登录！")
+    console.log(data)
+
+  }).on('disconnect', () => {
+    console.log("LOL客户端登出！")
   })
+
+  connector.start()
 }
