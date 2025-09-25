@@ -1,7 +1,8 @@
 import { app, BrowserWindow } from 'electron'
-import { createRequire } from 'node:module'
+//import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import LCUConnector from "../src-backend/lcu/utils/LcuConnector.ts";
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -11,7 +12,7 @@ import path from 'node:path'
  *
  * 然后require也同理，是我们手搓的，因为新版ESM不提供require。
  */
-const require = createRequire(import.meta.url)
+//const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // The built directory structure
@@ -74,4 +75,17 @@ app.on('activate', () => {
   }
 })
 
-app.whenReady().then(createWindow)
+//  正式启动app
+app.whenReady().then(()=>{
+  createWindow()  //  先创建窗口
+
+  init()
+})
+
+function init(){
+  //  启动LCUConnector
+  const connector = new LCUConnector()
+  connector.on('connect',(data)=>{
+    console.log()
+  })
+}

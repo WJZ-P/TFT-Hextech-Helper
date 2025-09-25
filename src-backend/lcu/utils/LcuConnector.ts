@@ -4,7 +4,7 @@ import cp from 'child_process';
 import path from "node:path";
 import fs from 'fs-extra'; // 增强版的 fs 模块，用于文件系统操作，比如检查文件是否存在
 import chokidar, {ChokidarOptions, FSWatcher} from 'chokidar'; // 一个高效的文件系统监听库，用于监控文件变化
-import LockfileParser from "./LockfileParser.ts";
+import LockfileParser, {LockfileData} from "./LockfileParser.ts";
 
 //  参考自https://github.com/Pupix/lcu-connector/blob/master/lib/index.js
 
@@ -15,6 +15,12 @@ const IS_WIN = process.platform === 'win32'
 const IS_MAC = process.platform === 'darwin';
 const IS_WSL = process.platform === 'linux' && os.release().toLowerCase().includes('microsoft');
 
+//  定义 LCUConnector能触发的所有事件，以及每个事件对应的数据类型
+interface LCUConnectorEvents {
+    'connect': (data:LockfileData) => void;
+    'disconnect': ()=> void;
+}
+
 /**
  * 用于连接LOL客户端，通过监听进程和lockfile自动管理连接状态。
  */
@@ -22,6 +28,17 @@ class LCUConnector extends EventEmitter {
     private dirPath?: string
     private processWatcher : NodeJS.Timeout
     private lockfileWatcher: FSWatcher
+
+    /**
+     * 声明 on 方法的类型，使其能够识别我们定义的事件和数据类型
+     */
+    public declare on: <E extends keyof LCUConnectorEvents>(event: E, listener: LCUConnectorEvents[E]) => this;
+
+    /**
+     * 声明 emit 方法的类型，使其在触发事件时也能进行类型检查
+     */
+    public declare emit: <E extends keyof LCUConnectorEvents>(event: E, ...args: Parameters<LCUConnectorEvents[E]>) => boolean;
+
     
     /**
      * @static
