@@ -75,7 +75,7 @@ class LCUConnector extends EventEmitter {
                     resolve();
                     return;
                 }
-                console.log(`process命令执行结果：${stdout}`)
+                //console.log(`process命令执行结果：${stdout}`)
 
                 // 匹配命令行输出，提取安装路径
                 //const parts = stdout.match(INSTALL_REGEX) || [];
@@ -143,7 +143,6 @@ class LCUConnector extends EventEmitter {
     private initProcessWatcher() {
         return LCUConnector.getLCUInfoFromProcess().then(lcuData => {
             if (lcuData) {
-                console.log("LOL已启动！准备发送lcuData")
                 this.emit('connect', lcuData);
                 this.clearProcessWatcher();
                 return;
@@ -155,6 +154,7 @@ class LCUConnector extends EventEmitter {
             }
         });
     }
+
 
     /**
      * @description 清除进程监听器

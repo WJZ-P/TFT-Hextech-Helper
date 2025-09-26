@@ -90,9 +90,11 @@ function init() {
   connector.on('connect', (data) => {
     console.log("LOL客户端登录！")
     console.log(data)
-
+    //  发消息给renderer线程，那边收到再做处理
+    win?.webContents.send('lcu-connect',data)
   }).on('disconnect', () => {
     console.log("LOL客户端登出！")
+    win?.webContents.send('lcu-disconnect')
   })
 
   connector.start()
