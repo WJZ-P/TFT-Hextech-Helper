@@ -3,8 +3,7 @@ import { app, BrowserWindow } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import LCUConnector from "../src-backend/lcu/utils/LcuConnector.ts";
-import {IpcChannels} from "../src-backend/lcu/utils/Protocols.ts";
-import Parameters = Electron.Parameters;
+import {ArgsFromIpcChannel, IpcChannels} from "../src-backend/lcu/utils/Protocols.ts";
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -103,6 +102,7 @@ function init() {
 }
 
 //  包装下webContents
-function sendToRenderer<E extends keyof IpcChannels>(channel:E , ...args) {
+function sendToRenderer<E extends keyof IpcChannels>(channel:E , ...args:ArgsFromIpcChannel<IpcChannels[E]>) {
   return win?.webContents.send(channel,...args)
 }
+
