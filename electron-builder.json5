@@ -1,9 +1,9 @@
 // @see - https://www.electron.build/configuration/configuration
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "YourAppID",
+  "appId": "me.wjz.tft-hextech-helper",
   "asar": true,
-  "productName": "YourAppName",
+  "productName": "云顶之弈海克斯科技助手",
   "directories": {
     "output": "release/${version}"
   },
@@ -19,14 +19,21 @@
   },
   "win": {
     "target": [
+//      {
+//        "target": "nsis", //  这个生成的是标准的setup.exe安装包
+//        "arch": [
+//          "x64"
+//        ]
+//      },
       {
-        "target": "nsis",
+        "target": "portable", // 这个会生成一个独立的 .exe 便携版！
         "arch": [
           "x64"
         ]
       }
     ],
-    "artifactName": "${productName}-Windows-${version}-Setup.${ext}"
+    "artifactName": "${productName}-Windows-${version}.${ext}",
+    "icon": "public/icon.ico"
   },
   "nsis": {
     "oneClick": false,

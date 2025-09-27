@@ -38,7 +38,7 @@ let win: BrowserWindow | null
 
 function createWindow() {
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),//  窗口左上角的图标
+    icon: path.join(process.env.VITE_PUBLIC, 'icon.png'),//  窗口左上角的图标
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),// 指定preload文件
     },
