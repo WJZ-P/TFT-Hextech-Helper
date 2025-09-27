@@ -3,6 +3,8 @@ import { app, BrowserWindow } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import LCUConnector from "../src-backend/lcu/utils/LcuConnector.ts";
+import {IpcChannels} from "../src-backend/lcu/utils/Protocols.ts";
+import Parameters = Electron.Parameters;
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -91,11 +93,16 @@ function init() {
     console.log("LOL客户端登录！")
     console.log(data)
     //  发消息给renderer线程，那边收到再做处理
-    win?.webContents.send('lcu-connect',data)
+    sendToRenderer('lcu-connect',data)
   }).on('disconnect', () => {
     console.log("LOL客户端登出！")
-    win?.webContents.send('lcu-disconnect')
+    sendToRenderer('lcu-disconnect')
   })
 
   connector.start()
+}
+
+//  包装下webContents
+function sendToRenderer<E extends keyof IpcChannels>(channel:E , ...args) {
+  return win?.webContents.send(channel,...args)
 }
