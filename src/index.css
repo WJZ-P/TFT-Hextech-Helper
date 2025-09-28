@@ -1,9 +1,5 @@
 @import "tailwindcss";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
-/* 你可以把这里原有的其他样式都删掉 */
 /* 我们给 body 一个深色的背景，让我们的应用看起来更酷 */
 body {
   background-color: #DCDCDC; /* 这是一个深灰色 */

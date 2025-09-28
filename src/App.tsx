@@ -3,7 +3,14 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/electron-vite.animate.svg'
 import './App.css'
 
+enum Pages{
+    DASHBOARD_PAGE,
+    SETTINGS_PAGE
+}
+
 function App() {
+    const [activeView,setActiveView] =useState(Pages)
+
     const [count, setCount] = useState(0)
 
     return (
