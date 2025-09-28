@@ -1,4 +1,4 @@
-/* 喵~ 我们只需要保留 Tailwind 的基础指令 */
+@import "tailwindcss";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
