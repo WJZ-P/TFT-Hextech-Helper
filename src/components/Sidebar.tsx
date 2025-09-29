@@ -1,4 +1,6 @@
 // --- 图标组件 ---
+import {NavLink} from "react-router-dom";
+
 type IconProps = { className?: string; };
 
 const HomeIcon = ({ className = 'w-6 h-6' }: IconProps) => (
@@ -24,3 +26,42 @@ const navItems = [
     {path:'/dashboard',label:'仪表盘',icon:HomeIcon},
     { path: '/settings', label: '设置', icon: SettingsIcon },
 ]
+
+const Sidebar = () => {
+  return (
+    <aside className="w-64 bg-gray-900 text-gray-200 flex flex-col p-4 border-r border-gray-800 shrink-0">
+      <div className="text-2xl font-bold mb-8 text-white flex items-center gap-2">
+        <svg className="w-8 h-8 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        <span>我的助手</span>
+      </div>
+      <nav className="flex flex-col gap-2">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200
+                ${isActive
+                  ? 'bg-indigo-600 text-white shadow-lg'
+                  : 'hover:bg-gray-700/50 hover:text-white'
+                }`
+              }
+            >
+              <Icon className="w-5 h-5" />
+              <span className="font-medium">{item.label}</span>
+            </NavLink>
+          );
+        })}
+      </nav>
+      <div className="mt-auto text-center text-xs text-gray-500">
+        <p>版本 v1.0.0</p>
+      </div>
+    </aside>
+  );
+};
+
+export default Sidebar;
