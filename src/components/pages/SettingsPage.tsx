@@ -4,3 +4,5 @@ const SettingsPage = () => (
     <p className="mt-2 text-gray-400">在这里配置你的应用参数。</p>
   </div>
 );
+
+export default SettingsPage;

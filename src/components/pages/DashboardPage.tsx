@@ -4,3 +4,5 @@ const DashboardPage = () => (
     <p className="mt-2 text-gray-400">这里是应用的主概览页面。</p>
   </div>
 );
+
+export default DashboardPage;
