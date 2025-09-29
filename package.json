@@ -28,6 +28,7 @@
     "autoprefixer": "^10.4.21",
     "electron": "^30.0.1",
     "electron-builder": "^24.13.3",
+    "electron-devtools-installer": "^4.0.0",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",

@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow,session } from 'electron'
 //import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -78,9 +78,8 @@ app.on('activate', () => {
 
 //  正式启动app
 app.whenReady().then(()=>{
-  createWindow()  //  先创建窗口
-
-  init()
+  createWindow()  //  创建窗口
+  init()  //  执行LCU相关函数
 })
 
 function init() {
@@ -105,4 +104,3 @@ function init() {
 function sendToRenderer<E extends keyof IpcChannels>(channel:E , ...args:ArgsFromIpcChannel<IpcChannels[E]>) {
   return win?.webContents.send(channel,...args)
 }
-

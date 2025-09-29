@@ -2,6 +2,7 @@
 import {lazy, Suspense} from "react";
 import {createBrowserRouter, createHashRouter, Navigate} from "react-router-dom";
 import MainLayout from "./components/MainLayout.tsx";
+import ErrorPage from "./components/pages/ErrorPage.tsx";
 
 const DashboardPage = lazy(() => import('./components/pages/DashboardPage'));
 const SettingsPage = lazy(() => import('./components/pages/SettingsPage'));
