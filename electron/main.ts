@@ -1,10 +1,9 @@
-import { app, BrowserWindow,session } from 'electron'
+import { app, BrowserWindow } from 'electron'
 //import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import LCUConnector from "../src-backend/lcu/utils/LcuConnector.ts";
 import {ArgsFromIpcChannel, IpcChannels} from "../src-backend/lcu/utils/Protocols.ts";
-import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -79,7 +78,6 @@ app.on('activate', () => {
 
 //  正式启动app
 app.whenReady().then( async ()=>{
-  await installExtension(REACT_DEVELOPER_TOOLS); // 自动下载并注入
   createWindow()  //  创建窗口
   init()  //  执行LCU相关函数
 })

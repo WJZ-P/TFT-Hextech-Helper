@@ -2,12 +2,19 @@ import {defineConfig} from 'vite'
 import path from 'node:path'
 import electron from 'vite-plugin-electron/simple'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [
-        react(),
+        react({
+            // 喵~ 我们在这里告诉 React 插件，
+            // 在处理代码时，请额外使用 styled-components 的 Babel 插件
+            babel: {
+                plugins: [
+                    'babel-plugin-styled-components',
+                ],
+            },
+        }),
         electron({
             main: {
                 // Shortcut of `build.lib.entry`.
@@ -26,6 +33,5 @@ export default defineConfig({
                 ? undefined
                 : {},
         }),
-        tailwindcss()
     ],
 })
