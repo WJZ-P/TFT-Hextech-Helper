@@ -23,18 +23,19 @@ const SidebarContainer = styled.aside`
 `;
 
 const Logo = styled.div`
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: bold;
   margin-bottom: 2rem;
-  color: #ffffff;
+  color: ${props => props.theme.colors.text}; 
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0 0.5rem;
 
-  /* 喵~ Logo 里的图标颜色，我们用主色调 */
+
+  /* MUI的组件设置 */
   .MuiSvgIcon-root {
-    color: ${props => props.theme.colors.primary};
+    color: ${props => props.theme.colors.primaryHover};
+    font-size: 2rem;
   }
 `;
 
@@ -89,8 +90,8 @@ const Sidebar = () => {
   return (
     <SidebarContainer>
       <Logo>
-        <BoltIcon style={{ color: '#5856d6' }} />
-        <span>我的助手</span>
+        <BoltIcon />
+        <span>海克斯科技助手</span>
       </Logo>
       <Nav>
         {navItems.map((item) => {

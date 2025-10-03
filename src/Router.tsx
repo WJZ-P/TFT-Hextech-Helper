@@ -1,6 +1,6 @@
 // 喵~ 使用 React.lazy 实现路由懒加载，优化初始加载速度
 import {lazy, Suspense} from "react";
-import {createBrowserRouter, createHashRouter, Navigate} from "react-router-dom";
+import {createHashRouter, Navigate} from "react-router-dom";
 import MainLayout from "./components/MainLayout.tsx";
 import ErrorPage from "./components/pages/ErrorPage.tsx";
 

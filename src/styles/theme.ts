@@ -1,27 +1,48 @@
-// 喵~ 1. 从 Material-UI 导入“菜单制作工具”
-import { createTheme, ThemeOptions } from '@mui/material/styles';
+import {createTheme, ThemeOptions} from "@mui/material";
 
-// 喵~ 2. 这是我们自己定义的、纯粹的“中文”设计规范
-const customThemeOptions = {
-  colors: {
-    primary: '#66ccff',
-    primaryHover: '#33bbff',
-    navActiveBg: '#66ccff',
-    navActiveText: '#0D1117',
-    background: '#111827',
-    sidebarBg: '#1F2937',
-    elementBg: '#374151',
-    elementHover: '#4B5563',
-    text: '#F9FAFB',
-    textSecondary: '#9CA3AF',
-    textDisabled: '#6B7280',
-    textOnPrimary: '#0D1117',
-    border: '#374151',
-    divider: '#4B5563',
-    success: '#10B981',
-    warning: '#F59E0B',
-    error: '#EF4444',
-  },
+const lightPalette = {
+  primary: '#66ccff',
+  primaryHover: '#33bbff',
+  navActiveBg: '#66ccff',
+  navActiveText: '#ffffff',
+  background: '#f8f9fa',
+  sidebarBg: '#ffffff',
+  elementBg: '#ffffff',
+  elementHover: '#f1f3f5',
+  text: '#212529',
+  textSecondary: '#6c757d',
+  textDisabled: '#adb5bd',
+  textOnPrimary: '#ffffff',
+  border: '#dee2e6',
+  divider: '#ced4da',
+  success: '#10B981',
+  warning: '#F59E0B',
+  error: '#EF4444',
+};
+
+// 喵~ 2. 这是我们新增的深色调色板！
+const darkPalette = {
+  primary: '#66ccff',
+  primaryHover: '#80d4ff', // 深色模式下，悬停颜色可以亮一点
+  navActiveBg: '#66ccff',
+  navActiveText: '#0D1117',
+  background: '#111827',
+  sidebarBg: '#1F2937',
+  elementBg: '#374151',
+  elementHover: '#4B5563',
+  text: '#F9FAFB',
+  textSecondary: '#9CA3AF',
+  textDisabled: '#6B7280',
+  textOnPrimary: '#0D1117',
+  border: '#374151',
+  divider: '#4B5563',
+  success: '#10B981',
+  warning: '#F59E0B',
+  error: '#EF4444',
+};
+
+// 喵~ 3. 这是两套主题共享的“设计规范”
+const baseTheme = {
   spacing: {
     small: '0.5rem',
     medium: '1rem',
@@ -35,24 +56,28 @@ const customThemeOptions = {
   borderRadius: '8px',
 };
 
-// 喵~ 3. 这是给“法餐大厨”看的“法语”菜单部分
-// 我们告诉他，他的主色调应该用我们的 primary 颜色
-const muiThemeOptions: ThemeOptions = {
+// 喵~ 4. 创建 MUI 能理解的“双语”主题配置
+const createMuiTheme = (palette: typeof lightPalette, mode: 'light' | 'dark'): ThemeOptions => ({
   palette: {
-    primary: {
-      main: customThemeOptions.colors.primary,
-    },
-    // 你可以在这里为 MUI 定义更多颜色...
+    mode,
+    primary: { main: palette.primary },
+    background: { default: palette.background, paper: palette.sidebarBg },
+    text: { primary: palette.text, secondary: palette.textSecondary },
   },
+});
+
+// 喵~ 5. 组合并导出两套完整的主题！
+export const lightTheme = {
+  ...createTheme(createMuiTheme(lightPalette, 'light')),
+  ...baseTheme,
+  colors: lightPalette,
 };
 
-// 喵~ 4. 最关键的一步：制作“双语菜单”！
-// 我们用 createTheme 创建一个基础的 MUI 主题（法语部分）
-// 然后用 ... 操作符，把我们自己的 customThemeOptions（中文部分）也合并进去！
-export const theme = {
-  ...createTheme(muiThemeOptions), // 包含了 MUI 需要的所有东西，比如 palette
-  ...customThemeOptions,          // 也包含了我们自己需要的所有东西，比如 colors
+export const darkTheme = {
+  ...createTheme(createMuiTheme(darkPalette, 'dark')),
+  ...baseTheme,
+  colors: darkPalette,
 };
 
-// 喵~ 导出一个 theme 的类型，方便我们在其他地方获得类型提示
-export type ThemeType = typeof theme;
+// 喵~ 导出一个统一的类型，方便我们在其他地方获得类型提示
+export type ThemeType = typeof lightTheme;
