@@ -1,46 +1,58 @@
-export const theme = {
+// 喵~ 1. 从 Material-UI 导入“菜单制作工具”
+import { createTheme, ThemeOptions } from '@mui/material/styles';
+
+// 喵~ 2. 这是我们自己定义的、纯粹的“中文”设计规范
+const customThemeOptions = {
   colors: {
-    // --- 核心色 ---
-    primary: '#66ccff',       // 主色调 (天空蓝)，用于按钮、高亮、活动状态等
-    primaryHover: '#33bbff',  // 主色调的悬停颜色，稍微深一点以提供反馈
-
-    // --- 导航专用色 ---
-    navActiveBg: '#66ccff',   // 喵~ 新增！导航项激活时的背景色 (当前与主色调相同)
-    navActiveText: '#0D1117', // 喵~ 新增！导航项激活时的文字颜色 (为了对比度，使用深色)
-
-
-    // --- 背景色 (由深到浅) ---
-    background: '#111827',    // 最深的背景色 (深空蓝)，用于页面body
-    sidebarBg: '#1F2937',     // 侧边栏/面板背景，比主背景稍浅
-    elementBg: '#374151',     // 卡片、输入框等元素的背景色
-    elementHover: '#4B5563',  // 元素悬停时的背景色
-
-    // --- 文字色 (由亮到暗) ---
-    text: '#F9FAFB',          // 主要文字颜色 (近白色)，保证可读性
-    textSecondary: '#9CA3AF', // 次要文字颜色，用于副标题、提示信息等
-    textDisabled: '#6B7280',   // 禁用状态的文字颜色
-    textOnPrimary: '#0D1117', // 在主色调按钮上使用的文字颜色 (深色以保证对比度)
-
-    // --- 边框和分割线 ---
-    border: '#374151',        // 边框颜色
-    divider: '#4B5563',       // 分割线颜色
-
-    // --- 状态色 (用于提示) ---
-    success: '#10B981',       // 成功状态 (绿色)
-    warning: '#F59E0B',       // 警告状态 (黄色)
-    error: '#EF4444',         // 错误状态 (红色)
+    primary: '#66ccff',
+    primaryHover: '#33bbff',
+    navActiveBg: '#66ccff',
+    navActiveText: '#0D1117',
+    background: '#111827',
+    sidebarBg: '#1F2937',
+    elementBg: '#374151',
+    elementHover: '#4B5563',
+    text: '#F9FAFB',
+    textSecondary: '#9CA3AF',
+    textDisabled: '#6B7280',
+    textOnPrimary: '#0D1117',
+    border: '#374151',
+    divider: '#4B5563',
+    success: '#10B981',
+    warning: '#F59E0B',
+    error: '#EF4444',
   },
   spacing: {
-    small: '0.5rem',  // 8px
-    medium: '1rem',   // 16px
-    large: '1.5rem',  // 24px
+    small: '0.5rem',
+    medium: '1rem',
+    large: '1.5rem',
   },
   fontSizes: {
-    small: '0.875rem', // 14px
-    medium: '1rem',    // 16px
-    large: '1.25rem',  // 20px
+    small: '0.875rem',
+    medium: '1rem',
+    large: '1.25rem',
   },
   borderRadius: '8px',
 };
 
+// 喵~ 3. 这是给“法餐大厨”看的“法语”菜单部分
+// 我们告诉他，他的主色调应该用我们的 primary 颜色
+const muiThemeOptions: ThemeOptions = {
+  palette: {
+    primary: {
+      main: customThemeOptions.colors.primary,
+    },
+    // 你可以在这里为 MUI 定义更多颜色...
+  },
+};
+
+// 喵~ 4. 最关键的一步：制作“双语菜单”！
+// 我们用 createTheme 创建一个基础的 MUI 主题（法语部分）
+// 然后用 ... 操作符，把我们自己的 customThemeOptions（中文部分）也合并进去！
+export const theme = {
+  ...createTheme(muiThemeOptions), // 包含了 MUI 需要的所有东西，比如 palette
+  ...customThemeOptions,          // 也包含了我们自己需要的所有东西，比如 colors
+};
+
+// 喵~ 导出一个 theme 的类型，方便我们在其他地方获得类型提示
 export type ThemeType = typeof theme;
