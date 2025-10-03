@@ -10,11 +10,17 @@ color: #ffffff;
 margin: 0;
 `
 
+const Subtitle=styled.p`
+margin-top: 0.5rem;
+color: #a0aec0;
+font-size: 1.125rem;
+`
+
 const DashboardPage = () => (
-    <div className="p-5">
-        <h1 className="text-3xl font-bold text-white">仪表盘</h1>
-        <p className="mt-2 text-gray-400">这里是应用的主概览页面。</p>
-    </div>
+    <PageContaier>
+      <Title>仪表盘</Title>
+      <Subtitle>这里是应用的主概览页面。</Subtitle>
+    </PageContaier>
 );
 
 export default DashboardPage;
