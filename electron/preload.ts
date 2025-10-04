@@ -1,5 +1,6 @@
 import { ipcRenderer, contextBridge } from 'electron'
 import IpcRendererEvent = Electron.IpcRendererEvent;
+import 'source-map-support/register';
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {

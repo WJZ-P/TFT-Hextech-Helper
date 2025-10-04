@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import LCUConnector from "../src-backend/lcu/utils/LcuConnector.ts";
 import {ArgsFromIpcChannel, IpcChannels} from "../src-backend/lcu/utils/Protocols.ts";
+import LCUManager from "../src-backend/lcu/LCUManager.ts";
+import 'source-map-support/register';
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -49,8 +51,7 @@ function createWindow() {
     win?.webContents.send('main-process-message', (new Date).toLocaleString())
   })
 
-  // 我们告诉窗口，把它的菜单设置为 null，也就是“没有菜单”！
-  win.setMenu(null);
+
 
   //  判断是在开发环境还是打包好的程序
   if (VITE_DEV_SERVER_URL) {
@@ -58,6 +59,7 @@ function createWindow() {
   } else {
     // win.loadFile('dist/index.html')
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
+    win.setMenu(null) //  release包里面不显示菜单。
   }
 }
 
@@ -96,11 +98,45 @@ function init() {
   const connector = new LCUConnector()
 
   connector.on('connect', (data) => {
-    console.log("LOL客户端登录！")
-    console.log(data)
+    console.log("LOL客户端已登录！", data);
+
     //  发消息给renderer线程，那边收到再做处理
     sendToRenderer('lcu-connect',data)
-  }).on('disconnect', () => {
+
+    // 喵~ 使用单例模式获取 LCUManager 实例，并把“钥匙”交给它
+    const lcu = LCUManager.init(data);
+
+    // 连接 WebSocket
+    lcu.connect();
+
+    lcu.on('connect', async () => {
+      console.log('LCUManager 已连接，可以开始发送请求了！');
+      sendToRenderer('lcu-connect', data); // 通知前台
+
+      // 示例：获取当前召唤师信息
+      setInterval(async () => {
+        try {
+          const summoner = await lcu.request('GET', '/lol-summoner/v1/current-summoner');
+          console.log('当前召唤师:', summoner.displayName);
+        } catch (e) {
+          console.error('请求召唤师信息失败:', e);
+        }
+      }, 2000)
+
+    });
+
+    lcu.on('disconnect', () => {
+      console.log('LCUManager 已断开');
+      sendToRenderer('lcu-disconnect'); // 通知前台
+    });
+
+    lcu.on('lcu-event', (event) => {
+      // 在这里处理实时收到的游戏事件
+      console.log('收到LCU事件:', event.uri, event.eventType);
+    });
+  });
+
+  connector.on('disconnect', () => {
     console.log("LOL客户端登出！")
     sendToRenderer('lcu-disconnect')
   })
