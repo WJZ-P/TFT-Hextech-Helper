@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow ,globalShortcut} from 'electron'
 //import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -49,6 +49,9 @@ function createWindow() {
     win?.webContents.send('main-process-message', (new Date).toLocaleString())
   })
 
+  // 我们告诉窗口，把它的菜单设置为 null，也就是“没有菜单”！
+  win.setMenu(null);
+
   //  判断是在开发环境还是打包好的程序
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
@@ -74,6 +77,11 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow()
   }
+})
+
+// 喵~ 这是一个好习惯：在应用退出前，注销所有已注册的快捷键
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll()
 })
 
 //  正式启动app

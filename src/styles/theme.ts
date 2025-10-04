@@ -59,8 +59,8 @@ const baseTheme = {
     },
     borderRadius: '8px',
     sidebar: {
-        minWidth: 200, // 侧边栏最小宽度 (px)
-        maxWidth: 500, // 侧边栏最大宽度 (px)
+        width: 256,         // 侧边栏展开时的宽度 (px)
+        collapsedWidth: 88, // 侧边栏收缩时的宽度 (px)
     },
 };
 
