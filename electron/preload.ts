@@ -1,5 +1,6 @@
 import { ipcRenderer, contextBridge } from 'electron'
 import IpcRendererEvent = Electron.IpcRendererEvent;
+import {SummonerInfo} from "../src-backend/lcu/utils/Protocols.ts";
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
   on(...args: Parameters<typeof ipcRenderer.on>) {
@@ -40,3 +41,11 @@ const ipcApi= {
 export type IpcApi = typeof ipcApi
 
 contextBridge.exposeInMainWorld('ipc',ipcApi)
+
+const lcuApi={
+  getSummonerInfo: (): Promise<{ data?: SummonerInfo; error?: string }> => {
+      return ipcRenderer.invoke('lcu-request', 'GET', '/lol-summoner/v1/current-summoner');
+    },
+}
+export type LcuApi = typeof lcuApi
+contextBridge.exposeInMainWorld('lcu',lcuApi)

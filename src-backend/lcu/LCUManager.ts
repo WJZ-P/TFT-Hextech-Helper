@@ -75,9 +75,10 @@ class LCUManager extends EventEmitter {
         this.api = axios.create({
             baseURL: `https://127.0.0.1:${this.port}`,
             httpsAgent: this.httpsAgent, // 把我们的“通行证”交给 axios
-            auth: { // axios 自带了更方便的 Basic Auth 写法
+            proxy: false,   // ← 关键：禁止任何系统/环境变量代理!!!这里debug找了一万年才发现是这个问题。
+            auth:{
                 username: 'riot',
-                password: this.token,
+                password:this.token
             },
             headers: {
                 'Content-Type': 'application/json',
@@ -106,7 +107,7 @@ class LCUManager extends EventEmitter {
 
         this.ws.on('open', () => {
             this.isConnected = true;
-            console.log('✅ [LCUManager] WebSocket 连接成功！现在可以完全通信了！');
+            console.log('✅ [LCUManager] WebSocket 连接成功！');
             this.emit('connect'); // 只有在此时，才广播“真正连接成功”的事件
             this.subscribe('OnJsonApiEvent');
         });
@@ -152,8 +153,8 @@ class LCUManager extends EventEmitter {
 
             const response = await this.api.request<T>({
                 method: method,
-                url: endpoint, // axios 会自动拼接 baseURL
-                data: body, // axios 用 data 字段来表示请求体
+                url: fullUrl, // axios 会自动拼接 baseURL
+                data:body
             });
             return response.data; // axios 会自动处理 JSON 解析，结果在 response.data 里
         } catch (error) {

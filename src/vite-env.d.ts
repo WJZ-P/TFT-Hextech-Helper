@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import {IpcApi} from "../electron/preload.ts";
+import {IpcApi, LcuApi} from "../electron/preload.ts";
 
 export {}   // 让文件变成模块，避免全局污染
 
@@ -9,5 +9,6 @@ export {}   // 让文件变成模块，避免全局污染
 declare global {
     interface Window {
         ipc:IpcApi
+        lcu:LcuApi
     }
 }

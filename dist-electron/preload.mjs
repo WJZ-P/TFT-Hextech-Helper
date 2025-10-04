@@ -32,3 +32,9 @@ const ipcApi = {
   }
 };
 electron.contextBridge.exposeInMainWorld("ipc", ipcApi);
+const lcuApi = {
+  getSummonerInfo: () => {
+    return electron.ipcRenderer.invoke("lcu-request", "GET", "/lol-summoner/v1/current-summoner");
+  }
+};
+electron.contextBridge.exposeInMainWorld("lcu", lcuApi);

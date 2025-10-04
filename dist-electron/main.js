@@ -1,7 +1,7 @@
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
-import { app, BrowserWindow, globalShortcut } from "electron";
+import { app, BrowserWindow, globalShortcut, ipcMain } from "electron";
 import { fileURLToPath } from "node:url";
 import path$i from "node:path";
 import require$$0$5, { EventEmitter as EventEmitter$1 } from "events";
@@ -22595,8 +22595,9 @@ const _LCUManager = class _LCUManager extends EventEmitter$1 {
       baseURL: `https://127.0.0.1:${this.port}`,
       httpsAgent: this.httpsAgent,
       // 把我们的“通行证”交给 axios
+      proxy: false,
+      // ← 关键：禁止任何系统/环境变量代理!!!这里debug找了一万年才发现是这个问题。
       auth: {
-        // axios 自带了更方便的 Basic Auth 写法
         username: "riot",
         password: this.token
       },
@@ -22644,7 +22645,7 @@ const _LCUManager = class _LCUManager extends EventEmitter$1 {
     });
     this.ws.on("open", () => {
       this.isConnected = true;
-      console.log("✅ [LCUManager] WebSocket 连接成功！现在可以完全通信了！");
+      console.log("✅ [LCUManager] WebSocket 连接成功！");
       this.emit("connect");
       this.subscribe("OnJsonApiEvent");
     });
@@ -22685,10 +22686,9 @@ const _LCUManager = class _LCUManager extends EventEmitter$1 {
       console.log(`➡️  [LCUManager] 准备发起请求: ${method} ${fullUrl}`);
       const response = await this.api.request({
         method,
-        url: endpoint,
+        url: fullUrl,
         // axios 会自动拼接 baseURL
         data: body
-        // axios 用 data 字段来表示请求体
       });
       return response.data;
     } catch (error) {
@@ -25000,6 +25000,7 @@ app.on("will-quit", () => {
 app.whenReady().then(async () => {
   createWindow();
   init();
+  registerHandler();
 });
 function init() {
   const connector = new LCUConnector();
@@ -25010,21 +25011,19 @@ function init() {
     lcu.start();
     lcu.on("connect", async () => {
       sendToRenderer("lcu-connect", data);
-      setInterval(async () => {
-        try {
-          const summoner = await lcu.request("GET", "/lol-summoner/v1/current-summoner");
-          console.log("当前召唤师:", summoner.displayName);
-        } catch (e) {
-          console.error("请求召唤师信息失败:", e);
-        }
-      }, 2e3);
+      try {
+        const summoner = await lcu.request("GET", "/lol-summoner/v1/current-summoner");
+        console.log("召唤师信息:", summoner);
+      } catch (e) {
+        console.error("请求召唤师信息失败:", e);
+      }
     });
     lcu.on("disconnect", () => {
       console.log("LCUManager 已断开");
       sendToRenderer("lcu-disconnect");
     });
     lcu.on("lcu-event", (event) => {
-      console.log("收到LCU事件:", event);
+      console.log("收到LCU事件:", event.uri, event.eventType);
     });
   });
   connector.on("disconnect", () => {
@@ -25035,6 +25034,23 @@ function init() {
 }
 function sendToRenderer(channel, ...args) {
   return win == null ? void 0 : win.webContents.send(channel, ...args);
+}
+function registerHandler() {
+  ipcMain.handle("lcu-request", async (event, method, endpoint, body) => {
+    const lcu = LCUManager.getInstance();
+    if (!lcu || !lcu.isConnected) {
+      console.error("❌ [IPC] LCUManager 尚未连接，无法处理请求");
+      return { error: "LCU is not connected yet." };
+    }
+    try {
+      console.log(`📞 [IPC] 收到请求: ${method} ${endpoint}`);
+      const result = await lcu.request(method, endpoint, body);
+      return { data: result };
+    } catch (e) {
+      console.error(`❌ [IPC] 处理请求 ${method} ${endpoint} 时出错:`, e);
+      return { error: e.message };
+    }
+  });
 }
 export {
   MAIN_DIST,
