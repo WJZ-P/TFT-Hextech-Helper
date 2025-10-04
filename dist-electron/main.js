@@ -17412,14 +17412,7 @@ var _eval = EvalError;
 var range = RangeError;
 var ref = ReferenceError;
 var syntax = SyntaxError;
-var type;
-var hasRequiredType;
-function requireType() {
-  if (hasRequiredType) return type;
-  hasRequiredType = 1;
-  type = TypeError;
-  return type;
-}
+var type = TypeError;
 var uri = URIError;
 var abs$1 = Math.abs;
 var floor$1 = Math.floor;
@@ -17665,7 +17658,7 @@ function requireCallBindApplyHelpers() {
   if (hasRequiredCallBindApplyHelpers) return callBindApplyHelpers;
   hasRequiredCallBindApplyHelpers = 1;
   var bind3 = functionBind;
-  var $TypeError2 = requireType();
+  var $TypeError2 = type;
   var $call2 = requireFunctionCall();
   var $actualApply = requireActualApply();
   callBindApplyHelpers = function callBindBasic(args) {
@@ -17738,7 +17731,7 @@ var $EvalError = _eval;
 var $RangeError = range;
 var $ReferenceError = ref;
 var $SyntaxError = syntax;
-var $TypeError$1 = requireType();
+var $TypeError$1 = type;
 var $URIError = uri;
 var abs = abs$1;
 var floor = floor$1;
@@ -18069,7 +18062,7 @@ var GetIntrinsic2 = getIntrinsic;
 var $defineProperty = GetIntrinsic2("%Object.defineProperty%", true);
 var hasToStringTag = requireShams()();
 var hasOwn$1 = hasown;
-var $TypeError = requireType();
+var $TypeError = type;
 var toStringTag = hasToStringTag ? Symbol.toStringTag : null;
 var esSetTostringtag = function setToStringTag(object, value) {
   var overrideIfSet = arguments.length > 2 && !!arguments[2] && arguments[2].force;
@@ -22585,10 +22578,8 @@ const _LCUManager = class _LCUManager extends EventEmitter$1 {
   // 构造函数是私有的，这确保了外部不能用 new 来创建实例
   constructor(details) {
     super();
-    // --------------------
     __publicField(this, "port");
     __publicField(this, "token");
-    __publicField(this, "authHeader");
     __publicField(this, "httpsAgent");
     __publicField(this, "api");
     // 我们将拥有一个专属的 axios 实例
@@ -22596,7 +22587,6 @@ const _LCUManager = class _LCUManager extends EventEmitter$1 {
     __publicField(this, "isConnected", false);
     this.port = details.port;
     this.token = details.token;
-    this.authHeader = "Basic " + Buffer.from(`riot:${this.token}`).toString("base64");
     this.httpsAgent = new https$3.Agent({
       rejectUnauthorized: false
       // LCU 使用的是自签名证书，我们必须忽略它
@@ -22631,29 +22621,36 @@ const _LCUManager = class _LCUManager extends EventEmitter$1 {
     return _LCUManager.instance;
   }
   /**
+   * 全新的启动方法，它会先确认 REST API 就绪，再连接 WebSocket
+   */
+  async start() {
+    console.log("🚀 [LCUManager] 开始启动，正在确认 API 服务状态...");
+    try {
+      await this.confirmApiReady();
+      this.connectWebSocket();
+    } catch (e) {
+      console.error("❌ [LCUManager] 启动过程中发生错误:", e);
+    }
+  }
+  /**
    * 连接到 LCU WebSocket
    */
-  connect() {
-    if (this.ws && this.ws.readyState === WebSocket$1.OPEN) {
-      console.warn("⚠️ [LCUManager] WebSocket 已经连接，无需重复操作。");
-      return;
-    }
+  connectWebSocket() {
+    if (this.ws && this.ws.readyState === WebSocket$1.OPEN) return;
     const wsUrl = `wss://127.0.0.1:${this.port}`;
     this.ws = new WebSocket$1(wsUrl, {
-      headers: { Authorization: this.authHeader },
+      headers: { Authorization: "Basic " + Buffer.from(`riot:${this.token}`).toString("base64") },
       agent: this.httpsAgent
     });
     this.ws.on("open", () => {
       this.isConnected = true;
-      console.log("✅ [LCUManager] WebSocket 连接成功！");
+      console.log("✅ [LCUManager] WebSocket 连接成功！现在可以完全通信了！");
       this.emit("connect");
       this.subscribe("OnJsonApiEvent");
     });
     this.ws.on("message", (data) => {
       const messageString = data.toString();
-      if (!messageString) {
-        return;
-      }
+      if (!messageString) return;
       try {
         const message = JSON.parse(messageString);
         if (message[0] === 8 && message[1] === "OnJsonApiEvent" && message[2]) {
@@ -22661,7 +22658,6 @@ const _LCUManager = class _LCUManager extends EventEmitter$1 {
         }
       } catch (e) {
         console.error("❌ [LCUManager] 解析 WebSocket 消息失败:", e);
-        console.log("收到的原始消息:", messageString);
       }
     });
     this.ws.on("close", () => {
@@ -22685,6 +22681,8 @@ const _LCUManager = class _LCUManager extends EventEmitter$1 {
   async request(method, endpoint, body) {
     var _a, _b;
     try {
+      const fullUrl = `${this.api.defaults.baseURL}${endpoint}`;
+      console.log(`➡️  [LCUManager] 准备发起请求: ${method} ${fullUrl}`);
       const response = await this.api.request({
         method,
         url: endpoint,
@@ -22729,6 +22727,21 @@ const _LCUManager = class _LCUManager extends EventEmitter$1 {
   close() {
     if (this.ws) {
       this.ws.close();
+    }
+  }
+  /**
+   * 喵~ 一个有礼貌的函数，会一直“敲门”直到后厨回应
+   */
+  async confirmApiReady() {
+    while (true) {
+      try {
+        await this.request("GET", "/riotclient/ux-state");
+        console.log("✅ [LCUManager] API 服务已就绪！");
+        return;
+      } catch (error) {
+        console.log("⏳ [LCUManager] API 服务尚未就绪，1秒后重试...", error);
+        await new Promise((resolve) => setTimeout(resolve, 2e3));
+      }
     }
   }
 };
@@ -24994,9 +25007,8 @@ function init() {
     console.log("LOL客户端已登录！", data);
     sendToRenderer("lcu-connect", data);
     const lcu = LCUManager.init(data);
-    lcu.connect();
+    lcu.start();
     lcu.on("connect", async () => {
-      console.log("LCUManager 已连接，可以开始发送请求了！");
       sendToRenderer("lcu-connect", data);
       setInterval(async () => {
         try {
@@ -25012,7 +25024,7 @@ function init() {
       sendToRenderer("lcu-disconnect");
     });
     lcu.on("lcu-event", (event) => {
-      console.log("收到LCU事件:", event.uri, event.eventType);
+      console.log("收到LCU事件:", event);
     });
   });
   connector.on("disconnect", () => {

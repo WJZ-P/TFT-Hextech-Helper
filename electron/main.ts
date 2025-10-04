@@ -107,10 +107,9 @@ function init() {
     const lcu = LCUManager.init(data);
 
     // 连接 WebSocket
-    lcu.connect();
+    lcu.start();
 
     lcu.on('connect', async () => {
-      console.log('LCUManager 已连接，可以开始发送请求了！');
       sendToRenderer('lcu-connect', data); // 通知前台
 
       // 示例：获取当前召唤师信息
@@ -132,7 +131,7 @@ function init() {
 
     lcu.on('lcu-event', (event) => {
       // 在这里处理实时收到的游戏事件
-      console.log('收到LCU事件:', event.uri, event.eventType);
+      console.log('收到LCU事件:', event);
     });
   });
 
