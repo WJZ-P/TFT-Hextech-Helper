@@ -64,6 +64,19 @@ const lcuApi = {
   },
   getChatConfig: () => {
     return electron.ipcRenderer.invoke("lcu-request", "GET", "/lol-game-queues/v1/queues");
+  },
+  getChampSelectSession: () => {
+    return electron.ipcRenderer.invoke("lcu-request", "GET", "/lol-champ-select/v1/session");
+  },
+  getChatConversations: () => {
+    return electron.ipcRenderer.invoke("lcu-request", "GET", "/lol-chat/v1/conversations");
+  },
+  testFunc: () => {
+    return electron.ipcRenderer.invoke(
+      "lcu-request",
+      "GET",
+      "/lol-game-queues/v1/custom-non-default"
+    );
   }
 };
 electron.contextBridge.exposeInMainWorld("lcu", lcuApi);

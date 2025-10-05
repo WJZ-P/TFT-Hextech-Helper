@@ -49,7 +49,18 @@ const DashboardPage = () => (
         <button onClick={async () => {
             console.log(await window.lcu.getChatConfig());
         }}>获取聊天config</button>
-
+        <button onClick={async () => {
+            console.log(await window.lcu.testFunc());
+        }}>测试功能</button>
+        <button onClick={async () => {
+            console.log(await window.lcu.getChampSelectSession());
+        }}>获取当前英雄选择的session信息</button>
+        <button onClick={async () => {
+            console.log(await window.lcu.getChatConversations());
+        }}>获取聊天内容</button>
+        <button onClick={async () => {
+            console.log(await window.lcu.getGameflowSession());
+        }}>gameflow的session</button>
     </PageContaier>
 );
 

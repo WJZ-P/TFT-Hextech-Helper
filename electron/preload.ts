@@ -75,6 +75,18 @@ const lcuApi = {
     getChatConfig: (): Promise<{ data?: any; error?: string }> => {
         return ipcRenderer.invoke('lcu-request', 'GET', '/lol-game-queues/v1/queues');
     },
+    getChampSelectSession: (): Promise<{ data?: any; error?: string }> => {
+        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-champ-select/v1/session');
+    },
+    getChatConversations: (): Promise<{ data?: any; error?: string }> => {
+        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-chat/v1/conversations');
+    },
+    getGameflowSession: (): Promise<{ data?: any; error?: string }> => {
+        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-gameflow/v1/session');
+    },
+    testFunc: (): Promise<{ data?: any; error?: string }> => {
+        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-game-queues/v1/custom-non-default');
+    },
 }
 export type LcuApi = typeof lcuApi
 contextBridge.exposeInMainWorld('lcu', lcuApi)
