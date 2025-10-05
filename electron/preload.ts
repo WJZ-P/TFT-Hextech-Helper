@@ -1,51 +1,62 @@
-import { ipcRenderer, contextBridge } from 'electron'
+import {ipcRenderer, contextBridge} from 'electron'
 import IpcRendererEvent = Electron.IpcRendererEvent;
-import {SummonerInfo} from "../src-backend/lcu/utils/Protocols.ts";
+import {LobbyConfig, Queue, QueueIdLobby, SummonerInfo} from "../src-backend/lcu/utils/Protocols.ts";
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
-  on(...args: Parameters<typeof ipcRenderer.on>) {
-    const [channel, listener] = args
-    return ipcRenderer.on(channel, (event, ...args) => listener(event, ...args))
-  },
-  off(...args: Parameters<typeof ipcRenderer.off>) {
-    const [channel, ...omit] = args
-    return ipcRenderer.off(channel, ...omit)
-  },
-  send(...args: Parameters<typeof ipcRenderer.send>) {
-    const [channel, ...omit] = args
-    return ipcRenderer.send(channel, ...omit)
-  },
-  invoke(...args: Parameters<typeof ipcRenderer.invoke>) {
-    const [channel, ...omit] = args
-    return ipcRenderer.invoke(channel, ...omit)
-  },
+    on(...args: Parameters<typeof ipcRenderer.on>) {
+        const [channel, listener] = args
+        return ipcRenderer.on(channel, (event, ...args) => listener(event, ...args))
+    },
+    off(...args: Parameters<typeof ipcRenderer.off>) {
+        const [channel, ...omit] = args
+        return ipcRenderer.off(channel, ...omit)
+    },
+    send(...args: Parameters<typeof ipcRenderer.send>) {
+        const [channel, ...omit] = args
+        return ipcRenderer.send(channel, ...omit)
+    },
+    invoke(...args: Parameters<typeof ipcRenderer.invoke>) {
+        const [channel, ...omit] = args
+        return ipcRenderer.invoke(channel, ...omit)
+    },
 
-  // You can expose other APTs you need here.
-  // ...
+    // You can expose other APTs you need here.
+    // ...
 })
 
-const ipcApi= {
-  on: (channel:string,callback:(...args:any[]) => void) =>{
-    const listener =(_event:IpcRendererEvent,...args:any[]) =>{
-      callback(...args)
+const ipcApi = {
+    on: (channel: string, callback: (...args: any[]) => void) => {
+        const listener = (_event: IpcRendererEvent, ...args: any[]) => {
+            callback(...args)
+        }
+        //  监听指定频道
+        ipcRenderer.on(channel, listener)
+        //  返回一个清理函数
+        return () => {
+            ipcRenderer.removeListener(channel, listener)
+        }
     }
-    //  监听指定频道
-    ipcRenderer.on(channel,listener)
-    //  返回一个清理函数
-    return () => {
-      ipcRenderer.removeListener(channel,listener)
-    }
-  }
 }
 
 export type IpcApi = typeof ipcApi
 
-contextBridge.exposeInMainWorld('ipc',ipcApi)
+contextBridge.exposeInMainWorld('ipc', ipcApi)
 
-const lcuApi={
-  getSummonerInfo: (): Promise<{ data?: SummonerInfo; error?: string }> => {
-      return ipcRenderer.invoke('lcu-request', 'GET', '/lol-summoner/v1/current-summoner');
+const lcuApi = {
+    getSummonerInfo: (): Promise<{ data?: SummonerInfo; error?: string }> => {
+        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-summoner/v1/current-summoner');
+    },
+    createCustomLobby: (config: LobbyConfig): Promise<{ data?: any; error?: string }> => {
+        console.log('📬 [Preload] 向主进程发送创建房间请求:', config);
+        return ipcRenderer.invoke('lcu-request', 'POST', '/lol-lobby/v2/lobby', config);
+    },
+    createLobbyByQueueId: (queueId: Queue): Promise<{ data?: any; error?: string }> => {
+        console.log('📬 [Preload] 向主进程发送创建房间请求:', queueId);
+        return ipcRenderer.invoke('lcu-request', 'POST', '/lol-lobby/v2/lobby', {queueId: queueId});
+    },
+    getCurrentGamemodeInfo: (): Promise<{ data?: any; error?: string }> => {
+        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-lobby/v1/parties/gamemode');
     },
 }
 export type LcuApi = typeof lcuApi
-contextBridge.exposeInMainWorld('lcu',lcuApi)
+contextBridge.exposeInMainWorld('lcu', lcuApi)

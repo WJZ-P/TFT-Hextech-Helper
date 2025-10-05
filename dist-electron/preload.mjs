@@ -35,6 +35,17 @@ electron.contextBridge.exposeInMainWorld("ipc", ipcApi);
 const lcuApi = {
   getSummonerInfo: () => {
     return electron.ipcRenderer.invoke("lcu-request", "GET", "/lol-summoner/v1/current-summoner");
+  },
+  createCustomLobby: (config) => {
+    console.log("📬 [Preload] 向主进程发送创建房间请求:", config);
+    return electron.ipcRenderer.invoke("lcu-request", "POST", "/lol-lobby/v2/lobby", config);
+  },
+  createLobbyByQueueId: (queueId) => {
+    console.log("📬 [Preload] 向主进程发送创建房间请求:", queueId);
+    return electron.ipcRenderer.invoke("lcu-request", "POST", "/lol-lobby/v2/lobby", { queueId });
+  },
+  getCurrentGamemodeInfo: () => {
+    return electron.ipcRenderer.invoke("lcu-request", "GET", "/lol-lobby/v1/parties/gamemode");
   }
 };
 electron.contextBridge.exposeInMainWorld("lcu", lcuApi);

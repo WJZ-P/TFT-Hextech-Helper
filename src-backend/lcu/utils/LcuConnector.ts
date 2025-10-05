@@ -85,7 +85,7 @@ class LCUConnector extends EventEmitter {
 
                 //  拿我们其他需要用到的数据
                 const portMatch = stdout.match(/--app-port=(\d+)/)
-                const tokenMatch = stdout.match(/--remoting-auth-token=(\w+)/)
+                const tokenMatch = stdout.match(/--remoting-auth-token=([\w-]+)/)
                 const pidMatch = stdout.match(/--app-pid=(\d+)/)
                 // 确保所有需要的信息都找到了
                 if (portMatch && tokenMatch && pidMatch) {
