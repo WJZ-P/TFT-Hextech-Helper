@@ -121,7 +121,7 @@ const ToggleButton = styled.button`
 `;
 
 const Sidebar = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   return (
     <SidebarContainer $isCollapsed={isCollapsed}>

@@ -1,4 +1,4 @@
-import {app, BrowserWindow, globalShortcut,ipcMain} from 'electron'
+import {app, BrowserWindow, globalShortcut, ipcMain} from 'electron'
 //import { createRequire } from 'node:module'
 import {fileURLToPath} from 'node:url'
 import path from 'node:path'
@@ -164,9 +164,8 @@ function registerHandler(){
     // 尝试执行请求
     try {
       console.log(`📞 [IPC] 收到请求: ${method} ${endpoint}`);
-      const result = await lcu.request(method, endpoint, body);
-      // 成功后，把数据包装在 data 字段里返回给前台
-      return { data: result };
+        // 成功后，把数据包装在 data 字段里返回给前台
+      return await lcu.request(method, endpoint, body);
     } catch (e: any) {
       console.error(`❌ [IPC] 处理请求 ${method} ${endpoint} 时出错:`, e);
       // 失败后，把错误信息包装在 error 字段里返回

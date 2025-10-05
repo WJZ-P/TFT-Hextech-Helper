@@ -25051,8 +25051,7 @@ function registerHandler() {
     }
     try {
       console.log(`📞 [IPC] 收到请求: ${method} ${endpoint}`);
-      const result = await lcu.request(method, endpoint, body);
-      return { data: result };
+      return await lcu.request(method, endpoint, body);
     } catch (e) {
       console.error(`❌ [IPC] 处理请求 ${method} ${endpoint} 时出错:`, e);
       return { error: e.message };

@@ -47,10 +47,14 @@ export enum Queue {
   NORMAL_BLIND   = 430, // 召唤师峡谷 - 匹配模式 (自选)
   RANKED_FLEX    = 440, // 召唤师峡谷 - 灵活排位
   ARAM           = 450, // 极地大乱斗
-  URF_RANDOM     = 900, // 无限乱斗
+  PICKURF        = 900, // 无限乱斗
   TFT_NORMAL     = 1090, // 云顶之弈 - 匹配模式
   TFT_RANKED     = 1100, // 云顶之弈 - 排位模式
   URF            = 1900, // 无限火力
+  DOU_HUN         = 1700,// 斗魂竞技场
+  MORIRENJI     = 4210, //  末日人工智能
+  MORIRENJI_HARD     = 4220, //  末日人工智能 - 困难
+  MORIRENJI_VERY_HARD     = 4260, //  末日人工智能 - 维迦的末日诅咒！
 }
 
 // --- 自定义游戏房间相关类型 ---

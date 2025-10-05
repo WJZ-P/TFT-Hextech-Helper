@@ -46,6 +46,24 @@ const lcuApi = {
   },
   getCurrentGamemodeInfo: () => {
     return electron.ipcRenderer.invoke("lcu-request", "GET", "/lol-lobby/v1/parties/gamemode");
+  },
+  startMatch: () => {
+    return electron.ipcRenderer.invoke("lcu-request", "POST", "/lol-lobby/v2/lobby/matchmaking/search");
+  },
+  stopMatch: () => {
+    return electron.ipcRenderer.invoke("lcu-request", "DELETE", "/lol-lobby/v2/lobby/matchmaking/search");
+  },
+  checkMatchState: () => {
+    return electron.ipcRenderer.invoke("lcu-request", "GET", "/lol-lobby/v2/lobby/matchmaking/search-state");
+  },
+  getCustomGames: () => {
+    return electron.ipcRenderer.invoke("lcu-request", "GET", "/lol-lobby/v1/custom-games");
+  },
+  getQueues: () => {
+    return electron.ipcRenderer.invoke("lcu-request", "GET", "/lol-game-queues/v1/queues");
+  },
+  getChatConfig: () => {
+    return electron.ipcRenderer.invoke("lcu-request", "GET", "/lol-game-queues/v1/queues");
   }
 };
 electron.contextBridge.exposeInMainWorld("lcu", lcuApi);

@@ -57,6 +57,24 @@ const lcuApi = {
     getCurrentGamemodeInfo: (): Promise<{ data?: any; error?: string }> => {
         return ipcRenderer.invoke('lcu-request', 'GET', '/lol-lobby/v1/parties/gamemode');
     },
+    startMatch: (): Promise<{ data?: any; error?: string }> => {
+        return ipcRenderer.invoke('lcu-request', 'POST', '/lol-lobby/v2/lobby/matchmaking/search');
+    },
+    stopMatch: (): Promise<{ data?: any; error?: string }> => {
+        return ipcRenderer.invoke('lcu-request', 'DELETE', '/lol-lobby/v2/lobby/matchmaking/search');
+    },
+    checkMatchState: (): Promise<{ data?: any; error?: string }> => {
+        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-lobby/v2/lobby/matchmaking/search-state');
+    },
+    getCustomGames: (): Promise<{ data?: any; error?: string }> => {
+        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-lobby/v1/custom-games');
+    },
+    getQueues: (): Promise<{ data?: any; error?: string }> => {
+        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-game-queues/v1/queues');
+    },
+    getChatConfig: (): Promise<{ data?: any; error?: string }> => {
+        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-game-queues/v1/queues');
+    },
 }
 export type LcuApi = typeof lcuApi
 contextBridge.exposeInMainWorld('lcu', lcuApi)
