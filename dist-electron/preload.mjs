@@ -71,12 +71,11 @@ const lcuApi = {
   getChatConversations: () => {
     return electron.ipcRenderer.invoke("lcu-request", "GET", "/lol-chat/v1/conversations");
   },
+  getGameflowSession: () => {
+    return electron.ipcRenderer.invoke("lcu-request", "GET", "/lol-gameflow/v1/session");
+  },
   testFunc: () => {
-    return electron.ipcRenderer.invoke(
-      "lcu-request",
-      "GET",
-      "/lol-game-queues/v1/custom-non-default"
-    );
+    return electron.ipcRenderer.invoke("lcu-request", "GET", "/lol-game-queues/v1/custom-non-default");
   }
 };
 electron.contextBridge.exposeInMainWorld("lcu", lcuApi);
