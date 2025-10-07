@@ -57,7 +57,7 @@ const DashboardPage = () => (
         }}>获取当前英雄选择的session信息</button>
         <button onClick={async () => {
             console.log(await window.lcu.getChatConversations());
-        }}>获取聊天内容</button>
+        }}>获取ChatConversations</button>
         <button onClick={async () => {
             console.log(await window.lcu.getGameflowSession());
         }}>gameflow的session</button>
