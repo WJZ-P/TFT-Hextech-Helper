@@ -84,8 +84,14 @@ const lcuApi = {
     getGameflowSession: (): Promise<{ data?: any; error?: string }> => {
         return ipcRenderer.invoke('lcu-request', 'GET', '/lol-gameflow/v1/session');
     },
+    getExtraGameClientArgs: (): Promise<{ data?: any; error?: string }> => {
+        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-gameflow/v1/extra-game-client-args');
+    },
+    getLobby: (): Promise<{ data?: any; error?: string }> => {
+        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-lobby/v2/lobby');
+    },
     testFunc: (): Promise<{ data?: any; error?: string }> => {
-        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-game-queues/v1/custom-non-default');
+        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-lobby/v2/notifications');
     },
 }
 export type LcuApi = typeof lcuApi

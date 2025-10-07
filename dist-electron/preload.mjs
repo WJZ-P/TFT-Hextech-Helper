@@ -74,8 +74,14 @@ const lcuApi = {
   getGameflowSession: () => {
     return electron.ipcRenderer.invoke("lcu-request", "GET", "/lol-gameflow/v1/session");
   },
+  getExtraGameClientArgs: () => {
+    return electron.ipcRenderer.invoke("lcu-request", "GET", "/lol-gameflow/v1/extra-game-client-args");
+  },
+  getLobby: () => {
+    return electron.ipcRenderer.invoke("lcu-request", "GET", "/lol-lobby/v2/lobby");
+  },
   testFunc: () => {
-    return electron.ipcRenderer.invoke("lcu-request", "GET", "/lol-game-queues/v1/custom-non-default");
+    return electron.ipcRenderer.invoke("lcu-request", "GET", "/lol-lobby/v2/notifications");
   }
 };
 electron.contextBridge.exposeInMainWorld("lcu", lcuApi);

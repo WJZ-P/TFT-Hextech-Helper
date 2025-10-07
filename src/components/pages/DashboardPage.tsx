@@ -61,6 +61,12 @@ const DashboardPage = () => (
         <button onClick={async () => {
             console.log(await window.lcu.getGameflowSession());
         }}>gameflow的session</button>
+        <button onClick={async () => {
+            console.log(await window.lcu.getExtraGameClientArgs());
+        }}>获取gameClient的args</button>
+        <button onClick={async () => {
+            console.log(await window.lcu.getLobby());
+        }}>getLobby</button>
     </PageContaier>
 );
 
