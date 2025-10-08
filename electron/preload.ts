@@ -96,3 +96,5 @@ const lcuApi = {
 }
 export type LcuApi = typeof lcuApi
 contextBridge.exposeInMainWorld('lcu', lcuApi)
+
+// https://127.0.0.1:2999/liveclientdata/allgamedata    开游戏后，这个url会有一些数据推送。

@@ -6,6 +6,8 @@ import LCUConnector from "../src-backend/lcu/utils/LcuConnector.ts";
 import {ArgsFromIpcChannel, IpcChannels} from "../src-backend/lcu/utils/Protocols.ts";
 import LCUManager from "../src-backend/lcu/LCUManager.ts";
 import 'source-map-support/register';
+import https from "https";
+import axios from "axios";
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -145,31 +147,31 @@ function sendToRenderer<E extends keyof IpcChannels>(channel: E, ...args: ArgsFr
     return win?.webContents.send(channel, ...args)
 }
 
-function registerHandler(){
+function registerHandler() {
     ipcMain.handle('lcu-request', async (
-    event, // 固定的第一个参数，包含了事件的源信息
-    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE', // 第二个参数：请求方法
-    endpoint: string, // 第三个参数：API 端点
-    body?: object      // 第四个参数：可选的请求体
-  ) => {
-    // 首先，从单例获取 LCUManager 实例
-    const lcu = LCUManager.getInstance();
+        event, // 固定的第一个参数，包含了事件的源信息
+        method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE', // 第二个参数：请求方法
+        endpoint: string, // 第三个参数：API 端点
+        body?: object      // 第四个参数：可选的请求体
+    ) => {
+        // 首先，从单例获取 LCUManager 实例
+        const lcu = LCUManager.getInstance();
 
-    // 安全检查：如果 LCU 还没准备好，就返回一个错误
-    if (!lcu || !lcu.isConnected) {
-      console.error("❌ [IPC] LCUManager 尚未连接，无法处理请求");
-      return { error: "LCU is not connected yet." };
-    }
+        // 安全检查：如果 LCU 还没准备好，就返回一个错误
+        if (!lcu || !lcu.isConnected) {
+            console.error("❌ [IPC] LCUManager 尚未连接，无法处理请求");
+            return {error: "LCU is not connected yet."};
+        }
 
-    // 尝试执行请求
-    try {
-      console.log(`📞 [IPC] 收到请求: ${method} ${endpoint}`);
-        // 成功后，把数据包装在 data 字段里返回给前台
-      return await lcu.request(method, endpoint, body);
-    } catch (e: any) {
-      console.error(`❌ [IPC] 处理请求 ${method} ${endpoint} 时出错:`, e);
-      // 失败后，把错误信息包装在 error 字段里返回
-      return { error: e.message };
-    }
-  });
+        // 尝试执行请求
+        try {
+            console.log(`📞 [IPC] 收到请求: ${method} ${endpoint}`);
+            // 成功后，把数据包装在 data 字段里返回给前台
+            return await lcu.request(method, endpoint, body);
+        } catch (e: any) {
+            console.error(`❌ [IPC] 处理请求 ${method} ${endpoint} 时出错:`, e);
+            // 失败后，把错误信息包装在 error 字段里返回
+            return {error: e.message};
+        }
+    });
 }
