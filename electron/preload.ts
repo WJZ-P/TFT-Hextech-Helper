@@ -1,6 +1,7 @@
 import {ipcRenderer, contextBridge} from 'electron'
 import IpcRendererEvent = Electron.IpcRendererEvent;
 import {LobbyConfig, Queue, QueueIdLobby, SummonerInfo} from "../src-backend/lcu/utils/Protocols.ts";
+import ConfigHelper from "../src-backend/ConfigHelper.ts";
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
     on(...args: Parameters<typeof ipcRenderer.on>) {
@@ -37,10 +38,15 @@ const ipcApi = {
         }
     }
 }
-
 export type IpcApi = typeof ipcApi
-
 contextBridge.exposeInMainWorld('ipc', ipcApi)
+
+const configApi = {
+    backup : ConfigHelper.backup,
+    restore : ConfigHelper.restore
+}
+export type ConfigApi = typeof configApi
+contextBridge.exposeInMainWorld('config', configApi)
 
 const lcuApi = {
     getSummonerInfo: (): Promise<{ data?: SummonerInfo; error?: string }> => {

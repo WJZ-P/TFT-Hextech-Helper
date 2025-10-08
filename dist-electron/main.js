@@ -2403,14 +2403,18 @@ class LCUConnector extends EventEmitter$1 {
           resolve();
           return;
         }
+        console.log(`process命令执行结果：${stdout}`);
         const portMatch = stdout.match(/--app-port=(\d+)/);
         const tokenMatch = stdout.match(/--remoting-auth-token=([\w-]+)/);
         const pidMatch = stdout.match(/--app-pid=(\d+)/);
-        if (portMatch && tokenMatch && pidMatch) {
+        const installDirectoryMatch = stdout.match(/--install-directory=(.*?)"/);
+        if (portMatch && tokenMatch && pidMatch && installDirectoryMatch) {
           const data = {
             port: parseInt(portMatch[1]),
             pid: parseInt(pidMatch[1]),
-            token: tokenMatch[1]
+            token: tokenMatch[1],
+            installDirectory: path$i.dirname(installDirectoryMatch[1])
+            //  父目录
           };
           resolve(data);
         } else resolve(null);
@@ -24964,6 +24968,73 @@ sourceMapSupport.exports;
 })(sourceMapSupport, sourceMapSupport.exports);
 var sourceMapSupportExports = sourceMapSupport.exports;
 sourceMapSupportExports.install();
+const _ConfigHelper = class _ConfigHelper {
+  // 2. 把构造函数（constructor）变成私有的（private），这样在外面就不能用 `new ConfigHelper()` 来创建很多实例了
+  constructor(installDirectory) {
+    // --- 类的成员变量 (Class Member Variables) ---
+    // 设置为 readonly，因为这些路径在初始化后就不应该被改变了
+    __publicField(this, "installDir");
+    __publicField(this, "gameConfigDir");
+    __publicField(this, "backupDir");
+    this.installDir = installDirectory;
+    this.gameConfigDir = require$$1$1.join(this.installDir, "Game", "Config");
+    this.backupDir = require$$1$1.join(app.getPath("userData"), "GameConfigBackup");
+    console.log(`小助手初始化成功！游戏设置目录: ${this.gameConfigDir}`);
+    console.log(`备份将存储在: ${this.backupDir}`);
+  }
+  // 3. 提供一个公共的、静态的 getInstance 方法，作为获取唯一实例的入口
+  // 如果实例不存在，它会创建一个；如果已存在，就直接返回那个旧的。
+  static getInstance(installDirectory) {
+    if (!_ConfigHelper.instance && installDirectory) {
+      if (installDirectory) return new _ConfigHelper(installDirectory);
+      else console.log("ConfigHelper未初始化且无安装路径传入。");
+    }
+    return _ConfigHelper.instance;
+  }
+  // --- 核心功能方法 (Core Function Methods) ---
+  /**
+   * 备份当前的游戏设置
+   * @description 把游戏目录的 Config 文件夹完整地拷贝到我们应用的备份目录里
+   */
+  async backup() {
+    try {
+      const sourceExists = await fs$1.pathExists(this.gameConfigDir);
+      if (!sourceExists) {
+        throw new Error(`游戏设置目录找不到喵！路径: ${this.gameConfigDir}`);
+      }
+      console.log("开始备份...");
+      await fs$1.emptyDir(this.backupDir);
+      await fs$1.copy(this.gameConfigDir, this.backupDir);
+      console.log(`备份成功！文件已存放在: ${this.backupDir}`);
+    } catch (error) {
+      console.error("哎呀，备份失败了！喵呜...", error);
+      throw error;
+    }
+  }
+  /**
+   * 从备份恢复游戏设置
+   * @description 把我们备份的 Config 文件夹拷贝回游戏目录
+   */
+  async restore() {
+    try {
+      const backupExists = await fs$1.pathExists(this.backupDir);
+      if (!backupExists) {
+        throw new Error(`还没有备份过，找不到备份文件喵！路径: ${this.backupDir}`);
+      }
+      console.log("开始恢复备份...");
+      await fs$1.ensureDir(this.gameConfigDir);
+      await fs$1.copy(this.backupDir, this.gameConfigDir);
+      console.log(`恢复成功！设置已恢复到: ${this.gameConfigDir}`);
+    } catch (error) {
+      console.error("哎呀，恢复失败了！喵呜...", error);
+      throw error;
+    }
+  }
+};
+// --- 单例模式的实现 (Implementation of Singleton Pattern) ---
+// 1. 创建一个私有的、静态的变量来存放我们唯一的实例
+__publicField(_ConfigHelper, "instance");
+let ConfigHelper = _ConfigHelper;
 const __dirname$1 = path$i.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path$i.join(__dirname$1, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
@@ -25015,6 +25086,7 @@ function init() {
     console.log("LOL客户端已登录！", data);
     sendToRenderer("lcu-connect", data);
     const lcu = LCUManager.init(data);
+    ConfigHelper.getInstance(data.installDirectory);
     lcu.start();
     lcu.on("connect", async () => {
       sendToRenderer("lcu-connect", data);

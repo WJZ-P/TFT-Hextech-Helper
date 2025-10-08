@@ -8,6 +8,7 @@ import LCUManager from "../src-backend/lcu/LCUManager.ts";
 import 'source-map-support/register';
 import https from "https";
 import axios from "axios";
+import ConfigHelper from "../src-backend/ConfigHelper.ts";
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -108,6 +109,9 @@ function init() {
         // 喵~ 使用单例模式获取 LCUManager 实例，并把“钥匙”交给它
         const lcu = LCUManager.init(data);
 
+        //  注册configHelper
+        ConfigHelper.getInstance(data.installDirectory)
+
         // 连接 WebSocket
         lcu.start();
 
@@ -174,4 +178,7 @@ function registerHandler() {
             return {error: e.message};
         }
     });
+}
+function registerConfigHelper(installPath:string){
+    ConfigHelper.getInstance(installPath)
 }

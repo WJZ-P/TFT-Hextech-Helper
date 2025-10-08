@@ -19,6 +19,7 @@ export interface LCUProcessInfo {
     pid: number;
     port: number;
     token: string;
+    installDirectory: string;
 }
 
 //  定义操作系统常量
@@ -75,7 +76,7 @@ class LCUConnector extends EventEmitter {
                     resolve();
                     return;
                 }
-                //console.log(`process命令执行结果：${stdout}`)
+                console.log(`process命令执行结果：${stdout}`)
 
                 // 匹配命令行输出，提取安装路径
                 //const parts = stdout.match(INSTALL_REGEX) || [];
@@ -87,12 +88,14 @@ class LCUConnector extends EventEmitter {
                 const portMatch = stdout.match(/--app-port=(\d+)/)
                 const tokenMatch = stdout.match(/--remoting-auth-token=([\w-]+)/)
                 const pidMatch = stdout.match(/--app-pid=(\d+)/)
+                const installDirectoryMatch = stdout.match(/--install-directory=(.*?)"/)
                 // 确保所有需要的信息都找到了
-                if (portMatch && tokenMatch && pidMatch) {
+                if (portMatch && tokenMatch && pidMatch && installDirectoryMatch) {
                     const data: LCUProcessInfo = {
                         port: parseInt(portMatch[1]),
                         pid: parseInt(pidMatch[1]) ,
-                        token: tokenMatch[1]
+                        token: tokenMatch[1],
+                        installDirectory:path.dirname(installDirectoryMatch[1]) //  父目录
                     }
                     resolve(data);
                 }
