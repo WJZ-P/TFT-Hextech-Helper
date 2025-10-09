@@ -15,6 +15,7 @@ import styled from 'styled-components';
 import BackupIcon from '@mui/icons-material/Backup';
 import RestoreIcon from '@mui/icons-material/Restore';
 import {ThemeType} from "../../styles/theme.ts";
+import ConfigHelper from "../../../src-backend/ConfigHelper.ts";
 
 // -------------------------------------------------------------------
 // ✨ 样式组件定义 (Styled Components Definitions) ✨
@@ -136,24 +137,16 @@ const SettingsPage = () => {
   const handleBackup = () => {
     console.log("开始备份游戏设置...");
     setIsBackingUp(true);
-    // 这里将来会调用 ConfigHelper.backup()
-    // 模拟一个2秒的异步操作
-    setTimeout(() => {
-      setIsBackingUp(false);
-      console.log("备份完成！");
-    }, 2000);
+    // 执行备份
+    ConfigHelper.backup()
   };
 
   // 点击恢复按钮的逻辑
   const handleRestore = () => {
     console.log("开始恢复游戏设置...");
     setIsRestoring(true);
-    // 这里将来会调用 ConfigHelper.restore()
-    // 模拟一个2秒的异步操作
-    setTimeout(() => {
-      setIsRestoring(false);
-      console.log("恢复完成！");
-    }, 2000);
+    //  执行恢复
+    ConfigHelper.restore()
   };
 
   return (

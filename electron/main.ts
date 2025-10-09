@@ -110,7 +110,7 @@ function init() {
         const lcu = LCUManager.init(data);
 
         //  注册configHelper
-        ConfigHelper.getInstance(data.installDirectory)
+        ConfigHelper.init(data.installDirectory)
 
         // 连接 WebSocket
         lcu.start();
@@ -178,7 +178,4 @@ function registerHandler() {
             return {error: e.message};
         }
     });
-}
-function registerConfigHelper(installPath:string){
-    ConfigHelper.getInstance(installPath)
 }

@@ -17416,14 +17416,7 @@ var _eval = EvalError;
 var range = RangeError;
 var ref = ReferenceError;
 var syntax = SyntaxError;
-var type;
-var hasRequiredType;
-function requireType() {
-  if (hasRequiredType) return type;
-  hasRequiredType = 1;
-  type = TypeError;
-  return type;
-}
+var type = TypeError;
 var uri = URIError;
 var abs$1 = Math.abs;
 var floor$1 = Math.floor;
@@ -17669,7 +17662,7 @@ function requireCallBindApplyHelpers() {
   if (hasRequiredCallBindApplyHelpers) return callBindApplyHelpers;
   hasRequiredCallBindApplyHelpers = 1;
   var bind3 = functionBind;
-  var $TypeError2 = requireType();
+  var $TypeError2 = type;
   var $call2 = requireFunctionCall();
   var $actualApply = requireActualApply();
   callBindApplyHelpers = function callBindBasic(args) {
@@ -17742,7 +17735,7 @@ var $EvalError = _eval;
 var $RangeError = range;
 var $ReferenceError = ref;
 var $SyntaxError = syntax;
-var $TypeError$1 = requireType();
+var $TypeError$1 = type;
 var $URIError = uri;
 var abs = abs$1;
 var floor = floor$1;
@@ -18073,7 +18066,7 @@ var GetIntrinsic2 = getIntrinsic;
 var $defineProperty = GetIntrinsic2("%Object.defineProperty%", true);
 var hasToStringTag = requireShams()();
 var hasOwn$1 = hasown;
-var $TypeError = requireType();
+var $TypeError = type;
 var toStringTag = hasToStringTag ? Symbol.toStringTag : null;
 var esSetTostringtag = function setToStringTag(object, value) {
   var overrideIfSet = arguments.length > 2 && !!arguments[2] && arguments[2].force;
@@ -24969,25 +24962,40 @@ sourceMapSupport.exports;
 var sourceMapSupportExports = sourceMapSupport.exports;
 sourceMapSupportExports.install();
 const _ConfigHelper = class _ConfigHelper {
-  // 2. 把构造函数（constructor）变成私有的（private），这样在外面就不能用 `new ConfigHelper()` 来创建很多实例了
-  constructor(installDirectory) {
+  constructor(installPath) {
+    // 实例的属性，用来存储路径信息
+    __publicField(this, "installPath");
+    __publicField(this, "gameConfigPath");
+    __publicField(this, "backupPath");
     // --- 类的成员变量 (Class Member Variables) ---
     // 设置为 readonly，因为这些路径在初始化后就不应该被改变了
     __publicField(this, "installDir");
     __publicField(this, "gameConfigDir");
     __publicField(this, "backupDir");
-    this.installDir = installDirectory;
-    this.gameConfigDir = require$$1$1.join(this.installDir, "Game", "Config");
-    this.backupDir = require$$1$1.join(app.getPath("userData"), "GameConfigBackup");
-    console.log(`小助手初始化成功！游戏设置目录: ${this.gameConfigDir}`);
-    console.log(`备份将存储在: ${this.backupDir}`);
+    if (!installPath) {
+      throw new Error("初始化失败，必须提供一个有效的游戏安装路径！");
+    }
+    this.installPath = installPath;
+    this.gameConfigPath = require$$1$1.join(this.installPath, "Game", "Config");
+    this.backupPath = require$$1$1.join(app.getPath("userData"), "GameConfigBackup");
+    console.log(`[ConfigHelper] 游戏设置目录已设定: ${this.gameConfigPath}`);
+    console.log(`[ConfigHelper] 备份将存储在: ${this.backupPath}`);
   }
-  // 3. 提供一个公共的、静态的 getInstance 方法，作为获取唯一实例的入口
-  // 如果实例不存在，它会创建一个；如果已存在，就直接返回那个旧的。
-  static getInstance(installDirectory) {
-    if (!_ConfigHelper.instance && installDirectory) {
-      if (installDirectory) return new _ConfigHelper(installDirectory);
-      else console.log("ConfigHelper未初始化且无安装路径传入。");
+  /**
+   * 喵~ ✨ 这是新的初始化方法！✨
+   * 在你的应用程序启动时，调用一次这个方法来设置好一切。
+   * @param installPath 游戏安装目录
+   */
+  static init(installPath) {
+    if (_ConfigHelper.instance) {
+      console.warn("ConfigHelper 已被初始化过！");
+      return;
+    }
+    _ConfigHelper.instance = new _ConfigHelper(installPath);
+  }
+  static getInstance() {
+    if (!_ConfigHelper.instance) {
+      throw new Error("喵呜！ConfigHelper 还没有被初始化！请先在程序入口调用 init(installPath) 方法。");
     }
     return _ConfigHelper.instance;
   }
@@ -24996,43 +25004,40 @@ const _ConfigHelper = class _ConfigHelper {
    * 备份当前的游戏设置
    * @description 把游戏目录的 Config 文件夹完整地拷贝到我们应用的备份目录里
    */
-  async backup() {
+  static async backup() {
+    const instance = _ConfigHelper.getInstance();
+    const sourceExists = await fs$1.pathExists(instance.gameConfigPath);
+    if (!sourceExists) {
+      throw new Error(`喵~ 备份失败！找不到游戏设置目录：${instance.gameConfigPath}`);
+    }
     try {
-      const sourceExists = await fs$1.pathExists(this.gameConfigDir);
-      if (!sourceExists) {
-        throw new Error(`游戏设置目录找不到喵！路径: ${this.gameConfigDir}`);
-      }
-      console.log("开始备份...");
-      await fs$1.emptyDir(this.backupDir);
-      await fs$1.copy(this.gameConfigDir, this.backupDir);
-      console.log(`备份成功！文件已存放在: ${this.backupDir}`);
-    } catch (error) {
-      console.error("哎呀，备份失败了！喵呜...", error);
-      throw error;
+      await fs$1.emptyDir(instance.backupPath);
+      await fs$1.copy(instance.gameConfigPath, instance.backupPath);
+      console.log("喵！设置备份成功！");
+    } catch (err) {
+      console.error("备份过程中发生错误:", err);
+      throw new Error("喵~ 备份失败了，请检查控制台的错误信息。");
     }
   }
   /**
    * 从备份恢复游戏设置
    * @description 把我们备份的 Config 文件夹拷贝回游戏目录
    */
-  async restore() {
+  static async restore() {
+    const instance = _ConfigHelper.getInstance();
+    const backupExists = await fs$1.pathExists(instance.backupPath);
+    if (!backupExists) {
+      throw new Error(`喵~ 恢复失败！找不到备份目录：${instance.backupPath}`);
+    }
     try {
-      const backupExists = await fs$1.pathExists(this.backupDir);
-      if (!backupExists) {
-        throw new Error(`还没有备份过，找不到备份文件喵！路径: ${this.backupDir}`);
-      }
-      console.log("开始恢复备份...");
-      await fs$1.ensureDir(this.gameConfigDir);
-      await fs$1.copy(this.backupDir, this.gameConfigDir);
-      console.log(`恢复成功！设置已恢复到: ${this.gameConfigDir}`);
-    } catch (error) {
-      console.error("哎呀，恢复失败了！喵呜...", error);
-      throw error;
+      await fs$1.copy(instance.backupPath, instance.gameConfigPath);
+      console.log("设置恢复成功！");
+    } catch (err) {
+      console.error("恢复过程中发生错误:", err);
+      throw new Error("恢复失败了，请检查控制台的错误信息。");
     }
   }
 };
-// --- 单例模式的实现 (Implementation of Singleton Pattern) ---
-// 1. 创建一个私有的、静态的变量来存放我们唯一的实例
 __publicField(_ConfigHelper, "instance");
 let ConfigHelper = _ConfigHelper;
 const __dirname$1 = path$i.dirname(fileURLToPath(import.meta.url));
@@ -25086,7 +25091,7 @@ function init() {
     console.log("LOL客户端已登录！", data);
     sendToRenderer("lcu-connect", data);
     const lcu = LCUManager.init(data);
-    ConfigHelper.getInstance(data.installDirectory);
+    ConfigHelper.init(data.installDirectory);
     lcu.start();
     lcu.on("connect", async () => {
       sendToRenderer("lcu-connect", data);

@@ -1,7 +1,8 @@
 import {ipcRenderer, contextBridge} from 'electron'
 import IpcRendererEvent = Electron.IpcRendererEvent;
-import {LobbyConfig, Queue, QueueIdLobby, SummonerInfo} from "../src-backend/lcu/utils/Protocols.ts";
+import {LobbyConfig, Queue, SummonerInfo} from "../src-backend/lcu/utils/Protocols.ts";
 import ConfigHelper from "../src-backend/ConfigHelper.ts";
+
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
     on(...args: Parameters<typeof ipcRenderer.on>) {
