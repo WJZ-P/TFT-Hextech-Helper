@@ -1,14 +1,12 @@
 import {app, BrowserWindow, globalShortcut, ipcMain} from 'electron'
 //import { createRequire } from 'node:module'
 import {fileURLToPath} from 'node:url'
-import path from 'node:path'
 import LCUConnector from "../src-backend/lcu/utils/LcuConnector.ts";
-import {ArgsFromIpcChannel, IpcChannels} from "../src-backend/lcu/utils/Protocols.ts";
+import {ArgsFromIpcChannel, LCUIpcChannels} from "../src-backend/lcu/utils/Protocols.ts";
 import LCUManager from "../src-backend/lcu/LCUManager.ts";
 import 'source-map-support/register';
-import https from "https";
-import axios from "axios";
 import ConfigHelper from "../src-backend/ConfigHelper.ts";
+import path from "path";
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -147,7 +145,7 @@ function init() {
 }
 
 //  包装下webContents
-function sendToRenderer<E extends keyof IpcChannels>(channel: E, ...args: ArgsFromIpcChannel<IpcChannels[E]>) {
+function sendToRenderer<E extends keyof LCUIpcChannels>(channel: E, ...args: ArgsFromIpcChannel<LCUIpcChannels[E]>) {
     return win?.webContents.send(channel, ...args)
 }
 

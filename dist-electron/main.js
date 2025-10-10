@@ -3,10 +3,10 @@ var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { en
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 import { app, BrowserWindow, globalShortcut, ipcMain } from "electron";
 import { fileURLToPath } from "node:url";
-import path$i from "node:path";
 import require$$0$5, { EventEmitter as EventEmitter$1 } from "events";
 import require$$1$2 from "os";
 import cp from "child_process";
+import path$i from "node:path";
 import require$$0$2 from "fs";
 import require$$0$1 from "constants";
 import stream, { Readable as Readable$1 } from "stream";
@@ -17416,14 +17416,7 @@ var _eval = EvalError;
 var range = RangeError;
 var ref = ReferenceError;
 var syntax = SyntaxError;
-var type;
-var hasRequiredType;
-function requireType() {
-  if (hasRequiredType) return type;
-  hasRequiredType = 1;
-  type = TypeError;
-  return type;
-}
+var type = TypeError;
 var uri = URIError;
 var abs$1 = Math.abs;
 var floor$1 = Math.floor;
@@ -17669,7 +17662,7 @@ function requireCallBindApplyHelpers() {
   if (hasRequiredCallBindApplyHelpers) return callBindApplyHelpers;
   hasRequiredCallBindApplyHelpers = 1;
   var bind3 = functionBind;
-  var $TypeError2 = requireType();
+  var $TypeError2 = type;
   var $call2 = requireFunctionCall();
   var $actualApply = requireActualApply();
   callBindApplyHelpers = function callBindBasic(args) {
@@ -17742,7 +17735,7 @@ var $EvalError = _eval;
 var $RangeError = range;
 var $ReferenceError = ref;
 var $SyntaxError = syntax;
-var $TypeError$1 = requireType();
+var $TypeError$1 = type;
 var $URIError = uri;
 var abs = abs$1;
 var floor = floor$1;
@@ -18073,7 +18066,7 @@ var GetIntrinsic2 = getIntrinsic;
 var $defineProperty = GetIntrinsic2("%Object.defineProperty%", true);
 var hasToStringTag = requireShams()();
 var hasOwn$1 = hasown;
-var $TypeError = requireType();
+var $TypeError = type;
 var toStringTag = hasToStringTag ? Symbol.toStringTag : null;
 var esSetTostringtag = function setToStringTag(object, value) {
   var overrideIfSet = arguments.length > 2 && !!arguments[2] && arguments[2].force;
@@ -25047,19 +25040,19 @@ const _ConfigHelper = class _ConfigHelper {
 };
 __publicField(_ConfigHelper, "instance");
 let ConfigHelper = _ConfigHelper;
-const __dirname$1 = path$i.dirname(fileURLToPath(import.meta.url));
-process.env.APP_ROOT = path$i.join(__dirname$1, "..");
+const __dirname$1 = require$$1$1.dirname(fileURLToPath(import.meta.url));
+process.env.APP_ROOT = require$$1$1.join(__dirname$1, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
-const MAIN_DIST = path$i.join(process.env.APP_ROOT, "dist-electron");
-const RENDERER_DIST = path$i.join(process.env.APP_ROOT, "dist");
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path$i.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
+const MAIN_DIST = require$$1$1.join(process.env.APP_ROOT, "dist-electron");
+const RENDERER_DIST = require$$1$1.join(process.env.APP_ROOT, "dist");
+process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? require$$1$1.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
 let win;
 function createWindow() {
   win = new BrowserWindow({
-    icon: path$i.join(process.env.VITE_PUBLIC, "icon.png"),
+    icon: require$$1$1.join(process.env.VITE_PUBLIC, "icon.png"),
     //  窗口左上角的图标
     webPreferences: {
-      preload: path$i.join(__dirname$1, "preload.mjs")
+      preload: require$$1$1.join(__dirname$1, "preload.mjs")
       // 指定preload文件
     }
   });
@@ -25069,7 +25062,7 @@ function createWindow() {
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL);
   } else {
-    win.loadFile(path$i.join(RENDERER_DIST, "index.html"));
+    win.loadFile(require$$1$1.join(RENDERER_DIST, "index.html"));
     win.setMenu(null);
   }
 }

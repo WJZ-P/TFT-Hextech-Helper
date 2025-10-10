@@ -2,7 +2,7 @@
 
 import {LCUProcessInfo} from "./LcuConnector";
 
-export interface IpcChannels {
+export interface LCUIpcChannels {
     'lcu-connect': LCUProcessInfo;  //  LOL客户端连接
     'lcu-disconnect': null;         //  LOL客户端断开连接
 }
