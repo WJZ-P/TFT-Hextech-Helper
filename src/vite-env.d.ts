@@ -13,9 +13,3 @@ declare global {
         config:ConfigApi
     }
 }
-
-declare module 'electron' {
-  interface IpcRenderer {
-    invoke(channel: IpcChannel, ...args: any[]): Promise<any>;
-  }
-}

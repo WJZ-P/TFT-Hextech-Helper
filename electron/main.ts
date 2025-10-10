@@ -7,6 +7,7 @@ import LCUManager from "../src-backend/lcu/LCUManager.ts";
 import 'source-map-support/register';
 import ConfigHelper from "../src-backend/ConfigHelper.ts";
 import path from "path";
+import {IpcChannel} from "./preload.ts";
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -150,7 +151,7 @@ function sendToRenderer<E extends keyof LCUIpcChannels>(channel: E, ...args: Arg
 }
 
 function registerHandler() {
-    ipcMain.handle('lcu-request', async (
+    ipcMain.handle(IpcChannel.LCU_REQUEST, async (
         event, // 固定的第一个参数，包含了事件的源信息
         method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE', // 第二个参数：请求方法
         endpoint: string, // 第三个参数：API 端点
@@ -176,4 +177,11 @@ function registerHandler() {
             return {error: e.message};
         }
     });
+    //  游戏设置备份
+    ipcMain.handle(IpcChannel.CONFIG_BACKUP,async (event)=>{
+
+    })
+    ipcMain.handle(IpcChannel.CONFIG_RESTORE,async (event)=>{
+
+    })
 }

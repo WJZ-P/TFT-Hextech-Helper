@@ -3,7 +3,12 @@ import IpcRendererEvent = Electron.IpcRendererEvent;
 import {LobbyConfig, Queue, SummonerInfo} from "../src-backend/lcu/utils/Protocols.ts";
 
 //  IPC通信Channel的枚举
-export type IpcChannel = 'config' | 'lcu-request' |'config-backup' |'config-restore'
+export enum IpcChannel {
+    CONFIG_BACKUP = 'config-backup',
+    CONFIG_RESTORE = 'config-restore',
+    LCU_REQUEST = 'lcu-request',
+
+}
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
@@ -54,54 +59,54 @@ contextBridge.exposeInMainWorld('config', configApi)
 
 const lcuApi = {
     getSummonerInfo: (): Promise<{ data?: SummonerInfo; error?: string }> => {
-        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-summoner/v1/current-summoner');
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-summoner/v1/current-summoner');
     },
     createCustomLobby: (config: LobbyConfig): Promise<{ data?: any; error?: string }> => {
         console.log('📬 [Preload] 向主进程发送创建房间请求:', config);
-        return ipcRenderer.invoke('lcu-request', 'POST', '/lol-lobby/v2/lobby', config);
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'POST', '/lol-lobby/v2/lobby', config);
     },
     createLobbyByQueueId: (queueId: Queue): Promise<{ data?: any; error?: string }> => {
         console.log('📬 [Preload] 向主进程发送创建房间请求:', queueId);
-        return ipcRenderer.invoke('lcu-request', 'POST', '/lol-lobby/v2/lobby', {queueId: queueId});
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'POST', '/lol-lobby/v2/lobby', {queueId: queueId});
     },
     getCurrentGamemodeInfo: (): Promise<{ data?: any; error?: string }> => {
-        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-lobby/v1/parties/gamemode');
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-lobby/v1/parties/gamemode');
     },
     startMatch: (): Promise<{ data?: any; error?: string }> => {
-        return ipcRenderer.invoke('lcu-request', 'POST', '/lol-lobby/v2/lobby/matchmaking/search');
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'POST', '/lol-lobby/v2/lobby/matchmaking/search');
     },
     stopMatch: (): Promise<{ data?: any; error?: string }> => {
-        return ipcRenderer.invoke('lcu-request', 'DELETE', '/lol-lobby/v2/lobby/matchmaking/search');
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'DELETE', '/lol-lobby/v2/lobby/matchmaking/search');
     },
     checkMatchState: (): Promise<{ data?: any; error?: string }> => {
-        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-lobby/v2/lobby/matchmaking/search-state');
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-lobby/v2/lobby/matchmaking/search-state');
     },
     getCustomGames: (): Promise<{ data?: any; error?: string }> => {
-        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-lobby/v1/custom-games');
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-lobby/v1/custom-games');
     },
     getQueues: (): Promise<{ data?: any; error?: string }> => {
-        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-game-queues/v1/queues');
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-game-queues/v1/queues');
     },
     getChatConfig: (): Promise<{ data?: any; error?: string }> => {
-        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-game-queues/v1/queues');
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-game-queues/v1/queues');
     },
     getChampSelectSession: (): Promise<{ data?: any; error?: string }> => {
-        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-champ-select/v1/session');
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-champ-select/v1/session');
     },
     getChatConversations: (): Promise<{ data?: any; error?: string }> => {
-        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-chat/v1/conversations');
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-chat/v1/conversations');
     },
     getGameflowSession: (): Promise<{ data?: any; error?: string }> => {
-        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-gameflow/v1/session');
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-gameflow/v1/session');
     },
     getExtraGameClientArgs: (): Promise<{ data?: any; error?: string }> => {
-        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-gameflow/v1/extra-game-client-args');
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-gameflow/v1/extra-game-client-args');
     },
     getLobby: (): Promise<{ data?: any; error?: string }> => {
-        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-lobby/v2/lobby');
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-lobby/v2/lobby');
     },
     testFunc: (): Promise<{ data?: any; error?: string }> => {
-        return ipcRenderer.invoke('lcu-request', 'GET', '/lol-lobby/v2/notifications');
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-lobby/v2/notifications');
     },
 }
 export type LcuApi = typeof lcuApi
