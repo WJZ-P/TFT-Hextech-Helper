@@ -50,10 +50,13 @@ export type IpcApi = typeof ipcApi
 contextBridge.exposeInMainWorld('ipc', ipcApi)
 
 const configApi = {
-    backup: ipcRenderer.invoke('config-backup'),
-    restore: ipcRenderer.invoke('config-restore'),
+    backup: (): Promise<{ data?: any; error?: string }> => {
+        return ipcRenderer.invoke(IpcChannel.CONFIG_BACKUP);
+    },
+    restore: (): Promise<{ data?: any; error?: string }> => {
+        return ipcRenderer.invoke(IpcChannel.CONFIG_RESTORE);
+    },
 }
-
 export type ConfigApi = typeof configApi
 contextBridge.exposeInMainWorld('config', configApi)
 
