@@ -66,16 +66,16 @@ class ConfigHelper {
 
         const sourceExists = await fs.pathExists(instance.gameConfigPath);
         if (!sourceExists) {
-            throw new Error(`喵~ 备份失败！找不到游戏设置目录：${instance.gameConfigPath}`);
+            throw new Error(`备份失败！找不到游戏设置目录：${instance.gameConfigPath}`);
         }
 
         try {
             await fs.emptyDir(instance.backupPath);
             await fs.copy(instance.gameConfigPath, instance.backupPath);
-            console.log('喵！设置备份成功！');
+            console.log('设置备份成功！');
         } catch (err) {
             console.error('备份过程中发生错误:', err);
-            throw new Error('喵~ 备份失败了，请检查控制台的错误信息。');
+            throw new Error('备份失败，请检查控制台。');
         }
     }
 
@@ -88,7 +88,7 @@ class ConfigHelper {
 
         const backupExists = await fs.pathExists(instance.backupPath);
         if (!backupExists) {
-            throw new Error(`喵~ 恢复失败！找不到备份目录：${instance.backupPath}`);
+            throw new Error(`恢复设置失败！找不到备份目录：${instance.backupPath}`);
         }
 
         try {
@@ -97,7 +97,7 @@ class ConfigHelper {
             console.log('设置恢复成功！');
         } catch (err) {
             console.error('恢复过程中发生错误:', err);
-            throw new Error('恢复失败了，请检查控制台的错误信息。');
+            throw new Error('恢复失败了，请检查控制台。');
         }
     }
 }

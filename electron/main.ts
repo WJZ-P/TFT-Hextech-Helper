@@ -179,7 +179,7 @@ function registerHandler() {
     });
     //  游戏设置备份
     ipcMain.handle(IpcChannel.CONFIG_BACKUP,async (event)=>{
-
+        await ConfigHelper.backup()
     })
     ipcMain.handle(IpcChannel.CONFIG_RESTORE,async (event)=>{
 
