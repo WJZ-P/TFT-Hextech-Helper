@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import {Queue} from "../../../src-backend/lcu/utils/Protocols.ts";
+import {Queue} from "../../../src-backend/lcu/utils/LCUProtocols.ts";
 const PageContaier = styled.div`
   padding: 2.5rem
 `

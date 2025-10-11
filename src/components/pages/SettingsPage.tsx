@@ -1,21 +1,9 @@
-// Nya~ 这是一个使用 styled-components 和你的主题打造的精美设置页面！
-
-// -------------------------------------------------------------------
-// ✨【重要提示】✨
-// 喵~ 要让这个组件正常工作，需要先安装 styled-components 和 Material UI 图标库哦！
-// 请在你的项目终端里运行下面的命令：
-//
-// npm install styled-components @mui/material @emotion/react @emotion/styled @mui/icons-material
-// npm install --save-dev @types/styled-components
-// -------------------------------------------------------------------
-
 import React from 'react';
 import styled from 'styled-components';
 // 从 Material Icons 库中引入我们需要的图标
 import BackupIcon from '@mui/icons-material/Backup';
 import RestoreIcon from '@mui/icons-material/Restore';
 import {ThemeType} from "../../styles/theme.ts";
-import ConfigHelper from "../../../src-backend/ConfigHelper.ts";
 
 // -------------------------------------------------------------------
 // ✨ 样式组件定义 (Styled Components Definitions) ✨
@@ -134,19 +122,21 @@ const SettingsPage = () => {
   const [isRestoring, setIsRestoring] = React.useState(false);
 
   // 点击备份按钮的逻辑
-  const handleBackup = () => {
+  const handleBackup = async () => {
     console.log("开始备份游戏设置...");
     setIsBackingUp(true);
     // 执行备份
-    ConfigHelper.backup()
+    await window.config.backup()
+    setIsBackingUp(false);
   };
 
   // 点击恢复按钮的逻辑
-  const handleRestore = () => {
+  const handleRestore =async () => {
     console.log("开始恢复游戏设置...");
     setIsRestoring(true);
     //  执行恢复
-    ConfigHelper.restore()
+    await window.config.restore()
+    setIsRestoring(false);
   };
 
   return (

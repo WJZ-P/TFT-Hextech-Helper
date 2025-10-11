@@ -24995,7 +24995,8 @@ const _ConfigHelper = class _ConfigHelper {
   }
   static getInstance() {
     if (!_ConfigHelper.instance) {
-      throw new Error("喵呜！ConfigHelper 还没有被初始化！请先在程序入口调用 init(installPath) 方法。");
+      console.error("[ConfigHelper]ConfigHelper 还没有被初始化！请先在程序入口调用 init(installPath) 方法。");
+      return null;
     }
     return _ConfigHelper.instance;
   }
@@ -25008,16 +25009,18 @@ const _ConfigHelper = class _ConfigHelper {
     const instance = _ConfigHelper.getInstance();
     const sourceExists = await fs$1.pathExists(instance.gameConfigPath);
     if (!sourceExists) {
-      throw new Error(`喵~ 备份失败！找不到游戏设置目录：${instance.gameConfigPath}`);
+      console.error(`备份失败！找不到游戏设置目录：${instance.gameConfigPath}`);
+      return false;
     }
     try {
       await fs$1.emptyDir(instance.backupPath);
       await fs$1.copy(instance.gameConfigPath, instance.backupPath);
-      console.log("喵！设置备份成功！");
+      console.log("设置备份成功！");
     } catch (err) {
       console.error("备份过程中发生错误:", err);
-      throw new Error("喵~ 备份失败了，请检查控制台的错误信息。");
+      return false;
     }
+    return true;
   }
   /**
    * 从备份恢复游戏设置
@@ -25027,19 +25030,25 @@ const _ConfigHelper = class _ConfigHelper {
     const instance = _ConfigHelper.getInstance();
     const backupExists = await fs$1.pathExists(instance.backupPath);
     if (!backupExists) {
-      throw new Error(`喵~ 恢复失败！找不到备份目录：${instance.backupPath}`);
+      throw new Error(`恢复设置失败！找不到备份目录：${instance.backupPath}`);
     }
     try {
       await fs$1.copy(instance.backupPath, instance.gameConfigPath);
       console.log("设置恢复成功！");
     } catch (err) {
       console.error("恢复过程中发生错误:", err);
-      throw new Error("恢复失败了，请检查控制台的错误信息。");
+      throw new Error("恢复失败了，请检查控制台。");
     }
   }
 };
 __publicField(_ConfigHelper, "instance");
 let ConfigHelper = _ConfigHelper;
+var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
+  IpcChannel2["CONFIG_BACKUP"] = "config-backup";
+  IpcChannel2["CONFIG_RESTORE"] = "config-restore";
+  IpcChannel2["LCU_REQUEST"] = "lcu-request";
+  return IpcChannel2;
+})(IpcChannel || {});
 const __dirname$1 = require$$1$1.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = require$$1$1.join(__dirname$1, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
@@ -25120,7 +25129,7 @@ function sendToRenderer(channel, ...args) {
   return win == null ? void 0 : win.webContents.send(channel, ...args);
 }
 function registerHandler() {
-  ipcMain.handle("lcu-request", async (event, method, endpoint, body) => {
+  ipcMain.handle(IpcChannel.LCU_REQUEST, async (event, method, endpoint, body) => {
     const lcu = LCUManager.getInstance();
     if (!lcu || !lcu.isConnected) {
       console.error("❌ [IPC] LCUManager 尚未连接，无法处理请求");
@@ -25133,6 +25142,12 @@ function registerHandler() {
       console.error(`❌ [IPC] 处理请求 ${method} ${endpoint} 时出错:`, e);
       return { error: e.message };
     }
+  });
+  ipcMain.handle(IpcChannel.CONFIG_BACKUP, async (event) => {
+    return ConfigHelper.backup();
+  });
+  ipcMain.handle(IpcChannel.CONFIG_RESTORE, async (event) => {
+    return ConfigHelper.restore();
   });
 }
 export {

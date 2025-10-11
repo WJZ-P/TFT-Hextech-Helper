@@ -41,9 +41,10 @@ class ConfigHelper {
         ConfigHelper.instance = new ConfigHelper(installPath);
     }
 
-    private static getInstance(): ConfigHelper {
+    private static getInstance(): ConfigHelper | null {
         if (!ConfigHelper.instance) {
-            throw new Error("喵呜！ConfigHelper 还没有被初始化！请先在程序入口调用 init(installPath) 方法。");
+            console.error("[ConfigHelper]ConfigHelper 还没有被初始化！请先在程序入口调用 init(installPath) 方法。");
+            return null
         }
         return ConfigHelper.instance;
     }
@@ -61,22 +62,27 @@ class ConfigHelper {
      * 备份当前的游戏设置
      * @description 把游戏目录的 Config 文件夹完整地拷贝到我们应用的备份目录里
      */
-    public static async backup(): Promise<void> {
+    public static async backup(): Promise<boolean> {
         const instance = ConfigHelper.getInstance();
+        if(!instance){
+            // TODO: 生成一个报错Toast，说明未启动LOL.
+            return false
+        }
 
         const sourceExists = await fs.pathExists(instance.gameConfigPath);
         if (!sourceExists) {
-            throw new Error(`备份失败！找不到游戏设置目录：${instance.gameConfigPath}`);
+            console.error(`备份失败！找不到游戏设置目录：${instance.gameConfigPath}`);
+            return false
         }
-
         try {
             await fs.emptyDir(instance.backupPath);
             await fs.copy(instance.gameConfigPath, instance.backupPath);
             console.log('设置备份成功！');
         } catch (err) {
             console.error('备份过程中发生错误:', err);
-            throw new Error('备份失败，请检查控制台。');
+            return false
         }
+        return true
     }
 
     /**
@@ -90,7 +96,6 @@ class ConfigHelper {
         if (!backupExists) {
             throw new Error(`恢复设置失败！找不到备份目录：${instance.backupPath}`);
         }
-
         try {
             // 为安全起见，先清空目标文件夹再恢复
             await fs.copy(instance.backupPath, instance.gameConfigPath);

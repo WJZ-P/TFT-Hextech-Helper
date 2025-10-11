@@ -2,12 +2,12 @@ import {app, BrowserWindow, globalShortcut, ipcMain} from 'electron'
 //import { createRequire } from 'node:module'
 import {fileURLToPath} from 'node:url'
 import LCUConnector from "../src-backend/lcu/utils/LcuConnector.ts";
-import {ArgsFromIpcChannel, LCUIpcChannels} from "../src-backend/lcu/utils/Protocols.ts";
+import {ArgsFromIpcChannel, LCUIpcChannels} from "../src-backend/lcu/utils/LCUProtocols.ts";
 import LCUManager from "../src-backend/lcu/LCUManager.ts";
 import 'source-map-support/register';
 import ConfigHelper from "../src-backend/ConfigHelper.ts";
 import path from "path";
-import {IpcChannel} from "./preload.ts";
+import {IpcChannel} from "./protocol.ts";
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -179,9 +179,9 @@ function registerHandler() {
     });
     //  游戏设置备份
     ipcMain.handle(IpcChannel.CONFIG_BACKUP,async (event)=>{
-        await ConfigHelper.backup()
+        return ConfigHelper.backup()
     })
     ipcMain.handle(IpcChannel.CONFIG_RESTORE,async (event)=>{
-
+        return ConfigHelper.restore()
     })
 }

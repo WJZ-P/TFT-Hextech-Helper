@@ -1,14 +1,7 @@
 import {ipcRenderer, contextBridge} from 'electron'
 import IpcRendererEvent = Electron.IpcRendererEvent;
-import {LobbyConfig, Queue, SummonerInfo} from "../src-backend/lcu/utils/Protocols.ts";
-
-//  IPC通信Channel的枚举
-export enum IpcChannel {
-    CONFIG_BACKUP = 'config-backup',
-    CONFIG_RESTORE = 'config-restore',
-    LCU_REQUEST = 'lcu-request',
-
-}
+import {LobbyConfig, Queue, SummonerInfo} from "../src-backend/lcu/utils/LCUProtocols.ts";
+import {IpcChannel} from "./protocol.ts";
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
