@@ -89,21 +89,29 @@ class ConfigHelper {
      * 从备份恢复游戏设置
      * @description 把我们备份的 Config 文件夹拷贝回游戏目录
      */
-    public static async restore(): Promise<void> {
+    public static async restore(): Promise<boolean> {
         const instance = ConfigHelper.getInstance();
+        if(!instance){
+            // TODO: 生成一个报错Toast，说明未启动LOL.
+            return false
+        }
 
         const backupExists = await fs.pathExists(instance.backupPath);
         if (!backupExists) {
-            throw new Error(`恢复设置失败！找不到备份目录：${instance.backupPath}`);
+            console.error(`恢复设置失败！找不到备份目录：${instance.backupPath}`);
+            // TODO: Toast
+            return false
         }
         try {
             // 为安全起见，先清空目标文件夹再恢复
             await fs.copy(instance.backupPath, instance.gameConfigPath);
             console.log('设置恢复成功！');
+            // TODO: Toast
         } catch (err) {
             console.error('恢复过程中发生错误:', err);
-            throw new Error('恢复失败了，请检查控制台。');
+            return false
         }
+        return true 
     }
 }
 
