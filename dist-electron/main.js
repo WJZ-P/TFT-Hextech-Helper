@@ -25007,6 +25007,9 @@ const _ConfigHelper = class _ConfigHelper {
    */
   static async backup() {
     const instance = _ConfigHelper.getInstance();
+    if (!instance) {
+      return false;
+    }
     const sourceExists = await fs$1.pathExists(instance.gameConfigPath);
     if (!sourceExists) {
       console.error(`备份失败！找不到游戏设置目录：${instance.gameConfigPath}`);
@@ -25028,17 +25031,22 @@ const _ConfigHelper = class _ConfigHelper {
    */
   static async restore() {
     const instance = _ConfigHelper.getInstance();
+    if (!instance) {
+      return false;
+    }
     const backupExists = await fs$1.pathExists(instance.backupPath);
     if (!backupExists) {
-      throw new Error(`恢复设置失败！找不到备份目录：${instance.backupPath}`);
+      console.error(`恢复设置失败！找不到备份目录：${instance.backupPath}`);
+      return false;
     }
     try {
       await fs$1.copy(instance.backupPath, instance.gameConfigPath);
       console.log("设置恢复成功！");
     } catch (err) {
       console.error("恢复过程中发生错误:", err);
-      throw new Error("恢复失败了，请检查控制台。");
+      return false;
     }
+    return true;
   }
 };
 __publicField(_ConfigHelper, "instance");

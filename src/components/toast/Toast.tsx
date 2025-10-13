@@ -107,13 +107,14 @@ const ToastContext = createContext<ToastContextType | null>(null)   //  创建�
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({children}) => {
     const [toasts, setToasts] = useState<ToastMessage[]>([]);
-
+    //  showToast基本不变，所以useCallback。
     const showToast = useCallback((
         message: string,
         type: ToastType,
         position: ToastPosition = 'top-right'
     ) => {
         const id = Date.now() + Math.random();
+        //  这里不直接写[...toasts,xxx]是因为会有陈旧状态！因为这里的set本身在useCallback的闭包内，它的闭包捕获了
         setToasts(prevToasts => [...prevToasts, {id, message, type, position}]);//  尾部插入新的Toast
 
         //  设置三秒后自动删除Toast
