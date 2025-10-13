@@ -122,6 +122,11 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({children
         }, 3000)
     }, [])
 
+    /**
+     *   这里用useMemo，意味着只有showToast本身改变，这个toastContextValue才会被改变。如果不加：这个value被用于Provider的value，每次新的toast出现
+     *   或者消失，属性toasts(它是state的)会改变，导致ToastProvider重新渲染，就会导致不用useMemo的话这里也会重新调用，没有必要。这里的重新调用导致 所
+     *   有使用了useContext(ToastContext) 的子组件，都会因为 value 的改变而全部重新渲染
+     */
     const toastContextValue = useMemo(() => ({showToast}), [showToast]);
 
     const groupedToasts = useMemo(() => {
