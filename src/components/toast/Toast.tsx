@@ -20,6 +20,7 @@ interface ToastMessage {
     message: string;
     type: ToastType;
     position: ToastPosition;
+    isVisible: boolean;
 }
 
 interface ToastContextType {
@@ -80,6 +81,7 @@ const ToastWrapper = styled.div<{ type: ToastType, isVisible: boolean, theme: Th
   animation: ${({isVisible}) => isVisible ? fadeIn : fadeOut} 0.3s ease-in-out forwards;
   min-width: 300px;
   max-width: 400px;
+  min-height: 25px;
 
   // 根据类型设置左边框颜色
   border-color: ${({type, theme}) => {
@@ -96,6 +98,21 @@ const ToastWrapper = styled.div<{ type: ToastType, isVisible: boolean, theme: Th
     }
   }};
 `;
+
+const SingleToast: React.FC<Omit<ToastMessage, 'id' | 'position'>> = ({message, type, isVisible}) => {
+    const icons = {
+        info: <InfoIcon color="primary"/>,
+        success: <CheckCircleIcon style={{color: '#10B981'}}/>,
+        warning: <WarningIcon style={{color: '#F59E0B'}}/>,
+        error: <ErrorIcon color="error"/>,
+    };
+    return (
+        <ToastWrapper isVisible={isVisible} type={type}>
+            <IconContainer>{icons[type]}</IconContainer>
+            <span>{message}</span>
+        </ToastWrapper>
+    )
+}
 
 const IconContainer = styled.div`
   display: flex;
@@ -115,12 +132,25 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({children
     ) => {
         const id = Date.now() + Math.random();
         //  这里不直接写[...toasts,xxx]是因为会有陈旧状态！因为这里的set本身在useCallback的闭包内，它的闭包捕获了
-        setToasts(prevToasts => [...prevToasts, {id, message, type, position}]);//  尾部插入新的Toast
+        setToasts(prevToasts => [...prevToasts, {id, message, type, position, isVisible: true}]);//  尾部插入新的Toast
 
-        //  设置三秒后自动删除Toast
+        //  这里的动画有问题。
+
+        // 这里的 setTimeout 不再直接删除 Toast
         setTimeout(() => {
-            setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id))
-        }, 3000)
+            // 步骤1：触发退场动画
+            // 遍历数组，只将对应 id 的 Toast 的 isVisible 设置为 false
+            setToasts(prevToasts =>
+                prevToasts.map(toast =>
+                    toast.id === id ? { ...toast, isVisible: false } : toast
+                )
+            );
+            // 步骤2：等待动画播放完毕后，再从 state 中移除
+            // 这个延时>=动画时间
+            setTimeout(() => {
+                setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
+            }, 300); // 动画时长为 0.3s = 300ms
+        }, 2000)
     }, [])
 
     /**
@@ -163,18 +193,3 @@ export const useToast = () => {
     return context;
 }
 
-const SingleToast: React.FC<Omit<ToastMessage, 'id' | 'position'>> = ({message, type}) => {
-    const [isVisible, setIsVisible] = useState(true);
-    const icons = {
-        info: <InfoIcon color="primary"/>,
-        success: <CheckCircleIcon style={{color: '#10B981'}}/>,
-        warning: <WarningIcon style={{color: '#F59E0B'}}/>,
-        error: <ErrorIcon color="error"/>,
-    };
-    return (
-        <ToastWrapper isVisible={isVisible} type={type}>
-            <IconContainer>{icons[type]}</IconContainer>
-            <span>{message}</span>
-        </ToastWrapper>
-    )
-}
