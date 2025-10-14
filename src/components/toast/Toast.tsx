@@ -23,7 +23,7 @@ interface ToastMessage {
 }
 
 interface ToastContextType {
-    showToast: (message: string, type: ToastType, position?: ToastPosition) => void;
+    showToast: (message: string, type?: ToastType, position?: ToastPosition) => void;
 }
 
 //  动画和样式定义
@@ -110,7 +110,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({children
     //  showToast基本不变，所以useCallback。
     const showToast = useCallback((
         message: string,
-        type: ToastType,
+        type: ToastType = "info",
         position: ToastPosition = 'top-right'
     ) => {
         const id = Date.now() + Math.random();

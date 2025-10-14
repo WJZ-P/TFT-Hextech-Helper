@@ -2,8 +2,9 @@ import './App.css'
 import {router} from "./Router.tsx";
 import {RouterProvider} from "react-router-dom";
 import {ThemeProvider} from "styled-components";
-import {darkTheme, lightTheme, } from "./styles/theme.ts";
+import {darkTheme, lightTheme,} from "./styles/theme.ts";
 import {GlobalStyle} from "./styles/GlobalStyle.ts";
+import {ToastProvider} from "./components/toast/Toast.tsx";
 
 
 function App() {
@@ -11,8 +12,10 @@ function App() {
     const currentTheme = lightTheme;
     return (
         <ThemeProvider theme={currentTheme}>
-            <GlobalStyle />
-            <RouterProvider router={router}/>
+            <ToastProvider>
+                <GlobalStyle/>
+                <RouterProvider router={router}/>
+            </ToastProvider>
         </ThemeProvider>
     );
 }
