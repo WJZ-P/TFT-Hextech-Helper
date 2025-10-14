@@ -135,7 +135,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({children
             if (!acc[toast.position]) acc[toast.position] = [];
             acc[toast.position].push(toast)
             return acc;
-        }, {} as Record<ToastPosition, ToastMessage[]>);
+        }, {} as Record<ToastPosition, ToastMessage[]>);//  这里Record表示快速创建一个对象类型。
     }, [toasts]);
 
     return (
