@@ -35,5 +35,8 @@ const store = {
         //  通知所有订阅者
         publish();
     },
-
+    dismissToast(toastId:string){
+        toasts = toasts.map(t=> t.id === toastId ? {...t, isVisible:false}:t);
+        publish();
+    }
 }
