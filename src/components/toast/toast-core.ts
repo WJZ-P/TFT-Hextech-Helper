@@ -38,5 +38,37 @@ const store = {
     dismissToast(toastId:string){
         toasts = toasts.map(t=> t.id === toastId ? {...t, isVisible:false}:t);
         publish();
+        //  退场动画结束后再真正移除
+        setTimeout(()=>{
+            toasts  = toasts.filter( t=>t.id!=toastId)
+            publish();
+        },300)
     }
 }
+
+//  内部函数，用来通知所有监听者
+function publish(){
+    for(const listener of listeners){
+        listener(toasts)
+    }
+}
+
+//  创建暴露给全局的toast函数
+export const toast =(message:string,options:{type?:ToastType,position?: ToastPosition}={})=>{
+    const { type = 'info', position = 'top-right' } = options;
+
+    // 调用 store 的方法来添加 toast
+    store.addToast({ message, type, position });
+
+    // TODO: 我们可以在这里返回 toastId，以便将来可以手动控制它
+}
+
+// 添加不同类型的快捷方式，就像 react-hot-toast 一样
+toast.success = (message: string, options?: { position?: ToastPosition }) =>
+    toast(message, { ...options, type: 'success' });
+
+toast.error = (message: string, options?: { position?: ToastPosition }) =>
+    toast(message, { ...options, type: 'error' });
+
+// 4. 暴露 store，给我们的 React 组件使用
+export default store;
