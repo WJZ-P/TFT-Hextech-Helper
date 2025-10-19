@@ -1,7 +1,8 @@
 import {keyframes} from "@mui/material";
 import styled from "styled-components";
-import {ToastPosition, ToastType} from "./toast-core.ts";
+import store, {ToastPosition, ToastType} from "./toast-core.ts";
 import {ThemeType} from "../../styles/theme.ts";
+import {useEffect, useState} from "react";
 
 const fadeIn = keyframes`
   from {
@@ -69,3 +70,15 @@ const IconContainer = styled.div`
   display: flex;
   align-items: center;
 `;
+
+//  创建一个自定义hook，用来连接react组件和store。
+function useStore(){
+  const [toasts,setToasts]=useState(()=>store.getSnapshot())
+  useEffect(() => {
+    const unsubscribe = store.subscribe(newToasts => {
+      setToasts([...newToasts]);
+      return ()=> unsubscribe()
+    })
+  }, []);
+  return toasts;
+}
