@@ -54,13 +54,11 @@ function publish() {
 }
 
 //  创建暴露给全局的toast函数
-export const toast = (message: string, options: { type?: ToastType, position?: ToastPosition } = {}) => {
+export const toast = (message: string, options: { type?: ToastType, position?: ToastPosition }) => {
     const {type = 'info', position = 'top-right'} = options;
-
     // 调用 store 的方法来添加 toast
     store.addToast({message, type, position});
 
-    // TODO: 我们可以在这里返回 toastId，以便将来可以手动控制它
 }
 
 // 添加不同类型的快捷方式，就像 react-hot-toast 一样
