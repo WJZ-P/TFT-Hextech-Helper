@@ -7,8 +7,9 @@ import InfoIcon from '@mui/icons-material/InfoOutlined';
 import CheckCircleIcon from '@mui/icons-material/CheckCircleOutline';
 import WarningIcon from '@mui/icons-material/WarningAmberOutlined';
 import ErrorIcon from '@mui/icons-material/ErrorOutline';
-import ReactDOM from "react-dom/client";
 import {createPortal} from "react-dom";
+
+const toastDuration=2000
 
 const fadeIn = keyframes`
   from {
@@ -26,7 +27,7 @@ const fadeOut = keyframes`
   }
   to {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(-20px);
   }`;
 
 const ToastContainer = styled.div<{ position: ToastPosition }>`
@@ -83,8 +84,8 @@ function useStore() {
     useEffect(() => {
         const unsubscribe = store.subscribe(newToasts => {
             setToasts([...newToasts]);
-            return () => unsubscribe()
         })
+        return () => unsubscribe()
     }, []);
     return toasts;
 }
@@ -93,7 +94,7 @@ const SingleToast = ({toast}: { toast: ToastMessage }) => {
     useEffect(() => {
         const timer = setTimeout(() => {
             store.dismissToast(toast.id)
-        }, 2000);
+        }, toastDuration);
         return () => clearTimeout(timer)
     }, [toast.id]);
 
@@ -106,6 +107,7 @@ const SingleToast = ({toast}: { toast: ToastMessage }) => {
     return(
         <ToastWrapper isVisible={toast.isVisible} type={toast.type}>
             <IconContainer>{icons[toast.type]}</IconContainer>
+            {toast.message}
         </ToastWrapper>
     )
 }

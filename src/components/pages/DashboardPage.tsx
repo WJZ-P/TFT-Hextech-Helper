@@ -1,6 +1,5 @@
 import styled from "styled-components";
 import {Queue} from "../../../src-backend/lcu/utils/LCUProtocols.ts";
-import {useState} from "react";
 import {toast} from "../toast/toast-core.ts";
 
 const PageContaier = styled.div`
