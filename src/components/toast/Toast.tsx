@@ -1,8 +1,14 @@
 import {keyframes} from "@mui/material";
 import styled from "styled-components";
-import store, {ToastPosition, ToastType} from "./toast-core.ts";
+import store, {toast, ToastMessage, ToastPosition, ToastType} from "./toast-core.ts";
 import {ThemeType} from "../../styles/theme.ts";
-import {useEffect, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
+import InfoIcon from '@mui/icons-material/InfoOutlined';
+import CheckCircleIcon from '@mui/icons-material/CheckCircleOutline';
+import WarningIcon from '@mui/icons-material/WarningAmberOutlined';
+import ErrorIcon from '@mui/icons-material/ErrorOutline';
+import ReactDOM from "react-dom/client";
+import {createPortal} from "react-dom";
 
 const fadeIn = keyframes`
   from {
@@ -72,13 +78,57 @@ const IconContainer = styled.div`
 `;
 
 //  创建一个自定义hook，用来连接react组件和store。
-function useStore(){
-  const [toasts,setToasts]=useState(()=>store.getSnapshot())
-  useEffect(() => {
-    const unsubscribe = store.subscribe(newToasts => {
-      setToasts([...newToasts]);
-      return ()=> unsubscribe()
-    })
-  }, []);
-  return toasts;
+function useStore() {
+    const [toasts, setToasts] = useState(() => store.getSnapshot())
+    useEffect(() => {
+        const unsubscribe = store.subscribe(newToasts => {
+            setToasts([...newToasts]);
+            return () => unsubscribe()
+        })
+    }, []);
+    return toasts;
+}
+
+const SingleToast = ({toast}: { toast: ToastMessage }) => {
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            store.dismissToast(toast.id)
+        }, 2000);
+        return () => clearTimeout(timer)
+    }, [toast.id]);
+
+    const icons = {
+        info: <InfoIcon color="primary"/>,
+        success: <CheckCircleIcon style={{color: '#10B981'}}/>,
+        warning: <WarningIcon style={{color: '#F59E0B'}}/>,
+        error: <ErrorIcon color="error"/>,
+    }
+    return(
+        <ToastWrapper isVisible={toast.isVisible} type={toast.type}>
+            <IconContainer>{icons[toast.type]}</IconContainer>
+        </ToastWrapper>
+    )
+}
+
+export const Toaster = ()=>{
+    const toasts = useStore();
+    const groupedToasts = useMemo(()=>{
+        return toasts.reduce((acc,toast)=>{
+            if(!acc[toast.position]) acc[toast.position] = [];
+            acc[toast.position].push(toast);
+            return acc;
+        },{} as Record<ToastPosition, ToastMessage[]>)
+    },[toasts]);
+
+    return createPortal(
+        <>
+         {Object.entries(groupedToasts).map(([position, toastList]) => (
+                <ToastContainer key={position} position={position as ToastPosition}>
+                    {toastList.map(toast => (
+                       <SingleToast key={toast.id} toast={toast} />
+                    ))}
+                </ToastContainer>
+            ))}
+        </>
+    ,document.body)
 }

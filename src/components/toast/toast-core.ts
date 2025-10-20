@@ -11,7 +11,7 @@ export interface ToastMessage {
 }
 
 //  创建一个事件中心，一个简单的发布/订阅实现
-let toasts: ToastMessage[]
+let toasts: ToastMessage[] = []
 const listeners: Array<(newToasts: ToastMessage[]) => void> = [];
 
 const store = {

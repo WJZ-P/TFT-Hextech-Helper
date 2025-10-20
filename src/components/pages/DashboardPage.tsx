@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import {Queue} from "../../../src-backend/lcu/utils/LCUProtocols.ts";
 import {useState} from "react";
-import {useToast} from "../toast/Toast.tsx";
+import {toast} from "../toast/toast-core.ts";
 
 const PageContaier = styled.div`
   padding: 2.5rem
@@ -20,7 +20,6 @@ const Subtitle = styled.p`
 `
 
 const DashboardPage = () => {
-    const {showToast} = useToast()
     return (
         <PageContaier>
             <Title>仪表盘</Title>
@@ -86,7 +85,7 @@ const DashboardPage = () => {
             }}>getLobby
             </button>
             <button onClick={async () => {
-                showToast("我是一个弹窗！")
+                toast("我是一个超级弹窗！",{type:"success"})
             }}>点我弹出一个Toast
             </button>
         </PageContaier>
