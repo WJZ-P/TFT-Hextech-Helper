@@ -82,6 +82,7 @@ const SettingText = styled.div`
     font-size: ${props => props.theme.fontSizes.medium};
     font-weight: 600;
     color: ${props => props.theme.colors.text};
+    text-align: start;
   }
   p {
     font-size: ${props => props.theme.fontSizes.small};
