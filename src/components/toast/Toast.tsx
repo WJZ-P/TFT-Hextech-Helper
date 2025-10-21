@@ -78,7 +78,7 @@ const IconContainer = styled.div`
   align-items: center;
 `;
 
-//  创建一个自定义hook，用来连接react组件和store。
+//  创建一个自定义hook，用来连接react组件和store，只在Toast组件内部使用
 function useStore() {
     const [toasts, setToasts] = useState(() => store.getSnapshot())
     useEffect(() => {
