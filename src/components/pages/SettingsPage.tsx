@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import BackupIcon from '@mui/icons-material/Backup';
 import RestoreIcon from '@mui/icons-material/Restore';
 import {ThemeType} from "../../styles/theme.ts";
+import {toast} from "../toast/toast-core.ts";
 
 // -------------------------------------------------------------------
 // ✨ 样式组件定义 (Styled Components Definitions) ✨
@@ -127,7 +128,10 @@ const SettingsPage = () => {
     console.log("开始备份游戏设置...");
     setIsBackingUp(true);
     // 执行备份
-    await window.config.backup()
+    const success = await window.config.backup() // Boolean
+    if(!success){
+      toast.error("备份错误！请检查客户端是否启动！")
+    }
     setIsBackingUp(false);
   };
 
