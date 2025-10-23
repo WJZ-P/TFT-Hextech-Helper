@@ -65,7 +65,7 @@ class ConfigHelper {
     public static async backup(): Promise<boolean> {
         const instance = ConfigHelper.getInstance();
         if(!instance){
-            // TODO: 生成一个报错Toast，说明未启动LOL.
+            //  LOL未启动
             return false
         }
 
