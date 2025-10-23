@@ -85,6 +85,7 @@ const SettingText = styled.div`
     color: ${props => props.theme.colors.text};
     text-align: start;
   }
+
   p {
     font-size: ${props => props.theme.fontSizes.small};
     color: ${props => props.theme.colors.textSecondary};
@@ -102,7 +103,7 @@ const ActionButton = styled.button`
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s ease-in-out;
-  
+
   &:hover {
     background-color: ${props => props.theme.colors.primaryHover};
   }
@@ -119,67 +120,70 @@ const ActionButton = styled.button`
 // -------------------------------------------------------------------
 
 const SettingsPage = () => {
-  // 喵~ 在这里你可以添加状态管理，比如按钮是否在加载中
-  const [isBackingUp, setIsBackingUp] = React.useState(false);
-  const [isRestoring, setIsRestoring] = React.useState(false);
+    // 喵~ 在这里你可以添加状态管理，比如按钮是否在加载中
+    const [isBackingUp, setIsBackingUp] = React.useState(false);
+    const [isRestoring, setIsRestoring] = React.useState(false);
 
-  // 点击备份按钮的逻辑
-  const handleBackup = async () => {
-    console.log("开始备份游戏设置...");
-    setIsBackingUp(true);
-    // 执行备份
-    const success = await window.config.backup() // Boolean
-    if(!success){
-      toast.error("备份错误！请检查客户端是否启动！")
-    }
-    setIsBackingUp(false);
-  };
+    // 点击备份按钮的逻辑
+    const handleBackup = async () => {
+        console.log("开始备份游戏设置...");
+        setIsBackingUp(true);
+        // 执行备份
+        const success = await window.config.backup() // Boolean
+        if (!success) {
+            toast.error("备份错误！请检查客户端是否启动！")
+        } else {
+            toast.success("备份成功!")
+        }
 
-  // 点击恢复按钮的逻辑
-  const handleRestore =async () => {
-    console.log("开始恢复游戏设置...");
-    setIsRestoring(true);
-    //  执行恢复
-    await window.config.restore()
-    setIsRestoring(false);
-  };
+        setIsBackingUp(false);
+    };
 
-  return (
-    <PageWrapper>
-      <PageHeader>
-        <h1>设置</h1>
-        <p>在这里管理你的游戏配置和其他应用参数。</p>
-      </PageHeader>
+    // 点击恢复按钮的逻辑
+    const handleRestore = async () => {
+        console.log("开始恢复游戏设置...");
+        setIsRestoring(true);
+        //  执行恢复
+        await window.config.restore()
+        setIsRestoring(false);
+    };
 
-      <SettingsCard>
-        <SettingItem>
-          <SettingInfo>
-            <IconWrapper><BackupIcon /></IconWrapper>
-            <SettingText>
-              <h3>备份游戏设置</h3>
-              <p>将当前的游戏内设置（如键位、画质等）备份到本地。</p>
-            </SettingText>
-          </SettingInfo>
-          <ActionButton onClick={handleBackup} disabled={isBackingUp || isRestoring}>
-            {isBackingUp ? '备份中...' : '立即备份'}
-          </ActionButton>
-        </SettingItem>
+    return (
+        <PageWrapper>
+            <PageHeader>
+                <h1>设置</h1>
+                <p>在这里管理你的游戏配置和其他应用参数。</p>
+            </PageHeader>
 
-        <SettingItem>
-          <SettingInfo>
-            <IconWrapper><RestoreIcon /></IconWrapper>
-            <SettingText>
-              <h3>恢复游戏设置</h3>
-              <p>使用之前备份的设置，覆盖当前的游戏设置。</p>
-            </SettingText>
-          </SettingInfo>
-          <ActionButton onClick={handleRestore} disabled={isBackingUp || isRestoring}>
-            {isRestoring ? '恢复中...' : '恢复备份'}
-          </ActionButton>
-        </SettingItem>
-      </SettingsCard>
-    </PageWrapper>
-  );
+            <SettingsCard>
+                <SettingItem>
+                    <SettingInfo>
+                        <IconWrapper><BackupIcon/></IconWrapper>
+                        <SettingText>
+                            <h3>备份游戏设置</h3>
+                            <p>将当前的游戏内设置（如键位、画质等）备份到本地。</p>
+                        </SettingText>
+                    </SettingInfo>
+                    <ActionButton onClick={handleBackup} disabled={isBackingUp || isRestoring}>
+                        {isBackingUp ? '备份中...' : '立即备份'}
+                    </ActionButton>
+                </SettingItem>
+
+                <SettingItem>
+                    <SettingInfo>
+                        <IconWrapper><RestoreIcon/></IconWrapper>
+                        <SettingText>
+                            <h3>恢复游戏设置</h3>
+                            <p>使用之前备份的设置，覆盖当前的游戏设置。</p>
+                        </SettingText>
+                    </SettingInfo>
+                    <ActionButton onClick={handleRestore} disabled={isBackingUp || isRestoring}>
+                        {isRestoring ? '恢复中...' : '恢复备份'}
+                    </ActionButton>
+                </SettingItem>
+            </SettingsCard>
+        </PageWrapper>
+    );
 };
 
 export default SettingsPage;

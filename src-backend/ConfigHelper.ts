@@ -68,7 +68,6 @@ class ConfigHelper {
             //  LOL未启动
             return false
         }
-
         const sourceExists = await fs.pathExists(instance.gameConfigPath);
         if (!sourceExists) {
             console.error(`备份失败！找不到游戏设置目录：${instance.gameConfigPath}`);
