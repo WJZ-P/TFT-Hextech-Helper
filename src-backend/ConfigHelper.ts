@@ -91,7 +91,7 @@ class ConfigHelper {
     public static async restore(): Promise<boolean> {
         const instance = ConfigHelper.getInstance();
         if(!instance){
-            // TODO: 生成一个报错Toast，说明未启动LOL.
+            console.log("[ConfigHelper] restore错误。尚未初始化！")
             return false
         }
 
