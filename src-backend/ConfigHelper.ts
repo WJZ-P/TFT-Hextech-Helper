@@ -35,7 +35,7 @@ class ConfigHelper {
      */
     public static init(installPath: string): void {
         if (ConfigHelper.instance) {
-            console.warn("ConfigHelper 已被初始化过！");
+            console.warn("[ConfigHelper] ConfigHelper 已被初始化过！");
             return;
         }
         ConfigHelper.instance = new ConfigHelper(installPath);
