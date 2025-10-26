@@ -24995,7 +24995,7 @@ const _ConfigHelper = class _ConfigHelper {
    */
   static init(installPath) {
     if (_ConfigHelper.instance) {
-      console.warn("ConfigHelper 已被初始化过！");
+      console.warn("[ConfigHelper] ConfigHelper 已被初始化过！");
       return;
     }
     _ConfigHelper.instance = new _ConfigHelper(installPath);
