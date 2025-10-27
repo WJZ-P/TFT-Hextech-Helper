@@ -20,22 +20,6 @@ const PageWrapper = styled.div<{ theme: ThemeType }>`
   transition: background-color 0.3s, color 0.3s;
 `;
 
-// 页面顶部的标题和描述
-const PageHeader = styled.div`
-  margin-bottom: ${props => props.theme.spacing.large};
-
-  h1 {
-    font-size: 2rem;
-    font-weight: bold;
-    color: ${props => props.theme.colors.text};
-  }
-
-  p {
-    margin-top: ${props => props.theme.spacing.small};
-    color: ${props => props.theme.colors.textSecondary};
-  }
-`;
-
 // 用来包裹设置项的卡片
 const SettingsCard = styled.div`
   background-color: ${props => props.theme.colors.elementBg};
@@ -116,7 +100,6 @@ const ActionButton = styled.button`
 
 // -------------------------------------------------------------------
 // ✨ React 组件本体 ✨
-// The React Component itself
 // -------------------------------------------------------------------
 
 const SettingsPage = () => {
@@ -150,11 +133,6 @@ const SettingsPage = () => {
 
     return (
         <PageWrapper>
-            <PageHeader>
-                <h1>设置</h1>
-                <p>在这里管理你的游戏配置和其他应用参数。</p>
-            </PageHeader>
-
             <SettingsCard>
                 <SettingItem>
                     <SettingInfo>
