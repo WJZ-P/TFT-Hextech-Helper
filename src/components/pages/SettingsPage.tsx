@@ -20,12 +20,17 @@ const PageWrapper = styled.div<{ theme: ThemeType }>`
   transition: background-color 0.3s, color 0.3s;
 `;
 
+//  设置每一组设置的标头
+const SettingsHeader = styled.div`
+
+`;
+
 // 用来包裹设置项的卡片
 const SettingsCard = styled.div`
   background-color: ${props => props.theme.colors.elementBg};
   border-radius: ${props => props.theme.borderRadius};
   border: 1px solid ${props => props.theme.colors.border};
-  padding: ${props => props.theme.spacing.large};
+  padding: ${props => props.theme.spacing.medium};
   transition: background-color 0.3s, border-color 0.3s;
 `;
 
@@ -37,8 +42,8 @@ const SettingItem = styled.div`
 
   // 如果不是最后一个设置项，给它加一点下边距
   &:not(:last-child) {
-    margin-bottom: ${props => props.theme.spacing.large};
-    padding-bottom: ${props => props.theme.spacing.large};
+    margin-bottom: ${props => props.theme.spacing.medium};
+    padding-bottom: ${props => props.theme.spacing.medium};
     border-bottom: 1px solid ${props => props.theme.colors.divider};
   }
 `;
@@ -47,7 +52,7 @@ const SettingItem = styled.div`
 const SettingInfo = styled.div`
   display: flex;
   align-items: center;
-  gap: ${props => props.theme.spacing.medium};
+  gap: ${props => props.theme.spacing.large};
 `;
 
 const IconWrapper = styled.div`
@@ -73,7 +78,7 @@ const SettingText = styled.div`
   p {
     font-size: ${props => props.theme.fontSizes.small};
     color: ${props => props.theme.colors.textSecondary};
-    margin-top: 4px;
+    margin-top: 0.25 rem;
   }
 `;
 
@@ -82,9 +87,10 @@ const ActionButton = styled.button`
   background-color: ${props => props.theme.colors.primary};
   color: ${props => props.theme.colors.textOnPrimary};
   border: none;
+  font-size: ${props => props.theme.fontSizes.small};
   border-radius: ${props => props.theme.borderRadius};
   padding: 0.6rem 1.2rem;
-  font-weight: 600;
+  font-weight: bolder;
   cursor: pointer;
   transition: background-color 0.2s ease-in-out;
 
@@ -136,7 +142,6 @@ const SettingsPage = () => {
             <SettingsCard>
                 <SettingItem>
                     <SettingInfo>
-                        <IconWrapper><BackupIcon/></IconWrapper>
                         <SettingText>
                             <h3>备份游戏设置</h3>
                             <p>将当前的游戏内设置（如键位、画质等）备份到本地。</p>
@@ -149,7 +154,6 @@ const SettingsPage = () => {
 
                 <SettingItem>
                     <SettingInfo>
-                        <IconWrapper><RestoreIcon/></IconWrapper>
                         <SettingText>
                             <h3>恢复游戏设置</h3>
                             <p>使用之前备份的设置，覆盖当前的游戏设置。</p>
