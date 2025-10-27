@@ -23,7 +23,15 @@ export const router = createHashRouter([
         errorElement: <ErrorPage/>,
         children: [
             // 当用户访问根路径时，自动跳转到仪表盘
-            {index: true, element: <Navigate to="/dashboard" replace/>},
+            {index: true, element: <Navigate to="/" replace/>},
+            {
+                path: '/',
+                element: (
+                    <Suspense fallback={<LoadingSpinner/>}>
+                        <HomePage/>
+                    </Suspense>
+                )
+            },
             {
                 path: 'dashboard',
                 element: (

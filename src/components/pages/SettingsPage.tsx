@@ -14,15 +14,18 @@ import {toast} from "../toast/toast-core.ts";
 const PageWrapper = styled.div<{ theme: ThemeType }>`
   background-color: ${props => props.theme.colors.background};
   color: ${props => props.theme.colors.text};
-  padding: ${props => props.theme.spacing.large} ${props => props.theme.spacing.large};
+  padding: ${props => props.theme.spacing.small} ${props => props.theme.spacing.large};
   height: 100vh;
   overflow-y: auto;
   transition: background-color 0.3s, color 0.3s;
 `;
 
 //  设置每一组设置的标头
-const SettingsHeader = styled.div`
-
+const SettingsHeader = styled.h2`
+  margin: ${props=>props.theme.spacing.small};
+  font-size: ${props=>props.theme.fontSizes.large};
+  text-align: start;
+  margin-bottom: ${props=>props.theme.spacing.medium};
 `;
 
 // 用来包裹设置项的卡片
@@ -78,7 +81,7 @@ const SettingText = styled.div`
   p {
     font-size: ${props => props.theme.fontSizes.small};
     color: ${props => props.theme.colors.textSecondary};
-    margin-top: 0.25 rem;
+    margin-top: 0.3rem;
   }
 `;
 
@@ -139,6 +142,9 @@ const SettingsPage = () => {
 
     return (
         <PageWrapper>
+            <SettingsHeader>
+                备份
+            </SettingsHeader>
             <SettingsCard>
                 <SettingItem>
                     <SettingInfo>

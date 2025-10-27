@@ -7,9 +7,10 @@ import styled, {ThemeContext} from "styled-components";
 import React, {useContext, useRef, useState} from "react"; // 一个好看的闪电图标给 Logo
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-
+import HomeIcon from '@mui/icons-material/Home'; // 新增：导入 Home 图标
 
 const navItems = [
+    {path: '/',label:'主界面',icon:HomeIcon},
     {path: '/dashboard', label: '仪表盘', icon: DashboardIcon},
     {path: '/settings', label: '设置', icon: SettingsIcon},
 ]
