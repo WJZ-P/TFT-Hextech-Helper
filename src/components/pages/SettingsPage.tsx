@@ -133,7 +133,7 @@ const SettingsPage = () => {
         if (!success) {
             toast.error("备份错误！请检查客户端是否启动！")
         } else {
-            toast.success("备份成功!")
+            toast.success("设置备份成功!")
         }
 
         setIsBackingUp(false);
