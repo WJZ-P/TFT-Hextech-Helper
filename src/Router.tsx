@@ -3,6 +3,7 @@ import {lazy, Suspense} from "react";
 import {createHashRouter, Navigate} from "react-router-dom";
 import MainLayout from "./components/MainLayout.tsx";
 import ErrorPage from "./components/pages/ErrorPage.tsx";
+import {HomePage} from "./components/pages/HomePage.tsx";
 
 const DashboardPage = lazy(() => import('./components/pages/DashboardPage'));
 const SettingsPage = lazy(() => import('./components/pages/SettingsPage'));
@@ -23,9 +24,8 @@ export const router = createHashRouter([
         errorElement: <ErrorPage/>,
         children: [
             // 当用户访问根路径时，自动跳转到仪表盘
-            {index: true, element: <Navigate to="/" replace/>},
             {
-                path: '/',
+                index:true,
                 element: (
                     <Suspense fallback={<LoadingSpinner/>}>
                         <HomePage/>
