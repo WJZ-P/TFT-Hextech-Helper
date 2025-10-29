@@ -100,21 +100,33 @@ export const LogPanel: React.FC<LogPanelProps> = ({isVisible}) => {
     const [logs, setLogs] = useState<LogEntry[]>([])
     const logPanelRef = useRef<HTMLDivElement | null>(null)
     //  添加log
-    const addLog = (message:string,level:LogLevel = 'info')=>{
+    const addLog = (message: string, level: LogLevel = 'info') => {
         //  创建一条新的日志
-        const newLog:LogEntry = {
-            id:Date.now() + Math.random(),
+        const newLog: LogEntry = {
+            id: Date.now() + Math.random(),
             timestamp: new Date().toLocaleTimeString(),
             level,
             message
         }
-        setLogs(prevLogs =>[...prevLogs,newLog]);
+        setLogs(prevLogs => [...prevLogs, newLog]);
     }
     //  监听IPC消息以添加日志
     useEffect(() => {
-        if(window.ipc?.on){
-            const handleLogMessage
+        let cleanup = () => {
+        }; // 默认的空清理函数
+        if (window.ipc?.on) {
+            try {
+                cleanup = window.ipc.on('log-message', addLog)
+                addLog('日志监听器启动');
+            } catch (error) {
+                console.error('设置IPC监听失败', error)
+                addLog('日志监听器启动失败！请查看控制台')
+            }
+        } else {
+            console.warn('IPC listener for logs not available.');
+            addLog('无法连接到后端日志通道。', 'warn');
         }
+
     }, []);
     return (null)
 }
