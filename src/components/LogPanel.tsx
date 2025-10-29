@@ -98,7 +98,7 @@ interface LogPanelProps {
 
 export const LogPanel: React.FC<LogPanelProps> = ({isVisible}) => {
     const [logs, setLogs] = useState<LogEntry[]>([])
-    const logPanelRef = useRef<HTMLDivElement>()
+    const logPanelRef = useRef<HTMLDivElement | null>(null)
     //  添加log
     const addLog = (message: string, level: LogLevel = 'info') => {
         //  创建一条新的日志
@@ -132,13 +132,13 @@ export const LogPanel: React.FC<LogPanelProps> = ({isVisible}) => {
     //  日志自动滚动逻辑
     useEffect(() => {
         if (logPanelRef.current) {
-            logPanelRef.current?.scrollTop = logPanelRef.current?.scrollHeight
+            logPanelRef.current!.scrollTop = logPanelRef.current!.scrollHeight
         }
     }, [logs]);
 
     return (
         <LogPanelWrapper $isVisible={isVisible}>
-            <LogPanelContent ref={{logPanelRef}}>
+            <LogPanelContent ref={logPanelRef}>
                 {logs.map((log) => (
                     <LogEntryLine key={log.id} level={log.level}>
                         <span className="timestamp">{log.timestamp}</span>
