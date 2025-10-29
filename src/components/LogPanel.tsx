@@ -98,7 +98,7 @@ interface LogPanelProps {
 
 export const LogPanel: React.FC<LogPanelProps> = ({isVisible}) => {
     const [logs, setLogs] = useState<LogEntry[]>([])
-    const logPanelRef = useRef<HTMLDivElement | null>(null)
+    const logPanelRef = useRef<HTMLDivElement>()
     //  添加log
     const addLog = (message: string, level: LogLevel = 'info') => {
         //  创建一条新的日志
@@ -126,7 +126,27 @@ export const LogPanel: React.FC<LogPanelProps> = ({isVisible}) => {
             console.warn('IPC listener for logs not available.');
             addLog('无法连接到后端日志通道。', 'warn');
         }
-
+        return cleanup;
     }, []);
-    return (null)
+
+    //  日志自动滚动逻辑
+    useEffect(() => {
+        if (logPanelRef.current) {
+            logPanelRef.current?.scrollTop = logPanelRef.current?.scrollHeight
+        }
+    }, [logs]);
+
+    return (
+        <LogPanelWrapper $isVisible={isVisible}>
+            <LogPanelContent ref={{logPanelRef}}>
+                {logs.map((log) => (
+                    <LogEntryLine key={log.id} level={log.level}>
+                        <span className="timestamp">{log.timestamp}</span>
+                        <span className="level">[{log.level.toUpperCase()}]</span>
+                        <span className="message">{log.message}</span>
+                    </LogEntryLine>
+                ))}
+            </LogPanelContent>
+        </LogPanelWrapper>
+    )
 }
