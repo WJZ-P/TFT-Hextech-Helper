@@ -13,7 +13,6 @@ const PageWrapper = styled.div<{ theme: ThemeType }>`
   padding: ${props => props.theme.spacing.large};
   background-color: ${props => props.theme.colors.background};
   color: ${props => props.theme.colors.text};
-  min-height: calc(100vh - 60px); // 假设你的布局有 60px 的头部或侧边栏，撑满剩余高度
   text-align: center; // 文本居中
 `;
 

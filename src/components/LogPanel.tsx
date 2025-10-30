@@ -11,7 +11,7 @@ import ErrorIcon from '@mui/icons-material/ErrorOutline';
 // -------------------------------------------------------------------
 // ✨ 类型定义 ✨ (从 HomePage 移到这里)
 // -------------------------------------------------------------------
-type LogLevel = 'info' | 'warn' | 'error';
+export type LogLevel = 'info' | 'warn' | 'error';
 
 interface LogEntry {
     id: number;
@@ -27,14 +27,15 @@ const LogPanelWrapper = styled.div<{ $isVisible: boolean; theme: ThemeType }>`
   max-height: ${props => props.$isVisible ? '300px' : '0px'};
   overflow: hidden;
   background-color: ${props => props.theme.colors.elementBg};
-
+  border-radius: ${props=>props.theme.borderRadius};
   border-top: ${props => props.$isVisible ? '1px' : 0 } solid ${props => props.theme.colors.border};
   transition: max-height 0.3s ease-in-out;
   width: 100%;
 `;
 
 const LogPanelContent = styled.div<{ theme: ThemeType }>`
-  height: 300px;
+  min-height: 100px;
+  max-height: 300px;
   padding: ${props => props.theme.spacing.medium};
   overflow-y: auto;
   font-family: 'Consolas', 'Monaco', monospace;
@@ -60,7 +61,7 @@ const LogEntryLine = styled.div<{ level: LogLevel; theme: ThemeType }>`
   padding: 0.2rem 0;
   white-space: pre-wrap;
   word-break: break-all;
-  
+  text-align: left;
   .timestamp {
     color: ${props => props.theme.colors.textDisabled};
     margin-right: ${props => props.theme.spacing.small};
