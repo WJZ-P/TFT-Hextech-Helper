@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline'; // 开始图标
 import StopCircleOutlinedIcon from '@mui/icons-material/StopCircleOutlined';
-import {ThemeType} from "../../styles/theme.ts"; // 关闭图标
+import {ThemeType} from "../../styles/theme.ts";
+import {LogPanel} from "../LogPanel.tsx"; // 关闭图标
 
 const PageWrapper = styled.div<{ theme: ThemeType }>`
   display: flex;
@@ -90,6 +91,7 @@ export const HomePage = () => {
         {isRunning ? <StopCircleOutlinedIcon /> : <PlayCircleOutlineIcon />}
         {isRunning ? '关闭' : '开始'}
       </ControlButton>
+        <LogPanel isVisible={isRunning}/>
     </PageWrapper>
   );
 };

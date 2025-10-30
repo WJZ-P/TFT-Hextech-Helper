@@ -27,8 +27,10 @@ const LogPanelWrapper = styled.div<{ $isVisible: boolean; theme: ThemeType }>`
   max-height: ${props => props.$isVisible ? '300px' : '0px'};
   overflow: hidden;
   background-color: ${props => props.theme.colors.elementBg};
-  border-top: 1px solid ${props => props.theme.colors.border};
+
+  border-top: ${props => props.$isVisible ? '1px' : 0 } solid ${props => props.theme.colors.border};
   transition: max-height 0.3s ease-in-out;
+  width: 100%;
 `;
 
 const LogPanelContent = styled.div<{ theme: ThemeType }>`
@@ -58,17 +60,15 @@ const LogEntryLine = styled.div<{ level: LogLevel; theme: ThemeType }>`
   padding: 0.2rem 0;
   white-space: pre-wrap;
   word-break: break-all;
-
+  
   .timestamp {
     color: ${props => props.theme.colors.textDisabled};
     margin-right: ${props => props.theme.spacing.small};
   }
 
   .level {
-    font-weight: 600;
+    font-weight: 800;
     margin-right: ${props => props.theme.spacing.small};
-    display: inline-block;
-    width: 45px;
     ${({level, theme}) => {
       switch (level) {
         case 'error':
@@ -115,8 +115,15 @@ export const LogPanel: React.FC<LogPanelProps> = ({isVisible}) => {
         let cleanup = () => {
         }; // 默认的空清理函数
         if (window.ipc?.on) {
+            const handleLogMessage = (logData: { message: string, level?: LogLevel }) => {
+                if (logData) {
+                    addLog(logData.message, logData.level || 'info');
+                } else {
+                    console.warn("Received invalid log data from IPC:", logData);
+                }
+            };
             try {
-                cleanup = window.ipc.on('log-message', addLog)
+                cleanup = window.ipc.on('log-message', handleLogMessage)
                 addLog('日志监听器启动');
             } catch (error) {
                 console.error('设置IPC监听失败', error)
