@@ -8,6 +8,7 @@ import 'source-map-support/register';
 import ConfigHelper from "../src-backend/ConfigHelper.ts";
 import path from "path";
 import {IpcChannel} from "./protocol.ts";
+import {logger} from "../src-backend/utils/PanelLogger.ts";
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -47,6 +48,9 @@ function createWindow() {
             preload: path.join(__dirname, 'preload.mjs'),// 指定preload文件
         },
     })
+
+    //  初始化PanelLogger
+    logger.init(win)
 
     // Test active push message to Renderer-process.
     win.webContents.on('did-finish-load', () => {
