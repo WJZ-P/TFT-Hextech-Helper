@@ -100,6 +100,8 @@ interface LogPanelProps {
 export const LogPanel: React.FC<LogPanelProps> = ({isVisible}) => {
     const [logs, setLogs] = useState<LogEntry[]>([])
     const logPanelRef = useRef<HTMLDivElement | null>(null)
+    const [isUserScrollUp,setIsUserScrollUp] = useState(false)
+
     //  添加log
     const addLog = (message: string, level: LogLevel = 'info') => {
         //  创建一条新的日志
@@ -139,14 +141,25 @@ export const LogPanel: React.FC<LogPanelProps> = ({isVisible}) => {
 
     //  日志自动滚动逻辑
     useEffect(() => {
-        if (logPanelRef.current) {
-            logPanelRef.current!.scrollTop = logPanelRef.current!.scrollHeight
+        const logPanel = logPanelRef.current
+
+        if (logPanel && !isUserScrollUp) {
+            logPanel.scrollTop = logPanel.scrollHeight
         }
-    }, [logs]);
+    }, [logs,isUserScrollUp]);
+
+    const handleScroll = ()=>{
+        const panel = logPanelRef.current
+        if(panel){
+            //  检查滚动条是否在底部
+            const isAtBottom = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 10;// 10 是容错
+            setIsUserScrollUp(!isAtBottom)
+        }
+    }
 
     return (
         <LogPanelWrapper $isVisible={isVisible}>
-            <LogPanelContent ref={logPanelRef}>
+            <LogPanelContent ref={logPanelRef} onScroll={handleScroll}>
                 {logs.map((log) => (
                     <LogEntryLine key={log.id} level={log.level}>
                         <span className="timestamp">{log.timestamp}</span>

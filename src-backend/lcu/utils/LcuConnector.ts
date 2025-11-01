@@ -2,7 +2,8 @@ import {EventEmitter} from 'events'
 import os from 'os'; // 用于获取操作系统相关信息，比如当前平台
 import cp from 'child_process';
 import path from "node:path";
-import fs from 'fs-extra'; // 增强版的 fs 模块，用于文件系统操作，比如检查文件是否存在
+import fs from 'fs-extra';
+import {logger} from "../../utils/PanelLogger.ts"; // 增强版的 fs 模块，用于文件系统操作，比如检查文件是否存在
 
 //  新版已不能从lockfile读取信息，而是全部通过进程读取
 
@@ -151,6 +152,7 @@ class LCUConnector extends EventEmitter {
                 return;
             }
             console.log("LOL客户端未启动，一秒后将再次检查...");
+            logger.error("LOL客户端未启动，一秒后将再次检查...");
             // 如果没找到，设置一个定时器，每秒执行一次 _initProcessWatcher 来重新查找
             if (!this.processWatcher) {
                 this.processWatcher = setInterval(this.initProcessWatcher.bind(this), 1000);

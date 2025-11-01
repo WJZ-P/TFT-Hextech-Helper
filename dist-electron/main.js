@@ -2382,6 +2382,43 @@ var output = {
 })(lib);
 var libExports = lib.exports;
 const fs$1 = /* @__PURE__ */ getDefaultExportFromCjs(libExports);
+const _PanelLogger = class _PanelLogger {
+  constructor() {
+    __publicField(this, "window");
+  }
+  static getInstance() {
+    if (!_PanelLogger.instance)
+      _PanelLogger.instance = new _PanelLogger();
+    return _PanelLogger.instance;
+  }
+  init(window2) {
+    this.window = window2;
+  }
+  info(message) {
+    this.sendLogToFrontend(message, "info");
+  }
+  warn(message) {
+    this.sendLogToFrontend(message, "warn");
+  }
+  error(message) {
+    const msg = message instanceof Error ? message.message : message;
+    this.sendLogToFrontend(msg, "error");
+    if (message instanceof Error) {
+      console.error(message.stack);
+    }
+  }
+  sendLogToFrontend(message, level = "info") {
+    if (this.window) {
+      this.window.webContents.send("log-message", { message, level });
+    } else {
+      console.error("[PanelLogger] 无window对象");
+    }
+  }
+};
+//  单例模式
+__publicField(_PanelLogger, "instance", null);
+let PanelLogger = _PanelLogger;
+const logger = PanelLogger.getInstance();
 const IS_WIN = process.platform === "win32";
 const IS_MAC = process.platform === "darwin";
 const IS_WSL = process.platform === "linux" && require$$1$2.release().toLowerCase().includes("microsoft");
@@ -2459,6 +2496,7 @@ class LCUConnector extends EventEmitter$1 {
         return;
       }
       console.log("LOL客户端未启动，一秒后将再次检查...");
+      logger.error("LOL客户端未启动，一秒后将再次检查...");
       if (!this.processWatcher) {
         this.processWatcher = setInterval(this.initProcessWatcher.bind(this), 1e3);
       }
@@ -25081,6 +25119,7 @@ function createWindow() {
       // 指定preload文件
     }
   });
+  logger.init(win);
   win.webContents.on("did-finish-load", () => {
     win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
   });
