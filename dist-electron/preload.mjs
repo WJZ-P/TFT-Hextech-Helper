@@ -4,6 +4,8 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["CONFIG_BACKUP"] = "config-backup";
   IpcChannel2["CONFIG_RESTORE"] = "config-restore";
   IpcChannel2["LCU_REQUEST"] = "lcu-request";
+  IpcChannel2["HEX_START"] = "hex-start";
+  IpcChannel2["HEX_STOP"] = "hex-stop";
   return IpcChannel2;
 })(IpcChannel || {});
 electron.contextBridge.exposeInMainWorld("ipcRenderer", {
@@ -47,6 +49,15 @@ const configApi = {
   }
 };
 electron.contextBridge.exposeInMainWorld("config", configApi);
+const hexApi = {
+  start: () => {
+    return electron.ipcRenderer.invoke(IpcChannel.HEX_START);
+  },
+  stop: () => {
+    return electron.ipcRenderer.invoke(IpcChannel.HEX_STOP);
+  }
+};
+electron.contextBridge.exposeInMainWorld("hex", hexApi);
 const lcuApi = {
   getSummonerInfo: () => {
     return electron.ipcRenderer.invoke(IpcChannel.LCU_REQUEST, "GET", "/lol-summoner/v1/current-summoner");

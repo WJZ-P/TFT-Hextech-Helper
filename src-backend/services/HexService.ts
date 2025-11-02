@@ -1,5 +1,5 @@
 import {logger} from "../utils/PanelLogger";
-import ConfigHelper from "../ConfigHelper";
+import ConfigHelper from "../utils/ConfigHelper";
 
 export enum GameState {
     GAME_START,

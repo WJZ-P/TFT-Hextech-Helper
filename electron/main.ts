@@ -5,10 +5,11 @@ import LCUConnector from "../src-backend/lcu/utils/LcuConnector.ts";
 import {ArgsFromIpcChannel, LCUIpcChannels} from "../src-backend/lcu/utils/LCUProtocols.ts";
 import LCUManager from "../src-backend/lcu/LCUManager.ts";
 import 'source-map-support/register';
-import ConfigHelper from "../src-backend/ConfigHelper.ts";
+import ConfigHelper from "../src-backend/utils/ConfigHelper.ts";
 import path from "path";
 import {IpcChannel} from "./protocol.ts";
 import {logger} from "../src-backend/utils/PanelLogger.ts";
+import {hexService} from "../src-backend/services/HexService.ts";
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -182,10 +183,9 @@ function registerHandler() {
         }
     });
     //  游戏设置备份
-    ipcMain.handle(IpcChannel.CONFIG_BACKUP,async (event)=>{
-        return ConfigHelper.backup()
-    })
-    ipcMain.handle(IpcChannel.CONFIG_RESTORE,async (event)=>{
-        return ConfigHelper.restore()
-    })
+    ipcMain.handle(IpcChannel.CONFIG_BACKUP, async (event) => ConfigHelper.backup())
+    ipcMain.handle(IpcChannel.CONFIG_RESTORE, async (event) => ConfigHelper.restore())
+    //  海克斯核心科技
+    ipcMain.handle(IpcChannel.HEX_START, async (event) => hexService.start())
+    ipcMain.handle(IpcChannel.HEX_STOP, async (event) => hexService.stop())
 }

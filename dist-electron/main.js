@@ -17454,7 +17454,14 @@ var _eval = EvalError;
 var range = RangeError;
 var ref = ReferenceError;
 var syntax = SyntaxError;
-var type = TypeError;
+var type;
+var hasRequiredType;
+function requireType() {
+  if (hasRequiredType) return type;
+  hasRequiredType = 1;
+  type = TypeError;
+  return type;
+}
 var uri = URIError;
 var abs$1 = Math.abs;
 var floor$1 = Math.floor;
@@ -17700,7 +17707,7 @@ function requireCallBindApplyHelpers() {
   if (hasRequiredCallBindApplyHelpers) return callBindApplyHelpers;
   hasRequiredCallBindApplyHelpers = 1;
   var bind3 = functionBind;
-  var $TypeError2 = type;
+  var $TypeError2 = requireType();
   var $call2 = requireFunctionCall();
   var $actualApply = requireActualApply();
   callBindApplyHelpers = function callBindBasic(args) {
@@ -17773,7 +17780,7 @@ var $EvalError = _eval;
 var $RangeError = range;
 var $ReferenceError = ref;
 var $SyntaxError = syntax;
-var $TypeError$1 = type;
+var $TypeError$1 = requireType();
 var $URIError = uri;
 var abs = abs$1;
 var floor = floor$1;
@@ -18104,7 +18111,7 @@ var GetIntrinsic2 = getIntrinsic;
 var $defineProperty = GetIntrinsic2("%Object.defineProperty%", true);
 var hasToStringTag = requireShams()();
 var hasOwn$1 = hasown;
-var $TypeError = type;
+var $TypeError = requireType();
 var toStringTag = hasToStringTag ? Symbol.toStringTag : null;
 var esSetTostringtag = function setToStringTag(object, value) {
   var overrideIfSet = arguments.length > 2 && !!arguments[2] && arguments[2].force;
@@ -25108,8 +25115,53 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["CONFIG_BACKUP"] = "config-backup";
   IpcChannel2["CONFIG_RESTORE"] = "config-restore";
   IpcChannel2["LCU_REQUEST"] = "lcu-request";
+  IpcChannel2["HEX_START"] = "hex-start";
+  IpcChannel2["HEX_STOP"] = "hex-stop";
   return IpcChannel2;
 })(IpcChannel || {});
+const _HexService = class _HexService {
+  constructor() {
+  }
+  static getInstance() {
+    if (!_HexService.instance) {
+      _HexService.instance = new _HexService();
+    }
+    return _HexService.instance;
+  }
+  /**
+   * 海克斯科技，启动！
+   */
+  async start() {
+    try {
+      console.log("[HexService] 海克斯科技，启动！");
+      logger.info("[HexService] 海克斯科技，启动！");
+      logger.info("[HexService] 正在备份当前客户端配置...");
+      await ConfigHelper.backup();
+      logger.info("[HexService] 正在应用云顶之弈配置...");
+      await ConfigHelper.applyTFTConfig();
+    } catch (e) {
+      console.error(e);
+      logger.error("[HexService] 启动失败！");
+      return true;
+    }
+    return true;
+  }
+  async stop() {
+    try {
+      logger.info("正在恢复客户端设置...");
+      await ConfigHelper.restore();
+      console.log("[HexService] 海克斯科技关闭。");
+      logger.info("[HexService] 海克斯科技关闭。");
+      return true;
+    } catch (e) {
+      console.error(e);
+      logger.error("[HexService] 海克斯科技关闭失败！");
+    }
+  }
+};
+__publicField(_HexService, "instance", null);
+let HexService = _HexService;
+const hexService = HexService.getInstance();
 const __dirname$1 = require$$1$1.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = require$$1$1.join(__dirname$1, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
@@ -25205,12 +25257,10 @@ function registerHandler() {
       return { error: e.message };
     }
   });
-  ipcMain.handle(IpcChannel.CONFIG_BACKUP, async (event) => {
-    return ConfigHelper.backup();
-  });
-  ipcMain.handle(IpcChannel.CONFIG_RESTORE, async (event) => {
-    return ConfigHelper.restore();
-  });
+  ipcMain.handle(IpcChannel.CONFIG_BACKUP, async (event) => ConfigHelper.backup());
+  ipcMain.handle(IpcChannel.CONFIG_RESTORE, async (event) => ConfigHelper.restore());
+  ipcMain.handle(IpcChannel.HEX_START, async (event) => hexService.start());
+  ipcMain.handle(IpcChannel.HEX_STOP, async (event) => hexService.stop());
 }
 export {
   MAIN_DIST,

@@ -61,6 +61,12 @@ export const toast = (message: string, options: { type?: ToastType, position?: T
 }
 
 // 添加不同类型的快捷方式，就像 react-hot-toast 一样
+toast.info = (message: string, options?: { position?: ToastPosition }) =>
+    toast(message, {...options, type: 'info'});
+
+toast.warning = (message: string, options?: { position?: ToastPosition }) =>
+    toast(message, {...options, type: 'warning'});
+
 toast.success = (message: string, options?: { position?: ToastPosition }) =>
     toast(message, {...options, type: 'success'});
 

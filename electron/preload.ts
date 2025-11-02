@@ -53,6 +53,18 @@ const configApi = {
 export type ConfigApi = typeof configApi
 contextBridge.exposeInMainWorld('config', configApi)
 
+//  hexApi：海克斯科技核心
+const hexApi = {
+    start: () : Promise<boolean> =>{
+        return ipcRenderer.invoke(IpcChannel.HEX_START)
+    },
+    stop: (): Promise<boolean> =>{
+        return ipcRenderer.invoke(IpcChannel.HEX_STOP)
+    }
+}
+export type HexApi = typeof hexApi
+contextBridge.exposeInMainWorld('hex',hexApi)
+
 const lcuApi = {
     getSummonerInfo: (): Promise<{ data?: SummonerInfo; error?: string }> => {
         return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-summoner/v1/current-summoner');

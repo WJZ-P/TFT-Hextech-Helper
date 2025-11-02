@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import styled from 'styled-components';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline'; // 开始图标
 import StopCircleOutlinedIcon from '@mui/icons-material/StopCircleOutlined';
 import {ThemeType} from "../../styles/theme.ts";
-import {LogPanel} from "../LogPanel.tsx"; // 关闭图标
+import {LogPanel} from "../LogPanel.tsx";
+import {toast} from "../toast/toast-core.ts"; // 关闭图标
 
 const PageWrapper = styled.div<{ theme: ThemeType }>`
   display: flex;
@@ -66,32 +67,40 @@ const ControlButton = styled.button<{ $isRunning: boolean; theme: ThemeType }>`
 `;
 
 export const HomePage = () => {
-  const [isRunning, setIsRunning] = useState(false); // false: 未开始, true: 运行中
+    const [isRunning, setIsRunning] = useState(false); // false: 未开始, true: 运行中
 
-  const handleToggle = () => {
-      const success =
-    setIsRunning(prevState => !prevState);
-    // 在这里添加你实际的开始/关闭逻辑
-    if (!isRunning) {
-      console.log("核心功能已启动！");
-      // 调用启动功能的函数...
-    } else {
-      console.log("核心功能已关闭！");
-      // 调用关闭功能的函数...
-    }
-  };
+    const handleToggle = async () => {
+        //  启动
+        if (!isRunning) {
+            const success = await window.hex.start()
+            if (success) {
+                toast.success('海克斯科技启动!')
+            } else {
+                return toast.error('海克斯科技启动失败!')
+            }
+        }
+        else{
+            const success = await window.hex.stop()
+            if (success) {
+                toast.success('海克斯科技已关闭!')
+            } else {
+                return toast.error('海克斯科技关闭失败!')
+            }
+        }
+        setIsRunning(!isRunning)
+    };
 
-  return (
-    <PageWrapper>
-      <Title>欢迎使用</Title>
-      <Description>
-        海克斯科技，启动！
-      </Description>
-      <ControlButton onClick={handleToggle} $isRunning={isRunning}>
-        {isRunning ? <StopCircleOutlinedIcon /> : <PlayCircleOutlineIcon />}
-        {isRunning ? '关闭' : '开始'}
-      </ControlButton>
-        <LogPanel isVisible={isRunning}/>
-    </PageWrapper>
-  );
+    return (
+        <PageWrapper>
+            <Title>欢迎使用</Title>
+            <Description>
+                海克斯科技，启动！
+            </Description>
+            <ControlButton onClick={handleToggle} $isRunning={isRunning}>
+                {isRunning ? <StopCircleOutlinedIcon/> : <PlayCircleOutlineIcon/>}
+                {isRunning ? '关闭' : '开始'}
+            </ControlButton>
+            <LogPanel isVisible={isRunning}/>
+        </PageWrapper>
+    );
 };
