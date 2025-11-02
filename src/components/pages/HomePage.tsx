@@ -69,6 +69,7 @@ export const HomePage = () => {
   const [isRunning, setIsRunning] = useState(false); // false: 未开始, true: 运行中
 
   const handleToggle = () => {
+      const success =
     setIsRunning(prevState => !prevState);
     // 在这里添加你实际的开始/关闭逻辑
     if (!isRunning) {

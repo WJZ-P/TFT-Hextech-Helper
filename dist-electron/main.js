@@ -25007,11 +25007,13 @@ sourceMapSupport.exports;
 var sourceMapSupportExports = sourceMapSupport.exports;
 sourceMapSupportExports.install();
 const _ConfigHelper = class _ConfigHelper {
+  //   预设的云顶设置
   constructor(installPath) {
     // 实例的属性，用来存储路径信息
     __publicField(this, "installPath");
     __publicField(this, "gameConfigPath");
     __publicField(this, "backupPath");
+    __publicField(this, "tftConfigPath");
     // --- 类的成员变量 (Class Member Variables) ---
     // 设置为 readonly，因为这些路径在初始化后就不应该被改变了
     __publicField(this, "installDir");
@@ -25069,6 +25071,16 @@ const _ConfigHelper = class _ConfigHelper {
       return false;
     }
     return true;
+  }
+  /**
+   * 应用预设的云顶设置
+   */
+  static async applyTFTConfig() {
+    const instance = _ConfigHelper.getInstance();
+    if (!instance) {
+      console.log("[ConfigHelper] restore错误。尚未初始化！");
+      return false;
+    }
   }
   /**
    * 从备份恢复游戏设置

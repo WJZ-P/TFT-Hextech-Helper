@@ -136,6 +136,12 @@ const SettingsPage = () => {
         console.log("开始恢复游戏设置...");
         setIsRestoring(true);
         //  执行恢复
+        const success = await window.config.restore() // Boolean
+        if (!success) {
+            toast.error("设置恢复错误！请检查客户端是否启动！")
+        } else {
+            toast.success("设置恢复成功!")
+        }
         await window.config.restore()
         setIsRestoring(false);
     };

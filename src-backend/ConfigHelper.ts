@@ -13,6 +13,7 @@ class ConfigHelper {
     private readonly installPath: string;
     private readonly gameConfigPath: string;
     private readonly backupPath: string;
+    private readonly tftConfigPath: string;//   预设的云顶设置
 
     private constructor(installPath: string) {
         if (!installPath) {
@@ -64,7 +65,7 @@ class ConfigHelper {
      */
     public static async backup(): Promise<boolean> {
         const instance = ConfigHelper.getInstance();
-        if(!instance){
+        if (!instance) {
             //  LOL未启动
             return false
         }
@@ -85,12 +86,24 @@ class ConfigHelper {
     }
 
     /**
+     * 应用预设的云顶设置
+     */
+    public static async applyTFTConfig() {
+        const instance = ConfigHelper.getInstance();
+        if (!instance) {
+            console.log("[ConfigHelper] restore错误。尚未初始化！")
+            return false
+        }
+
+    }
+
+    /**
      * 从备份恢复游戏设置
      * @description 把我们备份的 Config 文件夹拷贝回游戏目录
      */
     public static async restore(): Promise<boolean> {
         const instance = ConfigHelper.getInstance();
-        if(!instance){
+        if (!instance) {
             console.log("[ConfigHelper] restore错误。尚未初始化！")
             return false
         }
@@ -110,7 +123,7 @@ class ConfigHelper {
             console.error('恢复过程中发生错误:', err);
             return false
         }
-        return true 
+        return true
     }
 }
 
