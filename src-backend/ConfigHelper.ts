@@ -24,9 +24,12 @@ class ConfigHelper {
 
         // 备份路径
         this.backupPath = path.join(app.getPath('userData'), 'GameConfigBackup');
+        //  预设云顶配置路径
+        this.tftConfigPath = path.join(app.getAppPath(),'public','GameConfig','TFTConfig')
 
         console.log(`[ConfigHelper] 游戏设置目录已设定: ${this.gameConfigPath}`);
         console.log(`[ConfigHelper] 备份将存储在: ${this.backupPath}`);
+        console.log(`[ConfigHelper] 预设云顶之弈设置目录: ${this.tftConfigPath}`);
     }
 
     /**
