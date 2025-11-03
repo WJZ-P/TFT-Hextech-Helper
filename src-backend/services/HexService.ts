@@ -1,12 +1,6 @@
 import {logger} from "../utils/PanelLogger";
 import ConfigHelper from "../utils/ConfigHelper";
 
-export enum GameState {
-    GAME_START,
-    PLAYING,
-    GAME_END
-}
-
 //  海克斯科技核心逻辑！
 class HexService {
     private static instance: HexService | null = null
@@ -46,6 +40,7 @@ class HexService {
 
     public async stop(): Promise<boolean> {
         try {
+            logger.info('———— 停止运行 ————')
             logger.info('正在恢复客户端设置...')
             await ConfigHelper.restore()
 
@@ -57,6 +52,22 @@ class HexService {
             logger.error('[HexService] 海克斯科技关闭失败！')
         }
     }
+}
+
+export enum GamePhase {
+    IN_LOBBY,   //  在大厅
+    IN_QUEUE,   //  在排队
+    //  游戏开始后
+    CAROUSEL,   //  选秀
+    SHOPPING,   //  购买/准备阶段
+    BATTLE,     //  战斗阶段
+    //  游戏结束
+    GAME_END,   //  进行结算
+}
+
+
+class Action {
+
 }
 
 export const hexService = HexService.getInstance();
