@@ -1,15 +1,15 @@
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
-import { app, BrowserWindow, globalShortcut, ipcMain } from "electron";
-import { fileURLToPath } from "node:url";
-import require$$0$5, { EventEmitter as EventEmitter$1 } from "events";
+import {app, BrowserWindow, globalShortcut, ipcMain} from "electron";
+import {fileURLToPath} from "node:url";
+import require$$0$5, {EventEmitter as EventEmitter$1} from "events";
 import require$$1$2 from "os";
 import cp from "child_process";
 import path$i from "node:path";
 import require$$0$2 from "fs";
 import require$$0$1 from "constants";
-import stream, { Readable as Readable$1 } from "stream";
+import stream, {Readable as Readable$1} from "stream";
 import require$$1 from "util";
 import require$$5 from "assert";
 import require$$1$1 from "path";
@@ -22,6 +22,7 @@ import require$$0$4 from "url";
 import zlib$1 from "zlib";
 import require$$0$3 from "buffer";
 import require$$1$5 from "tty";
+
 var commonjsGlobal = typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : {};
 function getDefaultExportFromCjs(x) {
   return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
@@ -17454,14 +17455,7 @@ var _eval = EvalError;
 var range = RangeError;
 var ref = ReferenceError;
 var syntax = SyntaxError;
-var type;
-var hasRequiredType;
-function requireType() {
-  if (hasRequiredType) return type;
-  hasRequiredType = 1;
-  type = TypeError;
-  return type;
-}
+var type = TypeError;
 var uri = URIError;
 var abs$1 = Math.abs;
 var floor$1 = Math.floor;
@@ -17707,7 +17701,7 @@ function requireCallBindApplyHelpers() {
   if (hasRequiredCallBindApplyHelpers) return callBindApplyHelpers;
   hasRequiredCallBindApplyHelpers = 1;
   var bind3 = functionBind;
-  var $TypeError2 = requireType();
+  var $TypeError2 = type;
   var $call2 = requireFunctionCall();
   var $actualApply = requireActualApply();
   callBindApplyHelpers = function callBindBasic(args) {
@@ -17780,7 +17774,7 @@ var $EvalError = _eval;
 var $RangeError = range;
 var $ReferenceError = ref;
 var $SyntaxError = syntax;
-var $TypeError$1 = requireType();
+var $TypeError$1 = type;
 var $URIError = uri;
 var abs = abs$1;
 var floor = floor$1;
@@ -18111,7 +18105,7 @@ var GetIntrinsic2 = getIntrinsic;
 var $defineProperty = GetIntrinsic2("%Object.defineProperty%", true);
 var hasToStringTag = requireShams()();
 var hasOwn$1 = hasown;
-var $TypeError = requireType();
+var $TypeError = type;
 var toStringTag = hasToStringTag ? Symbol.toStringTag : null;
 var esSetTostringtag = function setToStringTag(object, value) {
   var overrideIfSet = arguments.length > 2 && !!arguments[2] && arguments[2].force;
@@ -25148,6 +25142,7 @@ const _HexService = class _HexService {
   }
   async stop() {
     try {
+      logger.info("———— 停止运行 ————");
       logger.info("正在恢复客户端设置...");
       await ConfigHelper.restore();
       console.log("[HexService] 海克斯科技关闭。");
