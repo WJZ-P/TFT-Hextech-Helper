@@ -25,17 +25,16 @@ class HexService {
             logger.info('[HexService] 海克斯科技，启动！')
 
             //  备份配置
-            logger.info('[HexService] 正在备份当前客户端配置...')
-            await ConfigHelper.backup()
-            logger.info('[HexService] 正在应用云顶之弈配置...')
-            await ConfigHelper.applyTFTConfig()
-
+            // logger.info('[HexService] 正在备份当前客户端配置...')
+            // await ConfigHelper.backup()
+            // logger.info('[HexService] 正在应用云顶之弈配置...')
+            // await ConfigHelper.applyTFTConfig()
+            return true
         } catch (e: unknown) {
             console.error(e)
             logger.error('[HexService] 启动失败！')
-            return true
         }
-        return true
+        return false
     }
 
     public async stop(): Promise<boolean> {
@@ -51,6 +50,7 @@ class HexService {
             console.error(e)
             logger.error('[HexService] 海克斯科技关闭失败！')
         }
+        return false
     }
 }
 
@@ -66,8 +66,5 @@ export enum GamePhase {
 }
 
 
-class Action {
-
-}
 
 export const hexService = HexService.getInstance();

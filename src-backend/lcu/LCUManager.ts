@@ -44,7 +44,7 @@ class LCUManager extends EventEmitter {
     public static getInstance(): LCUManager | null {
         if (!LCUManager.instance) {
             console.error("[LCUManager] 尚未初始化，无法获取实例。")
-            return
+            return null
         }
         return LCUManager.instance
     }

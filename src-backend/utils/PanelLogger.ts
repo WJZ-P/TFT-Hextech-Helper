@@ -4,7 +4,7 @@ import {LogLevel} from "vite";
 class PanelLogger {
     //  单例模式
     private static instance: PanelLogger | null = null;
-    private window: BrowserWindow | null;
+    private window: BrowserWindow | undefined;
 
     public static getInstance() {
         if (!PanelLogger.instance)
@@ -21,15 +21,18 @@ class PanelLogger {
 
     info(message: string) {
         this.sendLogToFrontend(message, 'info');
+        console.log(`[info] ${message}`)
     }
 
     warn(message: string) {
         this.sendLogToFrontend(message, 'warn');
+        console.log(`[warn] ${message}`)
     }
 
     error(message: string | Error) {
         const msg = message instanceof Error ? message.message : message;
         this.sendLogToFrontend(msg, 'error');
+        console.log(`[error] ${message}`)
         if (message instanceof Error) {
             console.error(message.stack); // 也在后端打印堆栈
         }
