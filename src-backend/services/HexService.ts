@@ -1,5 +1,4 @@
 import {logger} from "../utils/PanelLogger";
-import ConfigHelper from "../utils/ConfigHelper";
 import {IState} from "./states/IState.ts";
 import {IdleState} from "./states/IdleState.ts";
 import {EndState} from "./states/EndState.ts";
@@ -92,13 +91,14 @@ class HexService {
         try {
             while (this._isRunning) {
                 /// 执行当前state操作
-                const nextState = await this.currentState.action()
-                this.currentState = nextState;
+                this.currentState = await this.currentState.action();
+
             }
         }catch (error:any){
             `[HexService-Looper] 状态机在 [${this.currentState}] 状态下发生严重错误: ${error.message}`
             //  执行收尾工作
-            this.currentState = new EndState()
+            this.currentState =await new EndState().action()
+            this._isRunning = false
         }
 
     }
