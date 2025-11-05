@@ -7,7 +7,7 @@ import {LobbyState} from "./LobbyState";
 
 /// 服务开始阶段，判断客户端是否开启，备份用户配置，应用云顶挂机配置
 export class StartState implements IState {
-    async action(): StartState {
+    async action(): Promise<IState> {
         /// 开始启动服务
         const isGameOpen =LCUManager?.getInstance()?.isConnected
         if(!isGameOpen){

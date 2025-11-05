@@ -70,6 +70,7 @@ class HexService {
             logger.info('———————— [HexService] ————————')
             logger.info('[HexService] 海克斯科技，关闭！')
             this._isRunning = false; // 松开总开关.
+            this.currentState =await new EndState().action()
             // logger.info('———— 停止运行 ————')
             // logger.info('正在恢复客户端设置...')
             // await ConfigHelper.restore()
@@ -92,7 +93,6 @@ class HexService {
             while (this._isRunning) {
                 /// 执行当前state操作
                 this.currentState = await this.currentState.action();
-
             }
         }catch (error:any){
             `[HexService-Looper] 状态机在 [${this.currentState}] 状态下发生严重错误: ${error.message}`
@@ -100,7 +100,6 @@ class HexService {
             this.currentState =await new EndState().action()
             this._isRunning = false
         }
-
     }
 }
 
