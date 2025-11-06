@@ -4,6 +4,27 @@ import Store from 'electron-store';
 
 type WindowBounds = Pick<Rectangle, 'x' | 'y' | 'width' | 'height'>;
 
+export type DotNotationKeyOf<T> =
+    keyof T // 联合类型的第一部分
+    | {       // 联合类型的第二部分 (通过 Mapped Type + Lookup 方式)
+    [K in keyof T]: T[K] extends Record<string, any>
+        ? `${K & string}.${DotNotationKeyOf<T[K]>}`
+        : never;
+}[keyof T]; // 扁平化为联合类型
+
+export type DotNotationValueFor<
+    T,
+    K extends DotNotationKeyOf<T>
+> = K extends keyof T
+    ? T[K]
+    : K extends `${infer F}.${infer R}`
+        ? F extends keyof T
+            ? R extends DotNotationKeyOf<T[F]>
+                ? DotNotationValueFor<T[F], R>
+                : never
+            : never
+        : never;
+
 //  配置类
 interface AppSettings {
     tftMode: TFTMode,    //  下棋模式选择
