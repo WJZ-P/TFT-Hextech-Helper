@@ -3,7 +3,7 @@ import os from 'os'; // 用于获取操作系统相关信息，比如当前平�
 import cp from 'child_process';
 import path from "node:path";
 import fs from 'fs-extra';
-import {logger} from "../../utils/PanelLogger.ts"; // 增强版的 fs 模块，用于文件系统操作，比如检查文件是否存在
+import {logger} from "../../utils/Logger.ts"; // 增强版的 fs 模块，用于文件系统操作，比如检查文件是否存在
 
 //  新版已不能从lockfile读取信息，而是全部通过进程读取
 

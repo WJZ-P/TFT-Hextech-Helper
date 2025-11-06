@@ -1,0 +1,66 @@
+import {TFTMode} from "../services/TFTModeService";
+import type {Rectangle} from 'electron';
+import Store from 'electron-store';
+
+type WindowBounds = Pick<Rectangle, 'x' | 'y' | 'width' | 'height'>;
+
+//  配置类
+interface AppSettings {
+    tftMode: TFTMode,    //  下棋模式选择
+    window: {
+        bounds: WindowBounds | null, // 上次关闭时的窗口信息
+        isMaximized: boolean,   //  上次关闭是否最大化
+    }
+}
+
+class SettingsStore {
+    private static instance: SettingsStore;
+    private store: Store<AppSettings>;
+
+    public static getInstance(): SettingsStore {
+        if (!SettingsStore.instance) {
+            SettingsStore.instance = new SettingsStore()
+        }
+        return SettingsStore.instance
+    }
+
+    private constructor() {
+        //  创建默认配置
+        const defaults: AppSettings = {
+            tftMode: TFTMode.NORMAL,    //  默认是匹配模式
+            window: {
+                bounds: null,           //  第一次启动，默认为null
+                isMaximized: false     //  默认不最大化窗口
+            }
+        }
+        this.store = new Store<AppSettings>({defaults})
+    }
+
+    public get<K extends keyof AppSettings>(key: K): AppSettings[K] {
+        return this.store.get(key)
+    }
+
+    public set<K extends keyof AppSettings>(key: K, value: AppSettings[K]) {
+        this.store.set(key, value)
+    }
+
+    public getRawStore(): Store<AppSettings> {
+        return this.store
+    }
+
+    /**
+     * 【批量设置】
+     * (类型安全) 一次性写入 *多个* 设置项。
+     * @param settings 要合并的设置对象 (Partial 意味着 "部分的", 允许你只传一个子集)
+     */
+    public setMultiple(settings: Partial<AppSettings>): void {
+        // store.set(object) 会自动合并它们
+        this.store.set(settings as AppSettings);
+    }
+
+    public onDidChange<K extends keyof AppSettings>(key: K, callback: (newValue: AppSettings[K], oldValue: AppSettings[K]) => void) {
+        return this.store.onDidChange(key, callback as any)  //  返回的是unsubscribe，方便取消订阅
+    }
+}
+
+export const settingsStore = SettingsStore.getInstance()

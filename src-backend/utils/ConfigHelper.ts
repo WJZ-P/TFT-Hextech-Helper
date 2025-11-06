@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 // 从 electron 中引入 'app'，用来获取我们应用的安全数据存储路径
 import {app} from 'electron';
+import {logger} from "./Logger.ts";
 
 // -------------------------------------------------------------------
 // ✨ ConfigHelper 类的定义 ✨
@@ -25,7 +26,7 @@ class ConfigHelper {
         // 备份路径
         this.backupPath = path.join(app.getPath('userData'), 'GameConfigBackup');
         //  预设云顶配置路径
-        this.tftConfigPath = path.join(app.getAppPath(),'public','GameConfig','TFTConfig')
+        this.tftConfigPath = path.join(app.getAppPath(), 'public', 'GameConfig', 'TFTConfig')
 
         console.log(`[ConfigHelper] 游戏设置目录已设定: ${this.gameConfigPath}`);
         console.log(`[ConfigHelper] 备份将存储在: ${this.backupPath}`);
@@ -53,13 +54,6 @@ class ConfigHelper {
         return ConfigHelper.instance;
     }
 
-    // --- 类的成员变量 (Class Member Variables) ---
-
-    // 设置为 readonly，因为这些路径在初始化后就不应该被改变了
-    public readonly installDir: string;
-    public readonly gameConfigDir: string;
-    public readonly backupDir: string;
-
     // --- 核心功能方法 (Core Function Methods) ---
 
     /**
@@ -74,15 +68,15 @@ class ConfigHelper {
         }
         const sourceExists = await fs.pathExists(instance.gameConfigPath);
         if (!sourceExists) {
-            console.error(`备份失败！找不到游戏设置目录：${instance.gameConfigPath}`);
+            logger.error(`备份失败！找不到游戏设置目录：${instance.gameConfigPath}`);
             return false
         }
         try {
             await fs.emptyDir(instance.backupPath);
             await fs.copy(instance.gameConfigPath, instance.backupPath);
-            console.log('设置备份成功！');
+            logger.info('设置备份成功！');
         } catch (err) {
-            console.error('备份过程中发生错误:', err);
+            logger.error(`备份过程中发生错误:,${err}`);
             return false
         }
         return true
@@ -91,13 +85,27 @@ class ConfigHelper {
     /**
      * 应用预设的云顶设置
      */
-    public static async applyTFTConfig() {
+    public static async applyTFTConfig(): Promise<boolean> {
         const instance = ConfigHelper.getInstance();
         if (!instance) {
-            console.log("[ConfigHelper] restore错误。尚未初始化！")
+            logger.info("[ConfigHelper] restore错误。尚未初始化！")
             return false
         }
-
+        const pathExist = await fs.pathExists(instance.tftConfigPath)
+        if (!pathExist) {
+            logger.error(`应用云顶设置失败！找不到设置目录：${instance.tftConfigPath}`);
+            // TODO: Toast
+            return false
+        }
+        //  应用设置
+        try {
+            await fs.copy(instance.tftConfigPath, instance.gameConfigPath)
+            logger.info('云顶挂机游戏设置应用成功！')
+        } catch (e: unknown) {
+            logger.error(`云顶设置应用失败！,${e}`)
+            return false
+        }
+        return true
     }
 
     /**
@@ -120,7 +128,7 @@ class ConfigHelper {
         try {
             // 为安全起见，先清空目标文件夹再恢复
             await fs.copy(instance.backupPath, instance.gameConfigPath);
-            console.log('设置恢复成功！');
+            logger.info('设置恢复成功！');
             // TODO: Toast
         } catch (err) {
             console.error('恢复过程中发生错误:', err);

@@ -8,8 +8,10 @@ import 'source-map-support/register';
 import ConfigHelper from "../src-backend/utils/ConfigHelper.ts";
 import path from "path";
 import {IpcChannel} from "./protocol.ts";
-import {logger} from "../src-backend/utils/PanelLogger.ts";
+import {logger} from "../src-backend/utils/Logger.ts";
 import {hexService} from "../src-backend/services/HexService.ts";
+import {settingsStore} from "../src-backend/utils/SettingsStore.ts";
+import {debounce} from "../src-backend/utils/HelperTools.ts";
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -43,14 +45,33 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 let win: BrowserWindow | null
 
 function createWindow() {
+    const savedWindowInfo = settingsStore.get("window")
+
     win = new BrowserWindow({
         icon: path.join(process.env.VITE_PUBLIC, 'icon.png'),//  窗口左上角的图标
         webPreferences: {
             preload: path.join(__dirname, 'preload.mjs'),// 指定preload文件
         },
+        ...(savedWindowInfo.bounds || {width: 1024, height: 400}),   //  控制窗口位置,第一次打开不会有保存值，就用默认的
     })
 
-    //  初始化PanelLogger
+
+    const debouncedSaveBounds = debounce(() => {
+        // 核心！我们只在 "正常" 状态下才保存
+        if (!win?.isMaximized() && !win?.isFullScreen()) {
+            settingsStore.set('window.bounds', win?.getBounds());
+        }
+    },500)
+
+    //  监听窗口变化事件
+    win.on("resize", debouncedSaveBounds)
+    win.on("move", debouncedSaveBounds)
+    //  关闭窗口的时候，判断是否是全屏
+    win.on("close", () => {
+        settingsStore.set("window.isMaximized",win!.isMaximized())
+    })
+
+    //  初始化Logger
     logger.init(win)
 
     // Test active push message to Renderer-process.
@@ -131,7 +152,7 @@ function init() {
 
         lcu.on('disconnect', () => {
             console.log('LCUManager 已断开');
-            sendToRenderer('lcu-disconnect'); // 通知前台
+            sendToRenderer('lcu-disconnect', null); // 通知前台
         });
 
         lcu.on('lcu-event', (event) => {
@@ -143,7 +164,7 @@ function init() {
 
     connector.on('disconnect', () => {
         console.log("LOL客户端登出！")
-        sendToRenderer('lcu-disconnect')
+        sendToRenderer('lcu-disconnect', null)
     })
 
     connector.start()
@@ -157,7 +178,7 @@ function sendToRenderer<E extends keyof LCUIpcChannels>(channel: E, ...args: Arg
 
 function registerHandler() {
     ipcMain.handle(IpcChannel.LCU_REQUEST, async (
-        event, // 固定的第一个参数，包含了事件的源信息
+        _event, // 固定的第一个参数，包含了事件的源信息
         method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE', // 第二个参数：请求方法
         endpoint: string, // 第三个参数：API 端点
         body?: object      // 第四个参数：可选的请求体

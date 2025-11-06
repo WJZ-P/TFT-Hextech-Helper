@@ -19,6 +19,7 @@
     "axios": "^1.12.2",
     "bufferutil": "^4.0.9",
     "chokidar": "^4.0.3",
+    "electron-store": "^11.0.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.9.3",

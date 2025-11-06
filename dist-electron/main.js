@@ -2383,27 +2383,30 @@ var output = {
 })(lib);
 var libExports = lib.exports;
 const fs$1 = /* @__PURE__ */ getDefaultExportFromCjs(libExports);
-const _PanelLogger = class _PanelLogger {
+const _Logger = class _Logger {
   constructor() {
     __publicField(this, "window");
   }
   static getInstance() {
-    if (!_PanelLogger.instance)
-      _PanelLogger.instance = new _PanelLogger();
-    return _PanelLogger.instance;
+    if (!_Logger.instance)
+      _Logger.instance = new _Logger();
+    return _Logger.instance;
   }
   init(window2) {
     this.window = window2;
   }
   info(message) {
     this.sendLogToFrontend(message, "info");
+    console.log(`[info] ${message}`);
   }
   warn(message) {
     this.sendLogToFrontend(message, "warn");
+    console.log(`[warn] ${message}`);
   }
   error(message) {
     const msg = message instanceof Error ? message.message : message;
     this.sendLogToFrontend(msg, "error");
+    console.log(`[error] ${message}`);
     if (message instanceof Error) {
       console.error(message.stack);
     }
@@ -2412,14 +2415,14 @@ const _PanelLogger = class _PanelLogger {
     if (this.window) {
       this.window.webContents.send("log-message", { message, level });
     } else {
-      console.error("[PanelLogger] 无window对象");
+      console.error("[Logger] 无window对象");
     }
   }
 };
 //  单例模式
-__publicField(_PanelLogger, "instance", null);
-let PanelLogger = _PanelLogger;
-const logger = PanelLogger.getInstance();
+__publicField(_Logger, "instance", null);
+let Logger = _Logger;
+const logger = Logger.getInstance();
 const IS_WIN = process.platform === "win32";
 const IS_MAC = process.platform === "darwin";
 const IS_WSL = process.platform === "linux" && require$$1$2.release().toLowerCase().includes("microsoft");
@@ -22660,7 +22663,7 @@ const _LCUManager = class _LCUManager extends EventEmitter$1 {
   static getInstance() {
     if (!_LCUManager.instance) {
       console.error("[LCUManager] 尚未初始化，无法获取实例。");
-      return;
+      return null;
     }
     return _LCUManager.instance;
   }
@@ -25008,11 +25011,6 @@ const _ConfigHelper = class _ConfigHelper {
     __publicField(this, "gameConfigPath");
     __publicField(this, "backupPath");
     __publicField(this, "tftConfigPath");
-    // --- 类的成员变量 (Class Member Variables) ---
-    // 设置为 readonly，因为这些路径在初始化后就不应该被改变了
-    __publicField(this, "installDir");
-    __publicField(this, "gameConfigDir");
-    __publicField(this, "backupDir");
     if (!installPath) {
       throw new Error("初始化失败，必须提供一个有效的游戏安装路径！");
     }
@@ -25055,15 +25053,15 @@ const _ConfigHelper = class _ConfigHelper {
     }
     const sourceExists = await fs$1.pathExists(instance.gameConfigPath);
     if (!sourceExists) {
-      console.error(`备份失败！找不到游戏设置目录：${instance.gameConfigPath}`);
+      logger.error(`备份失败！找不到游戏设置目录：${instance.gameConfigPath}`);
       return false;
     }
     try {
       await fs$1.emptyDir(instance.backupPath);
       await fs$1.copy(instance.gameConfigPath, instance.backupPath);
-      console.log("设置备份成功！");
+      logger.info("设置备份成功！");
     } catch (err) {
-      console.error("备份过程中发生错误:", err);
+      logger.error(`备份过程中发生错误:,${err}`);
       return false;
     }
     return true;
@@ -25074,9 +25072,22 @@ const _ConfigHelper = class _ConfigHelper {
   static async applyTFTConfig() {
     const instance = _ConfigHelper.getInstance();
     if (!instance) {
-      console.log("[ConfigHelper] restore错误。尚未初始化！");
+      logger.info("[ConfigHelper] restore错误。尚未初始化！");
       return false;
     }
+    const pathExist = await fs$1.pathExists(instance.tftConfigPath);
+    if (!pathExist) {
+      logger.error(`应用云顶设置失败！找不到设置目录：${instance.tftConfigPath}`);
+      return false;
+    }
+    try {
+      await fs$1.copy(instance.tftConfigPath, instance.gameConfigPath);
+      logger.info("云顶挂机游戏设置应用成功！");
+    } catch (e) {
+      logger.error(`云顶设置应用失败！,${e}`);
+      return false;
+    }
+    return true;
   }
   /**
    * 从备份恢复游戏设置
@@ -25095,7 +25106,7 @@ const _ConfigHelper = class _ConfigHelper {
     }
     try {
       await fs$1.copy(instance.backupPath, instance.gameConfigPath);
-      console.log("设置恢复成功！");
+      logger.info("设置恢复成功！");
     } catch (err) {
       console.error("恢复过程中发生错误:", err);
       return false;
@@ -25113,8 +25124,48 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["HEX_STOP"] = "hex-stop";
   return IpcChannel2;
 })(IpcChannel || {});
+class EndState {
+  async action() {
+    logger.info("正在恢复客户端设置...");
+    await ConfigHelper.restore();
+    logger.info("客户端设置恢复完成");
+    logger.info("[HexService] 海克斯科技关闭。");
+    return new IdleState();
+  }
+}
+class LobbyState {
+  async action() {
+  }
+}
+class StartState {
+  async action(signal) {
+    var _a;
+    signal.throwIfAborted();
+    const isGameOpen = (_a = LCUManager == null ? void 0 : LCUManager.getInstance()) == null ? void 0 : _a.isConnected;
+    if (!isGameOpen) {
+      logger.error("[StartState] 客户端未启动!");
+      return new EndState();
+    }
+    logger.info("[HexService] 正在备份当前客户端配置...");
+    await ConfigHelper.backup();
+    logger.info("[HexService] 正在应用云顶之弈配置...");
+    await ConfigHelper.applyTFTConfig();
+    return new LobbyState();
+  }
+}
+class IdleState {
+  async action() {
+    return new StartState();
+  }
+}
 const _HexService = class _HexService {
+  // looper的心跳间隔。
   constructor() {
+    //  状态
+    __publicField(this, "abortController", null);
+    __publicField(this, "currentState");
+    __publicField(this, "TICK_RATE_MS", 3e3);
+    this.currentState = new IdleState();
   }
   static getInstance() {
     if (!_HexService.instance) {
@@ -25123,34 +25174,70 @@ const _HexService = class _HexService {
     return _HexService.instance;
   }
   /**
+   * 我们检查 abortController 是不是存在
+   */
+  get isRunning() {
+    return this.abortController !== null;
+  }
+  /**
    * 海克斯科技，启动！
    */
   async start() {
-    try {
-      console.log("[HexService] 海克斯科技，启动！");
-      logger.info("[HexService] 海克斯科技，启动！");
-      logger.info("[HexService] 正在备份当前客户端配置...");
-      await ConfigHelper.backup();
-      logger.info("[HexService] 正在应用云顶之弈配置...");
-      await ConfigHelper.applyTFTConfig();
-    } catch (e) {
-      console.error(e);
-      logger.error("[HexService] 启动失败！");
+    if (this.isRunning) {
+      logger.warn("[HexService] 引擎已在运行中，无需重复启动。");
       return true;
     }
-    return true;
+    try {
+      logger.info("———————— [HexService] ————————");
+      logger.info("[HexService] 海克斯科技，启动！");
+      this.abortController = new AbortController();
+      this.currentState = new StartState();
+      this.runMainLoop(this.abortController.signal);
+      return true;
+    } catch (e) {
+      logger.error("[HexService] 启动失败！");
+      console.error(e);
+      return false;
+    }
   }
   async stop() {
+    var _a;
+    if (!this.isRunning) {
+      logger.warn("[HexService] 服务已停止，无需重复操作。");
+      return true;
+    }
     try {
-      logger.info("———— 停止运行 ————");
-      logger.info("正在恢复客户端设置...");
-      await ConfigHelper.restore();
-      console.log("[HexService] 海克斯科技关闭。");
-      logger.info("[HexService] 海克斯科技关闭。");
+      logger.info("———————— [HexService] ————————");
+      logger.info("[HexService] 海克斯科技，关闭！");
+      (_a = this.abortController) == null ? void 0 : _a.abort("user stop");
       return true;
     } catch (e) {
       console.error(e);
       logger.error("[HexService] 海克斯科技关闭失败！");
+      return false;
+    }
+  }
+  /**
+   * 创建状态机引擎
+   */
+  async runMainLoop(signal) {
+    logger.info("[HexService-Looper] 启动事件循环。");
+    try {
+      signal.throwIfAborted();
+      while (true) {
+        signal.throwIfAborted();
+        logger.info(`[HexService-Looper] -> 当前状态: ${this.currentState.constructor.name}`);
+        this.currentState = await this.currentState.action(signal);
+      }
+    } catch (error) {
+      if (error.name === "AbortError") {
+        logger.info(`[HexService-Looper] -> 用户手动退出，挂机流程结束`);
+      } else {
+        logger.error(`[HexService-Looper] 状态机在 [${this.currentState}] 状态下发生严重错误: ${error.message}`);
+      }
+    } finally {
+      this.currentState = await new EndState().action();
+      this.abortController = null;
     }
   }
 };
@@ -25171,7 +25258,9 @@ function createWindow() {
     webPreferences: {
       preload: require$$1$1.join(__dirname$1, "preload.mjs")
       // 指定preload文件
-    }
+    },
+    ...{ width: 800, height: 400 }
+    //  控制窗口位置,第一次打开不会有保存值，就用默认的
   });
   logger.init(win);
   win.webContents.on("did-finish-load", () => {
@@ -25222,7 +25311,7 @@ function init() {
     });
     lcu.on("disconnect", () => {
       console.log("LCUManager 已断开");
-      sendToRenderer("lcu-disconnect");
+      sendToRenderer("lcu-disconnect", null);
     });
     lcu.on("lcu-event", (event) => {
       console.log("收到LCU事件:", event.uri, event.eventType);
@@ -25230,7 +25319,7 @@ function init() {
   });
   connector.on("disconnect", () => {
     console.log("LOL客户端登出！");
-    sendToRenderer("lcu-disconnect");
+    sendToRenderer("lcu-disconnect", null);
   });
   connector.start();
 }
@@ -25238,7 +25327,7 @@ function sendToRenderer(channel, ...args) {
   return win == null ? void 0 : win.webContents.send(channel, ...args);
 }
 function registerHandler() {
-  ipcMain.handle(IpcChannel.LCU_REQUEST, async (event, method, endpoint, body) => {
+  ipcMain.handle(IpcChannel.LCU_REQUEST, async (_event, method, endpoint, body) => {
     const lcu = LCUManager.getInstance();
     if (!lcu || !lcu.isConnected) {
       console.error("❌ [IPC] LCUManager 尚未连接，无法处理请求");

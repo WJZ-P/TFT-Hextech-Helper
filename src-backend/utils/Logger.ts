@@ -1,15 +1,15 @@
 import {BrowserWindow} from 'electron';
 import {LogLevel} from "vite";
 
-class PanelLogger {
+class Logger {
     //  单例模式
-    private static instance: PanelLogger | null = null;
+    private static instance: Logger | null = null;
     private window: BrowserWindow | undefined;
 
     public static getInstance() {
-        if (!PanelLogger.instance)
-            PanelLogger.instance = new PanelLogger()
-        return PanelLogger.instance
+        if (!Logger.instance)
+            Logger.instance = new Logger()
+        return Logger.instance
     }
 
     private constructor() {
@@ -42,9 +42,9 @@ class PanelLogger {
         if (this.window) {
             this.window.webContents.send('log-message', {message, level})
         } else {
-            console.error("[PanelLogger] 无window对象")
+            console.error("[Logger] 无window对象")
         }
     }
 }
 
-export const logger = PanelLogger.getInstance()
+export const logger = Logger.getInstance()

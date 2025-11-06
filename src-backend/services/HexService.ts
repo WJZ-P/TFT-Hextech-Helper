@@ -1,4 +1,4 @@
-import {logger} from "../utils/PanelLogger";
+import {logger} from "../utils/Logger.ts";
 import {IState} from "./states/IState.ts";
 import {IdleState} from "./states/IdleState.ts";
 import {EndState} from "./states/EndState.ts";

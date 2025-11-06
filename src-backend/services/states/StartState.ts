@@ -1,6 +1,6 @@
 import {IState} from "./IState";
 import LCUManager from "../../lcu/LCUManager";
-import {logger} from "../../utils/PanelLogger";
+import {logger} from "../../utils/Logger.ts";
 import {EndState} from "./EndState";
 import ConfigHelper from "../../utils/ConfigHelper";
 import {LobbyState} from "./LobbyState";

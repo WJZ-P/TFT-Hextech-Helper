@@ -1,6 +1,6 @@
 import {IState} from "./IState";
 import {IdleState} from "./IdleState.ts";
-import {logger} from "../../utils/PanelLogger.ts";
+import {logger} from "../../utils/Logger.ts";
 import ConfigHelper from "../../utils/ConfigHelper.ts";
 
 export class EndState implements IState {
