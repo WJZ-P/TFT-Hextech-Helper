@@ -3,6 +3,8 @@ import WebSocket from 'ws';
 import https from 'https';
 import {LCUProcessInfo} from "./utils/LcuConnector";
 import axios, {AxiosInstance} from "axios";
+import {LobbyConfig, Queue, SummonerInfo} from "./utils/LCUProtocols.ts";
+import {logger} from "../utils/Logger.ts";
 
 // 定义 LCUManager 能广播的所有事件
 interface LCUManagerEvents {
@@ -214,6 +216,72 @@ class LCUManager extends EventEmitter {
             }
         }
     }
+
+    //  一堆专注于后端使用的方法
+
+  public getSummonerInfo(): Promise<SummonerInfo> {
+    return this.request('GET', '/lol-summoner/v1/current-summoner');
+  }
+
+  public createCustomLobby(config: LobbyConfig): Promise<any> {
+    logger.info('📬 [LCUManager] 正在创建自定义房间...');
+    return this.request('POST', '/lol-lobby/v2/lobby', config);
+  }
+
+  public createLobbyByQueueId(queueId: Queue): Promise<any> {
+    logger.info(`📬 [LCUManager] 正在创建房间 (队列ID: ${queueId})...`);
+    return this.request('POST', '/lol-lobby/v2/lobby', { queueId: queueId });
+  }
+
+  public getCurrentGamemodeInfo(): Promise<any> {
+    return this.request('GET', '/lol-lobby/v1/parties/gamemode');
+  }
+
+  public startMatch(): Promise<any> {
+    logger.info('📬 [LCUManager] 正在开始匹配...');
+    return this.request('POST', '/lol-lobby/v2/lobby/matchmaking/search');
+  }
+
+  public stopMatch(): Promise<any> {
+    logger.info('📬 [LCUManager] 正在停止匹配...');
+    return this.request('DELETE', '/lol-lobby/v2/lobby/matchmaking/search');
+  }
+
+  public checkMatchState(): Promise<any> {
+    return this.request('GET', '/lol-lobby/v2/lobby/matchmaking/search-state');
+  }
+
+  public getCustomGames(): Promise<any> {
+    return this.request('GET', '/lol-lobby/v1/custom-games');
+  }
+
+  public getQueues(): Promise<any> {
+    return this.request('GET', '/lol-game-queues/v1/queues');
+  }
+
+  public getChatConfig(): Promise<any> {
+    return this.request('GET', '/lol-game-queues/v1/queues');
+  }
+
+  public getChampSelectSession(): Promise<any> {
+    return this.request('GET', '/lol-champ-select/v1/session');
+  }
+
+  public getChatConversations(): Promise<any> {
+    return this.request('GET', '/lol-chat/v1/conversations');
+  }
+
+  public getGameflowSession(): Promise<any> {
+    return this.request('GET', '/lol-gameflow/v1/session');
+  }
+
+  public getExtraGameClientArgs(): Promise<any> {
+    return this.request('GET', '/lol-gameflow/v1/extra-game-client-args');
+  }
+
+  public getLobby(): Promise<any> {
+    return this.request('GET', '/lol-lobby/v2/lobby');
+  }
 }
 
 export default LCUManager;

@@ -152,7 +152,7 @@ export const LogPanel: React.FC<LogPanelProps> = ({isVisible}) => {
         const panel = logPanelRef.current
         if(panel){
             //  检查滚动条是否在底部
-            const isAtBottom = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 10;// 10 是容错
+            const isAtBottom = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 20;// 这个数字是容错
             setIsUserScrollUp(!isAtBottom)
         }
     }
