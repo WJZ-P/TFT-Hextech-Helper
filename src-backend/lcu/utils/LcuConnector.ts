@@ -151,7 +151,6 @@ class LCUConnector extends EventEmitter {
                 this.clearProcessWatcher();
                 return;
             }
-            console.log("LOL客户端未启动，一秒后将再次检查...");
             logger.error("LOL客户端未启动，一秒后将再次检查...");
             // 如果没找到，设置一个定时器，每秒执行一次 _initProcessWatcher 来重新查找
             if (!this.processWatcher) {

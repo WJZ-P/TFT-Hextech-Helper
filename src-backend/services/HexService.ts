@@ -3,6 +3,7 @@ import {IState} from "./states/IState.ts";
 import {IdleState} from "./states/IdleState.ts";
 import {EndState} from "./states/EndState.ts";
 import {StartState} from "./states/StartState.ts";
+import {sleep} from "../utils/HelperTools.ts";
 
 //  海克斯科技核心逻辑！
 class HexService {
@@ -50,11 +51,6 @@ class HexService {
             //  点火
             this.runMainLoop(this.abortController.signal)
 
-            //  备份配置
-            // logger.info('[HexService] 正在备份当前客户端配置...')
-            // await ConfigHelper.backup()
-            // logger.info('[HexService] 正在应用云顶之弈配置...')
-            // await ConfigHelper.applyTFTConfig()
             return true
         } catch (e: unknown) {
             logger.error('[HexService] 启动失败！')
@@ -102,6 +98,7 @@ class HexService {
                 logger.info(`[HexService-Looper] -> 当前状态: ${this.currentState.constructor.name}`);
                 /// 执行当前state操作
                 this.currentState = await this.currentState.action(signal);
+                await sleep(2000)
             }
         } catch (error: any) {
             if (error.name === 'AbortError') {

@@ -52,7 +52,7 @@ function createWindow() {
         webPreferences: {
             preload: path.join(__dirname, 'preload.mjs'),// 指定preload文件
         },
-        ...(savedWindowInfo.bounds || {width: 1024, height: 400}),   //  控制窗口位置,第一次打开不会有保存值，就用默认的
+        ...(savedWindowInfo.bounds || {width: 1024, height: 600}),   //  控制窗口位置,第一次打开不会有保存值，就用默认的
     })
 
 
@@ -152,7 +152,7 @@ function init() {
 
         lcu.on('disconnect', () => {
             console.log('LCUManager 已断开');
-            sendToRenderer('lcu-disconnect', null); // 通知前台
+            sendToRenderer('lcu-disconnect'); // 通知前台
         });
 
         lcu.on('lcu-event', (event) => {
@@ -164,7 +164,7 @@ function init() {
 
     connector.on('disconnect', () => {
         console.log("LOL客户端登出！")
-        sendToRenderer('lcu-disconnect', null)
+        sendToRenderer('lcu-disconnect')
     })
 
     connector.start()
