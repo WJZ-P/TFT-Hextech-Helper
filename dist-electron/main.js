@@ -17473,7 +17473,14 @@ var _eval = EvalError;
 var range$1 = RangeError;
 var ref$2 = ReferenceError;
 var syntax = SyntaxError;
-var type$b = TypeError;
+var type$b;
+var hasRequiredType;
+function requireType() {
+  if (hasRequiredType) return type$b;
+  hasRequiredType = 1;
+  type$b = TypeError;
+  return type$b;
+}
 var uri$4 = URIError;
 var abs$1 = Math.abs;
 var floor$1 = Math.floor;
@@ -17719,7 +17726,7 @@ function requireCallBindApplyHelpers() {
   if (hasRequiredCallBindApplyHelpers) return callBindApplyHelpers;
   hasRequiredCallBindApplyHelpers = 1;
   var bind3 = functionBind;
-  var $TypeError2 = type$b;
+  var $TypeError2 = requireType();
   var $call2 = requireFunctionCall();
   var $actualApply = requireActualApply();
   callBindApplyHelpers = function callBindBasic(args) {
@@ -17792,7 +17799,7 @@ var $EvalError = _eval;
 var $RangeError = range$1;
 var $ReferenceError = ref$2;
 var $SyntaxError = syntax;
-var $TypeError$1 = type$b;
+var $TypeError$1 = requireType();
 var $URIError = uri$4;
 var abs = abs$1;
 var floor = floor$1;
@@ -18123,7 +18130,7 @@ var GetIntrinsic2 = getIntrinsic;
 var $defineProperty = GetIntrinsic2("%Object.defineProperty%", true);
 var hasToStringTag = requireShams()();
 var hasOwn$1 = hasown;
-var $TypeError = type$b;
+var $TypeError = requireType();
 var toStringTag = hasToStringTag ? Symbol.toStringTag : null;
 var esSetTostringtag = function setToStringTag(object, value) {
   var overrideIfSet = arguments.length > 2 && !!arguments[2] && arguments[2].force;
@@ -22828,8 +22835,9 @@ const _LCUManager = class _LCUManager extends EventEmitter$1 {
     logger.info("📬 [LCUManager] 正在停止匹配...");
     return this.request("DELETE", "/lol-lobby/v2/lobby/matchmaking/search");
   }
-  checkMatchState() {
-    return this.request("GET", "/lol-lobby/v2/lobby/matchmaking/search-state");
+  async checkMatchState() {
+    const result = await this.request("GET", "/lol-lobby/v2/lobby/matchmaking/search-state");
+    return result.searchState;
   }
   getCustomGames() {
     return this.request("GET", "/lol-lobby/v1/custom-games");
@@ -25189,9 +25197,49 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["HEX_STOP"] = "hex-stop";
   return IpcChannel2;
 })(IpcChannel || {});
+var Queue = /* @__PURE__ */ ((Queue2) => {
+  Queue2[Queue2["NORMAL_DRAFT"] = 400] = "NORMAL_DRAFT";
+  Queue2[Queue2["RANKED_SOLO_DUO"] = 420] = "RANKED_SOLO_DUO";
+  Queue2[Queue2["NORMAL_BLIND"] = 430] = "NORMAL_BLIND";
+  Queue2[Queue2["RANKED_FLEX"] = 440] = "RANKED_FLEX";
+  Queue2[Queue2["ARAM"] = 450] = "ARAM";
+  Queue2[Queue2["PICKURF"] = 900] = "PICKURF";
+  Queue2[Queue2["TFT_NORMAL"] = 1090] = "TFT_NORMAL";
+  Queue2[Queue2["TFT_RANKED"] = 1100] = "TFT_RANKED";
+  Queue2[Queue2["TFT_DOUBLE"] = 1160] = "TFT_DOUBLE";
+  Queue2[Queue2["TFT_TREASURE"] = 1170] = "TFT_TREASURE";
+  Queue2[Queue2["TFT_FATIAO"] = 1220] = "TFT_FATIAO";
+  Queue2[Queue2["URF"] = 1900] = "URF";
+  Queue2[Queue2["DOU_HUN"] = 1700] = "DOU_HUN";
+  Queue2[Queue2["MORIRENJI"] = 4210] = "MORIRENJI";
+  Queue2[Queue2["MORIRENJI_HARD"] = 4220] = "MORIRENJI_HARD";
+  Queue2[Queue2["MORIRENJI_VERY_HARD"] = 4260] = "MORIRENJI_VERY_HARD";
+  return Queue2;
+})(Queue || {});
+function sleep(ms2) {
+  return new Promise((resolve2) => setTimeout(resolve2, ms2));
+}
+function debounce(func, delay) {
+  let timeoutId = null;
+  return (...args) => {
+    if (timeoutId) clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      func(...args);
+    }, delay);
+  };
+}
 class LobbyState {
   async action(signal) {
     signal.throwIfAborted();
+    const lcuManager = LCUManager.getInstance();
+    if (!lcuManager) {
+      throw Error("[LobbyState] 检测到客户端未启动！");
+    }
+    await lcuManager.createLobbyByQueueId(Queue.TFT_FATIAO);
+    await sleep(500);
+    await lcuManager.startMatch();
+    await lcuManager.checkMatchState();
+    logger.info(`[${LobbyState.constructor.name}] -> 当前排队状态：`);
   }
 }
 class StartState {
@@ -25224,18 +25272,6 @@ class EndState {
     logger.info("[HexService] 海克斯科技关闭。");
     return new IdleState();
   }
-}
-function sleep(ms2) {
-  return new Promise((resolve2) => setTimeout(resolve2, ms2));
-}
-function debounce(func, delay) {
-  let timeoutId = null;
-  return (...args) => {
-    if (timeoutId) clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => {
-      func(...args);
-    }, delay);
-  };
 }
 const _HexService = class _HexService {
   // looper的心跳间隔。

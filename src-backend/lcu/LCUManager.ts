@@ -3,7 +3,7 @@ import WebSocket from 'ws';
 import https from 'https';
 import {LCUProcessInfo} from "./utils/LcuConnector";
 import axios, {AxiosInstance} from "axios";
-import {LobbyConfig, Queue, SummonerInfo} from "./utils/LCUProtocols.ts";
+import {LobbyConfig, MatchState, Queue, SummonerInfo} from "./utils/LCUProtocols.ts";
 import {logger} from "../utils/Logger.ts";
 
 // 定义 LCUManager 能广播的所有事件
@@ -78,9 +78,9 @@ class LCUManager extends EventEmitter {
             baseURL: `https://127.0.0.1:${this.port}`,
             httpsAgent: this.httpsAgent, // 把我们的“通行证”交给 axios
             proxy: false,   // ← 关键：禁止任何系统/环境变量代理!!!这里debug找了一万年才发现是这个问题。
-            auth:{
+            auth: {
                 username: 'riot',
-                password:this.token
+                password: this.token
             },
             headers: {
                 'Content-Type': 'application/json',
@@ -147,16 +147,16 @@ class LCUManager extends EventEmitter {
      * @param endpoint API 端点, e.g., '/lol-summoner/v1/current-summoner'
      * @param body 请求体 (可选)
      */
-    public async request<T = any>(method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE', endpoint: string, body?: object): Promise<T> {
+    public async request(method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE', endpoint: string, body?: object): Promise<any> {
         try {
             // 在这里打印出完整的请求 URL
             const fullUrl = `${this.api.defaults.baseURL}${endpoint}`;
             console.log(`➡️  [LCUManager] 准备发起请求: ${method} ${fullUrl}`);
 
-            const response = await this.api.request<T>({
+            const response = await this.api.request({
                 method: method,
                 url: fullUrl, // axios 会自动拼接 baseURL
-                data:body
+                data: body
             });
             return response.data; // axios 会自动处理 JSON 解析，结果在 response.data 里
         } catch (error) {
@@ -219,69 +219,81 @@ class LCUManager extends EventEmitter {
 
     //  一堆专注于后端使用的方法
 
-  public getSummonerInfo(): Promise<SummonerInfo> {
-    return this.request('GET', '/lol-summoner/v1/current-summoner');
-  }
+    public getSummonerInfo(): Promise<SummonerInfo> {
+        return this.request('GET', '/lol-summoner/v1/current-summoner');
+    }
 
-  public createCustomLobby(config: LobbyConfig): Promise<any> {
-    logger.info('📬 [LCUManager] 正在创建自定义房间...');
-    return this.request('POST', '/lol-lobby/v2/lobby', config);
-  }
+    public createCustomLobby(config: LobbyConfig): Promise<any> {
+        logger.info('📬 [LCUManager] 正在创建自定义房间...');
+        return this.request('POST', '/lol-lobby/v2/lobby', config);
+    }
 
-  public createLobbyByQueueId(queueId: Queue): Promise<any> {
-    logger.info(`📬 [LCUManager] 正在创建房间 (队列ID: ${queueId})...`);
-    return this.request('POST', '/lol-lobby/v2/lobby', { queueId: queueId });
-  }
+    public createLobbyByQueueId(queueId: Queue): Promise<any> {
+        logger.info(`📬 [LCUManager] 正在创建房间 (队列ID: ${queueId})...`);
+        return this.request('POST', '/lol-lobby/v2/lobby', {queueId: queueId});
+    }
 
-  public getCurrentGamemodeInfo(): Promise<any> {
-    return this.request('GET', '/lol-lobby/v1/parties/gamemode');
-  }
+    public getCurrentGamemodeInfo(): Promise<any> {
+        return this.request('GET', '/lol-lobby/v1/parties/gamemode');
+    }
 
-  public startMatch(): Promise<any> {
-    logger.info('📬 [LCUManager] 正在开始匹配...');
-    return this.request('POST', '/lol-lobby/v2/lobby/matchmaking/search');
-  }
+    public startMatch(): Promise<any> {
+        logger.info('📬 [LCUManager] 正在开始匹配...');
+        return this.request('POST', '/lol-lobby/v2/lobby/matchmaking/search');
+    }
 
-  public stopMatch(): Promise<any> {
-    logger.info('📬 [LCUManager] 正在停止匹配...');
-    return this.request('DELETE', '/lol-lobby/v2/lobby/matchmaking/search');
-  }
+    public stopMatch(): Promise<any> {
+        logger.info('📬 [LCUManager] 正在停止匹配...');
+        return this.request('DELETE', '/lol-lobby/v2/lobby/matchmaking/search');
+    }
 
-  public checkMatchState(): Promise<any> {
-    return this.request('GET', '/lol-lobby/v2/lobby/matchmaking/search-state');
-  }
+    public async checkMatchState(): Promise<MatchState> {
+        const result: {
+            errors: [],
+            lowPriorityData: {
+                "bustedLeaverAccessToken": "",
+                "penalizedSummonerIds": [],
+                "penaltyTime": 0,
+                "penaltyTimeRemaining": 0,
+                "reason": ""
+            },
+            "searchState": MatchState
+        } = await this.request('GET', '/lol-lobby/v2/lobby/matchmaking/search-state')
 
-  public getCustomGames(): Promise<any> {
-    return this.request('GET', '/lol-lobby/v1/custom-games');
-  }
+        return result.searchState
+    }
 
-  public getQueues(): Promise<any> {
-    return this.request('GET', '/lol-game-queues/v1/queues');
-  }
+    public getCustomGames(): Promise<any> {
+        return this.request('GET', '/lol-lobby/v1/custom-games');
+    }
 
-  public getChatConfig(): Promise<any> {
-    return this.request('GET', '/lol-game-queues/v1/queues');
-  }
+    public getQueues(): Promise<any> {
+        return this.request('GET', '/lol-game-queues/v1/queues');
+    }
 
-  public getChampSelectSession(): Promise<any> {
-    return this.request('GET', '/lol-champ-select/v1/session');
-  }
+    public getChatConfig(): Promise<any> {
+        return this.request('GET', '/lol-game-queues/v1/queues');
+    }
 
-  public getChatConversations(): Promise<any> {
-    return this.request('GET', '/lol-chat/v1/conversations');
-  }
+    public getChampSelectSession(): Promise<any> {
+        return this.request('GET', '/lol-champ-select/v1/session');
+    }
 
-  public getGameflowSession(): Promise<any> {
-    return this.request('GET', '/lol-gameflow/v1/session');
-  }
+    public getChatConversations(): Promise<any> {
+        return this.request('GET', '/lol-chat/v1/conversations');
+    }
 
-  public getExtraGameClientArgs(): Promise<any> {
-    return this.request('GET', '/lol-gameflow/v1/extra-game-client-args');
-  }
+    public getGameflowSession(): Promise<any> {
+        return this.request('GET', '/lol-gameflow/v1/session');
+    }
 
-  public getLobby(): Promise<any> {
-    return this.request('GET', '/lol-lobby/v2/lobby');
-  }
+    public getExtraGameClientArgs(): Promise<any> {
+        return this.request('GET', '/lol-gameflow/v1/extra-game-client-args');
+    }
+
+    public getLobby(): Promise<any> {
+        return this.request('GET', '/lol-lobby/v2/lobby');
+    }
 }
 
 export default LCUManager;

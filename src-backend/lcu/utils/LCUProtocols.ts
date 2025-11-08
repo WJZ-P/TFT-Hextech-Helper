@@ -52,6 +52,7 @@ export enum Queue {
     TFT_RANKED = 1100, // 云顶之弈 - 排位模式
     TFT_DOUBLE = 1160, //云顶之弈 (双人作战)
     TFT_TREASURE = 1170, //云顶之弈 (恭喜发财)
+    TFT_FATIAO = 1220,  // 云顶- 发条鸟的试炼
     URF = 1900, // 无限火力
     DOU_HUN = 1700,// 斗魂竞技场
     MORIRENJI = 4210, //  末日人工智能
@@ -100,6 +101,9 @@ export interface LobbyConfig {
         };
     };
 }
+
+//  排队状态
+export type MatchState = 'Invalid' | 'Searching' | 'Found'
 
 // 创建一个 5v5 的召唤师峡谷自定义房间
 export const summonersRiftConfig: LobbyConfig = {
