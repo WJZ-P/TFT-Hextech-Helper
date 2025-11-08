@@ -17473,14 +17473,7 @@ var _eval = EvalError;
 var range$1 = RangeError;
 var ref$2 = ReferenceError;
 var syntax = SyntaxError;
-var type$b;
-var hasRequiredType;
-function requireType() {
-  if (hasRequiredType) return type$b;
-  hasRequiredType = 1;
-  type$b = TypeError;
-  return type$b;
-}
+var type$b = TypeError;
 var uri$4 = URIError;
 var abs$1 = Math.abs;
 var floor$1 = Math.floor;
@@ -17726,7 +17719,7 @@ function requireCallBindApplyHelpers() {
   if (hasRequiredCallBindApplyHelpers) return callBindApplyHelpers;
   hasRequiredCallBindApplyHelpers = 1;
   var bind3 = functionBind;
-  var $TypeError2 = requireType();
+  var $TypeError2 = type$b;
   var $call2 = requireFunctionCall();
   var $actualApply = requireActualApply();
   callBindApplyHelpers = function callBindBasic(args) {
@@ -17799,7 +17792,7 @@ var $EvalError = _eval;
 var $RangeError = range$1;
 var $ReferenceError = ref$2;
 var $SyntaxError = syntax;
-var $TypeError$1 = requireType();
+var $TypeError$1 = type$b;
 var $URIError = uri$4;
 var abs = abs$1;
 var floor = floor$1;
@@ -18130,7 +18123,7 @@ var GetIntrinsic2 = getIntrinsic;
 var $defineProperty = GetIntrinsic2("%Object.defineProperty%", true);
 var hasToStringTag = requireShams()();
 var hasOwn$1 = hasown;
-var $TypeError = requireType();
+var $TypeError = type$b;
 var toStringTag = hasToStringTag ? Symbol.toStringTag : null;
 var esSetTostringtag = function setToStringTag(object, value) {
   var overrideIfSet = arguments.length > 2 && !!arguments[2] && arguments[2].force;
@@ -22734,6 +22727,7 @@ const _LCUManager = class _LCUManager extends EventEmitter$1 {
         console.log("❌ [LCUManager] WebSocket 连接已断开。");
         this.isConnected = false;
         this.emit("disconnect");
+        this.unsubscribe("OnJsonApiEvent");
         _LCUManager.instance = null;
       }
     });
@@ -25238,8 +25232,7 @@ class LobbyState {
     await lcuManager.createLobbyByQueueId(Queue.TFT_FATIAO);
     await sleep(500);
     await lcuManager.startMatch();
-    await lcuManager.checkMatchState();
-    logger.info(`[${LobbyState.constructor.name}] -> 当前排队状态：`);
+    lcuManager.subscribe("");
   }
 }
 class StartState {
@@ -25343,6 +25336,10 @@ const _HexService = class _HexService {
         signal.throwIfAborted();
         logger.info(`[HexService-Looper] -> 当前状态: ${this.currentState.constructor.name}`);
         this.currentState = await this.currentState.action(signal);
+        if (this.currentState === null) {
+          logger.error("[HexService-Looper] -> 上个状态未返回State，流程中止！");
+          break;
+        }
         await sleep(2e3);
       }
     } catch (error2) {
@@ -40966,23 +40963,23 @@ function init() {
   connector.on("connect", (data) => {
     console.log("LOL客户端已登录！", data);
     sendToRenderer("lcu-connect", data);
-    const lcu = LCUManager.init(data);
+    const lcuManager = LCUManager.init(data);
     ConfigHelper.init(data.installDirectory);
-    lcu.start();
-    lcu.on("connect", async () => {
+    lcuManager.start();
+    lcuManager.on("connect", async () => {
       sendToRenderer("lcu-connect", data);
       try {
-        const summoner = await lcu.request("GET", "/lol-summoner/v1/current-summoner");
+        const summoner = await lcuManager.request("GET", "/lol-summoner/v1/current-summoner");
         console.log("召唤师信息:", summoner);
       } catch (e) {
         console.error("请求召唤师信息失败:", e);
       }
     });
-    lcu.on("disconnect", () => {
+    lcuManager.on("disconnect", () => {
       console.log("LCUManager 已断开");
       sendToRenderer("lcu-disconnect");
     });
-    lcu.on("lcu-event", (event) => {
+    lcuManager.on("lcu-event", (event) => {
       console.log("收到LCU事件:", event.uri, event.eventType);
     });
   });

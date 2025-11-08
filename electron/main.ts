@@ -132,32 +132,31 @@ function init() {
         sendToRenderer('lcu-connect', data)
 
         // 喵~ 使用单例模式获取 LCUManager 实例，并把“钥匙”交给它
-        const lcu = LCUManager.init(data);
+        const lcuManager = LCUManager.init(data);
 
         //  注册configHelper
         ConfigHelper.init(data.installDirectory)
 
         // 连接 WebSocket
-        lcu.start();
+        lcuManager.start();
 
-        lcu.on('connect', async () => {
+        lcuManager.on('connect', async () => {
             sendToRenderer('lcu-connect', data); // 通知前台
             try {
-                const summoner = await lcu.request('GET', '/lol-summoner/v1/current-summoner');
+                const summoner = await lcuManager.request('GET', '/lol-summoner/v1/current-summoner');
                 console.log('召唤师信息:', summoner);
             } catch (e) {
                 console.error('请求召唤师信息失败:', e);
             }
         });
 
-        lcu.on('disconnect', () => {
+        lcuManager.on('disconnect', () => {
             console.log('LCUManager 已断开');
             sendToRenderer('lcu-disconnect'); // 通知前台
         });
 
-        lcu.on('lcu-event', (event) => {
+        lcuManager.on('lcu-event', (event) => {
             // 在这里处理实时收到的游戏事件
-            // console.log('收到LCU事件:', event);
             console.log('收到LCU事件:', event.uri, event.eventType);
         });
     });

@@ -111,6 +111,7 @@ class LCUManager extends EventEmitter {
             this.isConnected = true;
             console.log('✅ [LCUManager] WebSocket 连接成功！');
             this.emit('connect'); // 只有在此时，才广播“真正连接成功”的事件
+            //  "OnJsonApiEvent" 是一个“总事件”，它会把 LCU 上所有的 API 事件（创建、更新、删除）都通过这一个通道推送给你。
             this.subscribe('OnJsonApiEvent');
         });
 
@@ -119,6 +120,7 @@ class LCUManager extends EventEmitter {
             if (!messageString) return;
             try {
                 const message = JSON.parse(messageString);
+                // 8 是服务器推送事件的操作码
                 if (message[0] === 8 && message[1] === 'OnJsonApiEvent' && message[2]) {
                     this.emit('lcu-event', message[2] as LCUWebSocketMessage);
                 }
@@ -132,6 +134,7 @@ class LCUManager extends EventEmitter {
                 console.log('❌ [LCUManager] WebSocket 连接已断开。');
                 this.isConnected = false;
                 this.emit('disconnect');
+                this.unsubscribe('OnJsonApiEvent');
                 LCUManager.instance = null;
             }
         });

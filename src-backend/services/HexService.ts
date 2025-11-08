@@ -98,6 +98,10 @@ class HexService {
                 logger.info(`[HexService-Looper] -> 当前状态: ${this.currentState.constructor.name}`);
                 /// 执行当前state操作
                 this.currentState = await this.currentState.action(signal);
+                if(this.currentState === null){
+                    logger.error('[HexService-Looper] -> 上个状态未返回State，流程中止！')
+                    break
+                }
                 await sleep(2000)
             }
         } catch (error: any) {
