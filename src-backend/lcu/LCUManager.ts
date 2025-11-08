@@ -7,10 +7,26 @@ import {LobbyConfig, MatchState, Queue, SummonerInfo} from "./utils/LCUProtocols
 import {logger} from "../utils/Logger.ts";
 
 // 定义 LCUManager 能广播的所有事件
-interface LCUManagerEvents {
+
+type LcuEventUriEvents = {
+    [K in LcuEventUri]: (event: LCUWebSocketMessage) => void;
+};
+
+interface LCUManagerEvents extends LcuEventUriEvents {
     'connect': () => void;
     'disconnect': () => void;
     'lcu-event': (data: LCUWebSocketMessage) => void;
+}
+
+
+export enum LcuEventUri {
+    /** 匹配准备就绪（接受/拒绝） */
+    READY_CHECK = '/lol-matchmaking/v1/ready-check',
+    /** 游戏流程阶段 (排队中, 游戏中, 游戏后等) */
+    GAMEFLOW_PHASE = '/lol-gameflow/v1/session',
+    /** 英雄选择阶段 */
+    CHAMP_SELECT = '/lol-champ-select/v1/session',
+
 }
 
 // 定义 LCU WebSocket 消息的基本结构
@@ -92,8 +108,8 @@ class LCUManager extends EventEmitter {
     }
 
     // 声明 on/emit 的类型，提供完美的智能提示
-    public declare on: <E extends keyof LCUManagerEvents>(event: E, listener: LCUManagerEvents[E]) => this;
-    public declare emit: <E extends keyof LCUManagerEvents>(event: E, ...args: Parameters<LCUManagerEvents[E]>) => boolean;
+    public declare on: <E extends keyof LCUManagerEvents | LcuEventUri>(event: E, listener: LCUManagerEvents[E]) => this;
+    public declare emit: <E extends keyof LCUManagerEvents | LcuEventUri>(event: E, ...args: Parameters<LCUManagerEvents[E]>) => boolean;
 
     /**
      * 连接到 LCU WebSocket
@@ -122,7 +138,14 @@ class LCUManager extends EventEmitter {
                 const message = JSON.parse(messageString);
                 // 8 是服务器推送事件的操作码
                 if (message[0] === 8 && message[1] === 'OnJsonApiEvent' && message[2]) {
-                    this.emit('lcu-event', message[2] as LCUWebSocketMessage);
+                    const eventData = message[2] as LCUWebSocketMessage
+                    const eventUri: LcuEventUri = eventData.uri as LcuEventUri
+                    this.emit('lcu-event', eventData);
+                    //  上面的lcu-event作为一个超级大事件对外发送，再发送一点细分的事件
+                    if (Object.values(LcuEventUri).includes(eventUri)) {
+                        //  命中了我们的事件，也发送一份
+                        this.emit(eventUri, eventData);
+                    }
                 }
             } catch (e) {
                 console.error('❌ [LCUManager] 解析 WebSocket 消息失败:', e);
@@ -177,11 +200,12 @@ class LCUManager extends EventEmitter {
      * 订阅一个 WebSocket 事件
      * @param event 事件名, e.g., 'OnJsonApiEvent'
      */
-    public subscribe(event: string): void {
+    private subscribe(event: string): void {
         if (this.ws?.readyState === WebSocket.OPEN) {
             this.ws.send(JSON.stringify([5, event])); // 5 是 LCU 的订阅操作码
         }
     }
+
 
     /**
      * 取消订阅一个 WebSocket 事件
@@ -296,6 +320,16 @@ class LCUManager extends EventEmitter {
 
     public getLobby(): Promise<any> {
         return this.request('GET', '/lol-lobby/v2/lobby');
+    }
+
+    //  接受对局
+    public acceptMatch(): Promise<any> {
+        return this.request("POST", '/lol-matchmaking/v1/ready-check/accept');
+    }
+
+    //  拒绝对局
+    public declineMatch(): Promise<any> {
+        return this.request("POST", '/lol-matchmaking/v1/ready-check/decline');
     }
 }
 

@@ -22635,6 +22635,12 @@ const {
   getAdapter,
   mergeConfig
 } = axios;
+var LcuEventUri = /* @__PURE__ */ ((LcuEventUri2) => {
+  LcuEventUri2["READY_CHECK"] = "/lol-matchmaking/v1/ready-check";
+  LcuEventUri2["GAMEFLOW_PHASE"] = "/lol-gameflow/v1/session";
+  LcuEventUri2["CHAMP_SELECT"] = "/lol-champ-select/v1/session";
+  return LcuEventUri2;
+})(LcuEventUri || {});
 const _LCUManager = class _LCUManager extends EventEmitter$1 {
   // 构造函数是私有的，这确保了外部不能用 new 来创建实例
   constructor(details) {
@@ -22716,7 +22722,12 @@ const _LCUManager = class _LCUManager extends EventEmitter$1 {
       try {
         const message = JSON.parse(messageString);
         if (message[0] === 8 && message[1] === "OnJsonApiEvent" && message[2]) {
-          this.emit("lcu-event", message[2]);
+          const eventData = message[2];
+          const eventUri = eventData.uri;
+          this.emit("lcu-event", eventData);
+          if (Object.values(LcuEventUri).includes(eventUri)) {
+            this.emit(eventUri, eventData);
+          }
         }
       } catch (e) {
         console.error("❌ [LCUManager] 解析 WebSocket 消息失败:", e);
@@ -22856,6 +22867,14 @@ const _LCUManager = class _LCUManager extends EventEmitter$1 {
   }
   getLobby() {
     return this.request("GET", "/lol-lobby/v2/lobby");
+  }
+  //  接受对局
+  acceptMatch() {
+    return this.request("POST", "/lol-matchmaking/v1/ready-check/accept");
+  }
+  //  拒绝对局
+  declineMatch() {
+    return this.request("POST", "/lol-matchmaking/v1/ready-check/decline");
   }
 };
 // --- 单例模式核心 ---
@@ -25223,16 +25242,29 @@ function debounce(func, delay) {
   };
 }
 class LobbyState {
+  constructor() {
+    __publicField(this, "lcuManager", LCUManager.getInstance());
+    __publicField(this, "checkFunc", null);
+  }
   async action(signal) {
     signal.throwIfAborted();
-    const lcuManager = LCUManager.getInstance();
-    if (!lcuManager) {
+    if (!this.lcuManager) {
       throw Error("[LobbyState] 检测到客户端未启动！");
     }
-    await lcuManager.createLobbyByQueueId(Queue.TFT_FATIAO);
+    await this.lcuManager.createLobbyByQueueId(Queue.TFT_FATIAO);
     await sleep(500);
-    await lcuManager.startMatch();
-    lcuManager.subscribe("");
+    this.checkFunc = this.lcuManager.on(LcuEventUri.READY_CHECK, (event) => {
+      this.onReadyCheck(event);
+    });
+    await this.lcuManager.startMatch();
+  }
+  onReadyCheck(event) {
+    var _a, _b;
+    (_a = this.lcuManager) == null ? void 0 : _a.off(LcuEventUri.READY_CHECK, this.checkFunc);
+    console.log("已找到对局！");
+    console.log(JSON.stringify(event));
+    console.log("准备拒绝对局");
+    (_b = this.lcuManager) == null ? void 0 : _b.declineMatch();
   }
 }
 class StartState {
