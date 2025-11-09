@@ -24,7 +24,7 @@ interface LogEntry {
 
 const LogPanelWrapper = styled.div<{ $isVisible: boolean; theme: ThemeType }>`
   flex-shrink: 0;
-  max-height: ${props => props.$isVisible ? '300px' : '0px'};
+  max-height: ${props => props.$isVisible ? '500px' : '0px'};
   overflow: hidden;
   background-color: ${props => props.theme.colors.elementBg};
   border-radius: ${props=>props.theme.borderRadius};
@@ -35,7 +35,7 @@ const LogPanelWrapper = styled.div<{ $isVisible: boolean; theme: ThemeType }>`
 
 const LogPanelContent = styled.div<{ theme: ThemeType }>`
   min-height: 100px;
-  max-height: 300px;
+  max-height: 500px;
   padding: ${props => props.theme.spacing.medium};
   overflow-y: auto;
   font-family: 'Consolas', 'Monaco', monospace;
