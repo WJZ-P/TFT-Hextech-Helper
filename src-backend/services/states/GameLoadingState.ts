@@ -1,6 +1,5 @@
 import {IState} from "./IState";
 import {logger} from "../../utils/Logger.ts";
-import {sleep} from "../../utils/HelperTools.ts";
 import https from "https";
 import axios, {AxiosInstance} from "axios";
 import {EndState} from "./EndState.ts";
@@ -35,17 +34,19 @@ export class GameLoadingState implements IState {
     }
 
     private waitForGameToLoad(): Promise<boolean> {
+        let task :NodeJS.Timeout;
         return new Promise((resolve) => {
             const checkIfGameStart = async () =>{
                 try {
                     if (!hexService.isRunning) return resolve(false)
                     await inGameApi.get('/liveclientdata/allgamedata')
-                    logger.info('')
+                    clearTimeout(task)
+                    resolve(true)
                 } catch (e) {
                     logger.info('[GameLoadingState] 游戏仍在加载中...')
                 }
             }
-            setTimeout(checkIfGameStart,2000)//  每两秒钟遍历一次
+            task = setInterval(checkIfGameStart,2000)//  每两秒钟遍历一次
         })
     }
 }

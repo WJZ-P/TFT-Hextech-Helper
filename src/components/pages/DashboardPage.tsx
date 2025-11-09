@@ -84,12 +84,17 @@ const DashboardPage = () => {
             }}>getLobby
             </button>
             <button onClick={async () => {
-                toast("我是一个超级弹窗！",{type:"success"})
+                toast("我是一个超级弹窗！", {type: "success"})
             }}>点我弹出一个Toast
+            </button>
+            <button onClick={async () => {
+                console.log(await window.lcu.buySlotOne())
+            }}>点我购买第一个棋子
             </button>
         </PageContaier>
     );
 }
+
 async function getSummonerInfo() {
     console.log(await window.lcu.getSummonerInfo())
 }

@@ -113,6 +113,9 @@ const lcuApi = {
     getLobby: (): Promise<{ data?: any; error?: string }> => {
         return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-lobby/v2/lobby');
     },
+    buySlotOne:(): Promise<{ data?: any; error?: string }> => {
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'POST', '/lol-tft-tutorial/v1/helpers/buy-champion-in-slot',{ "slot": 0 });
+    },
     testFunc: (): Promise<{ data?: any; error?: string }> => {
         return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-lobby/v2/notifications');
     },
