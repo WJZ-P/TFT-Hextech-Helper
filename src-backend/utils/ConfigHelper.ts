@@ -16,6 +16,8 @@ class ConfigHelper {
     private readonly backupPath: string;
     private readonly tftConfigPath: string;//   预设的云顶设置
 
+    public isTFTConfig: boolean = false;
+
     private constructor(installPath: string) {
         if (!installPath) {
             throw new Error("初始化失败，必须提供一个有效的游戏安装路径！");
@@ -46,7 +48,7 @@ class ConfigHelper {
         ConfigHelper.instance = new ConfigHelper(installPath);
     }
 
-    private static getInstance(): ConfigHelper | null {
+    public static getInstance(): ConfigHelper | null {
         if (!ConfigHelper.instance) {
             console.error("[ConfigHelper]ConfigHelper 还没有被初始化！请先在程序入口调用 init(installPath) 方法。");
             return null
@@ -74,6 +76,7 @@ class ConfigHelper {
         try {
             await fs.emptyDir(instance.backupPath);
             await fs.copy(instance.gameConfigPath, instance.backupPath);
+            instance.isTFTConfig = false;
             logger.info('设置备份成功！');
         } catch (err) {
             logger.error(`备份过程中发生错误:,${err}`);
@@ -101,6 +104,7 @@ class ConfigHelper {
         try {
             await fs.copy(instance.tftConfigPath, instance.gameConfigPath)
             logger.info('云顶挂机游戏设置应用成功！')
+            instance.isTFTConfig = true;
         } catch (e: unknown) {
             logger.error(`云顶设置应用失败！,${e}`)
             return false

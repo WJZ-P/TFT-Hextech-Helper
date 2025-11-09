@@ -4,9 +4,11 @@ import {IdleState} from "./states/IdleState.ts";
 import {EndState} from "./states/EndState.ts";
 import {StartState} from "./states/StartState.ts";
 import {sleep} from "../utils/HelperTools.ts";
+import configHelper from "../utils/ConfigHelper.ts";
+import ConfigHelper from "../utils/ConfigHelper.ts";
 
 //  海克斯科技核心逻辑！
-class HexService {
+export class HexService {
     private static instance: HexService | null = null
     //  状态
     private abortController: AbortController | null = null;
@@ -70,11 +72,11 @@ class HexService {
 
             this.abortController?.abort('user stop')
 
-            // logger.info('———— 停止运行 ————')
-            // logger.info('正在恢复客户端设置...')
-            // await ConfigHelper.restore()
-            // console.log('[HexService] 海克斯科技关闭。')
-            // logger.info('[HexService] 海克斯科技关闭。')
+            //  这里做一个恢复备份设置的兜底，防止没有恢复备份
+            const configHelper = ConfigHelper.getInstance()
+            if(configHelper?.isTFTConfig === true){
+                await ConfigHelper.restore()
+            }
             return true
         } catch (e: unknown) {
             console.error(e)

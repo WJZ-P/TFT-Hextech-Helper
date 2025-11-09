@@ -25090,13 +25090,14 @@ sourceMapSupport.exports;
 var sourceMapSupportExports = sourceMapSupport.exports;
 sourceMapSupportExports.install();
 const _ConfigHelper = class _ConfigHelper {
-  //   预设的云顶设置
   constructor(installPath) {
     // 实例的属性，用来存储路径信息
     __publicField(this, "installPath");
     __publicField(this, "gameConfigPath");
     __publicField(this, "backupPath");
     __publicField(this, "tftConfigPath");
+    //   预设的云顶设置
+    __publicField(this, "isTFTConfig", false);
     if (!installPath) {
       throw new Error("初始化失败，必须提供一个有效的游戏安装路径！");
     }
@@ -25145,6 +25146,7 @@ const _ConfigHelper = class _ConfigHelper {
     try {
       await fs$1.emptyDir(instance.backupPath);
       await fs$1.copy(instance.gameConfigPath, instance.backupPath);
+      instance.isTFTConfig = false;
       logger.info("设置备份成功！");
     } catch (err) {
       logger.error(`备份过程中发生错误:,${err}`);
@@ -25169,6 +25171,7 @@ const _ConfigHelper = class _ConfigHelper {
     try {
       await fs$1.copy(instance.tftConfigPath, instance.gameConfigPath);
       logger.info("云顶挂机游戏设置应用成功！");
+      instance.isTFTConfig = true;
     } catch (e) {
       logger.error(`云顶设置应用失败！,${e}`);
       return false;
@@ -25244,27 +25247,50 @@ function debounce(func, delay) {
 class LobbyState {
   constructor() {
     __publicField(this, "lcuManager", LCUManager.getInstance());
-    __publicField(this, "checkFunc", null);
+    __publicField(this, "signal");
   }
   async action(signal) {
     signal.throwIfAborted();
+    this.signal = signal;
     if (!this.lcuManager) {
       throw Error("[LobbyState] 检测到客户端未启动！");
     }
     await this.lcuManager.createLobbyByQueueId(Queue.TFT_FATIAO);
     await sleep(500);
-    this.checkFunc = this.lcuManager.on(LcuEventUri.READY_CHECK, (event) => {
-      this.onReadyCheck(event);
-    });
     await this.lcuManager.startMatch();
+    await this.waitForMatchFound();
   }
-  onReadyCheck(event) {
-    var _a, _b;
-    (_a = this.lcuManager) == null ? void 0 : _a.off(LcuEventUri.READY_CHECK, this.checkFunc);
+  async onReadyCheck(event) {
+    var _a;
     console.log("已找到对局！");
-    console.log(JSON.stringify(event));
+    console.log("onReadyCheck" + JSON.stringify(event));
     console.log("准备拒绝对局");
-    (_b = this.lcuManager) == null ? void 0 : _b.declineMatch();
+    (_a = this.lcuManager) == null ? void 0 : _a.declineMatch();
+  }
+  waitForMatchFound() {
+    return new Promise((resolve2) => {
+      var _a, _b;
+      const onReadyCheck = (eventData) => {
+        var _a2;
+        this.signal.throwIfAborted();
+        console.log("已找到对局！");
+        console.log(JSON.stringify(eventData));
+        console.log("准备拒绝对局");
+        (_a2 = this.lcuManager) == null ? void 0 : _a2.declineMatch();
+      };
+      (_a = this.lcuManager) == null ? void 0 : _a.on(LcuEventUri.READY_CHECK, onReadyCheck);
+      const onGameflowPhase = (eventData) => {
+        var _a2;
+        this.signal.throwIfAborted();
+        const phase = (_a2 = eventData.data) == null ? void 0 : _a2.phase;
+        console.log("onGameflowPhase" + JSON.stringify(eventData));
+        if (phase === "InProgress") {
+          logger.info("[LobbyState] 监听到 GAMEFLOW 变为 InProgress，游戏即将开始");
+          resolve2(true);
+        }
+      };
+      (_b = this.lcuManager) == null ? void 0 : _b.on(LcuEventUri.GAMEFLOW_PHASE, onGameflowPhase);
+    });
   }
 }
 class StartState {
@@ -25350,6 +25376,10 @@ const _HexService = class _HexService {
       logger.info("———————— [HexService] ————————");
       logger.info("[HexService] 海克斯科技，关闭！");
       (_a = this.abortController) == null ? void 0 : _a.abort("user stop");
+      const configHelper2 = ConfigHelper.getInstance();
+      if ((configHelper2 == null ? void 0 : configHelper2.isTFTConfig) === true) {
+        await ConfigHelper.restore();
+      }
       return true;
     } catch (e) {
       console.error(e);

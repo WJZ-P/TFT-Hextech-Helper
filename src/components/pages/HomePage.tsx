@@ -100,7 +100,7 @@ export const HomePage = () => {
                 {isRunning ? <StopCircleOutlinedIcon/> : <PlayCircleOutlineIcon/>}
                 {isRunning ? '关闭' : '开始'}
             </ControlButton>
-            <LogPanel isVisible={isRunning}/>
+            <LogPanel isVisible={true}/>
         </PageWrapper>
     );
 };
