@@ -1,5 +1,5 @@
-import {app, BrowserWindow, globalShortcut, ipcMain} from 'electron'
-//import { createRequire } from 'node:module'
+import {app, BrowserWindow, globalShortcut, ipcMain, screen} from 'electron'
+import { createRequire } from 'node:module'
 import {fileURLToPath} from 'node:url'
 import LCUConnector from "../src-backend/lcu/utils/LcuConnector.ts";
 import {ArgsFromIpcChannel, LCUIpcChannels} from "../src-backend/lcu/utils/LCUProtocols.ts";
@@ -12,6 +12,8 @@ import {logger} from "../src-backend/utils/Logger.ts";
 import {hexService} from "../src-backend/services/HexService.ts";
 import {settingsStore} from "../src-backend/utils/SettingsStore.ts";
 import {debounce} from "../src-backend/utils/HelperTools.ts";
+import {tftOperator} from "../src-backend/TftOperator.ts";
+import {Point} from "@nut-tree-fork/nut-js";
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -21,7 +23,7 @@ import {debounce} from "../src-backend/utils/HelperTools.ts";
  *
  * 然后require也同理，是我们手搓的，因为新版ESM不提供require。
  */
-//const require = createRequire(import.meta.url)
+const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // The built directory structure
@@ -124,6 +126,8 @@ function init() {
 
     //  启动LCUConnector
     const connector = new LCUConnector()
+
+    tftOperator.init()
 
     connector.on('connect', (data) => {
         console.log("LOL客户端已登录！", data);

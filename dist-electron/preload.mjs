@@ -6,6 +6,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["LCU_REQUEST"] = "lcu-request";
   IpcChannel2["HEX_START"] = "hex-start";
   IpcChannel2["HEX_STOP"] = "hex-stop";
+  IpcChannel2["TFT_OPERATOR"] = "hex-operator";
   return IpcChannel2;
 })(IpcChannel || {});
 electron.contextBridge.exposeInMainWorld("ipcRenderer", {

@@ -4,5 +4,6 @@ export enum IpcChannel {
     CONFIG_RESTORE = 'config-restore',
     LCU_REQUEST = 'lcu-request',
     HEX_START = 'hex-start',
-    HEX_STOP = 'hex-stop'
+    HEX_STOP = 'hex-stop',
+    TFT_OPERATOR = 'hex-operator'
 }

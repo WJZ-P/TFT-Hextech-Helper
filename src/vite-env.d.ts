@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import {ConfigApi, HexApi, IpcApi, LcuApi} from "../electron/preload.ts";
+import {ConfigApi, HexApi, IpcApi, LcuApi, TftApi} from "../electron/preload.ts";
 
 export {}   // 让文件变成模块，避免全局污染
 
