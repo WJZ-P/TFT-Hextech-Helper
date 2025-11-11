@@ -11,15 +11,40 @@ interface SimplePoint {
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
 
-export enum ShopSLot {
-    SHOP_SLOT_1
+//  英雄购买槽坐标
+const shopSlot = {
+    SHOP_SLOT_1: {x: 240, y: 700},
+    SHOP_SLOT_2: {x: 380, y: 700},
+    SHOP_SLOT_3: {x: 520, y: 700},
+    SHOP_SLOT_4: {x: 660, y: 700},
+    SHOP_SLOT_5: {x: 800, y: 700},
+}
+//  装备槽位坐标
+const equipmentSlot = {
+    EQ_SLOT_1: {x: 20, y: 210},//+35
+    EQ_SLOT_2: {x: 20, y: 245},
+    EQ_SLOT_3: {x: 20, y: 280},
+    EQ_SLOT_4: {x: 20, y: 315},
+    EQ_SLOT_5: {x: 20, y: 350},
+    EQ_SLOT_6: {x: 20, y: 385},
+    EQ_SLOT_7: {x: 20, y: 430},//   这里重置下准确位置
+    EQ_SLOT_8: {x: 20, y: 465},
+    EQ_SLOT_9: {x: 20, y: 500},
+    EQ_SLOT_10: {x: 20, y: 535},
 }
 
+//  选秀站位，为离自己最近的棋子位置。
+const sharedDraftPoint = {x: 530, y: 400}
+//  游戏战斗阶段展示坐标，如1-2，1-3等
+const gameStageDisplay = {
+    leftTop: {x: 374, y: 6},
+    rightBottom: {x: 403, y: 22}
+}
 
 class TftOperator {
     private static instance: TftOperator;
     //  缓存游戏窗口的左上角坐标
-    private gameWindowRegion: SimplePoint;
+    private gameWindowRegion: SimplePoint | null;
 
     private constructor() {
     }
@@ -55,13 +80,13 @@ class TftOperator {
 
         } catch (e: any) {
             logger.error(`[TftOperator] 无法从 Electron 获取屏幕尺寸: ${e.message}`);
+            this.gameWindowRegion = null;
             return false;
         }
     }
 
     private async clickAt(offset: SimplePoint) {
         if (!this.gameWindowRegion) {
-            logger.warn('[TftOperator] TftOperator 尚未初始化，正在尝试... (请确保 InGameRunningState 调用了 init)');
             if (!this.init()) {
                 throw new Error("TftOperator 尚未初始化。");
             }
