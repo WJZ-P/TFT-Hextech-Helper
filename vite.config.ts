@@ -3,6 +3,11 @@ import path from 'node:path'
 import electron from 'vite-plugin-electron/simple'
 import react from '@vitejs/plugin-react'
 
+import {fileURLToPath} from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename); // 就叫 __dirname 吧！
+
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [
@@ -23,6 +28,17 @@ export default defineConfig({
             vite: {
                 build: {
                     sourcemap: 'inline',   // ← 改这里
+                    rollupOptions: {
+                        output: {
+                            // 强制 CJS 格式，解决 CJS/ESM 混合依赖问题
+                            format: 'cjs',
+                            // 强制输出文件名，不要 hash！
+                            entryFileNames: 'main.js',
+                            // 确保 chunk 和 asset 也不带 hash
+                            chunkFileNames: '[name].js',
+                            assetFileNames: '[name].[ext]'
+                        }
+                    }
                 },
             },
             preload: {
@@ -31,7 +47,7 @@ export default defineConfig({
                 input: path.join(__dirname, 'electron/preload.ts'),
             },
             // Ployfill the Electron and Node.js API for Renderer process.
-            // If you want use Node.js in Renderer process, the `nodeIntegration` needs to be enabled in the Main process.
+            // If you want to use Node.js in Renderer process, the `nodeIntegration` needs to be enabled in the Main process.
             // See 👉 https://github.com/electron-vite/vite-plugin-electron-renderer
             renderer: process.env.NODE_ENV === 'test'
                 // https://github.com/electron-vite/vite-plugin-electron-renderer/issues/78#issuecomment-2053600808
@@ -41,7 +57,8 @@ export default defineConfig({
     ],
     resolve: {
         alias: {
-            '@mui/styled-engine': '@mui/styled-engine-sc'
+            '@mui/styled-engine': '@mui/styled-engine-sc',
+            "@":path.resolve(__dirname,'src')
         }
     }
 })

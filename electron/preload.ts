@@ -2,7 +2,6 @@ import {ipcRenderer, contextBridge} from 'electron'
 import IpcRendererEvent = Electron.IpcRendererEvent;
 import {LobbyConfig, Queue, SummonerInfo} from "../src-backend/lcu/utils/LCUProtocols.ts";
 import {IpcChannel} from "./protocol.ts";
-import {tftOperator} from "../src-backend/TftOperator.ts";
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
