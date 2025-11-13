@@ -1,19 +1,7 @@
 //  游戏分辨率是1024x768
 import {logger} from "./utils/Logger";
-
-//  自己定义一个简单的点类型
-interface SimplePoint {
-    x: number;
-    y: number;
-}
-
-//  简单的Region定义
-interface SimpleRegion {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-}
+import {Button, mouse, Point, Region} from "@nut-tree-fork/nut-js"
+import {createWorker, PSM} from "tesseract.js";
 
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
@@ -51,7 +39,7 @@ const gameStageDisplay = {
 class TftOperator {
     private static instance: TftOperator;
     //  缓存游戏窗口的左上角坐标
-    private gameWindowRegion: SimplePoint | null;
+    private gameWindowRegion: Point | null;
     // 用来判断游戏阶段的Worker
     private gameStageWorker: any | null = null; //  必须动态导入，没法写类型
 
@@ -81,7 +69,7 @@ class TftOperator {
             const originX = screenCenterX - (GAME_WIDTH / 2);
             const originY = screenCenterY - (GAME_HEIGHT / 2);
 
-            this.gameWindowRegion = {x: originX, y: originY};
+            this.gameWindowRegion = new Point(originX,originY);
 
             logger.info(`[TftOperator] 屏幕尺寸: ${screenWidth}x${screenHeight}.`);
             logger.info(`[TftOperator] 游戏基准点 (0,0) 已计算在: (${originX}, ${originY})`);
@@ -98,13 +86,11 @@ class TftOperator {
     public async getGameStage(): Promise<string | null> {
         try {
             const worker = await this.getGameStageWorker();
-            const gameStageRegion = this.getStageAbsoluteRegion()
             // ✨ 3. (重要!) 动态导入 nut-js 的 CJS 方式
             //    因为这是一个 CJS 文件，nut-js 终于可以开心地找到 __dirname 了！
-            const { screen: nutScreen, Region } = await import("@nut-tree-fork/nut-js");
+            const { screen: nutScreen } = await import("@nut-tree-fork/nut-js");
             //  选定坐标并截图
-            const nutRegion = new Region(gameStageRegion.x, gameStageRegion.y, gameStageRegion.width, gameStageRegion.height);
-            const screenshot = await nutScreen.grabRegion(nutRegion);
+            const screenshot = await nutScreen.grabRegion(this.getStageAbsoluteRegion());
             //  截图结果转buffer识别
             const recognizeResult = await worker.recognize(screenshot.data)
             console.log('[TftOperator] gameStage识别成功：' + recognizeResult.data)
@@ -118,7 +104,7 @@ class TftOperator {
 
 
     //  处理点击事件
-    private async clickAt(offset: SimplePoint) {
+    private async clickAt(offset: Point) {
         if (!this.gameWindowRegion) {
             if (!this.init()) {
                 throw new Error("TftOperator 尚未初始化。");
@@ -131,12 +117,7 @@ class TftOperator {
         };
 
         logger.info(`[TftOperator] 正在点击: (Origin: ${this.gameWindowRegion!.x},${this.gameWindowRegion!.y}) + (Offset: ${offset.x},${offset.y}) -> (Target: ${target.x},${target.y})`);
-
         try {
-            // ✨ 7. (核心) 在“运行时”动态导入 nut-js！ ✨
-            // 此时 __dirname 垫片早已运行完毕
-            const {mouse, Button, Point} = await require("@nut-tree-fork/nut-js");
-
             // (重要) nut-js 的 API 需要它们自己的 Point 实例
             const nutPoint = new Point(target.x, target.y);
 
@@ -150,7 +131,7 @@ class TftOperator {
     }
 
     // 获取游戏里表示战斗阶段(如1-1)的Region
-    private getStageAbsoluteRegion(): SimpleRegion {
+    private getStageAbsoluteRegion(): Region {
         if (!this.gameWindowRegion) {
             logger.error("[TftOperator] 尝试在 init() 之前计算 Region！");
             // 抛出一个错误或者返回一个默认值，取决于你的健壮性需求
@@ -170,15 +151,13 @@ class TftOperator {
         const height = Math.round(gameStageDisplay.rightBottom.y - gameStageDisplay.leftTop.y);
 
         // ✨ 3. (修改) 返回我们自己的“简单”对象，而不是 nut-js 的 Region
-        return {x, y, width, height};
+        return new Region(x,y,width,height);
     }
 
     //  一个懒加载的 Tesseract worker
     private async getGameStageWorker(): Promise<any> {
         if (this.gameStageWorker) return this.gameStageWorker;
         logger.info("[TftOperator] 正在创建 Tesseract worker...");
-        // ✅ 动态导入 tesseract.js
-        const { createWorker, PSM } = await import("tesseract.js");
         const worker = await createWorker('eng', 1, {
             logger: m => logger.info(`[Tesseract] ${m.status}: ${Math.round(m.progress * 100)}%`)
         })

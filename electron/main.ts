@@ -13,7 +13,6 @@ import {hexService} from "../src-backend/services/HexService.ts";
 import {settingsStore} from "../src-backend/utils/SettingsStore.ts";
 import {debounce} from "../src-backend/utils/HelperTools.ts";
 import {tftOperator} from "../src-backend/TftOperator.ts";
-import {Point} from "@nut-tree-fork/nut-js";
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
