@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "云顶之弈海克斯助手 TFT-Hextech-Helper",
   "author": "WJZ_P",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "dev": "chcp 65001 && vite",
     "mac-dev": "vite",

@@ -2,6 +2,7 @@
 import {logger} from "./utils/Logger";
 import {Button, mouse, Point, Region} from "@nut-tree-fork/nut-js"
 import {createWorker, PSM} from "tesseract.js";
+import {screen} from "@nut-tree-fork/nut-js"
 
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
@@ -88,9 +89,8 @@ class TftOperator {
             const worker = await this.getGameStageWorker();
             // ✨ 3. (重要!) 动态导入 nut-js 的 CJS 方式
             //    因为这是一个 CJS 文件，nut-js 终于可以开心地找到 __dirname 了！
-            const { screen: nutScreen } = await import("@nut-tree-fork/nut-js");
             //  选定坐标并截图
-            const screenshot = await nutScreen.grabRegion(this.getStageAbsoluteRegion());
+            const screenshot = await screen.grabRegion(this.getStageAbsoluteRegion());
             //  截图结果转buffer识别
             const recognizeResult = await worker.recognize(screenshot.data)
             console.log('[TftOperator] gameStage识别成功：' + recognizeResult.data)

@@ -1,3 +1,4 @@
+"use strict";
 var __defProp2 = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -10,61 +11,44 @@ var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot
 var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
 var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
 var _validator, _encryptionKey, _options, _defaultValues, _isInMigration, _watcher, _watchFile, _debouncedChangeHandler, _Conf_instances, prepareOptions_fn, setupValidator_fn, captureSchemaDefaults_fn, applyDefaultValues_fn, configureSerialization_fn, resolvePath_fn, initializeStore_fn, runMigrations_fn;
-import electron, { app as app$1, BrowserWindow, globalShortcut, ipcMain as ipcMain$1 } from "electron";
-import { createRequire } from "node:module";
-import { fileURLToPath } from "node:url";
-import require$$0$9, { EventEmitter as EventEmitter$1 } from "events";
-import require$$0$6 from "os";
-import require$$0$7 from "child_process";
-import path$k from "node:path";
-import require$$0$4 from "fs";
-import require$$0$2 from "constants";
-import Stream$7, { Readable as Readable$2 } from "stream";
-import require$$0$3 from "util";
-import require$$0$5 from "assert";
-import require$$1$2 from "path";
-import https$5 from "https";
-import http$5 from "http";
-import require$$3$3 from "net";
-import require$$4$1 from "tls";
-import require$$1$3 from "crypto";
-import Url from "url";
-import zlib$6 from "zlib";
-import require$$0$8 from "buffer";
-import require$$1$4 from "tty";
-import require$$0$a from "punycode";
-import require$$4$2 from "querystring";
-import require$$1$5 from "string_decoder";
-import require$$4$3 from "timers";
-import require$$1$6 from "process";
-import require$$0$b from "worker_threads";
-import process$1 from "node:process";
-import { promisify as promisify$1, isDeepStrictEqual } from "node:util";
-import fs$r from "node:fs";
-import crypto$1 from "node:crypto";
-import assert$2 from "node:assert";
-import os from "node:os";
-import "node:events";
-import "node:stream";
-function _mergeNamespaces(n, m) {
-  for (var i = 0; i < m.length; i++) {
-    const e = m[i];
-    if (typeof e !== "string" && !Array.isArray(e)) {
-      for (const k in e) {
-        if (k !== "default" && !(k in n)) {
-          const d = Object.getOwnPropertyDescriptor(e, k);
-          if (d) {
-            Object.defineProperty(n, k, d.get ? d : {
-              enumerable: true,
-              get: () => e[k]
-            });
-          }
-        }
-      }
-    }
-  }
-  return Object.freeze(Object.defineProperty(n, Symbol.toStringTag, { value: "Module" }));
-}
+Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+const electron = require("electron");
+const node_module = require("node:module");
+const node_url = require("node:url");
+const require$$0$7 = require("events");
+const require$$0$6 = require("os");
+const require$$0$8 = require("child_process");
+const path$k = require("node:path");
+const require$$0$4 = require("fs");
+const require$$0$2 = require("constants");
+const Stream$7 = require("stream");
+const require$$0$3 = require("util");
+const require$$0$5 = require("assert");
+const require$$1$2 = require("path");
+const https$5 = require("https");
+const http$5 = require("http");
+const require$$3$3 = require("net");
+const require$$4$1 = require("tls");
+const require$$1$3 = require("crypto");
+const Url = require("url");
+const zlib$6 = require("zlib");
+const require$$0$9 = require("buffer");
+const require$$1$4 = require("tty");
+const require$$0$a = require("punycode");
+const require$$4$2 = require("querystring");
+const require$$1$5 = require("string_decoder");
+const require$$4$3 = require("timers");
+const require$$1$6 = require("process");
+const require$$0$b = require("worker_threads");
+const process$1 = require("node:process");
+const node_util = require("node:util");
+const fs$r = require("node:fs");
+const crypto$1 = require("node:crypto");
+const assert$2 = require("node:assert");
+const os = require("node:os");
+require("node:events");
+require("node:stream");
+var _documentCurrentScript = typeof document !== "undefined" ? document.currentScript : null;
 var commonjsGlobal = typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : {};
 function getDefaultExportFromCjs(x2) {
   return x2 && x2.__esModule && Object.prototype.hasOwnProperty.call(x2, "default") ? x2["default"] : x2;
@@ -868,7 +852,7 @@ function retry() {
     retryTimer = setTimeout(retry, 0);
   }
 }
-(function(exports) {
+(function(exports2) {
   const u2 = universalify.fromCallback;
   const fs2 = gracefulFs;
   const api = [
@@ -911,12 +895,12 @@ function retry() {
     if (key === "promises") {
       return;
     }
-    exports[key] = fs2[key];
+    exports2[key] = fs2[key];
   });
   api.forEach((method) => {
-    exports[method] = u2(fs2[method]);
+    exports2[method] = u2(fs2[method]);
   });
-  exports.exists = function(filename, callback) {
+  exports2.exists = function(filename, callback) {
     if (typeof callback === "function") {
       return fs2.exists(filename, callback);
     }
@@ -924,7 +908,7 @@ function retry() {
       return fs2.exists(filename, resolve2);
     });
   };
-  exports.read = function(fd, buffer2, offset, length, position, callback) {
+  exports2.read = function(fd, buffer2, offset, length, position, callback) {
     if (typeof callback === "function") {
       return fs2.read(fd, buffer2, offset, length, position, callback);
     }
@@ -935,7 +919,7 @@ function retry() {
       });
     });
   };
-  exports.write = function(fd, buffer2, ...args) {
+  exports2.write = function(fd, buffer2, ...args) {
     if (typeof args[args.length - 1] === "function") {
       return fs2.write(fd, buffer2, ...args);
     }
@@ -947,7 +931,7 @@ function retry() {
     });
   };
   if (typeof fs2.realpath.native === "function") {
-    exports.realpath.native = u2(fs2.realpath.native);
+    exports2.realpath.native = u2(fs2.realpath.native);
   }
 })(fs$q);
 const path$j = require$$1$2;
@@ -2420,8 +2404,8 @@ var output = {
   outputFile: u(outputFile),
   outputFileSync
 };
-(function(module) {
-  module.exports = Object.assign(
+(function(module2) {
+  module2.exports = Object.assign(
     {},
     // Export promiseified graceful-fs:
     fs$q,
@@ -2440,7 +2424,7 @@ var output = {
   );
   const fs2 = require$$0$4;
   if (Object.getOwnPropertyDescriptor(fs2, "promises")) {
-    Object.defineProperty(module.exports, "promises", {
+    Object.defineProperty(module2.exports, "promises", {
       get() {
         return fs2.promises;
       }
@@ -2492,7 +2476,7 @@ const logger = Logger.getInstance();
 const IS_WIN = process.platform === "win32";
 const IS_MAC = process.platform === "darwin";
 const IS_WSL = process.platform === "linux" && require$$0$6.release().toLowerCase().includes("microsoft");
-class LCUConnector extends EventEmitter$1 {
+class LCUConnector extends require$$0$7.EventEmitter {
   constructor() {
     super(...arguments);
     __publicField2(this, "processWatcher");
@@ -2505,7 +2489,7 @@ class LCUConnector extends EventEmitter$1 {
   static getLCUInfoFromProcess() {
     return new Promise((resolve2) => {
       const command = IS_WIN ? `WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline` : IS_WSL ? `WMIC.exe PROCESS WHERE "name='LeagueClientUx.exe'" GET commandline` : `ps x -o args | grep 'LeagueClientUx'`;
-      require$$0$7.exec(command, (err, stdout, stderr) => {
+      require$$0$8.exec(command, (err, stdout, stderr) => {
         if (err || !stdout || stderr) {
           resolve2();
           return;
@@ -3352,7 +3336,7 @@ function requireUtf8Validate() {
   return utf8Validate.exports;
 }
 var isValidUTF8_1;
-const { isUtf8 } = require$$0$8;
+const { isUtf8 } = require$$0$9;
 const { hasBlob } = constants$b;
 const tokenChars$2 = [
   0,
@@ -4977,7 +4961,7 @@ function format$8(extensions) {
   }).join(", ");
 }
 var extension = { format: format$8, parse: parse$a };
-const EventEmitter = require$$0$9;
+const EventEmitter = require$$0$7;
 const https$4 = https$5;
 const http$4 = http$5;
 const net = require$$3$3;
@@ -17287,19 +17271,19 @@ var mimeDb = require$$0$1;
  * Copyright(c) 2015 Douglas Christopher Wilson
  * MIT Licensed
  */
-(function(exports) {
+(function(exports2) {
   var db = mimeDb;
   var extname = require$$1$2.extname;
   var EXTRACT_TYPE_REGEXP = /^\s*([^;\s]*)(?:;|\s|$)/;
   var TEXT_TYPE_REGEXP = /^text\//i;
-  exports.charset = charset;
-  exports.charsets = { lookup: charset };
-  exports.contentType = contentType;
-  exports.extension = extension2;
-  exports.extensions = /* @__PURE__ */ Object.create(null);
-  exports.lookup = lookup;
-  exports.types = /* @__PURE__ */ Object.create(null);
-  populateMaps(exports.extensions, exports.types);
+  exports2.charset = charset;
+  exports2.charsets = { lookup: charset };
+  exports2.contentType = contentType;
+  exports2.extension = extension2;
+  exports2.extensions = /* @__PURE__ */ Object.create(null);
+  exports2.lookup = lookup;
+  exports2.types = /* @__PURE__ */ Object.create(null);
+  populateMaps(exports2.extensions, exports2.types);
   function charset(type2) {
     if (!type2 || typeof type2 !== "string") {
       return false;
@@ -17318,12 +17302,12 @@ var mimeDb = require$$0$1;
     if (!str || typeof str !== "string") {
       return false;
     }
-    var mime2 = str.indexOf("/") === -1 ? exports.lookup(str) : str;
+    var mime2 = str.indexOf("/") === -1 ? exports2.lookup(str) : str;
     if (!mime2) {
       return false;
     }
     if (mime2.indexOf("charset") === -1) {
-      var charset2 = exports.charset(mime2);
+      var charset2 = exports2.charset(mime2);
       if (charset2) mime2 += "; charset=" + charset2.toLowerCase();
     }
     return mime2;
@@ -17333,7 +17317,7 @@ var mimeDb = require$$0$1;
       return false;
     }
     var match = EXTRACT_TYPE_REGEXP.exec(type2);
-    var exts = match && exports.extensions[match[1].toLowerCase()];
+    var exts = match && exports2.extensions[match[1].toLowerCase()];
     if (!exts || !exts.length) {
       return false;
     }
@@ -17347,7 +17331,7 @@ var mimeDb = require$$0$1;
     if (!extension3) {
       return false;
     }
-    return exports.types[extension3] || false;
+    return exports2.types[extension3] || false;
   }
   function populateMaps(extensions, types2) {
     var preference = ["nginx", "apache", void 0, "iana"];
@@ -17523,7 +17507,14 @@ var _eval = EvalError;
 var range$1 = RangeError;
 var ref$2 = ReferenceError;
 var syntax = SyntaxError;
-var type$b = TypeError;
+var type$b;
+var hasRequiredType;
+function requireType() {
+  if (hasRequiredType) return type$b;
+  hasRequiredType = 1;
+  type$b = TypeError;
+  return type$b;
+}
 var uri$4 = URIError;
 var abs$1 = Math.abs;
 var floor$1 = Math.floor;
@@ -17769,7 +17760,7 @@ function requireCallBindApplyHelpers() {
   if (hasRequiredCallBindApplyHelpers) return callBindApplyHelpers;
   hasRequiredCallBindApplyHelpers = 1;
   var bind3 = functionBind;
-  var $TypeError2 = type$b;
+  var $TypeError2 = requireType();
   var $call2 = requireFunctionCall();
   var $actualApply = requireActualApply();
   callBindApplyHelpers = function callBindBasic(args) {
@@ -17842,7 +17833,7 @@ var $EvalError = _eval;
 var $RangeError = range$1;
 var $ReferenceError = ref$2;
 var $SyntaxError = syntax;
-var $TypeError$1 = type$b;
+var $TypeError$1 = requireType();
 var $URIError = uri$4;
 var abs = abs$1;
 var floor = floor$1;
@@ -18173,7 +18164,7 @@ var GetIntrinsic = getIntrinsic;
 var $defineProperty = GetIntrinsic("%Object.defineProperty%", true);
 var hasToStringTag = requireShams()();
 var hasOwn$1 = hasown;
-var $TypeError = type$b;
+var $TypeError = requireType();
 var toStringTag = hasToStringTag ? Symbol.toStringTag : null;
 var esSetTostringtag = function setToStringTag2(object, value) {
   var overrideIfSet = arguments.length > 2 && !!arguments[2] && arguments[2].force;
@@ -19650,13 +19641,13 @@ var hasRequiredBrowser;
 function requireBrowser() {
   if (hasRequiredBrowser) return browser.exports;
   hasRequiredBrowser = 1;
-  (function(module, exports) {
-    exports.formatArgs = formatArgs;
-    exports.save = save;
-    exports.load = load;
-    exports.useColors = useColors;
-    exports.storage = localstorage();
-    exports.destroy = /* @__PURE__ */ (() => {
+  (function(module2, exports2) {
+    exports2.formatArgs = formatArgs;
+    exports2.save = save;
+    exports2.load = load;
+    exports2.useColors = useColors;
+    exports2.storage = localstorage();
+    exports2.destroy = /* @__PURE__ */ (() => {
       let warned = false;
       return () => {
         if (!warned) {
@@ -19665,7 +19656,7 @@ function requireBrowser() {
         }
       };
     })();
-    exports.colors = [
+    exports2.colors = [
       "#0000CC",
       "#0000FF",
       "#0033CC",
@@ -19758,7 +19749,7 @@ function requireBrowser() {
       typeof navigator !== "undefined" && navigator.userAgent && navigator.userAgent.toLowerCase().match(/applewebkit\/(\d+)/);
     }
     function formatArgs(args) {
-      args[0] = (this.useColors ? "%c" : "") + this.namespace + (this.useColors ? " %c" : " ") + args[0] + (this.useColors ? "%c " : " ") + "+" + module.exports.humanize(this.diff);
+      args[0] = (this.useColors ? "%c" : "") + this.namespace + (this.useColors ? " %c" : " ") + args[0] + (this.useColors ? "%c " : " ") + "+" + module2.exports.humanize(this.diff);
       if (!this.useColors) {
         return;
       }
@@ -19777,14 +19768,14 @@ function requireBrowser() {
       });
       args.splice(lastC, 0, c2);
     }
-    exports.log = console.debug || console.log || (() => {
+    exports2.log = console.debug || console.log || (() => {
     });
     function save(namespaces) {
       try {
         if (namespaces) {
-          exports.storage.setItem("debug", namespaces);
+          exports2.storage.setItem("debug", namespaces);
         } else {
-          exports.storage.removeItem("debug");
+          exports2.storage.removeItem("debug");
         }
       } catch (error2) {
       }
@@ -19792,7 +19783,7 @@ function requireBrowser() {
     function load() {
       let r;
       try {
-        r = exports.storage.getItem("debug") || exports.storage.getItem("DEBUG");
+        r = exports2.storage.getItem("debug") || exports2.storage.getItem("DEBUG");
       } catch (error2) {
       }
       if (!r && typeof process !== "undefined" && "env" in process) {
@@ -19806,8 +19797,8 @@ function requireBrowser() {
       } catch (error2) {
       }
     }
-    module.exports = requireCommon$1()(exports);
-    const { formatters } = module.exports;
+    module2.exports = requireCommon$1()(exports2);
+    const { formatters } = module2.exports;
     formatters.j = function(v) {
       try {
         return JSON.stringify(v);
@@ -19938,25 +19929,25 @@ var hasRequiredNode;
 function requireNode() {
   if (hasRequiredNode) return node$1.exports;
   hasRequiredNode = 1;
-  (function(module, exports) {
+  (function(module2, exports2) {
     const tty = require$$1$4;
     const util2 = require$$0$3;
-    exports.init = init2;
-    exports.log = log2;
-    exports.formatArgs = formatArgs;
-    exports.save = save;
-    exports.load = load;
-    exports.useColors = useColors;
-    exports.destroy = util2.deprecate(
+    exports2.init = init2;
+    exports2.log = log2;
+    exports2.formatArgs = formatArgs;
+    exports2.save = save;
+    exports2.load = load;
+    exports2.useColors = useColors;
+    exports2.destroy = util2.deprecate(
       () => {
       },
       "Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`."
     );
-    exports.colors = [6, 2, 3, 4, 5, 1];
+    exports2.colors = [6, 2, 3, 4, 5, 1];
     try {
       const supportsColor = requireSupportsColor();
       if (supportsColor && (supportsColor.stderr || supportsColor).level >= 2) {
-        exports.colors = [
+        exports2.colors = [
           20,
           21,
           26,
@@ -20037,7 +20028,7 @@ function requireNode() {
       }
     } catch (error2) {
     }
-    exports.inspectOpts = Object.keys(process.env).filter((key) => {
+    exports2.inspectOpts = Object.keys(process.env).filter((key) => {
       return /^debug_/i.test(key);
     }).reduce((obj, key) => {
       const prop = key.substring(6).toLowerCase().replace(/_([a-z])/g, (_, k) => {
@@ -20057,7 +20048,7 @@ function requireNode() {
       return obj;
     }, {});
     function useColors() {
-      return "colors" in exports.inspectOpts ? Boolean(exports.inspectOpts.colors) : tty.isatty(process.stderr.fd);
+      return "colors" in exports2.inspectOpts ? Boolean(exports2.inspectOpts.colors) : tty.isatty(process.stderr.fd);
     }
     function formatArgs(args) {
       const { namespace: name, useColors: useColors2 } = this;
@@ -20066,19 +20057,19 @@ function requireNode() {
         const colorCode = "\x1B[3" + (c2 < 8 ? c2 : "8;5;" + c2);
         const prefix = `  ${colorCode};1m${name} \x1B[0m`;
         args[0] = prefix + args[0].split("\n").join("\n" + prefix);
-        args.push(colorCode + "m+" + module.exports.humanize(this.diff) + "\x1B[0m");
+        args.push(colorCode + "m+" + module2.exports.humanize(this.diff) + "\x1B[0m");
       } else {
         args[0] = getDate() + name + " " + args[0];
       }
     }
     function getDate() {
-      if (exports.inspectOpts.hideDate) {
+      if (exports2.inspectOpts.hideDate) {
         return "";
       }
       return (/* @__PURE__ */ new Date()).toISOString() + " ";
     }
     function log2(...args) {
-      return process.stderr.write(util2.formatWithOptions(exports.inspectOpts, ...args) + "\n");
+      return process.stderr.write(util2.formatWithOptions(exports2.inspectOpts, ...args) + "\n");
     }
     function save(namespaces) {
       if (namespaces) {
@@ -20092,13 +20083,13 @@ function requireNode() {
     }
     function init2(debug2) {
       debug2.inspectOpts = {};
-      const keys = Object.keys(exports.inspectOpts);
+      const keys = Object.keys(exports2.inspectOpts);
       for (let i = 0; i < keys.length; i++) {
-        debug2.inspectOpts[keys[i]] = exports.inspectOpts[keys[i]];
+        debug2.inspectOpts[keys[i]] = exports2.inspectOpts[keys[i]];
       }
     }
-    module.exports = requireCommon$1()(exports);
-    const { formatters } = module.exports;
+    module2.exports = requireCommon$1()(exports2);
+    const { formatters } = module2.exports;
     formatters.o = function(v) {
       this.inspectOpts.colors = this.useColors;
       return util2.inspect(v, this.inspectOpts).split("\n").map((str) => str.trim()).join(" ");
@@ -20480,7 +20471,7 @@ RedirectableRequest.prototype._processResponse = function(response) {
   this._performRequest();
 };
 function wrap(protocols) {
-  var exports = {
+  var exports2 = {
     maxRedirects: 21,
     maxBodyLength: 10 * 1024 * 1024
   };
@@ -20488,7 +20479,7 @@ function wrap(protocols) {
   Object.keys(protocols).forEach(function(scheme) {
     var protocol = scheme + ":";
     var nativeProtocol = nativeProtocols[protocol] = protocols[scheme];
-    var wrappedProtocol = exports[scheme] = Object.create(nativeProtocol);
+    var wrappedProtocol = exports2[scheme] = Object.create(nativeProtocol);
     function request2(input, options, callback) {
       if (isURL$1(input)) {
         input = spreadUrlObject(input);
@@ -20504,8 +20495,8 @@ function wrap(protocols) {
         options = null;
       }
       options = Object.assign({
-        maxRedirects: exports.maxRedirects,
-        maxBodyLength: exports.maxBodyLength
+        maxRedirects: exports2.maxRedirects,
+        maxBodyLength: exports2.maxBodyLength
       }, input, options);
       options.nativeProtocols = nativeProtocols;
       if (!isString$1(options.host) && !isString$1(options.hostname)) {
@@ -20525,7 +20516,7 @@ function wrap(protocols) {
       get: { value: get2, configurable: true, enumerable: true, writable: true }
     });
   });
-  return exports;
+  return exports2;
 }
 function noop$2() {
 }
@@ -20850,7 +20841,7 @@ const formDataToStream = (form, headersHandler, options) => {
     computedHeaders["Content-Length"] = contentLength;
   }
   headersHandler && headersHandler(computedHeaders);
-  return Readable$2.from(async function* () {
+  return Stream$7.Readable.from(async function* () {
     for (const part of parts) {
       yield boundaryBytes;
       yield* part.encode();
@@ -21145,7 +21136,7 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter2(config) {
         });
       };
     }
-    const emitter = new EventEmitter$1();
+    const emitter = new require$$0$7.EventEmitter();
     const onFinished = () => {
       if (config.cancelToken) {
         config.cancelToken.unsubscribe(abort2);
@@ -22691,7 +22682,7 @@ var LcuEventUri = /* @__PURE__ */ ((LcuEventUri2) => {
   LcuEventUri2["CHAMP_SELECT"] = "/lol-champ-select/v1/session";
   return LcuEventUri2;
 })(LcuEventUri || {});
-const _LCUManager = class _LCUManager extends EventEmitter$1 {
+const _LCUManager = class _LCUManager extends require$$0$7.EventEmitter {
   // 构造函数是私有的，这确保了外部不能用 new 来创建实例
   constructor(details) {
     super();
@@ -23019,7 +23010,7 @@ base64Vlq.decode = function base64VLQ_decode(aStr, aIndex, aOutParam) {
   aOutParam.rest = aIndex;
 };
 var util$e = {};
-(function(exports) {
+(function(exports2) {
   function getArg(aArgs, aName, aDefaultValue) {
     if (aName in aArgs) {
       return aArgs[aName];
@@ -23029,7 +23020,7 @@ var util$e = {};
       throw new Error('"' + aName + '" is a required argument.');
     }
   }
-  exports.getArg = getArg;
+  exports2.getArg = getArg;
   var urlRegexp = /^(?:([\w+\-.]+):)?\/\/(?:(\w+:\w+)@)?([\w.-]*)(?::(\d+))?(.*)$/;
   var dataUrlRegexp = /^data:.+\,.+$/;
   function urlParse(aUrl) {
@@ -23045,7 +23036,7 @@ var util$e = {};
       path: match[5]
     };
   }
-  exports.urlParse = urlParse;
+  exports2.urlParse = urlParse;
   function urlGenerate(aParsedUrl) {
     var url2 = "";
     if (aParsedUrl.scheme) {
@@ -23066,7 +23057,7 @@ var util$e = {};
     }
     return url2;
   }
-  exports.urlGenerate = urlGenerate;
+  exports2.urlGenerate = urlGenerate;
   function normalize2(aPath) {
     var path2 = aPath;
     var url2 = urlParse(aPath);
@@ -23076,7 +23067,7 @@ var util$e = {};
       }
       path2 = url2.path;
     }
-    var isAbsolute = exports.isAbsolute(path2);
+    var isAbsolute = exports2.isAbsolute(path2);
     var parts = path2.split(/\/+/);
     for (var part, up = 0, i = parts.length - 1; i >= 0; i--) {
       part = parts[i];
@@ -23104,7 +23095,7 @@ var util$e = {};
     }
     return path2;
   }
-  exports.normalize = normalize2;
+  exports2.normalize = normalize2;
   function join(aRoot, aPath) {
     if (aRoot === "") {
       aRoot = ".";
@@ -23137,8 +23128,8 @@ var util$e = {};
     }
     return joined;
   }
-  exports.join = join;
-  exports.isAbsolute = function(aPath) {
+  exports2.join = join;
+  exports2.isAbsolute = function(aPath) {
     return aPath.charAt(0) === "/" || urlRegexp.test(aPath);
   };
   function relative(aRoot, aPath) {
@@ -23160,7 +23151,7 @@ var util$e = {};
     }
     return Array(level + 1).join("../") + aPath.substr(aRoot.length + 1);
   }
-  exports.relative = relative;
+  exports2.relative = relative;
   var supportsNullProto = function() {
     var obj = /* @__PURE__ */ Object.create(null);
     return !("__proto__" in obj);
@@ -23174,14 +23165,14 @@ var util$e = {};
     }
     return aStr;
   }
-  exports.toSetString = supportsNullProto ? identity : toSetString;
+  exports2.toSetString = supportsNullProto ? identity : toSetString;
   function fromSetString(aStr) {
     if (isProtoString(aStr)) {
       return aStr.slice(1);
     }
     return aStr;
   }
-  exports.fromSetString = supportsNullProto ? identity : fromSetString;
+  exports2.fromSetString = supportsNullProto ? identity : fromSetString;
   function isProtoString(s) {
     if (!s) {
       return false;
@@ -23223,7 +23214,7 @@ var util$e = {};
     }
     return strcmp(mappingA.name, mappingB.name);
   }
-  exports.compareByOriginalPositions = compareByOriginalPositions;
+  exports2.compareByOriginalPositions = compareByOriginalPositions;
   function compareByGeneratedPositionsDeflated(mappingA, mappingB, onlyCompareGenerated) {
     var cmp2 = mappingA.generatedLine - mappingB.generatedLine;
     if (cmp2 !== 0) {
@@ -23247,7 +23238,7 @@ var util$e = {};
     }
     return strcmp(mappingA.name, mappingB.name);
   }
-  exports.compareByGeneratedPositionsDeflated = compareByGeneratedPositionsDeflated;
+  exports2.compareByGeneratedPositionsDeflated = compareByGeneratedPositionsDeflated;
   function strcmp(aStr1, aStr2) {
     if (aStr1 === aStr2) {
       return 0;
@@ -23286,11 +23277,11 @@ var util$e = {};
     }
     return strcmp(mappingA.name, mappingB.name);
   }
-  exports.compareByGeneratedPositionsInflated = compareByGeneratedPositionsInflated;
+  exports2.compareByGeneratedPositionsInflated = compareByGeneratedPositionsInflated;
   function parseSourceMapInput(str) {
     return JSON.parse(str.replace(/^\)]}'[^\n]*\n/, ""));
   }
-  exports.parseSourceMapInput = parseSourceMapInput;
+  exports2.parseSourceMapInput = parseSourceMapInput;
   function computeSourceURL(sourceRoot, sourceURL, sourceMapURL) {
     sourceURL = sourceURL || "";
     if (sourceRoot) {
@@ -23314,7 +23305,7 @@ var util$e = {};
     }
     return normalize2(sourceURL);
   }
-  exports.computeSourceURL = computeSourceURL;
+  exports2.computeSourceURL = computeSourceURL;
 })(util$e);
 var arraySet = {};
 var util$d = util$e;
@@ -23687,9 +23678,9 @@ SourceMapGenerator$1.prototype.toString = function SourceMapGenerator_toString()
 sourceMapGenerator.SourceMapGenerator = SourceMapGenerator$1;
 var sourceMapConsumer = {};
 var binarySearch$1 = {};
-(function(exports) {
-  exports.GREATEST_LOWER_BOUND = 1;
-  exports.LEAST_UPPER_BOUND = 2;
+(function(exports2) {
+  exports2.GREATEST_LOWER_BOUND = 1;
+  exports2.LEAST_UPPER_BOUND = 2;
   function recursiveSearch(aLow, aHigh, aNeedle, aHaystack, aCompare, aBias) {
     var mid = Math.floor((aHigh - aLow) / 2) + aLow;
     var cmp2 = aCompare(aNeedle, aHaystack[mid], true);
@@ -23699,7 +23690,7 @@ var binarySearch$1 = {};
       if (aHigh - mid > 1) {
         return recursiveSearch(mid, aHigh, aNeedle, aHaystack, aCompare, aBias);
       }
-      if (aBias == exports.LEAST_UPPER_BOUND) {
+      if (aBias == exports2.LEAST_UPPER_BOUND) {
         return aHigh < aHaystack.length ? aHigh : -1;
       } else {
         return mid;
@@ -23708,14 +23699,14 @@ var binarySearch$1 = {};
       if (mid - aLow > 1) {
         return recursiveSearch(aLow, mid, aNeedle, aHaystack, aCompare, aBias);
       }
-      if (aBias == exports.LEAST_UPPER_BOUND) {
+      if (aBias == exports2.LEAST_UPPER_BOUND) {
         return mid;
       } else {
         return aLow < 0 ? -1 : aLow;
       }
     }
   }
-  exports.search = function search(aNeedle, aHaystack, aCompare, aBias) {
+  exports2.search = function search(aNeedle, aHaystack, aCompare, aBias) {
     if (aHaystack.length === 0) {
       return -1;
     }
@@ -23725,7 +23716,7 @@ var binarySearch$1 = {};
       aNeedle,
       aHaystack,
       aCompare,
-      aBias || exports.GREATEST_LOWER_BOUND
+      aBias || exports2.GREATEST_LOWER_BOUND
     );
     if (index2 < 0) {
       return -1;
@@ -24671,7 +24662,7 @@ function bufferFrom(value, encodingOrOffset, length) {
 }
 var bufferFrom_1 = bufferFrom;
 sourceMapSupport.exports;
-(function(module, exports) {
+(function(module2, exports2) {
   var SourceMapConsumer2 = sourceMap.SourceMapConsumer;
   var path2 = require$$1$2;
   var fs2;
@@ -25070,11 +25061,11 @@ sourceMapSupport.exports;
   }
   var originalRetrieveFileHandlers = retrieveFileHandlers.slice(0);
   var originalRetrieveMapHandlers = retrieveMapHandlers.slice(0);
-  exports.wrapCallSite = wrapCallSite;
-  exports.getErrorSource = getErrorSource;
-  exports.mapSourcePosition = mapSourcePosition;
-  exports.retrieveSourceMap = retrieveSourceMap;
-  exports.install = function(options) {
+  exports2.wrapCallSite = wrapCallSite;
+  exports2.getErrorSource = getErrorSource;
+  exports2.mapSourcePosition = mapSourcePosition;
+  exports2.retrieveSourceMap = retrieveSourceMap;
+  exports2.install = function(options) {
     options = options || {};
     if (options.environment) {
       environment = options.environment;
@@ -25095,7 +25086,7 @@ sourceMapSupport.exports;
       retrieveMapHandlers.unshift(options.retrieveSourceMap);
     }
     if (options.hookRequire && !isInBrowser()) {
-      var Module = dynamicRequire(module, "module");
+      var Module = dynamicRequire(module2, "module");
       var $compile = Module.prototype._compile;
       if (!$compile.__sourceMapSupport) {
         Module.prototype._compile = function(content2, filename) {
@@ -25116,7 +25107,7 @@ sourceMapSupport.exports;
     if (!uncaughtShimInstalled) {
       var installHandler = "handleUncaughtExceptions" in options ? options.handleUncaughtExceptions : true;
       try {
-        var worker_threads = dynamicRequire(module, "worker_threads");
+        var worker_threads = dynamicRequire(module2, "worker_threads");
         if (worker_threads.isMainThread === false) {
           installHandler = false;
         }
@@ -25128,7 +25119,7 @@ sourceMapSupport.exports;
       }
     }
   };
-  exports.resetRetrieveHandlers = function() {
+  exports2.resetRetrieveHandlers = function() {
     retrieveFileHandlers.length = 0;
     retrieveMapHandlers.length = 0;
     retrieveFileHandlers = originalRetrieveFileHandlers.slice(0);
@@ -25153,8 +25144,8 @@ const _ConfigHelper = class _ConfigHelper {
     }
     this.installPath = installPath;
     this.gameConfigPath = require$$1$2.join(this.installPath, "Game", "Config");
-    this.backupPath = require$$1$2.join(app$1.getPath("userData"), "GameConfigBackup");
-    this.tftConfigPath = require$$1$2.join(app$1.getAppPath(), "public", "GameConfig", "TFTConfig");
+    this.backupPath = require$$1$2.join(electron.app.getPath("userData"), "GameConfigBackup");
+    this.tftConfigPath = require$$1$2.join(electron.app.getAppPath(), "public", "GameConfig", "TFTConfig");
     console.log(`[ConfigHelper] 游戏设置目录已设定: ${this.gameConfigPath}`);
     console.log(`[ConfigHelper] 备份将存储在: ${this.backupPath}`);
     console.log(`[ConfigHelper] 预设云顶之弈设置目录: ${this.tftConfigPath}`);
@@ -25544,7 +25535,7 @@ var Key;
   Key2[Key2["AudioRepeat"] = 135] = "AudioRepeat";
   Key2[Key2["AudioRandom"] = 136] = "AudioRandom";
 })(Key || (key_enum.Key = Key = {}));
-(function(exports) {
+(function(exports2) {
   var __createBinding = commonjsGlobal && commonjsGlobal.__createBinding || (Object.create ? function(o, m, k, k2) {
     if (k2 === void 0) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -25558,14 +25549,14 @@ var Key;
     if (k2 === void 0) k2 = k;
     o[k2] = m[k];
   });
-  var __exportStar = commonjsGlobal && commonjsGlobal.__exportStar || function(m, exports2) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p)) __createBinding(exports2, m, p);
+  var __exportStar = commonjsGlobal && commonjsGlobal.__exportStar || function(m, exports3) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports3, p)) __createBinding(exports3, m, p);
   };
-  Object.defineProperty(exports, "__esModule", { value: true });
-  __exportStar(button_enum, exports);
-  __exportStar(colormode_enum, exports);
-  __exportStar(fileType_enum, exports);
-  __exportStar(key_enum, exports);
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  __exportStar(button_enum, exports2);
+  __exportStar(colormode_enum, exports2);
+  __exportStar(fileType_enum, exports2);
+  __exportStar(key_enum, exports2);
 })(enums);
 var objects = {};
 var image_class = {};
@@ -26951,20 +26942,20 @@ conversions["RegExp"] = function(V, opts) {
   return V;
 };
 var utils$1 = { exports: {} };
-(function(module) {
-  module.exports.mixin = function mixin(target, source) {
+(function(module2) {
+  module2.exports.mixin = function mixin(target, source) {
     const keys = Object.getOwnPropertyNames(source);
     for (let i = 0; i < keys.length; ++i) {
       Object.defineProperty(target, keys[i], Object.getOwnPropertyDescriptor(source, keys[i]));
     }
   };
-  module.exports.wrapperSymbol = Symbol("wrapper");
-  module.exports.implSymbol = Symbol("impl");
-  module.exports.wrapperForImpl = function(impl) {
-    return impl[module.exports.wrapperSymbol];
+  module2.exports.wrapperSymbol = Symbol("wrapper");
+  module2.exports.implSymbol = Symbol("impl");
+  module2.exports.wrapperForImpl = function(impl) {
+    return impl[module2.exports.wrapperSymbol];
   };
-  module.exports.implForWrapper = function(wrapper) {
-    return wrapper[module.exports.implSymbol];
+  module2.exports.implForWrapper = function(wrapper) {
+    return wrapper[module2.exports.implSymbol];
   };
 })(utils$1);
 var utilsExports = utils$1.exports;
@@ -104229,7 +104220,7 @@ tr46.toUnicode = function(domain_name, useSTD3) {
   };
 };
 tr46.PROCESSING_OPTIONS = PROCESSING_OPTIONS;
-(function(module) {
+(function(module2) {
   const punycode2 = require$$0$a;
   const tr46$1 = tr46;
   const specialSchemes = {
@@ -105234,12 +105225,12 @@ tr46.PROCESSING_OPTIONS = PROCESSING_OPTIONS;
     }
     return result;
   }
-  module.exports.serializeURL = serializeURL;
-  module.exports.serializeURLOrigin = function(url2) {
+  module2.exports.serializeURL = serializeURL;
+  module2.exports.serializeURLOrigin = function(url2) {
     switch (url2.scheme) {
       case "blob":
         try {
-          return module.exports.serializeURLOrigin(module.exports.parseURL(url2.path[0]));
+          return module2.exports.serializeURLOrigin(module2.exports.parseURL(url2.path[0]));
         } catch (e) {
           return "null";
         }
@@ -105260,7 +105251,7 @@ tr46.PROCESSING_OPTIONS = PROCESSING_OPTIONS;
         return "null";
     }
   };
-  module.exports.basicURLParse = function(input, options) {
+  module2.exports.basicURLParse = function(input, options) {
     if (options === void 0) {
       options = {};
     }
@@ -105270,30 +105261,30 @@ tr46.PROCESSING_OPTIONS = PROCESSING_OPTIONS;
     }
     return usm2.url;
   };
-  module.exports.setTheUsername = function(url2, username) {
+  module2.exports.setTheUsername = function(url2, username) {
     url2.username = "";
     const decoded = punycode2.ucs2.decode(username);
     for (let i = 0; i < decoded.length; ++i) {
       url2.username += percentEncodeChar(decoded[i], isUserinfoPercentEncode);
     }
   };
-  module.exports.setThePassword = function(url2, password) {
+  module2.exports.setThePassword = function(url2, password) {
     url2.password = "";
     const decoded = punycode2.ucs2.decode(password);
     for (let i = 0; i < decoded.length; ++i) {
       url2.password += percentEncodeChar(decoded[i], isUserinfoPercentEncode);
     }
   };
-  module.exports.serializeHost = serializeHost;
-  module.exports.cannotHaveAUsernamePasswordPort = cannotHaveAUsernamePasswordPort;
-  module.exports.serializeInteger = function(integer) {
+  module2.exports.serializeHost = serializeHost;
+  module2.exports.cannotHaveAUsernamePasswordPort = cannotHaveAUsernamePasswordPort;
+  module2.exports.serializeInteger = function(integer) {
     return String(integer);
   };
-  module.exports.parseURL = function(input, options) {
+  module2.exports.parseURL = function(input, options) {
     if (options === void 0) {
       options = {};
     }
-    return module.exports.basicURLParse(input, { baseURL: options.baseURL, encodingOverride: options.encodingOverride });
+    return module2.exports.basicURLParse(input, { baseURL: options.baseURL, encodingOverride: options.encodingOverride });
   };
 })(urlStateMachine);
 var urlStateMachineExports = urlStateMachine.exports;
@@ -105447,7 +105438,7 @@ URLImpl.implementation = class URLImpl2 {
     return this.href;
   }
 };
-(function(module) {
+(function(module2) {
   const conversions2 = lib$8;
   const utils2 = utilsExports;
   const Impl = URLImpl;
@@ -105467,10 +105458,10 @@ URLImpl.implementation = class URLImpl2 {
     if (args[1] !== void 0) {
       args[1] = conversions2["USVString"](args[1]);
     }
-    module.exports.setup(this, args);
+    module2.exports.setup(this, args);
   }
   URL2.prototype.toJSON = function toJSON2() {
-    if (!this || !module.exports.is(this)) {
+    if (!this || !module2.exports.is(this)) {
       throw new TypeError("Illegal invocation");
     }
     const args = [];
@@ -105491,7 +105482,7 @@ URLImpl.implementation = class URLImpl2 {
     configurable: true
   });
   URL2.prototype.toString = function() {
-    if (!this || !module.exports.is(this)) {
+    if (!this || !module2.exports.is(this)) {
       throw new TypeError("Illegal invocation");
     }
     return this.href;
@@ -105602,7 +105593,7 @@ URLImpl.implementation = class URLImpl2 {
     enumerable: true,
     configurable: true
   });
-  module.exports = {
+  module2.exports = {
     is(obj) {
       return !!obj && obj[impl] instanceof Impl.implementation;
     },
@@ -106858,16 +106849,16 @@ const lib$7 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePropert
   default: fetch$2
 }, Symbol.toStringTag, { value: "Module" }));
 const require$$2$2 = /* @__PURE__ */ getAugmentedNamespace(lib$7);
-(function(module) {
+(function(module2) {
   var realFetch = require$$2$2;
-  module.exports = function(url2, options) {
+  module2.exports = function(url2, options) {
     if (/^\/\//.test(url2)) {
       url2 = "https:" + url2;
     }
     return realFetch.call(this, url2, options);
   };
   if (!commonjsGlobal.fetch) {
-    commonjsGlobal.fetch = module.exports;
+    commonjsGlobal.fetch = module2.exports;
     commonjsGlobal.Response = realFetch.Response;
     commonjsGlobal.Headers = realFetch.Headers;
     commonjsGlobal.Request = realFetch.Request;
@@ -107322,16 +107313,16 @@ var ReadStreamTokenizer$1 = {};
 var AbstractTokenizer$1 = {};
 var lib$5 = {};
 var EndOfFileStream = {};
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.EndOfStreamError = exports.defaultMessages = void 0;
-  exports.defaultMessages = "End-Of-Stream";
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.EndOfStreamError = exports2.defaultMessages = void 0;
+  exports2.defaultMessages = "End-Of-Stream";
   class EndOfStreamError extends Error {
     constructor() {
-      super(exports.defaultMessages);
+      super(exports2.defaultMessages);
     }
   }
-  exports.EndOfStreamError = EndOfStreamError;
+  exports2.EndOfStreamError = EndOfStreamError;
 })(EndOfFileStream);
 var StreamReader = {};
 var Deferred$1 = {};
@@ -107348,13 +107339,13 @@ class Deferred {
   }
 }
 Deferred$1.Deferred = Deferred;
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.StreamReader = exports.EndOfStreamError = void 0;
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.StreamReader = exports2.EndOfStreamError = void 0;
   const EndOfFileStream_1 = EndOfFileStream;
   const Deferred_1 = Deferred$1;
   var EndOfFileStream_2 = EndOfFileStream;
-  Object.defineProperty(exports, "EndOfStreamError", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "EndOfStreamError", { enumerable: true, get: function() {
     return EndOfFileStream_2.EndOfStreamError;
   } });
   const maxStreamReadSize = 1 * 1024 * 1024;
@@ -107471,17 +107462,17 @@ Deferred$1.Deferred = Deferred;
       }
     }
   }
-  exports.StreamReader = StreamReader2;
+  exports2.StreamReader = StreamReader2;
 })(StreamReader);
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.StreamReader = exports.EndOfStreamError = void 0;
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.StreamReader = exports2.EndOfStreamError = void 0;
   var EndOfFileStream_1 = EndOfFileStream;
-  Object.defineProperty(exports, "EndOfStreamError", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "EndOfStreamError", { enumerable: true, get: function() {
     return EndOfFileStream_1.EndOfStreamError;
   } });
   var StreamReader_1 = StreamReader;
-  Object.defineProperty(exports, "StreamReader", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "StreamReader", { enumerable: true, get: function() {
     return StreamReader_1.StreamReader;
   } });
 })(lib$5);
@@ -107727,24 +107718,24 @@ class BufferTokenizer extends AbstractTokenizer_1$1.AbstractTokenizer {
   }
 }
 BufferTokenizer$1.BufferTokenizer = BufferTokenizer;
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.fromBuffer = exports.fromStream = exports.EndOfStreamError = void 0;
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.fromBuffer = exports2.fromStream = exports2.EndOfStreamError = void 0;
   const ReadStreamTokenizer_1 = ReadStreamTokenizer$1;
   const BufferTokenizer_1 = BufferTokenizer$1;
   var peek_readable_12 = lib$5;
-  Object.defineProperty(exports, "EndOfStreamError", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "EndOfStreamError", { enumerable: true, get: function() {
     return peek_readable_12.EndOfStreamError;
   } });
   function fromStream2(stream2, fileInfo) {
     fileInfo = fileInfo ? fileInfo : {};
     return new ReadStreamTokenizer_1.ReadStreamTokenizer(stream2, fileInfo);
   }
-  exports.fromStream = fromStream2;
+  exports2.fromStream = fromStream2;
   function fromBuffer2(uint8Array, fileInfo) {
     return new BufferTokenizer_1.BufferTokenizer(uint8Array, fileInfo);
   }
-  exports.fromBuffer = fromBuffer2;
+  exports2.fromBuffer = fromBuffer2;
 })(core$9);
 var FileTokenizer$1 = {};
 Object.defineProperty(FileTokenizer$1, "__esModule", { value: true });
@@ -107801,20 +107792,20 @@ async function fromFile$1(sourceFilePath) {
   return new FileTokenizer(fd, { path: sourceFilePath, size: stat2.size });
 }
 FileTokenizer$1.fromFile = fromFile$1;
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.fromStream = exports.fromBuffer = exports.EndOfStreamError = exports.fromFile = void 0;
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.fromStream = exports2.fromBuffer = exports2.EndOfStreamError = exports2.fromFile = void 0;
   const fs2 = FsPromise;
   const core2 = core$9;
   var FileTokenizer_1 = FileTokenizer$1;
-  Object.defineProperty(exports, "fromFile", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "fromFile", { enumerable: true, get: function() {
     return FileTokenizer_1.fromFile;
   } });
   var core_12 = core$9;
-  Object.defineProperty(exports, "EndOfStreamError", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "EndOfStreamError", { enumerable: true, get: function() {
     return core_12.EndOfStreamError;
   } });
-  Object.defineProperty(exports, "fromBuffer", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "fromBuffer", { enumerable: true, get: function() {
     return core_12.fromBuffer;
   } });
   async function fromStream2(stream2, fileInfo) {
@@ -107826,7 +107817,7 @@ FileTokenizer$1.fromFile = fromFile$1;
     }
     return core2.fromStream(stream2, fileInfo);
   }
-  exports.fromStream = fromStream2;
+  exports2.fromStream = fromStream2;
 })(lib$6);
 var lib$4 = {};
 var ieee754 = {};
@@ -107908,14 +107899,14 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
   }
   buffer2[offset + i - d] |= s * 128;
 };
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.AnsiStringType = exports.StringType = exports.BufferType = exports.Uint8ArrayType = exports.IgnoreType = exports.Float80_LE = exports.Float80_BE = exports.Float64_LE = exports.Float64_BE = exports.Float32_LE = exports.Float32_BE = exports.Float16_LE = exports.Float16_BE = exports.INT64_BE = exports.UINT64_BE = exports.INT64_LE = exports.UINT64_LE = exports.INT32_LE = exports.INT32_BE = exports.INT24_BE = exports.INT24_LE = exports.INT16_LE = exports.INT16_BE = exports.INT8 = exports.UINT32_BE = exports.UINT32_LE = exports.UINT24_BE = exports.UINT24_LE = exports.UINT16_BE = exports.UINT16_LE = exports.UINT8 = void 0;
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.AnsiStringType = exports2.StringType = exports2.BufferType = exports2.Uint8ArrayType = exports2.IgnoreType = exports2.Float80_LE = exports2.Float80_BE = exports2.Float64_LE = exports2.Float64_BE = exports2.Float32_LE = exports2.Float32_BE = exports2.Float16_LE = exports2.Float16_BE = exports2.INT64_BE = exports2.UINT64_BE = exports2.INT64_LE = exports2.UINT64_LE = exports2.INT32_LE = exports2.INT32_BE = exports2.INT24_BE = exports2.INT24_LE = exports2.INT16_LE = exports2.INT16_BE = exports2.INT8 = exports2.UINT32_BE = exports2.UINT32_LE = exports2.UINT24_BE = exports2.UINT24_LE = exports2.UINT16_BE = exports2.UINT16_LE = exports2.UINT8 = void 0;
   const ieee754$1 = ieee754;
   function dv(array) {
     return new DataView(array.buffer, array.byteOffset);
   }
-  exports.UINT8 = {
+  exports2.UINT8 = {
     len: 1,
     get(array, offset) {
       return dv(array).getUint8(offset);
@@ -107925,7 +107916,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 1;
     }
   };
-  exports.UINT16_LE = {
+  exports2.UINT16_LE = {
     len: 2,
     get(array, offset) {
       return dv(array).getUint16(offset, true);
@@ -107935,7 +107926,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 2;
     }
   };
-  exports.UINT16_BE = {
+  exports2.UINT16_BE = {
     len: 2,
     get(array, offset) {
       return dv(array).getUint16(offset);
@@ -107945,7 +107936,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 2;
     }
   };
-  exports.UINT24_LE = {
+  exports2.UINT24_LE = {
     len: 3,
     get(array, offset) {
       const dataView = dv(array);
@@ -107958,7 +107949,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 3;
     }
   };
-  exports.UINT24_BE = {
+  exports2.UINT24_BE = {
     len: 3,
     get(array, offset) {
       const dataView = dv(array);
@@ -107971,7 +107962,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 3;
     }
   };
-  exports.UINT32_LE = {
+  exports2.UINT32_LE = {
     len: 4,
     get(array, offset) {
       return dv(array).getUint32(offset, true);
@@ -107981,7 +107972,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 4;
     }
   };
-  exports.UINT32_BE = {
+  exports2.UINT32_BE = {
     len: 4,
     get(array, offset) {
       return dv(array).getUint32(offset);
@@ -107991,7 +107982,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 4;
     }
   };
-  exports.INT8 = {
+  exports2.INT8 = {
     len: 1,
     get(array, offset) {
       return dv(array).getInt8(offset);
@@ -108001,7 +107992,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 1;
     }
   };
-  exports.INT16_BE = {
+  exports2.INT16_BE = {
     len: 2,
     get(array, offset) {
       return dv(array).getInt16(offset);
@@ -108011,7 +108002,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 2;
     }
   };
-  exports.INT16_LE = {
+  exports2.INT16_LE = {
     len: 2,
     get(array, offset) {
       return dv(array).getInt16(offset, true);
@@ -108021,10 +108012,10 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 2;
     }
   };
-  exports.INT24_LE = {
+  exports2.INT24_LE = {
     len: 3,
     get(array, offset) {
-      const unsigned = exports.UINT24_LE.get(array, offset);
+      const unsigned = exports2.UINT24_LE.get(array, offset);
       return unsigned > 8388607 ? unsigned - 16777216 : unsigned;
     },
     put(array, offset, value) {
@@ -108034,10 +108025,10 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 3;
     }
   };
-  exports.INT24_BE = {
+  exports2.INT24_BE = {
     len: 3,
     get(array, offset) {
-      const unsigned = exports.UINT24_BE.get(array, offset);
+      const unsigned = exports2.UINT24_BE.get(array, offset);
       return unsigned > 8388607 ? unsigned - 16777216 : unsigned;
     },
     put(array, offset, value) {
@@ -108047,7 +108038,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 3;
     }
   };
-  exports.INT32_BE = {
+  exports2.INT32_BE = {
     len: 4,
     get(array, offset) {
       return dv(array).getInt32(offset);
@@ -108057,7 +108048,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 4;
     }
   };
-  exports.INT32_LE = {
+  exports2.INT32_LE = {
     len: 4,
     get(array, offset) {
       return dv(array).getInt32(offset, true);
@@ -108067,7 +108058,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 4;
     }
   };
-  exports.UINT64_LE = {
+  exports2.UINT64_LE = {
     len: 8,
     get(array, offset) {
       return dv(array).getBigUint64(offset, true);
@@ -108077,7 +108068,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 8;
     }
   };
-  exports.INT64_LE = {
+  exports2.INT64_LE = {
     len: 8,
     get(array, offset) {
       return dv(array).getBigInt64(offset, true);
@@ -108087,7 +108078,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 8;
     }
   };
-  exports.UINT64_BE = {
+  exports2.UINT64_BE = {
     len: 8,
     get(array, offset) {
       return dv(array).getBigUint64(offset);
@@ -108097,7 +108088,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 8;
     }
   };
-  exports.INT64_BE = {
+  exports2.INT64_BE = {
     len: 8,
     get(array, offset) {
       return dv(array).getBigInt64(offset);
@@ -108107,7 +108098,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 8;
     }
   };
-  exports.Float16_BE = {
+  exports2.Float16_BE = {
     len: 2,
     get(dataView, offset) {
       return ieee754$1.read(dataView, offset, false, 10, this.len);
@@ -108117,7 +108108,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + this.len;
     }
   };
-  exports.Float16_LE = {
+  exports2.Float16_LE = {
     len: 2,
     get(array, offset) {
       return ieee754$1.read(array, offset, true, 10, this.len);
@@ -108127,7 +108118,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + this.len;
     }
   };
-  exports.Float32_BE = {
+  exports2.Float32_BE = {
     len: 4,
     get(array, offset) {
       return dv(array).getFloat32(offset);
@@ -108137,7 +108128,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 4;
     }
   };
-  exports.Float32_LE = {
+  exports2.Float32_LE = {
     len: 4,
     get(array, offset) {
       return dv(array).getFloat32(offset, true);
@@ -108147,7 +108138,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 4;
     }
   };
-  exports.Float64_BE = {
+  exports2.Float64_BE = {
     len: 8,
     get(array, offset) {
       return dv(array).getFloat64(offset);
@@ -108157,7 +108148,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 8;
     }
   };
-  exports.Float64_LE = {
+  exports2.Float64_LE = {
     len: 8,
     get(array, offset) {
       return dv(array).getFloat64(offset, true);
@@ -108167,7 +108158,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + 8;
     }
   };
-  exports.Float80_BE = {
+  exports2.Float80_BE = {
     len: 10,
     get(array, offset) {
       return ieee754$1.read(array, offset, false, 63, this.len);
@@ -108177,7 +108168,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return offset + this.len;
     }
   };
-  exports.Float80_LE = {
+  exports2.Float80_LE = {
     len: 10,
     get(array, offset) {
       return ieee754$1.read(array, offset, true, 63, this.len);
@@ -108198,7 +108189,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
     get(array, off) {
     }
   }
-  exports.IgnoreType = IgnoreType;
+  exports2.IgnoreType = IgnoreType;
   class Uint8ArrayType {
     constructor(len) {
       this.len = len;
@@ -108207,7 +108198,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return array.subarray(offset, offset + this.len);
     }
   }
-  exports.Uint8ArrayType = Uint8ArrayType;
+  exports2.Uint8ArrayType = Uint8ArrayType;
   class BufferType {
     constructor(len) {
       this.len = len;
@@ -108216,7 +108207,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return Buffer.from(uint8Array.subarray(off, off + this.len));
     }
   }
-  exports.BufferType = BufferType;
+  exports2.BufferType = BufferType;
   class StringType {
     constructor(len, encoding) {
       this.len = len;
@@ -108226,7 +108217,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return Buffer.from(uint8Array).toString(this.encoding, offset, offset + this.len);
     }
   }
-  exports.StringType = StringType;
+  exports2.StringType = StringType;
   class AnsiStringType {
     constructor(len) {
       this.len = len;
@@ -108263,7 +108254,7 @@ ieee754.write = function(buffer2, value, offset, isLE, mLen, nBytes) {
       return AnsiStringType.decode(buffer2, offset, offset + this.len);
     }
   }
-  exports.AnsiStringType = AnsiStringType;
+  exports2.AnsiStringType = AnsiStringType;
   AnsiStringType.windows1252 = [
     8364,
     129,
@@ -111291,7 +111282,7 @@ const emptyBitmap = {
   width: null,
   height: null
 };
-class Jimp extends require$$0$9 {
+class Jimp extends require$$0$7 {
   // An object representing a bitmap in memory, comprising:
   //  - data: a buffer of the bitmap data
   //  - width: the width of the image in pixels
@@ -112305,7 +112296,7 @@ const timm = {
 var _default = timm;
 timm$1.default = _default;
 var encoder$1 = { exports: {} };
-(function(module) {
+(function(module2) {
   function JPEGEncoder(quality) {
     var ffloor = Math.floor;
     var YTable = new Array(64);
@@ -113350,7 +113341,7 @@ var encoder$1 = { exports: {} };
     init2();
   }
   {
-    module.exports = encode2;
+    module2.exports = encode2;
   }
   function encode2(imgData, qu) {
     if (typeof qu === "undefined") qu = 50;
@@ -113365,7 +113356,7 @@ var encoder$1 = { exports: {} };
 })(encoder$1);
 var encoderExports = encoder$1.exports;
 var decoder$1 = { exports: {} };
-(function(module) {
+(function(module2) {
   var JpegImage = function jpegImage() {
     var dctZigZag = new Int32Array([
       0,
@@ -114352,7 +114343,7 @@ var decoder$1 = { exports: {} };
     return constructor;
   }();
   {
-    module.exports = decode2;
+    module2.exports = decode2;
   }
   function decode2(jpegData, userOpts = {}) {
     var defaultOpts = {
@@ -115957,11 +115948,11 @@ PackerAsync.prototype.pack = function(data, width, height, gamma) {
 var packerAsyncExports = packerAsync.exports;
 var pngSync = {};
 var syncInflate = { exports: {} };
-(function(module, exports) {
+(function(module2, exports2) {
   let assert2 = require$$0$5.ok;
   let zlib2 = zlib$6;
   let util2 = require$$0$3;
-  let kMaxLength = require$$0$8.kMaxLength;
+  let kMaxLength = require$$0$9.kMaxLength;
   function Inflate(opts) {
     if (!(this instanceof Inflate)) {
       return new Inflate(opts);
@@ -116081,10 +116072,10 @@ var syncInflate = { exports: {} };
   function inflateSync2(buffer2, opts) {
     return zlibBufferSync(new Inflate(opts), buffer2);
   }
-  module.exports = exports = inflateSync2;
-  exports.Inflate = Inflate;
-  exports.createInflate = createInflate;
-  exports.inflateSync = inflateSync2;
+  module2.exports = exports2 = inflateSync2;
+  exports2.Inflate = Inflate;
+  exports2.createInflate = createInflate;
+  exports2.inflateSync = inflateSync2;
 })(syncInflate, syncInflate.exports);
 var syncInflateExports = syncInflate.exports;
 var syncReader = { exports: {} };
@@ -117061,12 +117052,12 @@ var hasRequiredCommon;
 function requireCommon() {
   if (hasRequiredCommon) return common;
   hasRequiredCommon = 1;
-  (function(exports) {
+  (function(exports2) {
     var TYPED_OK = typeof Uint8Array !== "undefined" && typeof Uint16Array !== "undefined" && typeof Int32Array !== "undefined";
     function _has(obj, key) {
       return Object.prototype.hasOwnProperty.call(obj, key);
     }
-    exports.assign = function(obj) {
+    exports2.assign = function(obj) {
       var sources = Array.prototype.slice.call(arguments, 1);
       while (sources.length) {
         var source = sources.shift();
@@ -117084,7 +117075,7 @@ function requireCommon() {
       }
       return obj;
     };
-    exports.shrinkBuf = function(buf, size) {
+    exports2.shrinkBuf = function(buf, size) {
       if (buf.length === size) {
         return buf;
       }
@@ -117132,20 +117123,20 @@ function requireCommon() {
         return [].concat.apply([], chunks);
       }
     };
-    exports.setTyped = function(on) {
+    exports2.setTyped = function(on) {
       if (on) {
-        exports.Buf8 = Uint8Array;
-        exports.Buf16 = Uint16Array;
-        exports.Buf32 = Int32Array;
-        exports.assign(exports, fnTyped);
+        exports2.Buf8 = Uint8Array;
+        exports2.Buf16 = Uint16Array;
+        exports2.Buf32 = Int32Array;
+        exports2.assign(exports2, fnTyped);
       } else {
-        exports.Buf8 = Array;
-        exports.Buf16 = Array;
-        exports.Buf32 = Array;
-        exports.assign(exports, fnUntyped);
+        exports2.Buf8 = Array;
+        exports2.Buf16 = Array;
+        exports2.Buf32 = Array;
+        exports2.assign(exports2, fnUntyped);
       }
     };
-    exports.setTyped(TYPED_OK);
+    exports2.setTyped(TYPED_OK);
   })(common);
   return common;
 }
@@ -121253,11 +121244,11 @@ function requirePako() {
   pako_1 = pako;
   return pako_1;
 }
-(function(module) {
+(function(module2) {
   (function() {
     var UTIF2 = {};
     {
-      module.exports = UTIF2;
+      module2.exports = UTIF2;
     }
     var pako = typeof commonjsRequire === "function" ? requirePako() : self.pako;
     function log2() {
@@ -128484,7 +128475,7 @@ var hasRequiredGifutil;
 function requireGifutil() {
   if (hasRequiredGifutil) return gifutil;
   hasRequiredGifutil = 1;
-  (function(exports) {
+  (function(exports2) {
     const fs2 = require$$0$4;
     const ImageQ = imageQ;
     const BitmapImage3 = bitmapimage;
@@ -128493,14 +128484,14 @@ function requireGifutil() {
     const { GifCodec: GifCodec2 } = requireGifcodec();
     const INVALID_SUFFIXES = [".jpg", ".jpeg", ".png", ".bmp"];
     const defaultCodec = new GifCodec2();
-    exports.cloneFrames = function(frames) {
+    exports2.cloneFrames = function(frames) {
       let clones = [];
       frames.forEach((frame) => {
         clones.push(new GifFrame3(frame));
       });
       return clones;
     };
-    exports.getColorInfo = function(frames, maxGlobalIndex) {
+    exports2.getColorInfo = function(frames, maxGlobalIndex) {
       let usesTransparency = false;
       const palettes = [];
       for (let i = 0; i < frames.length; ++i) {
@@ -128537,10 +128528,10 @@ function requireGifutil() {
       colors.sort((a, b) => a - b);
       return { colors, indexCount, usesTransparency, palettes };
     };
-    exports.copyAsJimp = function(jimp, bitmapImageToCopy) {
-      return exports.shareAsJimp(jimp, new BitmapImage3(bitmapImageToCopy));
+    exports2.copyAsJimp = function(jimp, bitmapImageToCopy) {
+      return exports2.shareAsJimp(jimp, new BitmapImage3(bitmapImageToCopy));
     };
-    exports.getMaxDimensions = function(frames) {
+    exports2.getMaxDimensions = function(frames) {
       let maxWidth = 0, maxHeight = 0;
       frames.forEach((frame) => {
         const width = frame.xOffset + frame.bitmap.width;
@@ -128554,11 +128545,11 @@ function requireGifutil() {
       });
       return { maxWidth, maxHeight };
     };
-    exports.quantizeDekker = function(imageOrImages, maxColorIndexes, dither2) {
+    exports2.quantizeDekker = function(imageOrImages, maxColorIndexes, dither2) {
       maxColorIndexes = maxColorIndexes || 256;
       _quantize(imageOrImages, "NeuQuantFloat", maxColorIndexes, 0, dither2);
     };
-    exports.quantizeSorokin = function(imageOrImages, maxColorIndexes, histogram2, dither2) {
+    exports2.quantizeSorokin = function(imageOrImages, maxColorIndexes, histogram2, dither2) {
       maxColorIndexes = maxColorIndexes || 256;
       histogram2 = histogram2 || "min-pop";
       let histogramID;
@@ -128574,7 +128565,7 @@ function requireGifutil() {
       }
       _quantize(imageOrImages, "RGBQuant", maxColorIndexes, histogramID, dither2);
     };
-    exports.quantizeWu = function(imageOrImages, maxColorIndexes, significantBits, dither2) {
+    exports2.quantizeWu = function(imageOrImages, maxColorIndexes, significantBits, dither2) {
       maxColorIndexes = maxColorIndexes || 256;
       significantBits = significantBits || 5;
       if (significantBits < 1 || significantBits > 8) {
@@ -128582,7 +128573,7 @@ function requireGifutil() {
       }
       _quantize(imageOrImages, "WuQuant", maxColorIndexes, significantBits, dither2);
     };
-    exports.read = function(source, decoder2) {
+    exports2.read = function(source, decoder2) {
       decoder2 = decoder2 || defaultCodec;
       if (Buffer.isBuffer(source)) {
         return decoder2.decodeGif(source);
@@ -128591,7 +128582,7 @@ function requireGifutil() {
         return decoder2.decodeGif(buffer2);
       });
     };
-    exports.shareAsJimp = function(jimp, bitmapImageToShare) {
+    exports2.shareAsJimp = function(jimp, bitmapImageToShare) {
       const jimpImage = new jimp(
         bitmapImageToShare.bitmap.width,
         bitmapImageToShare.bitmap.height,
@@ -128600,7 +128591,7 @@ function requireGifutil() {
       jimpImage.bitmap.data = bitmapImageToShare.bitmap.data;
       return jimpImage;
     };
-    exports.write = function(path2, frames, spec, encoder2) {
+    exports2.write = function(path2, frames, spec, encoder2) {
       encoder2 = encoder2 || defaultCodec;
       const matches = path2.match(/\.[a-zA-Z]+$/);
       if (matches !== null && INVALID_SUFFIXES.includes(matches[0].toLowerCase())) {
@@ -134618,7 +134609,7 @@ var hasRequiredSax;
 function requireSax() {
   if (hasRequiredSax) return sax;
   hasRequiredSax = 1;
-  (function(exports) {
+  (function(exports2) {
     (function(sax2) {
       sax2.parser = function(strict, opt) {
         return new SAXParser(strict, opt);
@@ -136074,7 +136065,7 @@ function requireSax() {
           }
         })();
       }
-    })(exports);
+    })(exports2);
   })(sax);
   return sax;
 }
@@ -136130,7 +136121,7 @@ var hasRequiredParser;
 function requireParser() {
   if (hasRequiredParser) return parser;
   hasRequiredParser = 1;
-  (function(exports) {
+  (function(exports2) {
     (function() {
       var bom2, defaults2, events2, isEmpty, processItem, processors2, sax2, setImmediate2, bind3 = function(fn, me) {
         return function() {
@@ -136149,7 +136140,7 @@ function requireParser() {
         return child;
       }, hasProp = {}.hasOwnProperty;
       sax2 = requireSax();
-      events2 = require$$0$9;
+      events2 = require$$0$7;
       bom2 = requireBom();
       processors2 = requireProcessors();
       setImmediate2 = require$$4$3.setImmediate;
@@ -136165,7 +136156,7 @@ function requireParser() {
         }
         return item;
       };
-      exports.Parser = function(superClass) {
+      exports2.Parser = function(superClass) {
         extend2(Parser2, superClass);
         function Parser2(opts) {
           this.parseStringPromise = bind3(this.parseStringPromise, this);
@@ -136174,8 +136165,8 @@ function requireParser() {
           this.assignOrPush = bind3(this.assignOrPush, this);
           this.processAsync = bind3(this.processAsync, this);
           var key, ref2, value;
-          if (!(this instanceof exports.Parser)) {
-            return new exports.Parser(opts);
+          if (!(this instanceof exports2.Parser)) {
+            return new exports2.Parser(opts);
           }
           this.options = {};
           ref2 = defaults2["0.2"];
@@ -136479,7 +136470,7 @@ function requireParser() {
         };
         return Parser2;
       }(events2);
-      exports.parseString = function(str, a, b) {
+      exports2.parseString = function(str, a, b) {
         var cb, options, parser2;
         if (b != null) {
           if (typeof b === "function") {
@@ -136494,15 +136485,15 @@ function requireParser() {
           }
           options = {};
         }
-        parser2 = new exports.Parser(options);
+        parser2 = new exports2.Parser(options);
         return parser2.parseString(str, cb);
       };
-      exports.parseStringPromise = function(str, a) {
+      exports2.parseStringPromise = function(str, a) {
         var options, parser2;
         if (typeof a === "object") {
           options = a;
         }
-        parser2 = new exports.Parser(options);
+        parser2 = new exports2.Parser(options);
         return parser2.parseStringPromise(str);
       };
     }).call(commonjsGlobal);
@@ -139530,7 +139521,7 @@ mime$1.charsets = {
   }
 };
 var mime_1 = mime$1;
-var Buffer$1 = require$$0$8.Buffer;
+var Buffer$1 = require$$0$9.Buffer;
 var bufferEqual = function(a, b) {
   if (!Buffer$1.isBuffer(a)) return void 0;
   if (!Buffer$1.isBuffer(b)) return void 0;
@@ -140663,13 +140654,13 @@ const plugins$1 = (jimpEvChange2) => {
   });
   return mergeDeep_1(...initializedPlugins);
 };
-const index$1 = configure({
+const index = configure({
   types: [types$3],
   plugins: [plugins$1]
 });
 const es = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
-  default: index$1
+  default: index
 }, Symbol.toStringTag, { value: "Module" }));
 const require$$3$2 = /* @__PURE__ */ getAugmentedNamespace(es);
 var __importDefault$5 = commonjsGlobal && commonjsGlobal.__importDefault || function(mod) {
@@ -140992,7 +140983,7 @@ function isSize(possibleSize) {
   return true;
 }
 size_class.isSize = isSize;
-(function(exports) {
+(function(exports2) {
   var __createBinding = commonjsGlobal && commonjsGlobal.__createBinding || (Object.create ? function(o, m, k, k2) {
     if (k2 === void 0) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -141006,20 +140997,20 @@ size_class.isSize = isSize;
     if (k2 === void 0) k2 = k;
     o[k2] = m[k];
   });
-  var __exportStar = commonjsGlobal && commonjsGlobal.__exportStar || function(m, exports2) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p)) __createBinding(exports2, m, p);
+  var __exportStar = commonjsGlobal && commonjsGlobal.__exportStar || function(m, exports3) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports3, p)) __createBinding(exports3, m, p);
   };
-  Object.defineProperty(exports, "__esModule", { value: true });
-  __exportStar(image_class, exports);
-  __exportStar(matchRequest_class, exports);
-  __exportStar(matchResult_class, exports);
-  __exportStar(optionalsearchparameters_class, exports);
-  __exportStar(point_class, exports);
-  __exportStar(query_class, exports);
-  __exportStar(region_class, exports);
-  __exportStar(rgba_class, exports);
-  __exportStar(scaledMatchResult_class, exports);
-  __exportStar(size_class, exports);
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  __exportStar(image_class, exports2);
+  __exportStar(matchRequest_class, exports2);
+  __exportStar(matchResult_class, exports2);
+  __exportStar(optionalsearchparameters_class, exports2);
+  __exportStar(point_class, exports2);
+  __exportStar(query_class, exports2);
+  __exportStar(region_class, exports2);
+  __exportStar(rgba_class, exports2);
+  __exportStar(scaledMatchResult_class, exports2);
+  __exportStar(size_class, exports2);
 })(objects);
 var types$2 = {};
 var windowElement_interface = {};
@@ -141028,7 +141019,7 @@ var window_interface = {};
 Object.defineProperty(window_interface, "__esModule", { value: true });
 var screen_types = {};
 Object.defineProperty(screen_types, "__esModule", { value: true });
-(function(exports) {
+(function(exports2) {
   var __createBinding = commonjsGlobal && commonjsGlobal.__createBinding || (Object.create ? function(o, m, k, k2) {
     if (k2 === void 0) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -141042,16 +141033,16 @@ Object.defineProperty(screen_types, "__esModule", { value: true });
     if (k2 === void 0) k2 = k;
     o[k2] = m[k];
   });
-  var __exportStar = commonjsGlobal && commonjsGlobal.__exportStar || function(m, exports2) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p)) __createBinding(exports2, m, p);
+  var __exportStar = commonjsGlobal && commonjsGlobal.__exportStar || function(m, exports3) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports3, p)) __createBinding(exports3, m, p);
   };
-  Object.defineProperty(exports, "__esModule", { value: true });
-  __exportStar(windowElement_interface, exports);
-  __exportStar(window_interface, exports);
-  __exportStar(screen_types, exports);
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  __exportStar(windowElement_interface, exports2);
+  __exportStar(window_interface, exports2);
+  __exportStar(screen_types, exports2);
 })(types$2);
 var functions = {};
-(function(exports) {
+(function(exports2) {
   var __createBinding = commonjsGlobal && commonjsGlobal.__createBinding || (Object.create ? function(o, m, k, k2) {
     if (k2 === void 0) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -141065,13 +141056,13 @@ var functions = {};
     if (k2 === void 0) k2 = k;
     o[k2] = m[k];
   });
-  var __exportStar = commonjsGlobal && commonjsGlobal.__exportStar || function(m, exports2) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p)) __createBinding(exports2, m, p);
+  var __exportStar = commonjsGlobal && commonjsGlobal.__exportStar || function(m, exports3) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports3, p)) __createBinding(exports3, m, p);
   };
-  Object.defineProperty(exports, "__esModule", { value: true });
-  __exportStar(imageToJimp_function, exports);
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  __exportStar(imageToJimp_function, exports2);
 })(functions);
-(function(exports) {
+(function(exports2) {
   var __createBinding = commonjsGlobal && commonjsGlobal.__createBinding || (Object.create ? function(o, m, k, k2) {
     if (k2 === void 0) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -141085,16 +141076,16 @@ var functions = {};
     if (k2 === void 0) k2 = k;
     o[k2] = m[k];
   });
-  var __exportStar = commonjsGlobal && commonjsGlobal.__exportStar || function(m, exports2) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p)) __createBinding(exports2, m, p);
+  var __exportStar = commonjsGlobal && commonjsGlobal.__exportStar || function(m, exports3) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports3, p)) __createBinding(exports3, m, p);
   };
-  Object.defineProperty(exports, "__esModule", { value: true });
-  __exportStar(enums, exports);
-  __exportStar(objects, exports);
-  __exportStar(types$2, exports);
-  __exportStar(functions, exports);
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  __exportStar(enums, exports2);
+  __exportStar(objects, exports2);
+  __exportStar(types$2, exports2);
+  __exportStar(functions, exports2);
 })(lib$9);
-(function(exports) {
+(function(exports2) {
   var __createBinding = commonjsGlobal && commonjsGlobal.__createBinding || (Object.create ? function(o, m, k, k2) {
     if (k2 === void 0) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -141108,11 +141099,11 @@ var functions = {};
     if (k2 === void 0) k2 = k;
     o[k2] = m[k];
   });
-  var __exportStar = commonjsGlobal && commonjsGlobal.__exportStar || function(m, exports2) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p)) __createBinding(exports2, m, p);
+  var __exportStar = commonjsGlobal && commonjsGlobal.__exportStar || function(m, exports3) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports3, p)) __createBinding(exports3, m, p);
   };
-  Object.defineProperty(exports, "__esModule", { value: true });
-  __exportStar(lib$9, exports);
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  __exportStar(lib$9, exports2);
 })(dist$4);
 var sleep_function = {};
 var providerRegistry_class = {};
@@ -141719,8 +141710,8 @@ var hasRequiredSemver;
 function requireSemver() {
   if (hasRequiredSemver) return semver$3.exports;
   hasRequiredSemver = 1;
-  (function(module, exports) {
-    exports = module.exports = SemVer3;
+  (function(module2, exports2) {
+    exports2 = module2.exports = SemVer3;
     var debug2;
     if (typeof process === "object" && process.env && process.env.NODE_DEBUG && /\bsemver\b/i.test(process.env.NODE_DEBUG)) {
       debug2 = function() {
@@ -141732,15 +141723,15 @@ function requireSemver() {
       debug2 = function() {
       };
     }
-    exports.SEMVER_SPEC_VERSION = "2.0.0";
+    exports2.SEMVER_SPEC_VERSION = "2.0.0";
     var MAX_LENGTH2 = 256;
     var MAX_SAFE_INTEGER2 = Number.MAX_SAFE_INTEGER || /* istanbul ignore next */
     9007199254740991;
     var MAX_SAFE_COMPONENT_LENGTH2 = 16;
     var MAX_SAFE_BUILD_LENGTH2 = MAX_LENGTH2 - 6;
-    var re2 = exports.re = [];
-    var safeRe = exports.safeRe = [];
-    var src2 = exports.src = [];
+    var re2 = exports2.re = [];
+    var safeRe = exports2.safeRe = [];
+    var src2 = exports2.src = [];
     var R = 0;
     var LETTERDASHNUMBER = "[a-zA-Z0-9-]";
     var safeRegexReplacements = [
@@ -141844,7 +141835,7 @@ function requireSemver() {
         safeRe[i] = new RegExp(makeSafeRe(src2[i]));
       }
     }
-    exports.parse = parse2;
+    exports2.parse = parse2;
     function parse2(version, options) {
       if (!options || typeof options !== "object") {
         options = {
@@ -141871,17 +141862,17 @@ function requireSemver() {
         return null;
       }
     }
-    exports.valid = valid2;
+    exports2.valid = valid2;
     function valid2(version, options) {
       var v = parse2(version, options);
       return v ? v.version : null;
     }
-    exports.clean = clean2;
+    exports2.clean = clean2;
     function clean2(version, options) {
       var s = parse2(version.trim().replace(/^[=v]+/, ""), options);
       return s ? s.version : null;
     }
-    exports.SemVer = SemVer3;
+    exports2.SemVer = SemVer3;
     function SemVer3(version, options) {
       if (!options || typeof options !== "object") {
         options = {
@@ -142071,7 +142062,7 @@ function requireSemver() {
       this.raw = this.version;
       return this;
     };
-    exports.inc = inc2;
+    exports2.inc = inc2;
     function inc2(version, release, loose, identifier) {
       if (typeof loose === "string") {
         identifier = loose;
@@ -142083,7 +142074,7 @@ function requireSemver() {
         return null;
       }
     }
-    exports.diff = diff2;
+    exports2.diff = diff2;
     function diff2(version1, version2) {
       if (eq2(version1, version2)) {
         return null;
@@ -142105,7 +142096,7 @@ function requireSemver() {
         return defaultResult;
       }
     }
-    exports.compareIdentifiers = compareIdentifiers2;
+    exports2.compareIdentifiers = compareIdentifiers2;
     var numeric2 = /^[0-9]+$/;
     function compareIdentifiers2(a, b) {
       var anum = numeric2.test(a);
@@ -142116,71 +142107,71 @@ function requireSemver() {
       }
       return a === b ? 0 : anum && !bnum ? -1 : bnum && !anum ? 1 : a < b ? -1 : 1;
     }
-    exports.rcompareIdentifiers = rcompareIdentifiers2;
+    exports2.rcompareIdentifiers = rcompareIdentifiers2;
     function rcompareIdentifiers2(a, b) {
       return compareIdentifiers2(b, a);
     }
-    exports.major = major2;
+    exports2.major = major2;
     function major2(a, loose) {
       return new SemVer3(a, loose).major;
     }
-    exports.minor = minor2;
+    exports2.minor = minor2;
     function minor2(a, loose) {
       return new SemVer3(a, loose).minor;
     }
-    exports.patch = patch2;
+    exports2.patch = patch2;
     function patch2(a, loose) {
       return new SemVer3(a, loose).patch;
     }
-    exports.compare = compare2;
+    exports2.compare = compare2;
     function compare2(a, b, loose) {
       return new SemVer3(a, loose).compare(new SemVer3(b, loose));
     }
-    exports.compareLoose = compareLoose2;
+    exports2.compareLoose = compareLoose2;
     function compareLoose2(a, b) {
       return compare2(a, b, true);
     }
-    exports.rcompare = rcompare2;
+    exports2.rcompare = rcompare2;
     function rcompare2(a, b, loose) {
       return compare2(b, a, loose);
     }
-    exports.sort = sort2;
+    exports2.sort = sort2;
     function sort2(list, loose) {
       return list.sort(function(a, b) {
-        return exports.compare(a, b, loose);
+        return exports2.compare(a, b, loose);
       });
     }
-    exports.rsort = rsort2;
+    exports2.rsort = rsort2;
     function rsort2(list, loose) {
       return list.sort(function(a, b) {
-        return exports.rcompare(a, b, loose);
+        return exports2.rcompare(a, b, loose);
       });
     }
-    exports.gt = gt2;
+    exports2.gt = gt2;
     function gt2(a, b, loose) {
       return compare2(a, b, loose) > 0;
     }
-    exports.lt = lt2;
+    exports2.lt = lt2;
     function lt2(a, b, loose) {
       return compare2(a, b, loose) < 0;
     }
-    exports.eq = eq2;
+    exports2.eq = eq2;
     function eq2(a, b, loose) {
       return compare2(a, b, loose) === 0;
     }
-    exports.neq = neq2;
+    exports2.neq = neq2;
     function neq2(a, b, loose) {
       return compare2(a, b, loose) !== 0;
     }
-    exports.gte = gte2;
+    exports2.gte = gte2;
     function gte2(a, b, loose) {
       return compare2(a, b, loose) >= 0;
     }
-    exports.lte = lte2;
+    exports2.lte = lte2;
     function lte2(a, b, loose) {
       return compare2(a, b, loose) <= 0;
     }
-    exports.cmp = cmp2;
+    exports2.cmp = cmp2;
     function cmp2(a, op, b, loose) {
       switch (op) {
         case "===":
@@ -142213,7 +142204,7 @@ function requireSemver() {
           throw new TypeError("Invalid operator: " + op);
       }
     }
-    exports.Comparator = Comparator2;
+    exports2.Comparator = Comparator2;
     function Comparator2(comp, options) {
       if (!options || typeof options !== "object") {
         options = {
@@ -142299,7 +142290,7 @@ function requireSemver() {
       var oppositeDirectionsGreaterThan = cmp2(this.semver, ">", comp.semver, options) && ((this.operator === "<=" || this.operator === "<") && (comp.operator === ">=" || comp.operator === ">"));
       return sameDirectionIncreasing || sameDirectionDecreasing || sameSemVer && differentDirectionsInclusive || oppositeDirectionsLessThan || oppositeDirectionsGreaterThan;
     };
-    exports.Range = Range2;
+    exports2.Range = Range2;
     function Range2(range2, options) {
       if (!options || typeof options !== "object") {
         options = {
@@ -142380,7 +142371,7 @@ function requireSemver() {
         });
       });
     };
-    exports.toComparators = toComparators2;
+    exports2.toComparators = toComparators2;
     function toComparators2(range2, options) {
       return new Range2(range2, options).set.map(function(comp) {
         return comp.map(function(c2) {
@@ -142598,7 +142589,7 @@ function requireSemver() {
       }
       return true;
     }
-    exports.satisfies = satisfies2;
+    exports2.satisfies = satisfies2;
     function satisfies2(version, range2, options) {
       try {
         range2 = new Range2(range2, options);
@@ -142607,7 +142598,7 @@ function requireSemver() {
       }
       return range2.test(version);
     }
-    exports.maxSatisfying = maxSatisfying2;
+    exports2.maxSatisfying = maxSatisfying2;
     function maxSatisfying2(versions, range2, options) {
       var max2 = null;
       var maxSV = null;
@@ -142626,7 +142617,7 @@ function requireSemver() {
       });
       return max2;
     }
-    exports.minSatisfying = minSatisfying2;
+    exports2.minSatisfying = minSatisfying2;
     function minSatisfying2(versions, range2, options) {
       var min2 = null;
       var minSV = null;
@@ -142645,7 +142636,7 @@ function requireSemver() {
       });
       return min2;
     }
-    exports.minVersion = minVersion2;
+    exports2.minVersion = minVersion2;
     function minVersion2(range2, loose) {
       range2 = new Range2(range2, loose);
       var minver = new SemVer3("0.0.0");
@@ -142688,7 +142679,7 @@ function requireSemver() {
       }
       return null;
     }
-    exports.validRange = validRange2;
+    exports2.validRange = validRange2;
     function validRange2(range2, options) {
       try {
         return new Range2(range2, options).range || "*";
@@ -142696,15 +142687,15 @@ function requireSemver() {
         return null;
       }
     }
-    exports.ltr = ltr2;
+    exports2.ltr = ltr2;
     function ltr2(version, range2, options) {
       return outside2(version, range2, "<", options);
     }
-    exports.gtr = gtr2;
+    exports2.gtr = gtr2;
     function gtr2(version, range2, options) {
       return outside2(version, range2, ">", options);
     }
-    exports.outside = outside2;
+    exports2.outside = outside2;
     function outside2(version, range2, hilo, options) {
       version = new SemVer3(version, options);
       range2 = new Range2(range2, options);
@@ -142757,18 +142748,18 @@ function requireSemver() {
       }
       return true;
     }
-    exports.prerelease = prerelease2;
+    exports2.prerelease = prerelease2;
     function prerelease2(version, options) {
       var parsed = parse2(version, options);
       return parsed && parsed.prerelease.length ? parsed.prerelease : null;
     }
-    exports.intersects = intersects2;
+    exports2.intersects = intersects2;
     function intersects2(r1, r2, options) {
       r1 = new Range2(r1, options);
       r2 = new Range2(r2, options);
       return r1.intersects(r2);
     }
-    exports.coerce = coerce2;
+    exports2.coerce = coerce2;
     function coerce2(version) {
       if (version instanceof SemVer3) {
         return version;
@@ -142925,7 +142916,7 @@ var hasRequiredCrossSpawn;
 function requireCrossSpawn() {
   if (hasRequiredCrossSpawn) return crossSpawn.exports;
   hasRequiredCrossSpawn = 1;
-  const cp = require$$0$7;
+  const cp = require$$0$8;
   const parse2 = requireParse();
   const enoent2 = requireEnoent();
   function spawn(command, args, options) {
@@ -142987,10 +142978,10 @@ var hasRequiredNpmRunPath;
 function requireNpmRunPath() {
   if (hasRequiredNpmRunPath) return npmRunPath.exports;
   hasRequiredNpmRunPath = 1;
-  (function(module) {
+  (function(module2) {
     const path2 = require$$1$2;
     const pathKey2 = requirePathKey();
-    module.exports = (opts) => {
+    module2.exports = (opts) => {
       opts = Object.assign({
         cwd: process.cwd(),
         path: process.env[pathKey2()]
@@ -143006,14 +142997,14 @@ function requireNpmRunPath() {
       ret.push(path2.dirname(process.execPath));
       return ret.concat(opts.path).join(path2.delimiter);
     };
-    module.exports.env = (opts) => {
+    module2.exports.env = (opts) => {
       opts = Object.assign({
         env: process.env
       }, opts);
       const env2 = Object.assign({}, opts.env);
       const path22 = pathKey2({ env: env2 });
       opts.path = env2[path22];
-      env2[path22] = module.exports(opts);
+      env2[path22] = module2.exports(opts);
       return env2;
     };
   })(npmRunPath);
@@ -143396,8 +143387,8 @@ var hasRequiredSignals;
 function requireSignals() {
   if (hasRequiredSignals) return signals.exports;
   hasRequiredSignals = 1;
-  (function(module) {
-    module.exports = [
+  (function(module2) {
+    module2.exports = [
       "SIGABRT",
       "SIGALRM",
       "SIGHUP",
@@ -143405,7 +143396,7 @@ function requireSignals() {
       "SIGTERM"
     ];
     if (process.platform !== "win32") {
-      module.exports.push(
+      module2.exports.push(
         "SIGVTALRM",
         "SIGXCPU",
         "SIGXFSZ",
@@ -143420,7 +143411,7 @@ function requireSignals() {
       );
     }
     if (process.platform === "linux") {
-      module.exports.push(
+      module2.exports.push(
         "SIGIO",
         "SIGPOLL",
         "SIGPWR",
@@ -143448,7 +143439,7 @@ function requireSignalExit() {
     var assert2 = require$$0$5;
     var signals2 = requireSignals();
     var isWin = /^win/i.test(process2.platform);
-    var EE = require$$0$9;
+    var EE = require$$0$7;
     if (typeof EE !== "function") {
       EE = EE.EventEmitter;
     }
@@ -143651,9 +143642,9 @@ var hasRequiredExeca;
 function requireExeca() {
   if (hasRequiredExeca) return execa.exports;
   hasRequiredExeca = 1;
-  (function(module) {
+  (function(module2) {
     const path2 = require$$1$2;
-    const childProcess = require$$0$7;
+    const childProcess = require$$0$8;
     const crossSpawn2 = requireCrossSpawn();
     const stripEof2 = requireStripEof();
     const npmRunPath2 = requireNpmRunPath();
@@ -143809,7 +143800,7 @@ ${stderr}${stdout}`;
       }
       return joinedCmd;
     }
-    module.exports = (cmd, args, opts) => {
+    module2.exports = (cmd, args, opts) => {
       const parsed = handleArgs(cmd, args, opts);
       const { encoding, buffer: buffer2, maxBuffer } = parsed.opts;
       const joinedCmd = joinCmd(cmd, args);
@@ -143904,10 +143895,10 @@ ${stderr}${stdout}`;
       spawned.catch = (onrejected) => handlePromise().catch(onrejected);
       return spawned;
     };
-    module.exports.stdout = (...args) => module.exports(...args).then((x2) => x2.stdout);
-    module.exports.stderr = (...args) => module.exports(...args).then((x2) => x2.stderr);
-    module.exports.shell = (cmd, opts) => handleShell(module.exports, cmd, opts);
-    module.exports.sync = (cmd, args, opts) => {
+    module2.exports.stdout = (...args) => module2.exports(...args).then((x2) => x2.stdout);
+    module2.exports.stderr = (...args) => module2.exports(...args).then((x2) => x2.stderr);
+    module2.exports.shell = (cmd, opts) => handleShell(module2.exports, cmd, opts);
+    module2.exports.sync = (cmd, args, opts) => {
       const parsed = handleArgs(cmd, args, opts);
       const joinedCmd = joinCmd(cmd, args);
       if (isStream2(parsed.opts.input)) {
@@ -143935,7 +143926,7 @@ ${stderr}${stdout}`;
         timedOut: false
       };
     };
-    module.exports.shellSync = (cmd, opts) => handleShell(module.exports.sync, cmd, opts);
+    module2.exports.shellSync = (cmd, opts) => handleShell(module2.exports.sync, cmd, opts);
   })(execa);
   return execa.exports;
 }
@@ -144063,7 +144054,7 @@ var hasRequiredArch;
 function requireArch() {
   if (hasRequiredArch) return arch;
   hasRequiredArch = 1;
-  var cp = require$$0$7;
+  var cp = require$$0$8;
   var fs2 = require$$0$4;
   var path2 = require$$1$2;
   arch = function arch2() {
@@ -144251,8 +144242,8 @@ var hasRequiredBindings;
 function requireBindings() {
   if (hasRequiredBindings) return bindings.exports;
   hasRequiredBindings = 1;
-  (function(module, exports) {
-    var fs2 = require$$0$4, path2 = require$$1$2, fileURLToPath2 = requireFileUriToPath(), join = path2.join, dirname = path2.dirname, exists = fs2.accessSync && function(path22) {
+  (function(module2, exports2) {
+    var fs2 = require$$0$4, path2 = require$$1$2, fileURLToPath = requireFileUriToPath(), join = path2.join, dirname = path2.dirname, exists = fs2.accessSync && function(path22) {
       try {
         fs2.accessSync(path22);
       } catch (e) {
@@ -144301,7 +144292,7 @@ function requireBindings() {
         if (!(i2 in opts)) opts[i2] = defaults2[i2];
       });
       if (!opts.module_root) {
-        opts.module_root = exports.getRoot(exports.getFileName());
+        opts.module_root = exports2.getRoot(exports2.getFileName());
       }
       if (path2.extname(opts.bindings) != ".node") {
         opts.bindings += ".node";
@@ -144336,8 +144327,8 @@ function requireBindings() {
       err.tries = tries;
       throw err;
     }
-    module.exports = exports = bindings2;
-    exports.getFileName = function getFileName(calling_file) {
+    module2.exports = exports2 = bindings2;
+    exports2.getFileName = function getFileName(calling_file) {
       var origPST = Error.prepareStackTrace, origSTL = Error.stackTraceLimit, dummy = {}, fileName;
       Error.stackTraceLimit = 10;
       Error.prepareStackTrace = function(e, st) {
@@ -144360,11 +144351,11 @@ function requireBindings() {
       Error.stackTraceLimit = origSTL;
       var fileSchema = "file://";
       if (fileName.indexOf(fileSchema) === 0) {
-        fileName = fileURLToPath2(fileName);
+        fileName = fileURLToPath(fileName);
       }
       return fileName;
     };
-    exports.getRoot = function getRoot(file2) {
+    exports2.getRoot = function getRoot(file2) {
       var dir2 = dirname(file2), prev;
       while (true) {
         if (dir2 === ".") {
@@ -144475,15 +144466,15 @@ var hasRequiredLibnutWin32;
 function requireLibnutWin32() {
   if (hasRequiredLibnutWin32) return libnutWin32.exports;
   hasRequiredLibnutWin32 = 1;
-  (function(module) {
+  (function(module2) {
     let libnut;
     if (process.platform === "darwin") {
       libnut = requirePermissionCheck$2();
     } else {
       libnut = requireBindings()("libnut");
     }
-    module.exports = libnut;
-    module.exports.screen = {};
+    module2.exports = libnut;
+    module2.exports.screen = {};
     function bitmap(width, height, byteWidth, bitsPerPixel, bytesPerPixel, image) {
       this.width = width;
       this.height = height;
@@ -144492,13 +144483,13 @@ function requireLibnutWin32() {
       this.bytesPerPixel = bytesPerPixel;
       this.image = image;
     }
-    module.exports.screen.highlight = function(x2, y2, width, height, duration, opacity) {
+    module2.exports.screen.highlight = function(x2, y2, width, height, duration, opacity) {
       let highlightOpacity = opacity < 0 ? 0 : opacity;
       highlightOpacity = highlightOpacity > 1 ? 1 : highlightOpacity;
       const highlightDuration = duration < 0 ? 0 : duration;
       libnut.highlight(x2, y2, width, height, highlightDuration, highlightOpacity);
     };
-    module.exports.screen.capture = function(x2, y2, width, height) {
+    module2.exports.screen.capture = function(x2, y2, width, height) {
       let b;
       if (typeof x2 !== "undefined" && typeof y2 !== "undefined" && typeof width !== "undefined" && typeof height !== "undefined") {
         b = libnut.captureScreen(x2, y2, width, height);
@@ -144609,15 +144600,15 @@ var hasRequiredLibnutLinux;
 function requireLibnutLinux() {
   if (hasRequiredLibnutLinux) return libnutLinux.exports;
   hasRequiredLibnutLinux = 1;
-  (function(module) {
+  (function(module2) {
     let libnut;
     if (process.platform === "darwin") {
       libnut = requirePermissionCheck$1();
     } else {
       libnut = requireBindings()("libnut");
     }
-    module.exports = libnut;
-    module.exports.screen = {};
+    module2.exports = libnut;
+    module2.exports.screen = {};
     function bitmap(width, height, byteWidth, bitsPerPixel, bytesPerPixel, image) {
       this.width = width;
       this.height = height;
@@ -144626,13 +144617,13 @@ function requireLibnutLinux() {
       this.bytesPerPixel = bytesPerPixel;
       this.image = image;
     }
-    module.exports.screen.highlight = function(x2, y2, width, height, duration, opacity) {
+    module2.exports.screen.highlight = function(x2, y2, width, height, duration, opacity) {
       let highlightOpacity = opacity < 0 ? 0 : opacity;
       highlightOpacity = highlightOpacity > 1 ? 1 : highlightOpacity;
       const highlightDuration = duration < 0 ? 0 : duration;
       libnut.highlight(x2, y2, width, height, highlightDuration, highlightOpacity);
     };
-    module.exports.screen.capture = function(x2, y2, width, height) {
+    module2.exports.screen.capture = function(x2, y2, width, height) {
       let b;
       if (typeof x2 !== "undefined" && typeof y2 !== "undefined" && typeof width !== "undefined" && typeof height !== "undefined") {
         b = libnut.captureScreen(x2, y2, width, height);
@@ -144743,15 +144734,15 @@ var hasRequiredLibnutDarwin;
 function requireLibnutDarwin() {
   if (hasRequiredLibnutDarwin) return libnutDarwin.exports;
   hasRequiredLibnutDarwin = 1;
-  (function(module) {
+  (function(module2) {
     let libnut;
     if (process.platform === "darwin") {
       libnut = requirePermissionCheck();
     } else {
       libnut = requireBindings()("libnut");
     }
-    module.exports = libnut;
-    module.exports.screen = {};
+    module2.exports = libnut;
+    module2.exports.screen = {};
     function bitmap(width, height, byteWidth, bitsPerPixel, bytesPerPixel, image) {
       this.width = width;
       this.height = height;
@@ -144760,13 +144751,13 @@ function requireLibnutDarwin() {
       this.bytesPerPixel = bytesPerPixel;
       this.image = image;
     }
-    module.exports.screen.highlight = function(x2, y2, width, height, duration, opacity) {
+    module2.exports.screen.highlight = function(x2, y2, width, height, duration, opacity) {
       let highlightOpacity = opacity < 0 ? 0 : opacity;
       highlightOpacity = highlightOpacity > 1 ? 1 : highlightOpacity;
       const highlightDuration = duration < 0 ? 0 : duration;
       libnut.highlight(x2, y2, width, height, highlightDuration, highlightOpacity);
     };
-    module.exports.screen.capture = function(x2, y2, width, height) {
+    module2.exports.screen.capture = function(x2, y2, width, height) {
       let b;
       if (typeof x2 !== "undefined" && typeof y2 !== "undefined" && typeof width !== "undefined" && typeof height !== "undefined") {
         b = libnut.captureScreen(x2, y2, width, height);
@@ -145342,20 +145333,20 @@ var hasRequiredDist$1;
 function requireDist$1() {
   if (hasRequiredDist$1) return dist$2;
   hasRequiredDist$1 = 1;
-  (function(exports) {
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.DefaultWindowAction = exports.DefaultScreenAction = exports.DefaultMouseAction = exports.DefaultKeyboardAction = void 0;
+  (function(exports2) {
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.DefaultWindowAction = exports2.DefaultScreenAction = exports2.DefaultMouseAction = exports2.DefaultKeyboardAction = void 0;
     const lib_1 = requireLib();
-    Object.defineProperty(exports, "DefaultKeyboardAction", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "DefaultKeyboardAction", { enumerable: true, get: function() {
       return lib_1.KeyboardAction;
     } });
-    Object.defineProperty(exports, "DefaultMouseAction", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "DefaultMouseAction", { enumerable: true, get: function() {
       return lib_1.MouseAction;
     } });
-    Object.defineProperty(exports, "DefaultScreenAction", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "DefaultScreenAction", { enumerable: true, get: function() {
       return lib_1.ScreenAction;
     } });
-    Object.defineProperty(exports, "DefaultWindowAction", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "DefaultWindowAction", { enumerable: true, get: function() {
       return lib_1.WindowAction;
     } });
   })(dist$2);
@@ -145738,28 +145729,28 @@ class KeyboardClass {
 keyboard_class.KeyboardClass = KeyboardClass;
 var mouse_class = {};
 var mouseMovement_function = {};
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.linear = exports.calculateMovementTimesteps = exports.calculateStepDuration = void 0;
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.linear = exports2.calculateMovementTimesteps = exports2.calculateStepDuration = void 0;
   const nanoSecondsPerSecond = 1e9;
   const calculateStepDuration = (speedInPixelsPerSecond) => 1 / speedInPixelsPerSecond * nanoSecondsPerSecond;
-  exports.calculateStepDuration = calculateStepDuration;
-  const calculateMovementTimesteps = (amountOfSteps, speedInPixelsPerSecond, easingFunction = exports.linear) => {
+  exports2.calculateStepDuration = calculateStepDuration;
+  const calculateMovementTimesteps = (amountOfSteps, speedInPixelsPerSecond, easingFunction = exports2.linear) => {
     const isEasingFunction = typeof easingFunction === "function";
     return Array(amountOfSteps).fill(speedInPixelsPerSecond).map((speed, idx) => {
       let speedInPixels = speed;
       if (isEasingFunction) {
         speedInPixels += easingFunction(idx / amountOfSteps) * speedInPixels;
       }
-      const stepDuration = (0, exports.calculateStepDuration)(speedInPixels);
+      const stepDuration = (0, exports2.calculateStepDuration)(speedInPixels);
       return isFinite(stepDuration) && stepDuration > 0 ? stepDuration : 0;
     });
   };
-  exports.calculateMovementTimesteps = calculateMovementTimesteps;
+  exports2.calculateMovementTimesteps = calculateMovementTimesteps;
   const linear = (_) => {
     return 0;
   };
-  exports.linear = linear;
+  exports2.linear = linear;
 })(mouseMovement_function);
 Object.defineProperty(mouse_class, "__esModule", { value: true });
 mouse_class.MouseClass = void 0;
@@ -146857,7 +146848,7 @@ var providerRegistry_interface = {};
 Object.defineProperty(providerRegistry_interface, "__esModule", { value: true });
 var elementInspectionProvider_interface = {};
 Object.defineProperty(elementInspectionProvider_interface, "__esModule", { value: true });
-(function(exports) {
+(function(exports2) {
   var __createBinding = commonjsGlobal && commonjsGlobal.__createBinding || (Object.create ? function(o, m, k, k2) {
     if (k2 === void 0) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -146871,29 +146862,29 @@ Object.defineProperty(elementInspectionProvider_interface, "__esModule", { value
     if (k2 === void 0) k2 = k;
     o[k2] = m[k];
   });
-  var __exportStar = commonjsGlobal && commonjsGlobal.__exportStar || function(m, exports2) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p)) __createBinding(exports2, m, p);
+  var __exportStar = commonjsGlobal && commonjsGlobal.__exportStar || function(m, exports3) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports3, p)) __createBinding(exports3, m, p);
   };
-  Object.defineProperty(exports, "__esModule", { value: true });
-  __exportStar(clipboardProvider_interface, exports);
-  __exportStar(colorFinder_interface, exports);
-  __exportStar(dataSink_interface, exports);
-  __exportStar(dataSource_interface, exports);
-  __exportStar(imageFinder_interface, exports);
-  __exportStar(imageProcessor_interface, exports);
-  __exportStar(imageReader_type, exports);
-  __exportStar(imageWriter_type, exports);
-  __exportStar(keyboardProvider_interface, exports);
-  __exportStar(logProvider_interface, exports);
-  __exportStar(mouseProvider_interface, exports);
-  __exportStar(screenProvider_interface, exports);
-  __exportStar(textFinder_interface, exports);
-  __exportStar(windowFinder_interface, exports);
-  __exportStar(windowProvider_interface, exports);
-  __exportStar(providerRegistry_interface, exports);
-  __exportStar(elementInspectionProvider_interface, exports);
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  __exportStar(clipboardProvider_interface, exports2);
+  __exportStar(colorFinder_interface, exports2);
+  __exportStar(dataSink_interface, exports2);
+  __exportStar(dataSource_interface, exports2);
+  __exportStar(imageFinder_interface, exports2);
+  __exportStar(imageProcessor_interface, exports2);
+  __exportStar(imageReader_type, exports2);
+  __exportStar(imageWriter_type, exports2);
+  __exportStar(keyboardProvider_interface, exports2);
+  __exportStar(logProvider_interface, exports2);
+  __exportStar(mouseProvider_interface, exports2);
+  __exportStar(screenProvider_interface, exports2);
+  __exportStar(textFinder_interface, exports2);
+  __exportStar(windowFinder_interface, exports2);
+  __exportStar(windowProvider_interface, exports2);
+  __exportStar(providerRegistry_interface, exports2);
+  __exportStar(elementInspectionProvider_interface, exports2);
 })(lib);
-(function(exports) {
+(function(exports2) {
   var __createBinding = commonjsGlobal && commonjsGlobal.__createBinding || (Object.create ? function(o, m, k, k2) {
     if (k2 === void 0) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -146907,11 +146898,11 @@ Object.defineProperty(elementInspectionProvider_interface, "__esModule", { value
     if (k2 === void 0) k2 = k;
     o[k2] = m[k];
   });
-  var __exportStar = commonjsGlobal && commonjsGlobal.__exportStar || function(m, exports2) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p)) __createBinding(exports2, m, p);
+  var __exportStar = commonjsGlobal && commonjsGlobal.__exportStar || function(m, exports3) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports3, p)) __createBinding(exports3, m, p);
   };
-  Object.defineProperty(exports, "__esModule", { value: true });
-  __exportStar(lib, exports);
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  __exportStar(lib, exports2);
 })(dist$1);
 var jest_matcher_function = {};
 var toBeAt_function = {};
@@ -147155,31 +147146,31 @@ class ConsoleLogProvider {
   }
 }
 consoleLogProvider_class.ConsoleLogProvider = ConsoleLogProvider;
-(function(exports) {
+(function(exports2) {
   var __importDefault2 = commonjsGlobal && commonjsGlobal.__importDefault || function(mod) {
     return mod && mod.__esModule ? mod : { "default": mod };
   };
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.ConsoleLogLevel = exports.useConsoleLogger = exports.useLogger = void 0;
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.ConsoleLogLevel = exports2.useConsoleLogger = exports2.useLogger = void 0;
   const console_log_provider_class_1 = consoleLogProvider_class;
-  Object.defineProperty(exports, "ConsoleLogLevel", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "ConsoleLogLevel", { enumerable: true, get: function() {
     return console_log_provider_class_1.ConsoleLogLevel;
   } });
   const provider_registry_class_12 = __importDefault2(providerRegistry_class);
   const useLogger = (logger2) => {
     provider_registry_class_12.default.registerLogProvider(logger2);
   };
-  exports.useLogger = useLogger;
+  exports2.useLogger = useLogger;
   const useConsoleLogger = (config) => {
     provider_registry_class_12.default.registerLogProvider(new console_log_provider_class_1.ConsoleLogProvider(config));
   };
-  exports.useConsoleLogger = useConsoleLogger;
+  exports2.useConsoleLogger = useConsoleLogger;
 })(logging_function);
 var hasRequiredDist;
 function requireDist() {
   if (hasRequiredDist) return dist$5;
   hasRequiredDist = 1;
-  (function(exports) {
+  (function(exports2) {
     var __createBinding = commonjsGlobal && commonjsGlobal.__createBinding || (Object.create ? function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -147193,109 +147184,109 @@ function requireDist() {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
     });
-    var __exportStar = commonjsGlobal && commonjsGlobal.__exportStar || function(m, exports2) {
-      for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p)) __createBinding(exports2, m, p);
+    var __exportStar = commonjsGlobal && commonjsGlobal.__exportStar || function(m, exports3) {
+      for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports3, p)) __createBinding(exports3, m, p);
     };
     var __importDefault2 = commonjsGlobal && commonjsGlobal.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
     };
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.pixelWithColor = exports.windowWithTitle = exports.textLine = exports.singleWord = exports.imageResource = exports.saveImage = exports.loadImage = exports.getActiveWindow = exports.getWindows = exports.right = exports.left = exports.down = exports.up = exports.straightTo = exports.assert = exports.screen = exports.mouse = exports.keyboard = exports.clipboard = exports.fetchFromUrl = exports.ConsoleLogLevel = exports.useConsoleLogger = exports.useLogger = exports.Window = exports.linear = exports.randomPointIn = exports.centerOf = exports.sleep = exports.jestMatchers = exports.MatchResult = exports.MatchRequest = exports.providerRegistry = exports.ScreenClass = exports.MouseClass = exports.KeyboardClass = exports.ClipboardClass = exports.AssertClass = void 0;
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.pixelWithColor = exports2.windowWithTitle = exports2.textLine = exports2.singleWord = exports2.imageResource = exports2.saveImage = exports2.loadImage = exports2.getActiveWindow = exports2.getWindows = exports2.right = exports2.left = exports2.down = exports2.up = exports2.straightTo = exports2.assert = exports2.screen = exports2.mouse = exports2.keyboard = exports2.clipboard = exports2.fetchFromUrl = exports2.ConsoleLogLevel = exports2.useConsoleLogger = exports2.useLogger = exports2.Window = exports2.linear = exports2.randomPointIn = exports2.centerOf = exports2.sleep = exports2.jestMatchers = exports2.MatchResult = exports2.MatchRequest = exports2.providerRegistry = exports2.ScreenClass = exports2.MouseClass = exports2.KeyboardClass = exports2.ClipboardClass = exports2.AssertClass = void 0;
     const assert_class_1 = assert_class;
-    Object.defineProperty(exports, "AssertClass", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "AssertClass", { enumerable: true, get: function() {
       return assert_class_1.AssertClass;
     } });
     const clipboard_class_1 = clipboard_class;
-    Object.defineProperty(exports, "ClipboardClass", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "ClipboardClass", { enumerable: true, get: function() {
       return clipboard_class_1.ClipboardClass;
     } });
     const keyboard_class_1 = keyboard_class;
-    Object.defineProperty(exports, "KeyboardClass", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "KeyboardClass", { enumerable: true, get: function() {
       return keyboard_class_1.KeyboardClass;
     } });
     const mouse_class_1 = mouse_class;
-    Object.defineProperty(exports, "MouseClass", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "MouseClass", { enumerable: true, get: function() {
       return mouse_class_1.MouseClass;
     } });
     const movement_function_1 = movement_function;
     const screen_class_1 = screen_class;
-    Object.defineProperty(exports, "ScreenClass", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "ScreenClass", { enumerable: true, get: function() {
       return screen_class_1.ScreenClass;
     } });
     const linehelper_class_1 = linehelper_class;
     const window_function_1 = window_function;
     const provider_registry_class_12 = __importDefault2(providerRegistry_class);
-    exports.providerRegistry = provider_registry_class_12.default;
+    exports2.providerRegistry = provider_registry_class_12.default;
     const imageResources_function_1 = imageResources_function;
     var shared_12 = dist$4;
-    Object.defineProperty(exports, "MatchRequest", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "MatchRequest", { enumerable: true, get: function() {
       return shared_12.MatchRequest;
     } });
     var shared_2 = dist$4;
-    Object.defineProperty(exports, "MatchResult", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "MatchResult", { enumerable: true, get: function() {
       return shared_2.MatchResult;
     } });
-    __exportStar(dist$1, exports);
-    __exportStar(dist$4, exports);
+    __exportStar(dist$1, exports2);
+    __exportStar(dist$4, exports2);
     var jest_matcher_function_1 = requireJest_matcher_function();
-    Object.defineProperty(exports, "jestMatchers", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "jestMatchers", { enumerable: true, get: function() {
       return jest_matcher_function_1.jestMatchers;
     } });
     var sleep_function_12 = sleep_function;
-    Object.defineProperty(exports, "sleep", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "sleep", { enumerable: true, get: function() {
       return sleep_function_12.sleep;
     } });
     var location_function_1 = location_function;
-    Object.defineProperty(exports, "centerOf", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "centerOf", { enumerable: true, get: function() {
       return location_function_1.centerOf;
     } });
-    Object.defineProperty(exports, "randomPointIn", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "randomPointIn", { enumerable: true, get: function() {
       return location_function_1.randomPointIn;
     } });
     var mouse_movement_function_12 = mouseMovement_function;
-    Object.defineProperty(exports, "linear", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "linear", { enumerable: true, get: function() {
       return mouse_movement_function_12.linear;
     } });
     var window_class_12 = window_class;
-    Object.defineProperty(exports, "Window", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "Window", { enumerable: true, get: function() {
       return window_class_12.Window;
     } });
     var logging_function_1 = logging_function;
-    Object.defineProperty(exports, "useLogger", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "useLogger", { enumerable: true, get: function() {
       return logging_function_1.useLogger;
     } });
-    Object.defineProperty(exports, "useConsoleLogger", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "useConsoleLogger", { enumerable: true, get: function() {
       return logging_function_1.useConsoleLogger;
     } });
-    Object.defineProperty(exports, "ConsoleLogLevel", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "ConsoleLogLevel", { enumerable: true, get: function() {
       return logging_function_1.ConsoleLogLevel;
     } });
     const lineHelper = new linehelper_class_1.LineHelper();
     const clipboard = new clipboard_class_1.ClipboardClass(provider_registry_class_12.default);
-    exports.clipboard = clipboard;
+    exports2.clipboard = clipboard;
     const keyboard = new keyboard_class_1.KeyboardClass(provider_registry_class_12.default);
-    exports.keyboard = keyboard;
+    exports2.keyboard = keyboard;
     const mouse = new mouse_class_1.MouseClass(provider_registry_class_12.default);
-    exports.mouse = mouse;
+    exports2.mouse = mouse;
     const screen2 = new screen_class_1.ScreenClass(provider_registry_class_12.default);
-    exports.screen = screen2;
+    exports2.screen = screen2;
     const assert2 = new assert_class_1.AssertClass(screen2);
-    exports.assert = assert2;
+    exports2.assert = assert2;
     const { straightTo, up, down, left, right } = (0, movement_function_1.createMovementApi)(provider_registry_class_12.default, lineHelper);
-    exports.straightTo = straightTo;
-    exports.up = up;
-    exports.down = down;
-    exports.left = left;
-    exports.right = right;
+    exports2.straightTo = straightTo;
+    exports2.up = up;
+    exports2.down = down;
+    exports2.left = left;
+    exports2.right = right;
     const { getWindows, getActiveWindow } = (0, window_function_1.createWindowApi)(provider_registry_class_12.default);
-    exports.getWindows = getWindows;
-    exports.getActiveWindow = getActiveWindow;
+    exports2.getWindows = getWindows;
+    exports2.getActiveWindow = getActiveWindow;
     const loadImage2 = provider_registry_class_12.default.getImageReader().load;
-    exports.loadImage = loadImage2;
+    exports2.loadImage = loadImage2;
     const saveImage = provider_registry_class_12.default.getImageWriter().store;
-    exports.saveImage = saveImage;
+    exports2.saveImage = saveImage;
     const imageResource = (fileName) => (0, imageResources_function_1.loadImageResource)(provider_registry_class_12.default, screen2.config.resourceDirectory, fileName);
-    exports.imageResource = imageResource;
+    exports2.imageResource = imageResource;
     const singleWord = (word) => {
       return {
         type: "text",
@@ -147305,7 +147296,7 @@ function requireDist() {
         }
       };
     };
-    exports.singleWord = singleWord;
+    exports2.singleWord = singleWord;
     const textLine = (line) => {
       return {
         type: "text",
@@ -147315,7 +147306,7 @@ function requireDist() {
         }
       };
     };
-    exports.textLine = textLine;
+    exports2.textLine = textLine;
     const windowWithTitle = (title2) => {
       return {
         type: "window",
@@ -147325,7 +147316,7 @@ function requireDist() {
         }
       };
     };
-    exports.windowWithTitle = windowWithTitle;
+    exports2.windowWithTitle = windowWithTitle;
     const pixelWithColor = (color2) => {
       return {
         type: "color",
@@ -147335,21 +147326,18 @@ function requireDist() {
         }
       };
     };
-    exports.pixelWithColor = pixelWithColor;
+    exports2.pixelWithColor = pixelWithColor;
     var imageResources_function_2 = imageResources_function;
-    Object.defineProperty(exports, "fetchFromUrl", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "fetchFromUrl", { enumerable: true, get: function() {
       return imageResources_function_2.fetchFromUrl;
     } });
   })(dist$5);
   return dist$5;
 }
 var distExports$1 = requireDist();
-const index = /* @__PURE__ */ _mergeNamespaces({
-  __proto__: null
-}, [distExports$1]);
 var runtime = { exports: {} };
-(function(module) {
-  var runtime2 = function(exports) {
+(function(module2) {
+  var runtime2 = function(exports2) {
     var Op = Object.prototype;
     var hasOwn2 = Op.hasOwnProperty;
     var defineProperty = Object.defineProperty || function(obj, key, desc) {
@@ -147383,7 +147371,7 @@ var runtime = { exports: {} };
       defineProperty(generator, "_invoke", { value: makeInvokeMethod(innerFn, self2, context) });
       return generator;
     }
-    exports.wrap = wrap2;
+    exports2.wrap = wrap2;
     function tryCatch(fn, obj, arg) {
       try {
         return { type: "normal", arg: fn.call(obj, arg) };
@@ -147431,13 +147419,13 @@ var runtime = { exports: {} };
         });
       });
     }
-    exports.isGeneratorFunction = function(genFun) {
+    exports2.isGeneratorFunction = function(genFun) {
       var ctor = typeof genFun === "function" && genFun.constructor;
       return ctor ? ctor === GeneratorFunction || // For the native GeneratorFunction constructor, the best we can
       // do is to check its .name property.
       (ctor.displayName || ctor.name) === "GeneratorFunction" : false;
     };
-    exports.mark = function(genFun) {
+    exports2.mark = function(genFun) {
       if (Object.setPrototypeOf) {
         Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
       } else {
@@ -147447,7 +147435,7 @@ var runtime = { exports: {} };
       genFun.prototype = Object.create(Gp);
       return genFun;
     };
-    exports.awrap = function(arg) {
+    exports2.awrap = function(arg) {
       return { __await: arg };
     };
     function AsyncIterator(generator, PromiseImpl) {
@@ -147505,14 +147493,14 @@ var runtime = { exports: {} };
     define(AsyncIterator.prototype, asyncIteratorSymbol, function() {
       return this;
     });
-    exports.AsyncIterator = AsyncIterator;
-    exports.async = function(innerFn, outerFn, self2, tryLocsList, PromiseImpl) {
+    exports2.AsyncIterator = AsyncIterator;
+    exports2.async = function(innerFn, outerFn, self2, tryLocsList, PromiseImpl) {
       if (PromiseImpl === void 0) PromiseImpl = Promise;
       var iter = new AsyncIterator(
         wrap2(innerFn, outerFn, self2, tryLocsList),
         PromiseImpl
       );
-      return exports.isGeneratorFunction(outerFn) ? iter : iter.next().then(function(result) {
+      return exports2.isGeneratorFunction(outerFn) ? iter : iter.next().then(function(result) {
         return result.done ? result.value : iter.next();
       });
     };
@@ -147647,7 +147635,7 @@ var runtime = { exports: {} };
       tryLocsList.forEach(pushTryEntry, this);
       this.reset(true);
     }
-    exports.keys = function(val) {
+    exports2.keys = function(val) {
       var object = Object(val);
       var keys = [];
       for (var key in object) {
@@ -147694,7 +147682,7 @@ var runtime = { exports: {} };
       }
       return { next: doneResult };
     }
-    exports.values = values;
+    exports2.values = values;
     function doneResult() {
       return { value: undefined$12, done: true };
     }
@@ -147842,13 +147830,13 @@ var runtime = { exports: {} };
         return ContinueSentinel;
       }
     };
-    return exports;
+    return exports2;
   }(
     // If this script is executing as a CommonJS module, use module.exports
     // as the regeneratorRuntime namespace. Otherwise create a new empty
     // object. Either way, the resulting object will be used to initialize
     // the regeneratorRuntime variable at the top of this file.
-    module.exports
+    module2.exports
   );
   try {
     regeneratorRuntime = runtime2;
@@ -148451,8 +148439,7 @@ const _TftOperator = class _TftOperator {
   async getGameStage() {
     try {
       const worker = await this.getGameStageWorker();
-      const { screen: nutScreen } = await Promise.resolve().then(() => index);
-      const screenshot = await nutScreen.grabRegion(this.getStageAbsoluteRegion());
+      const screenshot = await distExports$1.screen.grabRegion(this.getStageAbsoluteRegion());
       const recognizeResult = await worker.recognize(screenshot.data);
       console.log("[TftOperator] gameStage识别成功：" + recognizeResult.data);
     } catch (e) {
@@ -149173,14 +149160,14 @@ const RETRYIFY_OPTIONS = {
 const FS = {
   attempt: {
     /* ASYNC */
-    chmod: attemptifyAsync(promisify$1(fs$r.chmod), ATTEMPTIFY_CHANGE_ERROR_OPTIONS),
-    chown: attemptifyAsync(promisify$1(fs$r.chown), ATTEMPTIFY_CHANGE_ERROR_OPTIONS),
-    close: attemptifyAsync(promisify$1(fs$r.close), ATTEMPTIFY_NOOP_OPTIONS),
-    fsync: attemptifyAsync(promisify$1(fs$r.fsync), ATTEMPTIFY_NOOP_OPTIONS),
-    mkdir: attemptifyAsync(promisify$1(fs$r.mkdir), ATTEMPTIFY_NOOP_OPTIONS),
-    realpath: attemptifyAsync(promisify$1(fs$r.realpath), ATTEMPTIFY_NOOP_OPTIONS),
-    stat: attemptifyAsync(promisify$1(fs$r.stat), ATTEMPTIFY_NOOP_OPTIONS),
-    unlink: attemptifyAsync(promisify$1(fs$r.unlink), ATTEMPTIFY_NOOP_OPTIONS),
+    chmod: attemptifyAsync(node_util.promisify(fs$r.chmod), ATTEMPTIFY_CHANGE_ERROR_OPTIONS),
+    chown: attemptifyAsync(node_util.promisify(fs$r.chown), ATTEMPTIFY_CHANGE_ERROR_OPTIONS),
+    close: attemptifyAsync(node_util.promisify(fs$r.close), ATTEMPTIFY_NOOP_OPTIONS),
+    fsync: attemptifyAsync(node_util.promisify(fs$r.fsync), ATTEMPTIFY_NOOP_OPTIONS),
+    mkdir: attemptifyAsync(node_util.promisify(fs$r.mkdir), ATTEMPTIFY_NOOP_OPTIONS),
+    realpath: attemptifyAsync(node_util.promisify(fs$r.realpath), ATTEMPTIFY_NOOP_OPTIONS),
+    stat: attemptifyAsync(node_util.promisify(fs$r.stat), ATTEMPTIFY_NOOP_OPTIONS),
+    unlink: attemptifyAsync(node_util.promisify(fs$r.unlink), ATTEMPTIFY_NOOP_OPTIONS),
     /* SYNC */
     chmodSync: attemptifySync(fs$r.chmodSync, ATTEMPTIFY_CHANGE_ERROR_OPTIONS),
     chownSync: attemptifySync(fs$r.chownSync, ATTEMPTIFY_CHANGE_ERROR_OPTIONS),
@@ -149194,14 +149181,14 @@ const FS = {
   },
   retry: {
     /* ASYNC */
-    close: retryifyAsync(promisify$1(fs$r.close), RETRYIFY_OPTIONS),
-    fsync: retryifyAsync(promisify$1(fs$r.fsync), RETRYIFY_OPTIONS),
-    open: retryifyAsync(promisify$1(fs$r.open), RETRYIFY_OPTIONS),
-    readFile: retryifyAsync(promisify$1(fs$r.readFile), RETRYIFY_OPTIONS),
-    rename: retryifyAsync(promisify$1(fs$r.rename), RETRYIFY_OPTIONS),
-    stat: retryifyAsync(promisify$1(fs$r.stat), RETRYIFY_OPTIONS),
-    write: retryifyAsync(promisify$1(fs$r.write), RETRYIFY_OPTIONS),
-    writeFile: retryifyAsync(promisify$1(fs$r.writeFile), RETRYIFY_OPTIONS),
+    close: retryifyAsync(node_util.promisify(fs$r.close), RETRYIFY_OPTIONS),
+    fsync: retryifyAsync(node_util.promisify(fs$r.fsync), RETRYIFY_OPTIONS),
+    open: retryifyAsync(node_util.promisify(fs$r.open), RETRYIFY_OPTIONS),
+    readFile: retryifyAsync(node_util.promisify(fs$r.readFile), RETRYIFY_OPTIONS),
+    rename: retryifyAsync(node_util.promisify(fs$r.rename), RETRYIFY_OPTIONS),
+    stat: retryifyAsync(node_util.promisify(fs$r.stat), RETRYIFY_OPTIONS),
+    write: retryifyAsync(node_util.promisify(fs$r.write), RETRYIFY_OPTIONS),
+    writeFile: retryifyAsync(node_util.promisify(fs$r.writeFile), RETRYIFY_OPTIONS),
     /* SYNC */
     closeSync: retryifySync(fs$r.closeSync, RETRYIFY_OPTIONS),
     fsyncSync: retryifySync(fs$r.fsyncSync, RETRYIFY_OPTIONS),
@@ -149414,17 +149401,17 @@ var boolSchema$1 = {};
 var errors$1 = {};
 var codegen$1 = {};
 var code$3 = {};
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.regexpCode = exports.getEsmExportName = exports.getProperty = exports.safeStringify = exports.stringify = exports.strConcat = exports.addCodeArg = exports.str = exports._ = exports.nil = exports._Code = exports.Name = exports.IDENTIFIER = exports._CodeOrName = void 0;
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.regexpCode = exports2.getEsmExportName = exports2.getProperty = exports2.safeStringify = exports2.stringify = exports2.strConcat = exports2.addCodeArg = exports2.str = exports2._ = exports2.nil = exports2._Code = exports2.Name = exports2.IDENTIFIER = exports2._CodeOrName = void 0;
   class _CodeOrName {
   }
-  exports._CodeOrName = _CodeOrName;
-  exports.IDENTIFIER = /^[a-z$_][a-z$_0-9]*$/i;
+  exports2._CodeOrName = _CodeOrName;
+  exports2.IDENTIFIER = /^[a-z$_][a-z$_0-9]*$/i;
   class Name extends _CodeOrName {
     constructor(s) {
       super();
-      if (!exports.IDENTIFIER.test(s))
+      if (!exports2.IDENTIFIER.test(s))
         throw new Error("CodeGen: name must be a valid identifier");
       this.str = s;
     }
@@ -149438,7 +149425,7 @@ var code$3 = {};
       return { [this.str]: 1 };
     }
   }
-  exports.Name = Name;
+  exports2.Name = Name;
   class _Code extends _CodeOrName {
     constructor(code2) {
       super();
@@ -149466,8 +149453,8 @@ var code$3 = {};
       }, {});
     }
   }
-  exports._Code = _Code;
-  exports.nil = new _Code("");
+  exports2._Code = _Code;
+  exports2.nil = new _Code("");
   function _(strs, ...args) {
     const code2 = [strs[0]];
     let i = 0;
@@ -149477,7 +149464,7 @@ var code$3 = {};
     }
     return new _Code(code2);
   }
-  exports._ = _;
+  exports2._ = _;
   const plus = new _Code("+");
   function str(strs, ...args) {
     const expr = [safeStringify(strs[0])];
@@ -149490,7 +149477,7 @@ var code$3 = {};
     optimize(expr);
     return new _Code(expr);
   }
-  exports.str = str;
+  exports2.str = str;
   function addCodeArg(code2, arg) {
     if (arg instanceof _Code)
       code2.push(...arg._items);
@@ -149499,7 +149486,7 @@ var code$3 = {};
     else
       code2.push(interpolate(arg));
   }
-  exports.addCodeArg = addCodeArg;
+  exports2.addCodeArg = addCodeArg;
   function optimize(expr) {
     let i = 1;
     while (i < expr.length - 1) {
@@ -149535,38 +149522,38 @@ var code$3 = {};
   function strConcat(c1, c2) {
     return c2.emptyStr() ? c1 : c1.emptyStr() ? c2 : str`${c1}${c2}`;
   }
-  exports.strConcat = strConcat;
+  exports2.strConcat = strConcat;
   function interpolate(x2) {
     return typeof x2 == "number" || typeof x2 == "boolean" || x2 === null ? x2 : safeStringify(Array.isArray(x2) ? x2.join(",") : x2);
   }
   function stringify2(x2) {
     return new _Code(safeStringify(x2));
   }
-  exports.stringify = stringify2;
+  exports2.stringify = stringify2;
   function safeStringify(x2) {
     return JSON.stringify(x2).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
   }
-  exports.safeStringify = safeStringify;
+  exports2.safeStringify = safeStringify;
   function getProperty2(key) {
-    return typeof key == "string" && exports.IDENTIFIER.test(key) ? new _Code(`.${key}`) : _`[${key}]`;
+    return typeof key == "string" && exports2.IDENTIFIER.test(key) ? new _Code(`.${key}`) : _`[${key}]`;
   }
-  exports.getProperty = getProperty2;
+  exports2.getProperty = getProperty2;
   function getEsmExportName(key) {
-    if (typeof key == "string" && exports.IDENTIFIER.test(key)) {
+    if (typeof key == "string" && exports2.IDENTIFIER.test(key)) {
       return new _Code(`${key}`);
     }
     throw new Error(`CodeGen: invalid export name: ${key}, use explicit $id name mapping`);
   }
-  exports.getEsmExportName = getEsmExportName;
+  exports2.getEsmExportName = getEsmExportName;
   function regexpCode(rx) {
     return new _Code(rx.toString());
   }
-  exports.regexpCode = regexpCode;
+  exports2.regexpCode = regexpCode;
 })(code$3);
 var scope$1 = {};
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.ValueScope = exports.ValueScopeName = exports.Scope = exports.varKinds = exports.UsedValueState = void 0;
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.ValueScope = exports2.ValueScopeName = exports2.Scope = exports2.varKinds = exports2.UsedValueState = void 0;
   const code_12 = code$3;
   class ValueError extends Error {
     constructor(name) {
@@ -149578,8 +149565,8 @@ var scope$1 = {};
   (function(UsedValueState2) {
     UsedValueState2[UsedValueState2["Started"] = 0] = "Started";
     UsedValueState2[UsedValueState2["Completed"] = 1] = "Completed";
-  })(UsedValueState || (exports.UsedValueState = UsedValueState = {}));
-  exports.varKinds = {
+  })(UsedValueState || (exports2.UsedValueState = UsedValueState = {}));
+  exports2.varKinds = {
     const: new code_12.Name("const"),
     let: new code_12.Name("let"),
     var: new code_12.Name("var")
@@ -149608,7 +149595,7 @@ var scope$1 = {};
       return this._names[prefix] = { prefix, index: 0 };
     }
   }
-  exports.Scope = Scope;
+  exports2.Scope = Scope;
   class ValueScopeName extends code_12.Name {
     constructor(prefix, nameStr) {
       super(nameStr);
@@ -149619,7 +149606,7 @@ var scope$1 = {};
       this.scopePath = (0, code_12._)`.${new code_12.Name(property)}[${itemIndex}]`;
     }
   }
-  exports.ValueScopeName = ValueScopeName;
+  exports2.ValueScopeName = ValueScopeName;
   const line = (0, code_12._)`\n`;
   class ValueScope extends Scope {
     constructor(opts) {
@@ -149689,7 +149676,7 @@ var scope$1 = {};
           nameSet.set(name, UsedValueState.Started);
           let c2 = valueCode(name);
           if (c2) {
-            const def2 = this.opts.es5 ? exports.varKinds.var : exports.varKinds.const;
+            const def2 = this.opts.es5 ? exports2.varKinds.var : exports2.varKinds.const;
             code2 = (0, code_12._)`${code2}${def2} ${name} = ${c2};${this.opts._n}`;
           } else if (c2 = getCode === null || getCode === void 0 ? void 0 : getCode(name)) {
             code2 = (0, code_12._)`${code2}${c2}${this.opts._n}`;
@@ -149702,52 +149689,52 @@ var scope$1 = {};
       return code2;
     }
   }
-  exports.ValueScope = ValueScope;
+  exports2.ValueScope = ValueScope;
 })(scope$1);
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.or = exports.and = exports.not = exports.CodeGen = exports.operators = exports.varKinds = exports.ValueScopeName = exports.ValueScope = exports.Scope = exports.Name = exports.regexpCode = exports.stringify = exports.getProperty = exports.nil = exports.strConcat = exports.str = exports._ = void 0;
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.or = exports2.and = exports2.not = exports2.CodeGen = exports2.operators = exports2.varKinds = exports2.ValueScopeName = exports2.ValueScope = exports2.Scope = exports2.Name = exports2.regexpCode = exports2.stringify = exports2.getProperty = exports2.nil = exports2.strConcat = exports2.str = exports2._ = void 0;
   const code_12 = code$3;
   const scope_1 = scope$1;
   var code_2 = code$3;
-  Object.defineProperty(exports, "_", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "_", { enumerable: true, get: function() {
     return code_2._;
   } });
-  Object.defineProperty(exports, "str", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "str", { enumerable: true, get: function() {
     return code_2.str;
   } });
-  Object.defineProperty(exports, "strConcat", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "strConcat", { enumerable: true, get: function() {
     return code_2.strConcat;
   } });
-  Object.defineProperty(exports, "nil", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "nil", { enumerable: true, get: function() {
     return code_2.nil;
   } });
-  Object.defineProperty(exports, "getProperty", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "getProperty", { enumerable: true, get: function() {
     return code_2.getProperty;
   } });
-  Object.defineProperty(exports, "stringify", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "stringify", { enumerable: true, get: function() {
     return code_2.stringify;
   } });
-  Object.defineProperty(exports, "regexpCode", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "regexpCode", { enumerable: true, get: function() {
     return code_2.regexpCode;
   } });
-  Object.defineProperty(exports, "Name", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "Name", { enumerable: true, get: function() {
     return code_2.Name;
   } });
   var scope_2 = scope$1;
-  Object.defineProperty(exports, "Scope", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "Scope", { enumerable: true, get: function() {
     return scope_2.Scope;
   } });
-  Object.defineProperty(exports, "ValueScope", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "ValueScope", { enumerable: true, get: function() {
     return scope_2.ValueScope;
   } });
-  Object.defineProperty(exports, "ValueScopeName", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "ValueScopeName", { enumerable: true, get: function() {
     return scope_2.ValueScopeName;
   } });
-  Object.defineProperty(exports, "varKinds", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "varKinds", { enumerable: true, get: function() {
     return scope_2.varKinds;
   } });
-  exports.operators = {
+  exports2.operators = {
     GT: new code_12._Code(">"),
     GTE: new code_12._Code(">="),
     LT: new code_12._Code("<"),
@@ -150160,7 +150147,7 @@ var scope$1 = {};
     }
     // `+=` code
     add(lhs, rhs) {
-      return this._leafNode(new AssignOp(lhs, exports.operators.ADD, rhs));
+      return this._leafNode(new AssignOp(lhs, exports2.operators.ADD, rhs));
     }
     // appends passed SafeExpr to code or executes Block
     code(c2) {
@@ -150360,7 +150347,7 @@ var scope$1 = {};
       ns[ns.length - 1] = node2;
     }
   }
-  exports.CodeGen = CodeGen;
+  exports2.CodeGen = CodeGen;
   function addNames(names2, from) {
     for (const n in from)
       names2[n] = (names2[n] || 0) + (from[n] || 0);
@@ -150401,17 +150388,17 @@ var scope$1 = {};
   function not2(x2) {
     return typeof x2 == "boolean" || typeof x2 == "number" || x2 === null ? !x2 : (0, code_12._)`!${par(x2)}`;
   }
-  exports.not = not2;
-  const andCode = mappend(exports.operators.AND);
+  exports2.not = not2;
+  const andCode = mappend(exports2.operators.AND);
   function and(...args) {
     return args.reduce(andCode);
   }
-  exports.and = and;
-  const orCode = mappend(exports.operators.OR);
+  exports2.and = and;
+  const orCode = mappend(exports2.operators.OR);
   function or(...args) {
     return args.reduce(orCode);
   }
-  exports.or = or;
+  exports2.or = or;
   function mappend(op) {
     return (x2, y2) => x2 === code_12.nil ? y2 : y2 === code_12.nil ? x2 : (0, code_12._)`${par(x2)} ${op} ${par(y2)}`;
   }
@@ -150613,19 +150600,19 @@ const names$2 = {
   jsonPart: new codegen_1$12.Name("jsonPart")
 };
 names$3.default = names$2;
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.extendErrors = exports.resetErrorsCount = exports.reportExtraError = exports.reportError = exports.keyword$DataError = exports.keywordError = void 0;
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.extendErrors = exports2.resetErrorsCount = exports2.reportExtraError = exports2.reportError = exports2.keyword$DataError = exports2.keywordError = void 0;
   const codegen_12 = codegen$1;
   const util_12 = util$1;
   const names_12 = names$3;
-  exports.keywordError = {
+  exports2.keywordError = {
     message: ({ keyword: keyword2 }) => (0, codegen_12.str)`must pass "${keyword2}" keyword validation`
   };
-  exports.keyword$DataError = {
+  exports2.keyword$DataError = {
     message: ({ keyword: keyword2, schemaType }) => schemaType ? (0, codegen_12.str)`"${keyword2}" keyword must be ${schemaType} ($data)` : (0, codegen_12.str)`"${keyword2}" keyword is invalid ($data)`
   };
-  function reportError(cxt, error2 = exports.keywordError, errorPaths, overrideAllErrors) {
+  function reportError(cxt, error2 = exports2.keywordError, errorPaths, overrideAllErrors) {
     const { it } = cxt;
     const { gen, compositeRule, allErrors } = it;
     const errObj = errorObjectCode(cxt, error2, errorPaths);
@@ -150635,8 +150622,8 @@ names$3.default = names$2;
       returnErrors(it, (0, codegen_12._)`[${errObj}]`);
     }
   }
-  exports.reportError = reportError;
-  function reportExtraError(cxt, error2 = exports.keywordError, errorPaths) {
+  exports2.reportError = reportError;
+  function reportExtraError(cxt, error2 = exports2.keywordError, errorPaths) {
     const { it } = cxt;
     const { gen, compositeRule, allErrors } = it;
     const errObj = errorObjectCode(cxt, error2, errorPaths);
@@ -150645,12 +150632,12 @@ names$3.default = names$2;
       returnErrors(it, names_12.default.vErrors);
     }
   }
-  exports.reportExtraError = reportExtraError;
+  exports2.reportExtraError = reportExtraError;
   function resetErrorsCount(gen, errsCount) {
     gen.assign(names_12.default.errors, errsCount);
     gen.if((0, codegen_12._)`${names_12.default.vErrors} !== null`, () => gen.if(errsCount, () => gen.assign((0, codegen_12._)`${names_12.default.vErrors}.length`, errsCount), () => gen.assign(names_12.default.vErrors, null)));
   }
-  exports.resetErrorsCount = resetErrorsCount;
+  exports2.resetErrorsCount = resetErrorsCount;
   function extendErrors({ gen, keyword: keyword2, schemaValue, data, errsCount, it }) {
     if (errsCount === void 0)
       throw new Error("ajv implementation error");
@@ -150665,7 +150652,7 @@ names$3.default = names$2;
       }
     });
   }
-  exports.extendErrors = extendErrors;
+  exports2.extendErrors = extendErrors;
   function addError(gen, errObj) {
     const err = gen.const("err", errObj);
     gen.if((0, codegen_12._)`${names_12.default.vErrors} === null`, () => gen.assign(names_12.default.vErrors, (0, codegen_12._)`[${err}]`), (0, codegen_12._)`${names_12.default.vErrors}.push(${err})`);
@@ -153057,30 +153044,30 @@ Object.defineProperty(uri$3, "__esModule", { value: true });
 const uri$2 = fastUriExports;
 uri$2.code = 'require("ajv/dist/runtime/uri").default';
 uri$3.default = uri$2;
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.CodeGen = exports.Name = exports.nil = exports.stringify = exports.str = exports._ = exports.KeywordCxt = void 0;
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.CodeGen = exports2.Name = exports2.nil = exports2.stringify = exports2.str = exports2._ = exports2.KeywordCxt = void 0;
   var validate_12 = validate$1;
-  Object.defineProperty(exports, "KeywordCxt", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "KeywordCxt", { enumerable: true, get: function() {
     return validate_12.KeywordCxt;
   } });
   var codegen_12 = codegen$1;
-  Object.defineProperty(exports, "_", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "_", { enumerable: true, get: function() {
     return codegen_12._;
   } });
-  Object.defineProperty(exports, "str", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "str", { enumerable: true, get: function() {
     return codegen_12.str;
   } });
-  Object.defineProperty(exports, "stringify", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "stringify", { enumerable: true, get: function() {
     return codegen_12.stringify;
   } });
-  Object.defineProperty(exports, "nil", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "nil", { enumerable: true, get: function() {
     return codegen_12.nil;
   } });
-  Object.defineProperty(exports, "Name", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "Name", { enumerable: true, get: function() {
     return codegen_12.Name;
   } });
-  Object.defineProperty(exports, "CodeGen", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "CodeGen", { enumerable: true, get: function() {
     return codegen_12.CodeGen;
   } });
   const validation_error_12 = validation_error$1;
@@ -153534,7 +153521,7 @@ uri$3.default = uri$2;
   }
   Ajv.ValidationError = validation_error_12.default;
   Ajv.MissingRefError = ref_error_12.default;
-  exports.default = Ajv;
+  exports2.default = Ajv;
   function checkOptions(checkOpts, options, msg, log2 = "error") {
     for (const key in checkOpts) {
       const opt = key;
@@ -154434,13 +154421,13 @@ const def$O = {
 };
 contains$1.default = def$O;
 var dependencies$1 = {};
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.validateSchemaDeps = exports.validatePropertyDeps = exports.error = void 0;
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.validateSchemaDeps = exports2.validatePropertyDeps = exports2.error = void 0;
   const codegen_12 = codegen$1;
   const util_12 = util$1;
   const code_12 = code$2;
-  exports.error = {
+  exports2.error = {
     message: ({ params: { property, depsCount, deps } }) => {
       const property_ies = depsCount === 1 ? "property" : "properties";
       return (0, codegen_12.str)`must have ${property_ies} ${deps} when property ${property} is present`;
@@ -154455,7 +154442,7 @@ var dependencies$1 = {};
     keyword: "dependencies",
     type: "object",
     schemaType: "object",
-    error: exports.error,
+    error: exports2.error,
     code(cxt) {
       const [propDeps, schDeps] = splitDependencies(cxt);
       validatePropertyDeps(cxt, propDeps);
@@ -154501,7 +154488,7 @@ var dependencies$1 = {};
       }
     }
   }
-  exports.validatePropertyDeps = validatePropertyDeps;
+  exports2.validatePropertyDeps = validatePropertyDeps;
   function validateSchemaDeps(cxt, schemaDeps = cxt.schema) {
     const { gen, data, keyword: keyword2, it } = cxt;
     const valid2 = gen.name("valid");
@@ -154520,8 +154507,8 @@ var dependencies$1 = {};
       cxt.ok(valid2);
     }
   }
-  exports.validateSchemaDeps = validateSchemaDeps;
-  exports.default = def2;
+  exports2.validateSchemaDeps = validateSchemaDeps;
+  exports2.default = def2;
 })(dependencies$1);
 var propertyNames$1 = {};
 Object.defineProperty(propertyNames$1, "__esModule", { value: true });
@@ -156029,9 +156016,9 @@ function addMetaSchema2020($data) {
   }
 }
 jsonSchema202012.default = addMetaSchema2020;
-(function(module, exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.MissingRefError = exports.ValidationError = exports.CodeGen = exports.Name = exports.nil = exports.stringify = exports.str = exports._ = exports.KeywordCxt = exports.Ajv2020 = void 0;
+(function(module2, exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.MissingRefError = exports2.ValidationError = exports2.CodeGen = exports2.Name = exports2.nil = exports2.stringify = exports2.str = exports2._ = exports2.KeywordCxt = exports2.Ajv2020 = void 0;
   const core_12 = core$6;
   const draft2020_1 = draft2020;
   const discriminator_1 = discriminator$1;
@@ -156064,53 +156051,53 @@ jsonSchema202012.default = addMetaSchema2020;
       return this.opts.defaultMeta = super.defaultMeta() || (this.getSchema(META_SCHEMA_ID) ? META_SCHEMA_ID : void 0);
     }
   }
-  exports.Ajv2020 = Ajv2020;
-  module.exports = exports = Ajv2020;
-  module.exports.Ajv2020 = Ajv2020;
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.default = Ajv2020;
+  exports2.Ajv2020 = Ajv2020;
+  module2.exports = exports2 = Ajv2020;
+  module2.exports.Ajv2020 = Ajv2020;
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.default = Ajv2020;
   var validate_12 = validate$1;
-  Object.defineProperty(exports, "KeywordCxt", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "KeywordCxt", { enumerable: true, get: function() {
     return validate_12.KeywordCxt;
   } });
   var codegen_12 = codegen$1;
-  Object.defineProperty(exports, "_", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "_", { enumerable: true, get: function() {
     return codegen_12._;
   } });
-  Object.defineProperty(exports, "str", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "str", { enumerable: true, get: function() {
     return codegen_12.str;
   } });
-  Object.defineProperty(exports, "stringify", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "stringify", { enumerable: true, get: function() {
     return codegen_12.stringify;
   } });
-  Object.defineProperty(exports, "nil", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "nil", { enumerable: true, get: function() {
     return codegen_12.nil;
   } });
-  Object.defineProperty(exports, "Name", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "Name", { enumerable: true, get: function() {
     return codegen_12.Name;
   } });
-  Object.defineProperty(exports, "CodeGen", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "CodeGen", { enumerable: true, get: function() {
     return codegen_12.CodeGen;
   } });
   var validation_error_12 = validation_error$1;
-  Object.defineProperty(exports, "ValidationError", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "ValidationError", { enumerable: true, get: function() {
     return validation_error_12.default;
   } });
   var ref_error_12 = ref_error$1;
-  Object.defineProperty(exports, "MissingRefError", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "MissingRefError", { enumerable: true, get: function() {
     return ref_error_12.default;
   } });
 })(_2020, _2020.exports);
 var _2020Exports = _2020.exports;
 var dist = { exports: {} };
 var formats = {};
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.formatNames = exports.fastFormats = exports.fullFormats = void 0;
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.formatNames = exports2.fastFormats = exports2.fullFormats = void 0;
   function fmtDef(validate2, compare2) {
     return { validate: validate2, compare: compare2 };
   }
-  exports.fullFormats = {
+  exports2.fullFormats = {
     // date: http://tools.ietf.org/html/rfc3339#section-5.6
     date: fmtDef(date2, compareDate),
     // date-time: http://tools.ietf.org/html/rfc3339#section-5.6
@@ -156157,8 +156144,8 @@ var formats = {};
     // unchecked string payload
     binary: true
   };
-  exports.fastFormats = {
-    ...exports.fullFormats,
+  exports2.fastFormats = {
+    ...exports2.fullFormats,
     date: fmtDef(/^\d\d\d\d-[0-1]\d-[0-3]\d$/, compareDate),
     time: fmtDef(/^(?:[0-2]\d:[0-5]\d:[0-5]\d|23:59:60)(?:\.\d+)?(?:z|[+-]\d\d(?::?\d\d)?)$/i, compareTime),
     "date-time": fmtDef(/^\d\d\d\d-[0-1]\d-[0-3]\dt(?:[0-2]\d:[0-5]\d:[0-5]\d|23:59:60)(?:\.\d+)?(?:z|[+-]\d\d(?::?\d\d)?)$/i, compareDateTime),
@@ -156172,7 +156159,7 @@ var formats = {};
     // http://www.w3.org/TR/html5/forms.html#valid-e-mail-address (search for 'wilful violation')
     email: /^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$/i
   };
-  exports.formatNames = Object.keys(exports.fullFormats);
+  exports2.formatNames = Object.keys(exports2.fullFormats);
   function isLeapYear(year) {
     return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
   }
@@ -156310,17 +156297,17 @@ var boolSchema = {};
 var errors = {};
 var codegen = {};
 var code$1 = {};
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.regexpCode = exports.getEsmExportName = exports.getProperty = exports.safeStringify = exports.stringify = exports.strConcat = exports.addCodeArg = exports.str = exports._ = exports.nil = exports._Code = exports.Name = exports.IDENTIFIER = exports._CodeOrName = void 0;
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.regexpCode = exports2.getEsmExportName = exports2.getProperty = exports2.safeStringify = exports2.stringify = exports2.strConcat = exports2.addCodeArg = exports2.str = exports2._ = exports2.nil = exports2._Code = exports2.Name = exports2.IDENTIFIER = exports2._CodeOrName = void 0;
   class _CodeOrName {
   }
-  exports._CodeOrName = _CodeOrName;
-  exports.IDENTIFIER = /^[a-z$_][a-z$_0-9]*$/i;
+  exports2._CodeOrName = _CodeOrName;
+  exports2.IDENTIFIER = /^[a-z$_][a-z$_0-9]*$/i;
   class Name extends _CodeOrName {
     constructor(s) {
       super();
-      if (!exports.IDENTIFIER.test(s))
+      if (!exports2.IDENTIFIER.test(s))
         throw new Error("CodeGen: name must be a valid identifier");
       this.str = s;
     }
@@ -156334,7 +156321,7 @@ var code$1 = {};
       return { [this.str]: 1 };
     }
   }
-  exports.Name = Name;
+  exports2.Name = Name;
   class _Code extends _CodeOrName {
     constructor(code2) {
       super();
@@ -156362,8 +156349,8 @@ var code$1 = {};
       }, {});
     }
   }
-  exports._Code = _Code;
-  exports.nil = new _Code("");
+  exports2._Code = _Code;
+  exports2.nil = new _Code("");
   function _(strs, ...args) {
     const code2 = [strs[0]];
     let i = 0;
@@ -156373,7 +156360,7 @@ var code$1 = {};
     }
     return new _Code(code2);
   }
-  exports._ = _;
+  exports2._ = _;
   const plus = new _Code("+");
   function str(strs, ...args) {
     const expr = [safeStringify(strs[0])];
@@ -156386,7 +156373,7 @@ var code$1 = {};
     optimize(expr);
     return new _Code(expr);
   }
-  exports.str = str;
+  exports2.str = str;
   function addCodeArg(code2, arg) {
     if (arg instanceof _Code)
       code2.push(...arg._items);
@@ -156395,7 +156382,7 @@ var code$1 = {};
     else
       code2.push(interpolate(arg));
   }
-  exports.addCodeArg = addCodeArg;
+  exports2.addCodeArg = addCodeArg;
   function optimize(expr) {
     let i = 1;
     while (i < expr.length - 1) {
@@ -156431,38 +156418,38 @@ var code$1 = {};
   function strConcat(c1, c2) {
     return c2.emptyStr() ? c1 : c1.emptyStr() ? c2 : str`${c1}${c2}`;
   }
-  exports.strConcat = strConcat;
+  exports2.strConcat = strConcat;
   function interpolate(x2) {
     return typeof x2 == "number" || typeof x2 == "boolean" || x2 === null ? x2 : safeStringify(Array.isArray(x2) ? x2.join(",") : x2);
   }
   function stringify2(x2) {
     return new _Code(safeStringify(x2));
   }
-  exports.stringify = stringify2;
+  exports2.stringify = stringify2;
   function safeStringify(x2) {
     return JSON.stringify(x2).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
   }
-  exports.safeStringify = safeStringify;
+  exports2.safeStringify = safeStringify;
   function getProperty2(key) {
-    return typeof key == "string" && exports.IDENTIFIER.test(key) ? new _Code(`.${key}`) : _`[${key}]`;
+    return typeof key == "string" && exports2.IDENTIFIER.test(key) ? new _Code(`.${key}`) : _`[${key}]`;
   }
-  exports.getProperty = getProperty2;
+  exports2.getProperty = getProperty2;
   function getEsmExportName(key) {
-    if (typeof key == "string" && exports.IDENTIFIER.test(key)) {
+    if (typeof key == "string" && exports2.IDENTIFIER.test(key)) {
       return new _Code(`${key}`);
     }
     throw new Error(`CodeGen: invalid export name: ${key}, use explicit $id name mapping`);
   }
-  exports.getEsmExportName = getEsmExportName;
+  exports2.getEsmExportName = getEsmExportName;
   function regexpCode(rx) {
     return new _Code(rx.toString());
   }
-  exports.regexpCode = regexpCode;
+  exports2.regexpCode = regexpCode;
 })(code$1);
 var scope = {};
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.ValueScope = exports.ValueScopeName = exports.Scope = exports.varKinds = exports.UsedValueState = void 0;
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.ValueScope = exports2.ValueScopeName = exports2.Scope = exports2.varKinds = exports2.UsedValueState = void 0;
   const code_12 = code$1;
   class ValueError extends Error {
     constructor(name) {
@@ -156474,8 +156461,8 @@ var scope = {};
   (function(UsedValueState2) {
     UsedValueState2[UsedValueState2["Started"] = 0] = "Started";
     UsedValueState2[UsedValueState2["Completed"] = 1] = "Completed";
-  })(UsedValueState || (exports.UsedValueState = UsedValueState = {}));
-  exports.varKinds = {
+  })(UsedValueState || (exports2.UsedValueState = UsedValueState = {}));
+  exports2.varKinds = {
     const: new code_12.Name("const"),
     let: new code_12.Name("let"),
     var: new code_12.Name("var")
@@ -156504,7 +156491,7 @@ var scope = {};
       return this._names[prefix] = { prefix, index: 0 };
     }
   }
-  exports.Scope = Scope;
+  exports2.Scope = Scope;
   class ValueScopeName extends code_12.Name {
     constructor(prefix, nameStr) {
       super(nameStr);
@@ -156515,7 +156502,7 @@ var scope = {};
       this.scopePath = (0, code_12._)`.${new code_12.Name(property)}[${itemIndex}]`;
     }
   }
-  exports.ValueScopeName = ValueScopeName;
+  exports2.ValueScopeName = ValueScopeName;
   const line = (0, code_12._)`\n`;
   class ValueScope extends Scope {
     constructor(opts) {
@@ -156585,7 +156572,7 @@ var scope = {};
           nameSet.set(name, UsedValueState.Started);
           let c2 = valueCode(name);
           if (c2) {
-            const def2 = this.opts.es5 ? exports.varKinds.var : exports.varKinds.const;
+            const def2 = this.opts.es5 ? exports2.varKinds.var : exports2.varKinds.const;
             code2 = (0, code_12._)`${code2}${def2} ${name} = ${c2};${this.opts._n}`;
           } else if (c2 = getCode === null || getCode === void 0 ? void 0 : getCode(name)) {
             code2 = (0, code_12._)`${code2}${c2}${this.opts._n}`;
@@ -156598,52 +156585,52 @@ var scope = {};
       return code2;
     }
   }
-  exports.ValueScope = ValueScope;
+  exports2.ValueScope = ValueScope;
 })(scope);
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.or = exports.and = exports.not = exports.CodeGen = exports.operators = exports.varKinds = exports.ValueScopeName = exports.ValueScope = exports.Scope = exports.Name = exports.regexpCode = exports.stringify = exports.getProperty = exports.nil = exports.strConcat = exports.str = exports._ = void 0;
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.or = exports2.and = exports2.not = exports2.CodeGen = exports2.operators = exports2.varKinds = exports2.ValueScopeName = exports2.ValueScope = exports2.Scope = exports2.Name = exports2.regexpCode = exports2.stringify = exports2.getProperty = exports2.nil = exports2.strConcat = exports2.str = exports2._ = void 0;
   const code_12 = code$1;
   const scope_1 = scope;
   var code_2 = code$1;
-  Object.defineProperty(exports, "_", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "_", { enumerable: true, get: function() {
     return code_2._;
   } });
-  Object.defineProperty(exports, "str", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "str", { enumerable: true, get: function() {
     return code_2.str;
   } });
-  Object.defineProperty(exports, "strConcat", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "strConcat", { enumerable: true, get: function() {
     return code_2.strConcat;
   } });
-  Object.defineProperty(exports, "nil", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "nil", { enumerable: true, get: function() {
     return code_2.nil;
   } });
-  Object.defineProperty(exports, "getProperty", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "getProperty", { enumerable: true, get: function() {
     return code_2.getProperty;
   } });
-  Object.defineProperty(exports, "stringify", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "stringify", { enumerable: true, get: function() {
     return code_2.stringify;
   } });
-  Object.defineProperty(exports, "regexpCode", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "regexpCode", { enumerable: true, get: function() {
     return code_2.regexpCode;
   } });
-  Object.defineProperty(exports, "Name", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "Name", { enumerable: true, get: function() {
     return code_2.Name;
   } });
   var scope_2 = scope;
-  Object.defineProperty(exports, "Scope", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "Scope", { enumerable: true, get: function() {
     return scope_2.Scope;
   } });
-  Object.defineProperty(exports, "ValueScope", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "ValueScope", { enumerable: true, get: function() {
     return scope_2.ValueScope;
   } });
-  Object.defineProperty(exports, "ValueScopeName", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "ValueScopeName", { enumerable: true, get: function() {
     return scope_2.ValueScopeName;
   } });
-  Object.defineProperty(exports, "varKinds", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "varKinds", { enumerable: true, get: function() {
     return scope_2.varKinds;
   } });
-  exports.operators = {
+  exports2.operators = {
     GT: new code_12._Code(">"),
     GTE: new code_12._Code(">="),
     LT: new code_12._Code("<"),
@@ -157056,7 +157043,7 @@ var scope = {};
     }
     // `+=` code
     add(lhs, rhs) {
-      return this._leafNode(new AssignOp(lhs, exports.operators.ADD, rhs));
+      return this._leafNode(new AssignOp(lhs, exports2.operators.ADD, rhs));
     }
     // appends passed SafeExpr to code or executes Block
     code(c2) {
@@ -157256,7 +157243,7 @@ var scope = {};
       ns[ns.length - 1] = node2;
     }
   }
-  exports.CodeGen = CodeGen;
+  exports2.CodeGen = CodeGen;
   function addNames(names2, from) {
     for (const n in from)
       names2[n] = (names2[n] || 0) + (from[n] || 0);
@@ -157297,17 +157284,17 @@ var scope = {};
   function not2(x2) {
     return typeof x2 == "boolean" || typeof x2 == "number" || x2 === null ? !x2 : (0, code_12._)`!${par(x2)}`;
   }
-  exports.not = not2;
-  const andCode = mappend(exports.operators.AND);
+  exports2.not = not2;
+  const andCode = mappend(exports2.operators.AND);
   function and(...args) {
     return args.reduce(andCode);
   }
-  exports.and = and;
-  const orCode = mappend(exports.operators.OR);
+  exports2.and = and;
+  const orCode = mappend(exports2.operators.OR);
   function or(...args) {
     return args.reduce(orCode);
   }
-  exports.or = or;
+  exports2.or = or;
   function mappend(op) {
     return (x2, y2) => x2 === code_12.nil ? y2 : y2 === code_12.nil ? x2 : (0, code_12._)`${par(x2)} ${op} ${par(y2)}`;
   }
@@ -157509,19 +157496,19 @@ const names = {
   jsonPart: new codegen_1$u.Name("jsonPart")
 };
 names$1.default = names;
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.extendErrors = exports.resetErrorsCount = exports.reportExtraError = exports.reportError = exports.keyword$DataError = exports.keywordError = void 0;
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.extendErrors = exports2.resetErrorsCount = exports2.reportExtraError = exports2.reportError = exports2.keyword$DataError = exports2.keywordError = void 0;
   const codegen_12 = codegen;
   const util_12 = util;
   const names_12 = names$1;
-  exports.keywordError = {
+  exports2.keywordError = {
     message: ({ keyword: keyword2 }) => (0, codegen_12.str)`must pass "${keyword2}" keyword validation`
   };
-  exports.keyword$DataError = {
+  exports2.keyword$DataError = {
     message: ({ keyword: keyword2, schemaType }) => schemaType ? (0, codegen_12.str)`"${keyword2}" keyword must be ${schemaType} ($data)` : (0, codegen_12.str)`"${keyword2}" keyword is invalid ($data)`
   };
-  function reportError(cxt, error2 = exports.keywordError, errorPaths, overrideAllErrors) {
+  function reportError(cxt, error2 = exports2.keywordError, errorPaths, overrideAllErrors) {
     const { it } = cxt;
     const { gen, compositeRule, allErrors } = it;
     const errObj = errorObjectCode(cxt, error2, errorPaths);
@@ -157531,8 +157518,8 @@ names$1.default = names;
       returnErrors(it, (0, codegen_12._)`[${errObj}]`);
     }
   }
-  exports.reportError = reportError;
-  function reportExtraError(cxt, error2 = exports.keywordError, errorPaths) {
+  exports2.reportError = reportError;
+  function reportExtraError(cxt, error2 = exports2.keywordError, errorPaths) {
     const { it } = cxt;
     const { gen, compositeRule, allErrors } = it;
     const errObj = errorObjectCode(cxt, error2, errorPaths);
@@ -157541,12 +157528,12 @@ names$1.default = names;
       returnErrors(it, names_12.default.vErrors);
     }
   }
-  exports.reportExtraError = reportExtraError;
+  exports2.reportExtraError = reportExtraError;
   function resetErrorsCount(gen, errsCount) {
     gen.assign(names_12.default.errors, errsCount);
     gen.if((0, codegen_12._)`${names_12.default.vErrors} !== null`, () => gen.if(errsCount, () => gen.assign((0, codegen_12._)`${names_12.default.vErrors}.length`, errsCount), () => gen.assign(names_12.default.vErrors, null)));
   }
-  exports.resetErrorsCount = resetErrorsCount;
+  exports2.resetErrorsCount = resetErrorsCount;
   function extendErrors({ gen, keyword: keyword2, schemaValue, data, errsCount, it }) {
     if (errsCount === void 0)
       throw new Error("ajv implementation error");
@@ -157561,7 +157548,7 @@ names$1.default = names;
       }
     });
   }
-  exports.extendErrors = extendErrors;
+  exports2.extendErrors = extendErrors;
   function addError(gen, errObj) {
     const err = gen.const("err", errObj);
     gen.if((0, codegen_12._)`${names_12.default.vErrors} === null`, () => gen.assign(names_12.default.vErrors, (0, codegen_12._)`[${err}]`), (0, codegen_12._)`${names_12.default.vErrors}.push(${err})`);
@@ -159242,30 +159229,30 @@ Object.defineProperty(uri$1, "__esModule", { value: true });
 const uri = fastUriExports;
 uri.code = 'require("ajv/dist/runtime/uri").default';
 uri$1.default = uri;
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.CodeGen = exports.Name = exports.nil = exports.stringify = exports.str = exports._ = exports.KeywordCxt = void 0;
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.CodeGen = exports2.Name = exports2.nil = exports2.stringify = exports2.str = exports2._ = exports2.KeywordCxt = void 0;
   var validate_12 = validate;
-  Object.defineProperty(exports, "KeywordCxt", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "KeywordCxt", { enumerable: true, get: function() {
     return validate_12.KeywordCxt;
   } });
   var codegen_12 = codegen;
-  Object.defineProperty(exports, "_", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "_", { enumerable: true, get: function() {
     return codegen_12._;
   } });
-  Object.defineProperty(exports, "str", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "str", { enumerable: true, get: function() {
     return codegen_12.str;
   } });
-  Object.defineProperty(exports, "stringify", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "stringify", { enumerable: true, get: function() {
     return codegen_12.stringify;
   } });
-  Object.defineProperty(exports, "nil", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "nil", { enumerable: true, get: function() {
     return codegen_12.nil;
   } });
-  Object.defineProperty(exports, "Name", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "Name", { enumerable: true, get: function() {
     return codegen_12.Name;
   } });
-  Object.defineProperty(exports, "CodeGen", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "CodeGen", { enumerable: true, get: function() {
     return codegen_12.CodeGen;
   } });
   const validation_error_12 = validation_error;
@@ -159719,7 +159706,7 @@ uri$1.default = uri;
   }
   Ajv.ValidationError = validation_error_12.default;
   Ajv.MissingRefError = ref_error_12.default;
-  exports.default = Ajv;
+  exports2.default = Ajv;
   function checkOptions(checkOpts, options, msg, log2 = "error") {
     for (const key in checkOpts) {
       const opt = key;
@@ -160619,13 +160606,13 @@ const def$c = {
 };
 contains.default = def$c;
 var dependencies = {};
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.validateSchemaDeps = exports.validatePropertyDeps = exports.error = void 0;
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.validateSchemaDeps = exports2.validatePropertyDeps = exports2.error = void 0;
   const codegen_12 = codegen;
   const util_12 = util;
   const code_12 = code;
-  exports.error = {
+  exports2.error = {
     message: ({ params: { property, depsCount, deps } }) => {
       const property_ies = depsCount === 1 ? "property" : "properties";
       return (0, codegen_12.str)`must have ${property_ies} ${deps} when property ${property} is present`;
@@ -160640,7 +160627,7 @@ var dependencies = {};
     keyword: "dependencies",
     type: "object",
     schemaType: "object",
-    error: exports.error,
+    error: exports2.error,
     code(cxt) {
       const [propDeps, schDeps] = splitDependencies(cxt);
       validatePropertyDeps(cxt, propDeps);
@@ -160686,7 +160673,7 @@ var dependencies = {};
       }
     }
   }
-  exports.validatePropertyDeps = validatePropertyDeps;
+  exports2.validatePropertyDeps = validatePropertyDeps;
   function validateSchemaDeps(cxt, schemaDeps = cxt.schema) {
     const { gen, data, keyword: keyword2, it } = cxt;
     const valid2 = gen.name("valid");
@@ -160705,8 +160692,8 @@ var dependencies = {};
       cxt.ok(valid2);
     }
   }
-  exports.validateSchemaDeps = validateSchemaDeps;
-  exports.default = def2;
+  exports2.validateSchemaDeps = validateSchemaDeps;
+  exports2.default = def2;
 })(dependencies);
 var propertyNames = {};
 Object.defineProperty(propertyNames, "__esModule", { value: true });
@@ -161665,9 +161652,9 @@ const require$$3 = {
   properties,
   "default": true
 };
-(function(module, exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.MissingRefError = exports.ValidationError = exports.CodeGen = exports.Name = exports.nil = exports.stringify = exports.str = exports._ = exports.KeywordCxt = exports.Ajv = void 0;
+(function(module2, exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.MissingRefError = exports2.ValidationError = exports2.CodeGen = exports2.Name = exports2.nil = exports2.stringify = exports2.str = exports2._ = exports2.KeywordCxt = exports2.Ajv = void 0;
   const core_12 = core$2;
   const draft7_1 = draft7;
   const discriminator_1 = discriminator;
@@ -161693,47 +161680,47 @@ const require$$3 = {
       return this.opts.defaultMeta = super.defaultMeta() || (this.getSchema(META_SCHEMA_ID) ? META_SCHEMA_ID : void 0);
     }
   }
-  exports.Ajv = Ajv;
-  module.exports = exports = Ajv;
-  module.exports.Ajv = Ajv;
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.default = Ajv;
+  exports2.Ajv = Ajv;
+  module2.exports = exports2 = Ajv;
+  module2.exports.Ajv = Ajv;
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.default = Ajv;
   var validate_12 = validate;
-  Object.defineProperty(exports, "KeywordCxt", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "KeywordCxt", { enumerable: true, get: function() {
     return validate_12.KeywordCxt;
   } });
   var codegen_12 = codegen;
-  Object.defineProperty(exports, "_", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "_", { enumerable: true, get: function() {
     return codegen_12._;
   } });
-  Object.defineProperty(exports, "str", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "str", { enumerable: true, get: function() {
     return codegen_12.str;
   } });
-  Object.defineProperty(exports, "stringify", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "stringify", { enumerable: true, get: function() {
     return codegen_12.stringify;
   } });
-  Object.defineProperty(exports, "nil", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "nil", { enumerable: true, get: function() {
     return codegen_12.nil;
   } });
-  Object.defineProperty(exports, "Name", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "Name", { enumerable: true, get: function() {
     return codegen_12.Name;
   } });
-  Object.defineProperty(exports, "CodeGen", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "CodeGen", { enumerable: true, get: function() {
     return codegen_12.CodeGen;
   } });
   var validation_error_12 = validation_error;
-  Object.defineProperty(exports, "ValidationError", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "ValidationError", { enumerable: true, get: function() {
     return validation_error_12.default;
   } });
   var ref_error_12 = ref_error;
-  Object.defineProperty(exports, "MissingRefError", { enumerable: true, get: function() {
+  Object.defineProperty(exports2, "MissingRefError", { enumerable: true, get: function() {
     return ref_error_12.default;
   } });
 })(ajv, ajv.exports);
 var ajvExports = ajv.exports;
-(function(exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.formatLimitDefinition = void 0;
+(function(exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.formatLimitDefinition = void 0;
   const ajv_1 = ajvExports;
   const codegen_12 = codegen;
   const ops2 = codegen_12.operators;
@@ -161747,7 +161734,7 @@ var ajvExports = ajv.exports;
     message: ({ keyword: keyword2, schemaCode }) => (0, codegen_12.str)`should be ${KWDs2[keyword2].okStr} ${schemaCode}`,
     params: ({ keyword: keyword2, schemaCode }) => (0, codegen_12._)`{comparison: ${KWDs2[keyword2].okStr}, limit: ${schemaCode}}`
   };
-  exports.formatLimitDefinition = {
+  exports2.formatLimitDefinition = {
     keyword: Object.keys(KWDs2),
     type: "string",
     schemaType: "string",
@@ -161793,13 +161780,13 @@ var ajvExports = ajv.exports;
     dependencies: ["format"]
   };
   const formatLimitPlugin = (ajv2) => {
-    ajv2.addKeyword(exports.formatLimitDefinition);
+    ajv2.addKeyword(exports2.formatLimitDefinition);
     return ajv2;
   };
-  exports.default = formatLimitPlugin;
+  exports2.default = formatLimitPlugin;
 })(limit);
-(function(module, exports) {
-  Object.defineProperty(exports, "__esModule", { value: true });
+(function(module2, exports2) {
+  Object.defineProperty(exports2, "__esModule", { value: true });
   const formats_1 = formats;
   const limit_1 = limit;
   const codegen_12 = codegen;
@@ -161831,9 +161818,9 @@ var ajvExports = ajv.exports;
     for (const f of list)
       ajv2.addFormat(f, fs2[f]);
   }
-  module.exports = exports = formatsPlugin;
-  Object.defineProperty(exports, "__esModule", { value: true });
-  exports.default = formatsPlugin;
+  module2.exports = exports2 = formatsPlugin;
+  Object.defineProperty(exports2, "__esModule", { value: true });
+  exports2.default = formatsPlugin;
 })(dist, dist.exports);
 var distExports = dist.exports;
 const ajvFormatsModule = /* @__PURE__ */ getDefaultExportFromCjs(distExports);
@@ -161975,19 +161962,19 @@ var constants$1 = {
 const debug$1 = typeof process === "object" && process.env && process.env.NODE_DEBUG && /\bsemver\b/i.test(process.env.NODE_DEBUG) ? (...args) => console.error("SEMVER", ...args) : () => {
 };
 var debug_1 = debug$1;
-(function(module, exports) {
+(function(module2, exports2) {
   const {
     MAX_SAFE_COMPONENT_LENGTH: MAX_SAFE_COMPONENT_LENGTH2,
     MAX_SAFE_BUILD_LENGTH: MAX_SAFE_BUILD_LENGTH2,
     MAX_LENGTH: MAX_LENGTH2
   } = constants$1;
   const debug2 = debug_1;
-  exports = module.exports = {};
-  const re2 = exports.re = [];
-  const safeRe = exports.safeRe = [];
-  const src2 = exports.src = [];
-  const safeSrc = exports.safeSrc = [];
-  const t2 = exports.t = {};
+  exports2 = module2.exports = {};
+  const re2 = exports2.re = [];
+  const safeRe = exports2.safeRe = [];
+  const src2 = exports2.src = [];
+  const safeSrc = exports2.safeSrc = [];
+  const t2 = exports2.t = {};
   let R = 0;
   const LETTERDASHNUMBER = "[a-zA-Z0-9-]";
   const safeRegexReplacements = [
@@ -162040,18 +162027,18 @@ var debug_1 = debug$1;
   createToken("COERCERTLFULL", src2[t2.COERCEFULL], true);
   createToken("LONETILDE", "(?:~>?)");
   createToken("TILDETRIM", `(\\s*)${src2[t2.LONETILDE]}\\s+`, true);
-  exports.tildeTrimReplace = "$1~";
+  exports2.tildeTrimReplace = "$1~";
   createToken("TILDE", `^${src2[t2.LONETILDE]}${src2[t2.XRANGEPLAIN]}$`);
   createToken("TILDELOOSE", `^${src2[t2.LONETILDE]}${src2[t2.XRANGEPLAINLOOSE]}$`);
   createToken("LONECARET", "(?:\\^)");
   createToken("CARETTRIM", `(\\s*)${src2[t2.LONECARET]}\\s+`, true);
-  exports.caretTrimReplace = "$1^";
+  exports2.caretTrimReplace = "$1^";
   createToken("CARET", `^${src2[t2.LONECARET]}${src2[t2.XRANGEPLAIN]}$`);
   createToken("CARETLOOSE", `^${src2[t2.LONECARET]}${src2[t2.XRANGEPLAINLOOSE]}$`);
   createToken("COMPARATORLOOSE", `^${src2[t2.GTLT]}\\s*(${src2[t2.LOOSEPLAIN]})$|^$`);
   createToken("COMPARATOR", `^${src2[t2.GTLT]}\\s*(${src2[t2.FULLPLAIN]})$|^$`);
   createToken("COMPARATORTRIM", `(\\s*)${src2[t2.GTLT]}\\s*(${src2[t2.LOOSEPLAIN]}|${src2[t2.XRANGEPLAIN]})`, true);
-  exports.comparatorTrimReplace = "$1$2$3";
+  exports2.comparatorTrimReplace = "$1$2$3";
   createToken("HYPHENRANGE", `^\\s*(${src2[t2.XRANGEPLAIN]})\\s+-\\s+(${src2[t2.XRANGEPLAIN]})\\s*$`);
   createToken("HYPHENRANGELOOSE", `^\\s*(${src2[t2.XRANGEPLAINLOOSE]})\\s+-\\s+(${src2[t2.XRANGEPLAINLOOSE]})\\s*$`);
   createToken("STAR", "(<|>)?=?\\s*\\*");
@@ -163892,7 +163879,7 @@ class Conf {
     const onChange = () => {
       const oldValue = currentValue;
       const newValue = this.store;
-      if (isDeepStrictEqual(newValue, oldValue)) {
+      if (node_util.isDeepStrictEqual(newValue, oldValue)) {
         return;
       }
       currentValue = newValue;
@@ -163908,7 +163895,7 @@ class Conf {
     const onChange = () => {
       const oldValue = currentValue;
       const newValue = getter();
-      if (isDeepStrictEqual(newValue, oldValue)) {
+      if (node_util.isDeepStrictEqual(newValue, oldValue)) {
         return;
       }
       currentValue = newValue;
@@ -164296,8 +164283,8 @@ const _SettingsStore = class _SettingsStore {
 __publicField2(_SettingsStore, "instance");
 let SettingsStore = _SettingsStore;
 const settingsStore = SettingsStore.getInstance();
-createRequire(import.meta.url);
-const __dirname$1 = require$$1$2.dirname(fileURLToPath(import.meta.url));
+node_module.createRequire(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href);
+const __dirname$1 = require$$1$2.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href));
 process.env.APP_ROOT = require$$1$2.join(__dirname$1, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
 const MAIN_DIST = require$$1$2.join(process.env.APP_ROOT, "dist-electron");
@@ -164306,7 +164293,7 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? require$$1$2.join(process.env.AP
 let win;
 function createWindow() {
   const savedWindowInfo = settingsStore.get("window");
-  win = new BrowserWindow({
+  win = new electron.BrowserWindow({
     icon: require$$1$2.join(process.env.VITE_PUBLIC, "icon.png"),
     //  窗口左上角的图标
     webPreferences: {
@@ -164337,21 +164324,21 @@ function createWindow() {
     win.setMenu(null);
   }
 }
-app$1.on("window-all-closed", () => {
+electron.app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
-    app$1.quit();
+    electron.app.quit();
     win = null;
   }
 });
-app$1.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
+electron.app.on("activate", () => {
+  if (electron.BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
 });
-app$1.on("will-quit", () => {
-  globalShortcut.unregisterAll();
+electron.app.on("will-quit", () => {
+  electron.globalShortcut.unregisterAll();
 });
-app$1.whenReady().then(async () => {
+electron.app.whenReady().then(async () => {
   createWindow();
   init();
   registerHandler();
@@ -164392,7 +164379,7 @@ function sendToRenderer(channel, ...args) {
   return win == null ? void 0 : win.webContents.send(channel, ...args);
 }
 function registerHandler() {
-  ipcMain$1.handle(IpcChannel.LCU_REQUEST, async (_event, method, endpoint, body) => {
+  electron.ipcMain.handle(IpcChannel.LCU_REQUEST, async (_event, method, endpoint, body) => {
     const lcu = LCUManager.getInstance();
     if (!lcu || !lcu.isConnected) {
       console.error("❌ [IPC] LCUManager 尚未连接，无法处理请求");
@@ -164406,13 +164393,11 @@ function registerHandler() {
       return { error: e.message };
     }
   });
-  ipcMain$1.handle(IpcChannel.CONFIG_BACKUP, async (event) => ConfigHelper.backup());
-  ipcMain$1.handle(IpcChannel.CONFIG_RESTORE, async (event) => ConfigHelper.restore());
-  ipcMain$1.handle(IpcChannel.HEX_START, async (event) => hexService.start());
-  ipcMain$1.handle(IpcChannel.HEX_STOP, async (event) => hexService.stop());
+  electron.ipcMain.handle(IpcChannel.CONFIG_BACKUP, async (event) => ConfigHelper.backup());
+  electron.ipcMain.handle(IpcChannel.CONFIG_RESTORE, async (event) => ConfigHelper.restore());
+  electron.ipcMain.handle(IpcChannel.HEX_START, async (event) => hexService.start());
+  electron.ipcMain.handle(IpcChannel.HEX_STOP, async (event) => hexService.stop());
 }
-export {
-  MAIN_DIST,
-  RENDERER_DIST,
-  VITE_DEV_SERVER_URL
-};
+exports.MAIN_DIST = MAIN_DIST;
+exports.RENDERER_DIST = RENDERER_DIST;
+exports.VITE_DEV_SERVER_URL = VITE_DEV_SERVER_URL;
