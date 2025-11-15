@@ -43,7 +43,7 @@ export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
 export const RENDERER_DIST = path.join(process.env.APP_ROOT)    //  renderer的文件路径，很重要
 
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
+process.env.VITE_PUBLIC = is.dev ? path.join(process.env.APP_ROOT, '../public') : RENDERER_DIST
 
 let win: BrowserWindow | null
 
@@ -59,6 +59,8 @@ function createWindow() {
         },
         ...(savedWindowInfo.bounds || {width: 1024, height: 600}),   //  控制窗口位置,第一次打开不会有保存值，就用默认的
     })
+
+    console.log("图标路径为："+path.join(process.env.VITE_PUBLIC, 'icon.png'))
 
     optimizer.watchWindowShortcuts(win) //  监听快捷键，打开F12控制台
 
@@ -94,16 +96,6 @@ function createWindow() {
         // prod: load built index.html
         win.loadFile(path.join(__dirname, 'index.html'))
     }
-
-
-    //  判断是在开发环境还是打包好的程序
-    // if (VITE_DEV_SERVER_URL) {
-    //     win.loadURL(VITE_DEV_SERVER_URL)
-    // } else {
-    //     // win.loadFile('dist/index.html')
-    //     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
-    //     win.setMenu(null) //  release包里面不显示菜单。
-    // }
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -137,11 +129,6 @@ app.whenReady().then(async () => {
 })
 
 function init() {
-
-    //  在这里debug
-    const point = new Point(1, 1)
-    console.log("我们创建的point为：" + point)
-
     //  启动LCUConnector
     const connector = new LCUConnector()
 

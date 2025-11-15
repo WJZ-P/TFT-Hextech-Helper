@@ -12,9 +12,10 @@ import require$$1 from "path";
 import WebSocket from "ws";
 import https from "https";
 import axios from "axios";
+import { screen, Point, mouse, Button, Region } from "@nut-tree-fork/nut-js";
+import { createWorker, PSM } from "tesseract.js";
 import Store from "electron-store";
-import { Point } from "@nut-tree-fork/nut-js";
-import { optimizer, is } from "@electron-toolkit/utils";
+import { is, optimizer } from "@electron-toolkit/utils";
 import __cjs_mod__ from "node:module";
 const __filename = import.meta.filename;
 const __dirname = import.meta.dirname;
@@ -5511,6 +5512,10 @@ class EndState {
 }
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
+const gameStageDisplay = {
+  leftTop: { x: 374, y: 6 },
+  rightBottom: { x: 403, y: 22 }
+};
 class TftOperator {
   static instance;
   //  缓存游戏窗口的左上角坐标
@@ -5546,93 +5551,77 @@ class TftOperator {
       return false;
     }
   }
-  // //  获取当前游戏阶段
-  // public async getGameStage(): Promise<string | null> {
-  //     try {
-  //         const worker = await this.getGameStageWorker();
-  //         // ✨ 3. (重要!) 动态导入 nut-js 的 CJS 方式
-  //         //    因为这是一个 CJS 文件，nut-js 终于可以开心地找到 __dirname 了！
-  //         //  选定坐标并截图
-  //         const screenshot = await screen.grabRegion(this.getStageAbsoluteRegion());
-  //         //  截图结果转buffer识别
-  //         const recognizeResult = await worker.recognize(screenshot.data)
-  //         console.log('[TftOperator] gameStage识别成功：' + recognizeResult.data)
-  //
-  //     } catch (e: any) {
-  //         logger.error(`[TftOperator] nut-js textFinder 失败: ${e.message}`);
-  //         logger.error("请确保 @nut-tree/plugin-ocr 已正确安装和配置！");
-  //         return null;
-  //     }
-  // }
-  //
-  //
-  //     //  处理点击事件
-  //     private async clickAt(offset: Point) {
-  //         if (!this.gameWindowRegion) {
-  //             if (!this.init()) {
-  //                 throw new Error("TftOperator 尚未初始化。");
-  //             }
-  //         }
-  //
-  //         const target = {
-  //             x: this.gameWindowRegion!.x + offset.x,
-  //             y: this.gameWindowRegion!.y + offset.y
-  //         };
-  //
-  //         logger.info(`[TftOperator] 正在点击: (Origin: ${this.gameWindowRegion!.x},${this.gameWindowRegion!.y}) + (Offset: ${offset.x},${offset.y}) -> (Target: ${target.x},${target.y})`);
-  //         try {
-  //             // (重要) nut-js 的 API 需要它们自己的 Point 实例
-  //             const nutPoint = new Point(target.x, target.y);
-  //
-  //             await mouse.move([nutPoint]);
-  //             await new Promise(resolve => setTimeout(resolve, 30));
-  //             await mouse.click(Button.LEFT);
-  //             await new Promise(resolve => setTimeout(resolve, 50));
-  //         } catch (e: any) {
-  //             logger.error(`[TftOperator] 模拟鼠标点击失败: ${e.message}`);
-  //         }
-  //     }
-  //
-  //     // 获取游戏里表示战斗阶段(如1-1)的Region
-  //     private getStageAbsoluteRegion(): Region {
-  //         if (!this.gameWindowRegion) {
-  //             logger.error("[TftOperator] 尝试在 init() 之前计算 Region！");
-  //             // 抛出一个错误或者返回一个默认值，取决于你的健壮性需求
-  //             // 这里我们先假设 init() 总是先被调用
-  //             if (!this.init()) {
-  //                 throw new Error("[TftOperator] 未初始化，请先调用 init()");
-  //             }
-  //         }
-  //
-  //         const originX = this.gameWindowRegion!.x;
-  //         const originY = this.gameWindowRegion!.y;
-  //
-  //         // nut-js 的 Region(x, y, width, height)
-  //         const x = Math.round(originX + gameStageDisplay.leftTop.x);
-  //         const y = Math.round(originY + gameStageDisplay.leftTop.y);
-  //         const width = Math.round(gameStageDisplay.rightBottom.x - gameStageDisplay.leftTop.x);
-  //         const height = Math.round(gameStageDisplay.rightBottom.y - gameStageDisplay.leftTop.y);
-  //
-  //         // ✨ 3. (修改) 返回我们自己的“简单”对象，而不是 nut-js 的 Region
-  //         return new Region(x,y,width,height);
-  //     }
-  //
-  //     //  一个懒加载的 Tesseract worker
-  //     private async getGameStageWorker(): Promise<any> {
-  //         if (this.gameStageWorker) return this.gameStageWorker;
-  //         logger.info("[TftOperator] 正在创建 Tesseract worker...");
-  //         const worker = await createWorker('eng', 1, {
-  //             logger: m => logger.info(`[Tesseract] ${m.status}: ${Math.round(m.progress * 100)}%`)
-  //         })
-  //         await worker.setParameters({
-  //             tessedit_char_whitelist: '0123456789-',
-  //             tessedit_pageseg_mode: PSM.SINGLE_LINE,    //  图片排版模式为简单的单行
-  //         })
-  //         this.gameStageWorker = worker;
-  //         logger.info("[TftOperator] Tesseract worker 准备就绪！");
-  //         return this.gameStageWorker;
-  //     }
-  //
+  //  获取当前游戏阶段
+  async getGameStage() {
+    try {
+      const worker = await this.getGameStageWorker();
+      const screenshot = await screen.grabRegion(this.getStageAbsoluteRegion());
+      const recognizeResult = await worker.recognize(screenshot.data);
+      console.log("[TftOperator] gameStage识别成功：" + recognizeResult.data);
+    } catch (e) {
+      logger.error(`[TftOperator] nut-js textFinder 失败: ${e.message}`);
+      logger.error("请确保 @nut-tree/plugin-ocr 已正确安装和配置！");
+      return null;
+    }
+  }
+  //  处理点击事件
+  async clickAt(offset) {
+    if (!this.gameWindowRegion) {
+      if (!this.init()) {
+        throw new Error("TftOperator 尚未初始化。");
+      }
+    }
+    const target = {
+      x: this.gameWindowRegion.x + offset.x,
+      y: this.gameWindowRegion.y + offset.y
+    };
+    logger.info(`[TftOperator] 正在点击: (Origin: ${this.gameWindowRegion.x},${this.gameWindowRegion.y}) + (Offset: ${offset.x},${offset.y}) -> (Target: ${target.x},${target.y})`);
+    try {
+      const nutPoint = new Point(target.x, target.y);
+      await mouse.move([nutPoint]);
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      await mouse.click(Button.LEFT);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    } catch (e) {
+      logger.error(`[TftOperator] 模拟鼠标点击失败: ${e.message}`);
+    }
+  }
+  // 获取游戏里表示战斗阶段(如1-1)的Region
+  getStageAbsoluteRegion() {
+    if (!this.gameWindowRegion) {
+      logger.error("[TftOperator] 尝试在 init() 之前计算 Region！");
+      if (!this.init()) {
+        throw new Error("[TftOperator] 未初始化，请先调用 init()");
+      }
+    }
+    const originX = this.gameWindowRegion.x;
+    const originY = this.gameWindowRegion.y;
+    const x = Math.round(originX + gameStageDisplay.leftTop.x);
+    const y = Math.round(originY + gameStageDisplay.leftTop.y);
+    const width = Math.round(gameStageDisplay.rightBottom.x - gameStageDisplay.leftTop.x);
+    const height = Math.round(gameStageDisplay.rightBottom.y - gameStageDisplay.leftTop.y);
+    return new Region(x, y, width, height);
+  }
+  //  一个懒加载的 Tesseract worker
+  async getGameStageWorker() {
+    if (this.gameStageWorker) return this.gameStageWorker;
+    logger.info("[TftOperator] 正在创建 Tesseract worker...");
+    const localLangPath = require$$1.join(process.env.VITE_PUBLIC, "resources/tessdata");
+    logger.info(`[TftOperator] Tesseract 本地语言包路径: ${localLangPath}`);
+    const worker = await createWorker("eng", 1, {
+      logger: (m) => logger.info(`[Tesseract] ${m.status}: ${Math.round(m.progress * 100)}%`),
+      langPath: localLangPath,
+      cachePath: localLangPath
+    });
+    await worker.setParameters({
+      tessedit_char_whitelist: "0123456789-",
+      tessedit_pageseg_mode: PSM.SINGLE_LINE
+      //  图片排版模式为简单的单行
+    });
+    this.gameStageWorker = worker;
+    logger.info("[TftOperator] Tesseract worker 准备就绪！");
+    return this.gameStageWorker;
+  }
 }
 const tftOperator = TftOperator.getInstance();
 class GameStageState {
@@ -5914,7 +5903,7 @@ process.env.APP_ROOT = require$$1.join(__dirname, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
 const MAIN_DIST = require$$1.join(process.env.APP_ROOT, "dist-electron");
 const RENDERER_DIST = require$$1.join(process.env.APP_ROOT);
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? require$$1.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
+process.env.VITE_PUBLIC = is.dev ? require$$1.join(process.env.APP_ROOT, "../public") : RENDERER_DIST;
 let win;
 function createWindow() {
   const savedWindowInfo = settingsStore.get("window");
@@ -5930,6 +5919,7 @@ function createWindow() {
     ...savedWindowInfo.bounds || { width: 1024, height: 600 }
     //  控制窗口位置,第一次打开不会有保存值，就用默认的
   });
+  console.log("图标路径为：" + require$$1.join(process.env.VITE_PUBLIC, "icon.png"));
   optimizer.watchWindowShortcuts(win);
   const debouncedSaveBounds = debounce(() => {
     if (!win?.isMaximized() && !win?.isFullScreen()) {
@@ -5972,10 +5962,9 @@ app.whenReady().then(async () => {
   registerHandler();
 });
 function init() {
-  const point = new Point(1, 1);
-  console.log("我们创建的point为：" + point);
   const connector = new LCUConnector();
   tftOperator.init();
+  tftOperator.getGameStage();
   connector.on("connect", (data) => {
     console.log("LOL客户端已登录！", data);
     sendToRenderer("lcu-connect", data);
