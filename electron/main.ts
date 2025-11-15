@@ -1,6 +1,4 @@
-import {app, BrowserWindow, globalShortcut, ipcMain, screen} from 'electron'
-import { createRequire } from 'node:module'
-import {fileURLToPath} from 'node:url'
+import {app, BrowserWindow, globalShortcut, ipcMain} from 'electron'
 import LCUConnector from "../src-backend/lcu/utils/LcuConnector.ts";
 import {ArgsFromIpcChannel, LCUIpcChannels} from "../src-backend/lcu/utils/LCUProtocols.ts";
 import LCUManager from "../src-backend/lcu/LCUManager.ts";
@@ -13,6 +11,8 @@ import {hexService} from "../src-backend/services/HexService.ts";
 import {settingsStore} from "../src-backend/utils/SettingsStore.ts";
 import {debounce} from "../src-backend/utils/HelperTools.ts";
 import {tftOperator} from "../src-backend/TftOperator.ts";
+import {Point} from "@nut-tree-fork/nut-js";
+import {is, optimizer} from "@electron-toolkit/utils";
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -22,8 +22,10 @@ import {tftOperator} from "../src-backend/TftOperator.ts";
  *
  * 然后require也同理，是我们手搓的，因为新版ESM不提供require。
  */
-const require = createRequire(import.meta.url)
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+// const require = createRequire(import.meta.url)
+// const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+//  我们默认是使用cjs打包，就不考虑这个问题了。
 
 // The built directory structure
 //
@@ -39,7 +41,7 @@ process.env.APP_ROOT = path.join(__dirname, '..')
 // 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
 export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
-export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
+export const RENDERER_DIST = path.join(process.env.APP_ROOT)    //  renderer的文件路径，很重要
 
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
 
@@ -50,11 +52,15 @@ function createWindow() {
 
     win = new BrowserWindow({
         icon: path.join(process.env.VITE_PUBLIC, 'icon.png'),//  窗口左上角的图标
+        autoHideMenuBar:true,
         webPreferences: {
-            preload: path.join(__dirname, 'preload.mjs'),// 指定preload文件
+            preload: path.join(__dirname, '../preload/preload.cjs'),// 指定preload文件
+            sandbox: false,
         },
         ...(savedWindowInfo.bounds || {width: 1024, height: 600}),   //  控制窗口位置,第一次打开不会有保存值，就用默认的
     })
+
+    optimizer.watchWindowShortcuts(win) //  监听快捷键，打开F12控制台
 
 
     const debouncedSaveBounds = debounce(() => {
@@ -62,14 +68,14 @@ function createWindow() {
         if (!win?.isMaximized() && !win?.isFullScreen()) {
             settingsStore.set('window.bounds', win?.getBounds());
         }
-    },500)
+    }, 500)
 
     //  监听窗口变化事件
     win.on("resize", debouncedSaveBounds)
     win.on("move", debouncedSaveBounds)
     //  关闭窗口的时候，判断是否是全屏
     win.on("close", () => {
-        settingsStore.set("window.isMaximized",win!.isMaximized())
+        settingsStore.set("window.isMaximized", win!.isMaximized())
     })
 
     //  初始化Logger
@@ -79,16 +85,25 @@ function createWindow() {
     win.webContents.on('did-finish-load', () => {
         win?.webContents.send('main-process-message', (new Date).toLocaleString())
     })
+    //  判断是在开发环境还是打包好的程序
+    if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+        console.log('Renderer URL:', process.env.ELECTRON_RENDERER_URL);
+
+        win.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    } else {
+        // prod: load built index.html
+        win.loadFile(path.join(__dirname, 'index.html'))
+    }
 
 
     //  判断是在开发环境还是打包好的程序
-    if (VITE_DEV_SERVER_URL) {
-        win.loadURL(VITE_DEV_SERVER_URL)
-    } else {
-        // win.loadFile('dist/index.html')
-        win.loadFile(path.join(RENDERER_DIST, 'index.html'))
-        win.setMenu(null) //  release包里面不显示菜单。
-    }
+    // if (VITE_DEV_SERVER_URL) {
+    //     win.loadURL(VITE_DEV_SERVER_URL)
+    // } else {
+    //     // win.loadFile('dist/index.html')
+    //     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
+    //     win.setMenu(null) //  release包里面不显示菜单。
+    // }
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -122,6 +137,10 @@ app.whenReady().then(async () => {
 })
 
 function init() {
+
+    //  在这里debug
+    const point = new Point(1, 1)
+    console.log("我们创建的point为：" + point)
 
     //  启动LCUConnector
     const connector = new LCUConnector()

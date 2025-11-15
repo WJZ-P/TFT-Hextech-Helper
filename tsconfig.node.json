@@ -1,11 +1,13 @@
 {
+  "extends": "@electron-toolkit/tsconfig/tsconfig.node.json",  // ← 用toolkit（含electron-vite/node types）
   "compilerOptions": {
     "composite": true,
     "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
-    "strict": true
+    "strict": true,
+    "types": ["electron-vite/node"]  // ← 加：nut.js Point等Node API类型
   },
-  "include": ["vite.config.ts"]
+  "include": ["electron/**/*.ts", "electron.vite.config.*"]  // ← include你的main/preload + 新config
 }
