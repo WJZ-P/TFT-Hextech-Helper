@@ -5,6 +5,7 @@ import {createWorker, PSM} from "tesseract.js";
 import {screen} from 'electron';
 import {screen as nutScreen} from '@nut-tree-fork/nut-js'
 import path from "path";
+import { ocr } from "@nut-tree-fork/plugin-ocr";
 
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
@@ -62,7 +63,7 @@ class TftOperator {
     public init(): boolean {
         try {
             // 从electron获取屏幕尺寸
-            const primaryDisplay = Electron.screen.getPrimaryDisplay();
+            const primaryDisplay = screen.getPrimaryDisplay();
             const {width: screenWidth, height: screenHeight} = primaryDisplay.size;
             // b. (关键) 计算屏幕中心
             const screenCenterX = screenWidth / 2;
@@ -72,7 +73,7 @@ class TftOperator {
             const originX = screenCenterX - (GAME_WIDTH / 2);
             const originY = screenCenterY - (GAME_HEIGHT / 2);
 
-            // this.gameWindowRegion = new Point(originX,originY);
+            this.gameWindowRegion = new Point(originX,originY);
 
             logger.info(`[TftOperator] 屏幕尺寸: ${screenWidth}x${screenHeight}.`);
             logger.info(`[TftOperator] 游戏基准点 (0,0) 已计算在: (${originX}, ${originY})`);
@@ -92,7 +93,12 @@ class TftOperator {
             // ✨ 3. (重要!) 动态导入 nut-js 的 CJS 方式
             //    因为这是一个 CJS 文件，nut-js 终于可以开心地找到 __dirname 了！
             //  选定坐标并截图
+            console.log("获取到的region:"+this.getStageAbsoluteRegion())
+
             const screenshot = await nutScreen.grabRegion(this.getStageAbsoluteRegion());
+            console.log('截图结果:')
+            console.log(JSON.stringify(screenshot))
+
             //  截图结果转buffer识别
             const recognizeResult = await worker.recognize(screenshot.data)
             console.log('[TftOperator] gameStage识别成功：' + recognizeResult.data)

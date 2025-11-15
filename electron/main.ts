@@ -133,6 +133,8 @@ function init() {
     const connector = new LCUConnector()
 
     tftOperator.init()
+    tftOperator.getGameStage()
+
 
     connector.on('connect', (data) => {
         console.log("LOL客户端已登录！", data);

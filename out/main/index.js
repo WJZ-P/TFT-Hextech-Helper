@@ -1,4 +1,4 @@
-import { app, BrowserWindow, globalShortcut, ipcMain } from "electron";
+import { app, screen, BrowserWindow, globalShortcut, ipcMain } from "electron";
 import { EventEmitter } from "events";
 import require$$1$1 from "os";
 import cp from "child_process";
@@ -12,7 +12,7 @@ import require$$1 from "path";
 import WebSocket from "ws";
 import https from "https";
 import axios from "axios";
-import { screen, Point, mouse, Button, Region } from "@nut-tree-fork/nut-js";
+import { Point, screen as screen$1, mouse, Button, Region } from "@nut-tree-fork/nut-js";
 import { createWorker, PSM } from "tesseract.js";
 import Store from "electron-store";
 import { is, optimizer } from "@electron-toolkit/utils";
@@ -5536,12 +5536,13 @@ class TftOperator {
    */
   init() {
     try {
-      const primaryDisplay = Electron.screen.getPrimaryDisplay();
+      const primaryDisplay = screen.getPrimaryDisplay();
       const { width: screenWidth, height: screenHeight } = primaryDisplay.size;
       const screenCenterX = screenWidth / 2;
       const screenCenterY = screenHeight / 2;
       const originX = screenCenterX - GAME_WIDTH / 2;
       const originY = screenCenterY - GAME_HEIGHT / 2;
+      this.gameWindowRegion = new Point(originX, originY);
       logger.info(`[TftOperator] 屏幕尺寸: ${screenWidth}x${screenHeight}.`);
       logger.info(`[TftOperator] 游戏基准点 (0,0) 已计算在: (${originX}, ${originY})`);
       return true;
@@ -5555,7 +5556,10 @@ class TftOperator {
   async getGameStage() {
     try {
       const worker = await this.getGameStageWorker();
-      const screenshot = await screen.grabRegion(this.getStageAbsoluteRegion());
+      console.log("获取到的region:" + this.getStageAbsoluteRegion());
+      const screenshot = await screen$1.grabRegion(this.getStageAbsoluteRegion());
+      console.log("截图结果:");
+      console.log(JSON.stringify(screenshot));
       const recognizeResult = await worker.recognize(screenshot.data);
       console.log("[TftOperator] gameStage识别成功：" + recognizeResult.data);
     } catch (e) {
