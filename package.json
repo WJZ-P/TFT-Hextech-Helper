@@ -29,6 +29,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.9.3",
+    "sharp": "^0.34.5",
     "styled-components": "^6.1.19",
     "tesseract.js": "^6.0.1",
     "utf-8-validate": "^6.0.5",

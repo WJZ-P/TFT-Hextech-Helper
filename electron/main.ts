@@ -131,10 +131,8 @@ app.whenReady().then(async () => {
 function init() {
     //  启动LCUConnector
     const connector = new LCUConnector()
-
+    //  初始化操作器
     tftOperator.init()
-    tftOperator.getGameStage()
-
 
     connector.on('connect', (data) => {
         console.log("LOL客户端已登录！", data);

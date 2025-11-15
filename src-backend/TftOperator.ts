@@ -5,7 +5,7 @@ import {createWorker, PSM} from "tesseract.js";
 import {screen} from 'electron';
 import {screen as nutScreen} from '@nut-tree-fork/nut-js'
 import path from "path";
-import { ocr } from "@nut-tree-fork/plugin-ocr";
+import sharp from 'sharp';
 
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
@@ -73,7 +73,7 @@ class TftOperator {
             const originX = screenCenterX - (GAME_WIDTH / 2);
             const originY = screenCenterY - (GAME_HEIGHT / 2);
 
-            this.gameWindowRegion = new Point(originX,originY);
+            this.gameWindowRegion = new Point(originX, originY);
 
             logger.info(`[TftOperator] 屏幕尺寸: ${screenWidth}x${screenHeight}.`);
             logger.info(`[TftOperator] 游戏基准点 (0,0) 已计算在: (${originX}, ${originY})`);
@@ -93,15 +93,26 @@ class TftOperator {
             // ✨ 3. (重要!) 动态导入 nut-js 的 CJS 方式
             //    因为这是一个 CJS 文件，nut-js 终于可以开心地找到 __dirname 了！
             //  选定坐标并截图
-            console.log("获取到的region:"+this.getStageAbsoluteRegion())
+            console.log("获取到的region:" + this.getStageAbsoluteRegion())
 
             const screenshot = await nutScreen.grabRegion(this.getStageAbsoluteRegion());
-            console.log('截图结果:')
-            console.log(JSON.stringify(screenshot))
+            //  识别之前，要做一次转换，因为screenshot.data是原始的数据，转成图片格式。
+            const pngBuffer = await sharp(screenshot.data, {
+                raw: {
+                    width: screenshot.width,
+                    height: screenshot.height,
+                    channels: 4, // RGBA四通道
+                }
+            })
+                // sharp 默认按 RGBA 处理，但输入是 BGRA，需要 swizzle 一下
+                .removeAlpha()
+                .toFormat('png')
+                .toBuffer();
 
             //  截图结果转buffer识别
-            const recognizeResult = await worker.recognize(screenshot.data)
-            console.log('[TftOperator] gameStage识别成功：' + recognizeResult.data)
+            const recognizeResult = await worker.recognize(pngBuffer)
+            console.log('[TftOperator] gameStage识别成功：')
+            console.log(recognizeResult)
 
         } catch (e: any) {
             logger.error(`[TftOperator] nut-js textFinder 失败: ${e.message}`);

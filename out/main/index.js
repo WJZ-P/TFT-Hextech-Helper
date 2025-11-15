@@ -14,6 +14,7 @@ import https from "https";
 import axios from "axios";
 import { Point, screen as screen$1, mouse, Button, Region } from "@nut-tree-fork/nut-js";
 import { createWorker, PSM } from "tesseract.js";
+import sharp from "sharp";
 import Store from "electron-store";
 import { is, optimizer } from "@electron-toolkit/utils";
 import __cjs_mod__ from "node:module";
@@ -5558,10 +5559,17 @@ class TftOperator {
       const worker = await this.getGameStageWorker();
       console.log("获取到的region:" + this.getStageAbsoluteRegion());
       const screenshot = await screen$1.grabRegion(this.getStageAbsoluteRegion());
-      console.log("截图结果:");
-      console.log(JSON.stringify(screenshot));
-      const recognizeResult = await worker.recognize(screenshot.data);
-      console.log("[TftOperator] gameStage识别成功：" + recognizeResult.data);
+      const pngBuffer = await sharp(screenshot.data, {
+        raw: {
+          width: screenshot.width,
+          height: screenshot.height,
+          channels: 4
+          // RGBA四通道
+        }
+      }).removeAlpha().toFormat("png").toBuffer();
+      const recognizeResult = await worker.recognize(pngBuffer);
+      console.log("[TftOperator] gameStage识别成功：");
+      console.log(recognizeResult);
     } catch (e) {
       logger.error(`[TftOperator] nut-js textFinder 失败: ${e.message}`);
       logger.error("请确保 @nut-tree/plugin-ocr 已正确安装和配置！");
