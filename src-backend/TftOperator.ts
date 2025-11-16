@@ -11,6 +11,17 @@ import {sleep} from "./utils/HelperTools";
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
 
+//  当前购买栏中的单个对象信息。
+export interface ShopUnit {
+    slot: number;
+    name: string | null;   // OCR 识别到的名字；识别不到就 null
+    cost: number | null;   // 武斗、3 费、4 费可用颜色判断（可选）
+}
+export interface ShopState {
+    units: ShopUnit[];     // 五个格子的所有单位
+    timestamp: number;     // 更新时间戳（可选）
+}
+
 //  当前下棋的游戏模式
 enum GAME_TYPE {
     CLASSIC,    //  经典
@@ -25,6 +36,31 @@ const shopSlot = {
     SHOP_SLOT_4: new Point(660, 700),
     SHOP_SLOT_5: new Point(800, 700),
 }
+//  英雄购买槽英雄名字Region
+const shopSlotNameRegions = {
+    SLOT_1: {
+        leftTop: {x: 173, y: 740},
+        rightBottom: {x: 281, y: 758}
+    },
+    SLOT_2: {
+        leftTop: {x: 315, y: 740},
+        rightBottom: {x: 423, y: 758}
+    },
+    SLOT_3: {
+        leftTop: {x: 459, y: 740},
+        rightBottom: {x: 567, y: 758}
+    },
+    SLOT_4: {
+        leftTop: {x: 602, y: 740},
+        rightBottom: {x: 710, y: 758}
+    },
+    SLOT_5: {
+        leftTop: {x: 746, y: 740},
+        rightBottom: {x: 854, y: 758}
+    },
+}
+
+
 //  装备槽位坐标
 const equipmentSlot = {
     EQ_SLOT_1: new Point(20, 210),//+35
@@ -87,7 +123,6 @@ const benchSlot = { //  x+=75
     SLOT_10: new Point(810, 555),
 }
 
-//215,410
 //  海克斯选择槽位
 const hexSlot = {   //  x+=295
     SLOT_1: new Point(215, 410),
