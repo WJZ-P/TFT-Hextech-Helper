@@ -6,6 +6,7 @@ import {screen} from 'electron';
 import {screen as nutScreen} from '@nut-tree-fork/nut-js'
 import path from "path";
 import sharp from 'sharp';
+import fs from "fs-extra";
 
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
@@ -34,8 +35,13 @@ const equipmentSlot = {
 
 //  选秀站位，为离自己最近的棋子位置。
 const sharedDraftPoint = {x: 530, y: 400}
-//  游戏战斗阶段展示坐标，如1-2，1-3等
-const gameStageDisplay = {
+//  游戏战斗阶段展示坐标，第一阶段。因为第一阶段只有四个回合，跟其他阶段的不一样。
+const gameStageDisplayStageOne = {
+    leftTop: {x: 411, y: 6},
+    rightBottom: {x: 442, y: 22}
+}
+//  游戏战斗阶段展示坐标，从2-1开始。
+const gameStageDisplayNormal = {
     leftTop: {x: 374, y: 6},
     rightBottom: {x: 403, y: 22}
 }
@@ -90,14 +96,10 @@ class TftOperator {
     public async getGameStage(): Promise<string | null> {
         try {
             const worker = await this.getGameStageWorker();
-            // ✨ 3. (重要!) 动态导入 nut-js 的 CJS 方式
-            //    因为这是一个 CJS 文件，nut-js 终于可以开心地找到 __dirname 了！
-            //  选定坐标并截图
-            console.log("获取到的region:" + this.getStageAbsoluteRegion())
 
-            const screenshot = await nutScreen.grabRegion(this.getStageAbsoluteRegion());
+            let screenshot = await nutScreen.grabRegion(this.getStageAbsoluteRegion());
             //  识别之前，要做一次转换，因为screenshot.data是原始的数据，转成图片格式。
-            const pngBuffer = await sharp(screenshot.data, {
+            let pngBuffer = await sharp(screenshot.data, {
                 raw: {
                     width: screenshot.width,
                     height: screenshot.height,
@@ -109,16 +111,48 @@ class TftOperator {
                 .toFormat('png')
                 .toBuffer();
 
+            const debugPath1 = path.join(process.env.VITE_PUBLIC, 'stage_normal.png')
+            console.log('图片路径为' + debugPath1)
+            fs.writeFileSync(debugPath1, pngBuffer);
+
             //  截图结果转buffer识别
-            const recognizeResult = await worker.recognize(pngBuffer)
-            console.log('[TftOperator] gameStage识别成功：')
-            console.log(recognizeResult)
+            let recognizeResult = await worker.recognize(pngBuffer)
+            let resStr: string = recognizeResult.data.text
+            console.log('[TftOperator] gameStage识别结果：' + resStr)
+            if (resStr.trim() === "") {
+                console.log('[TftOperator] gameStage识别失败，当前可能为第一战斗阶段')
+                screenshot = await nutScreen.grabRegion(this.getStageAbsoluteRegion(true))
+                pngBuffer = await sharp(screenshot.data, {
+                    raw: {
+                        width: screenshot.width,
+                        height: screenshot.height,
+                        channels: 4, // RGBA四通道
+                    }
+                })
+                    // sharp 默认按 RGBA 处理，但输入是 BGRA，需要 swizzle 一下
+                    .removeAlpha()
+                    .toFormat('png')
+                    .toBuffer();
+
+                const debugPath1 = path.join(process.env.VITE_PUBLIC, 'stage_one.png')
+                console.log('图片路径为' + debugPath1)
+                fs.writeFileSync(debugPath1, pngBuffer);
+
+                recognizeResult = await worker.recognize(pngBuffer)
+                resStr = recognizeResult.data.text
+                console.log('[TftOperator] gameStage识别结果：' + resStr)
+            }
 
         } catch (e: any) {
             logger.error(`[TftOperator] nut-js textFinder 失败: ${e.message}`);
             logger.error("请确保 @nut-tree/plugin-ocr 已正确安装和配置！");
             return null;
         }
+    }
+
+    //  购买棋子
+    public buyAtSlot(slot: number) {
+
     }
 
 
@@ -150,7 +184,7 @@ class TftOperator {
     }
 
     // 获取游戏里表示战斗阶段(如1-1)的Region
-    private getStageAbsoluteRegion(): Region {
+    private getStageAbsoluteRegion(isStageOne: boolean = false): Region {
         if (!this.gameWindowRegion) {
             logger.error("[TftOperator] 尝试在 init() 之前计算 Region！");
             // 抛出一个错误或者返回一个默认值，取决于你的健壮性需求
@@ -164,10 +198,10 @@ class TftOperator {
         const originY = this.gameWindowRegion!.y;
 
         // nut-js 的 Region(x, y, width, height)
-        const x = Math.round(originX + gameStageDisplay.leftTop.x);
-        const y = Math.round(originY + gameStageDisplay.leftTop.y);
-        const width = Math.round(gameStageDisplay.rightBottom.x - gameStageDisplay.leftTop.x);
-        const height = Math.round(gameStageDisplay.rightBottom.y - gameStageDisplay.leftTop.y);
+        const x = Math.round(originX + isStageOne ? gameStageDisplayStageOne.leftTop.x : gameStageDisplayNormal.leftTop.x);
+        const y = Math.round(originY + isStageOne ? gameStageDisplayStageOne.leftTop.y : gameStageDisplayNormal.leftTop.y);
+        const width = isStageOne ? Math.round(gameStageDisplayStageOne.rightBottom.x - gameStageDisplayStageOne.leftTop.x) : Math.round(gameStageDisplayNormal.rightBottom.x - gameStageDisplayNormal.leftTop.x);
+        const height = isStageOne ? Math.round(gameStageDisplayStageOne.rightBottom.y - gameStageDisplayStageOne.leftTop.y) : Math.round(gameStageDisplayNormal.rightBottom.y - gameStageDisplayNormal.leftTop.y);
 
         // ✨ 3. (修改) 返回我们自己的“简单”对象，而不是 nut-js 的 Region
         return new Region(x, y, width, height);

@@ -1,14 +1,14 @@
 import { app, screen, BrowserWindow, globalShortcut, ipcMain } from "electron";
 import { EventEmitter } from "events";
-import require$$1$1 from "os";
+import require$$1 from "os";
 import cp from "child_process";
-import path from "node:path";
+import path$1 from "node:path";
 import require$$0$2 from "fs";
 import require$$0 from "constants";
 import require$$0$1 from "stream";
 import require$$4 from "util";
 import require$$5 from "assert";
-import require$$1 from "path";
+import path from "path";
 import WebSocket from "ws";
 import https from "https";
 import axios from "axios";
@@ -927,9 +927,9 @@ var hasRequiredWin32;
 function requireWin32() {
   if (hasRequiredWin32) return win32;
   hasRequiredWin32 = 1;
-  const path2 = require$$1;
+  const path$12 = path;
   function getRootPath(p) {
-    p = path2.normalize(path2.resolve(p)).split(path2.sep);
+    p = path$12.normalize(path$12.resolve(p)).split(path$12.sep);
     if (p.length > 0) return p[0];
     return null;
   }
@@ -951,7 +951,7 @@ function requireMkdirs$1() {
   if (hasRequiredMkdirs$1) return mkdirs_1$1;
   hasRequiredMkdirs$1 = 1;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const invalidWin32Path = requireWin32().invalidWin32Path;
   const o777 = parseInt("0777", 8);
   function mkdirs(p, opts, callback, made) {
@@ -974,7 +974,7 @@ function requireMkdirs$1() {
     if (!made) made = null;
     callback = callback || function() {
     };
-    p = path2.resolve(p);
+    p = path$12.resolve(p);
     xfs.mkdir(p, mode, (er) => {
       if (!er) {
         made = made || p;
@@ -982,8 +982,8 @@ function requireMkdirs$1() {
       }
       switch (er.code) {
         case "ENOENT":
-          if (path2.dirname(p) === p) return callback(er);
-          mkdirs(path2.dirname(p), opts, (er2, made2) => {
+          if (path$12.dirname(p) === p) return callback(er);
+          mkdirs(path$12.dirname(p), opts, (er2, made2) => {
             if (er2) callback(er2, made2);
             else mkdirs(p, opts, callback, made2);
           });
@@ -1009,7 +1009,7 @@ function requireMkdirsSync() {
   if (hasRequiredMkdirsSync) return mkdirsSync_1;
   hasRequiredMkdirsSync = 1;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const invalidWin32Path = requireWin32().invalidWin32Path;
   const o777 = parseInt("0777", 8);
   function mkdirsSync(p, opts, made) {
@@ -1027,14 +1027,14 @@ function requireMkdirsSync() {
       mode = o777 & ~process.umask();
     }
     if (!made) made = null;
-    p = path2.resolve(p);
+    p = path$12.resolve(p);
     try {
       xfs.mkdirSync(p, mode);
       made = made || p;
     } catch (err0) {
       if (err0.code === "ENOENT") {
-        if (path2.dirname(p) === p) throw err0;
-        made = mkdirsSync(path2.dirname(p), opts, made);
+        if (path$12.dirname(p) === p) throw err0;
+        made = mkdirsSync(path$12.dirname(p), opts, made);
         mkdirsSync(p, opts, made);
       } else {
         let stat2;
@@ -1076,11 +1076,11 @@ function requireUtimes() {
   if (hasRequiredUtimes) return utimes;
   hasRequiredUtimes = 1;
   const fs2 = requireGracefulFs();
-  const os = require$$1$1;
-  const path2 = require$$1;
+  const os = require$$1;
+  const path$12 = path;
   function hasMillisResSync() {
-    let tmpfile = path2.join("millis-test-sync" + Date.now().toString() + Math.random().toString().slice(2));
-    tmpfile = path2.join(os.tmpdir(), tmpfile);
+    let tmpfile = path$12.join("millis-test-sync" + Date.now().toString() + Math.random().toString().slice(2));
+    tmpfile = path$12.join(os.tmpdir(), tmpfile);
     const d = /* @__PURE__ */ new Date(1435410243862);
     fs2.writeFileSync(tmpfile, "https://github.com/jprichardson/node-fs-extra/pull/141");
     const fd = fs2.openSync(tmpfile, "r+");
@@ -1089,8 +1089,8 @@ function requireUtimes() {
     return fs2.statSync(tmpfile).mtime > 1435410243e3;
   }
   function hasMillisRes(callback) {
-    let tmpfile = path2.join("millis-test" + Date.now().toString() + Math.random().toString().slice(2));
-    tmpfile = path2.join(os.tmpdir(), tmpfile);
+    let tmpfile = path$12.join("millis-test" + Date.now().toString() + Math.random().toString().slice(2));
+    tmpfile = path$12.join(os.tmpdir(), tmpfile);
     const d = /* @__PURE__ */ new Date(1435410243862);
     fs2.writeFile(tmpfile, "https://github.com/jprichardson/node-fs-extra/pull/141", (err) => {
       if (err) return callback(err);
@@ -1118,8 +1118,8 @@ function requireUtimes() {
       throw new Error("fs-extra: timeRemoveMillis() unknown parameter type");
     }
   }
-  function utimesMillis(path3, atime, mtime, callback) {
-    fs2.open(path3, "r+", (err, fd) => {
+  function utimesMillis(path2, atime, mtime, callback) {
+    fs2.open(path2, "r+", (err, fd) => {
       if (err) return callback(err);
       fs2.futimes(fd, atime, mtime, (futimesErr) => {
         fs2.close(fd, (closeErr) => {
@@ -1128,8 +1128,8 @@ function requireUtimes() {
       });
     });
   }
-  function utimesMillisSync(path3, atime, mtime) {
-    const fd = fs2.openSync(path3, "r+");
+  function utimesMillisSync(path2, atime, mtime) {
+    const fd = fs2.openSync(path2, "r+");
     fs2.futimesSync(fd, atime, mtime);
     return fs2.closeSync(fd);
   }
@@ -1148,7 +1148,7 @@ function requireStat() {
   if (hasRequiredStat) return stat;
   hasRequiredStat = 1;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const NODE_VERSION_MAJOR_WITH_BIGINT = 10;
   const NODE_VERSION_MINOR_WITH_BIGINT = 5;
   const NODE_VERSION_PATCH_WITH_BIGINT = 0;
@@ -1238,9 +1238,9 @@ function requireStat() {
     return { srcStat, destStat };
   }
   function checkParentPaths(src, srcStat, dest, funcName, cb) {
-    const srcParent = path2.resolve(path2.dirname(src));
-    const destParent = path2.resolve(path2.dirname(dest));
-    if (destParent === srcParent || destParent === path2.parse(destParent).root) return cb();
+    const srcParent = path$12.resolve(path$12.dirname(src));
+    const destParent = path$12.resolve(path$12.dirname(dest));
+    if (destParent === srcParent || destParent === path$12.parse(destParent).root) return cb();
     if (nodeSupportsBigInt()) {
       fs2.stat(destParent, { bigint: true }, (err, destStat) => {
         if (err) {
@@ -1266,9 +1266,9 @@ function requireStat() {
     }
   }
   function checkParentPathsSync(src, srcStat, dest, funcName) {
-    const srcParent = path2.resolve(path2.dirname(src));
-    const destParent = path2.resolve(path2.dirname(dest));
-    if (destParent === srcParent || destParent === path2.parse(destParent).root) return;
+    const srcParent = path$12.resolve(path$12.dirname(src));
+    const destParent = path$12.resolve(path$12.dirname(dest));
+    if (destParent === srcParent || destParent === path$12.parse(destParent).root) return;
     let destStat;
     try {
       if (nodeSupportsBigInt()) {
@@ -1286,8 +1286,8 @@ function requireStat() {
     return checkParentPathsSync(src, srcStat, destParent, funcName);
   }
   function isSrcSubdir(src, dest) {
-    const srcArr = path2.resolve(src).split(path2.sep).filter((i) => i);
-    const destArr = path2.resolve(dest).split(path2.sep).filter((i) => i);
+    const srcArr = path$12.resolve(src).split(path$12.sep).filter((i) => i);
+    const destArr = path$12.resolve(dest).split(path$12.sep).filter((i) => i);
     return srcArr.reduce((acc, cur, i) => acc && destArr[i] === cur, true);
   }
   function errMsg(src, dest, funcName) {
@@ -1325,7 +1325,7 @@ function requireCopySync$1() {
   if (hasRequiredCopySync$1) return copySync_1;
   hasRequiredCopySync$1 = 1;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const mkdirpSync = requireMkdirs().mkdirsSync;
   const utimesSync = requireUtimes().utimesMillisSync;
   const stat2 = requireStat();
@@ -1347,7 +1347,7 @@ function requireCopySync$1() {
   }
   function handleFilterAndCopy(destStat, src, dest, opts) {
     if (opts.filter && !opts.filter(src, dest)) return;
-    const destParent = path2.dirname(dest);
+    const destParent = path$12.dirname(dest);
     if (!fs2.existsSync(destParent)) mkdirpSync(destParent);
     return startCopy(destStat, src, dest, opts);
   }
@@ -1416,15 +1416,15 @@ function requireCopySync$1() {
     fs2.readdirSync(src).forEach((item) => copyDirItem(item, src, dest, opts));
   }
   function copyDirItem(item, src, dest, opts) {
-    const srcItem = path2.join(src, item);
-    const destItem = path2.join(dest, item);
+    const srcItem = path$12.join(src, item);
+    const destItem = path$12.join(dest, item);
     const { destStat } = stat2.checkPathsSync(srcItem, destItem, "copy");
     return startCopy(destStat, srcItem, destItem, opts);
   }
   function onLink(destStat, src, dest, opts) {
     let resolvedSrc = fs2.readlinkSync(src);
     if (opts.dereference) {
-      resolvedSrc = path2.resolve(process.cwd(), resolvedSrc);
+      resolvedSrc = path$12.resolve(process.cwd(), resolvedSrc);
     }
     if (!destStat) {
       return fs2.symlinkSync(resolvedSrc, dest);
@@ -1437,7 +1437,7 @@ function requireCopySync$1() {
         throw err;
       }
       if (opts.dereference) {
-        resolvedDest = path2.resolve(process.cwd(), resolvedDest);
+        resolvedDest = path$12.resolve(process.cwd(), resolvedDest);
       }
       if (stat2.isSrcSubdir(resolvedSrc, resolvedDest)) {
         throw new Error(`Cannot copy '${resolvedSrc}' to a subdirectory of itself, '${resolvedDest}'.`);
@@ -1487,7 +1487,7 @@ function requireCopy$1() {
   if (hasRequiredCopy$1) return copy_1;
   hasRequiredCopy$1 = 1;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const mkdirp = requireMkdirs().mkdirs;
   const pathExists = requirePathExists().pathExists;
   const utimes2 = requireUtimes().utimesMillis;
@@ -1520,7 +1520,7 @@ function requireCopy$1() {
     });
   }
   function checkParentDir(destStat, src, dest, opts, cb) {
-    const destParent = path2.dirname(dest);
+    const destParent = path$12.dirname(dest);
     pathExists(destParent, (err, dirExists) => {
       if (err) return cb(err);
       if (dirExists) return startCopy(destStat, src, dest, opts, cb);
@@ -1616,8 +1616,8 @@ function requireCopy$1() {
     return copyDirItem(items, item, src, dest, opts, cb);
   }
   function copyDirItem(items, item, src, dest, opts, cb) {
-    const srcItem = path2.join(src, item);
-    const destItem = path2.join(dest, item);
+    const srcItem = path$12.join(src, item);
+    const destItem = path$12.join(dest, item);
     stat2.checkPaths(srcItem, destItem, "copy", (err, stats) => {
       if (err) return cb(err);
       const { destStat } = stats;
@@ -1631,7 +1631,7 @@ function requireCopy$1() {
     fs2.readlink(src, (err, resolvedSrc) => {
       if (err) return cb(err);
       if (opts.dereference) {
-        resolvedSrc = path2.resolve(process.cwd(), resolvedSrc);
+        resolvedSrc = path$12.resolve(process.cwd(), resolvedSrc);
       }
       if (!destStat) {
         return fs2.symlink(resolvedSrc, dest, cb);
@@ -1642,7 +1642,7 @@ function requireCopy$1() {
             return cb(err2);
           }
           if (opts.dereference) {
-            resolvedDest = path2.resolve(process.cwd(), resolvedDest);
+            resolvedDest = path$12.resolve(process.cwd(), resolvedDest);
           }
           if (stat2.isSrcSubdir(resolvedSrc, resolvedDest)) {
             return cb(new Error(`Cannot copy '${resolvedSrc}' to a subdirectory of itself, '${resolvedDest}'.`));
@@ -1681,7 +1681,7 @@ function requireRimraf() {
   if (hasRequiredRimraf) return rimraf_1;
   hasRequiredRimraf = 1;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const assert = require$$5;
   const isWindows = process.platform === "win32";
   function defaults(options) {
@@ -1835,7 +1835,7 @@ function requireRimraf() {
       let errState;
       if (n === 0) return options.rmdir(p, cb);
       files.forEach((f) => {
-        rimraf(path2.join(p, f), options, (er2) => {
+        rimraf(path$12.join(p, f), options, (er2) => {
           if (errState) {
             return;
           }
@@ -1903,7 +1903,7 @@ function requireRimraf() {
   function rmkidsSync(p, options) {
     assert(p);
     assert(options);
-    options.readdirSync(p).forEach((f) => rimrafSync(path2.join(p, f), options));
+    options.readdirSync(p).forEach((f) => rimrafSync(path$12.join(p, f), options));
     if (isWindows) {
       const startTime = Date.now();
       do {
@@ -1942,7 +1942,7 @@ function requireEmpty() {
   hasRequiredEmpty = 1;
   const u = requireUniversalify().fromCallback;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const mkdir = requireMkdirs();
   const remove2 = requireRemove();
   const emptyDir = u(function emptyDir2(dir, callback) {
@@ -1950,7 +1950,7 @@ function requireEmpty() {
     };
     fs2.readdir(dir, (err, items) => {
       if (err) return mkdir.mkdirs(dir, callback);
-      items = items.map((item) => path2.join(dir, item));
+      items = items.map((item) => path$12.join(dir, item));
       deleteItem();
       function deleteItem() {
         const item = items.pop();
@@ -1970,7 +1970,7 @@ function requireEmpty() {
       return mkdir.mkdirsSync(dir);
     }
     items.forEach((item) => {
-      item = path2.join(dir, item);
+      item = path$12.join(dir, item);
       remove2.removeSync(item);
     });
   }
@@ -1988,7 +1988,7 @@ function requireFile() {
   if (hasRequiredFile) return file;
   hasRequiredFile = 1;
   const u = requireUniversalify().fromCallback;
-  const path2 = require$$1;
+  const path$12 = path;
   const fs2 = requireGracefulFs();
   const mkdir = requireMkdirs();
   const pathExists = requirePathExists().pathExists;
@@ -2001,7 +2001,7 @@ function requireFile() {
     }
     fs2.stat(file2, (err, stats) => {
       if (!err && stats.isFile()) return callback();
-      const dir = path2.dirname(file2);
+      const dir = path$12.dirname(file2);
       pathExists(dir, (err2, dirExists) => {
         if (err2) return callback(err2);
         if (dirExists) return makeFile();
@@ -2019,7 +2019,7 @@ function requireFile() {
     } catch (e) {
     }
     if (stats && stats.isFile()) return;
-    const dir = path2.dirname(file2);
+    const dir = path$12.dirname(file2);
     if (!fs2.existsSync(dir)) {
       mkdir.mkdirsSync(dir);
     }
@@ -2037,7 +2037,7 @@ function requireLink() {
   if (hasRequiredLink) return link;
   hasRequiredLink = 1;
   const u = requireUniversalify().fromCallback;
-  const path2 = require$$1;
+  const path$12 = path;
   const fs2 = requireGracefulFs();
   const mkdir = requireMkdirs();
   const pathExists = requirePathExists().pathExists;
@@ -2056,7 +2056,7 @@ function requireLink() {
           err2.message = err2.message.replace("lstat", "ensureLink");
           return callback(err2);
         }
-        const dir = path2.dirname(dstpath);
+        const dir = path$12.dirname(dstpath);
         pathExists(dir, (err3, dirExists) => {
           if (err3) return callback(err3);
           if (dirExists) return makeLink(srcpath, dstpath);
@@ -2077,7 +2077,7 @@ function requireLink() {
       err.message = err.message.replace("lstat", "ensureLink");
       throw err;
     }
-    const dir = path2.dirname(dstpath);
+    const dir = path$12.dirname(dstpath);
     const dirExists = fs2.existsSync(dir);
     if (dirExists) return fs2.linkSync(srcpath, dstpath);
     mkdir.mkdirsSync(dir);
@@ -2094,11 +2094,11 @@ var hasRequiredSymlinkPaths;
 function requireSymlinkPaths() {
   if (hasRequiredSymlinkPaths) return symlinkPaths_1;
   hasRequiredSymlinkPaths = 1;
-  const path2 = require$$1;
+  const path$12 = path;
   const fs2 = requireGracefulFs();
   const pathExists = requirePathExists().pathExists;
   function symlinkPaths(srcpath, dstpath, callback) {
-    if (path2.isAbsolute(srcpath)) {
+    if (path$12.isAbsolute(srcpath)) {
       return fs2.lstat(srcpath, (err) => {
         if (err) {
           err.message = err.message.replace("lstat", "ensureSymlink");
@@ -2110,8 +2110,8 @@ function requireSymlinkPaths() {
         });
       });
     } else {
-      const dstdir = path2.dirname(dstpath);
-      const relativeToDst = path2.join(dstdir, srcpath);
+      const dstdir = path$12.dirname(dstpath);
+      const relativeToDst = path$12.join(dstdir, srcpath);
       return pathExists(relativeToDst, (err, exists) => {
         if (err) return callback(err);
         if (exists) {
@@ -2127,7 +2127,7 @@ function requireSymlinkPaths() {
             }
             return callback(null, {
               "toCwd": srcpath,
-              "toDst": path2.relative(dstdir, srcpath)
+              "toDst": path$12.relative(dstdir, srcpath)
             });
           });
         }
@@ -2136,7 +2136,7 @@ function requireSymlinkPaths() {
   }
   function symlinkPathsSync(srcpath, dstpath) {
     let exists;
-    if (path2.isAbsolute(srcpath)) {
+    if (path$12.isAbsolute(srcpath)) {
       exists = fs2.existsSync(srcpath);
       if (!exists) throw new Error("absolute srcpath does not exist");
       return {
@@ -2144,8 +2144,8 @@ function requireSymlinkPaths() {
         "toDst": srcpath
       };
     } else {
-      const dstdir = path2.dirname(dstpath);
-      const relativeToDst = path2.join(dstdir, srcpath);
+      const dstdir = path$12.dirname(dstpath);
+      const relativeToDst = path$12.join(dstdir, srcpath);
       exists = fs2.existsSync(relativeToDst);
       if (exists) {
         return {
@@ -2157,7 +2157,7 @@ function requireSymlinkPaths() {
         if (!exists) throw new Error("relative srcpath does not exist");
         return {
           "toCwd": srcpath,
-          "toDst": path2.relative(dstdir, srcpath)
+          "toDst": path$12.relative(dstdir, srcpath)
         };
       }
     }
@@ -2206,7 +2206,7 @@ function requireSymlink() {
   if (hasRequiredSymlink) return symlink;
   hasRequiredSymlink = 1;
   const u = requireUniversalify().fromCallback;
-  const path2 = require$$1;
+  const path$12 = path;
   const fs2 = requireGracefulFs();
   const _mkdirs = requireMkdirs();
   const mkdirs = _mkdirs.mkdirs;
@@ -2229,7 +2229,7 @@ function requireSymlink() {
         srcpath = relative.toDst;
         symlinkType(relative.toCwd, type, (err3, type2) => {
           if (err3) return callback(err3);
-          const dir = path2.dirname(dstpath);
+          const dir = path$12.dirname(dstpath);
           pathExists(dir, (err4, dirExists) => {
             if (err4) return callback(err4);
             if (dirExists) return fs2.symlink(srcpath, dstpath, type2, callback);
@@ -2248,7 +2248,7 @@ function requireSymlink() {
     const relative = symlinkPathsSync(srcpath, dstpath);
     srcpath = relative.toDst;
     type = symlinkTypeSync(relative.toCwd, type);
-    const dir = path2.dirname(dstpath);
+    const dir = path$12.dirname(dstpath);
     const exists = fs2.existsSync(dir);
     if (exists) return fs2.symlinkSync(srcpath, dstpath, type);
     mkdirsSync(dir);
@@ -2423,7 +2423,7 @@ var hasRequiredOutputJson;
 function requireOutputJson() {
   if (hasRequiredOutputJson) return outputJson_1;
   hasRequiredOutputJson = 1;
-  const path2 = require$$1;
+  const path$12 = path;
   const mkdir = requireMkdirs();
   const pathExists = requirePathExists().pathExists;
   const jsonFile = requireJsonfile();
@@ -2432,7 +2432,7 @@ function requireOutputJson() {
       callback = options;
       options = {};
     }
-    const dir = path2.dirname(file2);
+    const dir = path$12.dirname(file2);
     pathExists(dir, (err, itDoes) => {
       if (err) return callback(err);
       if (itDoes) return jsonFile.writeJson(file2, data, options, callback);
@@ -2451,11 +2451,11 @@ function requireOutputJsonSync() {
   if (hasRequiredOutputJsonSync) return outputJsonSync_1;
   hasRequiredOutputJsonSync = 1;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const mkdir = requireMkdirs();
   const jsonFile = requireJsonfile();
   function outputJsonSync(file2, data, options) {
-    const dir = path2.dirname(file2);
+    const dir = path$12.dirname(file2);
     if (!fs2.existsSync(dir)) {
       mkdir.mkdirsSync(dir);
     }
@@ -2488,7 +2488,7 @@ function requireMoveSync$1() {
   if (hasRequiredMoveSync$1) return moveSync_1;
   hasRequiredMoveSync$1 = 1;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const copySync2 = requireCopySync().copySync;
   const removeSync = requireRemove().removeSync;
   const mkdirpSync = requireMkdirs().mkdirpSync;
@@ -2498,7 +2498,7 @@ function requireMoveSync$1() {
     const overwrite = opts.overwrite || opts.clobber || false;
     const { srcStat } = stat2.checkPathsSync(src, dest, "move");
     stat2.checkParentPathsSync(src, srcStat, dest, "move");
-    mkdirpSync(path2.dirname(dest));
+    mkdirpSync(path$12.dirname(dest));
     return doRename(src, dest, overwrite);
   }
   function doRename(src, dest, overwrite) {
@@ -2544,7 +2544,7 @@ function requireMove$1() {
   if (hasRequiredMove$1) return move_1;
   hasRequiredMove$1 = 1;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const copy2 = requireCopy().copy;
   const remove2 = requireRemove().remove;
   const mkdirp = requireMkdirs().mkdirp;
@@ -2561,7 +2561,7 @@ function requireMove$1() {
       const { srcStat } = stats;
       stat2.checkParentPaths(src, srcStat, dest, "move", (err2) => {
         if (err2) return cb(err2);
-        mkdirp(path2.dirname(dest), (err3) => {
+        mkdirp(path$12.dirname(dest), (err3) => {
           if (err3) return cb(err3);
           return doRename(src, dest, overwrite, cb);
         });
@@ -2619,7 +2619,7 @@ function requireOutput() {
   hasRequiredOutput = 1;
   const u = requireUniversalify().fromCallback;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const mkdir = requireMkdirs();
   const pathExists = requirePathExists().pathExists;
   function outputFile(file2, data, encoding, callback) {
@@ -2627,7 +2627,7 @@ function requireOutput() {
       callback = encoding;
       encoding = "utf8";
     }
-    const dir = path2.dirname(file2);
+    const dir = path$12.dirname(file2);
     pathExists(dir, (err, itDoes) => {
       if (err) return callback(err);
       if (itDoes) return fs2.writeFile(file2, data, encoding, callback);
@@ -2638,7 +2638,7 @@ function requireOutput() {
     });
   }
   function outputFileSync(file2, ...args) {
-    const dir = path2.dirname(file2);
+    const dir = path$12.dirname(file2);
     if (fs2.existsSync(dir)) {
       return fs2.writeFileSync(file2, ...args);
     }
@@ -2727,7 +2727,7 @@ class Logger {
 const logger = Logger.getInstance();
 const IS_WIN = process.platform === "win32";
 const IS_MAC = process.platform === "darwin";
-const IS_WSL = process.platform === "linux" && require$$1$1.release().toLowerCase().includes("microsoft");
+const IS_WSL = process.platform === "linux" && require$$1.release().toLowerCase().includes("microsoft");
 class LCUConnector extends EventEmitter {
   processWatcher;
   /**
@@ -2753,7 +2753,7 @@ class LCUConnector extends EventEmitter {
             port: parseInt(portMatch[1]),
             pid: parseInt(pidMatch[1]),
             token: tokenMatch[1],
-            installDirectory: path.dirname(installDirectoryMatch[1])
+            installDirectory: path$1.dirname(installDirectoryMatch[1])
             //  父目录
           };
           resolve(data);
@@ -2772,9 +2772,9 @@ class LCUConnector extends EventEmitter {
       return false;
     }
     const lcuClientApp = IS_MAC ? "LeagueClient.app" : "LeagueClient.exe";
-    const common = fs.existsSync(path.join(dirPath, lcuClientApp)) && fs.existsSync(path.join(dirPath, "Config"));
-    const isGlobal = common && fs.existsSync(path.join(dirPath, "RADS"));
-    const isCN = common && fs.existsSync(path.join(dirPath, "TQM"));
+    const common = fs.existsSync(path$1.join(dirPath, lcuClientApp)) && fs.existsSync(path$1.join(dirPath, "Config"));
+    const isGlobal = common && fs.existsSync(path$1.join(dirPath, "RADS"));
+    const isCN = common && fs.existsSync(path$1.join(dirPath, "TQM"));
     const isGarena = common;
     return isGlobal || isCN || isGarena;
   }
@@ -4873,7 +4873,7 @@ function requireSourceMapSupport() {
   hasRequiredSourceMapSupport = 1;
   (function(module, exports) {
     var SourceMapConsumer = requireSourceMap().SourceMapConsumer;
-    var path2 = require$$1;
+    var path$12 = path;
     var fs2;
     try {
       fs2 = require2("fs");
@@ -4934,18 +4934,18 @@ function requireSourceMapSupport() {
       };
     }
     var retrieveFile = handlerExec(retrieveFileHandlers);
-    retrieveFileHandlers.push(function(path3) {
-      path3 = path3.trim();
-      if (/^file:/.test(path3)) {
-        path3 = path3.replace(/file:\/\/\/(\w:)?/, function(protocol, drive) {
+    retrieveFileHandlers.push(function(path2) {
+      path2 = path2.trim();
+      if (/^file:/.test(path2)) {
+        path2 = path2.replace(/file:\/\/\/(\w:)?/, function(protocol, drive) {
           return drive ? "" : (
             // file:///C:/dir/file -> C:/dir/file
             "/"
           );
         });
       }
-      if (path3 in fileContentsCache) {
-        return fileContentsCache[path3];
+      if (path2 in fileContentsCache) {
+        return fileContentsCache[path2];
       }
       var contents = "";
       try {
@@ -4953,7 +4953,7 @@ function requireSourceMapSupport() {
           var xhr = new XMLHttpRequest();
           xhr.open(
             "GET",
-            path3,
+            path2,
             /** async */
             false
           );
@@ -4961,24 +4961,24 @@ function requireSourceMapSupport() {
           if (xhr.readyState === 4 && xhr.status === 200) {
             contents = xhr.responseText;
           }
-        } else if (fs2.existsSync(path3)) {
-          contents = fs2.readFileSync(path3, "utf8");
+        } else if (fs2.existsSync(path2)) {
+          contents = fs2.readFileSync(path2, "utf8");
         }
       } catch (er) {
       }
-      return fileContentsCache[path3] = contents;
+      return fileContentsCache[path2] = contents;
     });
     function supportRelativeURL(file2, url) {
       if (!file2) return url;
-      var dir = path2.dirname(file2);
+      var dir = path$12.dirname(file2);
       var match = /^\w+:\/\/[^\/]*/.exec(dir);
       var protocol = match ? match[0] : "";
       var startPath = dir.slice(protocol.length);
       if (protocol && /^\/\w\:/.test(startPath)) {
         protocol += "/";
-        return protocol + path2.resolve(dir.slice(protocol.length), url).replace(/\\/g, "/");
+        return protocol + path$12.resolve(dir.slice(protocol.length), url).replace(/\\/g, "/");
       }
-      return protocol + path2.resolve(dir.slice(protocol.length), url);
+      return protocol + path$12.resolve(dir.slice(protocol.length), url);
     }
     function retrieveSourceMapURL(source) {
       var fileData;
@@ -5361,9 +5361,9 @@ class ConfigHelper {
       throw new Error("初始化失败，必须提供一个有效的游戏安装路径！");
     }
     this.installPath = installPath;
-    this.gameConfigPath = require$$1.join(this.installPath, "Game", "Config");
-    this.backupPath = require$$1.join(app.getPath("userData"), "GameConfigBackup");
-    this.tftConfigPath = require$$1.join(app.getAppPath(), "public", "GameConfig", "TFTConfig");
+    this.gameConfigPath = path.join(this.installPath, "Game", "Config");
+    this.backupPath = path.join(app.getPath("userData"), "GameConfigBackup");
+    this.tftConfigPath = path.join(app.getAppPath(), "public", "GameConfig", "TFTConfig");
     console.log(`[ConfigHelper] 游戏设置目录已设定: ${this.gameConfigPath}`);
     console.log(`[ConfigHelper] 备份将存储在: ${this.backupPath}`);
     console.log(`[ConfigHelper] 预设云顶之弈设置目录: ${this.tftConfigPath}`);
@@ -5513,7 +5513,11 @@ class EndState {
 }
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
-const gameStageDisplay = {
+const gameStageDisplayStageOne = {
+  leftTop: { x: 411, y: 6 },
+  rightBottom: { x: 442, y: 22 }
+};
+const gameStageDisplayNormal = {
   leftTop: { x: 374, y: 6 },
   rightBottom: { x: 403, y: 22 }
 };
@@ -5557,9 +5561,8 @@ class TftOperator {
   async getGameStage() {
     try {
       const worker = await this.getGameStageWorker();
-      console.log("获取到的region:" + this.getStageAbsoluteRegion());
-      const screenshot = await screen$1.grabRegion(this.getStageAbsoluteRegion());
-      const pngBuffer = await sharp(screenshot.data, {
+      let screenshot = await screen$1.grabRegion(this.getStageAbsoluteRegion());
+      let pngBuffer = await sharp(screenshot.data, {
         raw: {
           width: screenshot.width,
           height: screenshot.height,
@@ -5567,14 +5570,38 @@ class TftOperator {
           // RGBA四通道
         }
       }).removeAlpha().toFormat("png").toBuffer();
-      const recognizeResult = await worker.recognize(pngBuffer);
-      console.log("[TftOperator] gameStage识别成功：");
-      console.log(recognizeResult);
+      const debugPath1 = path.join(process.env.VITE_PUBLIC, "stage_normal.png");
+      console.log("图片路径为" + debugPath1);
+      fs.writeFileSync(debugPath1, pngBuffer);
+      let recognizeResult = await worker.recognize(pngBuffer);
+      let resStr = recognizeResult.data.text;
+      console.log("[TftOperator] gameStage识别结果：" + resStr);
+      if (resStr.trim() === "") {
+        console.log("[TftOperator] gameStage识别失败，当前可能为第一战斗阶段");
+        screenshot = await screen$1.grabRegion(this.getStageAbsoluteRegion(true));
+        pngBuffer = await sharp(screenshot.data, {
+          raw: {
+            width: screenshot.width,
+            height: screenshot.height,
+            channels: 4
+            // RGBA四通道
+          }
+        }).removeAlpha().toFormat("png").toBuffer();
+        const debugPath12 = path.join(process.env.VITE_PUBLIC, "stage_one.png");
+        console.log("图片路径为" + debugPath12);
+        fs.writeFileSync(debugPath12, pngBuffer);
+        recognizeResult = await worker.recognize(pngBuffer);
+        resStr = recognizeResult.data.text;
+        console.log("[TftOperator] gameStage识别结果：" + resStr);
+      }
     } catch (e) {
       logger.error(`[TftOperator] nut-js textFinder 失败: ${e.message}`);
       logger.error("请确保 @nut-tree/plugin-ocr 已正确安装和配置！");
       return null;
     }
+  }
+  //  购买棋子
+  buyAtSlot(slot) {
   }
   //  处理点击事件
   async clickAt(offset) {
@@ -5599,7 +5626,7 @@ class TftOperator {
     }
   }
   // 获取游戏里表示战斗阶段(如1-1)的Region
-  getStageAbsoluteRegion() {
+  getStageAbsoluteRegion(isStageOne = false) {
     if (!this.gameWindowRegion) {
       logger.error("[TftOperator] 尝试在 init() 之前计算 Region！");
       if (!this.init()) {
@@ -5608,17 +5635,17 @@ class TftOperator {
     }
     const originX = this.gameWindowRegion.x;
     const originY = this.gameWindowRegion.y;
-    const x = Math.round(originX + gameStageDisplay.leftTop.x);
-    const y = Math.round(originY + gameStageDisplay.leftTop.y);
-    const width = Math.round(gameStageDisplay.rightBottom.x - gameStageDisplay.leftTop.x);
-    const height = Math.round(gameStageDisplay.rightBottom.y - gameStageDisplay.leftTop.y);
+    const x = Math.round(originX + isStageOne ? gameStageDisplayStageOne.leftTop.x : gameStageDisplayNormal.leftTop.x);
+    const y = Math.round(originY + isStageOne ? gameStageDisplayStageOne.leftTop.y : gameStageDisplayNormal.leftTop.y);
+    const width = isStageOne ? Math.round(gameStageDisplayStageOne.rightBottom.x - gameStageDisplayStageOne.leftTop.x) : Math.round(gameStageDisplayNormal.rightBottom.x - gameStageDisplayNormal.leftTop.x);
+    const height = isStageOne ? Math.round(gameStageDisplayStageOne.rightBottom.y - gameStageDisplayStageOne.leftTop.y) : Math.round(gameStageDisplayNormal.rightBottom.y - gameStageDisplayNormal.leftTop.y);
     return new Region(x, y, width, height);
   }
   //  一个懒加载的 Tesseract worker
   async getGameStageWorker() {
     if (this.gameStageWorker) return this.gameStageWorker;
     logger.info("[TftOperator] 正在创建 Tesseract worker...");
-    const localLangPath = require$$1.join(process.env.VITE_PUBLIC, "resources/tessdata");
+    const localLangPath = path.join(process.env.VITE_PUBLIC, "resources/tessdata");
     logger.info(`[TftOperator] Tesseract 本地语言包路径: ${localLangPath}`);
     const worker = await createWorker("eng", 1, {
       logger: (m) => logger.info(`[Tesseract] ${m.status}: ${Math.round(m.progress * 100)}%`),
@@ -5911,27 +5938,27 @@ class SettingsStore {
   }
 }
 const settingsStore = SettingsStore.getInstance();
-process.env.APP_ROOT = require$$1.join(__dirname, "..");
+process.env.APP_ROOT = path.join(__dirname, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
-const MAIN_DIST = require$$1.join(process.env.APP_ROOT, "dist-electron");
-const RENDERER_DIST = require$$1.join(process.env.APP_ROOT);
-process.env.VITE_PUBLIC = is.dev ? require$$1.join(process.env.APP_ROOT, "../public") : RENDERER_DIST;
+const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
+const RENDERER_DIST = path.join(process.env.APP_ROOT);
+process.env.VITE_PUBLIC = is.dev ? path.join(process.env.APP_ROOT, "../public") : RENDERER_DIST;
 let win;
 function createWindow() {
   const savedWindowInfo = settingsStore.get("window");
   win = new BrowserWindow({
-    icon: require$$1.join(process.env.VITE_PUBLIC, "icon.png"),
+    icon: path.join(process.env.VITE_PUBLIC, "icon.png"),
     //  窗口左上角的图标
     autoHideMenuBar: true,
     webPreferences: {
-      preload: require$$1.join(__dirname, "../preload/preload.cjs"),
+      preload: path.join(__dirname, "../preload/preload.cjs"),
       // 指定preload文件
       sandbox: false
     },
     ...savedWindowInfo.bounds || { width: 1024, height: 600 }
     //  控制窗口位置,第一次打开不会有保存值，就用默认的
   });
-  console.log("图标路径为：" + require$$1.join(process.env.VITE_PUBLIC, "icon.png"));
+  console.log("图标路径为：" + path.join(process.env.VITE_PUBLIC, "icon.png"));
   optimizer.watchWindowShortcuts(win);
   const debouncedSaveBounds = debounce(() => {
     if (!win?.isMaximized() && !win?.isFullScreen()) {
@@ -5951,7 +5978,7 @@ function createWindow() {
     console.log("Renderer URL:", process.env.ELECTRON_RENDERER_URL);
     win.loadURL(process.env["ELECTRON_RENDERER_URL"]);
   } else {
-    win.loadFile(require$$1.join(__dirname, "index.html"));
+    win.loadFile(path.join(__dirname, "index.html"));
   }
 }
 app.on("window-all-closed", () => {
@@ -5976,7 +6003,6 @@ app.whenReady().then(async () => {
 function init() {
   const connector = new LCUConnector();
   tftOperator.init();
-  tftOperator.getGameStage();
   connector.on("connect", (data) => {
     console.log("LOL客户端已登录！", data);
     sendToRenderer("lcu-connect", data);
