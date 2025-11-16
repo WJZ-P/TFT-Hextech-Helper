@@ -80,9 +80,6 @@ function createWindow() {
         settingsStore.set("window.isMaximized", win!.isMaximized())
     })
 
-    //  初始化Logger
-    logger.init(win)
-
     // Test active push message to Renderer-process.
     win.webContents.on('did-finish-load', () => {
         win?.webContents.send('main-process-message', (new Date).toLocaleString())
@@ -129,6 +126,9 @@ app.whenReady().then(async () => {
 })
 
 function init() {
+    //  初始化Logger
+    logger.init(win)
+
     //  启动LCUConnector
     const connector = new LCUConnector()
     //  初始化操作器
@@ -217,4 +217,6 @@ function registerHandler() {
     //  海克斯核心科技
     ipcMain.handle(IpcChannel.HEX_START, async (event) => hexService.start())
     ipcMain.handle(IpcChannel.HEX_STOP, async (event) => hexService.stop())
+    //  TFT相关操作
+    ipcMain.handle(IpcChannel.TFT_BUY_AT_SLOT,async (event,slot:number)=>tftOperator.buyAtSlot(slot))
 }

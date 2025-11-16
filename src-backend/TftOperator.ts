@@ -1,15 +1,21 @@
 // //  游戏分辨率是1024x768
 import {logger} from "./utils/Logger";
-import {Button, mouse, Point, Region} from "@nut-tree-fork/nut-js"
-import {createWorker, PSM} from "tesseract.js";
+import {Button, mouse, Point, Region, screen as nutScreen} from "@nut-tree-fork/nut-js"
+import Tesseract, {createWorker, PSM} from "tesseract.js";
 import {screen} from 'electron';
-import {screen as nutScreen} from '@nut-tree-fork/nut-js'
 import path from "path";
 import sharp from 'sharp';
 import fs from "fs-extra";
+import {sleep} from "./utils/HelperTools";
 
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
+
+//  当前下棋的游戏模式
+enum GAME_TYPE {
+    CLASSIC,    //  经典
+    CLOCKWORK_TRAILS    //  PVE，发条鸟的试炼。
+}
 
 //  英雄购买槽坐标
 const shopSlot = {
@@ -45,13 +51,19 @@ const gameStageDisplayNormal = {
     leftTop: {x: 374, y: 6},
     rightBottom: {x: 403, y: 22}
 }
+//  发条鸟的战斗阶段，布局跟其他的都不一样，因为发条鸟一个大阶段有10场
+const gameStageDisplayTheClockworkTrails = {
+    leftTop: {x: 337, y: 6},
+    rightBottom: {x: 366, y: 22}
+}
 
 class TftOperator {
     private static instance: TftOperator;
     //  缓存游戏窗口的左上角坐标
     private gameWindowRegion: Point | null;
     // 用来判断游戏阶段的Worker
-    private gameStageWorker: any | null = null; //  必须动态导入，没法写类型
+    private gameStageWorker: Tesseract.Worker | null = null;
+    private gameType: GAME_TYPE;
 
     private constructor() {
     }
@@ -97,51 +109,52 @@ class TftOperator {
         try {
             const worker = await this.getGameStageWorker();
 
-            let screenshot = await nutScreen.grabRegion(this.getStageAbsoluteRegion());
-            //  识别之前，要做一次转换，因为screenshot.data是原始的数据，转成图片格式。
-            let pngBuffer = await sharp(screenshot.data, {
-                raw: {
-                    width: screenshot.width,
-                    height: screenshot.height,
-                    channels: 4, // RGBA四通道
-                }
-            })
-                // sharp 默认按 RGBA 处理，但输入是 BGRA，需要 swizzle 一下
-                .removeAlpha()
-                .toFormat('png')
-                .toBuffer();
+            const normalRegion = this.getStageAbsoluteRegion(false);
+            const normalPng = await this.captureRegionAsPng(normalRegion);
+            let text = await this.ocr(normalPng, worker);
+            console.log('[TftOperator] 普通区域识别：' + text)
 
-            const debugPath1 = path.join(process.env.VITE_PUBLIC, 'stage_normal.png')
-            console.log('图片路径为' + debugPath1)
-            fs.writeFileSync(debugPath1, pngBuffer);
-
-            //  截图结果转buffer识别
-            let recognizeResult = await worker.recognize(pngBuffer)
-            let resStr: string = recognizeResult.data.text
-            console.log('[TftOperator] gameStage识别结果：' + resStr)
-            if (resStr.trim() === "") {
-                console.log('[TftOperator] gameStage识别失败，当前可能为第一战斗阶段')
-                screenshot = await nutScreen.grabRegion(this.getStageAbsoluteRegion(true))
-                pngBuffer = await sharp(screenshot.data, {
-                    raw: {
-                        width: screenshot.width,
-                        height: screenshot.height,
-                        channels: 4, // RGBA四通道
-                    }
-                })
-                    // sharp 默认按 RGBA 处理，但输入是 BGRA，需要 swizzle 一下
-                    .removeAlpha()
-                    .toFormat('png')
-                    .toBuffer();
-
-                const debugPath1 = path.join(process.env.VITE_PUBLIC, 'stage_one.png')
-                console.log('图片路径为' + debugPath1)
-                fs.writeFileSync(debugPath1, pngBuffer);
-
-                recognizeResult = await worker.recognize(pngBuffer)
-                resStr = recognizeResult.data.text
-                console.log('[TftOperator] gameStage识别结果：' + resStr)
+            if (text !== "") {
+                this.gameType = GAME_TYPE.CLASSIC;
+                return text;
             }
+            // ======================================
+            // 2) 若失败，尝试识别经典模式 stage-one 区域
+            // ======================================
+            console.log('[TftOperator] 普通识别失败，尝试 Stage-One 区域…');
+
+            const stageOneRegion = this.getStageAbsoluteRegion(true);
+            const stageOnePng = await this.captureRegionAsPng(stageOneRegion);
+            //this.saveDebugImage('stage_one.png', stageOnePng);
+
+            text = await this.ocr(stageOnePng, worker);
+            console.log('[TftOperator] Stage-One 识别：' + text);
+
+            if (text !== "") {
+                this.gameType = GAME_TYPE.CLASSIC;
+                return text;
+            }
+
+            // ======================================
+            // 3) 若仍失败，则尝试发条鸟试炼（PVE）区域
+            // ======================================
+            console.log('[TftOperator] Stage-One 也失败，尝试发条鸟试炼模式…');
+
+            const clockworkRegion = this.getClockworkTrialsRegion();
+            const clockPng = await this.captureRegionAsPng(clockworkRegion);
+            //this.saveDebugImage('stage_clockwork.png', clockPng);
+
+            text = await this.ocr(clockPng, worker);
+            console.log('[TftOperator] 发条鸟试炼识别：' + text);
+
+            if (text !== "") {
+                this.gameType = GAME_TYPE.CLOCKWORK_TRAILS;
+                return text;
+            }
+
+            // 三种模式均识别失败
+            console.log('[TftOperator] 三种模式全部识别失败！');
+            return null;
 
         } catch (e: any) {
             logger.error(`[TftOperator] nut-js textFinder 失败: ${e.message}`);
@@ -150,9 +163,33 @@ class TftOperator {
         }
     }
 
-    //  购买棋子
-    public buyAtSlot(slot: number) {
+    /**
+     * 购买指定槽位的棋子
+     * @param slot 槽位编号 (1, 2, 3, 4, 或 5)
+     */
+    public async buyAtSlot(slot: number): Promise<void> {
+        const slotKey = `SHOP_SLOT_${slot}` as keyof typeof shopSlot
+        const targetSlotCoords = shopSlot[slotKey];
 
+        // 3. (健壮性) 检查这个坐标是否存在
+        //    如果 slot 是 6, "SHOP_SLOT_6" 不存在, targetSlotCoords 就会是 undefined
+        //    这完美地替代了 "default" 分支！
+        if (!targetSlotCoords) {
+            logger.error(`[TftOperator] 尝试购买一个无效的槽位: ${slot}。只接受 1-5。`);
+            return;
+        }
+
+        // 3. (核心) 将我们自己的坐标 {x, y} 转换为 nut-js 需要的 Point 对象
+        const targetPoint = new Point(
+            targetSlotCoords.x,
+            targetSlotCoords.y
+        );
+
+        logger.info(`[TftOperator] 正在购买棋子，槽位：${slot}...`);
+        //  为了健壮，买棋子的时候点两次，避免买不上
+        await this.clickAt(targetPoint);
+        await sleep(100)
+        await this.clickAt(targetPoint);
     }
 
 
@@ -187,23 +224,19 @@ class TftOperator {
     private getStageAbsoluteRegion(isStageOne: boolean = false): Region {
         if (!this.gameWindowRegion) {
             logger.error("[TftOperator] 尝试在 init() 之前计算 Region！");
-            // 抛出一个错误或者返回一个默认值，取决于你的健壮性需求
-            // 这里我们先假设 init() 总是先被调用
-            if (!this.init()) {
-                throw new Error("[TftOperator] 未初始化，请先调用 init()");
-            }
+            if (!this.init()) throw new Error("[TftOperator] 未初始化，请先调用 init()");
         }
 
         const originX = this.gameWindowRegion!.x;
         const originY = this.gameWindowRegion!.y;
 
-        // nut-js 的 Region(x, y, width, height)
-        const x = Math.round(originX + isStageOne ? gameStageDisplayStageOne.leftTop.x : gameStageDisplayNormal.leftTop.x);
-        const y = Math.round(originY + isStageOne ? gameStageDisplayStageOne.leftTop.y : gameStageDisplayNormal.leftTop.y);
-        const width = isStageOne ? Math.round(gameStageDisplayStageOne.rightBottom.x - gameStageDisplayStageOne.leftTop.x) : Math.round(gameStageDisplayNormal.rightBottom.x - gameStageDisplayNormal.leftTop.x);
-        const height = isStageOne ? Math.round(gameStageDisplayStageOne.rightBottom.y - gameStageDisplayStageOne.leftTop.y) : Math.round(gameStageDisplayNormal.rightBottom.y - gameStageDisplayNormal.leftTop.y);
+        const display = isStageOne ? gameStageDisplayStageOne : gameStageDisplayNormal;
 
-        // ✨ 3. (修改) 返回我们自己的“简单”对象，而不是 nut-js 的 Region
+        const x = Math.round(originX + display.leftTop.x);
+        const y = Math.round(originY + display.leftTop.y);
+        const width = Math.round(display.rightBottom.x - display.leftTop.x);
+        const height = Math.round(display.rightBottom.y - display.leftTop.y);
+
         return new Region(x, y, width, height);
     }
 
@@ -228,6 +261,52 @@ class TftOperator {
         return this.gameStageWorker;
     }
 
+    // ======================================
+    // 工具函数：截图某区域并输出 PNG buffer
+    // ======================================
+    private async captureRegionAsPng(region: Region): Promise<Buffer> {
+        const screenshot = await nutScreen.grabRegion(region);
+
+        // 识别前：原始像素数据转换成 PNG
+        return await sharp(screenshot.data, {
+            raw: {
+                width: screenshot.width,
+                height: screenshot.height,
+                channels: 4, // RGBA 四通道
+            }
+        })
+            .removeAlpha()      // nut-js 截图为 BGRA，移除 alpha 防止通道错乱
+            .toFormat('png')
+            .toBuffer();
+    }
+
+    //  保存调试图片，debug用的
+    private saveDebugImage(name: string, pngBuffer: Buffer) {
+        const filePath = path.join(process.env.VITE_PUBLIC!, name);
+        console.log('[Debug] 保存截图：' + filePath);
+        fs.writeFileSync(filePath, pngBuffer);
+    }
+
+    // ======================================
+    // 工具函数：OCR 识别
+    // ======================================
+    private async ocr(pngBuffer: Buffer, worker: any): Promise<string> {
+        const result = await worker.recognize(pngBuffer);
+        return result.data.text.trim();
+    }
+
+    //  发条鸟试炼的布局
+    private getClockworkTrialsRegion(): Region {
+        const originX = this.gameWindowRegion!.x;
+        const originY = this.gameWindowRegion!.y;
+
+        return new Region(
+            originX + gameStageDisplayTheClockworkTrails.leftTop.x,
+            originY + gameStageDisplayTheClockworkTrails.leftTop.y,
+            gameStageDisplayTheClockworkTrails.rightBottom.x - gameStageDisplayTheClockworkTrails.leftTop.x,
+            gameStageDisplayTheClockworkTrails.rightBottom.y - gameStageDisplayTheClockworkTrails.leftTop.y
+        );
+    }
 }
 
 export const tftOperator = TftOperator.getInstance();

@@ -5,5 +5,5 @@ export enum IpcChannel {
     LCU_REQUEST = 'lcu-request',
     HEX_START = 'hex-start',
     HEX_STOP = 'hex-stop',
-    TFT_OPERATOR = 'hex-operator'
+    TFT_BUY_AT_SLOT = 'tft-buy-at-slot'
 }

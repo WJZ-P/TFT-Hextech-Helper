@@ -65,6 +65,13 @@ const hexApi = {
 export type HexApi = typeof hexApi
 contextBridge.exposeInMainWorld('hex',hexApi)
 
+//  TFTApi: 下棋控制器相关操作
+const tftApi = {
+    buyAtSlot: (slot:number)=>{ return ipcRenderer.invoke(IpcChannel.TFT_BUY_AT_SLOT,slot)}
+}
+export type TftApi = typeof tftApi
+contextBridge.exposeInMainWorld('tft',tftApi)
+
 const lcuApi = {
     getSummonerInfo: (): Promise<{ data?: SummonerInfo; error?: string }> => {
         return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-summoner/v1/current-summoner');

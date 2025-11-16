@@ -12,5 +12,6 @@ declare global {
         lcu:LcuApi
         config:ConfigApi
         hex:HexApi
+        tft:TftApi
     }
 }

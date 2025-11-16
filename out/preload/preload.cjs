@@ -6,7 +6,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["LCU_REQUEST"] = "lcu-request";
   IpcChannel2["HEX_START"] = "hex-start";
   IpcChannel2["HEX_STOP"] = "hex-stop";
-  IpcChannel2["TFT_OPERATOR"] = "hex-operator";
+  IpcChannel2["TFT_BUY_AT_SLOT"] = "tft-buy-at-slot";
   return IpcChannel2;
 })(IpcChannel || {});
 electron.contextBridge.exposeInMainWorld("ipcRenderer", {
@@ -59,6 +59,12 @@ const hexApi = {
   }
 };
 electron.contextBridge.exposeInMainWorld("hex", hexApi);
+const tftApi = {
+  buyAtSlot: (slot) => {
+    return electron.ipcRenderer.invoke(IpcChannel.TFT_BUY_AT_SLOT, slot);
+  }
+};
+electron.contextBridge.exposeInMainWorld("tft", tftApi);
 const lcuApi = {
   getSummonerInfo: () => {
     return electron.ipcRenderer.invoke(IpcChannel.LCU_REQUEST, "GET", "/lol-summoner/v1/current-summoner");

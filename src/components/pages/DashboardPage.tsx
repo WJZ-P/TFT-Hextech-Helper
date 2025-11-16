@@ -88,8 +88,24 @@ const DashboardPage = () => {
             }}>点我弹出一个Toast
             </button>
             <button onClick={async () => {
-                console.log(await window.lcu.buySlotOne())
-            }}>点我购买第一个棋子
+                console.log(await window.tft.buyAtSlot(1))
+            }}>点我购买第1个棋子
+            </button>
+            <button onClick={async () => {
+                console.log(await window.tft.buyAtSlot(2))
+            }}>点我购买第2个棋子
+            </button>
+            <button onClick={async () => {
+                console.log(await window.tft.buyAtSlot(3))
+            }}>点我购买第3个棋子
+            </button>
+            <button onClick={async () => {
+                console.log(await window.tft.buyAtSlot(4))
+            }}>点我购买第4个棋子
+            </button>
+            <button onClick={async () => {
+                console.log(await window.tft.buyAtSlot(5))
+            }}>点我购买第5个棋子
             </button>
         </PageContaier>
     );
