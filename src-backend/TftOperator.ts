@@ -19,25 +19,82 @@ enum GAME_TYPE {
 
 //  英雄购买槽坐标
 const shopSlot = {
-    SHOP_SLOT_1: {x: 240, y: 700},
-    SHOP_SLOT_2: {x: 380, y: 700},
-    SHOP_SLOT_3: {x: 520, y: 700},
-    SHOP_SLOT_4: {x: 660, y: 700},
-    SHOP_SLOT_5: {x: 800, y: 700},
+    SHOP_SLOT_1: new Point(240, 700),
+    SHOP_SLOT_2: new Point(380, 700),
+    SHOP_SLOT_3: new Point(520, 700),
+    SHOP_SLOT_4: new Point(660, 700),
+    SHOP_SLOT_5: new Point(800, 700),
 }
 //  装备槽位坐标
 const equipmentSlot = {
-    EQ_SLOT_1: {x: 20, y: 210},//+35
-    EQ_SLOT_2: {x: 20, y: 245},
-    EQ_SLOT_3: {x: 20, y: 280},
-    EQ_SLOT_4: {x: 20, y: 315},
-    EQ_SLOT_5: {x: 20, y: 350},
-    EQ_SLOT_6: {x: 20, y: 385},
-    EQ_SLOT_7: {x: 20, y: 430},//   这里重置下准确位置
-    EQ_SLOT_8: {x: 20, y: 465},
-    EQ_SLOT_9: {x: 20, y: 500},
-    EQ_SLOT_10: {x: 20, y: 535},
+    EQ_SLOT_1: new Point(20, 210),//+35
+    EQ_SLOT_2: new Point(20, 245),
+    EQ_SLOT_3: new Point(20, 280),
+    EQ_SLOT_4: new Point(20, 315),
+    EQ_SLOT_5: new Point(20, 350),
+    EQ_SLOT_6: new Point(20, 385),
+    EQ_SLOT_7: new Point(20, 430),//   这里重置下准确位置
+    EQ_SLOT_8: new Point(20, 465),
+    EQ_SLOT_9: new Point(20, 500),
+    EQ_SLOT_10: new Point(20, 535),
 }
+const fightBoardSlot = { // x+=80
+    //  第一行的棋子位置
+    R1_C1: new Point(230, 315),
+    R1_C2: new Point(310, 315),
+    R1_C3: new Point(390, 315),
+    R1_C4: new Point(470, 315),
+    R1_C5: new Point(550, 315),
+    R1_C6: new Point(630, 315),
+    R1_C7: new Point(710, 315),
+    //  第二行的棋子位置        //  x+=85
+    R2_C1: new Point(260, 370),
+    R2_C2: new Point(345, 370),
+    R2_C3: new Point(430, 370),
+    R2_C4: new Point(515, 370),
+    R2_C5: new Point(600, 370),
+    R2_C6: new Point(685, 370),
+    R2_C7: new Point(770, 370),
+    //  第三行棋子的位置        //  x+=90
+    R3_C1: new Point(200, 420),
+    R3_C2: new Point(290, 420),
+    R3_C3: new Point(380, 420),
+    R3_C4: new Point(470, 420),
+    R3_C5: new Point(560, 420),
+    R3_C6: new Point(650, 420),
+    R3_C7: new Point(740, 420),
+    //  第四行棋子的位置        //  x+=90
+    R4_C1: new Point(240, 475),
+    R4_C2: new Point(330, 475),
+    R4_C3: new Point(420, 475),
+    R4_C4: new Point(510, 475),
+    R4_C5: new Point(600, 475),
+    R4_C6: new Point(690, 475),
+    R4_C7: new Point(780, 475),
+}
+
+//  备战席
+const benchSlot = { //  x+=75
+    SLOT_1: new Point(135, 555),
+    SLOT_2: new Point(210, 555),
+    SLOT_3: new Point(285, 555),
+    SLOT_4: new Point(360, 555),
+    SLOT_5: new Point(435, 555),
+    SLOT_6: new Point(510, 555),
+    SLOT_7: new Point(585, 555),
+    SLOT_8: new Point(660, 555),
+    SLOT_9: new Point(735, 555),
+    SLOT_10: new Point(810, 555),
+}
+
+//215,410
+//  海克斯选择槽位
+const hexSlot = {   //  x+=295
+    SLOT_1: new Point(215, 410),
+    SLOT_2: new Point(510, 410),
+    SLOT_3: new Point(805, 410),
+}
+
 
 //  选秀站位，为离自己最近的棋子位置。
 const sharedDraftPoint = {x: 530, y: 400}
@@ -169,26 +226,20 @@ class TftOperator {
      */
     public async buyAtSlot(slot: number): Promise<void> {
         const slotKey = `SHOP_SLOT_${slot}` as keyof typeof shopSlot
-        const targetSlotCoords = shopSlot[slotKey];
+        const targetPoint = shopSlot[slotKey];
 
         // 3. (健壮性) 检查这个坐标是否存在
         //    如果 slot 是 6, "SHOP_SLOT_6" 不存在, targetSlotCoords 就会是 undefined
         //    这完美地替代了 "default" 分支！
-        if (!targetSlotCoords) {
+        if (!targetPoint) {
             logger.error(`[TftOperator] 尝试购买一个无效的槽位: ${slot}。只接受 1-5。`);
             return;
         }
 
-        // 3. (核心) 将我们自己的坐标 {x, y} 转换为 nut-js 需要的 Point 对象
-        const targetPoint = new Point(
-            targetSlotCoords.x,
-            targetSlotCoords.y
-        );
-
         logger.info(`[TftOperator] 正在购买棋子，槽位：${slot}...`);
         //  为了健壮，买棋子的时候点两次，避免买不上
         await this.clickAt(targetPoint);
-        await sleep(100)
+        await sleep(50)
         await this.clickAt(targetPoint);
     }
 
