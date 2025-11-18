@@ -7,6 +7,7 @@ import path from "path";
 import sharp from 'sharp';
 import fs from "fs-extra";
 import {sleep} from "./utils/HelperTools";
+import {TFT_15_CHAMPION_DATA} from "./TFTProtocol";
 
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
@@ -17,6 +18,7 @@ export interface ShopUnit {
     name: string | null;   // OCR 识别到的名字；识别不到就 null
     cost: number | null;   // 武斗、3 费、4 费可用颜色判断（可选）
 }
+
 export interface ShopState {
     units: ShopUnit[];     // 五个格子的所有单位
     timestamp: number;     // 更新时间戳（可选）
@@ -59,8 +61,6 @@ const shopSlotNameRegions = {
         rightBottom: {x: 854, y: 758}
     },
 }
-
-
 //  装备槽位坐标
 const equipmentSlot = {
     EQ_SLOT_1: new Point(20, 210),//+35
@@ -74,7 +74,9 @@ const equipmentSlot = {
     EQ_SLOT_9: new Point(20, 500),
     EQ_SLOT_10: new Point(20, 535),
 }
-const fightBoardSlot = { // x+=80
+//  棋子在战场上的位置
+const fightBoardSlot = {
+    // x+=80
     //  第一行的棋子位置
     R1_C1: new Point(230, 315),
     R1_C2: new Point(310, 315),
@@ -108,7 +110,6 @@ const fightBoardSlot = { // x+=80
     R4_C6: new Point(690, 475),
     R4_C7: new Point(780, 475),
 }
-
 //  备战席
 const benchSlot = { //  x+=75
     SLOT_1: new Point(135, 555),
@@ -122,15 +123,12 @@ const benchSlot = { //  x+=75
     SLOT_9: new Point(735, 555),
     SLOT_10: new Point(810, 555),
 }
-
 //  海克斯选择槽位
 const hexSlot = {   //  x+=295
     SLOT_1: new Point(215, 410),
     SLOT_2: new Point(510, 410),
     SLOT_3: new Point(805, 410),
 }
-
-
 //  选秀站位，为离自己最近的棋子位置。
 const sharedDraftPoint = {x: 530, y: 400}
 //  游戏战斗阶段展示坐标，第一阶段。因为第一阶段只有四个回合，跟其他阶段的不一样。
@@ -153,8 +151,10 @@ class TftOperator {
     private static instance: TftOperator;
     //  缓存游戏窗口的左上角坐标
     private gameWindowRegion: Point | null;
-    // 用来判断游戏阶段的Worker
+    //  用来判断游戏阶段的Worker
     private gameStageWorker: Tesseract.Worker | null = null;
+    //  用来判断棋子内容的Worker
+    private chessWorker: Tesseract.Worker | null = null;
     private gameType: GAME_TYPE;
 
     private constructor() {
@@ -345,6 +345,29 @@ class TftOperator {
         this.gameStageWorker = worker;
         logger.info("[TftOperator] Tesseract worker 准备就绪！");
         return this.gameStageWorker;
+    }
+
+    //  同样懒加载Worker，用来识别棋子名字，中文模型
+    private async getChessWorker(): Promise<any> {
+        if (this.chessWorker) return this.chessWorker
+        logger.info("[TftOperator] 正在创建 Tesseract worker...");
+        const localLangPath = path.join(process.env.VITE_PUBLIC, 'resources/tessdata');
+        logger.info(`[TftOperator] Tesseract 本地语言包路径: ${localLangPath}`);
+        const worker = await createWorker('chi_sim', 1, {
+            logger: m => logger.info(`[Tesseract] ${m.status}: ${Math.round(m.progress * 100)}%`),
+            langPath: localLangPath,
+            cachePath: localLangPath,
+        })
+        //  识别字体白名单做一下处理
+        const uniqueChars = [...new Set(Object.keys(TFT_15_CHAMPION_DATA).join(''))].join('')
+        await worker.setParameters({
+                tessedit_char_whitelist: uniqueChars,
+                tessedit_pageseg_mode: PSM.SINGLE_LINE, // 单行模式
+            }
+        )
+        this.chessWorker = worker
+        logger.info("[TftOperator] Tesseract worker 准备就绪！");
+        return this.chessWorker;
     }
 
     // ======================================
