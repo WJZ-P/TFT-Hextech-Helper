@@ -1,4 +1,4 @@
-export const chessesInfo = [
+export const chessesFullInfo = [
     {
         "chessId": "10357",
         "title": "",
