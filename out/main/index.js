@@ -6994,7 +6994,12 @@ class TftOperator {
         channels: 4
         // RGBA 四通道
       }
-    }).removeAlpha().toFormat("png").toBuffer();
+    }).removeAlpha().resize({
+      width: Math.round(screenshot.width * 3),
+      //  宽高都放大一些
+      height: Math.round(screenshot.height * 3),
+      kernel: "lanczos3"
+    }).grayscale().normalize().threshold(160).sharpen().toFormat("png").toBuffer();
   }
   //  保存调试图片，debug用的
   saveDebugImage(name, pngBuffer) {

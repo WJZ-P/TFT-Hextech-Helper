@@ -412,6 +412,15 @@ class TftOperator {
             }
         })
             .removeAlpha()      // nut-js 截图为 BGRA，移除 alpha 防止通道错乱
+            .resize({
+                width: Math.round(screenshot.width * 3),  //  宽高都放大一些
+                height: Math.round(screenshot.height * 3),
+                kernel: "lanczos3"
+            })
+            .grayscale()                //  去色
+            .normalize()                //  拉伸对比度
+            .threshold(160)   //  二值化
+            .sharpen()                  //  轻量锐化
             .toFormat('png')
             .toBuffer();
     }
