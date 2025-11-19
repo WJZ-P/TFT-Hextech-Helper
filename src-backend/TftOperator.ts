@@ -256,6 +256,31 @@ class TftOperator {
     }
 
     /**
+     * 获取当前商店的所有棋子信息
+     */
+    public async getShopInfo(): Promise<string[]> {
+        const worker = await this.getChessWorker()
+        logger.info('[TftOperator] 正在扫描商店中的 5 个槽位...')
+        const scanResult: string[] = [];
+        for (let i = 1; i <= 5; i++) {
+            const slotKey = `SLOT_${i}` as keyof typeof shopSlotNameRegions
+            const simpleRegion = shopSlotNameRegions[slotKey]
+            const tessRegion = new Region(this.gameWindowRegion.x + simpleRegion.leftTop.x,
+                this.gameWindowRegion.y + simpleRegion.leftTop.y,
+                simpleRegion.rightBottom.x - simpleRegion.leftTop.x,
+                simpleRegion.rightBottom.y - simpleRegion.leftTop.y
+            )
+            //  处理得到png
+            const processedPng = await this.captureRegionAsPng(tessRegion);
+            //  识别图片
+            const {data: {text}} = await worker.recognize(processedPng)
+            scanResult.push(text)
+            logger.info(`[TftOperator] 购买槽${i}：${text}`)
+        }
+        return scanResult;
+    }
+
+    /**
      * 购买指定槽位的棋子
      * @param slot 槽位编号 (1, 2, 3, 4, 或 5)
      */
@@ -277,6 +302,8 @@ class TftOperator {
         await sleep(50)
         await this.clickAt(targetPoint);
     }
+
+    // ----------------------   这下面都是private方法  ----------------------
 
 
     //  处理点击事件

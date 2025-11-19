@@ -1,18 +1,18 @@
 import { app, screen, BrowserWindow, globalShortcut, ipcMain } from "electron";
 import { EventEmitter } from "events";
-import require$$1$1 from "os";
+import require$$1 from "os";
 import cp from "child_process";
-import path from "node:path";
+import path$1 from "node:path";
 import require$$0$2 from "fs";
 import require$$0 from "constants";
 import require$$0$1 from "stream";
 import require$$4 from "util";
 import require$$5 from "assert";
-import require$$1 from "path";
+import path from "path";
 import WebSocket from "ws";
 import https from "https";
 import axios from "axios";
-import { Point, mouse, Button, Region, screen as screen$1 } from "@nut-tree-fork/nut-js";
+import { Point, Region, mouse, Button, screen as screen$1 } from "@nut-tree-fork/nut-js";
 import { createWorker, PSM } from "tesseract.js";
 import sharp from "sharp";
 import Store from "electron-store";
@@ -927,9 +927,9 @@ var hasRequiredWin32;
 function requireWin32() {
   if (hasRequiredWin32) return win32;
   hasRequiredWin32 = 1;
-  const path2 = require$$1;
+  const path$12 = path;
   function getRootPath(p) {
-    p = path2.normalize(path2.resolve(p)).split(path2.sep);
+    p = path$12.normalize(path$12.resolve(p)).split(path$12.sep);
     if (p.length > 0) return p[0];
     return null;
   }
@@ -951,7 +951,7 @@ function requireMkdirs$1() {
   if (hasRequiredMkdirs$1) return mkdirs_1$1;
   hasRequiredMkdirs$1 = 1;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const invalidWin32Path = requireWin32().invalidWin32Path;
   const o777 = parseInt("0777", 8);
   function mkdirs(p, opts, callback, made) {
@@ -974,7 +974,7 @@ function requireMkdirs$1() {
     if (!made) made = null;
     callback = callback || function() {
     };
-    p = path2.resolve(p);
+    p = path$12.resolve(p);
     xfs.mkdir(p, mode, (er) => {
       if (!er) {
         made = made || p;
@@ -982,8 +982,8 @@ function requireMkdirs$1() {
       }
       switch (er.code) {
         case "ENOENT":
-          if (path2.dirname(p) === p) return callback(er);
-          mkdirs(path2.dirname(p), opts, (er2, made2) => {
+          if (path$12.dirname(p) === p) return callback(er);
+          mkdirs(path$12.dirname(p), opts, (er2, made2) => {
             if (er2) callback(er2, made2);
             else mkdirs(p, opts, callback, made2);
           });
@@ -1009,7 +1009,7 @@ function requireMkdirsSync() {
   if (hasRequiredMkdirsSync) return mkdirsSync_1;
   hasRequiredMkdirsSync = 1;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const invalidWin32Path = requireWin32().invalidWin32Path;
   const o777 = parseInt("0777", 8);
   function mkdirsSync(p, opts, made) {
@@ -1027,14 +1027,14 @@ function requireMkdirsSync() {
       mode = o777 & ~process.umask();
     }
     if (!made) made = null;
-    p = path2.resolve(p);
+    p = path$12.resolve(p);
     try {
       xfs.mkdirSync(p, mode);
       made = made || p;
     } catch (err0) {
       if (err0.code === "ENOENT") {
-        if (path2.dirname(p) === p) throw err0;
-        made = mkdirsSync(path2.dirname(p), opts, made);
+        if (path$12.dirname(p) === p) throw err0;
+        made = mkdirsSync(path$12.dirname(p), opts, made);
         mkdirsSync(p, opts, made);
       } else {
         let stat2;
@@ -1076,11 +1076,11 @@ function requireUtimes() {
   if (hasRequiredUtimes) return utimes;
   hasRequiredUtimes = 1;
   const fs2 = requireGracefulFs();
-  const os = require$$1$1;
-  const path2 = require$$1;
+  const os = require$$1;
+  const path$12 = path;
   function hasMillisResSync() {
-    let tmpfile = path2.join("millis-test-sync" + Date.now().toString() + Math.random().toString().slice(2));
-    tmpfile = path2.join(os.tmpdir(), tmpfile);
+    let tmpfile = path$12.join("millis-test-sync" + Date.now().toString() + Math.random().toString().slice(2));
+    tmpfile = path$12.join(os.tmpdir(), tmpfile);
     const d = /* @__PURE__ */ new Date(1435410243862);
     fs2.writeFileSync(tmpfile, "https://github.com/jprichardson/node-fs-extra/pull/141");
     const fd = fs2.openSync(tmpfile, "r+");
@@ -1089,8 +1089,8 @@ function requireUtimes() {
     return fs2.statSync(tmpfile).mtime > 1435410243e3;
   }
   function hasMillisRes(callback) {
-    let tmpfile = path2.join("millis-test" + Date.now().toString() + Math.random().toString().slice(2));
-    tmpfile = path2.join(os.tmpdir(), tmpfile);
+    let tmpfile = path$12.join("millis-test" + Date.now().toString() + Math.random().toString().slice(2));
+    tmpfile = path$12.join(os.tmpdir(), tmpfile);
     const d = /* @__PURE__ */ new Date(1435410243862);
     fs2.writeFile(tmpfile, "https://github.com/jprichardson/node-fs-extra/pull/141", (err) => {
       if (err) return callback(err);
@@ -1118,8 +1118,8 @@ function requireUtimes() {
       throw new Error("fs-extra: timeRemoveMillis() unknown parameter type");
     }
   }
-  function utimesMillis(path3, atime, mtime, callback) {
-    fs2.open(path3, "r+", (err, fd) => {
+  function utimesMillis(path2, atime, mtime, callback) {
+    fs2.open(path2, "r+", (err, fd) => {
       if (err) return callback(err);
       fs2.futimes(fd, atime, mtime, (futimesErr) => {
         fs2.close(fd, (closeErr) => {
@@ -1128,8 +1128,8 @@ function requireUtimes() {
       });
     });
   }
-  function utimesMillisSync(path3, atime, mtime) {
-    const fd = fs2.openSync(path3, "r+");
+  function utimesMillisSync(path2, atime, mtime) {
+    const fd = fs2.openSync(path2, "r+");
     fs2.futimesSync(fd, atime, mtime);
     return fs2.closeSync(fd);
   }
@@ -1148,7 +1148,7 @@ function requireStat() {
   if (hasRequiredStat) return stat;
   hasRequiredStat = 1;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const NODE_VERSION_MAJOR_WITH_BIGINT = 10;
   const NODE_VERSION_MINOR_WITH_BIGINT = 5;
   const NODE_VERSION_PATCH_WITH_BIGINT = 0;
@@ -1238,9 +1238,9 @@ function requireStat() {
     return { srcStat, destStat };
   }
   function checkParentPaths(src, srcStat, dest, funcName, cb) {
-    const srcParent = path2.resolve(path2.dirname(src));
-    const destParent = path2.resolve(path2.dirname(dest));
-    if (destParent === srcParent || destParent === path2.parse(destParent).root) return cb();
+    const srcParent = path$12.resolve(path$12.dirname(src));
+    const destParent = path$12.resolve(path$12.dirname(dest));
+    if (destParent === srcParent || destParent === path$12.parse(destParent).root) return cb();
     if (nodeSupportsBigInt()) {
       fs2.stat(destParent, { bigint: true }, (err, destStat) => {
         if (err) {
@@ -1266,9 +1266,9 @@ function requireStat() {
     }
   }
   function checkParentPathsSync(src, srcStat, dest, funcName) {
-    const srcParent = path2.resolve(path2.dirname(src));
-    const destParent = path2.resolve(path2.dirname(dest));
-    if (destParent === srcParent || destParent === path2.parse(destParent).root) return;
+    const srcParent = path$12.resolve(path$12.dirname(src));
+    const destParent = path$12.resolve(path$12.dirname(dest));
+    if (destParent === srcParent || destParent === path$12.parse(destParent).root) return;
     let destStat;
     try {
       if (nodeSupportsBigInt()) {
@@ -1286,8 +1286,8 @@ function requireStat() {
     return checkParentPathsSync(src, srcStat, destParent, funcName);
   }
   function isSrcSubdir(src, dest) {
-    const srcArr = path2.resolve(src).split(path2.sep).filter((i) => i);
-    const destArr = path2.resolve(dest).split(path2.sep).filter((i) => i);
+    const srcArr = path$12.resolve(src).split(path$12.sep).filter((i) => i);
+    const destArr = path$12.resolve(dest).split(path$12.sep).filter((i) => i);
     return srcArr.reduce((acc, cur, i) => acc && destArr[i] === cur, true);
   }
   function errMsg(src, dest, funcName) {
@@ -1325,7 +1325,7 @@ function requireCopySync$1() {
   if (hasRequiredCopySync$1) return copySync_1;
   hasRequiredCopySync$1 = 1;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const mkdirpSync = requireMkdirs().mkdirsSync;
   const utimesSync = requireUtimes().utimesMillisSync;
   const stat2 = requireStat();
@@ -1347,7 +1347,7 @@ function requireCopySync$1() {
   }
   function handleFilterAndCopy(destStat, src, dest, opts) {
     if (opts.filter && !opts.filter(src, dest)) return;
-    const destParent = path2.dirname(dest);
+    const destParent = path$12.dirname(dest);
     if (!fs2.existsSync(destParent)) mkdirpSync(destParent);
     return startCopy(destStat, src, dest, opts);
   }
@@ -1416,15 +1416,15 @@ function requireCopySync$1() {
     fs2.readdirSync(src).forEach((item) => copyDirItem(item, src, dest, opts));
   }
   function copyDirItem(item, src, dest, opts) {
-    const srcItem = path2.join(src, item);
-    const destItem = path2.join(dest, item);
+    const srcItem = path$12.join(src, item);
+    const destItem = path$12.join(dest, item);
     const { destStat } = stat2.checkPathsSync(srcItem, destItem, "copy");
     return startCopy(destStat, srcItem, destItem, opts);
   }
   function onLink(destStat, src, dest, opts) {
     let resolvedSrc = fs2.readlinkSync(src);
     if (opts.dereference) {
-      resolvedSrc = path2.resolve(process.cwd(), resolvedSrc);
+      resolvedSrc = path$12.resolve(process.cwd(), resolvedSrc);
     }
     if (!destStat) {
       return fs2.symlinkSync(resolvedSrc, dest);
@@ -1437,7 +1437,7 @@ function requireCopySync$1() {
         throw err;
       }
       if (opts.dereference) {
-        resolvedDest = path2.resolve(process.cwd(), resolvedDest);
+        resolvedDest = path$12.resolve(process.cwd(), resolvedDest);
       }
       if (stat2.isSrcSubdir(resolvedSrc, resolvedDest)) {
         throw new Error(`Cannot copy '${resolvedSrc}' to a subdirectory of itself, '${resolvedDest}'.`);
@@ -1487,7 +1487,7 @@ function requireCopy$1() {
   if (hasRequiredCopy$1) return copy_1;
   hasRequiredCopy$1 = 1;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const mkdirp = requireMkdirs().mkdirs;
   const pathExists = requirePathExists().pathExists;
   const utimes2 = requireUtimes().utimesMillis;
@@ -1520,7 +1520,7 @@ function requireCopy$1() {
     });
   }
   function checkParentDir(destStat, src, dest, opts, cb) {
-    const destParent = path2.dirname(dest);
+    const destParent = path$12.dirname(dest);
     pathExists(destParent, (err, dirExists) => {
       if (err) return cb(err);
       if (dirExists) return startCopy(destStat, src, dest, opts, cb);
@@ -1616,8 +1616,8 @@ function requireCopy$1() {
     return copyDirItem(items, item, src, dest, opts, cb);
   }
   function copyDirItem(items, item, src, dest, opts, cb) {
-    const srcItem = path2.join(src, item);
-    const destItem = path2.join(dest, item);
+    const srcItem = path$12.join(src, item);
+    const destItem = path$12.join(dest, item);
     stat2.checkPaths(srcItem, destItem, "copy", (err, stats) => {
       if (err) return cb(err);
       const { destStat } = stats;
@@ -1631,7 +1631,7 @@ function requireCopy$1() {
     fs2.readlink(src, (err, resolvedSrc) => {
       if (err) return cb(err);
       if (opts.dereference) {
-        resolvedSrc = path2.resolve(process.cwd(), resolvedSrc);
+        resolvedSrc = path$12.resolve(process.cwd(), resolvedSrc);
       }
       if (!destStat) {
         return fs2.symlink(resolvedSrc, dest, cb);
@@ -1642,7 +1642,7 @@ function requireCopy$1() {
             return cb(err2);
           }
           if (opts.dereference) {
-            resolvedDest = path2.resolve(process.cwd(), resolvedDest);
+            resolvedDest = path$12.resolve(process.cwd(), resolvedDest);
           }
           if (stat2.isSrcSubdir(resolvedSrc, resolvedDest)) {
             return cb(new Error(`Cannot copy '${resolvedSrc}' to a subdirectory of itself, '${resolvedDest}'.`));
@@ -1681,7 +1681,7 @@ function requireRimraf() {
   if (hasRequiredRimraf) return rimraf_1;
   hasRequiredRimraf = 1;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const assert = require$$5;
   const isWindows = process.platform === "win32";
   function defaults(options) {
@@ -1835,7 +1835,7 @@ function requireRimraf() {
       let errState;
       if (n === 0) return options.rmdir(p, cb);
       files.forEach((f) => {
-        rimraf(path2.join(p, f), options, (er2) => {
+        rimraf(path$12.join(p, f), options, (er2) => {
           if (errState) {
             return;
           }
@@ -1903,7 +1903,7 @@ function requireRimraf() {
   function rmkidsSync(p, options) {
     assert(p);
     assert(options);
-    options.readdirSync(p).forEach((f) => rimrafSync(path2.join(p, f), options));
+    options.readdirSync(p).forEach((f) => rimrafSync(path$12.join(p, f), options));
     if (isWindows) {
       const startTime = Date.now();
       do {
@@ -1942,7 +1942,7 @@ function requireEmpty() {
   hasRequiredEmpty = 1;
   const u = requireUniversalify().fromCallback;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const mkdir = requireMkdirs();
   const remove2 = requireRemove();
   const emptyDir = u(function emptyDir2(dir, callback) {
@@ -1950,7 +1950,7 @@ function requireEmpty() {
     };
     fs2.readdir(dir, (err, items) => {
       if (err) return mkdir.mkdirs(dir, callback);
-      items = items.map((item) => path2.join(dir, item));
+      items = items.map((item) => path$12.join(dir, item));
       deleteItem();
       function deleteItem() {
         const item = items.pop();
@@ -1970,7 +1970,7 @@ function requireEmpty() {
       return mkdir.mkdirsSync(dir);
     }
     items.forEach((item) => {
-      item = path2.join(dir, item);
+      item = path$12.join(dir, item);
       remove2.removeSync(item);
     });
   }
@@ -1988,7 +1988,7 @@ function requireFile() {
   if (hasRequiredFile) return file;
   hasRequiredFile = 1;
   const u = requireUniversalify().fromCallback;
-  const path2 = require$$1;
+  const path$12 = path;
   const fs2 = requireGracefulFs();
   const mkdir = requireMkdirs();
   const pathExists = requirePathExists().pathExists;
@@ -2001,7 +2001,7 @@ function requireFile() {
     }
     fs2.stat(file2, (err, stats) => {
       if (!err && stats.isFile()) return callback();
-      const dir = path2.dirname(file2);
+      const dir = path$12.dirname(file2);
       pathExists(dir, (err2, dirExists) => {
         if (err2) return callback(err2);
         if (dirExists) return makeFile();
@@ -2019,7 +2019,7 @@ function requireFile() {
     } catch (e) {
     }
     if (stats && stats.isFile()) return;
-    const dir = path2.dirname(file2);
+    const dir = path$12.dirname(file2);
     if (!fs2.existsSync(dir)) {
       mkdir.mkdirsSync(dir);
     }
@@ -2037,7 +2037,7 @@ function requireLink() {
   if (hasRequiredLink) return link;
   hasRequiredLink = 1;
   const u = requireUniversalify().fromCallback;
-  const path2 = require$$1;
+  const path$12 = path;
   const fs2 = requireGracefulFs();
   const mkdir = requireMkdirs();
   const pathExists = requirePathExists().pathExists;
@@ -2056,7 +2056,7 @@ function requireLink() {
           err2.message = err2.message.replace("lstat", "ensureLink");
           return callback(err2);
         }
-        const dir = path2.dirname(dstpath);
+        const dir = path$12.dirname(dstpath);
         pathExists(dir, (err3, dirExists) => {
           if (err3) return callback(err3);
           if (dirExists) return makeLink(srcpath, dstpath);
@@ -2077,7 +2077,7 @@ function requireLink() {
       err.message = err.message.replace("lstat", "ensureLink");
       throw err;
     }
-    const dir = path2.dirname(dstpath);
+    const dir = path$12.dirname(dstpath);
     const dirExists = fs2.existsSync(dir);
     if (dirExists) return fs2.linkSync(srcpath, dstpath);
     mkdir.mkdirsSync(dir);
@@ -2094,11 +2094,11 @@ var hasRequiredSymlinkPaths;
 function requireSymlinkPaths() {
   if (hasRequiredSymlinkPaths) return symlinkPaths_1;
   hasRequiredSymlinkPaths = 1;
-  const path2 = require$$1;
+  const path$12 = path;
   const fs2 = requireGracefulFs();
   const pathExists = requirePathExists().pathExists;
   function symlinkPaths(srcpath, dstpath, callback) {
-    if (path2.isAbsolute(srcpath)) {
+    if (path$12.isAbsolute(srcpath)) {
       return fs2.lstat(srcpath, (err) => {
         if (err) {
           err.message = err.message.replace("lstat", "ensureSymlink");
@@ -2110,8 +2110,8 @@ function requireSymlinkPaths() {
         });
       });
     } else {
-      const dstdir = path2.dirname(dstpath);
-      const relativeToDst = path2.join(dstdir, srcpath);
+      const dstdir = path$12.dirname(dstpath);
+      const relativeToDst = path$12.join(dstdir, srcpath);
       return pathExists(relativeToDst, (err, exists) => {
         if (err) return callback(err);
         if (exists) {
@@ -2127,7 +2127,7 @@ function requireSymlinkPaths() {
             }
             return callback(null, {
               "toCwd": srcpath,
-              "toDst": path2.relative(dstdir, srcpath)
+              "toDst": path$12.relative(dstdir, srcpath)
             });
           });
         }
@@ -2136,7 +2136,7 @@ function requireSymlinkPaths() {
   }
   function symlinkPathsSync(srcpath, dstpath) {
     let exists;
-    if (path2.isAbsolute(srcpath)) {
+    if (path$12.isAbsolute(srcpath)) {
       exists = fs2.existsSync(srcpath);
       if (!exists) throw new Error("absolute srcpath does not exist");
       return {
@@ -2144,8 +2144,8 @@ function requireSymlinkPaths() {
         "toDst": srcpath
       };
     } else {
-      const dstdir = path2.dirname(dstpath);
-      const relativeToDst = path2.join(dstdir, srcpath);
+      const dstdir = path$12.dirname(dstpath);
+      const relativeToDst = path$12.join(dstdir, srcpath);
       exists = fs2.existsSync(relativeToDst);
       if (exists) {
         return {
@@ -2157,7 +2157,7 @@ function requireSymlinkPaths() {
         if (!exists) throw new Error("relative srcpath does not exist");
         return {
           "toCwd": srcpath,
-          "toDst": path2.relative(dstdir, srcpath)
+          "toDst": path$12.relative(dstdir, srcpath)
         };
       }
     }
@@ -2206,7 +2206,7 @@ function requireSymlink() {
   if (hasRequiredSymlink) return symlink;
   hasRequiredSymlink = 1;
   const u = requireUniversalify().fromCallback;
-  const path2 = require$$1;
+  const path$12 = path;
   const fs2 = requireGracefulFs();
   const _mkdirs = requireMkdirs();
   const mkdirs = _mkdirs.mkdirs;
@@ -2229,7 +2229,7 @@ function requireSymlink() {
         srcpath = relative.toDst;
         symlinkType(relative.toCwd, type, (err3, type2) => {
           if (err3) return callback(err3);
-          const dir = path2.dirname(dstpath);
+          const dir = path$12.dirname(dstpath);
           pathExists(dir, (err4, dirExists) => {
             if (err4) return callback(err4);
             if (dirExists) return fs2.symlink(srcpath, dstpath, type2, callback);
@@ -2248,7 +2248,7 @@ function requireSymlink() {
     const relative = symlinkPathsSync(srcpath, dstpath);
     srcpath = relative.toDst;
     type = symlinkTypeSync(relative.toCwd, type);
-    const dir = path2.dirname(dstpath);
+    const dir = path$12.dirname(dstpath);
     const exists = fs2.existsSync(dir);
     if (exists) return fs2.symlinkSync(srcpath, dstpath, type);
     mkdirsSync(dir);
@@ -2423,7 +2423,7 @@ var hasRequiredOutputJson;
 function requireOutputJson() {
   if (hasRequiredOutputJson) return outputJson_1;
   hasRequiredOutputJson = 1;
-  const path2 = require$$1;
+  const path$12 = path;
   const mkdir = requireMkdirs();
   const pathExists = requirePathExists().pathExists;
   const jsonFile = requireJsonfile();
@@ -2432,7 +2432,7 @@ function requireOutputJson() {
       callback = options;
       options = {};
     }
-    const dir = path2.dirname(file2);
+    const dir = path$12.dirname(file2);
     pathExists(dir, (err, itDoes) => {
       if (err) return callback(err);
       if (itDoes) return jsonFile.writeJson(file2, data, options, callback);
@@ -2451,11 +2451,11 @@ function requireOutputJsonSync() {
   if (hasRequiredOutputJsonSync) return outputJsonSync_1;
   hasRequiredOutputJsonSync = 1;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const mkdir = requireMkdirs();
   const jsonFile = requireJsonfile();
   function outputJsonSync(file2, data, options) {
-    const dir = path2.dirname(file2);
+    const dir = path$12.dirname(file2);
     if (!fs2.existsSync(dir)) {
       mkdir.mkdirsSync(dir);
     }
@@ -2488,7 +2488,7 @@ function requireMoveSync$1() {
   if (hasRequiredMoveSync$1) return moveSync_1;
   hasRequiredMoveSync$1 = 1;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const copySync2 = requireCopySync().copySync;
   const removeSync = requireRemove().removeSync;
   const mkdirpSync = requireMkdirs().mkdirpSync;
@@ -2498,7 +2498,7 @@ function requireMoveSync$1() {
     const overwrite = opts.overwrite || opts.clobber || false;
     const { srcStat } = stat2.checkPathsSync(src, dest, "move");
     stat2.checkParentPathsSync(src, srcStat, dest, "move");
-    mkdirpSync(path2.dirname(dest));
+    mkdirpSync(path$12.dirname(dest));
     return doRename(src, dest, overwrite);
   }
   function doRename(src, dest, overwrite) {
@@ -2544,7 +2544,7 @@ function requireMove$1() {
   if (hasRequiredMove$1) return move_1;
   hasRequiredMove$1 = 1;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const copy2 = requireCopy().copy;
   const remove2 = requireRemove().remove;
   const mkdirp = requireMkdirs().mkdirp;
@@ -2561,7 +2561,7 @@ function requireMove$1() {
       const { srcStat } = stats;
       stat2.checkParentPaths(src, srcStat, dest, "move", (err2) => {
         if (err2) return cb(err2);
-        mkdirp(path2.dirname(dest), (err3) => {
+        mkdirp(path$12.dirname(dest), (err3) => {
           if (err3) return cb(err3);
           return doRename(src, dest, overwrite, cb);
         });
@@ -2619,7 +2619,7 @@ function requireOutput() {
   hasRequiredOutput = 1;
   const u = requireUniversalify().fromCallback;
   const fs2 = requireGracefulFs();
-  const path2 = require$$1;
+  const path$12 = path;
   const mkdir = requireMkdirs();
   const pathExists = requirePathExists().pathExists;
   function outputFile(file2, data, encoding, callback) {
@@ -2627,7 +2627,7 @@ function requireOutput() {
       callback = encoding;
       encoding = "utf8";
     }
-    const dir = path2.dirname(file2);
+    const dir = path$12.dirname(file2);
     pathExists(dir, (err, itDoes) => {
       if (err) return callback(err);
       if (itDoes) return fs2.writeFile(file2, data, encoding, callback);
@@ -2638,7 +2638,7 @@ function requireOutput() {
     });
   }
   function outputFileSync(file2, ...args) {
-    const dir = path2.dirname(file2);
+    const dir = path$12.dirname(file2);
     if (fs2.existsSync(dir)) {
       return fs2.writeFileSync(file2, ...args);
     }
@@ -2727,7 +2727,7 @@ class Logger {
 const logger = Logger.getInstance();
 const IS_WIN = process.platform === "win32";
 const IS_MAC = process.platform === "darwin";
-const IS_WSL = process.platform === "linux" && require$$1$1.release().toLowerCase().includes("microsoft");
+const IS_WSL = process.platform === "linux" && require$$1.release().toLowerCase().includes("microsoft");
 class LCUConnector extends EventEmitter {
   processWatcher;
   /**
@@ -2753,7 +2753,7 @@ class LCUConnector extends EventEmitter {
             port: parseInt(portMatch[1]),
             pid: parseInt(pidMatch[1]),
             token: tokenMatch[1],
-            installDirectory: path.dirname(installDirectoryMatch[1])
+            installDirectory: path$1.dirname(installDirectoryMatch[1])
             //  父目录
           };
           resolve(data);
@@ -2772,9 +2772,9 @@ class LCUConnector extends EventEmitter {
       return false;
     }
     const lcuClientApp = IS_MAC ? "LeagueClient.app" : "LeagueClient.exe";
-    const common = fs.existsSync(path.join(dirPath, lcuClientApp)) && fs.existsSync(path.join(dirPath, "Config"));
-    const isGlobal = common && fs.existsSync(path.join(dirPath, "RADS"));
-    const isCN = common && fs.existsSync(path.join(dirPath, "TQM"));
+    const common = fs.existsSync(path$1.join(dirPath, lcuClientApp)) && fs.existsSync(path$1.join(dirPath, "Config"));
+    const isGlobal = common && fs.existsSync(path$1.join(dirPath, "RADS"));
+    const isCN = common && fs.existsSync(path$1.join(dirPath, "TQM"));
     const isGarena = common;
     return isGlobal || isCN || isGarena;
   }
@@ -4873,7 +4873,7 @@ function requireSourceMapSupport() {
   hasRequiredSourceMapSupport = 1;
   (function(module, exports) {
     var SourceMapConsumer = requireSourceMap().SourceMapConsumer;
-    var path2 = require$$1;
+    var path$12 = path;
     var fs2;
     try {
       fs2 = require2("fs");
@@ -4934,18 +4934,18 @@ function requireSourceMapSupport() {
       };
     }
     var retrieveFile = handlerExec(retrieveFileHandlers);
-    retrieveFileHandlers.push(function(path3) {
-      path3 = path3.trim();
-      if (/^file:/.test(path3)) {
-        path3 = path3.replace(/file:\/\/\/(\w:)?/, function(protocol, drive) {
+    retrieveFileHandlers.push(function(path2) {
+      path2 = path2.trim();
+      if (/^file:/.test(path2)) {
+        path2 = path2.replace(/file:\/\/\/(\w:)?/, function(protocol, drive) {
           return drive ? "" : (
             // file:///C:/dir/file -> C:/dir/file
             "/"
           );
         });
       }
-      if (path3 in fileContentsCache) {
-        return fileContentsCache[path3];
+      if (path2 in fileContentsCache) {
+        return fileContentsCache[path2];
       }
       var contents = "";
       try {
@@ -4953,7 +4953,7 @@ function requireSourceMapSupport() {
           var xhr = new XMLHttpRequest();
           xhr.open(
             "GET",
-            path3,
+            path2,
             /** async */
             false
           );
@@ -4961,24 +4961,24 @@ function requireSourceMapSupport() {
           if (xhr.readyState === 4 && xhr.status === 200) {
             contents = xhr.responseText;
           }
-        } else if (fs2.existsSync(path3)) {
-          contents = fs2.readFileSync(path3, "utf8");
+        } else if (fs2.existsSync(path2)) {
+          contents = fs2.readFileSync(path2, "utf8");
         }
       } catch (er) {
       }
-      return fileContentsCache[path3] = contents;
+      return fileContentsCache[path2] = contents;
     });
     function supportRelativeURL(file2, url) {
       if (!file2) return url;
-      var dir = path2.dirname(file2);
+      var dir = path$12.dirname(file2);
       var match = /^\w+:\/\/[^\/]*/.exec(dir);
       var protocol = match ? match[0] : "";
       var startPath = dir.slice(protocol.length);
       if (protocol && /^\/\w\:/.test(startPath)) {
         protocol += "/";
-        return protocol + path2.resolve(dir.slice(protocol.length), url).replace(/\\/g, "/");
+        return protocol + path$12.resolve(dir.slice(protocol.length), url).replace(/\\/g, "/");
       }
-      return protocol + path2.resolve(dir.slice(protocol.length), url);
+      return protocol + path$12.resolve(dir.slice(protocol.length), url);
     }
     function retrieveSourceMapURL(source) {
       var fileData;
@@ -5361,9 +5361,9 @@ class ConfigHelper {
       throw new Error("初始化失败，必须提供一个有效的游戏安装路径！");
     }
     this.installPath = installPath;
-    this.gameConfigPath = require$$1.join(this.installPath, "Game", "Config");
-    this.backupPath = require$$1.join(app.getPath("userData"), "GameConfigBackup");
-    this.tftConfigPath = require$$1.join(app.getAppPath(), "public", "GameConfig", "TFTConfig");
+    this.gameConfigPath = path.join(this.installPath, "Game", "Config");
+    this.backupPath = path.join(app.getPath("userData"), "GameConfigBackup");
+    this.tftConfigPath = path.join(app.getAppPath(), "public", "GameConfig", "TFTConfig");
     console.log(`[ConfigHelper] 游戏设置目录已设定: ${this.gameConfigPath}`);
     console.log(`[ConfigHelper] 备份将存储在: ${this.backupPath}`);
     console.log(`[ConfigHelper] 预设云顶之弈设置目录: ${this.tftConfigPath}`);
@@ -5469,6 +5469,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["HEX_START"] = "hex-start";
   IpcChannel2["HEX_STOP"] = "hex-stop";
   IpcChannel2["TFT_BUY_AT_SLOT"] = "tft-buy-at-slot";
+  IpcChannel2["TFT_GET_SHOP_INFO"] = "tft-get-shop-info";
   return IpcChannel2;
 })(IpcChannel || {});
 var Queue = /* @__PURE__ */ ((Queue2) => {
@@ -5511,15 +5512,1268 @@ class EndState {
     return new IdleState();
   }
 }
+const TFT_15_CHAMPION_DATA = {
+  "亚托克斯": {
+    displayName: "亚托克斯",
+    price: 1,
+    traits: [
+      "超级战队",
+      "主宰",
+      "重量级斗士"
+      /* Heavyweight */
+    ],
+    origins: [
+      "超级战队"
+      /* MightyMech */
+    ],
+    classes: [
+      "主宰",
+      "重量级斗士"
+      /* Heavyweight */
+    ]
+  },
+  "阿狸": {
+    displayName: "阿狸",
+    price: 3,
+    traits: [
+      "星之守护者",
+      "法师"
+      /* Sorcerer */
+    ],
+    origins: [
+      "星之守护者"
+      /* StarGuardian */
+    ],
+    classes: [
+      "法师"
+      /* Sorcerer */
+    ]
+  },
+  "阿卡丽": {
+    displayName: "阿卡丽",
+    price: 4,
+    traits: [
+      "兵王",
+      "裁决使者"
+      /* Executioner */
+    ],
+    origins: [
+      "兵王"
+      /* SupremeCells */
+    ],
+    classes: [
+      "裁决使者"
+      /* Executioner */
+    ]
+  },
+  "艾希": {
+    displayName: "艾希",
+    price: 4,
+    traits: [
+      "水晶玫瑰",
+      "决斗大师"
+      /* Duelist */
+    ],
+    origins: [
+      "水晶玫瑰"
+      /* CrystalGambit */
+    ],
+    classes: [
+      "决斗大师"
+      /* Duelist */
+    ]
+  },
+  "布隆": {
+    displayName: "布隆",
+    price: 5,
+    traits: [
+      "布隆之心",
+      "假面摔跤手",
+      "护卫"
+      /* Bastion */
+    ],
+    origins: [
+      "布隆之心",
+      "假面摔跤手"
+      /* Luchador */
+    ],
+    classes: [
+      "护卫"
+      /* Bastion */
+    ]
+  },
+  "凯特琳": {
+    displayName: "凯特琳",
+    price: 3,
+    traits: [
+      "战斗学院",
+      "狙神"
+      /* Sniper */
+    ],
+    origins: [
+      "战斗学院"
+      /* BattleAcademia */
+    ],
+    classes: [
+      "狙神"
+      /* Sniper */
+    ]
+  },
+  "德莱厄斯": {
+    displayName: "德莱厄斯",
+    price: 3,
+    traits: [
+      "兵王",
+      "重量级斗士"
+      /* Heavyweight */
+    ],
+    origins: [
+      "兵王"
+      /* SupremeCells */
+    ],
+    classes: [
+      "重量级斗士"
+      /* Heavyweight */
+    ]
+  },
+  "蒙多医生": {
+    displayName: "蒙多医生",
+    price: 2,
+    traits: [
+      "假面摔跤手",
+      "主宰"
+      /* Juggernaut */
+    ],
+    origins: [
+      "假面摔跤手"
+      /* Luchador */
+    ],
+    classes: [
+      "主宰"
+      /* Juggernaut */
+    ]
+  },
+  "艾克": {
+    displayName: "艾克",
+    price: 0,
+    traits: [],
+    origins: [],
+    classes: []
+  },
+  "伊泽瑞尔": {
+    displayName: "伊泽瑞尔",
+    price: 1,
+    traits: [
+      "战斗学院",
+      "天才"
+      /* Prodigy */
+    ],
+    origins: [
+      "战斗学院"
+      /* BattleAcademia */
+    ],
+    classes: [
+      "天才"
+      /* Prodigy */
+    ]
+  },
+  "超级机甲": {
+    displayName: "超级机甲",
+    price: 0,
+    traits: [],
+    origins: [],
+    classes: []
+  },
+  "普朗克": {
+    displayName: "普朗克",
+    price: 2,
+    traits: [
+      "超级战队",
+      "决斗大师"
+      /* Duelist */
+    ],
+    origins: [
+      "超级战队"
+      /* MightyMech */
+    ],
+    classes: [
+      "决斗大师"
+      /* Duelist */
+    ]
+  },
+  "盖伦": {
+    displayName: "盖伦",
+    price: 1,
+    traits: [
+      "战斗学院",
+      "护卫"
+      /* Bastion */
+    ],
+    origins: [
+      "战斗学院"
+      /* BattleAcademia */
+    ],
+    classes: [
+      "护卫"
+      /* Bastion */
+    ]
+  },
+  "纳尔": {
+    displayName: "纳尔",
+    price: 1,
+    traits: [
+      "假面摔跤手",
+      "狙神"
+      /* Sniper */
+    ],
+    origins: [
+      "假面摔跤手"
+      /* Luchador */
+    ],
+    classes: [
+      "狙神"
+      /* Sniper */
+    ]
+  },
+  "格温": {
+    displayName: "格温",
+    price: 5,
+    traits: [
+      "斗魂战士",
+      "法师"
+      /* Sorcerer */
+    ],
+    origins: [
+      "斗魂战士"
+      /* SoulFighter */
+    ],
+    classes: [
+      "法师"
+      /* Sorcerer */
+    ]
+  },
+  "迦娜": {
+    displayName: "迦娜",
+    price: 2,
+    traits: [
+      "水晶玫瑰",
+      "圣盾使",
+      "司令"
+      /* Strategist */
+    ],
+    origins: [
+      "水晶玫瑰"
+      /* CrystalGambit */
+    ],
+    classes: [
+      "圣盾使",
+      "司令"
+      /* Strategist */
+    ]
+  },
+  "嘉文四世": {
+    displayName: "嘉文四世",
+    price: 4,
+    traits: [
+      "超级战队",
+      "司令"
+      /* Strategist */
+    ],
+    origins: [
+      "超级战队"
+      /* MightyMech */
+    ],
+    classes: [
+      "司令"
+      /* Strategist */
+    ]
+  },
+  "杰斯": {
+    displayName: "杰斯",
+    price: 3,
+    traits: [
+      "战斗学院",
+      "重量级斗士"
+      /* Heavyweight */
+    ],
+    origins: [
+      "战斗学院"
+      /* BattleAcademia */
+    ],
+    classes: [
+      "重量级斗士"
+      /* Heavyweight */
+    ]
+  },
+  "烬": {
+    displayName: "烬",
+    price: 2,
+    traits: [
+      "至高天",
+      "狙神"
+      /* Sniper */
+    ],
+    origins: [
+      "至高天"
+      /* Wraith */
+    ],
+    classes: [
+      "狙神"
+      /* Sniper */
+    ]
+  },
+  "金克丝": {
+    displayName: "金克丝",
+    price: 4,
+    traits: [
+      "星之守护者",
+      "狙神"
+      /* Sniper */
+    ],
+    origins: [
+      "星之守护者"
+      /* StarGuardian */
+    ],
+    classes: [
+      "狙神"
+      /* Sniper */
+    ]
+  },
+  "卡莎": {
+    displayName: "卡莎",
+    price: 2,
+    traits: [
+      "兵王",
+      "决斗大师"
+      /* Duelist */
+    ],
+    origins: [
+      "兵王"
+      /* SupremeCells */
+    ],
+    classes: [
+      "决斗大师"
+      /* Duelist */
+    ]
+  },
+  "卡莉丝塔": {
+    displayName: "卡莉丝塔",
+    price: 1,
+    traits: [
+      "斗魂战士",
+      "裁决使者"
+      /* Executioner */
+    ],
+    origins: [
+      "斗魂战士"
+      /* SoulFighter */
+    ],
+    classes: [
+      "裁决使者"
+      /* Executioner */
+    ]
+  },
+  "卡尔玛": {
+    displayName: "卡尔玛",
+    price: 4,
+    traits: [
+      "超级战队",
+      "法师"
+      /* Sorcerer */
+    ],
+    origins: [
+      "超级战队"
+      /* MightyMech */
+    ],
+    classes: [
+      "法师"
+      /* Sorcerer */
+    ]
+  },
+  "卡特琳娜": {
+    displayName: "卡特琳娜",
+    price: 2,
+    traits: [
+      "战斗学院",
+      "裁决使者"
+      /* Executioner */
+    ],
+    origins: [
+      "战斗学院"
+      /* BattleAcademia */
+    ],
+    classes: [
+      "裁决使者"
+      /* Executioner */
+    ]
+  },
+  "凯尔": {
+    displayName: "凯尔",
+    price: 1,
+    traits: [
+      "至高天",
+      "决斗大师"
+      /* Duelist */
+    ],
+    origins: [
+      "至高天"
+      /* Wraith */
+    ],
+    classes: [
+      "决斗大师"
+      /* Duelist */
+    ]
+  },
+  "凯南": {
+    displayName: "凯南",
+    price: 1,
+    traits: [
+      "兵王",
+      "圣盾使",
+      "法师"
+      /* Sorcerer */
+    ],
+    origins: [
+      "兵王"
+      /* SupremeCells */
+    ],
+    classes: [
+      "圣盾使",
+      "法师"
+      /* Sorcerer */
+    ]
+  },
+  "可酷伯": {
+    displayName: "可酷伯",
+    price: 2,
+    traits: [
+      "大宗师",
+      "重量级斗士"
+      /* Heavyweight */
+    ],
+    origins: [
+      "大宗师"
+      /* Mentor */
+    ],
+    classes: [
+      "重量级斗士"
+      /* Heavyweight */
+    ]
+  },
+  "克格莫": {
+    displayName: "克格莫",
+    price: 3,
+    traits: [
+      "小怪兽训练师"
+      /* MonsterTrainer */
+    ],
+    origins: [
+      "小怪兽训练师"
+      /* MonsterTrainer */
+    ],
+    classes: []
+  },
+  "奎桑提": {
+    displayName: "奎桑提",
+    price: 4,
+    traits: [
+      "至高天",
+      "圣盾使"
+      /* Protector */
+    ],
+    origins: [
+      "至高天"
+      /* Wraith */
+    ],
+    classes: [
+      "圣盾使"
+      /* Protector */
+    ]
+  },
+  "李青": {
+    displayName: "李青",
+    price: 5,
+    traits: [
+      "龙的传人"
+      /* StanceMaster */
+    ],
+    origins: [
+      "龙的传人"
+      /* StanceMaster */
+    ],
+    classes: []
+  },
+  "李青-裁决使者": {
+    displayName: "李青-裁决使者",
+    price: 5,
+    traits: [
+      "龙的传人",
+      "裁决使者"
+      /* Executioner */
+    ],
+    origins: [
+      "龙的传人"
+      /* StanceMaster */
+    ],
+    classes: [
+      "裁决使者"
+      /* Executioner */
+    ]
+  },
+  "李青-决斗大师": {
+    displayName: "李青-决斗大师",
+    price: 5,
+    traits: [
+      "龙的传人",
+      "决斗大师"
+      /* Duelist */
+    ],
+    origins: [
+      "龙的传人"
+      /* StanceMaster */
+    ],
+    classes: [
+      "决斗大师"
+      /* Duelist */
+    ]
+  },
+  "李青-主宰": {
+    displayName: "李青-主宰",
+    price: 5,
+    traits: [
+      "龙的传人",
+      "主宰"
+      /* Juggernaut */
+    ],
+    origins: [
+      "龙的传人"
+      /* StanceMaster */
+    ],
+    classes: [
+      "主宰"
+      /* Juggernaut */
+    ]
+  },
+  "蕾欧娜": {
+    displayName: "蕾欧娜",
+    price: 4,
+    traits: [
+      "战斗学院",
+      "护卫"
+      /* Bastion */
+    ],
+    origins: [
+      "战斗学院"
+      /* BattleAcademia */
+    ],
+    classes: [
+      "护卫"
+      /* Bastion */
+    ]
+  },
+  "卢锡安": {
+    displayName: "卢锡安",
+    price: 1,
+    traits: [
+      "超级战队",
+      "法师"
+      /* Sorcerer */
+    ],
+    origins: [
+      "超级战队"
+      /* MightyMech */
+    ],
+    classes: [
+      "法师"
+      /* Sorcerer */
+    ]
+  },
+  "璐璐": {
+    displayName: "璐璐",
+    price: 3,
+    traits: [
+      "小怪兽训练师"
+      /* MonsterTrainer */
+    ],
+    origins: [
+      "小怪兽训练师"
+      /* MonsterTrainer */
+    ],
+    classes: []
+  },
+  "拉克丝": {
+    displayName: "拉克丝",
+    price: 2,
+    traits: [
+      "斗魂战士",
+      "法师"
+      /* Sorcerer */
+    ],
+    origins: [
+      "斗魂战士"
+      /* SoulFighter */
+    ],
+    classes: [
+      "法师"
+      /* Sorcerer */
+    ]
+  },
+  "墨菲特": {
+    displayName: "墨菲特",
+    price: 1,
+    traits: [
+      "奥德赛",
+      "圣盾使"
+      /* Protector */
+    ],
+    origins: [
+      "奥德赛"
+      /* TheCrew */
+    ],
+    classes: [
+      "圣盾使"
+      /* Protector */
+    ]
+  },
+  "玛尔扎哈": {
+    displayName: "玛尔扎哈",
+    price: 3,
+    traits: [
+      "至高天",
+      "天才"
+      /* Prodigy */
+    ],
+    origins: [
+      "至高天"
+      /* Wraith */
+    ],
+    classes: [
+      "天才"
+      /* Prodigy */
+    ]
+  },
+  "纳亚菲利": {
+    displayName: "纳亚菲利",
+    price: 1,
+    traits: [
+      "斗魂战士",
+      "主宰"
+      /* Juggernaut */
+    ],
+    origins: [
+      "斗魂战士"
+      /* SoulFighter */
+    ],
+    classes: [
+      "主宰"
+      /* Juggernaut */
+    ]
+  },
+  "妮蔻": {
+    displayName: "妮蔻",
+    price: 3,
+    traits: [
+      "星之守护者",
+      "圣盾使"
+      /* Protector */
+    ],
+    origins: [
+      "星之守护者"
+      /* StarGuardian */
+    ],
+    classes: [
+      "圣盾使"
+      /* Protector */
+    ]
+  },
+  "波比": {
+    displayName: "波比",
+    price: 4,
+    traits: [
+      "星之守护者",
+      "重量级斗士"
+      /* Heavyweight */
+    ],
+    origins: [
+      "星之守护者"
+      /* StarGuardian */
+    ],
+    classes: [
+      "重量级斗士"
+      /* Heavyweight */
+    ]
+  },
+  "洛": {
+    displayName: "洛",
+    price: 2,
+    traits: [
+      "战斗学院",
+      "圣盾使"
+      /* Protector */
+    ],
+    origins: [
+      "战斗学院"
+      /* BattleAcademia */
+    ],
+    classes: [
+      "圣盾使"
+      /* Protector */
+    ]
+  },
+  "拉莫斯": {
+    displayName: "拉莫斯",
+    price: 3,
+    traits: [
+      "小怪兽训练师"
+      /* MonsterTrainer */
+    ],
+    origins: [
+      "小怪兽训练师"
+      /* MonsterTrainer */
+    ],
+    classes: []
+  },
+  "芮尔": {
+    displayName: "芮尔",
+    price: 1,
+    traits: [
+      "星之守护者",
+      "护卫"
+      /* Bastion */
+    ],
+    origins: [
+      "星之守护者"
+      /* StarGuardian */
+    ],
+    classes: [
+      "护卫"
+      /* Bastion */
+    ]
+  },
+  "瑞兹": {
+    displayName: "瑞兹",
+    price: 4,
+    traits: [
+      "大宗师",
+      "裁决使者",
+      "司令"
+      /* Strategist */
+    ],
+    origins: [
+      "大宗师"
+      /* Mentor */
+    ],
+    classes: [
+      "裁决使者",
+      "司令"
+      /* Strategist */
+    ]
+  },
+  "莎弥拉": {
+    displayName: "莎弥拉",
+    price: 4,
+    traits: [
+      "斗魂战士",
+      "刀锋领主"
+      /* Edgelord */
+    ],
+    origins: [
+      "斗魂战士"
+      /* SoulFighter */
+    ],
+    classes: [
+      "刀锋领主"
+      /* Edgelord */
+    ]
+  },
+  "赛娜": {
+    displayName: "赛娜",
+    price: 3,
+    traits: [
+      "超级战队",
+      "裁决使者"
+      /* Executioner */
+    ],
+    origins: [
+      "超级战队"
+      /* MightyMech */
+    ],
+    classes: [
+      "裁决使者"
+      /* Executioner */
+    ]
+  },
+  "萨勒芬妮": {
+    displayName: "萨勒芬妮",
+    price: 5,
+    traits: [
+      "星之守护者",
+      "天才"
+      /* Prodigy */
+    ],
+    origins: [
+      "星之守护者"
+      /* StarGuardian */
+    ],
+    classes: [
+      "天才"
+      /* Prodigy */
+    ]
+  },
+  "瑟提": {
+    displayName: "瑟提",
+    price: 4,
+    traits: [
+      "斗魂战士",
+      "主宰"
+      /* Juggernaut */
+    ],
+    origins: [
+      "斗魂战士"
+      /* SoulFighter */
+    ],
+    classes: [
+      "主宰"
+      /* Juggernaut */
+    ]
+  },
+  "慎": {
+    displayName: "慎",
+    price: 2,
+    traits: [
+      "奥德赛",
+      "护卫",
+      "刀锋领主"
+      /* Edgelord */
+    ],
+    origins: [
+      "奥德赛"
+      /* TheCrew */
+    ],
+    classes: [
+      "护卫",
+      "刀锋领主"
+      /* Edgelord */
+    ]
+  },
+  "希维尔": {
+    displayName: "希维尔",
+    price: 1,
+    traits: [
+      "奥德赛",
+      "狙神"
+      /* Sniper */
+    ],
+    origins: [
+      "奥德赛"
+      /* TheCrew */
+    ],
+    classes: [
+      "狙神"
+      /* Sniper */
+    ]
+  },
+  "斯莫德": {
+    displayName: "斯莫德",
+    price: 3,
+    traits: [
+      "小怪兽训练师"
+      /* MonsterTrainer */
+    ],
+    origins: [
+      "小怪兽训练师"
+      /* MonsterTrainer */
+    ],
+    classes: []
+  },
+  "斯维因": {
+    displayName: "斯维因",
+    price: 3,
+    traits: [
+      "水晶玫瑰",
+      "护卫",
+      "法师"
+      /* Sorcerer */
+    ],
+    origins: [
+      "水晶玫瑰"
+      /* CrystalGambit */
+    ],
+    classes: [
+      "护卫",
+      "法师"
+      /* Sorcerer */
+    ]
+  },
+  "辛德拉": {
+    displayName: "辛德拉",
+    price: 1,
+    traits: [
+      "水晶玫瑰",
+      "星之守护者",
+      "天才"
+      /* Prodigy */
+    ],
+    origins: [
+      "水晶玫瑰",
+      "星之守护者"
+      /* StarGuardian */
+    ],
+    classes: [
+      "天才"
+      /* Prodigy */
+    ]
+  },
+  "崔斯特": {
+    displayName: "崔斯特",
+    price: 5,
+    traits: [
+      "卡牌大师",
+      "奥德赛"
+      /* TheCrew */
+    ],
+    origins: [
+      "卡牌大师",
+      "奥德赛"
+      /* TheCrew */
+    ],
+    classes: []
+  },
+  "乌迪尔": {
+    displayName: "乌迪尔",
+    price: 3,
+    traits: [
+      "大宗师",
+      "主宰",
+      "决斗大师"
+      /* Duelist */
+    ],
+    origins: [
+      "大宗师"
+      /* Mentor */
+    ],
+    classes: [
+      "主宰",
+      "决斗大师"
+      /* Duelist */
+    ]
+  },
+  "韦鲁斯": {
+    displayName: "韦鲁斯",
+    price: 5,
+    traits: [
+      "至高天",
+      "狙神"
+      /* Sniper */
+    ],
+    origins: [
+      "至高天"
+      /* Wraith */
+    ],
+    classes: [
+      "狙神"
+      /* Sniper */
+    ]
+  },
+  "蔚": {
+    displayName: "蔚",
+    price: 2,
+    traits: [
+      "水晶玫瑰",
+      "主宰"
+      /* Juggernaut */
+    ],
+    origins: [
+      "水晶玫瑰"
+      /* CrystalGambit */
+    ],
+    classes: [
+      "主宰"
+      /* Juggernaut */
+    ]
+  },
+  "佛耶戈": {
+    displayName: "佛耶戈",
+    price: 3,
+    traits: [
+      "斗魂战士",
+      "决斗大师"
+      /* Duelist */
+    ],
+    origins: [
+      "斗魂战士"
+      /* SoulFighter */
+    ],
+    classes: [
+      "决斗大师"
+      /* Duelist */
+    ]
+  },
+  "沃利贝尔": {
+    displayName: "沃利贝尔",
+    price: 4,
+    traits: [
+      "假面摔跤手",
+      "刀锋领主"
+      /* Edgelord */
+    ],
+    origins: [
+      "假面摔跤手"
+      /* Luchador */
+    ],
+    classes: [
+      "刀锋领主"
+      /* Edgelord */
+    ]
+  },
+  "霞": {
+    displayName: "霞",
+    price: 2,
+    traits: [
+      "星之守护者",
+      "刀锋领主"
+      /* Edgelord */
+    ],
+    origins: [
+      "星之守护者"
+      /* StarGuardian */
+    ],
+    classes: [
+      "刀锋领主"
+      /* Edgelord */
+    ]
+  },
+  "赵信": {
+    displayName: "赵信",
+    price: 2,
+    traits: [
+      "斗魂战士",
+      "护卫"
+      /* Bastion */
+    ],
+    origins: [
+      "斗魂战士"
+      /* SoulFighter */
+    ],
+    classes: [
+      "护卫"
+      /* Bastion */
+    ]
+  },
+  "亚索": {
+    displayName: "亚索",
+    price: 3,
+    traits: [
+      "大宗师",
+      "刀锋领主"
+      /* Edgelord */
+    ],
+    origins: [
+      "大宗师"
+      /* Mentor */
+    ],
+    classes: [
+      "刀锋领主"
+      /* Edgelord */
+    ]
+  },
+  "永恩": {
+    displayName: "永恩",
+    price: 5,
+    traits: [
+      "超级战队",
+      "刀锋领主"
+      /* Edgelord */
+    ],
+    origins: [
+      "超级战队"
+      /* MightyMech */
+    ],
+    classes: [
+      "刀锋领主"
+      /* Edgelord */
+    ]
+  },
+  "悠米": {
+    displayName: "悠米",
+    price: 4,
+    traits: [
+      "战斗学院",
+      "天才"
+      /* Prodigy */
+    ],
+    origins: [
+      "战斗学院"
+      /* BattleAcademia */
+    ],
+    classes: [
+      "天才"
+      /* Prodigy */
+    ]
+  },
+  "扎克": {
+    displayName: "扎克",
+    price: 1,
+    traits: [
+      "至高天",
+      "重量级斗士"
+      /* Heavyweight */
+    ],
+    origins: [
+      "至高天"
+      /* Wraith */
+    ],
+    classes: [
+      "重量级斗士"
+      /* Heavyweight */
+    ]
+  },
+  "吉格斯": {
+    displayName: "吉格斯",
+    price: 3,
+    traits: [
+      "奥德赛",
+      "司令"
+      /* Strategist */
+    ],
+    origins: [
+      "奥德赛"
+      /* TheCrew */
+    ],
+    classes: [
+      "司令"
+      /* Strategist */
+    ]
+  },
+  "婕拉": {
+    displayName: "婕拉",
+    price: 5,
+    traits: [
+      "水晶玫瑰",
+      "荆棘之兴"
+      /* Rosemother */
+    ],
+    origins: [
+      "水晶玫瑰",
+      "荆棘之兴"
+      /* Rosemother */
+    ],
+    classes: []
+  },
+  "缠绕之根": {
+    displayName: "缠绕之根",
+    price: 0,
+    traits: [],
+    origins: [],
+    classes: []
+  },
+  "致命棘刺": {
+    displayName: "致命棘刺",
+    price: 0,
+    traits: [],
+    origins: [],
+    classes: []
+  }
+};
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
 const shopSlot = {
-  SHOP_SLOT_1: { x: 240, y: 700 },
-  SHOP_SLOT_2: { x: 380, y: 700 },
-  SHOP_SLOT_3: { x: 520, y: 700 },
-  SHOP_SLOT_4: { x: 660, y: 700 },
-  SHOP_SLOT_5: { x: 800, y: 700 }
+  SHOP_SLOT_1: new Point(240, 700),
+  SHOP_SLOT_2: new Point(380, 700),
+  SHOP_SLOT_3: new Point(520, 700),
+  SHOP_SLOT_4: new Point(660, 700),
+  SHOP_SLOT_5: new Point(800, 700)
 };
+const shopSlotNameRegions = {
+  SLOT_1: {
+    leftTop: { x: 173, y: 740 },
+    rightBottom: { x: 281, y: 758 }
+  },
+  SLOT_2: {
+    leftTop: { x: 315, y: 740 },
+    rightBottom: { x: 423, y: 758 }
+  },
+  SLOT_3: {
+    leftTop: { x: 459, y: 740 },
+    rightBottom: { x: 567, y: 758 }
+  },
+  SLOT_4: {
+    leftTop: { x: 602, y: 740 },
+    rightBottom: { x: 710, y: 758 }
+  },
+  SLOT_5: {
+    leftTop: { x: 746, y: 740 },
+    rightBottom: { x: 854, y: 758 }
+  }
+};
+({
+  EQ_SLOT_1: new Point(20, 210),
+  //+35
+  EQ_SLOT_2: new Point(20, 245),
+  EQ_SLOT_3: new Point(20, 280),
+  EQ_SLOT_4: new Point(20, 315),
+  EQ_SLOT_5: new Point(20, 350),
+  EQ_SLOT_6: new Point(20, 385),
+  EQ_SLOT_7: new Point(20, 430),
+  //   这里重置下准确位置
+  EQ_SLOT_8: new Point(20, 465),
+  EQ_SLOT_9: new Point(20, 500),
+  EQ_SLOT_10: new Point(20, 535)
+});
+({
+  // x+=80
+  //  第一行的棋子位置
+  R1_C1: new Point(230, 315),
+  R1_C2: new Point(310, 315),
+  R1_C3: new Point(390, 315),
+  R1_C4: new Point(470, 315),
+  R1_C5: new Point(550, 315),
+  R1_C6: new Point(630, 315),
+  R1_C7: new Point(710, 315),
+  //  第二行的棋子位置        //  x+=85
+  R2_C1: new Point(260, 370),
+  R2_C2: new Point(345, 370),
+  R2_C3: new Point(430, 370),
+  R2_C4: new Point(515, 370),
+  R2_C5: new Point(600, 370),
+  R2_C6: new Point(685, 370),
+  R2_C7: new Point(770, 370),
+  //  第三行棋子的位置        //  x+=90
+  R3_C1: new Point(200, 420),
+  R3_C2: new Point(290, 420),
+  R3_C3: new Point(380, 420),
+  R3_C4: new Point(470, 420),
+  R3_C5: new Point(560, 420),
+  R3_C6: new Point(650, 420),
+  R3_C7: new Point(740, 420),
+  //  第四行棋子的位置        //  x+=90
+  R4_C1: new Point(240, 475),
+  R4_C2: new Point(330, 475),
+  R4_C3: new Point(420, 475),
+  R4_C4: new Point(510, 475),
+  R4_C5: new Point(600, 475),
+  R4_C6: new Point(690, 475),
+  R4_C7: new Point(780, 475)
+});
+({
+  //  x+=75
+  SLOT_1: new Point(135, 555),
+  SLOT_2: new Point(210, 555),
+  SLOT_3: new Point(285, 555),
+  SLOT_4: new Point(360, 555),
+  SLOT_5: new Point(435, 555),
+  SLOT_6: new Point(510, 555),
+  SLOT_7: new Point(585, 555),
+  SLOT_8: new Point(660, 555),
+  SLOT_9: new Point(735, 555),
+  SLOT_10: new Point(810, 555)
+});
+({
+  //  x+=295
+  SLOT_1: new Point(215, 410),
+  SLOT_2: new Point(510, 410),
+  SLOT_3: new Point(805, 410)
+});
 const gameStageDisplayStageOne = {
   leftTop: { x: 411, y: 6 },
   rightBottom: { x: 442, y: 22 }
@@ -5536,8 +6790,10 @@ class TftOperator {
   static instance;
   //  缓存游戏窗口的左上角坐标
   gameWindowRegion;
-  // 用来判断游戏阶段的Worker
+  //  用来判断游戏阶段的Worker
   gameStageWorker = null;
+  //  用来判断棋子内容的Worker
+  chessWorker = null;
   gameType;
   constructor() {
   }
@@ -5607,25 +6863,45 @@ class TftOperator {
     }
   }
   /**
+   * 获取当前商店的所有棋子信息
+   */
+  async getShopInfo() {
+    const worker = await this.getChessWorker();
+    logger.info("[TftOperator] 正在扫描商店中的 5 个槽位...");
+    const scanResult = [];
+    for (let i = 1; i <= 5; i++) {
+      const slotKey = `SLOT_${i}`;
+      const simpleRegion = shopSlotNameRegions[slotKey];
+      const tessRegion = new Region(
+        this.gameWindowRegion.x + simpleRegion.leftTop.x,
+        this.gameWindowRegion.y + simpleRegion.leftTop.y,
+        simpleRegion.rightBottom.x - simpleRegion.leftTop.x,
+        simpleRegion.rightBottom.y - simpleRegion.leftTop.y
+      );
+      const processedPng = await this.captureRegionAsPng(tessRegion);
+      const { data: { text } } = await worker.recognize(processedPng);
+      scanResult.push(text);
+      logger.info(`[TftOperator] 购买槽${i}：${text}`);
+    }
+    return scanResult;
+  }
+  /**
    * 购买指定槽位的棋子
    * @param slot 槽位编号 (1, 2, 3, 4, 或 5)
    */
   async buyAtSlot(slot) {
     const slotKey = `SHOP_SLOT_${slot}`;
-    const targetSlotCoords = shopSlot[slotKey];
-    if (!targetSlotCoords) {
+    const targetPoint = shopSlot[slotKey];
+    if (!targetPoint) {
       logger.error(`[TftOperator] 尝试购买一个无效的槽位: ${slot}。只接受 1-5。`);
       return;
     }
-    const targetPoint = new Point(
-      targetSlotCoords.x,
-      targetSlotCoords.y
-    );
     logger.info(`[TftOperator] 正在购买棋子，槽位：${slot}...`);
     await this.clickAt(targetPoint);
-    await sleep(100);
+    await sleep(50);
     await this.clickAt(targetPoint);
   }
+  // ----------------------   这下面都是private方法  ----------------------
   //  处理点击事件
   async clickAt(offset) {
     if (!this.gameWindowRegion) {
@@ -5667,7 +6943,7 @@ class TftOperator {
   async getGameStageWorker() {
     if (this.gameStageWorker) return this.gameStageWorker;
     logger.info("[TftOperator] 正在创建 Tesseract worker...");
-    const localLangPath = require$$1.join(process.env.VITE_PUBLIC, "resources/tessdata");
+    const localLangPath = path.join(process.env.VITE_PUBLIC, "resources/tessdata");
     logger.info(`[TftOperator] Tesseract 本地语言包路径: ${localLangPath}`);
     const worker = await createWorker("eng", 1, {
       logger: (m) => logger.info(`[Tesseract] ${m.status}: ${Math.round(m.progress * 100)}%`),
@@ -5682,6 +6958,29 @@ class TftOperator {
     this.gameStageWorker = worker;
     logger.info("[TftOperator] Tesseract worker 准备就绪！");
     return this.gameStageWorker;
+  }
+  //  同样懒加载Worker，用来识别棋子名字，中文模型
+  async getChessWorker() {
+    if (this.chessWorker) return this.chessWorker;
+    logger.info("[TftOperator] 正在创建 Tesseract worker...");
+    const localLangPath = path.join(process.env.VITE_PUBLIC, "resources/tessdata");
+    logger.info(`[TftOperator] Tesseract 本地语言包路径: ${localLangPath}`);
+    const worker = await createWorker("chi_sim", 1, {
+      logger: (m) => logger.info(`[Tesseract] ${m.status}: ${Math.round(m.progress * 100)}%`),
+      langPath: localLangPath,
+      cachePath: localLangPath
+    });
+    const uniqueChars = [...new Set(Object.keys(TFT_15_CHAMPION_DATA).join(""))].join("");
+    await worker.setParameters(
+      {
+        tessedit_char_whitelist: uniqueChars,
+        tessedit_pageseg_mode: PSM.SINGLE_LINE
+        // 单行模式
+      }
+    );
+    this.chessWorker = worker;
+    logger.info("[TftOperator] Tesseract worker 准备就绪！");
+    return this.chessWorker;
   }
   // ======================================
   // 工具函数：截图某区域并输出 PNG buffer
@@ -5699,7 +6998,7 @@ class TftOperator {
   }
   //  保存调试图片，debug用的
   saveDebugImage(name, pngBuffer) {
-    const filePath = require$$1.join(process.env.VITE_PUBLIC, name);
+    const filePath = path.join(process.env.VITE_PUBLIC, name);
     console.log("[Debug] 保存截图：" + filePath);
     fs.writeFileSync(filePath, pngBuffer);
   }
@@ -5998,27 +7297,27 @@ class SettingsStore {
   }
 }
 const settingsStore = SettingsStore.getInstance();
-process.env.APP_ROOT = require$$1.join(__dirname, "..");
+process.env.APP_ROOT = path.join(__dirname, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
-const MAIN_DIST = require$$1.join(process.env.APP_ROOT, "dist-electron");
-const RENDERER_DIST = require$$1.join(process.env.APP_ROOT);
-process.env.VITE_PUBLIC = is.dev ? require$$1.join(process.env.APP_ROOT, "../public") : RENDERER_DIST;
+const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
+const RENDERER_DIST = path.join(process.env.APP_ROOT);
+process.env.VITE_PUBLIC = is.dev ? path.join(process.env.APP_ROOT, "../public") : RENDERER_DIST;
 let win;
 function createWindow() {
   const savedWindowInfo = settingsStore.get("window");
   win = new BrowserWindow({
-    icon: require$$1.join(process.env.VITE_PUBLIC, "icon.png"),
+    icon: path.join(process.env.VITE_PUBLIC, "icon.png"),
     //  窗口左上角的图标
     autoHideMenuBar: true,
     webPreferences: {
-      preload: require$$1.join(__dirname, "../preload/preload.cjs"),
+      preload: path.join(__dirname, "../preload/preload.cjs"),
       // 指定preload文件
       sandbox: false
     },
     ...savedWindowInfo.bounds || { width: 1024, height: 600 }
     //  控制窗口位置,第一次打开不会有保存值，就用默认的
   });
-  console.log("图标路径为：" + require$$1.join(process.env.VITE_PUBLIC, "icon.png"));
+  console.log("图标路径为：" + path.join(process.env.VITE_PUBLIC, "icon.png"));
   optimizer.watchWindowShortcuts(win);
   const debouncedSaveBounds = debounce(() => {
     if (!win?.isMaximized() && !win?.isFullScreen()) {
@@ -6037,7 +7336,7 @@ function createWindow() {
     console.log("Renderer URL:", process.env.ELECTRON_RENDERER_URL);
     win.loadURL(process.env["ELECTRON_RENDERER_URL"]);
   } else {
-    win.loadFile(require$$1.join(__dirname, "index.html"));
+    win.loadFile(path.join(__dirname, "index.html"));
   }
 }
 app.on("window-all-closed", () => {
@@ -6115,6 +7414,7 @@ function registerHandler() {
   ipcMain.handle(IpcChannel.HEX_START, async (event) => hexService.start());
   ipcMain.handle(IpcChannel.HEX_STOP, async (event) => hexService.stop());
   ipcMain.handle(IpcChannel.TFT_BUY_AT_SLOT, async (event, slot) => tftOperator.buyAtSlot(slot));
+  ipcMain.handle(IpcChannel.TFT_GET_SHOP_INFO, async (event) => tftOperator.getShopInfo());
 }
 export {
   MAIN_DIST,

@@ -55,22 +55,23 @@ contextBridge.exposeInMainWorld('config', configApi)
 
 //  hexApi：海克斯科技核心
 const hexApi = {
-    start: () : Promise<boolean> =>{
+    start: (): Promise<boolean> => {
         return ipcRenderer.invoke(IpcChannel.HEX_START)
     },
-    stop: (): Promise<boolean> =>{
+    stop: (): Promise<boolean> => {
         return ipcRenderer.invoke(IpcChannel.HEX_STOP)
     }
 }
 export type HexApi = typeof hexApi
-contextBridge.exposeInMainWorld('hex',hexApi)
+contextBridge.exposeInMainWorld('hex', hexApi)
 
 //  TFTApi: 下棋控制器相关操作
 const tftApi = {
-    buyAtSlot: (slot:number)=>{ return ipcRenderer.invoke(IpcChannel.TFT_BUY_AT_SLOT,slot)}
+    buyAtSlot: (slot: number) => ipcRenderer.invoke(IpcChannel.TFT_BUY_AT_SLOT, slot),
+    getShopInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_SHOP_INFO),
 }
 export type TftApi = typeof tftApi
-contextBridge.exposeInMainWorld('tft',tftApi)
+contextBridge.exposeInMainWorld('tft', tftApi)
 
 const lcuApi = {
     getSummonerInfo: (): Promise<{ data?: SummonerInfo; error?: string }> => {
@@ -120,8 +121,8 @@ const lcuApi = {
     getLobby: (): Promise<{ data?: any; error?: string }> => {
         return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-lobby/v2/lobby');
     },
-    buySlotOne:(): Promise<{ data?: any; error?: string }> => {
-        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'POST', '/lol-tft-tutorial/v1/helpers/buy-champion-in-slot',{ "slot": 0 });
+    buySlotOne: (): Promise<{ data?: any; error?: string }> => {
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'POST', '/lol-tft-tutorial/v1/helpers/buy-champion-in-slot', {"slot": 0});
     },
     testFunc: (): Promise<{ data?: any; error?: string }> => {
         return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-lobby/v2/notifications');

@@ -107,6 +107,10 @@ const DashboardPage = () => {
                 console.log(await window.tft.buyAtSlot(5))
             }}>点我购买第5个棋子
             </button>
+            <button onClick={async () => {
+                console.log(await window.tft.getShopInfo())
+            }}>点我查看当前购买栏信息
+            </button>
         </PageContaier>
     );
 }

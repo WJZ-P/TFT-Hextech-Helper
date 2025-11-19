@@ -52,7 +52,7 @@ function createWindow() {
 
     win = new BrowserWindow({
         icon: path.join(process.env.VITE_PUBLIC, 'icon.png'),//  窗口左上角的图标
-        autoHideMenuBar:true,
+        autoHideMenuBar: true,
         webPreferences: {
             preload: path.join(__dirname, '../preload/preload.cjs'),// 指定preload文件
             sandbox: false,
@@ -60,7 +60,7 @@ function createWindow() {
         ...(savedWindowInfo.bounds || {width: 1024, height: 600}),   //  控制窗口位置,第一次打开不会有保存值，就用默认的
     })
 
-    console.log("图标路径为："+path.join(process.env.VITE_PUBLIC, 'icon.png'))
+    console.log("图标路径为：" + path.join(process.env.VITE_PUBLIC, 'icon.png'))
 
     optimizer.watchWindowShortcuts(win) //  监听快捷键，打开F12控制台
 
@@ -218,5 +218,7 @@ function registerHandler() {
     ipcMain.handle(IpcChannel.HEX_START, async (event) => hexService.start())
     ipcMain.handle(IpcChannel.HEX_STOP, async (event) => hexService.stop())
     //  TFT相关操作
-    ipcMain.handle(IpcChannel.TFT_BUY_AT_SLOT,async (event,slot:number)=>tftOperator.buyAtSlot(slot))
+    ipcMain.handle(IpcChannel.TFT_BUY_AT_SLOT, async (event, slot: number) => tftOperator.buyAtSlot(slot))
+    ipcMain.handle(IpcChannel.TFT_GET_SHOP_INFO, async (event) => tftOperator.getShopInfo())
+
 }
