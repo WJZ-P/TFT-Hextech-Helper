@@ -6868,7 +6868,7 @@ class TftOperator {
   async getShopInfo() {
     const worker = await this.getChessWorker();
     logger.info("[TftOperator] 正在扫描商店中的 5 个槽位...");
-    const scanResult = [];
+    const shopUnits = [];
     for (let i = 1; i <= 5; i++) {
       const slotKey = `SLOT_${i}`;
       const simpleRegion = shopSlotNameRegions[slotKey];
@@ -6880,10 +6880,20 @@ class TftOperator {
       );
       const processedPng = await this.captureRegionAsPng(tessRegion);
       const { data: { text } } = await worker.recognize(processedPng);
-      scanResult.push(text);
-      logger.info(`[TftOperator] 购买槽${i}：${text}`);
+      const cleanName = text.replace(/\s/g, "");
+      const unitData = TFT_15_CHAMPION_DATA[cleanName];
+      if (unitData) {
+        logger.info(`[商店槽位 ${i}] 识别成功-> ${unitData.displayName}-(${unitData.price}费)`);
+        shopUnits.push(unitData);
+      } else {
+        if (text.length > 0) {
+          logger.warn(`[商店槽位 ${i}] 识别到未知名称: ${cleanName}`);
+        } else {
+          logger.info(`[商店槽位 ${i}] 空槽位`);
+        }
+      }
     }
-    return scanResult;
+    return shopUnits;
   }
   /**
    * 购买指定槽位的棋子

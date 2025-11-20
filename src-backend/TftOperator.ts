@@ -275,15 +275,17 @@ class TftOperator {
             //  识别图片
             const {data: {text}} = await worker.recognize(processedPng)
 
+            const cleanName = text.replace(/\s/g,"")
+
             //  从数据集中找到对应英雄
-            const unitData: TFTUnit | null = TFT_15_CHAMPION_DATA[text]
+            const unitData: TFTUnit | null = TFT_15_CHAMPION_DATA[cleanName]
             if (unitData) {
                 logger.info(`[商店槽位 ${i}] 识别成功-> ${unitData.displayName}-(${unitData.price}费)`);
                 shopUnits.push(unitData)
             }else{
                 // 没找到 (可能是空槽位，或者识别错误)
                 if (text.length > 0) {
-                    logger.warn(`[商店槽位 ${i}] 识别到未知名称: "${text}"`);
+                    logger.warn(`[商店槽位 ${i}] 识别到未知名称: ${cleanName}`);
                 } else {
                     // 空字符串通常意味着槽位是空的（比如买完了）
                     logger.info(`[商店槽位 ${i}] 空槽位`);
