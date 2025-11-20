@@ -7,7 +7,7 @@ import path from "path";
 import sharp from 'sharp';
 import fs from "fs-extra";
 import {sleep} from "./utils/HelperTools";
-import {TFT_15_CHAMPION_DATA} from "./TFTProtocol";
+import {TFT_15_CHAMPION_DATA, TFTUnit} from "./TFTProtocol";
 
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
@@ -258,10 +258,10 @@ class TftOperator {
     /**
      * 获取当前商店的所有棋子信息
      */
-    public async getShopInfo(): Promise<string[]> {
+    public async getShopInfo(): Promise<TFTUnit[]> {
         const worker = await this.getChessWorker()
         logger.info('[TftOperator] 正在扫描商店中的 5 个槽位...')
-        const scanResult: string[] = [];
+        const shopUnits: TFTUnit[] = [];
         for (let i = 1; i <= 5; i++) {
             const slotKey = `SLOT_${i}` as keyof typeof shopSlotNameRegions
             const simpleRegion = shopSlotNameRegions[slotKey]
@@ -274,10 +274,23 @@ class TftOperator {
             const processedPng = await this.captureRegionAsPng(tessRegion);
             //  识别图片
             const {data: {text}} = await worker.recognize(processedPng)
-            scanResult.push(text)
-            logger.info(`[TftOperator] 购买槽${i}：${text}`)
+
+            //  从数据集中找到对应英雄
+            const unitData: TFTUnit | null = TFT_15_CHAMPION_DATA[text]
+            if (unitData) {
+                logger.info(`[商店槽位 ${i}] 识别成功-> ${unitData.displayName}-(${unitData.price}费)`);
+                shopUnits.push(unitData)
+            }else{
+                // 没找到 (可能是空槽位，或者识别错误)
+                if (text.length > 0) {
+                    logger.warn(`[商店槽位 ${i}] 识别到未知名称: "${text}"`);
+                } else {
+                    // 空字符串通常意味着槽位是空的（比如买完了）
+                    logger.info(`[商店槽位 ${i}] 空槽位`);
+                }
+            }
         }
-        return scanResult;
+        return shopUnits;
     }
 
     /**
