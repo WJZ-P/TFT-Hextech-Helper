@@ -1,4 +1,9 @@
-// //  游戏分辨率是1024x768
+/**
+ * 数据来源：官方的https://lol.qq.com/act/a20220802tftsimulator/#/index，高清棋子图标，但感觉不是最新
+ * https://op.gg/zh-cn/tft/meta-trends/item OPGG上可以拿到标清版最新信息。
+ */
+
+//  游戏分辨率是1024x768
 import {logger} from "./utils/Logger";
 import {Button, mouse, Point, Region, screen as nutScreen} from "@nut-tree-fork/nut-js"
 import Tesseract, {createWorker, PSM} from "tesseract.js";
@@ -19,9 +24,23 @@ export interface ShopUnit {
     cost: number | null;   // 武斗、3 费、4 费可用颜色判断（可选）
 }
 
-export interface ShopState {
-    units: ShopUnit[];     // 五个格子的所有单位
-    timestamp: number;     // 更新时间戳（可选）
+//  战斗棋盘上的棋子位置
+export type BoardLocation = keyof typeof fightBoardSlot;
+
+
+//  棋盘上的一个棋子单位
+export interface BoardUnit{
+    location : BoardLocation;   //  位置信息
+    tftUnit  : TFTUnit;         //  棋子信息
+    starLevel: 1|2|3|4;         //  棋子星级
+    items: string[]
+}
+
+// 整个棋盘的快照状态
+export interface BoardState {
+    // 使用 Map 来存储，Key 是位置，Value 是棋子
+    // 这样查询 "R1_C1 有没有人" 会非常快！
+    cells: Map<BoardLocation, BoardUnit>;
 }
 
 //  当前下棋的游戏模式
@@ -155,7 +174,12 @@ class TftOperator {
     private gameStageWorker: Tesseract.Worker | null = null;
     //  用来判断棋子内容的Worker
     private chessWorker: Tesseract.Worker | null = null;
+    //  当前的游戏模式
     private gameType: GAME_TYPE;
+    //  当前战场状态，初始化为空 Map
+    private currentBoardState: BoardState = {
+        cells: new Map()
+    };
 
     private constructor() {
     }
