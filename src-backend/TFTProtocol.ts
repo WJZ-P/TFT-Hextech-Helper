@@ -10,7 +10,7 @@ export interface TFTUnit {
 }
 
 //  装备类型接口
-export interface TFTItem {
+export interface TFTEquip {
     name: string;               //  中文名
     englishName: string;        //  英文名，基本对应图片名字，方便检索
     equipId: string;            //  装备ID
@@ -552,7 +552,7 @@ export const TFT_15_CHAMPION_DATA: Record<string, TFTUnit> = {
     },
 };
 
-export const TFT_15_EQUIP_DATA:Record<string, TFTItem> = {
+export const TFT_15_EQUIP_DATA:Record<string, TFTEquip> = {
   // ==========================================
   // Type 1: 基础散件 (Base Items)
   // ==========================================

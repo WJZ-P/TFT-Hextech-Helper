@@ -12,7 +12,7 @@ import path from "path";
 import sharp from 'sharp';
 import fs from "fs-extra";
 import {sleep} from "./utils/HelperTools";
-import {TFT_15_CHAMPION_DATA, TFTUnit} from "./TFTProtocol";
+import {TFT_15_CHAMPION_DATA, TFTEquip, TFTUnit} from "./TFTProtocol";
 
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
@@ -223,6 +223,10 @@ class TftOperator {
     private currentBoardState: BoardState = {
         cells: new Map()
     };
+    //  当前装备状态。
+    private currentEquipState: TFTEquip[] = [];
+    //  缓存装备的模板图片
+    private equipTemplates:Map<string,cv.Mat> = new Map();
 
     private constructor() {
     }
@@ -360,6 +364,44 @@ class TftOperator {
             }
         }
         return shopUnits;
+    }
+
+    /**
+     * 获取当前装备栏信息
+     */
+    public async getEquipInfo(): Promise<TFTEquip[]> {
+        if (!this.gameWindowRegion) {
+            logger.error("[TftOperator] 尚未初始化游戏窗口位置！");
+            return [];
+        }
+        const resultEquips: TFTEquip[];
+        //  假设一个预加载的模板列表
+        logger.info('[TftOperator] 开始扫描装备栏...');
+
+        for (const [slotName, regionDef] of Object.entries(equipmentRegion)) {
+            // --- A. 计算绝对坐标 Region ---
+            const targetRegion = new Region(this.gameWindowRegion.x + regionDef.leftTop.x,
+                this.gameWindowRegion.y + regionDef.leftTop.y,
+                regionDef.rightBottom.x - regionDef.leftTop.x,
+                regionDef.rightBottom.y - regionDef.leftTop.y);
+            //  开始扫描
+            try {
+                const slotPngBuffer = await this.captureRegionAsPng(targetRegion, false);
+                // --- C. 在内存中寻找最匹配的装备 ---
+                const matchResult = await this.findBestMatch(slotPngBuffer);
+
+                if (matchResult) {
+                    logger.info(`[TftOperator] ${slotName} 识别成功: ${matchResult.name} (相似度: ${(matchResult.confidence * 100).toFixed(1)}%)`);
+
+                    resultEquips.push(matchResult);
+                } else {
+                    logger.info(`[TftOperator] ${slotName} 槽位为空或识别失败。`)
+                }
+
+            } catch (e: any) {
+                logger.error(`[TftOperator] ${slotName} 扫描出错: ${e.message}`);
+            }
+        }
     }
 
     /**
@@ -544,6 +586,13 @@ class TftOperator {
             gameStageDisplayTheClockworkTrails.rightBottom.x - gameStageDisplayTheClockworkTrails.leftTop.x,
             gameStageDisplayTheClockworkTrails.rightBottom.y - gameStageDisplayTheClockworkTrails.leftTop.y
         );
+    }
+
+    /**
+     * 加载装备模板
+     */
+    private async loadEquipTemplates() {
+        if (this.loadedTemplates.size > 0) return;
     }
 }
 

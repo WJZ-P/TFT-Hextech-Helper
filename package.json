@@ -22,6 +22,7 @@
     "@mui/material": "^7.3.3",
     "@mui/styled-engine-sc": "^7.3.3",
     "@nut-tree-fork/nut-js": "^4.2.6",
+    "@techstark/opencv-js": "^4.12.0-release.1",
     "axios": "^1.12.2",
     "bufferutil": "^4.0.9",
     "chokidar": "^4.0.3",
