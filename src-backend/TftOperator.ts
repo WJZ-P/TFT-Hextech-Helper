@@ -94,46 +94,46 @@ const equipmentSlot = {
     EQ_SLOT_10: new Point(20, 535),
 }
 //  装备槽位具体区域
-const equipmentRegion = {
-    SLOT_1: {
-        leftTop: {x: 173, y: 740},
-        rightBottom: {x: 281, y: 758}
+const equipmentRegion = {   //  宽24，高25
+    SLOT_1: {                   //  y+=36
+        leftTop: {x: 9, y: 198},
+        rightBottom: {x: 32, y: 222}
     },
     SLOT_2: {
-        leftTop: {x: 173, y: 740},
-        rightBottom: {x: 281, y: 758}
+        leftTop: {x: 9, y: 234},
+        rightBottom: {x: 32, y: 259}
     },
     SLOT_3: {
-        leftTop: {x: 173, y: 740},
-        rightBottom: {x: 281, y: 758}
+        leftTop: {x: 9, y: 271},
+        rightBottom: {x: 32, y: 295}
     },
     SLOT_4: {
-        leftTop: {x: 173, y: 740},
-        rightBottom: {x: 281, y: 758}
+        leftTop: {x: 9, y: 307},
+        rightBottom: {x: 32, y: 332}
     },
     SLOT_5: {
-        leftTop: {x: 173, y: 740},
-        rightBottom: {x: 281, y: 758}
+        leftTop: {x: 9, y: 344},
+        rightBottom: {x: 32, y: 368}
     },
     SLOT_6: {
-        leftTop: {x: 173, y: 740},
-        rightBottom: {x: 281, y: 758}
+        leftTop: {x: 9, y: 380},
+        rightBottom: {x: 32, y: 404}
     },
     SLOT_7: {
-        leftTop: {x: 173, y: 740},
-        rightBottom: {x: 281, y: 758}
+        leftTop: {x: 9, y: 417},
+        rightBottom: {x: 32, y: 441}
     },
     SLOT_8: {
-        leftTop: {x: 173, y: 740},
-        rightBottom: {x: 281, y: 758}
+        leftTop: {x: 9, y: 453},
+        rightBottom: {x: 32, y: 477}
     },
     SLOT_9: {
-        leftTop: {x: 173, y: 740},
-        rightBottom: {x: 281, y: 758}
+        leftTop: {x: 9, y: 490},
+        rightBottom: {x: 32, y: 514}
     },
     SLOT_10: {
-        leftTop: {x: 173, y: 740},
-        rightBottom: {x: 281, y: 758}
+        leftTop: {x: 9, y: 526},
+        rightBottom: {x: 32, y: 550}
     },
 }
 //  棋子在战场上的位置

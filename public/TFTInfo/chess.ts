@@ -1,4 +1,4 @@
-export const chessesFullInfo = [
+export const TFT_15_CHESS = [
     {
         "chessId": "10357",
         "title": "",
