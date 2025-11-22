@@ -29,10 +29,10 @@ export type BoardLocation = keyof typeof fightBoardSlot;
 
 
 //  棋盘上的一个棋子单位
-export interface BoardUnit{
-    location : BoardLocation;   //  位置信息
-    tftUnit  : TFTUnit;         //  棋子信息
-    starLevel: 1|2|3|4;         //  棋子星级
+export interface BoardUnit {
+    location: BoardLocation;   //  位置信息
+    tftUnit: TFTUnit;         //  棋子信息
+    starLevel: 1 | 2 | 3 | 4;         //  棋子星级
     items: string[]
 }
 
@@ -92,6 +92,49 @@ const equipmentSlot = {
     EQ_SLOT_8: new Point(20, 465),
     EQ_SLOT_9: new Point(20, 500),
     EQ_SLOT_10: new Point(20, 535),
+}
+//  装备槽位具体区域
+const equipmentRegion = {
+    SLOT_1: {
+        leftTop: {x: 173, y: 740},
+        rightBottom: {x: 281, y: 758}
+    },
+    SLOT_2: {
+        leftTop: {x: 173, y: 740},
+        rightBottom: {x: 281, y: 758}
+    },
+    SLOT_3: {
+        leftTop: {x: 173, y: 740},
+        rightBottom: {x: 281, y: 758}
+    },
+    SLOT_4: {
+        leftTop: {x: 173, y: 740},
+        rightBottom: {x: 281, y: 758}
+    },
+    SLOT_5: {
+        leftTop: {x: 173, y: 740},
+        rightBottom: {x: 281, y: 758}
+    },
+    SLOT_6: {
+        leftTop: {x: 173, y: 740},
+        rightBottom: {x: 281, y: 758}
+    },
+    SLOT_7: {
+        leftTop: {x: 173, y: 740},
+        rightBottom: {x: 281, y: 758}
+    },
+    SLOT_8: {
+        leftTop: {x: 173, y: 740},
+        rightBottom: {x: 281, y: 758}
+    },
+    SLOT_9: {
+        leftTop: {x: 173, y: 740},
+        rightBottom: {x: 281, y: 758}
+    },
+    SLOT_10: {
+        leftTop: {x: 173, y: 740},
+        rightBottom: {x: 281, y: 758}
+    },
 }
 //  棋子在战场上的位置
 const fightBoardSlot = {
@@ -299,14 +342,14 @@ class TftOperator {
             //  识别图片
             const {data: {text}} = await worker.recognize(processedPng)
 
-            const cleanName = text.replace(/\s/g,"")
+            const cleanName = text.replace(/\s/g, "")
 
             //  从数据集中找到对应英雄
             const unitData: TFTUnit | null = TFT_15_CHAMPION_DATA[cleanName]
             if (unitData) {
                 logger.info(`[商店槽位 ${i}] 识别成功-> ${unitData.displayName}-(${unitData.price}费)`);
                 shopUnits.push(unitData)
-            }else{
+            } else {
                 // 没找到 (可能是空槽位，或者识别错误)
                 if (text.length > 0) {
                     logger.warn(`[商店槽位 ${i}] 识别到未知名称: ${cleanName}`);
@@ -439,27 +482,38 @@ class TftOperator {
     // ======================================
     // 工具函数：截图某区域并输出 PNG buffer
     // ======================================
-    private async captureRegionAsPng(region: Region): Promise<Buffer> {
+    private async captureRegionAsPng(region: Region, forOCR: boolean = true): Promise<Buffer> {
         const screenshot = await nutScreen.grabRegion(region);
-
-        // 识别前：原始像素数据转换成 PNG
-        return await sharp(screenshot.data, {
+        //  中间变量
+        let pipeline = sharp(screenshot.data, {
             raw: {
                 width: screenshot.width,
                 height: screenshot.height,
-                channels: 4, // RGBA 四通道
+                channels: 4, // RGBA / BGRA
             }
-        })
-            .removeAlpha()      // nut-js 截图为 BGRA，移除 alpha 防止通道错乱
-            .resize({
-                width: Math.round(screenshot.width * 3),  //  宽高都放大一些
-                height: Math.round(screenshot.height * 3),
-                kernel: "lanczos3"
-            })
-            .grayscale()                //  去色
-            .normalize()                //  拉伸对比度
-            .threshold(160)   //  二值化
-            .sharpen()                  //  轻量锐化
+        }).removeAlpha();
+
+        // 3. 根据用途分叉处理
+        if (forOCR) {
+            // --- OCR 专用流程 (增强文字对比度) ---
+            pipeline = pipeline
+                .resize({
+                    width: Math.round(screenshot.width * 3),  // 放大 3 倍以提高 OCR 精度
+                    height: Math.round(screenshot.height * 3),
+                    kernel: "lanczos3"
+                })
+                .grayscale()      // 去色
+                .normalize()      // 拉伸对比度
+                .threshold(160)   // 二值化 (非黑即白)
+                .sharpen();       // 锐化边缘
+        } else {
+            // --- 模板匹配/图像识别流程 (保留原貌) ---
+            // 喵！这里什么都不做，保持原汁原味！
+            // 千万不要 resize！模板匹配对尺寸非常敏感！
+            // 也不要 grayscale，因为红buff和蓝buff形状很像，颜色才是关键！
+        }
+        // 4. 输出 buffer
+        return await pipeline
             .toFormat('png')
             .toBuffer();
     }
