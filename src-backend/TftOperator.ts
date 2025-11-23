@@ -257,17 +257,37 @@ class TftOperator {
             const targetRegion = new Region(
                 this.gameWindowRegion.x + regionDef.leftTop.x,
                 this.gameWindowRegion.y + regionDef.leftTop.y,
-                regionDef.rightBottom.x - regionDef.leftTop.x,
-                regionDef.rightBottom.y - regionDef.leftTop.y
+                regionDef.rightBottom.x - regionDef.leftTop.x + 1,
+                regionDef.rightBottom.y - regionDef.leftTop.y + 1
             );
 
             try {
                 // --- B. 直接获取 Raw Data (跳过 PNG 编解码，极致性能) ---
                 const screenshot = await nutScreen.grabRegion(targetRegion);
-                // 注意：nut-js 截取的 raw buffer 放入 WASM 内存
-                const targetMat = cv.matFromImageData(screenshot);
-                // 这一步很关键，否则红色装备会匹配失败
-                cv.cvtColor(targetMat, targetMat, cv.COLOR_BGRA2RGBA);
+                // ⚡️ 关键修改：把 nut-js 的截图数据也转一下
+                // nut-js 的 screenshot.data 是一个 Buffer，我们需要转成 Uint8Array
+                const screenData = new Uint8Array(screenshot.data);
+                const targetImageData = {
+                    data: screenData,
+                    width: screenshot.width,
+                    height: screenshot.height
+                };
+                // 注意：这里可能会抛出错误，如果抛出数字错误，说明是这里挂了
+                let targetMat: cv.Mat;
+                try {
+                    targetMat = cv.matFromImageData(targetImageData);
+                } catch (err) {
+                    logger.error(`[TftOperator] matFromImageData 失败 (Slot: ${slotName}): ${err}`);
+                    continue; // 跳过这个槽位
+                }
+                // 颜色转换
+                try {
+                    cv.cvtColor(targetMat, targetMat, cv.COLOR_BGRA2RGBA);
+                } catch (err) {
+                    logger.error(`[TftOperator] cvtColor 失败: ${err}`);
+                    targetMat.delete();
+                    continue;
+                }
                 // --- E. 在内存中寻找最匹配的装备 ---
                 const matchResult = this.findBestMatchEquipTemplate(targetMat);
                 // 释放截图产生的 Mat
@@ -283,7 +303,7 @@ class TftOperator {
                 }
 
             } catch (e: any) {
-                logger.error(`[TftOperator] ${slotName} 扫描出错: ${e.message}`);
+                logger.error(`[TftOperator] ${slotName} 扫描流程异常: ${e.message}`);
             }
         }
         return resultEquips;
@@ -476,50 +496,73 @@ class TftOperator {
     /**
      * 加载装备模板
      */
+    /**
+     * 加载装备模板
+     */
     private async loadEquipTemplates() {
-        //  有内容了说明加载好了
         if (this.equipTemplates.length > 0) return;
-        logger.info(`[TftOperator] 开始加载装备模板... 根目录: ${this.BASE_TEMPLATE_DIR}`);
+        logger.info(`[TftOperator] 开始加载装备模板...`);
+        const TEMPLATE_SIZE = 24;
+        // 初始化空模板
+        if (!this.emptySlotTemplate) {
+            try {
+                this.emptySlotTemplate = new cv.Mat(TEMPLATE_SIZE, TEMPLATE_SIZE, cv.CV_8UC4, new cv.Scalar(0, 0, 0, 255));
+            } catch (e) {
+                logger.error(`[TftOperator] 创建空模板失败: ${e}`);
+            }
+        }
 
-        const TEMPLATE_SIZE = 24;// 图片模板的大小是64x64，这里适当缩小到跟游戏内截图出来的大小一致.
+        const validExtensions = ['.png', '.webp', '.jpg', '.jpeg'];
 
         for (const category of equipResourcePath) {
             const resourcePath = path.join(this.BASE_TEMPLATE_DIR, category);
-            const categoryMap = new Map<string, any>();
+            const categoryMap = new Map<string, cv.Mat>();
 
             if (fs.existsSync(resourcePath)) {
                 const files = fs.readdirSync(resourcePath);
                 for (const file of files) {
+                    const ext = path.extname(file).toLowerCase();
+                    if (!validExtensions.includes(ext)) continue;
+
                     const filePath = path.join(resourcePath, file);
-                    // 获取不带后缀的文件名 (英文名，例如 "TFT_Item_BFSword")
-                    // 这个名字必须能和 TFTProtocol 里的 englishName 对应上
-                    const fileNameNotExt = path.parse(filePath).name;
-                    //  开始解析图片
+                    const fileNameNotExt = path.parse(file).name;
+
                     try {
-                        const fileBuf = fs.readdirSync(filePath);
+                        const fileBuf = fs.readFileSync(filePath);
                         const {data, info} = await sharp(fileBuf)
                             .resize(TEMPLATE_SIZE, TEMPLATE_SIZE, {fit: "fill"})
                             .ensureAlpha()
                             .raw()
-                            .toBuffer({resolveWithObject: true})
+                            .toBuffer({resolveWithObject: true});
 
-                        const rawData = {
-                            data: data,
+                        // ⚡️ 关键修改：显式转换为 Uint8Array，防止 Buffer 类型不兼容
+                        const uint8Data = new Uint8Array(data);
+
+                        // 再次检查数据长度是否合法 (w * h * 4)
+                        if (uint8Data.length !== info.width * info.height * 4) {
+                            logger.warn(`[TftOperator] 图片数据长度异常: ${file}`);
+                            continue;
+                        }
+
+                        // 构造符合 ImageData 接口的对象
+                        const imageData = {
+                            data: uint8Data,
                             width: info.width,
                             height: info.height,
-                            channels: info.channels,
                         };
-                        const mat = cv.matFromImageData(rawData);
+
+                        const mat = cv.matFromImageData(imageData);
                         categoryMap.set(fileNameNotExt, mat);
 
                     } catch (e) {
-                        logger.error(`[TftOperator] 加载图片模板失败：${file}`)
+                        logger.error(`[TftOperator] 加载模板失败 [${file}]: ${e}`);
                     }
                 }
-                logger.info(`[TftOperator] 加载 [${category}] 类别模板: ${categoryMap.size} 个 (cv.Mat Cached)`);
+                logger.info(`[TftOperator] 加载 [${category}] 模板: ${categoryMap.size} 个`);
             }
-            this.equipTemplates.push(categoryMap)
+            this.equipTemplates.push(categoryMap);
         }
+        logger.info(`[TftOperator] 图片模板加载完成！`);
     }
 
     /**
@@ -536,7 +579,7 @@ class TftOperator {
         //  开始比对
         try {
             //  优先判断是否是空槽位，TM_CCOEFF_NORMED是归一化算法，-1完全相反，1完美匹配，0毫无关系
-            cv.matchTemplate(targetMat, this.emptySlotTemplate, resultMat, cv.TM_CCOEFF_NORMED, mask)
+            cv.matchTemplate(targetMat, this.emptySlotTemplate, resultMat, cv.TM_CCOEFF_NORMED)
             const emptyResult = cv.minMaxLoc(resultMat, mask)
             if (emptyResult.maxVal > 0.9) {
                 // logger.debug("[TftOperator] 判定为空槽位");
