@@ -12,10 +12,30 @@ import path from "path";
 import sharp from 'sharp';
 import fs from "fs-extra";
 import {sleep} from "./utils/HelperTools";
-import {TFT_15_CHAMPION_DATA, TFTEquip, TFTUnit} from "./TFTProtocol";
+import {
+    equipmentRegion,
+    fightBoardSlot, gameStageDisplayNormal, gameStageDisplayStageOne, gameStageDisplayTheClockworkTrails, shopSlot,
+    shopSlotNameRegions,
+    TFT_15_CHAMPION_DATA, TFT_15_EQUIP_DATA,
+    TFTEquip,
+    TFTUnit
+} from "./TFTProtocol";
+import cv from "@techstark/opencv-js";
+import {TFT_15_EQUIP} from "../public/TFTInfo/equip";
 
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
+
+//  装备的资源路径，从public/resources/assets/images/equipment里面算起
+// 优先级排序：散件 -> 成装 -> 纹章 -> 神器 -> 光明
+export const equipResourcePath = ['component', 'core', 'emblem', 'artifact', 'radiant',];
+
+// 定义识别到的装备接口，继承自协议中的基础装备接口，并添加识别特有的属性
+export interface IdentifiedEquip extends TFTEquip {
+    slot: string;       // 所在的槽位名称，如 "SLOT_1"
+    confidence: number; // 匹配相似度 (0-1)
+    category: string;   // 装备分类 (component, core 等)
+}
 
 //  当前购买栏中的单个对象信息。
 export interface ShopUnit {
@@ -44,170 +64,11 @@ export interface BoardState {
 }
 
 //  当前下棋的游戏模式
-enum GAME_TYPE {
+export enum GAME_TYPE {
     CLASSIC,    //  经典
     CLOCKWORK_TRAILS    //  PVE，发条鸟的试炼。
 }
 
-//  英雄购买槽坐标
-const shopSlot = {
-    SHOP_SLOT_1: new Point(240, 700),
-    SHOP_SLOT_2: new Point(380, 700),
-    SHOP_SLOT_3: new Point(520, 700),
-    SHOP_SLOT_4: new Point(660, 700),
-    SHOP_SLOT_5: new Point(800, 700),
-}
-//  英雄购买槽英雄名字Region
-const shopSlotNameRegions = {
-    SLOT_1: {
-        leftTop: {x: 173, y: 740},
-        rightBottom: {x: 281, y: 758}
-    },
-    SLOT_2: {
-        leftTop: {x: 315, y: 740},
-        rightBottom: {x: 423, y: 758}
-    },
-    SLOT_3: {
-        leftTop: {x: 459, y: 740},
-        rightBottom: {x: 567, y: 758}
-    },
-    SLOT_4: {
-        leftTop: {x: 602, y: 740},
-        rightBottom: {x: 710, y: 758}
-    },
-    SLOT_5: {
-        leftTop: {x: 746, y: 740},
-        rightBottom: {x: 854, y: 758}
-    },
-}
-//  装备槽位坐标
-const equipmentSlot = {
-    EQ_SLOT_1: new Point(20, 210),//+35
-    EQ_SLOT_2: new Point(20, 245),
-    EQ_SLOT_3: new Point(20, 280),
-    EQ_SLOT_4: new Point(20, 315),
-    EQ_SLOT_5: new Point(20, 350),
-    EQ_SLOT_6: new Point(20, 385),
-    EQ_SLOT_7: new Point(20, 430),//   这里重置下准确位置
-    EQ_SLOT_8: new Point(20, 465),
-    EQ_SLOT_9: new Point(20, 500),
-    EQ_SLOT_10: new Point(20, 535),
-}
-//  装备槽位具体区域
-const equipmentRegion = {   //  宽24，高25
-    SLOT_1: {                   //  y+=36
-        leftTop: {x: 9, y: 198},
-        rightBottom: {x: 32, y: 222}
-    },
-    SLOT_2: {
-        leftTop: {x: 9, y: 234},
-        rightBottom: {x: 32, y: 259}
-    },
-    SLOT_3: {
-        leftTop: {x: 9, y: 271},
-        rightBottom: {x: 32, y: 295}
-    },
-    SLOT_4: {
-        leftTop: {x: 9, y: 307},
-        rightBottom: {x: 32, y: 332}
-    },
-    SLOT_5: {
-        leftTop: {x: 9, y: 344},
-        rightBottom: {x: 32, y: 368}
-    },
-    SLOT_6: {
-        leftTop: {x: 9, y: 380},
-        rightBottom: {x: 32, y: 404}
-    },
-    SLOT_7: {
-        leftTop: {x: 9, y: 417},
-        rightBottom: {x: 32, y: 441}
-    },
-    SLOT_8: {
-        leftTop: {x: 9, y: 453},
-        rightBottom: {x: 32, y: 477}
-    },
-    SLOT_9: {
-        leftTop: {x: 9, y: 490},
-        rightBottom: {x: 32, y: 514}
-    },
-    SLOT_10: {
-        leftTop: {x: 9, y: 526},
-        rightBottom: {x: 32, y: 550}
-    },
-}
-//  棋子在战场上的位置
-const fightBoardSlot = {
-    // x+=80
-    //  第一行的棋子位置
-    R1_C1: new Point(230, 315),
-    R1_C2: new Point(310, 315),
-    R1_C3: new Point(390, 315),
-    R1_C4: new Point(470, 315),
-    R1_C5: new Point(550, 315),
-    R1_C6: new Point(630, 315),
-    R1_C7: new Point(710, 315),
-    //  第二行的棋子位置        //  x+=85
-    R2_C1: new Point(260, 370),
-    R2_C2: new Point(345, 370),
-    R2_C3: new Point(430, 370),
-    R2_C4: new Point(515, 370),
-    R2_C5: new Point(600, 370),
-    R2_C6: new Point(685, 370),
-    R2_C7: new Point(770, 370),
-    //  第三行棋子的位置        //  x+=90
-    R3_C1: new Point(200, 420),
-    R3_C2: new Point(290, 420),
-    R3_C3: new Point(380, 420),
-    R3_C4: new Point(470, 420),
-    R3_C5: new Point(560, 420),
-    R3_C6: new Point(650, 420),
-    R3_C7: new Point(740, 420),
-    //  第四行棋子的位置        //  x+=90
-    R4_C1: new Point(240, 475),
-    R4_C2: new Point(330, 475),
-    R4_C3: new Point(420, 475),
-    R4_C4: new Point(510, 475),
-    R4_C5: new Point(600, 475),
-    R4_C6: new Point(690, 475),
-    R4_C7: new Point(780, 475),
-}
-//  备战席
-const benchSlot = { //  x+=75
-    SLOT_1: new Point(135, 555),
-    SLOT_2: new Point(210, 555),
-    SLOT_3: new Point(285, 555),
-    SLOT_4: new Point(360, 555),
-    SLOT_5: new Point(435, 555),
-    SLOT_6: new Point(510, 555),
-    SLOT_7: new Point(585, 555),
-    SLOT_8: new Point(660, 555),
-    SLOT_9: new Point(735, 555),
-    SLOT_10: new Point(810, 555),
-}
-//  海克斯选择槽位
-const hexSlot = {   //  x+=295
-    SLOT_1: new Point(215, 410),
-    SLOT_2: new Point(510, 410),
-    SLOT_3: new Point(805, 410),
-}
-//  选秀站位，为离自己最近的棋子位置。
-const sharedDraftPoint = {x: 530, y: 400}
-//  游戏战斗阶段展示坐标，第一阶段。因为第一阶段只有四个回合，跟其他阶段的不一样。
-const gameStageDisplayStageOne = {
-    leftTop: {x: 411, y: 6},
-    rightBottom: {x: 442, y: 22}
-}
-//  游戏战斗阶段展示坐标，从2-1开始。
-const gameStageDisplayNormal = {
-    leftTop: {x: 374, y: 6},
-    rightBottom: {x: 403, y: 22}
-}
-//  发条鸟的战斗阶段，布局跟其他的都不一样，因为发条鸟一个大阶段有10场
-const gameStageDisplayTheClockworkTrails = {
-    leftTop: {x: 337, y: 6},
-    rightBottom: {x: 366, y: 22}
-}
 
 class TftOperator {
     private static instance: TftOperator;
@@ -225,10 +86,19 @@ class TftOperator {
     };
     //  当前装备状态。
     private currentEquipState: TFTEquip[] = [];
-    //  缓存装备的模板图片
-    private equipTemplates:Map<string,cv.Mat> = new Map();
+    // 缓存已加载的图片模板 (分层存储)
+    private equipTemplates: Array<Map<string, cv.Mat>> = [];
+    // 装备图片资源根目录
+    private readonly BASE_TEMPLATE_DIR = path.join(process.env.VITE_PUBLIC || '.', 'resources/assets/images/equipment');
+    // ⚡️ 新增：全黑的空槽位模板，宽高均为24
+    private emptySlotTemplate: cv.Mat = null;
+
 
     private constructor() {
+        cv['onRuntimeInitialized'] = () => {
+            this.emptySlotTemplate = new cv.Mat(24, 24, cv.CV_8UC4, new cv.Scalar(0, 0, 0, 255))
+            logger.info("[TftOperator] OpenCV (WASM) 核心模块加载完毕！");
+        };
     }
 
     public static getInstance(): TftOperator {
@@ -366,42 +236,57 @@ class TftOperator {
         return shopUnits;
     }
 
-    /**
-     * 获取当前装备栏信息
-     */
-    public async getEquipInfo(): Promise<TFTEquip[]> {
+    public async getEquipInfo(): Promise<IdentifiedEquip[]> {
         if (!this.gameWindowRegion) {
             logger.error("[TftOperator] 尚未初始化游戏窗口位置！");
             return [];
         }
-        const resultEquips: TFTEquip[];
-        //  假设一个预加载的模板列表
+
+        // 1. 确保模板已加载
+        await this.loadEquipTemplates();
+        if (this.equipTemplates.length === 0) {
+            logger.warn("[TftOperator] 装备模板为空，跳过识别");
+            return [];
+        }
+
+        const resultEquips: IdentifiedEquip[] = [];
         logger.info('[TftOperator] 开始扫描装备栏...');
 
         for (const [slotName, regionDef] of Object.entries(equipmentRegion)) {
             // --- A. 计算绝对坐标 Region ---
-            const targetRegion = new Region(this.gameWindowRegion.x + regionDef.leftTop.x,
+            const targetRegion = new Region(
+                this.gameWindowRegion.x + regionDef.leftTop.x,
                 this.gameWindowRegion.y + regionDef.leftTop.y,
                 regionDef.rightBottom.x - regionDef.leftTop.x,
-                regionDef.rightBottom.y - regionDef.leftTop.y);
-            //  开始扫描
+                regionDef.rightBottom.y - regionDef.leftTop.y
+            );
+
             try {
-                const slotPngBuffer = await this.captureRegionAsPng(targetRegion, false);
-                // --- C. 在内存中寻找最匹配的装备 ---
-                const matchResult = await this.findBestMatch(slotPngBuffer);
+                // --- B. 直接获取 Raw Data (跳过 PNG 编解码，极致性能) ---
+                const screenshot = await nutScreen.grabRegion(targetRegion);
+                // 注意：nut-js 截取的 raw buffer 放入 WASM 内存
+                const targetMat = cv.matFromImageData(screenshot);
+                // 这一步很关键，否则红色装备会匹配失败
+                cv.cvtColor(targetMat, targetMat, cv.COLOR_BGRA2RGBA);
+                // --- E. 在内存中寻找最匹配的装备 ---
+                const matchResult = this.findBestMatchEquipTemplate(targetMat);
+                // 释放截图产生的 Mat
+                targetMat.delete();
 
                 if (matchResult) {
                     logger.info(`[TftOperator] ${slotName} 识别成功: ${matchResult.name} (相似度: ${(matchResult.confidence * 100).toFixed(1)}%)`);
-
+                    // 补全 slot 信息
+                    matchResult.slot = slotName;
                     resultEquips.push(matchResult);
                 } else {
-                    logger.info(`[TftOperator] ${slotName} 槽位为空或识别失败。`)
+                    // logger.info(`[TftOperator] ${slotName} 槽位为空或识别失败。`)
                 }
 
             } catch (e: any) {
                 logger.error(`[TftOperator] ${slotName} 扫描出错: ${e.message}`);
             }
         }
+        return resultEquips;
     }
 
     /**
@@ -592,7 +477,106 @@ class TftOperator {
      * 加载装备模板
      */
     private async loadEquipTemplates() {
-        if (this.loadedTemplates.size > 0) return;
+        //  有内容了说明加载好了
+        if (this.equipTemplates.length > 0) return;
+        logger.info(`[TftOperator] 开始加载装备模板... 根目录: ${this.BASE_TEMPLATE_DIR}`);
+
+        const TEMPLATE_SIZE = 24;// 图片模板的大小是64x64，这里适当缩小到跟游戏内截图出来的大小一致.
+
+        for (const category of equipResourcePath) {
+            const resourcePath = path.join(this.BASE_TEMPLATE_DIR, category);
+            const categoryMap = new Map<string, any>();
+
+            if (fs.existsSync(resourcePath)) {
+                const files = fs.readdirSync(resourcePath);
+                for (const file of files) {
+                    const filePath = path.join(resourcePath, file);
+                    // 获取不带后缀的文件名 (英文名，例如 "TFT_Item_BFSword")
+                    // 这个名字必须能和 TFTProtocol 里的 englishName 对应上
+                    const fileNameNotExt = path.parse(filePath).name;
+                    //  开始解析图片
+                    try {
+                        const fileBuf = fs.readdirSync(filePath);
+                        const {data, info} = await sharp(fileBuf)
+                            .resize(TEMPLATE_SIZE, TEMPLATE_SIZE, {fit: "fill"})
+                            .ensureAlpha()
+                            .raw()
+                            .toBuffer({resolveWithObject: true})
+
+                        const rawData = {
+                            data: data,
+                            width: info.width,
+                            height: info.height,
+                            channels: info.channels,
+                        };
+                        const mat = cv.matFromImageData(rawData);
+                        categoryMap.set(fileNameNotExt, mat);
+
+                    } catch (e) {
+                        logger.error(`[TftOperator] 加载图片模板失败：${file}`)
+                    }
+                }
+                logger.info(`[TftOperator] 加载 [${category}] 类别模板: ${categoryMap.size} 个 (cv.Mat Cached)`);
+            }
+            this.equipTemplates.push(categoryMap)
+        }
+    }
+
+    /**
+     *  传入一个Mat对象，并从图片模板中找到最匹配的装备
+     */
+    private findBestMatchEquipTemplate(targetMat: cv.Mat): IdentifiedEquip | null {
+        let bestMatchEquip: TFTEquip | null = null;
+        let maxConfidence = 0;
+        let foundCategory = "";
+        const THRESHOLD = 0.80; // 匹配阈值
+
+        const mask = new cv.Mat();  //  判断模板时候用，遮罩为空表示匹配所有像素
+        const resultMat = new cv.Mat();
+        //  开始比对
+        try {
+            //  优先判断是否是空槽位，TM_CCOEFF_NORMED是归一化算法，-1完全相反，1完美匹配，0毫无关系
+            cv.matchTemplate(targetMat, this.emptySlotTemplate, resultMat, cv.TM_CCOEFF_NORMED, mask)
+            const emptyResult = cv.minMaxLoc(resultMat, mask)
+            if (emptyResult.maxVal > 0.9) {
+                // logger.debug("[TftOperator] 判定为空槽位");
+                return null;
+            }
+
+            for (let i = 0; i < this.equipTemplates.length; i++) {
+                const currentMap = this.equipTemplates[i];
+                const currentCategory = equipResourcePath[i];// 这个是目录里面的图片路径
+                if (currentMap.size === 0) continue;
+
+                for (const [templateName, templateMat] of currentMap) {
+                    //  保证模板的大小一定要小于等于目标Mat的，不然无法匹配。
+                    if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) continue;
+
+                    cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
+                    const result = cv.minMaxLoc(resultMat, mask);
+
+                    if (result.maxVal >= THRESHOLD) {
+                        //  匹配度高，说明已经找到了图片
+                        maxConfidence = result.maxVal
+                        bestMatchEquip = Object.values(TFT_15_EQUIP_DATA).find(e => e.englishName === templateName)
+                        break;
+                    }
+                }
+            }
+        } catch (e) {
+            logger.error("[TftOperator] 匹配过程出错: " + e);
+        } finally {
+            mask.delete();
+            resultMat.delete();
+        }
+
+        //  到这里为止全部类别图片都找完了或者提前找到图片且结束。
+        return bestMatchEquip ? {
+            ...bestMatchEquip,
+            slot: "",   //  槽位信息留给外面加
+            confidence: maxConfidence,
+            category: foundCategory
+        } : null
     }
 }
 

@@ -12,9 +12,10 @@ import path from "path";
 import WebSocket from "ws";
 import https from "https";
 import axios from "axios";
-import { Point, Region, mouse, Button, screen as screen$1 } from "@nut-tree-fork/nut-js";
+import { Point, Region, screen as screen$1, mouse, Button } from "@nut-tree-fork/nut-js";
 import { createWorker, PSM } from "tesseract.js";
 import sharp from "sharp";
+import cv from "@techstark/opencv-js";
 import Store from "electron-store";
 import { is, optimizer } from "@electron-toolkit/utils";
 import __cjs_mod__ from "node:module";
@@ -5470,6 +5471,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["HEX_STOP"] = "hex-stop";
   IpcChannel2["TFT_BUY_AT_SLOT"] = "tft-buy-at-slot";
   IpcChannel2["TFT_GET_SHOP_INFO"] = "tft-get-shop-info";
+  IpcChannel2["TFT_GET_EQUIP_INFO"] = "tft-get-equip-info";
   return IpcChannel2;
 })(IpcChannel || {});
 var Queue = /* @__PURE__ */ ((Queue2) => {
@@ -5512,6 +5514,159 @@ class EndState {
     return new IdleState();
   }
 }
+const shopSlot = {
+  SHOP_SLOT_1: new Point(240, 700),
+  SHOP_SLOT_2: new Point(380, 700),
+  SHOP_SLOT_3: new Point(520, 700),
+  SHOP_SLOT_4: new Point(660, 700),
+  SHOP_SLOT_5: new Point(800, 700)
+};
+const shopSlotNameRegions = {
+  SLOT_1: {
+    leftTop: { x: 173, y: 740 },
+    rightBottom: { x: 281, y: 758 }
+  },
+  SLOT_2: {
+    leftTop: { x: 315, y: 740 },
+    rightBottom: { x: 423, y: 758 }
+  },
+  SLOT_3: {
+    leftTop: { x: 459, y: 740 },
+    rightBottom: { x: 567, y: 758 }
+  },
+  SLOT_4: {
+    leftTop: { x: 602, y: 740 },
+    rightBottom: { x: 710, y: 758 }
+  },
+  SLOT_5: {
+    leftTop: { x: 746, y: 740 },
+    rightBottom: { x: 854, y: 758 }
+  }
+};
+({
+  EQ_SLOT_1: new Point(20, 210),
+  //+35
+  EQ_SLOT_2: new Point(20, 245),
+  EQ_SLOT_3: new Point(20, 280),
+  EQ_SLOT_4: new Point(20, 315),
+  EQ_SLOT_5: new Point(20, 350),
+  EQ_SLOT_6: new Point(20, 385),
+  EQ_SLOT_7: new Point(20, 430),
+  //   这里重置下准确位置
+  EQ_SLOT_8: new Point(20, 465),
+  EQ_SLOT_9: new Point(20, 500),
+  EQ_SLOT_10: new Point(20, 535)
+});
+const equipmentRegion = {
+  //  宽24，高25
+  SLOT_1: {
+    //  y+=36
+    leftTop: { x: 9, y: 198 },
+    rightBottom: { x: 32, y: 222 }
+  },
+  SLOT_2: {
+    leftTop: { x: 9, y: 234 },
+    rightBottom: { x: 32, y: 259 }
+  },
+  SLOT_3: {
+    leftTop: { x: 9, y: 271 },
+    rightBottom: { x: 32, y: 295 }
+  },
+  SLOT_4: {
+    leftTop: { x: 9, y: 307 },
+    rightBottom: { x: 32, y: 332 }
+  },
+  SLOT_5: {
+    leftTop: { x: 9, y: 344 },
+    rightBottom: { x: 32, y: 368 }
+  },
+  SLOT_6: {
+    leftTop: { x: 9, y: 380 },
+    rightBottom: { x: 32, y: 404 }
+  },
+  SLOT_7: {
+    leftTop: { x: 9, y: 417 },
+    rightBottom: { x: 32, y: 441 }
+  },
+  SLOT_8: {
+    leftTop: { x: 9, y: 453 },
+    rightBottom: { x: 32, y: 477 }
+  },
+  SLOT_9: {
+    leftTop: { x: 9, y: 490 },
+    rightBottom: { x: 32, y: 514 }
+  },
+  SLOT_10: {
+    leftTop: { x: 9, y: 526 },
+    rightBottom: { x: 32, y: 550 }
+  }
+};
+({
+  // x+=80
+  //  第一行的棋子位置
+  R1_C1: new Point(230, 315),
+  R1_C2: new Point(310, 315),
+  R1_C3: new Point(390, 315),
+  R1_C4: new Point(470, 315),
+  R1_C5: new Point(550, 315),
+  R1_C6: new Point(630, 315),
+  R1_C7: new Point(710, 315),
+  //  第二行的棋子位置        //  x+=85
+  R2_C1: new Point(260, 370),
+  R2_C2: new Point(345, 370),
+  R2_C3: new Point(430, 370),
+  R2_C4: new Point(515, 370),
+  R2_C5: new Point(600, 370),
+  R2_C6: new Point(685, 370),
+  R2_C7: new Point(770, 370),
+  //  第三行棋子的位置        //  x+=90
+  R3_C1: new Point(200, 420),
+  R3_C2: new Point(290, 420),
+  R3_C3: new Point(380, 420),
+  R3_C4: new Point(470, 420),
+  R3_C5: new Point(560, 420),
+  R3_C6: new Point(650, 420),
+  R3_C7: new Point(740, 420),
+  //  第四行棋子的位置        //  x+=90
+  R4_C1: new Point(240, 475),
+  R4_C2: new Point(330, 475),
+  R4_C3: new Point(420, 475),
+  R4_C4: new Point(510, 475),
+  R4_C5: new Point(600, 475),
+  R4_C6: new Point(690, 475),
+  R4_C7: new Point(780, 475)
+});
+({
+  //  x+=75
+  SLOT_1: new Point(135, 555),
+  SLOT_2: new Point(210, 555),
+  SLOT_3: new Point(285, 555),
+  SLOT_4: new Point(360, 555),
+  SLOT_5: new Point(435, 555),
+  SLOT_6: new Point(510, 555),
+  SLOT_7: new Point(585, 555),
+  SLOT_8: new Point(660, 555),
+  SLOT_9: new Point(735, 555),
+  SLOT_10: new Point(810, 555)
+});
+({
+  //  x+=295
+  SLOT_1: new Point(215, 410),
+  SLOT_2: new Point(510, 410),
+  SLOT_3: new Point(805, 410)
+});
+const gameStageDisplayStageOne = {
+  leftTop: { x: 411, y: 6 },
+  rightBottom: { x: 442, y: 22 }
+};
+const gameStageDisplayNormal = {
+  leftTop: { x: 374, y: 6 },
+  rightBottom: { x: 403, y: 22 }
+};
+const gameStageDisplayTheClockworkTrails = {
+  leftTop: { x: 337, y: 6 },
+  rightBottom: { x: 366, y: 22 }
+};
 const TFT_15_CHAMPION_DATA = {
   "亚托克斯": {
     displayName: "亚托克斯",
@@ -6675,117 +6830,431 @@ const TFT_15_CHAMPION_DATA = {
     classes: []
   }
 };
-const GAME_WIDTH = 1024;
-const GAME_HEIGHT = 768;
-const shopSlot = {
-  SHOP_SLOT_1: new Point(240, 700),
-  SHOP_SLOT_2: new Point(380, 700),
-  SHOP_SLOT_3: new Point(520, 700),
-  SHOP_SLOT_4: new Point(660, 700),
-  SHOP_SLOT_5: new Point(800, 700)
-};
-const shopSlotNameRegions = {
-  SLOT_1: {
-    leftTop: { x: 173, y: 740 },
-    rightBottom: { x: 281, y: 758 }
+const TFT_15_EQUIP_DATA = {
+  // ==========================================
+  // Type 1: 基础散件 (Base Items)
+  // ==========================================
+  "暴风大剑": {
+    name: "暴风大剑",
+    englishName: "TFT_Item_BFSword",
+    equipId: "501",
+    formula: ""
   },
-  SLOT_2: {
-    leftTop: { x: 315, y: 740 },
-    rightBottom: { x: 423, y: 758 }
+  "反曲之弓": {
+    name: "反曲之弓",
+    englishName: "TFT_Item_RecurveBow",
+    equipId: "502",
+    formula: ""
   },
-  SLOT_3: {
-    leftTop: { x: 459, y: 740 },
-    rightBottom: { x: 567, y: 758 }
+  "无用大棒": {
+    name: "无用大棒",
+    englishName: "TFT_Item_NeedlesslyLargeRod",
+    equipId: "503",
+    formula: ""
   },
-  SLOT_4: {
-    leftTop: { x: 602, y: 740 },
-    rightBottom: { x: 710, y: 758 }
+  "女神之泪": {
+    name: "女神之泪",
+    englishName: "TFT_Item_TearOfTheGoddess",
+    equipId: "504",
+    formula: ""
   },
-  SLOT_5: {
-    leftTop: { x: 746, y: 740 },
-    rightBottom: { x: 854, y: 758 }
+  "锁子甲": {
+    name: "锁子甲",
+    englishName: "TFT_Item_ChainVest",
+    equipId: "505",
+    formula: ""
+  },
+  "负极斗篷": {
+    name: "负极斗篷",
+    englishName: "TFT_Item_NegatronCloak",
+    equipId: "506",
+    formula: ""
+  },
+  "巨人腰带": {
+    name: "巨人腰带",
+    englishName: "TFT_Item_GiantsBelt",
+    equipId: "507",
+    formula: ""
+  },
+  "金铲铲": {
+    name: "金铲铲",
+    englishName: "TFT_Item_Spatula",
+    equipId: "508",
+    formula: ""
+  },
+  "拳套": {
+    name: "拳套",
+    englishName: "TFT_Item_SparringGloves",
+    equipId: "509",
+    formula: ""
+  },
+  "金锅锅": {
+    name: "金锅锅",
+    englishName: "TFT_Item_FryingPan",
+    equipId: "91163",
+    formula: ""
+  },
+  // ==========================================
+  // Type 2: S15 赛季纹章 (Set 15 Emblems)
+  // ==========================================
+  // 金锅锅 (91163) 系列合成
+  "护卫纹章": {
+    name: "护卫纹章",
+    englishName: "TFT15_Item_BastionEmblemItem",
+    equipId: "91292",
+    formula: "91163,505"
+    // 金锅锅 + 锁子甲
+  },
+  "决斗大师纹章": {
+    name: "决斗大师纹章",
+    englishName: "TFT15_Item_ChallengerEmblemItem",
+    equipId: "91294",
+    formula: "91163,502"
+    // 金锅锅 + 反曲之弓
+  },
+  "裁决使者纹章": {
+    name: "裁决使者纹章",
+    englishName: "TFT15_Item_DestroyerEmblemItem",
+    equipId: "91295",
+    formula: "91163,509"
+    // 金锅锅 + 拳套
+  },
+  "刀锋领主纹章": {
+    name: "刀锋领主纹章",
+    englishName: "TFT15_Item_EdgelordEmblemItem",
+    equipId: "91296",
+    formula: "91163,501"
+    // 金锅锅 + 暴风大剑
+  },
+  "重量级斗士纹章": {
+    name: "重量级斗士纹章",
+    englishName: "TFT15_Item_HeavyweightEmblemItem",
+    equipId: "91300",
+    formula: "91163,507"
+    // 金锅锅 + 巨人腰带
+  },
+  "法师纹章": {
+    name: "法师纹章",
+    englishName: "TFT15_Item_SpellslingerEmblemItem",
+    equipId: "91301",
+    formula: "91163,503"
+    // 金锅锅 + 无用大棒
+  },
+  "天才纹章": {
+    name: "天才纹章",
+    englishName: "TFT15_Item_ProdigyEmblemItem",
+    equipId: "91302",
+    formula: "91163,504"
+    // 金锅锅 + 女神之泪
+  },
+  "主宰纹章": {
+    name: "主宰纹章",
+    englishName: "TFT15_Item_JuggernautEmblemItem",
+    equipId: "91304",
+    formula: "91163,506"
+    // 金锅锅 + 负极斗篷
+  },
+  "金锅铲冠冕": {
+    name: "金锅铲冠冕",
+    englishName: "TFT_Item_TacticiansRing",
+    equipId: "91164",
+    formula: "91163,508"
+    // 金锅锅 + 金铲铲
+  },
+  "金锅锅冠冕": {
+    name: "金锅锅冠冕",
+    englishName: "TFT_Item_TacticiansScepter",
+    equipId: "91165",
+    formula: "91163,91163"
+    // 金锅锅 + 金锅锅
+  },
+  // 金铲铲 (508) 系列合成
+  "战斗学院纹章": {
+    name: "战斗学院纹章",
+    englishName: "TFT15_Item_BattleAcademiaEmblemItem",
+    equipId: "91293",
+    formula: "508,504"
+    // 金铲铲 + 女神之泪
+  },
+  "至高天纹章": {
+    name: "至高天纹章",
+    englishName: "TFT15_Item_EmpyreanEmblemItem",
+    equipId: "91297",
+    formula: "508,505"
+    // 金铲铲 + 锁子甲
+  },
+  "假面摔角手纹章": {
+    name: "假面摔角手纹章",
+    englishName: "TFT15_Item_RingKingsEmblemItem",
+    equipId: "91298",
+    formula: "508,509"
+    // 金铲铲 + 拳套
+  },
+  "水晶玫瑰纹章": {
+    name: "水晶玫瑰纹章",
+    englishName: "TFT15_Item_CrystalRoseEmblemItem",
+    equipId: "91299",
+    formula: "508,507"
+    // 金铲铲 + 巨人腰带
+  },
+  "斗魂战士纹章": {
+    name: "斗魂战士纹章",
+    englishName: "TFT15_Item_SoulFighterEmblemItem",
+    equipId: "91305",
+    formula: "508,501"
+    // 金铲铲 + 暴风大剑
+  },
+  "星之守护者纹章": {
+    name: "星之守护者纹章",
+    englishName: "TFT15_Item_StarGuardianEmblemItem",
+    equipId: "91306",
+    formula: "508,503"
+    // 金铲铲 + 无用大棒
+  },
+  "兵王纹章": {
+    name: "兵王纹章",
+    englishName: "TFT15_Item_SupremeCellsEmblemItem",
+    equipId: "91307",
+    formula: "508,502"
+    // 金铲铲 + 反曲之弓
+  },
+  "司令纹章": {
+    name: "司令纹章",
+    englishName: "TFT15_Item_ShotcallerEmblemItem",
+    equipId: "91309",
+    formula: "508,506"
+    // 金铲铲 + 负极斗篷
+  },
+  "金铲铲冠冕": {
+    name: "金铲铲冠冕",
+    englishName: "TFT_Item_ForceOfNature",
+    equipId: "603",
+    formula: "508,508"
+    // 金铲铲 + 金铲铲
+  },
+  // ==========================================
+  // Type 2: 常驻合成成装 (Standard Craftable Items)
+  // ==========================================
+  "死亡之刃": {
+    name: "死亡之刃",
+    englishName: "TFT_Item_Deathblade",
+    equipId: "519",
+    formula: "501,501"
+  },
+  "巨人杀手": {
+    name: "巨人杀手",
+    englishName: "TFT_Item_MadredsBloodrazor",
+    equipId: "521",
+    formula: "501,502"
+  },
+  "海克斯科技枪刃": {
+    name: "海克斯科技枪刃",
+    englishName: "TFT_Item_HextechGunblade",
+    equipId: "523",
+    formula: "501,503"
+  },
+  "朔极之矛": {
+    name: "朔极之矛",
+    englishName: "TFT_Item_SpearOfShojin",
+    equipId: "525",
+    formula: "501,504"
+  },
+  "夜之锋刃": {
+    name: "夜之锋刃",
+    englishName: "TFT_Item_GuardianAngel",
+    equipId: "6022",
+    formula: "501,505"
+  },
+  "饮血剑": {
+    name: "饮血剑",
+    englishName: "TFT_Item_Bloodthirster",
+    equipId: "529",
+    formula: "501,506"
+  },
+  "斯特拉克的挑战护手": {
+    name: "斯特拉克的挑战护手",
+    englishName: "TFT_Item_SteraksGage",
+    equipId: "1001",
+    formula: "501,507"
+  },
+  "无尽之刃": {
+    name: "无尽之刃",
+    englishName: "TFT_Item_InfinityEdge",
+    equipId: "535",
+    formula: "501,509"
+  },
+  "红霸符": {
+    name: "红霸符",
+    englishName: "TFT_Item_RapidFireCannon",
+    equipId: "1007",
+    formula: "502,502"
+  },
+  "鬼索的狂暴之刃": {
+    name: "鬼索的狂暴之刃",
+    englishName: "TFT_Item_GuinsoosRageblade",
+    equipId: "539",
+    formula: "502,503"
+  },
+  "斯塔缇克电刃": {
+    name: "斯塔缇克电刃",
+    englishName: "TFT_Item_StatikkShiv",
+    equipId: "541",
+    formula: "502,504"
+  },
+  "泰坦的坚决": {
+    name: "泰坦的坚决",
+    englishName: "TFT_Item_TitansResolve",
+    equipId: "543",
+    formula: "502,505"
+  },
+  "卢安娜的飓风": {
+    name: "卢安娜的飓风",
+    englishName: "TFT_Item_RunaansHurricane",
+    equipId: "545",
+    formula: "502,506"
+  },
+  "纳什之牙": {
+    name: "纳什之牙",
+    englishName: "TFT_Item_Leviathan",
+    equipId: "547",
+    formula: "502,507"
+  },
+  "最后的轻语": {
+    name: "最后的轻语",
+    englishName: "TFT_Item_LastWhisper",
+    equipId: "551",
+    formula: "502,509"
+  },
+  "灭世者的死亡之帽": {
+    name: "灭世者的死亡之帽",
+    englishName: "TFT_Item_RabadonsDeathcap",
+    equipId: "553",
+    formula: "503,503"
+  },
+  "大天使之杖": {
+    name: "大天使之杖",
+    englishName: "TFT_Item_ArchangelsStaff",
+    equipId: "555",
+    formula: "503,504"
+  },
+  "冕卫": {
+    name: "冕卫",
+    englishName: "TFT_Item_Crownguard",
+    equipId: "1003",
+    formula: "503,505"
+  },
+  "离子火花": {
+    name: "离子火花",
+    englishName: "TFT_Item_IonicSpark",
+    equipId: "559",
+    formula: "503,506"
+  },
+  "莫雷洛秘典": {
+    name: "莫雷洛秘典",
+    englishName: "TFT_Item_Morellonomicon",
+    equipId: "561",
+    formula: "503,507"
+  },
+  "珠光护手": {
+    name: "珠光护手",
+    englishName: "TFT_Item_JeweledGauntlet",
+    equipId: "565",
+    formula: "503,509"
+  },
+  "蓝霸符": {
+    name: "蓝霸符",
+    englishName: "TFT_Item_BlueBuff",
+    equipId: "567",
+    formula: "504,504"
+  },
+  "圣盾使的誓约": {
+    name: "圣盾使的誓约",
+    englishName: "TFT_Item_FrozenHeart",
+    equipId: "7034",
+    formula: "505,504"
+  },
+  "棘刺背心": {
+    name: "棘刺背心",
+    englishName: "TFT_Item_BrambleVest",
+    equipId: "579",
+    formula: "505,505"
+  },
+  "石像鬼石板甲": {
+    name: "石像鬼石板甲",
+    englishName: "TFT_Item_GargoyleStoneplate",
+    equipId: "581",
+    formula: "505,506"
+  },
+  "日炎斗篷": {
+    name: "日炎斗篷",
+    englishName: "TFT_Item_RedBuff",
+    equipId: "583",
+    formula: "507,505"
+  },
+  "坚定之心": {
+    name: "坚定之心",
+    englishName: "TFT_Item_NightHarvester",
+    equipId: "1009",
+    formula: "505,509"
+  },
+  "巨龙之爪": {
+    name: "巨龙之爪",
+    englishName: "TFT_Item_DragonsClaw",
+    equipId: "589",
+    formula: "506,506"
+  },
+  "适应性头盔": {
+    name: "适应性头盔",
+    englishName: "TFT_Item_AdaptiveHelm",
+    equipId: "1004",
+    formula: "504,506"
+  },
+  "薄暮法袍": {
+    name: "薄暮法袍",
+    englishName: "TFT_Item_SpectralGauntlet",
+    equipId: "1006",
+    formula: "507,506"
+  },
+  "水银": {
+    name: "水银",
+    englishName: "TFT_Item_Quicksilver",
+    equipId: "595",
+    formula: "506,509"
+  },
+  "救赎": {
+    name: "救赎",
+    englishName: "TFT_Item_Redemption",
+    equipId: "573",
+    formula: "507,504"
+  },
+  "狂徒铠甲": {
+    name: "狂徒铠甲",
+    englishName: "TFT_Item_WarmogsArmor",
+    equipId: "597",
+    formula: "507,507"
+  },
+  "强袭者的链枷": {
+    name: "强袭者的链枷",
+    englishName: "TFT_Item_PowerGauntlet",
+    equipId: "801",
+    formula: "507,509"
+  },
+  "正义之手": {
+    name: "正义之手",
+    englishName: "TFT_Item_UnstableConcoction",
+    equipId: "577",
+    formula: "509,504"
+  },
+  "窃贼手套": {
+    name: "窃贼手套",
+    englishName: "TFT_Item_ThiefsGloves",
+    equipId: "607",
+    formula: "509,509"
   }
 };
-({
-  EQ_SLOT_1: new Point(20, 210),
-  //+35
-  EQ_SLOT_2: new Point(20, 245),
-  EQ_SLOT_3: new Point(20, 280),
-  EQ_SLOT_4: new Point(20, 315),
-  EQ_SLOT_5: new Point(20, 350),
-  EQ_SLOT_6: new Point(20, 385),
-  EQ_SLOT_7: new Point(20, 430),
-  //   这里重置下准确位置
-  EQ_SLOT_8: new Point(20, 465),
-  EQ_SLOT_9: new Point(20, 500),
-  EQ_SLOT_10: new Point(20, 535)
-});
-({
-  // x+=80
-  //  第一行的棋子位置
-  R1_C1: new Point(230, 315),
-  R1_C2: new Point(310, 315),
-  R1_C3: new Point(390, 315),
-  R1_C4: new Point(470, 315),
-  R1_C5: new Point(550, 315),
-  R1_C6: new Point(630, 315),
-  R1_C7: new Point(710, 315),
-  //  第二行的棋子位置        //  x+=85
-  R2_C1: new Point(260, 370),
-  R2_C2: new Point(345, 370),
-  R2_C3: new Point(430, 370),
-  R2_C4: new Point(515, 370),
-  R2_C5: new Point(600, 370),
-  R2_C6: new Point(685, 370),
-  R2_C7: new Point(770, 370),
-  //  第三行棋子的位置        //  x+=90
-  R3_C1: new Point(200, 420),
-  R3_C2: new Point(290, 420),
-  R3_C3: new Point(380, 420),
-  R3_C4: new Point(470, 420),
-  R3_C5: new Point(560, 420),
-  R3_C6: new Point(650, 420),
-  R3_C7: new Point(740, 420),
-  //  第四行棋子的位置        //  x+=90
-  R4_C1: new Point(240, 475),
-  R4_C2: new Point(330, 475),
-  R4_C3: new Point(420, 475),
-  R4_C4: new Point(510, 475),
-  R4_C5: new Point(600, 475),
-  R4_C6: new Point(690, 475),
-  R4_C7: new Point(780, 475)
-});
-({
-  //  x+=75
-  SLOT_1: new Point(135, 555),
-  SLOT_2: new Point(210, 555),
-  SLOT_3: new Point(285, 555),
-  SLOT_4: new Point(360, 555),
-  SLOT_5: new Point(435, 555),
-  SLOT_6: new Point(510, 555),
-  SLOT_7: new Point(585, 555),
-  SLOT_8: new Point(660, 555),
-  SLOT_9: new Point(735, 555),
-  SLOT_10: new Point(810, 555)
-});
-({
-  //  x+=295
-  SLOT_1: new Point(215, 410),
-  SLOT_2: new Point(510, 410),
-  SLOT_3: new Point(805, 410)
-});
-const gameStageDisplayStageOne = {
-  leftTop: { x: 411, y: 6 },
-  rightBottom: { x: 442, y: 22 }
-};
-const gameStageDisplayNormal = {
-  leftTop: { x: 374, y: 6 },
-  rightBottom: { x: 403, y: 22 }
-};
-const gameStageDisplayTheClockworkTrails = {
-  leftTop: { x: 337, y: 6 },
-  rightBottom: { x: 366, y: 22 }
-};
+const GAME_WIDTH = 1024;
+const GAME_HEIGHT = 768;
+const equipResourcePath = ["component", "core", "emblem", "artifact", "radiant"];
 class TftOperator {
   static instance;
   //  缓存游戏窗口的左上角坐标
@@ -6794,8 +7263,25 @@ class TftOperator {
   gameStageWorker = null;
   //  用来判断棋子内容的Worker
   chessWorker = null;
+  //  当前的游戏模式
   gameType;
+  //  当前战场状态，初始化为空 Map
+  currentBoardState = {
+    cells: /* @__PURE__ */ new Map()
+  };
+  //  当前装备状态。
+  currentEquipState = [];
+  // 缓存已加载的图片模板 (分层存储)
+  equipTemplates = [];
+  // 装备图片资源根目录
+  BASE_TEMPLATE_DIR = path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/equipment");
+  // ⚡️ 新增：全黑的空槽位模板，宽高均为24
+  emptySlotTemplate = null;
   constructor() {
+    cv["onRuntimeInitialized"] = () => {
+      this.emptySlotTemplate = new cv.Mat(24, 24, cv.CV_8UC4, new cv.Scalar(0, 0, 0, 255));
+      logger.info("[TftOperator] OpenCV (WASM) 核心模块加载完毕！");
+    };
   }
   static getInstance() {
     if (!TftOperator.instance) {
@@ -6894,6 +7380,43 @@ class TftOperator {
       }
     }
     return shopUnits;
+  }
+  async getEquipInfo() {
+    if (!this.gameWindowRegion) {
+      logger.error("[TftOperator] 尚未初始化游戏窗口位置！");
+      return [];
+    }
+    await this.loadEquipTemplates();
+    if (this.equipTemplates.length === 0) {
+      logger.warn("[TftOperator] 装备模板为空，跳过识别");
+      return [];
+    }
+    const resultEquips = [];
+    logger.info("[TftOperator] 开始扫描装备栏...");
+    for (const [slotName, regionDef] of Object.entries(equipmentRegion)) {
+      const targetRegion = new Region(
+        this.gameWindowRegion.x + regionDef.leftTop.x,
+        this.gameWindowRegion.y + regionDef.leftTop.y,
+        regionDef.rightBottom.x - regionDef.leftTop.x,
+        regionDef.rightBottom.y - regionDef.leftTop.y
+      );
+      try {
+        const screenshot = await screen$1.grabRegion(targetRegion);
+        const targetMat = cv.matFromImageData(screenshot);
+        cv.cvtColor(targetMat, targetMat, cv.COLOR_BGRA2RGBA);
+        const matchResult = this.findBestMatchEquipTemplate(targetMat);
+        targetMat.delete();
+        if (matchResult) {
+          logger.info(`[TftOperator] ${slotName} 识别成功: ${matchResult.name} (相似度: ${(matchResult.confidence * 100).toFixed(1)}%)`);
+          matchResult.slot = slotName;
+          resultEquips.push(matchResult);
+        } else {
+        }
+      } catch (e) {
+        logger.error(`[TftOperator] ${slotName} 扫描出错: ${e.message}`);
+      }
+    }
+    return resultEquips;
   }
   /**
    * 购买指定槽位的棋子
@@ -6995,21 +7518,25 @@ class TftOperator {
   // ======================================
   // 工具函数：截图某区域并输出 PNG buffer
   // ======================================
-  async captureRegionAsPng(region) {
+  async captureRegionAsPng(region, forOCR = true) {
     const screenshot = await screen$1.grabRegion(region);
-    return await sharp(screenshot.data, {
+    let pipeline = sharp(screenshot.data, {
       raw: {
         width: screenshot.width,
         height: screenshot.height,
         channels: 4
-        // RGBA 四通道
+        // RGBA / BGRA
       }
-    }).removeAlpha().resize({
-      width: Math.round(screenshot.width * 3),
-      //  宽高都放大一些
-      height: Math.round(screenshot.height * 3),
-      kernel: "lanczos3"
-    }).grayscale().normalize().threshold(160).sharpen().toFormat("png").toBuffer();
+    }).removeAlpha();
+    if (forOCR) {
+      pipeline = pipeline.resize({
+        width: Math.round(screenshot.width * 3),
+        // 放大 3 倍以提高 OCR 精度
+        height: Math.round(screenshot.height * 3),
+        kernel: "lanczos3"
+      }).grayscale().normalize().threshold(160).sharpen();
+    }
+    return await pipeline.toFormat("png").toBuffer();
   }
   //  保存调试图片，debug用的
   saveDebugImage(name, pngBuffer) {
@@ -7034,6 +7561,86 @@ class TftOperator {
       gameStageDisplayTheClockworkTrails.rightBottom.x - gameStageDisplayTheClockworkTrails.leftTop.x,
       gameStageDisplayTheClockworkTrails.rightBottom.y - gameStageDisplayTheClockworkTrails.leftTop.y
     );
+  }
+  /**
+   * 加载装备模板
+   */
+  async loadEquipTemplates() {
+    if (this.equipTemplates.length > 0) return;
+    logger.info(`[TftOperator] 开始加载装备模板... 根目录: ${this.BASE_TEMPLATE_DIR}`);
+    const TEMPLATE_SIZE = 24;
+    for (const category of equipResourcePath) {
+      const resourcePath = path.join(this.BASE_TEMPLATE_DIR, category);
+      const categoryMap = /* @__PURE__ */ new Map();
+      if (fs.existsSync(resourcePath)) {
+        const files = fs.readdirSync(resourcePath);
+        for (const file2 of files) {
+          const filePath = path.join(resourcePath, file2);
+          const fileNameNotExt = path.parse(filePath).name;
+          try {
+            const fileBuf = fs.readdirSync(filePath);
+            const { data, info } = await sharp(fileBuf).resize(TEMPLATE_SIZE, TEMPLATE_SIZE, { fit: "fill" }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+            const rawData = {
+              data,
+              width: info.width,
+              height: info.height,
+              channels: info.channels
+            };
+            const mat = cv.matFromImageData(rawData);
+            categoryMap.set(fileNameNotExt, mat);
+          } catch (e) {
+            logger.error(`[TftOperator] 加载图片模板失败：${file2}`);
+          }
+        }
+        logger.info(`[TftOperator] 加载 [${category}] 类别模板: ${categoryMap.size} 个 (cv.Mat Cached)`);
+      }
+      this.equipTemplates.push(categoryMap);
+    }
+  }
+  /**
+   *  传入一个Mat对象，并从图片模板中找到最匹配的装备
+   */
+  findBestMatchEquipTemplate(targetMat) {
+    let bestMatchEquip = null;
+    let maxConfidence = 0;
+    let foundCategory = "";
+    const THRESHOLD = 0.8;
+    const mask = new cv.Mat();
+    const resultMat = new cv.Mat();
+    try {
+      cv.matchTemplate(targetMat, this.emptySlotTemplate, resultMat, cv.TM_CCOEFF_NORMED, mask);
+      const emptyResult = cv.minMaxLoc(resultMat, mask);
+      if (emptyResult.maxVal > 0.9) {
+        return null;
+      }
+      for (let i = 0; i < this.equipTemplates.length; i++) {
+        const currentMap = this.equipTemplates[i];
+        const currentCategory = equipResourcePath[i];
+        if (currentMap.size === 0) continue;
+        for (const [templateName, templateMat] of currentMap) {
+          if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) continue;
+          cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
+          const result = cv.minMaxLoc(resultMat, mask);
+          if (result.maxVal >= THRESHOLD) {
+            maxConfidence = result.maxVal;
+            bestMatchEquip = Object.values(TFT_15_EQUIP_DATA).find((e) => e.englishName === templateName);
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      logger.error("[TftOperator] 匹配过程出错: " + e);
+    } finally {
+      mask.delete();
+      resultMat.delete();
+    }
+    return bestMatchEquip ? {
+      ...bestMatchEquip,
+      slot: "",
+      //  槽位信息留给外面加
+      confidence: maxConfidence,
+      category: foundCategory
+    } : null;
   }
 }
 const tftOperator = TftOperator.getInstance();
@@ -7430,6 +8037,7 @@ function registerHandler() {
   ipcMain.handle(IpcChannel.HEX_STOP, async (event) => hexService.stop());
   ipcMain.handle(IpcChannel.TFT_BUY_AT_SLOT, async (event, slot) => tftOperator.buyAtSlot(slot));
   ipcMain.handle(IpcChannel.TFT_GET_SHOP_INFO, async (event) => tftOperator.getShopInfo());
+  ipcMain.handle(IpcChannel.TFT_GET_EQUIP_INFO, async (event) => tftOperator.getEquipInfo());
 }
 export {
   MAIN_DIST,

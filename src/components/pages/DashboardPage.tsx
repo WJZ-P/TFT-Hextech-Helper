@@ -111,6 +111,10 @@ const DashboardPage = () => {
                 console.log(await window.tft.getShopInfo())
             }}>点我查看当前购买栏信息
             </button>
+            <button onClick={async () => {
+                console.log(await window.tft.getEquipInfo())
+            }}>点我查看当前装备信息
+            </button>
         </PageContaier>
     );
 }

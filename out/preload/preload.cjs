@@ -8,6 +8,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["HEX_STOP"] = "hex-stop";
   IpcChannel2["TFT_BUY_AT_SLOT"] = "tft-buy-at-slot";
   IpcChannel2["TFT_GET_SHOP_INFO"] = "tft-get-shop-info";
+  IpcChannel2["TFT_GET_EQUIP_INFO"] = "tft-get-equip-info";
   return IpcChannel2;
 })(IpcChannel || {});
 electron.contextBridge.exposeInMainWorld("ipcRenderer", {
@@ -62,7 +63,8 @@ const hexApi = {
 electron.contextBridge.exposeInMainWorld("hex", hexApi);
 const tftApi = {
   buyAtSlot: (slot) => electron.ipcRenderer.invoke(IpcChannel.TFT_BUY_AT_SLOT, slot),
-  getShopInfo: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_SHOP_INFO)
+  getShopInfo: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_SHOP_INFO),
+  getEquipInfo: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_EQUIP_INFO)
 };
 electron.contextBridge.exposeInMainWorld("tft", tftApi);
 const lcuApi = {

@@ -1,5 +1,168 @@
 //  定义一下棋子相关的一些协议。
 
+//  英雄购买槽坐标
+import {Point} from "@nut-tree-fork/nut-js";
+
+export const shopSlot = {
+    SHOP_SLOT_1: new Point(240, 700),
+    SHOP_SLOT_2: new Point(380, 700),
+    SHOP_SLOT_3: new Point(520, 700),
+    SHOP_SLOT_4: new Point(660, 700),
+    SHOP_SLOT_5: new Point(800, 700),
+}
+//  英雄购买槽英雄名字Region
+export const shopSlotNameRegions = {
+    SLOT_1: {
+        leftTop: {x: 173, y: 740},
+        rightBottom: {x: 281, y: 758}
+    },
+    SLOT_2: {
+        leftTop: {x: 315, y: 740},
+        rightBottom: {x: 423, y: 758}
+    },
+    SLOT_3: {
+        leftTop: {x: 459, y: 740},
+        rightBottom: {x: 567, y: 758}
+    },
+    SLOT_4: {
+        leftTop: {x: 602, y: 740},
+        rightBottom: {x: 710, y: 758}
+    },
+    SLOT_5: {
+        leftTop: {x: 746, y: 740},
+        rightBottom: {x: 854, y: 758}
+    },
+}
+//  装备槽位坐标
+export const equipmentSlot = {
+    EQ_SLOT_1: new Point(20, 210),//+35
+    EQ_SLOT_2: new Point(20, 245),
+    EQ_SLOT_3: new Point(20, 280),
+    EQ_SLOT_4: new Point(20, 315),
+    EQ_SLOT_5: new Point(20, 350),
+    EQ_SLOT_6: new Point(20, 385),
+    EQ_SLOT_7: new Point(20, 430),//   这里重置下准确位置
+    EQ_SLOT_8: new Point(20, 465),
+    EQ_SLOT_9: new Point(20, 500),
+    EQ_SLOT_10: new Point(20, 535),
+}
+//  装备槽位具体区域
+export const equipmentRegion = {   //  宽24，高25
+    SLOT_1: {                   //  y+=36
+        leftTop: {x: 9, y: 198},
+        rightBottom: {x: 32, y: 222}
+    },
+    SLOT_2: {
+        leftTop: {x: 9, y: 234},
+        rightBottom: {x: 32, y: 259}
+    },
+    SLOT_3: {
+        leftTop: {x: 9, y: 271},
+        rightBottom: {x: 32, y: 295}
+    },
+    SLOT_4: {
+        leftTop: {x: 9, y: 307},
+        rightBottom: {x: 32, y: 332}
+    },
+    SLOT_5: {
+        leftTop: {x: 9, y: 344},
+        rightBottom: {x: 32, y: 368}
+    },
+    SLOT_6: {
+        leftTop: {x: 9, y: 380},
+        rightBottom: {x: 32, y: 404}
+    },
+    SLOT_7: {
+        leftTop: {x: 9, y: 417},
+        rightBottom: {x: 32, y: 441}
+    },
+    SLOT_8: {
+        leftTop: {x: 9, y: 453},
+        rightBottom: {x: 32, y: 477}
+    },
+    SLOT_9: {
+        leftTop: {x: 9, y: 490},
+        rightBottom: {x: 32, y: 514}
+    },
+    SLOT_10: {
+        leftTop: {x: 9, y: 526},
+        rightBottom: {x: 32, y: 550}
+    },
+}
+//  棋子在战场上的位置
+export const fightBoardSlot = {
+    // x+=80
+    //  第一行的棋子位置
+    R1_C1: new Point(230, 315),
+    R1_C2: new Point(310, 315),
+    R1_C3: new Point(390, 315),
+    R1_C4: new Point(470, 315),
+    R1_C5: new Point(550, 315),
+    R1_C6: new Point(630, 315),
+    R1_C7: new Point(710, 315),
+    //  第二行的棋子位置        //  x+=85
+    R2_C1: new Point(260, 370),
+    R2_C2: new Point(345, 370),
+    R2_C3: new Point(430, 370),
+    R2_C4: new Point(515, 370),
+    R2_C5: new Point(600, 370),
+    R2_C6: new Point(685, 370),
+    R2_C7: new Point(770, 370),
+    //  第三行棋子的位置        //  x+=90
+    R3_C1: new Point(200, 420),
+    R3_C2: new Point(290, 420),
+    R3_C3: new Point(380, 420),
+    R3_C4: new Point(470, 420),
+    R3_C5: new Point(560, 420),
+    R3_C6: new Point(650, 420),
+    R3_C7: new Point(740, 420),
+    //  第四行棋子的位置        //  x+=90
+    R4_C1: new Point(240, 475),
+    R4_C2: new Point(330, 475),
+    R4_C3: new Point(420, 475),
+    R4_C4: new Point(510, 475),
+    R4_C5: new Point(600, 475),
+    R4_C6: new Point(690, 475),
+    R4_C7: new Point(780, 475),
+}
+//  备战席
+export const benchSlot = { //  x+=75
+    SLOT_1: new Point(135, 555),
+    SLOT_2: new Point(210, 555),
+    SLOT_3: new Point(285, 555),
+    SLOT_4: new Point(360, 555),
+    SLOT_5: new Point(435, 555),
+    SLOT_6: new Point(510, 555),
+    SLOT_7: new Point(585, 555),
+    SLOT_8: new Point(660, 555),
+    SLOT_9: new Point(735, 555),
+    SLOT_10: new Point(810, 555),
+}
+//  海克斯选择槽位
+export const hexSlot = {   //  x+=295
+    SLOT_1: new Point(215, 410),
+    SLOT_2: new Point(510, 410),
+    SLOT_3: new Point(805, 410),
+}
+//  选秀站位，为离自己最近的棋子位置。
+export const sharedDraftPoint = {x: 530, y: 400}
+//  游戏战斗阶段展示坐标，第一阶段。因为第一阶段只有四个回合，跟其他阶段的不一样。
+export const gameStageDisplayStageOne = {
+    leftTop: {x: 411, y: 6},
+    rightBottom: {x: 442, y: 22}
+}
+//  游戏战斗阶段展示坐标，从2-1开始。
+export const gameStageDisplayNormal = {
+    leftTop: {x: 374, y: 6},
+    rightBottom: {x: 403, y: 22}
+}
+//  发条鸟的战斗阶段，布局跟其他的都不一样，因为发条鸟一个大阶段有10场
+export const gameStageDisplayTheClockworkTrails = {
+    leftTop: {x: 337, y: 6},
+    rightBottom: {x: 366, y: 22}
+}
+
+
 //  棋子类型接口
 export interface TFTUnit {
     displayName: string;                //  棋子的英雄名称，用于ocr

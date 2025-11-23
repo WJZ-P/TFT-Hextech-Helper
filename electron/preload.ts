@@ -69,6 +69,7 @@ contextBridge.exposeInMainWorld('hex', hexApi)
 const tftApi = {
     buyAtSlot: (slot: number) => ipcRenderer.invoke(IpcChannel.TFT_BUY_AT_SLOT, slot),
     getShopInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_SHOP_INFO),
+    getEquipInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_EQUIP_INFO),
 }
 export type TftApi = typeof tftApi
 contextBridge.exposeInMainWorld('tft', tftApi)
