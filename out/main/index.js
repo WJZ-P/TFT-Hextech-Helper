@@ -7550,12 +7550,20 @@ class TftOperator {
       }
     }).removeAlpha();
     if (forOCR) {
-      pipeline = pipeline.resize({
-        width: Math.round(screenshot.width * 3),
-        // 放大 3 倍以提高 OCR 精度
-        height: Math.round(screenshot.height * 3),
+      pipeline = pipeline.grayscale().threshold(160).trim({ threshold: 10 }).extend({
+        top: 10,
+        bottom: 10,
+        left: 10,
+        right: 10,
+        background: { r: 0, g: 0, b: 0 }
+        // 补黑色的边
+      }).resize({
+        height: 80,
+        // 我们可以指定高度，让 Sharp 自动按比例缩放宽度
+        fit: "contain",
+        // 保持比例
         kernel: "lanczos3"
-      }).grayscale().normalize().threshold(160).sharpen();
+      }).sharpen().negate();
     }
     return await pipeline.toFormat("png").toBuffer();
   }
