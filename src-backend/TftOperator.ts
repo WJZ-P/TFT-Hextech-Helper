@@ -217,6 +217,7 @@ class TftOperator {
             const {data: {text}} = await worker.recognize(processedPng)
 
             const cleanName = text.replace(/\s/g, "")
+            logger.info(`[TftOperator] 槽位${i}识别结果：${cleanName}`)
 
             //  从数据集中找到对应英雄
             const unitData: TFTUnit | null = TFT_15_CHAMPION_DATA[cleanName]
