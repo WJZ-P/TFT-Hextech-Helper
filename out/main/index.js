@@ -7367,6 +7367,7 @@ class TftOperator {
       const processedPng = await this.captureRegionAsPng(tessRegion);
       const { data: { text } } = await worker.recognize(processedPng);
       const cleanName = text.replace(/\s/g, "");
+      logger.info(`[TftOperator] 槽位${i}识别结果：${cleanName}`);
       const unitData = TFT_15_CHAMPION_DATA[cleanName];
       if (unitData) {
         logger.info(`[商店槽位 ${i}] 识别成功-> ${unitData.displayName}-(${unitData.price}费)`);
@@ -7497,7 +7498,7 @@ class TftOperator {
     const localLangPath = path.join(process.env.VITE_PUBLIC, "resources/tessdata");
     logger.info(`[TftOperator] Tesseract 本地语言包路径: ${localLangPath}`);
     const worker = await createWorker("eng", 1, {
-      logger: (m) => logger.info(`[Tesseract] ${m.status}: ${Math.round(m.progress * 100)}%`),
+      //logger: m => logger.info(`[Tesseract] ${m.status}: ${Math.round(m.progress * 100)}%`),
       langPath: localLangPath,
       cachePath: localLangPath
     });
@@ -7517,7 +7518,7 @@ class TftOperator {
     const localLangPath = path.join(process.env.VITE_PUBLIC, "resources/tessdata");
     logger.info(`[TftOperator] Tesseract 本地语言包路径: ${localLangPath}`);
     const worker = await createWorker("chi_sim", 1, {
-      logger: (m) => logger.info(`[Tesseract] ${m.status}: ${Math.round(m.progress * 100)}%`),
+      //logger: m => logger.info(`[Tesseract] ${m.status}: ${Math.round(m.progress * 100)}%`),
       langPath: localLangPath,
       cachePath: localLangPath
     });
@@ -7525,8 +7526,10 @@ class TftOperator {
     await worker.setParameters(
       {
         tessedit_char_whitelist: uniqueChars,
-        tessedit_pageseg_mode: PSM.SINGLE_LINE
+        tessedit_pageseg_mode: PSM.SINGLE_LINE,
         // 单行模式
+        preserve_interword_spaces: "1"
+        // 还可以尝试这个参数，强制将其视为单词
       }
     );
     this.chessWorker = worker;

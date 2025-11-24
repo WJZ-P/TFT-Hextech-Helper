@@ -391,7 +391,7 @@ class TftOperator {
         logger.info(`[TftOperator] Tesseract 本地语言包路径: ${localLangPath}`);
 
         const worker = await createWorker('eng', 1, {
-            logger: m => logger.info(`[Tesseract] ${m.status}: ${Math.round(m.progress * 100)}%`),
+            //logger: m => logger.info(`[Tesseract] ${m.status}: ${Math.round(m.progress * 100)}%`),
             langPath: localLangPath,
             cachePath: localLangPath,
         })
@@ -411,7 +411,7 @@ class TftOperator {
         const localLangPath = path.join(process.env.VITE_PUBLIC, 'resources/tessdata');
         logger.info(`[TftOperator] Tesseract 本地语言包路径: ${localLangPath}`);
         const worker = await createWorker('chi_sim', 1, {
-            logger: m => logger.info(`[Tesseract] ${m.status}: ${Math.round(m.progress * 100)}%`),
+            //logger: m => logger.info(`[Tesseract] ${m.status}: ${Math.round(m.progress * 100)}%`),
             langPath: localLangPath,
             cachePath: localLangPath,
         })
@@ -420,6 +420,7 @@ class TftOperator {
         await worker.setParameters({
                 tessedit_char_whitelist: uniqueChars,
                 tessedit_pageseg_mode: PSM.SINGLE_LINE, // 单行模式
+                preserve_interword_spaces: '1',// 还可以尝试这个参数，强制将其视为单词
             }
         )
         this.chessWorker = worker
