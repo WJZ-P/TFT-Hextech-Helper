@@ -23,8 +23,8 @@ import {
 import cv from "@techstark/opencv-js";
 import {TFT_15_EQUIP} from "../public/TFTInfo/equip";
 
-const GAME_WIDTH = 1024;
-const GAME_HEIGHT = 768;
+const GAME_WIDTH = 1600;
+const GAME_HEIGHT = 1200;
 
 //  装备的资源路径，从public/resources/assets/images/equipment里面算起
 // 优先级排序：散件 -> 成装 -> 纹章 -> 神器 -> 光明

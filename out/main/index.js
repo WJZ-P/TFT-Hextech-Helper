@@ -5523,24 +5523,24 @@ const shopSlot = {
 };
 const shopSlotNameRegions = {
   SLOT_1: {
-    leftTop: { x: 173, y: 740 },
-    rightBottom: { x: 281, y: 758 }
+    leftTop: { x: 270, y: 1157 },
+    rightBottom: { x: 440 - 80, y: 1186 }
   },
   SLOT_2: {
-    leftTop: { x: 315, y: 740 },
-    rightBottom: { x: 423, y: 758 }
+    leftTop: { x: 493, y: 1157 },
+    rightBottom: { x: 663 - 80, y: 1186 }
   },
   SLOT_3: {
-    leftTop: { x: 459, y: 740 },
-    rightBottom: { x: 567, y: 758 }
+    leftTop: { x: 716, y: 1157 },
+    rightBottom: { x: 886 - 80, y: 1186 }
   },
   SLOT_4: {
-    leftTop: { x: 602, y: 740 },
-    rightBottom: { x: 710, y: 758 }
+    leftTop: { x: 941, y: 1157 },
+    rightBottom: { x: 1111 - 80, y: 1186 }
   },
   SLOT_5: {
-    leftTop: { x: 746, y: 740 },
-    rightBottom: { x: 854, y: 758 }
+    leftTop: { x: 1165, y: 1157 },
+    rightBottom: { x: 1335 - 80, y: 1186 }
   }
 };
 ({
@@ -7252,8 +7252,8 @@ const TFT_15_EQUIP_DATA = {
     formula: "509,509"
   }
 };
-const GAME_WIDTH = 1024;
-const GAME_HEIGHT = 768;
+const GAME_WIDTH = 1600;
+const GAME_HEIGHT = 1200;
 const equipResourcePath = ["component", "core", "emblem", "artifact", "radiant"];
 class TftOperator {
   static instance;
@@ -7550,20 +7550,7 @@ class TftOperator {
       }
     }).removeAlpha();
     if (forOCR) {
-      pipeline = pipeline.grayscale().threshold(160).trim({ threshold: 10 }).extend({
-        top: 10,
-        bottom: 10,
-        left: 10,
-        right: 10,
-        background: { r: 0, g: 0, b: 0 }
-        // 补黑色的边
-      }).resize({
-        height: 80,
-        // 我们可以指定高度，让 Sharp 自动按比例缩放宽度
-        fit: "contain",
-        // 保持比例
-        kernel: "lanczos3"
-      }).sharpen().negate();
+      pipeline = pipeline.grayscale();
     }
     return await pipeline.toFormat("png").toBuffer();
   }
