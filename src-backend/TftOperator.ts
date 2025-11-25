@@ -86,19 +86,25 @@ class TftOperator {
     };
     //  当前装备状态。
     private currentEquipState: TFTEquip[] = [];
-    // 缓存已加载的图片模板 (分层存储)
+    // 缓存装备图片模板 (分层存储)
     private equipTemplates: Array<Map<string, cv.Mat>> = [];
+    // 缓存商店栏英雄ID模板
+    private championTemplates: Map<string, cv.Mat> = new Map();
     // 装备图片资源根目录
     private readonly BASE_TEMPLATE_DIR = path.join(process.env.VITE_PUBLIC || '.', 'resources/assets/images/equipment');
-    // ⚡️ 新增：全黑的空槽位模板，宽高均为24
+    private readonly CHAMPION_TEMPLATE_DIR = path.join(process.env.VITE_PUBLIC || '.', 'resources/assets/images/champions');
+    // ⚡️ 全黑的空槽位模板，宽高均为24
     private emptySlotTemplate: cv.Mat = null;
-
 
     private constructor() {
         cv['onRuntimeInitialized'] = () => {
             this.emptySlotTemplate = new cv.Mat(24, 24, cv.CV_8UC4, new cv.Scalar(0, 0, 0, 255))
             logger.info("[TftOperator] OpenCV (WASM) 核心模块加载完毕！");
         };
+        // 加载装备模板
+        this.loadEquipTemplates();
+        // 加载英雄ID模板
+        this.loadChampionTemplates();
     }
 
     public static getInstance(): TftOperator {
@@ -243,8 +249,6 @@ class TftOperator {
             return [];
         }
 
-        // 1. 确保模板已加载
-        await this.loadEquipTemplates();
         if (this.equipTemplates.length === 0) {
             logger.warn("[TftOperator] 装备模板为空，跳过识别");
             return [];
@@ -498,9 +502,7 @@ class TftOperator {
     /**
      * 加载装备模板
      */
-    /**
-     * 加载装备模板
-     */
+
     private async loadEquipTemplates() {
         if (this.equipTemplates.length > 0) return;
         logger.info(`[TftOperator] 开始加载装备模板...`);
@@ -565,6 +567,55 @@ class TftOperator {
             this.equipTemplates.push(categoryMap);
         }
         logger.info(`[TftOperator] 图片模板加载完成！`);
+    }
+
+    /**
+     * 加载英雄ID模板
+     */
+    private async loadChampionTemplates() {
+        if (this.championTemplates.size > 0) return;
+        logger.info(`[TftOperator] 开始加载英雄模板...`)
+        if (!fs.existsSync(this.CHAMPION_TEMPLATE_DIR)) {
+            logger.warn(`[TftOperator] 英雄模板目录不存在: ${this.CHAMPION_TEMPLATE_DIR}`);
+            return;
+        }
+        const files = fs.readdirSync(this.CHAMPION_TEMPLATE_DIR);
+        // 假设商店里的英雄名字截图高度大概是 20-30px，这里需要根据实际截图大小调整
+        // 建议：把你的模板统一缩放到和 OCR 截图一样的高度（比如我们之前设定的 80px 高）
+        const TARGET_HEIGHT = 80;
+
+        for (const file of files) {
+            const ext = path.extname(file).toLowerCase();
+            if (!['.png', '.jpg', '.jpeg'].includes(ext)) continue;
+
+            const championName = path.parse(file).name; // 文件名即英雄名，如 "阿狸"
+            const filePath = path.join(this.CHAMPION_TEMPLATE_DIR, file);
+
+            try {
+                const fileBuf = fs.readFileSync(filePath);
+                // 预处理：这里的处理方式要和 getShopInfo 里 captureRegionAsPng 的处理方式尽可能一致！
+                // 比如都转灰度、二值化、缩放
+                const {data, info} = await sharp(fileBuf)
+                    .resize({height: TARGET_HEIGHT}) // 高度对齐
+                    .grayscale()
+                    .threshold(160) // 二值化
+                    .negate() // 保持黑底白字还是白底黑字要统一
+                    .raw()
+                    .toBuffer({resolveWithObject: true});
+
+                const mat = cv.matFromImageData({
+                    data: new Uint8Array(data),
+                    width: info.width,
+                    height: info.height
+                });
+
+                this.championTemplates.set(championName, mat);
+            } catch (e) {
+                logger.error(`[TftOperator] 加载英雄模板失败 [${file}]: ${e}`);
+            }
+        }
+        logger.info(`[TftOperator] 英雄模板加载完成，共 ${this.championTemplates.size} 个`);
+
     }
 
     /**

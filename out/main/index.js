@@ -5523,24 +5523,24 @@ const shopSlot = {
 };
 const shopSlotNameRegions = {
   SLOT_1: {
-    leftTop: { x: 270, y: 1157 },
-    rightBottom: { x: 440 - 80, y: 1186 }
+    leftTop: { x: 173, y: 740 },
+    rightBottom: { x: 281, y: 758 }
   },
   SLOT_2: {
-    leftTop: { x: 493, y: 1157 },
-    rightBottom: { x: 663 - 80, y: 1186 }
+    leftTop: { x: 315, y: 740 },
+    rightBottom: { x: 423, y: 758 }
   },
   SLOT_3: {
-    leftTop: { x: 716, y: 1157 },
-    rightBottom: { x: 886 - 80, y: 1186 }
+    leftTop: { x: 459, y: 740 },
+    rightBottom: { x: 567, y: 758 }
   },
   SLOT_4: {
-    leftTop: { x: 941, y: 1157 },
-    rightBottom: { x: 1111 - 80, y: 1186 }
+    leftTop: { x: 602, y: 740 },
+    rightBottom: { x: 710, y: 758 }
   },
   SLOT_5: {
-    leftTop: { x: 1165, y: 1157 },
-    rightBottom: { x: 1335 - 80, y: 1186 }
+    leftTop: { x: 746, y: 740 },
+    rightBottom: { x: 854, y: 758 }
   }
 };
 ({
@@ -7271,17 +7271,22 @@ class TftOperator {
   };
   //  当前装备状态。
   currentEquipState = [];
-  // 缓存已加载的图片模板 (分层存储)
+  // 缓存装备图片模板 (分层存储)
   equipTemplates = [];
+  // 缓存商店栏英雄ID模板
+  championTemplates = /* @__PURE__ */ new Map();
   // 装备图片资源根目录
   BASE_TEMPLATE_DIR = path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/equipment");
-  // ⚡️ 新增：全黑的空槽位模板，宽高均为24
+  CHAMPION_TEMPLATE_DIR = path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/champions");
+  // ⚡️ 全黑的空槽位模板，宽高均为24
   emptySlotTemplate = null;
   constructor() {
     cv["onRuntimeInitialized"] = () => {
       this.emptySlotTemplate = new cv.Mat(24, 24, cv.CV_8UC4, new cv.Scalar(0, 0, 0, 255));
       logger.info("[TftOperator] OpenCV (WASM) 核心模块加载完毕！");
     };
+    this.loadEquipTemplates();
+    this.loadChampionTemplates();
   }
   static getInstance() {
     if (!TftOperator.instance) {
@@ -7387,7 +7392,6 @@ class TftOperator {
       logger.error("[TftOperator] 尚未初始化游戏窗口位置！");
       return [];
     }
-    await this.loadEquipTemplates();
     if (this.equipTemplates.length === 0) {
       logger.warn("[TftOperator] 装备模板为空，跳过识别");
       return [];
@@ -7550,7 +7554,12 @@ class TftOperator {
       }
     }).removeAlpha();
     if (forOCR) {
-      pipeline = pipeline.grayscale();
+      pipeline = pipeline.resize({
+        width: Math.round(screenshot.width * 3),
+        // 放大 3 倍以提高 OCR 精度
+        height: Math.round(screenshot.height * 3),
+        kernel: "lanczos3"
+      }).grayscale().normalize().threshold(160).sharpen();
     }
     return await pipeline.toFormat("png").toBuffer();
   }
@@ -7578,9 +7587,6 @@ class TftOperator {
       gameStageDisplayTheClockworkTrails.rightBottom.y - gameStageDisplayTheClockworkTrails.leftTop.y
     );
   }
-  /**
-   * 加载装备模板
-   */
   /**
    * 加载装备模板
    */
@@ -7630,6 +7636,38 @@ class TftOperator {
       this.equipTemplates.push(categoryMap);
     }
     logger.info(`[TftOperator] 图片模板加载完成！`);
+  }
+  /**
+   * 加载英雄ID模板
+   */
+  async loadChampionTemplates() {
+    if (this.championTemplates.size > 0) return;
+    logger.info(`[TftOperator] 开始加载英雄模板...`);
+    if (!fs.existsSync(this.CHAMPION_TEMPLATE_DIR)) {
+      logger.warn(`[TftOperator] 英雄模板目录不存在: ${this.CHAMPION_TEMPLATE_DIR}`);
+      return;
+    }
+    const files = fs.readdirSync(this.CHAMPION_TEMPLATE_DIR);
+    const TARGET_HEIGHT = 80;
+    for (const file2 of files) {
+      const ext = path.extname(file2).toLowerCase();
+      if (![".png", ".jpg", ".jpeg"].includes(ext)) continue;
+      const championName = path.parse(file2).name;
+      const filePath = path.join(this.CHAMPION_TEMPLATE_DIR, file2);
+      try {
+        const fileBuf = fs.readFileSync(filePath);
+        const { data, info } = await sharp(fileBuf).resize({ height: TARGET_HEIGHT }).grayscale().threshold(160).negate().raw().toBuffer({ resolveWithObject: true });
+        const mat = cv.matFromImageData({
+          data: new Uint8Array(data),
+          width: info.width,
+          height: info.height
+        });
+        this.championTemplates.set(championName, mat);
+      } catch (e) {
+        logger.error(`[TftOperator] 加载英雄模板失败 [${file2}]: ${e}`);
+      }
+    }
+    logger.info(`[TftOperator] 英雄模板加载完成，共 ${this.championTemplates.size} 个`);
   }
   /**
    *  传入一个Mat对象，并从图片模板中找到最匹配的装备

@@ -13,24 +13,24 @@ export const shopSlot = {
 //  英雄购买槽英雄名字Region
 export const shopSlotNameRegions = {
     SLOT_1: {
-        leftTop: {x: 270, y: 1157},
-        rightBottom: {x: 440, y: 1186}
+        leftTop: {x: 173, y: 740},
+        rightBottom: {x: 281, y: 758}
     },
     SLOT_2: {
-        leftTop: {x: 493, y: 1157},
-        rightBottom: {x: 663, y: 1186}
+        leftTop: {x: 315, y: 740},
+        rightBottom: {x: 423, y: 758}
     },
     SLOT_3: {
-        leftTop: {x: 716, y: 1157},
-        rightBottom: {x: 886, y: 1186}
+        leftTop: {x: 459, y: 740},
+        rightBottom: {x: 567, y: 758}
     },
     SLOT_4: {
-        leftTop: {x: 941, y: 1157},
-        rightBottom: {x: 1111, y: 1186}
+        leftTop: {x: 602, y: 740},
+        rightBottom: {x: 710, y: 758}
     },
     SLOT_5: {
-        leftTop: {x: 1165, y: 1157},
-        rightBottom: {x: 1335, y: 1186}
+        leftTop: {x: 746, y: 740},
+        rightBottom: {x: 854, y: 758}
     },
 }
 //  装备槽位坐标
