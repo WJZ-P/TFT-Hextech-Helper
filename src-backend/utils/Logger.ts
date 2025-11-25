@@ -42,7 +42,7 @@ class Logger {
         if (this.window) {
             this.window.webContents.send('log-message', {message, level})
         } else {
-            console.error("[Logger] 无window对象")
+            console.error("[Logger] window还未初始化，无法把消息发给前端")
         }
     }
 }

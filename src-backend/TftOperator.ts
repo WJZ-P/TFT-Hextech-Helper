@@ -90,21 +90,27 @@ class TftOperator {
     private equipTemplates: Array<Map<string, cv.Mat>> = [];
     // 缓存商店栏英雄ID模板
     private championTemplates: Map<string, cv.Mat> = new Map();
-    // 装备图片资源根目录
-    private readonly BASE_TEMPLATE_DIR = path.join(process.env.VITE_PUBLIC || '.', 'resources/assets/images/equipment');
-    private readonly CHAMPION_TEMPLATE_DIR = path.join(process.env.VITE_PUBLIC || '.', 'resources/assets/images/champions');
+
     // ⚡️ 全黑的空槽位模板，宽高均为24
     private emptySlotTemplate: cv.Mat = null;
+    //  每次使用计算路径，避免初始化的时候产生process.env的属性未定义的问题。
+    private get championTemplatePath(): string {
+        return path.join(process.env.VITE_PUBLIC || '.', 'resources/assets/images/champion');
+    }
+    // 3. 同样的，之前的装备路径也可以这样改，防止同样的问题
+    private get equipTemplatePath(): string {
+        return path.join(process.env.VITE_PUBLIC || '.', 'resources/assets/images/equipment');
+    }
 
     private constructor() {
         cv['onRuntimeInitialized'] = () => {
             this.emptySlotTemplate = new cv.Mat(24, 24, cv.CV_8UC4, new cv.Scalar(0, 0, 0, 255))
             logger.info("[TftOperator] OpenCV (WASM) 核心模块加载完毕！");
+            // 加载装备模板
+            this.loadEquipTemplates();
+            // 加载英雄ID模板
+            this.loadChampionTemplates();
         };
-        // 加载装备模板
-        this.loadEquipTemplates();
-        // 加载英雄ID模板
-        this.loadChampionTemplates();
     }
 
     public static getInstance(): TftOperator {
@@ -519,51 +525,53 @@ class TftOperator {
         const validExtensions = ['.png', '.webp', '.jpg', '.jpeg'];
 
         for (const category of equipResourcePath) {
-            const resourcePath = path.join(this.BASE_TEMPLATE_DIR, category);
+            const resourcePath = path.join(this.equipTemplatePath, category);
             const categoryMap = new Map<string, cv.Mat>();
-
-            if (fs.existsSync(resourcePath)) {
-                const files = fs.readdirSync(resourcePath);
-                for (const file of files) {
-                    const ext = path.extname(file).toLowerCase();
-                    if (!validExtensions.includes(ext)) continue;
-
-                    const filePath = path.join(resourcePath, file);
-                    const fileNameNotExt = path.parse(file).name;
-
-                    try {
-                        const fileBuf = fs.readFileSync(filePath);
-                        const {data, info} = await sharp(fileBuf)
-                            .resize(TEMPLATE_SIZE, TEMPLATE_SIZE, {fit: "fill"})
-                            .ensureAlpha()
-                            .raw()
-                            .toBuffer({resolveWithObject: true});
-
-                        // ⚡️ 关键修改：显式转换为 Uint8Array，防止 Buffer 类型不兼容
-                        const uint8Data = new Uint8Array(data);
-
-                        // 再次检查数据长度是否合法 (w * h * 4)
-                        if (uint8Data.length !== info.width * info.height * 4) {
-                            logger.warn(`[TftOperator] 图片数据长度异常: ${file}`);
-                            continue;
-                        }
-
-                        // 构造符合 ImageData 接口的对象
-                        const imageData = {
-                            data: uint8Data,
-                            width: info.width,
-                            height: info.height,
-                        };
-
-                        const mat = cv.matFromImageData(imageData);
-                        categoryMap.set(fileNameNotExt, mat);
-
-                    } catch (e) {
-                        logger.error(`[TftOperator] 加载模板失败 [${file}]: ${e}`);
-                    }
-                }
-                logger.info(`[TftOperator] 加载 [${category}] 模板: ${categoryMap.size} 个`);
+            if (!fs.existsSync(resourcePath)) {
+                logger.warn(`[TftOperator] 装备模板目录不存在: ${resourcePath}`);
+                continue;
             }
+
+            const files = fs.readdirSync(resourcePath);
+            for (const file of files) {
+                const ext = path.extname(file).toLowerCase();
+                if (!validExtensions.includes(ext)) continue;
+
+                const filePath = path.join(resourcePath, file);
+                const fileNameNotExt = path.parse(file).name;
+
+                try {
+                    const fileBuf = fs.readFileSync(filePath);
+                    const {data, info} = await sharp(fileBuf)
+                        .resize(TEMPLATE_SIZE, TEMPLATE_SIZE, {fit: "fill"})
+                        .ensureAlpha()
+                        .raw()
+                        .toBuffer({resolveWithObject: true});
+
+                    // ⚡️ 关键修改：显式转换为 Uint8Array，防止 Buffer 类型不兼容
+                    const uint8Data = new Uint8Array(data);
+
+                    // 再次检查数据长度是否合法 (w * h * 4)
+                    if (uint8Data.length !== info.width * info.height * 4) {
+                        logger.warn(`[TftOperator] 图片数据长度异常: ${file}`);
+                        continue;
+                    }
+
+                    // 构造符合 ImageData 接口的对象
+                    const imageData = {
+                        data: uint8Data,
+                        width: info.width,
+                        height: info.height,
+                    };
+
+                    const mat = cv.matFromImageData(imageData);
+                    categoryMap.set(fileNameNotExt, mat);
+
+                } catch (e) {
+                    logger.error(`[TftOperator] 加载模板失败 [${file}]: ${e}`);
+                }
+            }
+            logger.info(`[TftOperator] 加载 [${category}] 模板: ${categoryMap.size} 个`);
             this.equipTemplates.push(categoryMap);
         }
         logger.info(`[TftOperator] 图片模板加载完成！`);
@@ -575,11 +583,11 @@ class TftOperator {
     private async loadChampionTemplates() {
         if (this.championTemplates.size > 0) return;
         logger.info(`[TftOperator] 开始加载英雄模板...`)
-        if (!fs.existsSync(this.CHAMPION_TEMPLATE_DIR)) {
-            logger.warn(`[TftOperator] 英雄模板目录不存在: ${this.CHAMPION_TEMPLATE_DIR}`);
+        if (!fs.existsSync(this.championTemplatePath)) {
+            logger.warn(`[TftOperator] 英雄模板目录不存在: ${this.championTemplatePath}`);
             return;
         }
-        const files = fs.readdirSync(this.CHAMPION_TEMPLATE_DIR);
+        const files = fs.readdirSync(this.championTemplatePath);
         // 假设商店里的英雄名字截图高度大概是 20-30px，这里需要根据实际截图大小调整
         // 建议：把你的模板统一缩放到和 OCR 截图一样的高度（比如我们之前设定的 80px 高）
         const TARGET_HEIGHT = 80;
@@ -589,7 +597,7 @@ class TftOperator {
             if (!['.png', '.jpg', '.jpeg'].includes(ext)) continue;
 
             const championName = path.parse(file).name; // 文件名即英雄名，如 "阿狸"
-            const filePath = path.join(this.CHAMPION_TEMPLATE_DIR, file);
+            const filePath = path.join(this.championTemplatePath, file);
 
             try {
                 const fileBuf = fs.readFileSync(filePath);
