@@ -21,10 +21,9 @@ import {
     TFTUnit
 } from "./TFTProtocol";
 import cv from "@techstark/opencv-js";
-import {TFT_15_EQUIP} from "../public/TFTInfo/equip";
 
-const GAME_WIDTH = 1600;
-const GAME_HEIGHT = 1200;
+const GAME_WIDTH = 1024;
+const GAME_HEIGHT = 768;
 
 //  装备的资源路径，从public/resources/assets/images/equipment里面算起
 // 优先级排序：散件 -> 成装 -> 纹章 -> 神器 -> 光明
@@ -91,12 +90,14 @@ class TftOperator {
     // 缓存商店栏英雄ID模板
     private championTemplates: Map<string, cv.Mat> = new Map();
 
-    // ⚡️ 全黑的空槽位模板，宽高均为24
-    private emptySlotTemplate: cv.Mat = null;
+    // ⚡️ 全黑的空装备槽位模板，宽高均为24
+    private emptyEquipSlotTemplate: cv.Mat = null;
+
     //  每次使用计算路径，避免初始化的时候产生process.env的属性未定义的问题。
     private get championTemplatePath(): string {
         return path.join(process.env.VITE_PUBLIC || '.', 'resources/assets/images/champion');
     }
+
     // 3. 同样的，之前的装备路径也可以这样改，防止同样的问题
     private get equipTemplatePath(): string {
         return path.join(process.env.VITE_PUBLIC || '.', 'resources/assets/images/equipment');
@@ -104,7 +105,7 @@ class TftOperator {
 
     private constructor() {
         cv['onRuntimeInitialized'] = () => {
-            this.emptySlotTemplate = new cv.Mat(24, 24, cv.CV_8UC4, new cv.Scalar(0, 0, 0, 255))
+            this.emptyEquipSlotTemplate = new cv.Mat(24, 24, cv.CV_8UC4, new cv.Scalar(0, 0, 0, 255))
             logger.info("[TftOperator] OpenCV (WASM) 核心模块加载完毕！");
             // 加载装备模板
             this.loadEquipTemplates();
@@ -228,22 +229,41 @@ class TftOperator {
             //  识别图片
             const {data: {text}} = await worker.recognize(processedPng)
 
-            const cleanName = text.replace(/\s/g, "")
-            logger.info(`[TftOperator] 槽位${i}识别结果：${cleanName}`)
+            let cleanName = text.replace(/\s/g, "")
+            if (!cleanName || cleanName === "") {
+                logger.warn(`[商店槽位 ${i}] OCR识别失败！尝试模板匹配...`);
+                //  模板匹配兜底
+                const rawData = await sharp(processedPng)
+                    .ensureAlpha()
+                    .raw()
+                    .toBuffer({resolveWithObject: true});
+                const processedMat = cv.matFromImageData({
+                    data: new Uint8Array(rawData.data),
+                    width: rawData.info.width,
+                    height: rawData.info.height
+                })
+                cleanName = this.findBestMatchChampionTemplate(processedMat)
+            }
 
             //  从数据集中找到对应英雄
-            const unitData: TFTUnit | null = TFT_15_CHAMPION_DATA[cleanName]
+            const unitData: TFTUnit | null = TFT_15_CHAMPION_DATA[cleanName];
             if (unitData) {
                 logger.info(`[商店槽位 ${i}] 识别成功-> ${unitData.displayName}-(${unitData.price}费)`);
                 shopUnits.push(unitData)
             } else {
                 // 没找到 (可能是空槽位，或者识别错误)
-                if (text.length > 0) {
-                    logger.warn(`[商店槽位 ${i}] 识别到未知名称: ${cleanName}`);
-                } else {
-                    // 空字符串通常意味着槽位是空的（比如买完了）
-                    logger.info(`[商店槽位 ${i}] 空槽位`);
+                if (cleanName.length > 0) {
+                    if (cleanName === "empty")
+                        logger.info(`[商店槽位 ${i}] 识别为空槽位`);
+                    else
+                        logger.warn(`[商店槽位 ${i}] 从英雄模板目录中识别到未知名称: ${cleanName}，请检查是否拼写有误！`);
+                    shopUnits.push(null);// 放入一个null占位
+                    continue;
                 }
+                //  把识别失败的截图保存到本地
+                logger.warn(`[商店槽位 ${i}] 识别失败，保存截图...`);
+                const filename = `fail_slot_${i}_${Date.now()}.png`;
+                fs.writeFileSync(path.join(this.championTemplatePath, filename), processedPng);
             }
         }
         return shopUnits;
@@ -514,9 +534,9 @@ class TftOperator {
         logger.info(`[TftOperator] 开始加载装备模板...`);
         const TEMPLATE_SIZE = 24;
         // 初始化空模板
-        if (!this.emptySlotTemplate) {
+        if (!this.emptyEquipSlotTemplate) {
             try {
-                this.emptySlotTemplate = new cv.Mat(TEMPLATE_SIZE, TEMPLATE_SIZE, cv.CV_8UC4, new cv.Scalar(0, 0, 0, 255));
+                this.emptyEquipSlotTemplate = new cv.Mat(TEMPLATE_SIZE, TEMPLATE_SIZE, cv.CV_8UC4, new cv.Scalar(0, 0, 0, 255));
             } catch (e) {
                 logger.error(`[TftOperator] 创建空模板失败: ${e}`);
             }
@@ -584,13 +604,14 @@ class TftOperator {
         if (this.championTemplates.size > 0) return;
         logger.info(`[TftOperator] 开始加载英雄模板...`)
         if (!fs.existsSync(this.championTemplatePath)) {
-            logger.warn(`[TftOperator] 英雄模板目录不存在: ${this.championTemplatePath}`);
+            // 如果目录不存在，可能是第一次运行还没保存过失败图片，不用慌，建一个就是了
+            fs.ensureDirSync(this.championTemplatePath);
+            logger.info(`[TftOperator] 英雄模板目录不存在，已自动创建: ${this.championTemplatePath}`);
             return;
         }
         const files = fs.readdirSync(this.championTemplatePath);
         // 假设商店里的英雄名字截图高度大概是 20-30px，这里需要根据实际截图大小调整
         // 建议：把你的模板统一缩放到和 OCR 截图一样的高度（比如我们之前设定的 80px 高）
-        const TARGET_HEIGHT = 80;
 
         for (const file of files) {
             const ext = path.extname(file).toLowerCase();
@@ -601,13 +622,8 @@ class TftOperator {
 
             try {
                 const fileBuf = fs.readFileSync(filePath);
-                // 预处理：这里的处理方式要和 getShopInfo 里 captureRegionAsPng 的处理方式尽可能一致！
-                // 比如都转灰度、二值化、缩放
                 const {data, info} = await sharp(fileBuf)
-                    .resize({height: TARGET_HEIGHT}) // 高度对齐
-                    .grayscale()
-                    .threshold(160) // 二值化
-                    .negate() // 保持黑底白字还是白底黑字要统一
+                    .ensureAlpha() // 确保有 Alpha 通道 (4通道)，跟 captureRegionAsPng 对齐
                     .raw()
                     .toBuffer({resolveWithObject: true});
 
@@ -623,7 +639,6 @@ class TftOperator {
             }
         }
         logger.info(`[TftOperator] 英雄模板加载完成，共 ${this.championTemplates.size} 个`);
-
     }
 
     /**
@@ -640,7 +655,7 @@ class TftOperator {
         //  开始比对
         try {
             //  优先判断是否是空槽位，TM_CCOEFF_NORMED是归一化算法，-1完全相反，1完美匹配，0毫无关系
-            cv.matchTemplate(targetMat, this.emptySlotTemplate, resultMat, cv.TM_CCOEFF_NORMED)
+            cv.matchTemplate(targetMat, this.emptyEquipSlotTemplate, resultMat, cv.TM_CCOEFF_NORMED)
             const emptyResult = cv.minMaxLoc(resultMat, mask)
             if (emptyResult.maxVal > 0.9) {
                 // logger.debug("[TftOperator] 判定为空槽位");
@@ -648,8 +663,7 @@ class TftOperator {
             }
 
             for (let i = 0; i < this.equipTemplates.length; i++) {
-                const currentMap = this.equipTemplates[i];
-                const currentCategory = equipResourcePath[i];// 这个是目录里面的图片路径
+                const currentMap = this.equipTemplates[i];  //  当前分类
                 if (currentMap.size === 0) continue;
 
                 for (const [templateName, templateMat] of currentMap) {
@@ -681,6 +695,45 @@ class TftOperator {
             confidence: maxConfidence,
             category: foundCategory
         } : null
+    }
+
+    /**
+     * 😺 新增：寻找最匹配的英雄 (兜底逻辑)
+     */
+    private findBestMatchChampionTemplate(targetMat: cv.Mat): string | null {
+        let bestMatchName: string | null = null;
+        let maxConfidence = 0;
+        const THRESHOLD = 0.80; // 匹配阈值
+        const mask = new cv.Mat()
+        const resultMat = new cv.Mat();
+
+        try {
+            for (const [name, templateMat] of this.championTemplates) {
+                // 尺寸检查：模板必须小于等于目标
+                if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) continue;
+
+                // 模板匹配
+                cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
+                const result = cv.minMaxLoc(resultMat, mask);
+
+                if (result.maxVal >= THRESHOLD) {
+                    //  匹配度高，说明已经找到了图片
+                    maxConfidence = result.maxVal
+                    bestMatchName = name
+                    break;
+                }
+            }
+            //  检查是否找到了
+            if (bestMatchName) {
+                logger.info(`[TftOperator] 🛡️ 模板匹配挽救成功: ${bestMatchName} (相似度 ${(maxConfidence * 100).toFixed(1)}%)`);
+                return bestMatchName
+            }
+        } catch (e) {
+            logger.error(`[TftOperator] 英雄模板匹配出错: ${e}`);
+        } finally {
+            resultMat.delete();
+        }
+        return null;
     }
 }
 

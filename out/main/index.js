@@ -7252,8 +7252,8 @@ const TFT_15_EQUIP_DATA = {
     formula: "509,509"
   }
 };
-const GAME_WIDTH = 1600;
-const GAME_HEIGHT = 1200;
+const GAME_WIDTH = 1024;
+const GAME_HEIGHT = 768;
 const equipResourcePath = ["component", "core", "emblem", "artifact", "radiant"];
 class TftOperator {
   static instance;
@@ -7275,11 +7275,11 @@ class TftOperator {
   equipTemplates = [];
   // 缓存商店栏英雄ID模板
   championTemplates = /* @__PURE__ */ new Map();
-  // ⚡️ 全黑的空槽位模板，宽高均为24
-  emptySlotTemplate = null;
+  // ⚡️ 全黑的空装备槽位模板，宽高均为24
+  emptyEquipSlotTemplate = null;
   //  每次使用计算路径，避免初始化的时候产生process.env的属性未定义的问题。
   get championTemplatePath() {
-    return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/champions");
+    return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/champion");
   }
   // 3. 同样的，之前的装备路径也可以这样改，防止同样的问题
   get equipTemplatePath() {
@@ -7287,10 +7287,12 @@ class TftOperator {
   }
   constructor() {
     cv["onRuntimeInitialized"] = () => {
-      this.emptySlotTemplate = new cv.Mat(24, 24, cv.CV_8UC4, new cv.Scalar(0, 0, 0, 255));
+      this.emptyEquipSlotTemplate = new cv.Mat(24, 24, cv.CV_8UC4, new cv.Scalar(0, 0, 0, 255));
       logger.info("[TftOperator] OpenCV (WASM) 核心模块加载完毕！");
       this.loadEquipTemplates();
       this.loadChampionTemplates();
+      if (cv.print) cv.print = (text) => {
+      };
     };
   }
   static getInstance() {
@@ -7376,18 +7378,32 @@ class TftOperator {
       );
       const processedPng = await this.captureRegionAsPng(tessRegion);
       const { data: { text } } = await worker.recognize(processedPng);
-      const cleanName = text.replace(/\s/g, "");
-      logger.info(`[TftOperator] 槽位${i}识别结果：${cleanName}`);
+      let cleanName = text.replace(/\s/g, "");
+      if (!cleanName || cleanName === "") {
+        const rawData = await sharp(processedPng).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+        const processedMat = cv.matFromImageData({
+          data: new Uint8Array(rawData.data),
+          width: rawData.info.width,
+          height: rawData.info.height
+        });
+        cleanName = this.findBestMatchChampionTemplate(processedMat);
+      }
       const unitData = TFT_15_CHAMPION_DATA[cleanName];
       if (unitData) {
         logger.info(`[商店槽位 ${i}] 识别成功-> ${unitData.displayName}-(${unitData.price}费)`);
         shopUnits.push(unitData);
       } else {
-        if (text.length > 0) {
-          logger.warn(`[商店槽位 ${i}] 识别到未知名称: ${cleanName}`);
-        } else {
-          logger.info(`[商店槽位 ${i}] 空槽位`);
+        if (cleanName.length > 0) {
+          if (cleanName === "empty")
+            logger.info(`[商店槽位 ${i}] 识别为空槽位`);
+          else
+            logger.warn(`[商店槽位 ${i}] 从英雄模板目录中识别到未知名称: ${cleanName}，请检查是否拼写有误！`);
+          shopUnits.push(null);
+          continue;
         }
+        logger.warn(`[商店槽位 ${i}] 识别失败，保存截图...`);
+        const filename = `fail_slot_${i}_${Date.now()}.png`;
+        fs.writeFileSync(path.join(this.championTemplatePath, filename), processedPng);
       }
     }
     return shopUnits;
@@ -7599,9 +7615,9 @@ class TftOperator {
     if (this.equipTemplates.length > 0) return;
     logger.info(`[TftOperator] 开始加载装备模板...`);
     const TEMPLATE_SIZE = 24;
-    if (!this.emptySlotTemplate) {
+    if (!this.emptyEquipSlotTemplate) {
       try {
-        this.emptySlotTemplate = new cv.Mat(TEMPLATE_SIZE, TEMPLATE_SIZE, cv.CV_8UC4, new cv.Scalar(0, 0, 0, 255));
+        this.emptyEquipSlotTemplate = new cv.Mat(TEMPLATE_SIZE, TEMPLATE_SIZE, cv.CV_8UC4, new cv.Scalar(0, 0, 0, 255));
       } catch (e) {
         logger.error(`[TftOperator] 创建空模板失败: ${e}`);
       }
@@ -7651,11 +7667,11 @@ class TftOperator {
     if (this.championTemplates.size > 0) return;
     logger.info(`[TftOperator] 开始加载英雄模板...`);
     if (!fs.existsSync(this.championTemplatePath)) {
-      logger.warn(`[TftOperator] 英雄模板目录不存在: ${this.championTemplatePath}`);
+      fs.ensureDirSync(this.championTemplatePath);
+      logger.info(`[TftOperator] 英雄模板目录不存在，已自动创建: ${this.championTemplatePath}`);
       return;
     }
     const files = fs.readdirSync(this.championTemplatePath);
-    const TARGET_HEIGHT = 80;
     for (const file2 of files) {
       const ext = path.extname(file2).toLowerCase();
       if (![".png", ".jpg", ".jpeg"].includes(ext)) continue;
@@ -7663,7 +7679,7 @@ class TftOperator {
       const filePath = path.join(this.championTemplatePath, file2);
       try {
         const fileBuf = fs.readFileSync(filePath);
-        const { data, info } = await sharp(fileBuf).resize({ height: TARGET_HEIGHT }).grayscale().threshold(160).negate().raw().toBuffer({ resolveWithObject: true });
+        const { data, info } = await sharp(fileBuf).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
         const mat = cv.matFromImageData({
           data: new Uint8Array(data),
           width: info.width,
@@ -7687,14 +7703,13 @@ class TftOperator {
     const mask = new cv.Mat();
     const resultMat = new cv.Mat();
     try {
-      cv.matchTemplate(targetMat, this.emptySlotTemplate, resultMat, cv.TM_CCOEFF_NORMED);
+      cv.matchTemplate(targetMat, this.emptyEquipSlotTemplate, resultMat, cv.TM_CCOEFF_NORMED);
       const emptyResult = cv.minMaxLoc(resultMat, mask);
       if (emptyResult.maxVal > 0.9) {
         return null;
       }
       for (let i = 0; i < this.equipTemplates.length; i++) {
         const currentMap = this.equipTemplates[i];
-        const currentCategory = equipResourcePath[i];
         if (currentMap.size === 0) continue;
         for (const [templateName, templateMat] of currentMap) {
           if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) continue;
@@ -7720,6 +7735,37 @@ class TftOperator {
       confidence: maxConfidence,
       category: foundCategory
     } : null;
+  }
+  /**
+   * 😺 新增：寻找最匹配的英雄 (兜底逻辑)
+   */
+  findBestMatchChampionTemplate(targetMat) {
+    let bestMatchName = null;
+    let maxConfidence = 0;
+    const THRESHOLD = 0.8;
+    const mask = new cv.Mat();
+    const resultMat = new cv.Mat();
+    try {
+      for (const [name, templateMat] of this.championTemplates) {
+        if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) continue;
+        cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
+        const result = cv.minMaxLoc(resultMat, mask);
+        if (result.maxVal >= THRESHOLD) {
+          maxConfidence = result.maxVal;
+          bestMatchName = name;
+          break;
+        }
+      }
+      if (bestMatchName) {
+        logger.info(`[TftOperator] 🛡️ 模板匹配挽救成功: ${bestMatchName} (相似度 ${(maxConfidence * 100).toFixed(1)}%)`);
+        return bestMatchName;
+      }
+    } catch (e) {
+      logger.error(`[TftOperator] 英雄模板匹配出错: ${e}`);
+    } finally {
+      resultMat.delete();
+    }
+    return null;
   }
 }
 const tftOperator = TftOperator.getInstance();
