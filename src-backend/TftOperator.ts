@@ -228,9 +228,13 @@ class TftOperator {
             const processedPng = await this.captureRegionAsPng(tessRegion);
             //  识别图片
             const {data: {text}} = await worker.recognize(processedPng)
+            let tftUnit: TFTUnit | null = null;
 
             let cleanName = text.replace(/\s/g, "")
-            if (!cleanName || cleanName === "") {
+            //  看能否从OCR结果中找到匹配的英雄
+            tftUnit = TFT_15_CHAMPION_DATA[cleanName];
+
+            if (!tftUnit) {
                 logger.warn(`[商店槽位 ${i}] OCR识别失败！尝试模板匹配...`);
                 //  模板匹配兜底
                 const rawData = await sharp(processedPng)
@@ -246,24 +250,25 @@ class TftOperator {
             }
 
             //  从数据集中找到对应英雄
-            const unitData: TFTUnit | null = TFT_15_CHAMPION_DATA[cleanName];
-            if (unitData) {
-                logger.info(`[商店槽位 ${i}] 识别成功-> ${unitData.displayName}-(${unitData.price}费)`);
-                shopUnits.push(unitData)
+            tftUnit = TFT_15_CHAMPION_DATA[cleanName];
+            if (tftUnit) {
+                logger.info(`[商店槽位 ${i}] 识别成功-> ${tftUnit.displayName}-(${tftUnit.price}费)`);
+                shopUnits.push(tftUnit)
             } else {
                 // 没找到 (可能是空槽位，或者识别错误)
                 if (cleanName.length > 0) {
                     if (cleanName === "empty")
                         logger.info(`[商店槽位 ${i}] 识别为空槽位`);
                     else
-                        logger.warn(`[商店槽位 ${i}] 从英雄模板目录中识别到未知名称: ${cleanName}，请检查是否拼写有误！`);
-                    shopUnits.push(null);// 放入一个null占位
-                    continue;
+                        logger.warn(`[商店槽位 ${i}] 成功匹配到模板，但识别到未知名称: ${cleanName}，请检查是否拼写有误！`);
+                } else {
+                    //  把识别失败的截图保存到本地
+                    logger.warn(`[商店槽位 ${i}] 识别失败，保存截图...`);
+                    const filename = `fail_slot_${i}_${Date.now()}.png`;
+                    fs.writeFileSync(path.join(this.championTemplatePath, filename), processedPng);
                 }
-                //  把识别失败的截图保存到本地
-                logger.warn(`[商店槽位 ${i}] 识别失败，保存截图...`);
-                const filename = `fail_slot_${i}_${Date.now()}.png`;
-                fs.writeFileSync(path.join(this.championTemplatePath, filename), processedPng);
+
+                shopUnits.push(null);// 放入一个null占位
             }
         }
         return shopUnits;
