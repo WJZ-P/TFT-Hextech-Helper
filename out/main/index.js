@@ -7291,8 +7291,6 @@ class TftOperator {
       logger.info("[TftOperator] OpenCV (WASM) 核心模块加载完毕！");
       this.loadEquipTemplates();
       this.loadChampionTemplates();
-      if (cv.print) cv.print = (text) => {
-      };
     };
   }
   static getInstance() {
@@ -7307,7 +7305,10 @@ class TftOperator {
   init() {
     try {
       const primaryDisplay = screen.getPrimaryDisplay();
-      const { width: screenWidth, height: screenHeight } = primaryDisplay.size;
+      const scaleFactor = primaryDisplay.scaleFactor;
+      const { width: logicalWidth, height: logicalHeight } = primaryDisplay.size;
+      const screenWidth = Math.round(logicalWidth * scaleFactor);
+      const screenHeight = Math.round(logicalHeight * scaleFactor);
       const screenCenterX = screenWidth / 2;
       const screenCenterY = screenHeight / 2;
       const originX = screenCenterX - GAME_WIDTH / 2;
@@ -7378,8 +7379,11 @@ class TftOperator {
       );
       const processedPng = await this.captureRegionAsPng(tessRegion);
       const { data: { text } } = await worker.recognize(processedPng);
+      let tftUnit = null;
       let cleanName = text.replace(/\s/g, "");
-      if (!cleanName || cleanName === "") {
+      tftUnit = TFT_15_CHAMPION_DATA[cleanName];
+      if (!tftUnit) {
+        logger.warn(`[商店槽位 ${i}] OCR识别失败！尝试模板匹配...`);
         const rawData = await sharp(processedPng).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
         const processedMat = cv.matFromImageData({
           data: new Uint8Array(rawData.data),
@@ -7388,22 +7392,24 @@ class TftOperator {
         });
         cleanName = this.findBestMatchChampionTemplate(processedMat);
       }
-      const unitData = TFT_15_CHAMPION_DATA[cleanName];
-      if (unitData) {
-        logger.info(`[商店槽位 ${i}] 识别成功-> ${unitData.displayName}-(${unitData.price}费)`);
-        shopUnits.push(unitData);
+      tftUnit = TFT_15_CHAMPION_DATA[cleanName];
+      if (tftUnit) {
+        logger.info(`[商店槽位 ${i}] 识别成功-> ${tftUnit.displayName}-(${tftUnit.price}费)`);
+        shopUnits.push(tftUnit);
       } else {
         if (cleanName.length > 0) {
           if (cleanName === "empty")
             logger.info(`[商店槽位 ${i}] 识别为空槽位`);
           else
-            logger.warn(`[商店槽位 ${i}] 从英雄模板目录中识别到未知名称: ${cleanName}，请检查是否拼写有误！`);
-          shopUnits.push(null);
-          continue;
+            logger.warn(`[商店槽位 ${i}] 成功匹配到模板，但识别到未知名称: ${cleanName}，请检查是否拼写有误！`);
+          const filename = `fail_slot_${i}_${Date.now()}.png`;
+          fs.writeFileSync(path.join(this.championTemplatePath, filename), processedPng);
+        } else {
+          logger.warn(`[商店槽位 ${i}] 识别失败，保存截图...`);
+          const filename = `fail_slot_${i}_${Date.now()}.png`;
+          fs.writeFileSync(path.join(this.championTemplatePath, filename), processedPng);
         }
-        logger.warn(`[商店槽位 ${i}] 识别失败，保存截图...`);
-        const filename = `fail_slot_${i}_${Date.now()}.png`;
-        fs.writeFileSync(path.join(this.championTemplatePath, filename), processedPng);
+        shopUnits.push(null);
       }
     }
     return shopUnits;
@@ -7426,6 +7432,8 @@ class TftOperator {
         regionDef.rightBottom.x - regionDef.leftTop.x + 1,
         regionDef.rightBottom.y - regionDef.leftTop.y + 1
       );
+      console.log("当前截取的装备region为：");
+      console.log(targetRegion);
       try {
         const screenshot = await screen$1.grabRegion(targetRegion);
         const screenData = new Uint8Array(screenshot.data);
@@ -7455,6 +7463,7 @@ class TftOperator {
           matchResult.slot = slotName;
           resultEquips.push(matchResult);
         } else {
+          logger.info(`[TftOperator] ${slotName} 槽位识别失败。`);
         }
       } catch (e) {
         logger.error(`[TftOperator] ${slotName} 扫描流程异常: ${e.message}`);
@@ -7693,7 +7702,7 @@ class TftOperator {
     logger.info(`[TftOperator] 英雄模板加载完成，共 ${this.championTemplates.size} 个`);
   }
   /**
-   *  传入一个Mat对象，并从图片模板中找到最匹配的装备
+   *  传入一个Mat对象，并从图片模板中找到最匹配的装备，规定如果category为empty即为空模板。
    */
   findBestMatchEquipTemplate(targetMat) {
     let bestMatchEquip = null;
@@ -7706,7 +7715,7 @@ class TftOperator {
       cv.matchTemplate(targetMat, this.emptyEquipSlotTemplate, resultMat, cv.TM_CCOEFF_NORMED);
       const emptyResult = cv.minMaxLoc(resultMat, mask);
       if (emptyResult.maxVal > 0.9) {
-        return null;
+        return { name: "空槽位", confidence: emptyResult.maxVal };
       }
       for (let i = 0; i < this.equipTemplates.length; i++) {
         const currentMap = this.equipTemplates[i];

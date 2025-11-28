@@ -128,7 +128,15 @@ class TftOperator {
         try {
             // 从electron获取屏幕尺寸
             const primaryDisplay = screen.getPrimaryDisplay();
-            const {width: screenWidth, height: screenHeight} = primaryDisplay.size;
+            // 获取屏幕的缩放因子
+            const scaleFactor = primaryDisplay.scaleFactor;
+            // 获取逻辑尺寸 (Electron 这里的 width/height 是缩放后的)
+            const {width: logicalWidth, height: logicalHeight} = primaryDisplay.size;
+            // 😺 关键修复：还原为物理像素！
+            // Math.round 防止出现小数像素导致模糊
+            const screenWidth = Math.round(logicalWidth * scaleFactor);
+            const screenHeight = Math.round(logicalHeight * scaleFactor);
+
             // b. (关键) 计算屏幕中心
             const screenCenterX = screenWidth / 2;
             const screenCenterY = screenHeight / 2;
@@ -261,6 +269,8 @@ class TftOperator {
                         logger.info(`[商店槽位 ${i}] 识别为空槽位`);
                     else
                         logger.warn(`[商店槽位 ${i}] 成功匹配到模板，但识别到未知名称: ${cleanName}，请检查是否拼写有误！`);
+                    // const filename = `fail_slot_${i}_${Date.now()}.png`;
+                    // fs.writeFileSync(path.join(this.championTemplatePath, filename), processedPng);
                 } else {
                     //  把识别失败的截图保存到本地
                     logger.warn(`[商店槽位 ${i}] 识别失败，保存截图...`);
@@ -296,6 +306,8 @@ class TftOperator {
                 regionDef.rightBottom.x - regionDef.leftTop.x + 1,
                 regionDef.rightBottom.y - regionDef.leftTop.y + 1
             );
+            console.log("当前截取的装备region为：")
+            console.log(targetRegion)
 
             try {
                 // --- B. 直接获取 Raw Data (跳过 PNG 编解码，极致性能) ---
@@ -335,7 +347,7 @@ class TftOperator {
                     matchResult.slot = slotName;
                     resultEquips.push(matchResult);
                 } else {
-                    // logger.info(`[TftOperator] ${slotName} 槽位为空或识别失败。`)
+                    logger.info(`[TftOperator] ${slotName} 槽位识别失败。`)
                 }
 
             } catch (e: any) {
@@ -647,7 +659,7 @@ class TftOperator {
     }
 
     /**
-     *  传入一个Mat对象，并从图片模板中找到最匹配的装备
+     *  传入一个Mat对象，并从图片模板中找到最匹配的装备，规定如果category为empty即为空模板。
      */
     private findBestMatchEquipTemplate(targetMat: cv.Mat): IdentifiedEquip | null {
         let bestMatchEquip: TFTEquip | null = null;
@@ -664,7 +676,7 @@ class TftOperator {
             const emptyResult = cv.minMaxLoc(resultMat, mask)
             if (emptyResult.maxVal > 0.9) {
                 // logger.debug("[TftOperator] 判定为空槽位");
-                return null;
+                return {name: "空槽位", confidence: emptyResult.maxVal} as IdentifiedEquip;
             }
 
             for (let i = 0; i < this.equipTemplates.length; i++) {
@@ -713,6 +725,27 @@ class TftOperator {
         const resultMat = new cv.Mat();
 
         try {
+            //  首先判断是否为空内容的图片。
+            // 1. ⚡️ 快速空槽位检查：基于统计学 (Standard Deviation)
+            // 既然空槽位几乎是纯色的 (标准差接近0)，有字的图片标准差很高 (比如46)
+            // 我们直接算一下目标图片的标准差，根本不需要用 matchTemplate！
+            const mean = new cv.Mat();
+            const stddev = new cv.Mat();
+
+            // 计算目标图片的均值和标准差
+            cv.meanStdDev(targetMat, mean, stddev);
+            const deviation = stddev.doubleAt(0, 0); // 获取第一个通道的标准差
+
+            // 记得释放内存！
+            mean.delete();
+            stddev.delete();
+
+            // 阈值设定：如果标准差小于 10，说明图片没什么内容（纯黑），直接判定为空
+            if (deviation < 10) {
+                // logger.info(`[TftOperator] 判定为空槽位 (stddev=${deviation.toFixed(2)})`);
+                return "empty";
+            }
+
             for (const [name, templateMat] of this.championTemplates) {
                 // 尺寸检查：模板必须小于等于目标
                 if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) continue;
