@@ -7397,13 +7397,11 @@ class TftOperator {
         logger.info(`[商店槽位 ${i}] 识别成功-> ${tftUnit.displayName}-(${tftUnit.price}费)`);
         shopUnits.push(tftUnit);
       } else {
-        if (cleanName.length > 0) {
+        if (cleanName?.length > 0) {
           if (cleanName === "empty")
             logger.info(`[商店槽位 ${i}] 识别为空槽位`);
           else
             logger.warn(`[商店槽位 ${i}] 成功匹配到模板，但识别到未知名称: ${cleanName}，请检查是否拼写有误！`);
-          const filename = `fail_slot_${i}_${Date.now()}.png`;
-          fs.writeFileSync(path.join(this.championTemplatePath, filename), processedPng);
         } else {
           logger.warn(`[商店槽位 ${i}] 识别失败，保存截图...`);
           const filename = `fail_slot_${i}_${Date.now()}.png`;
@@ -7708,14 +7706,18 @@ class TftOperator {
     let bestMatchEquip = null;
     let maxConfidence = 0;
     let foundCategory = "";
-    const THRESHOLD = 0.8;
+    const THRESHOLD = 0.95;
     const mask = new cv.Mat();
     const resultMat = new cv.Mat();
     try {
-      cv.matchTemplate(targetMat, this.emptyEquipSlotTemplate, resultMat, cv.TM_CCOEFF_NORMED);
-      const emptyResult = cv.minMaxLoc(resultMat, mask);
-      if (emptyResult.maxVal > 0.9) {
-        return { name: "空槽位", confidence: emptyResult.maxVal };
+      const mean = new cv.Mat();
+      const stddev = new cv.Mat();
+      cv.meanStdDev(targetMat, mean, stddev);
+      const deviation = stddev.doubleAt(0, 0);
+      mean.delete();
+      stddev.delete();
+      if (deviation < 10) {
+        return { name: "空槽位", confidence: 1 - deviation };
       }
       for (let i = 0; i < this.equipTemplates.length; i++) {
         const currentMap = this.equipTemplates[i];
@@ -7755,6 +7757,15 @@ class TftOperator {
     const mask = new cv.Mat();
     const resultMat = new cv.Mat();
     try {
+      const mean = new cv.Mat();
+      const stddev = new cv.Mat();
+      cv.meanStdDev(targetMat, mean, stddev);
+      const deviation = stddev.doubleAt(0, 0);
+      mean.delete();
+      stddev.delete();
+      if (deviation < 10) {
+        return "empty";
+      }
       for (const [name, templateMat] of this.championTemplates) {
         if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) continue;
         cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);

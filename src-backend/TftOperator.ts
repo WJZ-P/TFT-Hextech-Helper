@@ -264,7 +264,7 @@ class TftOperator {
                 shopUnits.push(tftUnit)
             } else {
                 // 没找到 (可能是空槽位，或者识别错误)
-                if (cleanName.length > 0) {
+                if (cleanName?.length > 0) {
                     if (cleanName === "empty")
                         logger.info(`[商店槽位 ${i}] 识别为空槽位`);
                     else
@@ -306,8 +306,8 @@ class TftOperator {
                 regionDef.rightBottom.x - regionDef.leftTop.x + 1,
                 regionDef.rightBottom.y - regionDef.leftTop.y + 1
             );
-            console.log("当前截取的装备region为：")
-            console.log(targetRegion)
+            // console.log("当前截取的装备region为：")
+            // console.log(targetRegion)
 
             try {
                 // --- B. 直接获取 Raw Data (跳过 PNG 编解码，极致性能) ---
@@ -665,18 +665,28 @@ class TftOperator {
         let bestMatchEquip: TFTEquip | null = null;
         let maxConfidence = 0;
         let foundCategory = "";
-        const THRESHOLD = 0.80; // 匹配阈值
+        const THRESHOLD = 0.95; // 匹配阈值
 
         const mask = new cv.Mat();  //  判断模板时候用，遮罩为空表示匹配所有像素
         const resultMat = new cv.Mat();
         //  开始比对
         try {
-            //  优先判断是否是空槽位，TM_CCOEFF_NORMED是归一化算法，-1完全相反，1完美匹配，0毫无关系
-            cv.matchTemplate(targetMat, this.emptyEquipSlotTemplate, resultMat, cv.TM_CCOEFF_NORMED)
-            const emptyResult = cv.minMaxLoc(resultMat, mask)
-            if (emptyResult.maxVal > 0.9) {
-                // logger.debug("[TftOperator] 判定为空槽位");
-                return {name: "空槽位", confidence: emptyResult.maxVal} as IdentifiedEquip;
+            // 1. ⚡️ 快速空槽位检查：基于统计学 (Standard Deviation)
+            const mean = new cv.Mat();
+            const stddev = new cv.Mat();
+
+            // 计算目标图片的均值和标准差
+            cv.meanStdDev(targetMat, mean, stddev);
+            const deviation = stddev.doubleAt(0, 0); // 获取第一个通道的标准差
+
+            // 记得释放内存！
+            mean.delete();
+            stddev.delete();
+
+            // 阈值设定：如果标准差小于 10，说明图片没什么内容（纯黑），直接判定为空
+            if (deviation < 10) {
+                // logger.info(`[TftOperator] 判定为空槽位 (stddev=${deviation.toFixed(2)})`);
+                return {name: "空槽位", confidence: 1 - deviation} as IdentifiedEquip;
             }
 
             for (let i = 0; i < this.equipTemplates.length; i++) {
