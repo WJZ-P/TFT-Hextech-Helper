@@ -715,409 +715,429 @@ export const TFT_15_CHAMPION_DATA: Record<string, TFTUnit> = {
     },
 };
 
-export const TFT_15_EQUIP_DATA:Record<string, TFTEquip> = {
-  // ==========================================
-  // Type 1: 基础散件 (Base Items)
-  // ==========================================
-  "暴风大剑": {
-    name: "暴风大剑",
-    englishName: "TFT_Item_BFSword",
-    equipId: "501",
-    formula: ""
-  },
-  "反曲之弓": {
-    name: "反曲之弓",
-    englishName: "TFT_Item_RecurveBow",
-    equipId: "502",
-    formula: ""
-  },
-  "无用大棒": {
-    name: "无用大棒",
-    englishName: "TFT_Item_NeedlesslyLargeRod",
-    equipId: "503",
-    formula: ""
-  },
-  "女神之泪": {
-    name: "女神之泪",
-    englishName: "TFT_Item_TearOfTheGoddess",
-    equipId: "504",
-    formula: ""
-  },
-  "锁子甲": {
-    name: "锁子甲",
-    englishName: "TFT_Item_ChainVest",
-    equipId: "505",
-    formula: ""
-  },
-  "负极斗篷": {
-    name: "负极斗篷",
-    englishName: "TFT_Item_NegatronCloak",
-    equipId: "506",
-    formula: ""
-  },
-  "巨人腰带": {
-    name: "巨人腰带",
-    englishName: "TFT_Item_GiantsBelt",
-    equipId: "507",
-    formula: ""
-  },
-  "金铲铲": {
-    name: "金铲铲",
-    englishName: "TFT_Item_Spatula",
-    equipId: "508",
-    formula: ""
-  },
-  "拳套": {
-    name: "拳套",
-    englishName: "TFT_Item_SparringGloves",
-    equipId: "509",
-    formula: ""
-  },
-  "金锅锅": {
-    name: "金锅锅",
-    englishName: "TFT_Item_FryingPan",
-    equipId: "91163",
-    formula: ""
-  },
+export const TFT_15_EQUIP_DATA: Record<string, TFTEquip> = {
+    //  特殊类型的装备，比如装备拆卸器，强化果实等
+    "强化果实": {
+        name: "强化果实",
+        englishName: "TFT_Item_PowerSnax",
+        equipId: "-1",  //  不知道装备ID
+        formula: ""
+    },
+    "装备拆卸器": {
+        name: "强化果实",
+        englishName: "TFT_Item_MagneticRemover",
+        equipId: "-1",  //  不知道装备ID
+        formula: ""
+    },
+    "金质装备拆卸器": {
+        name: "金质装备拆卸器",
+        englishName: "TFT_Item_GoldenItemRemover",
+        equipId: "-1",  //  不知道装备ID
+        formula: ""
+    },
 
-  // ==========================================
-  // Type 2: S15 赛季纹章 (Set 15 Emblems)
-  // ==========================================
-  // 金锅锅 (91163) 系列合成
-  "护卫纹章": {
-    name: "护卫纹章",
-    englishName: "TFT15_Item_BastionEmblemItem",
-    equipId: "91292",
-    formula: "91163,505" // 金锅锅 + 锁子甲
-  },
-  "决斗大师纹章": {
-    name: "决斗大师纹章",
-    englishName: "TFT15_Item_ChallengerEmblemItem",
-    equipId: "91294",
-    formula: "91163,502" // 金锅锅 + 反曲之弓
-  },
-  "裁决使者纹章": {
-    name: "裁决使者纹章",
-    englishName: "TFT15_Item_DestroyerEmblemItem",
-    equipId: "91295",
-    formula: "91163,509" // 金锅锅 + 拳套
-  },
-  "刀锋领主纹章": {
-    name: "刀锋领主纹章",
-    englishName: "TFT15_Item_EdgelordEmblemItem",
-    equipId: "91296",
-    formula: "91163,501" // 金锅锅 + 暴风大剑
-  },
-  "重量级斗士纹章": {
-    name: "重量级斗士纹章",
-    englishName: "TFT15_Item_HeavyweightEmblemItem",
-    equipId: "91300",
-    formula: "91163,507" // 金锅锅 + 巨人腰带
-  },
-  "法师纹章": {
-    name: "法师纹章",
-    englishName: "TFT15_Item_SpellslingerEmblemItem",
-    equipId: "91301",
-    formula: "91163,503" // 金锅锅 + 无用大棒
-  },
-  "天才纹章": {
-    name: "天才纹章",
-    englishName: "TFT15_Item_ProdigyEmblemItem",
-    equipId: "91302",
-    formula: "91163,504" // 金锅锅 + 女神之泪
-  },
-  "主宰纹章": {
-    name: "主宰纹章",
-    englishName: "TFT15_Item_JuggernautEmblemItem",
-    equipId: "91304",
-    formula: "91163,506" // 金锅锅 + 负极斗篷
-  },
-  "金锅铲冠冕": {
-    name: "金锅铲冠冕",
-    englishName: "TFT_Item_TacticiansRing",
-    equipId: "91164",
-    formula: "91163,508" // 金锅锅 + 金铲铲
-  },
-  "金锅锅冠冕": {
-    name: "金锅锅冠冕",
-    englishName: "TFT_Item_TacticiansScepter",
-    equipId: "91165",
-    formula: "91163,91163" // 金锅锅 + 金锅锅
-  },
+    // ==========================================
+    // Type 1: 基础散件 (Base Items)
+    // ==========================================
+    "暴风大剑": {
+        name: "暴风大剑",
+        englishName: "TFT_Item_BFSword",
+        equipId: "501",
+        formula: ""
+    },
+    "反曲之弓": {
+        name: "反曲之弓",
+        englishName: "TFT_Item_RecurveBow",
+        equipId: "502",
+        formula: ""
+    },
+    "无用大棒": {
+        name: "无用大棒",
+        englishName: "TFT_Item_NeedlesslyLargeRod",
+        equipId: "503",
+        formula: ""
+    },
+    "女神之泪": {
+        name: "女神之泪",
+        englishName: "TFT_Item_TearOfTheGoddess",
+        equipId: "504",
+        formula: ""
+    },
+    "锁子甲": {
+        name: "锁子甲",
+        englishName: "TFT_Item_ChainVest",
+        equipId: "505",
+        formula: ""
+    },
+    "负极斗篷": {
+        name: "负极斗篷",
+        englishName: "TFT_Item_NegatronCloak",
+        equipId: "506",
+        formula: ""
+    },
+    "巨人腰带": {
+        name: "巨人腰带",
+        englishName: "TFT_Item_GiantsBelt",
+        equipId: "507",
+        formula: ""
+    },
+    "金铲铲": {
+        name: "金铲铲",
+        englishName: "TFT_Item_Spatula",
+        equipId: "508",
+        formula: ""
+    },
+    "拳套": {
+        name: "拳套",
+        englishName: "TFT_Item_SparringGloves",
+        equipId: "509",
+        formula: ""
+    },
+    "金锅锅": {
+        name: "金锅锅",
+        englishName: "TFT_Item_FryingPan",
+        equipId: "91163",
+        formula: ""
+    },
 
-  // 金铲铲 (508) 系列合成
-  "战斗学院纹章": {
-    name: "战斗学院纹章",
-    englishName: "TFT15_Item_BattleAcademiaEmblemItem",
-    equipId: "91293",
-    formula: "508,504" // 金铲铲 + 女神之泪
-  },
-  "至高天纹章": {
-    name: "至高天纹章",
-    englishName: "TFT15_Item_EmpyreanEmblemItem",
-    equipId: "91297",
-    formula: "508,505" // 金铲铲 + 锁子甲
-  },
-  "假面摔角手纹章": {
-    name: "假面摔角手纹章",
-    englishName: "TFT15_Item_RingKingsEmblemItem",
-    equipId: "91298",
-    formula: "508,509" // 金铲铲 + 拳套
-  },
-  "水晶玫瑰纹章": {
-    name: "水晶玫瑰纹章",
-    englishName: "TFT15_Item_CrystalRoseEmblemItem",
-    equipId: "91299",
-    formula: "508,507" // 金铲铲 + 巨人腰带
-  },
-  "斗魂战士纹章": {
-    name: "斗魂战士纹章",
-    englishName: "TFT15_Item_SoulFighterEmblemItem",
-    equipId: "91305",
-    formula: "508,501" // 金铲铲 + 暴风大剑
-  },
-  "星之守护者纹章": {
-    name: "星之守护者纹章",
-    englishName: "TFT15_Item_StarGuardianEmblemItem",
-    equipId: "91306",
-    formula: "508,503" // 金铲铲 + 无用大棒
-  },
-  "兵王纹章": {
-    name: "兵王纹章",
-    englishName: "TFT15_Item_SupremeCellsEmblemItem",
-    equipId: "91307",
-    formula: "508,502" // 金铲铲 + 反曲之弓
-  },
-  "司令纹章": {
-    name: "司令纹章",
-    englishName: "TFT15_Item_ShotcallerEmblemItem",
-    equipId: "91309",
-    formula: "508,506" // 金铲铲 + 负极斗篷
-  },
-  "金铲铲冠冕": {
-    name: "金铲铲冠冕",
-    englishName: "TFT_Item_ForceOfNature",
-    equipId: "603",
-    formula: "508,508" // 金铲铲 + 金铲铲
-  },
+    // ==========================================
+    // Type 2: S15 赛季纹章 (Set 15 Emblems)
+    // ==========================================
+    // 金锅锅 (91163) 系列合成
+    "护卫纹章": {
+        name: "护卫纹章",
+        englishName: "TFT15_Item_BastionEmblemItem",
+        equipId: "91292",
+        formula: "91163,505" // 金锅锅 + 锁子甲
+    },
+    "决斗大师纹章": {
+        name: "决斗大师纹章",
+        englishName: "TFT15_Item_ChallengerEmblemItem",
+        equipId: "91294",
+        formula: "91163,502" // 金锅锅 + 反曲之弓
+    },
+    "裁决使者纹章": {
+        name: "裁决使者纹章",
+        englishName: "TFT15_Item_DestroyerEmblemItem",
+        equipId: "91295",
+        formula: "91163,509" // 金锅锅 + 拳套
+    },
+    "刀锋领主纹章": {
+        name: "刀锋领主纹章",
+        englishName: "TFT15_Item_EdgelordEmblemItem",
+        equipId: "91296",
+        formula: "91163,501" // 金锅锅 + 暴风大剑
+    },
+    "重量级斗士纹章": {
+        name: "重量级斗士纹章",
+        englishName: "TFT15_Item_HeavyweightEmblemItem",
+        equipId: "91300",
+        formula: "91163,507" // 金锅锅 + 巨人腰带
+    },
+    "法师纹章": {
+        name: "法师纹章",
+        englishName: "TFT15_Item_SpellslingerEmblemItem",
+        equipId: "91301",
+        formula: "91163,503" // 金锅锅 + 无用大棒
+    },
+    "天才纹章": {
+        name: "天才纹章",
+        englishName: "TFT15_Item_ProdigyEmblemItem",
+        equipId: "91302",
+        formula: "91163,504" // 金锅锅 + 女神之泪
+    },
+    "主宰纹章": {
+        name: "主宰纹章",
+        englishName: "TFT15_Item_JuggernautEmblemItem",
+        equipId: "91304",
+        formula: "91163,506" // 金锅锅 + 负极斗篷
+    },
+    "金锅铲冠冕": {
+        name: "金锅铲冠冕",
+        englishName: "TFT_Item_TacticiansRing",
+        equipId: "91164",
+        formula: "91163,508" // 金锅锅 + 金铲铲
+    },
+    "金锅锅冠冕": {
+        name: "金锅锅冠冕",
+        englishName: "TFT_Item_TacticiansScepter",
+        equipId: "91165",
+        formula: "91163,91163" // 金锅锅 + 金锅锅
+    },
 
-  // ==========================================
-  // Type 2: 常驻合成成装 (Standard Craftable Items)
-  // ==========================================
-  "死亡之刃": {
-    name: "死亡之刃",
-    englishName: "TFT_Item_Deathblade",
-    equipId: "519",
-    formula: "501,501"
-  },
-  "巨人杀手": {
-    name: "巨人杀手",
-    englishName: "TFT_Item_MadredsBloodrazor",
-    equipId: "521",
-    formula: "501,502"
-  },
-  "海克斯科技枪刃": {
-    name: "海克斯科技枪刃",
-    englishName: "TFT_Item_HextechGunblade",
-    equipId: "523",
-    formula: "501,503"
-  },
-  "朔极之矛": {
-    name: "朔极之矛",
-    englishName: "TFT_Item_SpearOfShojin",
-    equipId: "525",
-    formula: "501,504"
-  },
-  "夜之锋刃": {
-    name: "夜之锋刃",
-    englishName: "TFT_Item_GuardianAngel",
-    equipId: "6022",
-    formula: "501,505"
-  },
-  "饮血剑": {
-    name: "饮血剑",
-    englishName: "TFT_Item_Bloodthirster",
-    equipId: "529",
-    formula: "501,506"
-  },
-  "斯特拉克的挑战护手": {
-    name: "斯特拉克的挑战护手",
-    englishName: "TFT_Item_SteraksGage",
-    equipId: "1001",
-    formula: "501,507"
-  },
-  "无尽之刃": {
-    name: "无尽之刃",
-    englishName: "TFT_Item_InfinityEdge",
-    equipId: "535",
-    formula: "501,509"
-  },
-  "红霸符": {
-    name: "红霸符",
-    englishName: "TFT_Item_RapidFireCannon",
-    equipId: "1007",
-    formula: "502,502"
-  },
-  "鬼索的狂暴之刃": {
-    name: "鬼索的狂暴之刃",
-    englishName: "TFT_Item_GuinsoosRageblade",
-    equipId: "539",
-    formula: "502,503"
-  },
-  "斯塔缇克电刃": {
-    name: "斯塔缇克电刃",
-    englishName: "TFT_Item_StatikkShiv",
-    equipId: "541",
-    formula: "502,504"
-  },
-  "泰坦的坚决": {
-    name: "泰坦的坚决",
-    englishName: "TFT_Item_TitansResolve",
-    equipId: "543",
-    formula: "502,505"
-  },
-  "卢安娜的飓风": {
-    name: "卢安娜的飓风",
-    englishName: "TFT_Item_RunaansHurricane",
-    equipId: "545",
-    formula: "502,506"
-  },
-  "纳什之牙": {
-    name: "纳什之牙",
-    englishName: "TFT_Item_Leviathan",
-    equipId: "547",
-    formula: "502,507"
-  },
-  "最后的轻语": {
-    name: "最后的轻语",
-    englishName: "TFT_Item_LastWhisper",
-    equipId: "551",
-    formula: "502,509"
-  },
-  "灭世者的死亡之帽": {
-    name: "灭世者的死亡之帽",
-    englishName: "TFT_Item_RabadonsDeathcap",
-    equipId: "553",
-    formula: "503,503"
-  },
-  "大天使之杖": {
-    name: "大天使之杖",
-    englishName: "TFT_Item_ArchangelsStaff",
-    equipId: "555",
-    formula: "503,504"
-  },
-  "冕卫": {
-    name: "冕卫",
-    englishName: "TFT_Item_Crownguard",
-    equipId: "1003",
-    formula: "503,505"
-  },
-  "离子火花": {
-    name: "离子火花",
-    englishName: "TFT_Item_IonicSpark",
-    equipId: "559",
-    formula: "503,506"
-  },
-  "莫雷洛秘典": {
-    name: "莫雷洛秘典",
-    englishName: "TFT_Item_Morellonomicon",
-    equipId: "561",
-    formula: "503,507"
-  },
-  "珠光护手": {
-    name: "珠光护手",
-    englishName: "TFT_Item_JeweledGauntlet",
-    equipId: "565",
-    formula: "503,509"
-  },
-  "蓝霸符": {
-    name: "蓝霸符",
-    englishName: "TFT_Item_BlueBuff",
-    equipId: "567",
-    formula: "504,504"
-  },
-  "圣盾使的誓约": {
-    name: "圣盾使的誓约",
-    englishName: "TFT_Item_FrozenHeart",
-    equipId: "7034",
-    formula: "505,504"
-  },
-  "棘刺背心": {
-    name: "棘刺背心",
-    englishName: "TFT_Item_BrambleVest",
-    equipId: "579",
-    formula: "505,505"
-  },
-  "石像鬼石板甲": {
-    name: "石像鬼石板甲",
-    englishName: "TFT_Item_GargoyleStoneplate",
-    equipId: "581",
-    formula: "505,506"
-  },
-  "日炎斗篷": {
-    name: "日炎斗篷",
-    englishName: "TFT_Item_RedBuff",
-    equipId: "583",
-    formula: "507,505"
-  },
-  "坚定之心": {
-    name: "坚定之心",
-    englishName: "TFT_Item_NightHarvester",
-    equipId: "1009",
-    formula: "505,509"
-  },
-  "巨龙之爪": {
-    name: "巨龙之爪",
-    englishName: "TFT_Item_DragonsClaw",
-    equipId: "589",
-    formula: "506,506"
-  },
-  "适应性头盔": {
-    name: "适应性头盔",
-    englishName: "TFT_Item_AdaptiveHelm",
-    equipId: "1004",
-    formula: "504,506"
-  },
-  "薄暮法袍": {
-    name: "薄暮法袍",
-    englishName: "TFT_Item_SpectralGauntlet",
-    equipId: "1006",
-    formula: "507,506"
-  },
-  "水银": {
-    name: "水银",
-    englishName: "TFT_Item_Quicksilver",
-    equipId: "595",
-    formula: "506,509"
-  },
-  "救赎": {
-    name: "救赎",
-    englishName: "TFT_Item_Redemption",
-    equipId: "573",
-    formula: "507,504"
-  },
-  "狂徒铠甲": {
-    name: "狂徒铠甲",
-    englishName: "TFT_Item_WarmogsArmor",
-    equipId: "597",
-    formula: "507,507"
-  },
-  "强袭者的链枷": {
-    name: "强袭者的链枷",
-    englishName: "TFT_Item_PowerGauntlet",
-    equipId: "801",
-    formula: "507,509"
-  },
-  "正义之手": {
-    name: "正义之手",
-    englishName: "TFT_Item_UnstableConcoction",
-    equipId: "577",
-    formula: "509,504"
-  },
-  "窃贼手套": {
-    name: "窃贼手套",
-    englishName: "TFT_Item_ThiefsGloves",
-    equipId: "607",
-    formula: "509,509"
-  }
+    // 金铲铲 (508) 系列合成
+    "战斗学院纹章": {
+        name: "战斗学院纹章",
+        englishName: "TFT15_Item_BattleAcademiaEmblemItem",
+        equipId: "91293",
+        formula: "508,504" // 金铲铲 + 女神之泪
+    },
+    "至高天纹章": {
+        name: "至高天纹章",
+        englishName: "TFT15_Item_EmpyreanEmblemItem",
+        equipId: "91297",
+        formula: "508,505" // 金铲铲 + 锁子甲
+    },
+    "假面摔角手纹章": {
+        name: "假面摔角手纹章",
+        englishName: "TFT15_Item_RingKingsEmblemItem",
+        equipId: "91298",
+        formula: "508,509" // 金铲铲 + 拳套
+    },
+    "水晶玫瑰纹章": {
+        name: "水晶玫瑰纹章",
+        englishName: "TFT15_Item_CrystalRoseEmblemItem",
+        equipId: "91299",
+        formula: "508,507" // 金铲铲 + 巨人腰带
+    },
+    "斗魂战士纹章": {
+        name: "斗魂战士纹章",
+        englishName: "TFT15_Item_SoulFighterEmblemItem",
+        equipId: "91305",
+        formula: "508,501" // 金铲铲 + 暴风大剑
+    },
+    "星之守护者纹章": {
+        name: "星之守护者纹章",
+        englishName: "TFT15_Item_StarGuardianEmblemItem",
+        equipId: "91306",
+        formula: "508,503" // 金铲铲 + 无用大棒
+    },
+    "兵王纹章": {
+        name: "兵王纹章",
+        englishName: "TFT15_Item_SupremeCellsEmblemItem",
+        equipId: "91307",
+        formula: "508,502" // 金铲铲 + 反曲之弓
+    },
+    "司令纹章": {
+        name: "司令纹章",
+        englishName: "TFT15_Item_ShotcallerEmblemItem",
+        equipId: "91309",
+        formula: "508,506" // 金铲铲 + 负极斗篷
+    },
+    "金铲铲冠冕": {
+        name: "金铲铲冠冕",
+        englishName: "TFT_Item_ForceOfNature",
+        equipId: "603",
+        formula: "508,508" // 金铲铲 + 金铲铲
+    },
+
+    // ==========================================
+    // Type 2: 常驻合成成装 (Standard Craftable Items)
+    // ==========================================
+    "死亡之刃": {
+        name: "死亡之刃",
+        englishName: "TFT_Item_Deathblade",
+        equipId: "519",
+        formula: "501,501"
+    },
+    "巨人杀手": {
+        name: "巨人杀手",
+        englishName: "TFT_Item_MadredsBloodrazor",
+        equipId: "521",
+        formula: "501,502"
+    },
+    "海克斯科技枪刃": {
+        name: "海克斯科技枪刃",
+        englishName: "TFT_Item_HextechGunblade",
+        equipId: "523",
+        formula: "501,503"
+    },
+    "朔极之矛": {
+        name: "朔极之矛",
+        englishName: "TFT_Item_SpearOfShojin",
+        equipId: "525",
+        formula: "501,504"
+    },
+    "夜之锋刃": {
+        name: "夜之锋刃",
+        englishName: "TFT_Item_GuardianAngel",
+        equipId: "6022",
+        formula: "501,505"
+    },
+    "饮血剑": {
+        name: "饮血剑",
+        englishName: "TFT_Item_Bloodthirster",
+        equipId: "529",
+        formula: "501,506"
+    },
+    "斯特拉克的挑战护手": {
+        name: "斯特拉克的挑战护手",
+        englishName: "TFT_Item_SteraksGage",
+        equipId: "1001",
+        formula: "501,507"
+    },
+    "无尽之刃": {
+        name: "无尽之刃",
+        englishName: "TFT_Item_InfinityEdge",
+        equipId: "535",
+        formula: "501,509"
+    },
+    "红霸符": {
+        name: "红霸符",
+        englishName: "TFT_Item_RapidFireCannon",
+        equipId: "1007",
+        formula: "502,502"
+    },
+    "鬼索的狂暴之刃": {
+        name: "鬼索的狂暴之刃",
+        englishName: "TFT_Item_GuinsoosRageblade",
+        equipId: "539",
+        formula: "502,503"
+    },
+    "斯塔缇克电刃": {
+        name: "斯塔缇克电刃",
+        englishName: "TFT_Item_StatikkShiv",
+        equipId: "541",
+        formula: "502,504"
+    },
+    "泰坦的坚决": {
+        name: "泰坦的坚决",
+        englishName: "TFT_Item_TitansResolve",
+        equipId: "543",
+        formula: "502,505"
+    },
+    "卢安娜的飓风": {
+        name: "卢安娜的飓风",
+        englishName: "TFT_Item_RunaansHurricane",
+        equipId: "545",
+        formula: "502,506"
+    },
+    "纳什之牙": {
+        name: "纳什之牙",
+        englishName: "TFT_Item_Leviathan",
+        equipId: "547",
+        formula: "502,507"
+    },
+    "最后的轻语": {
+        name: "最后的轻语",
+        englishName: "TFT_Item_LastWhisper",
+        equipId: "551",
+        formula: "502,509"
+    },
+    "灭世者的死亡之帽": {
+        name: "灭世者的死亡之帽",
+        englishName: "TFT_Item_RabadonsDeathcap",
+        equipId: "553",
+        formula: "503,503"
+    },
+    "大天使之杖": {
+        name: "大天使之杖",
+        englishName: "TFT_Item_ArchangelsStaff",
+        equipId: "555",
+        formula: "503,504"
+    },
+    "冕卫": {
+        name: "冕卫",
+        englishName: "TFT_Item_Crownguard",
+        equipId: "1003",
+        formula: "503,505"
+    },
+    "离子火花": {
+        name: "离子火花",
+        englishName: "TFT_Item_IonicSpark",
+        equipId: "559",
+        formula: "503,506"
+    },
+    "莫雷洛秘典": {
+        name: "莫雷洛秘典",
+        englishName: "TFT_Item_Morellonomicon",
+        equipId: "561",
+        formula: "503,507"
+    },
+    "珠光护手": {
+        name: "珠光护手",
+        englishName: "TFT_Item_JeweledGauntlet",
+        equipId: "565",
+        formula: "503,509"
+    },
+    "蓝霸符": {
+        name: "蓝霸符",
+        englishName: "TFT_Item_BlueBuff",
+        equipId: "567",
+        formula: "504,504"
+    },
+    "圣盾使的誓约": {
+        name: "圣盾使的誓约",
+        englishName: "TFT_Item_FrozenHeart",
+        equipId: "7034",
+        formula: "505,504"
+    },
+    "棘刺背心": {
+        name: "棘刺背心",
+        englishName: "TFT_Item_BrambleVest",
+        equipId: "579",
+        formula: "505,505"
+    },
+    "石像鬼石板甲": {
+        name: "石像鬼石板甲",
+        englishName: "TFT_Item_GargoyleStoneplate",
+        equipId: "581",
+        formula: "505,506"
+    },
+    "日炎斗篷": {
+        name: "日炎斗篷",
+        englishName: "TFT_Item_RedBuff",
+        equipId: "583",
+        formula: "507,505"
+    },
+    "坚定之心": {
+        name: "坚定之心",
+        englishName: "TFT_Item_NightHarvester",
+        equipId: "1009",
+        formula: "505,509"
+    },
+    "巨龙之爪": {
+        name: "巨龙之爪",
+        englishName: "TFT_Item_DragonsClaw",
+        equipId: "589",
+        formula: "506,506"
+    },
+    "适应性头盔": {
+        name: "适应性头盔",
+        englishName: "TFT_Item_AdaptiveHelm",
+        equipId: "1004",
+        formula: "504,506"
+    },
+    "薄暮法袍": {
+        name: "薄暮法袍",
+        englishName: "TFT_Item_SpectralGauntlet",
+        equipId: "1006",
+        formula: "507,506"
+    },
+    "水银": {
+        name: "水银",
+        englishName: "TFT_Item_Quicksilver",
+        equipId: "595",
+        formula: "506,509"
+    },
+    "救赎": {
+        name: "救赎",
+        englishName: "TFT_Item_Redemption",
+        equipId: "573",
+        formula: "507,504"
+    },
+    "狂徒铠甲": {
+        name: "狂徒铠甲",
+        englishName: "TFT_Item_WarmogsArmor",
+        equipId: "597",
+        formula: "507,507"
+    },
+    "强袭者的链枷": {
+        name: "强袭者的链枷",
+        englishName: "TFT_Item_PowerGauntlet",
+        equipId: "801",
+        formula: "507,509"
+    },
+    "正义之手": {
+        name: "正义之手",
+        englishName: "TFT_Item_UnstableConcoction",
+        equipId: "577",
+        formula: "509,504"
+    },
+    "窃贼手套": {
+        name: "窃贼手套",
+        englishName: "TFT_Item_ThiefsGloves",
+        equipId: "607",
+        formula: "509,509"
+    }
 };

@@ -7384,7 +7384,7 @@ class TftOperator {
       tftUnit = TFT_15_CHAMPION_DATA[cleanName];
       if (!tftUnit) {
         logger.warn(`[商店槽位 ${i}] OCR识别失败！尝试模板匹配...`);
-        const rawData = await sharp(processedPng).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+        const rawData = await sharp(processedPng).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
         const processedMat = cv.matFromImageData({
           data: new Uint8Array(rawData.data),
           width: rawData.info.width,
@@ -7442,7 +7442,7 @@ class TftOperator {
           matchResult.slot = slotName;
           resultEquips.push(matchResult);
         } else {
-          logger.info(`[TftOperator] ${slotName} 槽位识别失败。`);
+          logger.error(`[TftOperator] ${slotName} 槽位识别失败。`);
           const fileName = `equip_${slotName}${Date.now()}.png`;
           const pngBuffer = await sharp(targetMat.data, {
             raw: {
@@ -7716,10 +7716,10 @@ class TftOperator {
           if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) continue;
           cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
           const result = cv.minMaxLoc(resultMat, mask);
-          console.log(`当前模板：${templateName},匹配相似度：${(result.maxVal * 100).toFixed(4)}%`);
           if (result.maxVal >= THRESHOLD) {
+            console.log(`模板已匹配！当前模板：${templateName}，匹配度：${(result.maxVal * 100).toFixed(4)}%`);
             maxConfidence = result.maxVal;
-            bestMatchEquip = Object.values(TFT_15_EQUIP_DATA).find((e) => e.englishName === templateName);
+            bestMatchEquip = Object.values(TFT_15_EQUIP_DATA).find((e) => e.englishName.toLowerCase() === templateName.toLowerCase());
             hasFind = true;
             break;
           }
@@ -7763,7 +7763,7 @@ class TftOperator {
         if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) continue;
         cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
         const result = cv.minMaxLoc(resultMat, mask);
-        console.log(`当前模板装备名：${name}`);
+        console.log(`英雄模板名：${name}，相似度：${(result.maxVal * 100).toFixed(3)}%`);
         if (result.maxVal >= THRESHOLD) {
           maxConfidence = result.maxVal;
           bestMatchName = name;

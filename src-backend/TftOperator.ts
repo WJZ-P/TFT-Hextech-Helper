@@ -26,8 +26,8 @@ const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
 
 //  装备的资源路径，从public/resources/assets/images/equipment里面算起
-// 优先级排序：散件 -> 成装 -> 纹章 -> 神器 -> 光明
-export const equipResourcePath = ['component', 'core', 'emblem', 'artifact', 'radiant',];
+// 优先级排序：散件 -> 特殊 -> 成装 -> 纹章 -> 神器 -> 光明
+export const equipResourcePath = ['component','special', 'core', 'emblem', 'artifact', 'radiant',];
 
 // 定义识别到的装备接口，继承自协议中的基础装备接口，并添加识别特有的属性
 export interface IdentifiedEquip extends TFTEquip {
@@ -246,7 +246,7 @@ class TftOperator {
                 logger.warn(`[商店槽位 ${i}] OCR识别失败！尝试模板匹配...`);
                 //  模板匹配兜底
                 const rawData = await sharp(processedPng)
-                    .removeAlpha()  //  要和载入本地模板的方式一致，去掉alpha层。
+                    .ensureAlpha()//    如果用matFromImageData，必须保证有A才行。
                     .raw()
                     .toBuffer({resolveWithObject: true});
                 const processedMat = cv.matFromImageData({
@@ -328,7 +328,9 @@ class TftOperator {
                     matchResult.slot = slotName;
                     resultEquips.push(matchResult);
                 } else {
-                    logger.info(`[TftOperator] ${slotName} 槽位识别失败。`)
+                    logger.error(`[TftOperator] ${slotName} 槽位识别失败。`)
+
+                    //  把识别失败的图片保存到本地。
                     const fileName = `equip_${slotName}${Date.now()}.png`
                     const pngBuffer = await sharp(targetMat.data, {
                         raw: {
@@ -697,12 +699,13 @@ class TftOperator {
                     cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
                     const result = cv.minMaxLoc(resultMat, mask);
 
-                    console.log(`当前模板：${templateName},匹配相似度：${(result.maxVal * 100).toFixed(4)}%`)
+                    //console.log(`当前模板：${templateName},匹配相似度：${(result.maxVal * 100).toFixed(4)}%`)
 
                     if (result.maxVal >= THRESHOLD) {
                         //  匹配度高，说明已经找到了图片
+                        console.log(`模板已匹配！当前模板：${templateName}，匹配度：${(result.maxVal * 100).toFixed(4)}%`)
                         maxConfidence = result.maxVal
-                        bestMatchEquip = Object.values(TFT_15_EQUIP_DATA).find(e => e.englishName === templateName)
+                        bestMatchEquip = Object.values(TFT_15_EQUIP_DATA).find(e => e.englishName.toLowerCase() === templateName.toLowerCase())
                         hasFind = true;
                         break;
                     }
@@ -764,7 +767,7 @@ class TftOperator {
                 // 模板匹配
                 cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
                 const result = cv.minMaxLoc(resultMat, mask);
-                console.log(`当前模板装备名：${name}`)
+                console.log(`英雄模板名：${name}，相似度：${(result.maxVal*100).toFixed(3)}%`)
 
                 if (result.maxVal >= THRESHOLD) {
                     //  匹配度高，说明已经找到了图片
