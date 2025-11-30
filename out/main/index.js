@@ -2945,7 +2945,7 @@ class LCUManager extends EventEmitter {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error(`❌ [LCUManager] Axios 请求失败: ${error.message}`);
-        throw new Error(`LCU 请求失败: ${error.response?.status} - ${error.response?.statusText}`);
+        throw new Error(`LCU 请求失败:endpoint:${endpoint} state: ${error.response?.status} - ${error.response?.statusText}`);
       } else {
         console.error(`❌ [LCUManager] 未知请求错误:`, error);
         throw error;
@@ -5523,6 +5523,7 @@ const shopSlot = {
 };
 const shopSlotNameRegions = {
   SLOT_1: {
+    // width: 108 height:18
     leftTop: { x: 173, y: 740 },
     rightBottom: { x: 281, y: 758 }
   },
@@ -7331,6 +7332,7 @@ class TftOperator {
       logger.info("[TftOperator] OpenCV (WASM) 核心模块加载完毕！");
       this.loadEquipTemplates();
       this.loadChampionTemplates();
+      this.setupChampionTemplateWatcher();
     };
   }
   static getInstance() {
@@ -7649,7 +7651,14 @@ class TftOperator {
    * 加载装备模板
    */
   async loadEquipTemplates() {
-    if (this.equipTemplates.length > 0) return;
+    if (this.equipTemplates.length > 0) {
+      for (const category of this.equipTemplates) {
+        for (const mat of category.values()) {
+          if (mat && !mat.isDeleted()) mat.delete();
+        }
+      }
+      this.equipTemplates.length = 0;
+    }
     logger.info(`[TftOperator] 开始加载装备模板...`);
     const TEMPLATE_SIZE = 24;
     if (!this.emptyEquipSlotTemplate) {
@@ -7700,7 +7709,14 @@ class TftOperator {
    * 加载英雄ID模板
    */
   async loadChampionTemplates() {
-    if (this.championTemplates.size > 0) return;
+    if (this.championTemplates.size > 0) {
+      for (const mat of this.championTemplates.values()) {
+        if (mat && !mat.isDeleted()) {
+          mat.delete();
+        }
+      }
+      this.championTemplates.clear();
+    }
     logger.info(`[TftOperator] 开始加载英雄模板...`);
     if (!fs.existsSync(this.championTemplatePath)) {
       fs.ensureDirSync(this.championTemplatePath);
@@ -7820,6 +7836,20 @@ class TftOperator {
     }
     return null;
   }
+  /**
+   * 监听英雄模板文件夹变更
+   */
+  setupChampionTemplateWatcher() {
+    if (!fs.existsSync(this.championTemplatePath)) fs.ensureDirSync(this.championTemplatePath);
+    let debounceTimer;
+    fs.watch(this.championTemplatePath, (event, filename) => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        logger.info(`[TftOperator] 检测到英雄模板变更 (${event}: ${filename})，重新加载英雄模板...`);
+        this.loadChampionTemplates();
+      }, 500);
+    });
+  }
 }
 const tftOperator = TftOperator.getInstance();
 class GameStageState {
@@ -7908,7 +7938,9 @@ class LobbyState {
       const onReadyCheck = (eventData) => {
         if (eventData.data?.state === "InProgress") {
           logger.info("[LobbyState] 已找到对局！正在自动接受...");
-          this.lcuManager?.acceptMatch();
+          this.lcuManager?.acceptMatch().catch((reason) => {
+            console.log(reason);
+          });
         }
       };
       const onGameflowPhase = (eventData) => {
@@ -7946,7 +7978,13 @@ class StartState {
     await ConfigHelper.backup();
     logger.info("[HexService] 正在应用云顶之弈配置...");
     await ConfigHelper.applyTFTConfig();
-    return new LobbyState();
+    try {
+      await inGameApi.get("/liveclientdata/allgamedata");
+      logger.info("[HexService] 检测到游戏已开启，流转到GameStageState");
+      return new GameStageState();
+    } catch (e) {
+      return new LobbyState();
+    }
   }
 }
 class IdleState {

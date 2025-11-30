@@ -6,7 +6,7 @@ import {EndState} from "./EndState.ts";
 import {hexService} from "../HexService.ts";
 import {GameStageState} from "./GameStageState.ts";
 
-const inGameApi: AxiosInstance = axios.create({
+export const inGameApi: AxiosInstance = axios.create({
     baseURL: 'https://127.0.0.1:2999',  //  What the fuck???
     httpsAgent: new https.Agent({
         rejectUnauthorized: false,

@@ -61,7 +61,7 @@ export class LobbyState implements IState {
             const onReadyCheck = (eventData: LCUWebSocketMessage) => {
                 if (eventData.data?.state === 'InProgress') {
                     logger.info('[LobbyState] 已找到对局！正在自动接受...');
-                    this.lcuManager?.acceptMatch()
+                        this.lcuManager?.acceptMatch().catch((reason)=>{console.log(reason)})
                 }
             };
 

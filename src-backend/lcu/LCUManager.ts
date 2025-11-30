@@ -188,7 +188,7 @@ class LCUManager extends EventEmitter {
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 console.error(`❌ [LCUManager] Axios 请求失败: ${error.message}`);
-                throw new Error(`LCU 请求失败: ${error.response?.status} - ${error.response?.statusText}`);
+                throw new Error(`LCU 请求失败:endpoint:${endpoint} state: ${error.response?.status} - ${error.response?.statusText}`);
             } else {
                 console.error(`❌ [LCUManager] 未知请求错误:`, error);
                 throw error;

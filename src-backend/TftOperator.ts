@@ -27,7 +27,7 @@ const GAME_HEIGHT = 768;
 
 //  装备的资源路径，从public/resources/assets/images/equipment里面算起
 // 优先级排序：散件 -> 特殊 -> 成装 -> 纹章 -> 神器 -> 光明
-export const equipResourcePath = ['component','special', 'core', 'emblem', 'artifact', 'radiant',];
+export const equipResourcePath = ['component', 'special', 'core', 'emblem', 'artifact', 'radiant',];
 
 // 定义识别到的装备接口，继承自协议中的基础装备接口，并添加识别特有的属性
 export interface IdentifiedEquip extends TFTEquip {
@@ -111,6 +111,8 @@ class TftOperator {
             this.loadEquipTemplates();
             // 加载英雄ID模板
             this.loadChampionTemplates();
+            // 启动文件监听
+            this.setupChampionTemplateWatcher();
         };
     }
 
@@ -536,7 +538,15 @@ class TftOperator {
      * 加载装备模板
      */
     private async loadEquipTemplates() {
-        if (this.equipTemplates.length > 0) return;
+
+        if (this.equipTemplates.length > 0) {
+            for(const category of this.equipTemplates){
+                for(const mat of category.values()){
+                   if(mat && !mat.isDeleted()) mat.delete()
+                }
+            }
+            this.equipTemplates.length = 0;
+        }
         logger.info(`[TftOperator] 开始加载装备模板...`);
         const TEMPLATE_SIZE = 24;
         // 初始化空模板
@@ -617,7 +627,16 @@ class TftOperator {
      * 加载英雄ID模板
      */
     private async loadChampionTemplates() {
-        if (this.championTemplates.size > 0) return;
+        //  refresh
+        if (this.championTemplates.size > 0) {
+            //  mat对象必须手动delete，因为它是指向C++内存地址的包装器
+             for (const mat of this.championTemplates.values()) {
+                if (mat && !mat.isDeleted()) {
+                    mat.delete();
+                }
+            }
+            this.championTemplates.clear();
+        }
         logger.info(`[TftOperator] 开始加载英雄模板...`)
         if (!fs.existsSync(this.championTemplatePath)) {
             // 如果目录不存在，可能是第一次运行还没保存过失败图片，建一个
@@ -767,7 +786,7 @@ class TftOperator {
                 // 模板匹配
                 cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
                 const result = cv.minMaxLoc(resultMat, mask);
-                console.log(`英雄模板名：${name}，相似度：${(result.maxVal*100).toFixed(3)}%`)
+                console.log(`英雄模板名：${name}，相似度：${(result.maxVal * 100).toFixed(3)}%`)
 
                 if (result.maxVal >= THRESHOLD) {
                     //  匹配度高，说明已经找到了图片
@@ -787,6 +806,21 @@ class TftOperator {
             resultMat.delete();
         }
         return null;
+    }
+
+    /**
+     * 监听英雄模板文件夹变更
+     */
+    private setupChampionTemplateWatcher() {
+        if (!fs.existsSync(this.championTemplatePath)) fs.ensureDirSync(this.championTemplatePath)
+        let debounceTimer:NodeJS.Timeout
+        fs.watch(this.championTemplatePath, (event, filename) => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                logger.info(`[TftOperator] 检测到英雄模板变更 (${event}: ${filename})，重新加载英雄模板...`);
+                this.loadChampionTemplates()
+            }, 500);
+        })
     }
 }
 
