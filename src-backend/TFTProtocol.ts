@@ -12,7 +12,7 @@ export const shopSlot = {
 }
 //  英雄购买槽英雄名字Region
 export const shopSlotNameRegions = {
-    SLOT_1: {
+    SLOT_1: {   // width: 108 height:18
         leftTop: {x: 173, y: 740},
         rightBottom: {x: 281, y: 758}
     },
@@ -33,6 +33,12 @@ export const shopSlotNameRegions = {
         rightBottom: {x: 854, y: 758}
     },
 }
+//选中英雄时，右侧英雄详情的英雄idregion，必须分毫不差以复用商店英雄名称模板！
+export const detailChampionNameRegion = {
+    leftTop: {x:870,y:226},
+    rightBottom:{x:978,y:244},
+}
+
 //  装备槽位坐标
 export const equipmentSlot = {
     EQ_SLOT_1: new Point(20, 210),//+35
