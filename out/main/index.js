@@ -7384,7 +7384,7 @@ class TftOperator {
       tftUnit = TFT_15_CHAMPION_DATA[cleanName];
       if (!tftUnit) {
         logger.warn(`[商店槽位 ${i}] OCR识别失败！尝试模板匹配...`);
-        const rawData = await sharp(processedPng).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+        const rawData = await sharp(processedPng).removeAlpha().raw().toBuffer({ resolveWithObject: true });
         const processedMat = cv.matFromImageData({
           data: new Uint8Array(rawData.data),
           width: rawData.info.width,
@@ -7430,41 +7430,44 @@ class TftOperator {
         regionDef.rightBottom.x - regionDef.leftTop.x + 1,
         regionDef.rightBottom.y - regionDef.leftTop.y + 1
       );
-      console.log("当前截取的装备region为：");
-      console.log(targetRegion);
+      let targetMat;
       try {
         const screenshot = await screen$1.grabRegion(targetRegion);
-        const screenData = new Uint8Array(screenshot.data);
-        const targetImageData = {
-          data: screenData,
-          width: screenshot.width,
-          height: screenshot.height
-        };
-        let targetMat;
-        try {
-          targetMat = cv.matFromImageData(targetImageData);
-        } catch (err) {
-          logger.error(`[TftOperator] matFromImageData 失败 (Slot: ${slotName}): ${err}`);
-          continue;
-        }
-        try {
-          cv.cvtColor(targetMat, targetMat, cv.COLOR_BGRA2RGBA);
-        } catch (err) {
-          logger.error(`[TftOperator] cvtColor 失败: ${err}`);
-          targetMat.delete();
-          continue;
-        }
+        const { data, info } = await sharp(screenshot.data, {
+          raw: {
+            width: screenshot.width,
+            height: screenshot.height,
+            channels: 4
+            // 假设是 4 通道，Sharp 默认视为 RGBA
+          }
+        }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+        targetMat = new cv.Mat(info.height, info.width, cv.CV_8UC3);
+        targetMat.data.set(new Uint8Array(data));
         const matchResult = this.findBestMatchEquipTemplate(targetMat);
-        targetMat.delete();
         if (matchResult) {
           logger.info(`[TftOperator] ${slotName} 识别成功: ${matchResult.name} (相似度: ${(matchResult.confidence * 100).toFixed(1)}%)`);
           matchResult.slot = slotName;
           resultEquips.push(matchResult);
         } else {
           logger.info(`[TftOperator] ${slotName} 槽位识别失败。`);
+          const fileName = `equip_${slotName}${Date.now()}.png`;
+          const pngBuffer = await sharp(targetMat.data, {
+            raw: {
+              width: targetMat.cols,
+              // OpenCV 的宽
+              height: targetMat.rows,
+              // OpenCV 的高
+              channels: 3
+              // RGBA 是 4 通道
+            }
+          }).png().toBuffer();
+          fs.writeFileSync(path.join(this.equipTemplatePath, fileName), pngBuffer);
+          logger.info(`[TftOperator] 槽位${slotName}图片已保存到本地。`);
         }
       } catch (e) {
         logger.error(`[TftOperator] ${slotName} 扫描流程异常: ${e.message}`);
+      } finally {
+        targetMat.delete();
       }
     }
     return resultEquips;
@@ -7580,7 +7583,7 @@ class TftOperator {
         channels: 4
         // RGBA / BGRA
       }
-    }).removeAlpha();
+    });
     if (forOCR) {
       pipeline = pipeline.resize({
         width: Math.round(screenshot.width * 3),
@@ -7590,12 +7593,6 @@ class TftOperator {
       }).grayscale().normalize().threshold(160).sharpen();
     }
     return await pipeline.toFormat("png").toBuffer();
-  }
-  //  保存调试图片，debug用的
-  saveDebugImage(name, pngBuffer) {
-    const filePath = path.join(process.env.VITE_PUBLIC, name);
-    console.log("[Debug] 保存截图：" + filePath);
-    fs.writeFileSync(filePath, pngBuffer);
   }
   // ======================================
   // 工具函数：OCR 识别
@@ -7643,20 +7640,18 @@ class TftOperator {
         if (!validExtensions.includes(ext)) continue;
         const filePath = path.join(resourcePath, file2);
         const fileNameNotExt = path.parse(file2).name;
+        const processedBaseDir = path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/processed_equipment");
+        fs.ensureDirSync(processedBaseDir);
         try {
           const fileBuf = fs.readFileSync(filePath);
-          const { data, info } = await sharp(fileBuf).resize(TEMPLATE_SIZE, TEMPLATE_SIZE, { fit: "fill" }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+          const pipeline = sharp(fileBuf).resize(TEMPLATE_SIZE, TEMPLATE_SIZE, { fit: "fill", kernel: "nearest" }).removeAlpha();
+          const { data, info } = await pipeline.clone().raw().toBuffer({ resolveWithObject: true });
           const uint8Data = new Uint8Array(data);
-          if (uint8Data.length !== info.width * info.height * 4) {
+          if (uint8Data.length !== info.width * info.height * 3) {
             logger.warn(`[TftOperator] 图片数据长度异常: ${file2}`);
             continue;
           }
-          const imageData = {
-            data: uint8Data,
-            width: info.width,
-            height: info.height
-          };
-          const mat = cv.matFromImageData(imageData);
+          const mat = new cv.Mat(info.height, info.width, cv.CV_8UC3);
           categoryMap.set(fileNameNotExt, mat);
         } catch (e) {
           logger.error(`[TftOperator] 加载模板失败 [${file2}]: ${e}`);
@@ -7706,7 +7701,7 @@ class TftOperator {
     let bestMatchEquip = null;
     let maxConfidence = 0;
     let foundCategory = "";
-    const THRESHOLD = 0.95;
+    const THRESHOLD = 0.6;
     const mask = new cv.Mat();
     const resultMat = new cv.Mat();
     try {
@@ -7722,16 +7717,20 @@ class TftOperator {
       for (let i = 0; i < this.equipTemplates.length; i++) {
         const currentMap = this.equipTemplates[i];
         if (currentMap.size === 0) continue;
+        let hasFind = false;
         for (const [templateName, templateMat] of currentMap) {
           if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) continue;
           cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
           const result = cv.minMaxLoc(resultMat, mask);
+          console.log(`当前模板：${templateName},匹配相似度：${(result.maxVal * 100).toFixed(4)}%`);
           if (result.maxVal >= THRESHOLD) {
             maxConfidence = result.maxVal;
             bestMatchEquip = Object.values(TFT_15_EQUIP_DATA).find((e) => e.englishName === templateName);
+            hasFind = true;
             break;
           }
         }
+        if (hasFind) break;
       }
     } catch (e) {
       logger.error("[TftOperator] 匹配过程出错: " + e);
@@ -7770,6 +7769,7 @@ class TftOperator {
         if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) continue;
         cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
         const result = cv.minMaxLoc(resultMat, mask);
+        console.log(`当前模板装备名：${name}`);
         if (result.maxVal >= THRESHOLD) {
           maxConfidence = result.maxVal;
           bestMatchName = name;

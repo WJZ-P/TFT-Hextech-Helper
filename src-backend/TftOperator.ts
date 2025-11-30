@@ -246,7 +246,7 @@ class TftOperator {
                 logger.warn(`[商店槽位 ${i}] OCR识别失败！尝试模板匹配...`);
                 //  模板匹配兜底
                 const rawData = await sharp(processedPng)
-                    .ensureAlpha()
+                    .removeAlpha()  //  要和载入本地模板的方式一致，去掉alpha层。
                     .raw()
                     .toBuffer({resolveWithObject: true});
                 const processedMat = cv.matFromImageData({
@@ -308,38 +308,28 @@ class TftOperator {
             );
             // console.log("当前截取的装备region为：")
             // console.log(targetRegion)
-
+            let targetMat: cv.Mat;
             try {
                 // --- B. 直接获取 Raw Data (跳过 PNG 编解码，极致性能) ---
                 const screenshot = await nutScreen.grabRegion(targetRegion);
-                // ⚡️ 关键修改：把 nut-js 的截图数据也转一下
-                // nut-js 的 screenshot.data 是一个 Buffer，我们需要转成 Uint8Array
-                const screenData = new Uint8Array(screenshot.data);
-                const targetImageData = {
-                    data: screenData,
-                    width: screenshot.width,
-                    height: screenshot.height
-                };
-                // 注意：这里可能会抛出错误，如果抛出数字错误，说明是这里挂了
-                let targetMat: cv.Mat;
-                try {
-                    targetMat = cv.matFromImageData(targetImageData);
-                } catch (err) {
-                    logger.error(`[TftOperator] matFromImageData 失败 (Slot: ${slotName}): ${err}`);
-                    continue; // 跳过这个槽位
-                }
-                // 颜色转换
-                try {
-                    cv.cvtColor(targetMat, targetMat, cv.COLOR_BGRA2RGBA);
-                } catch (err) {
-                    logger.error(`[TftOperator] cvtColor 失败: ${err}`);
-                    targetMat.delete();
-                    continue;
-                }
+                // 🛠️ 【关键修复】使用 Sharp 来标准化数据，就像你在 Demo 里做的一样！
+                // 这样无论 nut-js 返回 BGRA 还是 RGBA，Sharp 都会帮我们转成纯净的 RGB
+                const {data, info} = await sharp(screenshot.data, {
+                    raw: {
+                        width: screenshot.width,
+                        height: screenshot.height,
+                        channels: 4 // 假设是 4 通道，Sharp 默认视为 RGBA
+                    }
+                })
+                    .removeAlpha() // 扔掉 Alpha，强制转为 3 通道 RGB
+                    .raw()
+                    .toBuffer({resolveWithObject: true});
+
+                // 2. 直接从 RGB Buffer 创建 Mat，不再需要 cvtColor 猜谜了
+                targetMat = new cv.Mat(info.height, info.width, cv.CV_8UC3);
+                targetMat.data.set(new Uint8Array(data));
                 // --- E. 在内存中寻找最匹配的装备 ---
                 const matchResult = this.findBestMatchEquipTemplate(targetMat);
-                // 释放截图产生的 Mat
-                targetMat.delete();
 
                 if (matchResult) {
                     logger.info(`[TftOperator] ${slotName} 识别成功: ${matchResult.name} (相似度: ${(matchResult.confidence * 100).toFixed(1)}%)`);
@@ -348,10 +338,23 @@ class TftOperator {
                     resultEquips.push(matchResult);
                 } else {
                     logger.info(`[TftOperator] ${slotName} 槽位识别失败。`)
+                    const fileName = `equip_${slotName}${Date.now()}.png`
+                    const pngBuffer = await sharp(targetMat.data, {
+                        raw: {
+                            width: targetMat.cols,  // OpenCV 的宽
+                            height: targetMat.rows, // OpenCV 的高
+                            channels: 3             // RGBA 是 4 通道
+                        }
+                    }).png().toBuffer();
+                    fs.writeFileSync(path.join(this.equipTemplatePath, fileName), pngBuffer);
+                    logger.info(`[TftOperator] 槽位${slotName}图片已保存到本地。`)
                 }
 
             } catch (e: any) {
                 logger.error(`[TftOperator] ${slotName} 扫描流程异常: ${e.message}`);
+            } finally {
+                // 释放截图产生的 Mat
+                targetMat.delete();
             }
         }
         return resultEquips;
@@ -487,7 +490,7 @@ class TftOperator {
                 height: screenshot.height,
                 channels: 4, // RGBA / BGRA
             }
-        }).removeAlpha();
+        })
 
         // 3. 根据用途分叉处理
         if (forOCR) {
@@ -514,12 +517,6 @@ class TftOperator {
             .toBuffer();
     }
 
-    //  保存调试图片，debug用的
-    private saveDebugImage(name: string, pngBuffer: Buffer) {
-        const filePath = path.join(process.env.VITE_PUBLIC!, name);
-        console.log('[Debug] 保存截图：' + filePath);
-        fs.writeFileSync(filePath, pngBuffer);
-    }
 
     // ======================================
     // 工具函数：OCR 识别
@@ -545,7 +542,6 @@ class TftOperator {
     /**
      * 加载装备模板
      */
-
     private async loadEquipTemplates() {
         if (this.equipTemplates.length > 0) return;
         logger.info(`[TftOperator] 开始加载装备模板...`);
@@ -577,31 +573,40 @@ class TftOperator {
                 const filePath = path.join(resourcePath, file);
                 const fileNameNotExt = path.parse(file).name;
 
+                const processedBaseDir = path.join(process.env.VITE_PUBLIC || '.', 'resources/assets/images/processed_equipment');
+                fs.ensureDirSync(processedBaseDir);
+
                 try {
                     const fileBuf = fs.readFileSync(filePath);
-                    const {data, info} = await sharp(fileBuf)
-                        .resize(TEMPLATE_SIZE, TEMPLATE_SIZE, {fit: "fill"})
-                        .ensureAlpha()
+                    // ⚡️ Sharp 处理：移除 Alpha，输出 RGB
+                    // 注意：这里我们创建一个 sharp 实例，方便后面多次使用
+                    const pipeline = sharp(fileBuf)
+                        .resize(TEMPLATE_SIZE, TEMPLATE_SIZE, {fit: "fill", kernel: "nearest"})
+                        .removeAlpha(); // 扔掉透明通道 -> 变成 3 通道
+
+                    // A. 获取 Raw Data 用于 OpenCV
+                    const {data, info} = await pipeline
+                        .clone() // ⚡️ 克隆流，防止被消耗
                         .raw()
                         .toBuffer({resolveWithObject: true});
+
+                    //  debug，处理后的图片保存到本地
+                    //const savePath = path.join(processedBaseDir, `${fileNameNotExt}.png`);
+                    // await pipeline
+                    //     .clone()
+                    //     .png()
+                    //     .toFile(savePath);
+                    // logger.info(`[TftOperator] 已保存处理后的模板: ${savePath}`);
 
                     // ⚡️ 关键修改：显式转换为 Uint8Array，防止 Buffer 类型不兼容
                     const uint8Data = new Uint8Array(data);
 
-                    // 再次检查数据长度是否合法 (w * h * 4)
-                    if (uint8Data.length !== info.width * info.height * 4) {
+                    // 再次检查数据长度是否合法 (w * h * 3), x3是因为RGB我们去掉了A，正常RGBA要x4
+                    if (uint8Data.length !== info.width * info.height * 3) {
                         logger.warn(`[TftOperator] 图片数据长度异常: ${file}`);
                         continue;
                     }
-
-                    // 构造符合 ImageData 接口的对象
-                    const imageData = {
-                        data: uint8Data,
-                        width: info.width,
-                        height: info.height,
-                    };
-
-                    const mat = cv.matFromImageData(imageData);
+                    const mat = new cv.Mat(info.height, info.width, cv.CV_8UC3);
                     categoryMap.set(fileNameNotExt, mat);
 
                 } catch (e) {
@@ -621,7 +626,7 @@ class TftOperator {
         if (this.championTemplates.size > 0) return;
         logger.info(`[TftOperator] 开始加载英雄模板...`)
         if (!fs.existsSync(this.championTemplatePath)) {
-            // 如果目录不存在，可能是第一次运行还没保存过失败图片，不用慌，建一个就是了
+            // 如果目录不存在，可能是第一次运行还没保存过失败图片，建一个
             fs.ensureDirSync(this.championTemplatePath);
             logger.info(`[TftOperator] 英雄模板目录不存在，已自动创建: ${this.championTemplatePath}`);
             return;
@@ -665,7 +670,7 @@ class TftOperator {
         let bestMatchEquip: TFTEquip | null = null;
         let maxConfidence = 0;
         let foundCategory = "";
-        const THRESHOLD = 0.95; // 匹配阈值
+        const THRESHOLD = 0.6; // 匹配阈值
 
         const mask = new cv.Mat();  //  判断模板时候用，遮罩为空表示匹配所有像素
         const resultMat = new cv.Mat();
@@ -692,7 +697,7 @@ class TftOperator {
             for (let i = 0; i < this.equipTemplates.length; i++) {
                 const currentMap = this.equipTemplates[i];  //  当前分类
                 if (currentMap.size === 0) continue;
-
+                let hasFind = false;
                 for (const [templateName, templateMat] of currentMap) {
                     //  保证模板的大小一定要小于等于目标Mat的，不然无法匹配。
                     if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) continue;
@@ -700,13 +705,17 @@ class TftOperator {
                     cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
                     const result = cv.minMaxLoc(resultMat, mask);
 
+                    console.log(`当前模板：${templateName},匹配相似度：${(result.maxVal * 100).toFixed(4)}%`)
+
                     if (result.maxVal >= THRESHOLD) {
                         //  匹配度高，说明已经找到了图片
                         maxConfidence = result.maxVal
                         bestMatchEquip = Object.values(TFT_15_EQUIP_DATA).find(e => e.englishName === templateName)
+                        hasFind = true;
                         break;
                     }
                 }
+                if (hasFind) break;
             }
         } catch (e) {
             logger.error("[TftOperator] 匹配过程出错: " + e);
@@ -763,6 +772,7 @@ class TftOperator {
                 // 模板匹配
                 cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
                 const result = cv.minMaxLoc(resultMat, mask);
+                console.log(`当前模板装备名：${name}`)
 
                 if (result.maxVal >= THRESHOLD) {
                     //  匹配度高，说明已经找到了图片
