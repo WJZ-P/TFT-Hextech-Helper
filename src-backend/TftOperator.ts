@@ -703,7 +703,7 @@ class TftOperator {
 
                     if (result.maxVal >= THRESHOLD) {
                         //  匹配度高，说明已经找到了图片
-                        console.log(`模板已匹配！当前模板：${templateName}，匹配度：${(result.maxVal * 100).toFixed(4)}%`)
+                        //console.log(`模板已匹配！当前模板：${templateName}，匹配度：${(result.maxVal * 100).toFixed(4)}%`)
                         maxConfidence = result.maxVal
                         bestMatchEquip = Object.values(TFT_15_EQUIP_DATA).find(e => e.englishName.toLowerCase() === templateName.toLowerCase())
                         hasFind = true;

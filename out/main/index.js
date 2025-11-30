@@ -6831,6 +6831,28 @@ const TFT_15_CHAMPION_DATA = {
   }
 };
 const TFT_15_EQUIP_DATA = {
+  //  特殊类型的装备，比如装备拆卸器，强化果实等
+  "强化果实": {
+    name: "强化果实",
+    englishName: "TFT_Item_PowerSnax",
+    equipId: "-1",
+    //  不知道装备ID
+    formula: ""
+  },
+  "装备拆卸器": {
+    name: "强化果实",
+    englishName: "TFT_Item_MagneticRemover",
+    equipId: "-1",
+    //  不知道装备ID
+    formula: ""
+  },
+  "金质装备拆卸器": {
+    name: "金质装备拆卸器",
+    englishName: "TFT_Item_GoldenItemRemover",
+    equipId: "-1",
+    //  不知道装备ID
+    formula: ""
+  },
   // ==========================================
   // Type 1: 基础散件 (Base Items)
   // ==========================================
@@ -7254,7 +7276,7 @@ const TFT_15_EQUIP_DATA = {
 };
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
-const equipResourcePath = ["component", "core", "emblem", "artifact", "radiant"];
+const equipResourcePath = ["component", "special", "core", "emblem", "artifact", "radiant"];
 class TftOperator {
   static instance;
   //  缓存游戏窗口的左上角坐标
