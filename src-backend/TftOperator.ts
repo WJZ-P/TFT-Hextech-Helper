@@ -664,7 +664,7 @@ class TftOperator {
         let bestMatchEquip: TFTEquip | null = null;
         let maxConfidence = 0;
         let foundCategory = "";
-        const THRESHOLD = 0.6; // 匹配阈值
+        const THRESHOLD = 0.75; // 匹配阈值
 
         const mask = new cv.Mat();  //  判断模板时候用，遮罩为空表示匹配所有像素
         const resultMat = new cv.Mat();

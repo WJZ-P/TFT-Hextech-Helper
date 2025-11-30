@@ -6830,7 +6830,7 @@ const TFT_15_CHAMPION_DATA = {
     classes: []
   }
 };
-const TFT_15_EQUIP_DATA = {
+const specialEquip = {
   //  特殊类型的装备，比如装备拆卸器，强化果实等
   "强化果实": {
     name: "强化果实",
@@ -6853,6 +6853,24 @@ const TFT_15_EQUIP_DATA = {
     //  不知道装备ID
     formula: ""
   },
+  "微型英雄复制器": {
+    name: "微型英雄复制器",
+    englishName: "TFT_Item_LesserChampionDuplicator",
+    equipId: "-1",
+    //  不知道装备ID
+    formula: ""
+  },
+  "装备重铸器": {
+    name: "微型英雄复制器",
+    englishName: "TFT_Item_Reforger",
+    equipId: "-1",
+    //  不知道装备ID
+    formula: ""
+  }
+};
+const TFT_15_EQUIP_DATA = {
+  //  特殊类型的装备
+  ...specialEquip,
   // ==========================================
   // Type 1: 基础散件 (Base Items)
   // ==========================================
@@ -7717,7 +7735,7 @@ class TftOperator {
     let bestMatchEquip = null;
     let maxConfidence = 0;
     let foundCategory = "";
-    const THRESHOLD = 0.6;
+    const THRESHOLD = 0.75;
     const mask = new cv.Mat();
     const resultMat = new cv.Mat();
     try {
@@ -7739,7 +7757,6 @@ class TftOperator {
           cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
           const result = cv.minMaxLoc(resultMat, mask);
           if (result.maxVal >= THRESHOLD) {
-            console.log(`模板已匹配！当前模板：${templateName}，匹配度：${(result.maxVal * 100).toFixed(4)}%`);
             maxConfidence = result.maxVal;
             bestMatchEquip = Object.values(TFT_15_EQUIP_DATA).find((e) => e.englishName.toLowerCase() === templateName.toLowerCase());
             hasFind = true;

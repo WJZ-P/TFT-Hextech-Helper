@@ -715,7 +715,7 @@ export const TFT_15_CHAMPION_DATA: Record<string, TFTUnit> = {
     },
 };
 
-export const TFT_15_EQUIP_DATA: Record<string, TFTEquip> = {
+const specialEquip: Record<string, TFTEquip> = {
     //  特殊类型的装备，比如装备拆卸器，强化果实等
     "强化果实": {
         name: "强化果实",
@@ -735,6 +735,23 @@ export const TFT_15_EQUIP_DATA: Record<string, TFTEquip> = {
         equipId: "-1",  //  不知道装备ID
         formula: ""
     },
+    "微型英雄复制器": {
+        name: "微型英雄复制器",
+        englishName: "TFT_Item_LesserChampionDuplicator",
+        equipId: "-1",  //  不知道装备ID
+        formula: ""
+    },
+    "装备重铸器": {
+        name: "微型英雄复制器",
+        englishName: "TFT_Item_Reforger",
+        equipId: "-1",  //  不知道装备ID
+        formula: ""
+    },
+}
+
+export const TFT_15_EQUIP_DATA: Record<string, TFTEquip> = {
+    //  特殊类型的装备
+    ...specialEquip,
 
     // ==========================================
     // Type 1: 基础散件 (Base Items)
