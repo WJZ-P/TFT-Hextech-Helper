@@ -306,28 +306,19 @@ class TftOperator {
                 regionDef.rightBottom.x - regionDef.leftTop.x + 1,
                 regionDef.rightBottom.y - regionDef.leftTop.y + 1
             );
-            // console.log("当前截取的装备region为：")
-            // console.log(targetRegion)
+
             let targetMat: cv.Mat;
             try {
                 // --- B. 直接获取 Raw Data (跳过 PNG 编解码，极致性能) ---
                 const screenshot = await nutScreen.grabRegion(targetRegion);
-                // 🛠️ 【关键修复】使用 Sharp 来标准化数据，就像你在 Demo 里做的一样！
-                // 这样无论 nut-js 返回 BGRA 还是 RGBA，Sharp 都会帮我们转成纯净的 RGB
-                const {data, info} = await sharp(screenshot.data, {
-                    raw: {
-                        width: screenshot.width,
-                        height: screenshot.height,
-                        channels: 4 // 假设是 4 通道，Sharp 默认视为 RGBA
-                    }
-                })
-                    .removeAlpha() // 扔掉 Alpha，强制转为 3 通道 RGB
-                    .raw()
-                    .toBuffer({resolveWithObject: true});
+                // 1. 创建 Mat (假设屏幕是 BGRA 4通道)
+                // 注意：nut-js 截屏通常返回的是 4 通道数据
+                targetMat = new cv.Mat(screenshot.height, screenshot.width, cv.CV_8UC4);
+                // 2. 注入数据 (nut-js 返回的是 Buffer，转成 Uint8Array 塞给 Mat)
+                targetMat.data.set(new Uint8Array(screenshot.data));
+                // 3. 🛡️ 【关键颜色修复】手动执行 BGRA -> RGB 转换
+                cv.cvtColor(targetMat, targetMat, cv.COLOR_BGRA2RGB);
 
-                // 2. 直接从 RGB Buffer 创建 Mat，不再需要 cvtColor 猜谜了
-                targetMat = new cv.Mat(info.height, info.width, cv.CV_8UC3);
-                targetMat.data.set(new Uint8Array(data));
                 // --- E. 在内存中寻找最匹配的装备 ---
                 const matchResult = this.findBestMatchEquipTemplate(targetMat);
 
@@ -581,7 +572,7 @@ class TftOperator {
                     // ⚡️ Sharp 处理：移除 Alpha，输出 RGB
                     // 注意：这里我们创建一个 sharp 实例，方便后面多次使用
                     const pipeline = sharp(fileBuf)
-                        .resize(TEMPLATE_SIZE, TEMPLATE_SIZE, {fit: "fill", kernel: "nearest"})
+                        .resize(TEMPLATE_SIZE, TEMPLATE_SIZE, {fit: "fill"})
                         .removeAlpha(); // 扔掉透明通道 -> 变成 3 通道
 
                     // A. 获取 Raw Data 用于 OpenCV
@@ -607,6 +598,7 @@ class TftOperator {
                         continue;
                     }
                     const mat = new cv.Mat(info.height, info.width, cv.CV_8UC3);
+                    mat.data.set(uint8Data)
                     categoryMap.set(fileNameNotExt, mat);
 
                 } catch (e) {

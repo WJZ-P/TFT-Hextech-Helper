@@ -7433,16 +7433,9 @@ class TftOperator {
       let targetMat;
       try {
         const screenshot = await screen$1.grabRegion(targetRegion);
-        const { data, info } = await sharp(screenshot.data, {
-          raw: {
-            width: screenshot.width,
-            height: screenshot.height,
-            channels: 4
-            // 假设是 4 通道，Sharp 默认视为 RGBA
-          }
-        }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
-        targetMat = new cv.Mat(info.height, info.width, cv.CV_8UC3);
-        targetMat.data.set(new Uint8Array(data));
+        targetMat = new cv.Mat(screenshot.height, screenshot.width, cv.CV_8UC4);
+        targetMat.data.set(new Uint8Array(screenshot.data));
+        cv.cvtColor(targetMat, targetMat, cv.COLOR_BGRA2RGB);
         const matchResult = this.findBestMatchEquipTemplate(targetMat);
         if (matchResult) {
           logger.info(`[TftOperator] ${slotName} 识别成功: ${matchResult.name} (相似度: ${(matchResult.confidence * 100).toFixed(1)}%)`);
@@ -7644,7 +7637,7 @@ class TftOperator {
         fs.ensureDirSync(processedBaseDir);
         try {
           const fileBuf = fs.readFileSync(filePath);
-          const pipeline = sharp(fileBuf).resize(TEMPLATE_SIZE, TEMPLATE_SIZE, { fit: "fill", kernel: "nearest" }).removeAlpha();
+          const pipeline = sharp(fileBuf).resize(TEMPLATE_SIZE, TEMPLATE_SIZE, { fit: "fill" }).removeAlpha();
           const { data, info } = await pipeline.clone().raw().toBuffer({ resolveWithObject: true });
           const uint8Data = new Uint8Array(data);
           if (uint8Data.length !== info.width * info.height * 3) {
@@ -7652,6 +7645,7 @@ class TftOperator {
             continue;
           }
           const mat = new cv.Mat(info.height, info.width, cv.CV_8UC3);
+          mat.data.set(uint8Data);
           categoryMap.set(fileNameNotExt, mat);
         } catch (e) {
           logger.error(`[TftOperator] 加载模板失败 [${file2}]: ${e}`);
