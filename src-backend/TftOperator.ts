@@ -836,8 +836,10 @@ function parseStageStringToEnum(stageText: string): GameStageType {
 
     //  根据stage和round判断当前阶段
     if (stage === 1) return GameStageType.PVE    //  第一阶段全是打野怪。
-
-
+    if (round === 2) return GameStageType.AUGMENT  //  第二回合选择海克斯
+    if (round === 4) return GameStageType.CAROUSEL  //  第四回合选秀
+    if (round === 7) return GameStageType.PVE        //  第七回合打野怪
+    return GameStageType.PVP    //  其他的阶段直接进行玩家对战，无额外内容
 }
 
 export const tftOperator = TftOperator.getInstance();
