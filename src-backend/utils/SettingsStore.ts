@@ -1,6 +1,6 @@
-import {TFTMode} from "../services/TFTModeService";
 import type {Rectangle} from 'electron';
 import Store from 'electron-store';
+import {TFTMode} from "../TFTProtocol";
 
 type WindowBounds = Pick<Rectangle, 'x' | 'y' | 'width' | 'height'>;
 
@@ -79,8 +79,9 @@ class SettingsStore {
         this.store.set(settings as AppSettings);
     }
 
+    //  返回的是unsubscribe，方便取消订阅
     public onDidChange<K extends keyof AppSettings>(key: K, callback: (newValue: AppSettings[K], oldValue: AppSettings[K]) => void) {
-        return this.store.onDidChange(key, callback as any)  //  返回的是unsubscribe，方便取消订阅
+        return this.store.onDidChange(key, callback as any)
     }
 }
 

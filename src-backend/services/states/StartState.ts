@@ -1,7 +1,7 @@
 import {IState} from "./IState";
 import LCUManager from "../../lcu/LCUManager";
 import {logger} from "../../utils/Logger.ts";
-import ConfigHelper from "../../utils/ConfigHelper";
+import GameConfigHelper from "../../utils/GameConfigHelper";
 import {LobbyState} from "./LobbyState";
 import {IdleState} from "./IdleState.ts";
 import {inGameApi} from "./GameLoadingState";
@@ -20,9 +20,9 @@ export class StartState implements IState {
         }
         //  备份当前客户端设置
         logger.info('[HexService] 正在备份当前客户端配置...')
-        await ConfigHelper.backup()
+        await GameConfigHelper.backup()
         logger.info('[HexService] 正在应用云顶之弈配置...')
-        await ConfigHelper.applyTFTConfig()
+        await GameConfigHelper.applyTFTConfig()
 
         //  这里会存在State分叉，如果游戏已经开始，那么就直接进入GameStageState，判断游戏处于哪个状态。
         try{

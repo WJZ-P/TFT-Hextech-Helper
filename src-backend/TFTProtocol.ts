@@ -1,4 +1,27 @@
-//  定义一下棋子相关的一些协议。
+//  定义一下棋子相关的一些协议，包含棋子单位信息，各种位置信息和约定各种枚举值
+
+/**
+ * 游戏阶段的具体类型
+ * 这里的分类决定了我们的 AI 应该采取什么策略
+ */
+export enum GameStageType {
+    PVE = 'PVE',             // 打野怪/小兵 (Stage 1 全阶段, 以及 x-7)
+    CAROUSEL = 'CAROUSEL',   // 选秀环节 (x-4)
+    AUGMENT = 'AUGMENT',     // 海克斯强化选择环节 (2-1, 3-2, 4-2)
+    PVP = 'PVP',             // 正常的玩家对战 (其他回合)
+    UNKNOWN = 'UNKNOWN'      // 无法识别或不在游戏内
+}
+
+
+
+export enum TFTMode {
+    CLASSIC = 'CLASSIC',    //  经典模式，包括匹配和排位。
+    NORMAL = 'NORMAL',      //  匹配模式
+    RANK = 'RANK',          //  排位模式
+    CLOCKWORK_TRAILS,       //  PVE，发条鸟的试炼。
+}
+
+
 
 //  英雄购买槽坐标
 import {Point} from "@nut-tree-fork/nut-js";

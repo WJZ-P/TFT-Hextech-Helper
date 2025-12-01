@@ -5,11 +5,11 @@ import {app} from 'electron';
 import {logger} from "./Logger.ts";
 
 // -------------------------------------------------------------------
-// ✨ ConfigHelper 类的定义 ✨
-// Definition of the ConfigHelper class
+// ✨ GameConfigHelper 类的定义 ✨
+// Definition of the GameConfigHelper class
 // -------------------------------------------------------------------
-class ConfigHelper {
-    private static instance: ConfigHelper;
+class GameConfigHelper {
+    private static instance: GameConfigHelper;
     // 实例的属性，用来存储路径信息
     private readonly installPath: string;
     private readonly gameConfigPath: string;
@@ -41,19 +41,19 @@ class ConfigHelper {
      * @param installPath 游戏安装目录
      */
     public static init(installPath: string): void {
-        if (ConfigHelper.instance) {
-            console.warn("[ConfigHelper] ConfigHelper 已被初始化过！");
+        if (GameConfigHelper.instance) {
+            console.warn("[GameConfigHelper] GameConfigHelper 已被初始化过！");
             return;
         }
-        ConfigHelper.instance = new ConfigHelper(installPath);
+        GameConfigHelper.instance = new GameConfigHelper(installPath);
     }
 
-    public static getInstance(): ConfigHelper | null {
-        if (!ConfigHelper.instance) {
-            console.error("[ConfigHelper]ConfigHelper 还没有被初始化！请先在程序入口调用 init(installPath) 方法。");
+    public static getInstance(): GameConfigHelper | null {
+        if (!GameConfigHelper.instance) {
+            console.error("[GameConfigHelper]GameConfigHelper 还没有被初始化！请先在程序入口调用 init(installPath) 方法。");
             return null
         }
-        return ConfigHelper.instance;
+        return GameConfigHelper.instance;
     }
 
     // --- 核心功能方法 (Core Function Methods) ---
@@ -63,7 +63,7 @@ class ConfigHelper {
      * @description 把游戏目录的 Config 文件夹完整地拷贝到我们应用的备份目录里
      */
     public static async backup(): Promise<boolean> {
-        const instance = ConfigHelper.getInstance();
+        const instance = GameConfigHelper.getInstance();
         if (!instance) {
             //  LOL未启动
             return false
@@ -89,9 +89,9 @@ class ConfigHelper {
      * 应用预设的云顶设置
      */
     public static async applyTFTConfig(): Promise<boolean> {
-        const instance = ConfigHelper.getInstance();
+        const instance = GameConfigHelper.getInstance();
         if (!instance) {
-            logger.info("[ConfigHelper] restore错误。尚未初始化！")
+            logger.info("[GameConfigHelper] restore错误。尚未初始化！")
             return false
         }
         const pathExist = await fs.pathExists(instance.tftConfigPath)
@@ -117,9 +117,9 @@ class ConfigHelper {
      * @description 把我们备份的 Config 文件夹拷贝回游戏目录
      */
     public static async restore(): Promise<boolean> {
-        const instance = ConfigHelper.getInstance();
+        const instance = GameConfigHelper.getInstance();
         if (!instance) {
-            console.log("[ConfigHelper] restore错误。尚未初始化！")
+            console.log("[GameConfigHelper] restore错误。尚未初始化！")
             return false
         }
 
@@ -143,4 +143,4 @@ class ConfigHelper {
 }
 
 // 导出这个类，方便在其他地方 import
-export default ConfigHelper;
+export default GameConfigHelper;

@@ -14,13 +14,20 @@ import fs from "fs-extra";
 import {sleep} from "./utils/HelperTools";
 import {
     equipmentRegion,
-    fightBoardSlot, gameStageDisplayNormal, gameStageDisplayStageOne, gameStageDisplayTheClockworkTrails, shopSlot,
+    fightBoardSlot,
+    gameStageDisplayNormal,
+    gameStageDisplayStageOne,
+    gameStageDisplayTheClockworkTrails,
+    GameStageType,
+    shopSlot,
     shopSlotNameRegions,
-    TFT_15_CHAMPION_DATA, TFT_15_EQUIP_DATA,
-    TFTEquip,
+    TFT_15_CHAMPION_DATA,
+    TFT_15_EQUIP_DATA,
+    TFTEquip, TFTMode,
     TFTUnit
 } from "./TFTProtocol";
 import cv from "@techstark/opencv-js";
+import {GameMode} from "./lcu/utils/LCUProtocols";
 
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
@@ -62,11 +69,6 @@ export interface BoardState {
     cells: Map<BoardLocation, BoardUnit>;
 }
 
-//  当前下棋的游戏模式
-export enum GAME_TYPE {
-    CLASSIC,    //  经典
-    CLOCKWORK_TRAILS    //  PVE，发条鸟的试炼。
-}
 
 
 class TftOperator {
@@ -78,7 +80,7 @@ class TftOperator {
     //  用来判断棋子内容的Worker
     private chessWorker: Tesseract.Worker | null = null;
     //  当前的游戏模式
-    private gameType: GAME_TYPE;
+    private tftMode: TFTMode;
     //  当前战场状态，初始化为空 Map
     private currentBoardState: BoardState = {
         cells: new Map()
@@ -161,17 +163,16 @@ class TftOperator {
     }
 
     //  获取当前游戏阶段
-    public async getGameStage(): Promise<string | null> {
+    public async getGameStage(): Promise<GameStageType> {
         try {
             const worker = await this.getGameStageWorker();
-
             const normalRegion = this.getStageAbsoluteRegion(false);
             const normalPng = await this.captureRegionAsPng(normalRegion);
             let text = await this.ocr(normalPng, worker);
             console.log('[TftOperator] 普通区域识别：' + text)
 
             if (text !== "") {
-                this.gameType = GAME_TYPE.CLASSIC;
+                this.tftMode = TFTMode.CLASSIC;
                 return text;
             }
             // ======================================
@@ -187,7 +188,7 @@ class TftOperator {
             console.log('[TftOperator] Stage-One 识别：' + text);
 
             if (text !== "") {
-                this.gameType = GAME_TYPE.CLASSIC;
+                this.tftMode = TFTMode.CLASSIC;
                 return text;
             }
 
@@ -204,7 +205,7 @@ class TftOperator {
             console.log('[TftOperator] 发条鸟试炼识别：' + text);
 
             if (text !== "") {
-                this.gameType = GAME_TYPE.CLOCKWORK_TRAILS;
+                this.tftMode = TFTMode.CLOCKWORK_TRAILS;
                 return text;
             }
 
@@ -237,7 +238,7 @@ class TftOperator {
             //  处理得到png
             const processedPng = await this.captureRegionAsPng(tessRegion);
             //  识别图片
-            const {data: {text}} = await worker.recognize(processedPng)
+            const text = await this.ocr(processedPng,worker);
             let tftUnit: TFTUnit | null = null;
 
             let cleanName = text.replace(/\s/g, "")

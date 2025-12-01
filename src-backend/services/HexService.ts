@@ -4,8 +4,8 @@ import {IdleState} from "./states/IdleState.ts";
 import {EndState} from "./states/EndState.ts";
 import {StartState} from "./states/StartState.ts";
 import {sleep} from "../utils/HelperTools.ts";
-import configHelper from "../utils/ConfigHelper.ts";
-import ConfigHelper from "../utils/ConfigHelper.ts";
+import configHelper from "../utils/GameConfigHelper.ts";
+import GameConfigHelper from "../utils/GameConfigHelper.ts";
 
 //  海克斯科技核心逻辑！
 export class HexService {
@@ -73,9 +73,9 @@ export class HexService {
             this.abortController?.abort('user stop')
 
             //  这里做一个恢复备份设置的兜底，防止没有恢复备份
-            const configHelper = ConfigHelper.getInstance()
+            const configHelper = GameConfigHelper.getInstance()
             if(configHelper?.isTFTConfig === true){
-                await ConfigHelper.restore()
+                await GameConfigHelper.restore()
             }
             return true
         } catch (e: unknown) {

@@ -5376,14 +5376,14 @@ class ConfigHelper {
    */
   static init(installPath) {
     if (ConfigHelper.instance) {
-      console.warn("[ConfigHelper] ConfigHelper 已被初始化过！");
+      console.warn("[GameConfigHelper] GameConfigHelper 已被初始化过！");
       return;
     }
     ConfigHelper.instance = new ConfigHelper(installPath);
   }
   static getInstance() {
     if (!ConfigHelper.instance) {
-      console.error("[ConfigHelper]ConfigHelper 还没有被初始化！请先在程序入口调用 init(installPath) 方法。");
+      console.error("[GameConfigHelper]GameConfigHelper 还没有被初始化！请先在程序入口调用 init(installPath) 方法。");
       return null;
     }
     return ConfigHelper.instance;
@@ -5420,7 +5420,7 @@ class ConfigHelper {
   static async applyTFTConfig() {
     const instance = ConfigHelper.getInstance();
     if (!instance) {
-      logger.info("[ConfigHelper] restore错误。尚未初始化！");
+      logger.info("[GameConfigHelper] restore错误。尚未初始化！");
       return false;
     }
     const pathExist = await fs.pathExists(instance.tftConfigPath);
@@ -5445,7 +5445,7 @@ class ConfigHelper {
   static async restore() {
     const instance = ConfigHelper.getInstance();
     if (!instance) {
-      console.log("[ConfigHelper] restore错误。尚未初始化！");
+      console.log("[GameConfigHelper] restore错误。尚未初始化！");
       return false;
     }
     const backupExists = await fs.pathExists(instance.backupPath);
