@@ -23,11 +23,11 @@ import {
     shopSlotNameRegions,
     TFT_15_CHAMPION_DATA,
     TFT_15_EQUIP_DATA,
-    TFTEquip, TFTMode,
+    TFTEquip,
+    TFTMode,
     TFTUnit
 } from "./TFTProtocol";
 import cv from "@techstark/opencv-js";
-import {GameMode} from "./lcu/utils/LCUProtocols";
 
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
@@ -68,7 +68,6 @@ export interface BoardState {
     // 这样查询 "R1_C1 有没有人" 会非常快！
     cells: Map<BoardLocation, BoardUnit>;
 }
-
 
 
 class TftOperator {
@@ -165,58 +164,56 @@ class TftOperator {
     //  获取当前游戏阶段
     public async getGameStage(): Promise<GameStageType> {
         try {
+            //  定义一个小的辅助函数
+            const isValidStageFormat = (text: string): boolean => {
+                return /^d+\s*[-]\s*\d+$/.test(text.trim())
+            }
+
             const worker = await this.getGameStageWorker();
+            // 1. 尝试识别标准区域 (例如 2-1, 3-5, 4-2)
+            // 大多数时候都在这里
+            let stageText = "";
             const normalRegion = this.getStageAbsoluteRegion(false);
             const normalPng = await this.captureRegionAsPng(normalRegion);
-            let text = await this.ocr(normalPng, worker);
-            console.log('[TftOperator] 普通区域识别：' + text)
+            stageText = await this.ocr(normalPng, worker);
 
-            if (text !== "") {
+            // 2. 如果标准区域识别失败 (格式不对)，尝试识别 Stage 1 区域 (例如 1-1, 1-2)
+            // Stage 1 的 UI 位置通常比较特殊（在屏幕中间上方）
+            if (!isValidStageFormat(stageText)) {
+                logger.info(`[TftOperator] 标准区域识别未命中: "${stageText}"，尝试 Stage-1 区域...`);
+                const stageOneRegion = this.getStageAbsoluteRegion(true);
+                const stageOnePng = await this.captureRegionAsPng(stageOneRegion);
+                stageText = await this.ocr(stageOnePng, worker);
+            }
+            // 3. 再次校验，如果还是不行，检查是否为“发条鸟试炼”模式
+            // 发条鸟模式的阶段显示位置更靠左，因为阶段更多
+            if (!isValidStageFormat(stageText)) {
+                const clockworkRegion = this.getClockworkTrialsRegion();
+                const clockPng = await this.captureRegionAsPng(clockworkRegion);
+                const clockText = await this.ocr(clockPng, worker);
+
+                // 简单的文字检测，如果有文字，暂时默认为 PVP 或特殊处理
+                if (clockText && clockText.length > 2) {
+                    this.tftMode = TFTMode.CLOCKWORK_TRAILS;
+                    logger.info('[TftOperator] 识别为发条鸟试炼模式，直接返回PVP。');
+                    // 发条鸟主要是战斗，暂时返回 PVP
+                    return GameStageType.PVP;
+                }
+            }
+            // 4. 🧠 核心解析：把 "2-1" 这种字符串变成枚举
+            const stageType = this.parseStageStringToEnum(stageText);
+
+            if (stageType !== GameStageType.UNKNOWN) {
+                logger.info(`[TftOperator] 识别阶段: [${stageText}] -> 判定为: ${stageType}`);
                 this.tftMode = TFTMode.CLASSIC;
-                return text;
+            } else {
+                // 识别不到是正常的（比如加载中、黑屏、或者被挡住），静默处理即可
+                logger.warn(`[TftOperator] 无法识别当前阶段: "${stageText ?? 'null'}"`);
             }
-            // ======================================
-            // 2) 若失败，尝试识别经典模式 stage-one 区域
-            // ======================================
-            console.log('[TftOperator] 普通识别失败，尝试 Stage-One 区域…');
-
-            const stageOneRegion = this.getStageAbsoluteRegion(true);
-            const stageOnePng = await this.captureRegionAsPng(stageOneRegion);
-            //this.saveDebugImage('stage_one.png', stageOnePng);
-
-            text = await this.ocr(stageOnePng, worker);
-            console.log('[TftOperator] Stage-One 识别：' + text);
-
-            if (text !== "") {
-                this.tftMode = TFTMode.CLASSIC;
-                return text;
-            }
-
-            // ======================================
-            // 3) 若仍失败，则尝试发条鸟试炼（PVE）区域
-            // ======================================
-            console.log('[TftOperator] Stage-One 也失败，尝试发条鸟试炼模式…');
-
-            const clockworkRegion = this.getClockworkTrialsRegion();
-            const clockPng = await this.captureRegionAsPng(clockworkRegion);
-            //this.saveDebugImage('stage_clockwork.png', clockPng);
-
-            text = await this.ocr(clockPng, worker);
-            console.log('[TftOperator] 发条鸟试炼识别：' + text);
-
-            if (text !== "") {
-                this.tftMode = TFTMode.CLOCKWORK_TRAILS;
-                return text;
-            }
-
-            // 三种模式均识别失败
-            console.log('[TftOperator] 三种模式全部识别失败！');
-            return null;
-
+            return stageType;
         } catch (e: any) {
-            logger.error(`[TftOperator] nut-js textFinder 失败: ${e.message}`);
-            logger.error("请确保 @nut-tree/plugin-ocr 已正确安装和配置！");
-            return null;
+            logger.error(`[TftOperator] 阶段识别流程异常: ${e.message}`);
+            return GameStageType.UNKNOWN;
         }
     }
 
@@ -238,7 +235,7 @@ class TftOperator {
             //  处理得到png
             const processedPng = await this.captureRegionAsPng(tessRegion);
             //  识别图片
-            const text = await this.ocr(processedPng,worker);
+            const text = await this.ocr(processedPng, worker);
             let tftUnit: TFTUnit | null = null;
 
             let cleanName = text.replace(/\s/g, "")
@@ -541,9 +538,9 @@ class TftOperator {
     private async loadEquipTemplates() {
 
         if (this.equipTemplates.length > 0) {
-            for(const category of this.equipTemplates){
-                for(const mat of category.values()){
-                   if(mat && !mat.isDeleted()) mat.delete()
+            for (const category of this.equipTemplates) {
+                for (const mat of category.values()) {
+                    if (mat && !mat.isDeleted()) mat.delete()
                 }
             }
             this.equipTemplates.length = 0;
@@ -631,7 +628,7 @@ class TftOperator {
         //  refresh
         if (this.championTemplates.size > 0) {
             //  mat对象必须手动delete，因为它是指向C++内存地址的包装器
-             for (const mat of this.championTemplates.values()) {
+            for (const mat of this.championTemplates.values()) {
                 if (mat && !mat.isDeleted()) {
                     mat.delete();
                 }
@@ -814,7 +811,7 @@ class TftOperator {
      */
     private setupChampionTemplateWatcher() {
         if (!fs.existsSync(this.championTemplatePath)) fs.ensureDirSync(this.championTemplatePath)
-        let debounceTimer:NodeJS.Timeout
+        let debounceTimer: NodeJS.Timeout
         fs.watch(this.championTemplatePath, (event, filename) => {
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
@@ -823,6 +820,24 @@ class TftOperator {
             }, 500);
         })
     }
+
+}
+
+//  一些不依赖实例属性的方法
+
+//  将 "2-1" 这种字符串映射为游戏行为枚举
+function parseStageStringToEnum(stageText: string): GameStageType {
+    //  先判断是否是合法的字符串，如1-1,1-2什么的
+    const cleanText = stageText.replace(/\s/g, "");
+    const match = cleanText.match(/^(\d+)-(\d+)$/);
+    if (!match) return GameStageType.UNKNOWN;
+    const stage = parseInt(match[1]); // 大阶段 (如 2)
+    const round = parseInt(match[2]); // 小回合 (如 1)
+
+    //  根据stage和round判断当前阶段
+    if (stage === 1) return GameStageType.PVE    //  第一阶段全是打野怪。
+
+
 }
 
 export const tftOperator = TftOperator.getInstance();
