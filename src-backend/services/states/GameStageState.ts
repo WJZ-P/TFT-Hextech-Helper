@@ -34,7 +34,7 @@ export class GameStageState implements IState{
                 break;
         }
 
-        await sleep(2000); // 降低频率，避免高频 OCR 占用 CPU
+        await sleep(1000); // 降低频率，避免高频 OCR 占用 CPU
         return this; // 暂时保持在这个状态循环，直到写好子状态
     }
 }

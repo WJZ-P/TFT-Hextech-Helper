@@ -5348,7 +5348,7 @@ function requireRegister() {
   return register;
 }
 requireRegister();
-class ConfigHelper {
+class GameConfigHelper {
   static instance;
   // 实例的属性，用来存储路径信息
   installPath;
@@ -5375,18 +5375,18 @@ class ConfigHelper {
    * @param installPath 游戏安装目录
    */
   static init(installPath) {
-    if (ConfigHelper.instance) {
+    if (GameConfigHelper.instance) {
       console.warn("[GameConfigHelper] GameConfigHelper 已被初始化过！");
       return;
     }
-    ConfigHelper.instance = new ConfigHelper(installPath);
+    GameConfigHelper.instance = new GameConfigHelper(installPath);
   }
   static getInstance() {
-    if (!ConfigHelper.instance) {
+    if (!GameConfigHelper.instance) {
       console.error("[GameConfigHelper]GameConfigHelper 还没有被初始化！请先在程序入口调用 init(installPath) 方法。");
       return null;
     }
-    return ConfigHelper.instance;
+    return GameConfigHelper.instance;
   }
   // --- 核心功能方法 (Core Function Methods) ---
   /**
@@ -5394,7 +5394,7 @@ class ConfigHelper {
    * @description 把游戏目录的 Config 文件夹完整地拷贝到我们应用的备份目录里
    */
   static async backup() {
-    const instance = ConfigHelper.getInstance();
+    const instance = GameConfigHelper.getInstance();
     if (!instance) {
       return false;
     }
@@ -5418,7 +5418,7 @@ class ConfigHelper {
    * 应用预设的云顶设置
    */
   static async applyTFTConfig() {
-    const instance = ConfigHelper.getInstance();
+    const instance = GameConfigHelper.getInstance();
     if (!instance) {
       logger.info("[GameConfigHelper] restore错误。尚未初始化！");
       return false;
@@ -5443,7 +5443,7 @@ class ConfigHelper {
    * @description 把我们备份的 Config 文件夹拷贝回游戏目录
    */
   static async restore() {
-    const instance = ConfigHelper.getInstance();
+    const instance = GameConfigHelper.getInstance();
     if (!instance) {
       console.log("[GameConfigHelper] restore错误。尚未初始化！");
       return false;
@@ -5508,12 +5508,27 @@ function debounce(func, delay) {
 class EndState {
   async action() {
     logger.info("正在恢复客户端设置...");
-    await ConfigHelper.restore();
+    await GameConfigHelper.restore();
     logger.info("客户端设置恢复完成");
     logger.info("[HexService] 海克斯科技关闭。");
     return new IdleState();
   }
 }
+var GameStageType = /* @__PURE__ */ ((GameStageType2) => {
+  GameStageType2["PVE"] = "PVE";
+  GameStageType2["CAROUSEL"] = "CAROUSEL";
+  GameStageType2["AUGMENT"] = "AUGMENT";
+  GameStageType2["PVP"] = "PVP";
+  GameStageType2["UNKNOWN"] = "UNKNOWN";
+  return GameStageType2;
+})(GameStageType || {});
+var TFTMode = /* @__PURE__ */ ((TFTMode2) => {
+  TFTMode2["CLASSIC"] = "CLASSIC";
+  TFTMode2["NORMAL"] = "NORMAL";
+  TFTMode2["RANK"] = "RANK";
+  TFTMode2[TFTMode2["CLOCKWORK_TRAILS"] = void 0] = "CLOCKWORK_TRAILS";
+  return TFTMode2;
+})(TFTMode || {});
 const shopSlot = {
   SHOP_SLOT_1: new Point(240, 700),
   SHOP_SLOT_2: new Point(380, 700),
@@ -7305,7 +7320,7 @@ class TftOperator {
   //  用来判断棋子内容的Worker
   chessWorker = null;
   //  当前的游戏模式
-  gameType;
+  tftMode;
   //  当前战场状态，初始化为空 Map
   currentBoardState = {
     cells: /* @__PURE__ */ new Map()
@@ -7368,39 +7383,41 @@ class TftOperator {
   //  获取当前游戏阶段
   async getGameStage() {
     try {
+      const isValidStageFormat = (text) => {
+        return /^d+\s*[-]\s*\d+$/.test(text.trim());
+      };
       const worker = await this.getGameStageWorker();
+      let stageText = "";
       const normalRegion = this.getStageAbsoluteRegion(false);
       const normalPng = await this.captureRegionAsPng(normalRegion);
-      let text = await this.ocr(normalPng, worker);
-      console.log("[TftOperator] 普通区域识别：" + text);
-      if (text !== "") {
-        this.gameType = 0;
-        return text;
+      stageText = await this.ocr(normalPng, worker);
+      if (!isValidStageFormat(stageText)) {
+        logger.info(`[TftOperator] 标准区域识别未命中: "${stageText}"，尝试 Stage-1 区域...`);
+        const stageOneRegion = this.getStageAbsoluteRegion(true);
+        const stageOnePng = await this.captureRegionAsPng(stageOneRegion);
+        stageText = await this.ocr(stageOnePng, worker);
       }
-      console.log("[TftOperator] 普通识别失败，尝试 Stage-One 区域…");
-      const stageOneRegion = this.getStageAbsoluteRegion(true);
-      const stageOnePng = await this.captureRegionAsPng(stageOneRegion);
-      text = await this.ocr(stageOnePng, worker);
-      console.log("[TftOperator] Stage-One 识别：" + text);
-      if (text !== "") {
-        this.gameType = 0;
-        return text;
+      if (!isValidStageFormat(stageText)) {
+        const clockworkRegion = this.getClockworkTrialsRegion();
+        const clockPng = await this.captureRegionAsPng(clockworkRegion);
+        const clockText = await this.ocr(clockPng, worker);
+        if (clockText && clockText.length > 2) {
+          this.tftMode = TFTMode.CLOCKWORK_TRAILS;
+          logger.info("[TftOperator] 识别为发条鸟试炼模式，直接返回PVP。");
+          return GameStageType.PVP;
+        }
       }
-      console.log("[TftOperator] Stage-One 也失败，尝试发条鸟试炼模式…");
-      const clockworkRegion = this.getClockworkTrialsRegion();
-      const clockPng = await this.captureRegionAsPng(clockworkRegion);
-      text = await this.ocr(clockPng, worker);
-      console.log("[TftOperator] 发条鸟试炼识别：" + text);
-      if (text !== "") {
-        this.gameType = 1;
-        return text;
+      const stageType = parseStageStringToEnum(stageText);
+      if (stageType !== GameStageType.UNKNOWN) {
+        logger.info(`[TftOperator] 识别阶段: [${stageText}] -> 判定为: ${stageType}`);
+        this.tftMode = TFTMode.CLASSIC;
+      } else {
+        logger.warn(`[TftOperator] 无法识别当前阶段: "${stageText ?? "null"}"`);
       }
-      console.log("[TftOperator] 三种模式全部识别失败！");
-      return null;
+      return stageType;
     } catch (e) {
-      logger.error(`[TftOperator] nut-js textFinder 失败: ${e.message}`);
-      logger.error("请确保 @nut-tree/plugin-ocr 已正确安装和配置！");
-      return null;
+      logger.error(`[TftOperator] 阶段识别流程异常: ${e.message}`);
+      return GameStageType.UNKNOWN;
     }
   }
   /**
@@ -7420,7 +7437,7 @@ class TftOperator {
         simpleRegion.rightBottom.y - simpleRegion.leftTop.y
       );
       const processedPng = await this.captureRegionAsPng(tessRegion);
-      const { data: { text } } = await worker.recognize(processedPng);
+      const text = await this.ocr(processedPng, worker);
       let tftUnit = null;
       let cleanName = text.replace(/\s/g, "");
       tftUnit = TFT_15_CHAMPION_DATA[cleanName];
@@ -7851,11 +7868,44 @@ class TftOperator {
     });
   }
 }
+function parseStageStringToEnum(stageText) {
+  try {
+    const cleanText = stageText.replace(/\s/g, "");
+    const match = cleanText.match(/^(\d+)-(\d+)$/);
+    if (!match) return GameStageType.UNKNOWN;
+    const stage = parseInt(match[1]);
+    const round = parseInt(match[2]);
+    if (stage === 1) return GameStageType.PVE;
+    if (round === 2) return GameStageType.AUGMENT;
+    if (round === 4) return GameStageType.CAROUSEL;
+    if (round === 7) return GameStageType.PVE;
+    return GameStageType.PVP;
+  } catch (e) {
+    console.log(e);
+    return GameStageType.UNKNOWN;
+  }
+}
 const tftOperator = TftOperator.getInstance();
 class GameStageState {
   async action(signal) {
-    await tftOperator.getGameStage();
-    await sleep(3e3);
+    const currentGameStage = await tftOperator.getGameStage();
+    switch (currentGameStage) {
+      case GameStageType.PVE:
+        logger.info("[GameStageState] 正在打野怪，准备捡球...");
+        break;
+      case GameStageType.CAROUSEL:
+        logger.info("[GameStageState] 选秀环节，准备抢装备...");
+        break;
+      case GameStageType.AUGMENT:
+        logger.info("[GameStageState] 海克斯选择环节，准备分析...");
+        break;
+      case GameStageType.PVP:
+        logger.info("[GameStageState] 玩家对战环节，准备战斗...");
+        break;
+      case GameStageType.UNKNOWN:
+        break;
+    }
+    await sleep(1e3);
     return this;
   }
 }
@@ -7975,9 +8025,9 @@ class StartState {
       return new IdleState();
     }
     logger.info("[HexService] 正在备份当前客户端配置...");
-    await ConfigHelper.backup();
+    await GameConfigHelper.backup();
     logger.info("[HexService] 正在应用云顶之弈配置...");
-    await ConfigHelper.applyTFTConfig();
+    await GameConfigHelper.applyTFTConfig();
     try {
       await inGameApi.get("/liveclientdata/allgamedata");
       logger.info("[HexService] 检测到游戏已开启，流转到GameStageState");
@@ -8045,9 +8095,9 @@ class HexService {
       logger.info("———————— [HexService] ————————");
       logger.info("[HexService] 海克斯科技，关闭！");
       this.abortController?.abort("user stop");
-      const configHelper2 = ConfigHelper.getInstance();
+      const configHelper2 = GameConfigHelper.getInstance();
       if (configHelper2?.isTFTConfig === true) {
-        await ConfigHelper.restore();
+        await GameConfigHelper.restore();
       }
       return true;
     } catch (e) {
@@ -8086,11 +8136,6 @@ class HexService {
   }
 }
 const hexService = HexService.getInstance();
-var TFTMode = /* @__PURE__ */ ((TFTMode2) => {
-  TFTMode2["NORMAL"] = "NORMAL";
-  TFTMode2["RANK"] = "RANK";
-  return TFTMode2;
-})(TFTMode || {});
 class SettingsStore {
   static instance;
   store;
@@ -8130,6 +8175,7 @@ class SettingsStore {
   setMultiple(settings) {
     this.store.set(settings);
   }
+  //  返回的是unsubscribe，方便取消订阅
   onDidChange(key, callback) {
     return this.store.onDidChange(key, callback);
   }
@@ -8204,7 +8250,7 @@ function init() {
     console.log("LOL客户端已登录！", data);
     sendToRenderer("lcu-connect", data);
     const lcuManager = LCUManager.init(data);
-    ConfigHelper.init(data.installDirectory);
+    GameConfigHelper.init(data.installDirectory);
     lcuManager.start();
     lcuManager.on("connect", async () => {
       sendToRenderer("lcu-connect", data);
@@ -8247,8 +8293,8 @@ function registerHandler() {
       return { error: e.message };
     }
   });
-  ipcMain.handle(IpcChannel.CONFIG_BACKUP, async (event) => ConfigHelper.backup());
-  ipcMain.handle(IpcChannel.CONFIG_RESTORE, async (event) => ConfigHelper.restore());
+  ipcMain.handle(IpcChannel.CONFIG_BACKUP, async (event) => GameConfigHelper.backup());
+  ipcMain.handle(IpcChannel.CONFIG_RESTORE, async (event) => GameConfigHelper.restore());
   ipcMain.handle(IpcChannel.HEX_START, async (event) => hexService.start());
   ipcMain.handle(IpcChannel.HEX_STOP, async (event) => hexService.stop());
   ipcMain.handle(IpcChannel.TFT_BUY_AT_SLOT, async (event, slot) => tftOperator.buyAtSlot(slot));

@@ -13,6 +13,7 @@ import sharp from 'sharp';
 import fs from "fs-extra";
 import {sleep} from "./utils/HelperTools";
 import {
+    benchSlotPoint,
     equipmentRegion,
     fightBoardSlot,
     gameStageDisplayNormal,
@@ -62,14 +63,6 @@ export interface BoardUnit {
     items: string[]
 }
 
-// 整个棋盘的快照状态
-export interface BoardState {
-    // 使用 Map 来存储，Key 是位置，Value 是棋子
-    // 这样查询 "R1_C1 有没有人" 会非常快！
-    cells: Map<BoardLocation, BoardUnit>;
-}
-
-
 class TftOperator {
     private static instance: TftOperator;
     //  缓存游戏窗口的左上角坐标
@@ -80,12 +73,12 @@ class TftOperator {
     private chessWorker: Tesseract.Worker | null = null;
     //  当前的游戏模式
     private tftMode: TFTMode;
-    //  当前战场状态，初始化为空 Map
-    private currentBoardState: BoardState = {
-        cells: new Map()
-    };
+    //  当前战场上的棋子状态，初始化为空 Map
+    private currentBoardState:Map<BoardLocation,TFTUnit|null> = new Map()
     //  当前装备状态。
     private currentEquipState: TFTEquip[] = [];
+    //  当前备战席状态。
+    private currentBenchState: TFTUnit[] = [];
     // 缓存装备图片模板 (分层存储)
     private equipTemplates: Array<Map<string, cv.Mat>> = [];
     // 缓存商店栏英雄ID模板
@@ -376,6 +369,17 @@ class TftOperator {
         await this.clickAt(targetPoint);
     }
 
+    /**
+     * 获取当前备战席的棋子信息。
+     */
+    public async getBunchInfo():Promise<BoardUnit[]> {
+        const result:BoardUnit[] = [];
+        for(const benchSlotLocation of benchSlotPoint){
+            //先用鼠标右键点击槽位，以在右侧显示详细信息。
+            /// TODO: 实现
+        }
+    }
+
     // ----------------------   这下面都是private方法  ----------------------
 
 
@@ -398,9 +402,9 @@ class TftOperator {
             const nutPoint = new Point(target.x, target.y);
 
             await mouse.move([nutPoint]);
-            await new Promise(resolve => setTimeout(resolve, 30));
+            await sleep(10);    //  每次鼠标操作给定一定的间隔时间
             await mouse.click(Button.LEFT);
-            await new Promise(resolve => setTimeout(resolve, 50));
+            await sleep(20);
         } catch (e: any) {
             logger.error(`[TftOperator] 模拟鼠标点击失败: ${e.message}`);
         }
@@ -841,7 +845,7 @@ function parseStageStringToEnum(stageText: string): GameStageType {
         if (round === 4) return GameStageType.CAROUSEL  //  第四回合选秀
         if (round === 7) return GameStageType.PVE        //  第七回合打野怪
         return GameStageType.PVP    //  其他的阶段直接进行玩家对战，无额外内容
-    }catch (e){
+    } catch (e) {
         console.log(e)
         return GameStageType.UNKNOWN;
     }

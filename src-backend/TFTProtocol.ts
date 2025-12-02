@@ -155,7 +155,7 @@ export const fightBoardSlot = {
     R4_C7: new Point(780, 475),
 }
 //  备战席
-export const benchSlot = { //  x+=75
+export const benchSlotPoint = { //  x+=75
     SLOT_1: new Point(135, 555),
     SLOT_2: new Point(210, 555),
     SLOT_3: new Point(285, 555),
