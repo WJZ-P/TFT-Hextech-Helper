@@ -13,7 +13,7 @@ import sharp from 'sharp';
 import fs from "fs-extra";
 import {sleep} from "./utils/HelperTools";
 import {
-    benchSlotPoint,
+    benchSlotPoints, detailChampionNameRegion,
     equipmentRegion,
     fightBoardSlot,
     gameStageDisplayNormal,
@@ -74,7 +74,7 @@ class TftOperator {
     //  当前的游戏模式
     private tftMode: TFTMode;
     //  当前战场上的棋子状态，初始化为空 Map
-    private currentBoardState:Map<BoardLocation,TFTUnit|null> = new Map()
+    private currentBoardState: Map<BoardLocation, TFTUnit | null> = new Map()
     //  当前装备状态。
     private currentEquipState: TFTEquip[] = [];
     //  当前备战席状态。
@@ -372,11 +372,71 @@ class TftOperator {
     /**
      * 获取当前备战席的棋子信息。
      */
-    public async getBunchInfo():Promise<BoardUnit[]> {
-        const result:BoardUnit[] = [];
-        for(const benchSlotLocation of benchSlotPoint){
-            //先用鼠标右键点击槽位，以在右侧显示详细信息。
-            /// TODO: 实现
+    public async getBunchInfo(): Promise<BoardUnit[]> {
+        const result: BoardUnit[] = [];
+        //  拿到我们的worker。
+        const worker = this.getChessWorker();
+        for (const benchSlot of Object.keys(benchSlotPoints)) {
+            // TODO 这里还需要判断英雄的星级
+
+            //  先用鼠标右键点击槽位，以在右侧显示详细信息。
+            await this.clickAt(benchSlotPoints[benchSlot]);
+            await sleep(40);    //  下棋配置是25帧每秒，因此这里要等待一点时间以刷新画面。
+
+            const simpleRegion = detailChampionNameRegion[benchSlot]
+            const tessRegion = new Region(this.gameWindowRegion.x + simpleRegion.leftTop.x,
+                this.gameWindowRegion.y + simpleRegion.leftTop.y,
+                simpleRegion.rightBottom.x - simpleRegion.leftTop.x,
+                simpleRegion.rightBottom.y - simpleRegion.leftTop.y
+            )
+            //  处理得到png
+            const processedPng = await this.captureRegionAsPng(tessRegion);
+            //  识别图片
+            const text = await this.ocr(processedPng, worker);
+            let tftUnit: TFTUnit | null = null;
+
+            let cleanName = text.replace(/\s/g, "")
+            //  看能否从OCR结果中找到匹配的英雄
+            tftUnit = TFT_15_CHAMPION_DATA[cleanName];
+
+            if (!tftUnit) {
+                logger.warn(`[备战席槽位${benchSlot.slice(-1)}] OCR识别失败！尝试模板匹配...`);
+                //  模板匹配兜底
+                const rawData = await sharp(processedPng)
+                    .ensureAlpha()//    如果用matFromImageData，必须保证有A才行。
+                    .raw()
+                    .toBuffer({resolveWithObject: true});
+                const processedMat = cv.matFromImageData({
+                    data: new Uint8Array(rawData.data),
+                    width: rawData.info.width,
+                    height: rawData.info.height
+                })
+                cleanName = this.findBestMatchChampionTemplate(processedMat)
+            }
+
+            //  从数据集中找到对应英雄
+            tftUnit = TFT_15_CHAMPION_DATA[cleanName];
+            if (tftUnit) {
+                logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别成功-> ${tftUnit.displayName}-(${tftUnit.price}费)`);
+                shopUnits.push(tftUnit)
+            } else {
+                // 没找到 (可能是空槽位，或者识别错误)
+                if (cleanName?.length > 0) {
+                    if (cleanName === "empty")
+                        logger.info(`[商店槽位 ${i}] 识别为空槽位`);
+                    else
+                        logger.warn(`[商店槽位 ${i}] 成功匹配到模板，但识别到未知名称: ${cleanName}，请检查是否拼写有误！`);
+                    // const filename = `fail_slot_${i}_${Date.now()}.png`;
+                    // fs.writeFileSync(path.join(this.championTemplatePath, filename), processedPng);
+                } else {
+                    //  把识别失败的截图保存到本地
+                    logger.warn(`[商店槽位 ${i}] 识别失败，保存截图...`);
+                    const filename = `fail_slot_${i}_${Date.now()}.png`;
+                    fs.writeFileSync(path.join(this.championTemplatePath, filename), processedPng);
+                }
+
+                shopUnits.push(null);// 放入一个null占位
+            }
         }
     }
 

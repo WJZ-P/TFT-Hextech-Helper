@@ -13,14 +13,12 @@ export enum GameStageType {
 }
 
 
-
 export enum TFTMode {
     CLASSIC = 'CLASSIC',    //  经典模式，包括匹配和排位。
     NORMAL = 'NORMAL',      //  匹配模式
     RANK = 'RANK',          //  排位模式
     CLOCKWORK_TRAILS,       //  PVE，发条鸟的试炼。
 }
-
 
 
 //  英雄购买槽坐标
@@ -56,10 +54,15 @@ export const shopSlotNameRegions = {
         rightBottom: {x: 854, y: 758}
     },
 }
-//选中英雄时，右侧英雄详情的英雄idregion，必须分毫不差以复用商店英雄名称模板！
+//  选中英雄时，右侧英雄详情的英雄idregion，必须分毫不差以复用商店英雄名称模板！
 export const detailChampionNameRegion = {
-    leftTop: {x:870,y:226},
-    rightBottom:{x:978,y:244},
+    leftTop: {x: 870, y: 226},
+    rightBottom: {x: 978, y: 244},
+}
+//  选中英雄时，右侧查看英雄星级的
+export const detailChampionStarRegion = {
+    leftTop: {x: 919, y: 122},
+    rightBottom: {x: 974, y: 132}
 }
 
 //  装备槽位坐标
@@ -155,7 +158,7 @@ export const fightBoardSlot = {
     R4_C7: new Point(780, 475),
 }
 //  备战席
-export const benchSlotPoint = { //  x+=75
+export const benchSlotPoints = { //  x+=75
     SLOT_1: new Point(135, 555),
     SLOT_2: new Point(210, 555),
     SLOT_3: new Point(285, 555),
