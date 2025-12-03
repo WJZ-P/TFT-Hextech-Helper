@@ -53,14 +53,20 @@ export interface ShopUnit {
 
 //  战斗棋盘上的棋子位置
 export type BoardLocation = keyof typeof fightBoardSlot;
-
-
 //  棋盘上的一个棋子单位
 export interface BoardUnit {
     location: BoardLocation;   //  位置信息
     tftUnit: TFTUnit;         //  棋子信息
     starLevel: 1 | 2 | 3 | 4;         //  棋子星级
-    items: string[]
+    equips: TFTEquip[]
+}
+export type BenchLocation = keyof typeof benchSlotPoints;
+//  备战席上的一个单位
+export interface BenchUnit {
+    location: BenchLocation;   //  位置信息
+    tftUnit: TFTUnit;         //  棋子信息
+    starLevel: 1 | 2 | 3 | 4;         //  棋子星级
+    equips: TFTEquip[]
 }
 
 class TftOperator {
@@ -267,7 +273,7 @@ class TftOperator {
                 } else {
                     //  把识别失败的截图保存到本地
                     logger.warn(`[商店槽位 ${i}] 识别失败，保存截图...`);
-                    const filename = `fail_slot_${i}_${Date.now()}.png`;
+                    const filename = `fail_shop_slot_${i}_${Date.now()}.png`;
                     fs.writeFileSync(path.join(this.championTemplatePath, filename), processedPng);
                 }
 
@@ -372,8 +378,8 @@ class TftOperator {
     /**
      * 获取当前备战席的棋子信息。
      */
-    public async getBunchInfo(): Promise<BoardUnit[]> {
-        const result: BoardUnit[] = [];
+    public async getBunchInfo(): Promise<BenchUnit[]> {
+        const benchUnits: BenchUnit[] = [];
         //  拿到我们的worker。
         const worker = this.getChessWorker();
         for (const benchSlot of Object.keys(benchSlotPoints)) {
@@ -418,26 +424,35 @@ class TftOperator {
             tftUnit = TFT_15_CHAMPION_DATA[cleanName];
             if (tftUnit) {
                 logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别成功-> ${tftUnit.displayName}-(${tftUnit.price}费)`);
-                shopUnits.push(tftUnit)
+                //  组装一下
+                const benchUnit: BenchUnit = {
+                    location: benchSlot as BenchLocation,
+                    tftUnit: tftUnit,         //  棋子信息
+                    starLevel: 1,             //  棋子星级
+                    equips: []
+                }
+                //  TODO 这里需要完善星级和装备探测
+                benchUnits.push(benchUnit)
             } else {
                 // 没找到 (可能是空槽位，或者识别错误)
                 if (cleanName?.length > 0) {
                     if (cleanName === "empty")
-                        logger.info(`[商店槽位 ${i}] 识别为空槽位`);
+                        logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别为空槽位`);
                     else
-                        logger.warn(`[商店槽位 ${i}] 成功匹配到模板，但识别到未知名称: ${cleanName}，请检查是否拼写有误！`);
+                        logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] 成功匹配到模板，但识别到未知名称: ${cleanName}，请检查是否拼写有误！`);
                     // const filename = `fail_slot_${i}_${Date.now()}.png`;
                     // fs.writeFileSync(path.join(this.championTemplatePath, filename), processedPng);
                 } else {
                     //  把识别失败的截图保存到本地
-                    logger.warn(`[商店槽位 ${i}] 识别失败，保存截图...`);
-                    const filename = `fail_slot_${i}_${Date.now()}.png`;
+                    logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] 识别失败，保存截图...`);
+                    const filename = `fail_bench_slot_${benchSlot.slice(-1)}_${Date.now()}.png`;
                     fs.writeFileSync(path.join(this.championTemplatePath, filename), processedPng);
                 }
 
-                shopUnits.push(null);// 放入一个null占位
+                benchUnits.push(null);// 放入一个null占位
             }
         }
+        return benchUnits;
     }
 
     // ----------------------   这下面都是private方法  ----------------------
