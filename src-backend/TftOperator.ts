@@ -13,7 +13,7 @@ import sharp from 'sharp';
 import fs from "fs-extra";
 import {sleep} from "./utils/HelperTools";
 import {
-    benchSlotPoints, detailChampionNameRegion,
+    benchSlotPoints, detailChampionNameRegion, detailChampionStarRegion,
     equipmentRegion,
     fightBoardSlot,
     gameStageDisplayNormal,
@@ -53,6 +53,7 @@ export interface ShopUnit {
 
 //  战斗棋盘上的棋子位置
 export type BoardLocation = keyof typeof fightBoardSlot;
+
 //  棋盘上的一个棋子单位
 export interface BoardUnit {
     location: BoardLocation;   //  位置信息
@@ -60,7 +61,9 @@ export interface BoardUnit {
     starLevel: 1 | 2 | 3 | 4;         //  棋子星级
     equips: TFTEquip[]
 }
+
 export type BenchLocation = keyof typeof benchSlotPoints;
+
 //  备战席上的一个单位
 export interface BenchUnit {
     location: BenchLocation;   //  位置信息
@@ -70,6 +73,7 @@ export interface BenchUnit {
 }
 
 class TftOperator {
+
     private static instance: TftOperator;
     //  缓存游戏窗口的左上角坐标
     private gameWindowRegion: Point | null;
@@ -89,6 +93,8 @@ class TftOperator {
     private equipTemplates: Array<Map<string, cv.Mat>> = [];
     // 缓存商店栏英雄ID模板
     private championTemplates: Map<string, cv.Mat> = new Map();
+    // 缓存星级模板
+    private starLevelTemplates:Map<string,cv.Mat> = new Map();
 
     // ⚡️ 全黑的空装备槽位模板，宽高均为24
     private emptyEquipSlotTemplate: cv.Mat = null;
@@ -111,6 +117,8 @@ class TftOperator {
             this.loadEquipTemplates();
             // 加载英雄ID模板
             this.loadChampionTemplates();
+            // 加载星级模板
+            this.loadStarLevelTemplates();
             // 启动文件监听
             this.setupChampionTemplateWatcher();
         };
@@ -225,12 +233,7 @@ class TftOperator {
         const shopUnits: TFTUnit[] = [];
         for (let i = 1; i <= 5; i++) {
             const slotKey = `SLOT_${i}` as keyof typeof shopSlotNameRegions
-            const simpleRegion = shopSlotNameRegions[slotKey]
-            const tessRegion = new Region(this.gameWindowRegion.x + simpleRegion.leftTop.x,
-                this.gameWindowRegion.y + simpleRegion.leftTop.y,
-                simpleRegion.rightBottom.x - simpleRegion.leftTop.x,
-                simpleRegion.rightBottom.y - simpleRegion.leftTop.y
-            )
+            const tessRegion = this.getRealRegion(shopSlotNameRegions[slotKey])
             //  处理得到png
             const processedPng = await this.captureRegionAsPng(tessRegion);
             //  识别图片
@@ -388,13 +391,7 @@ class TftOperator {
             //  先用鼠标右键点击槽位，以在右侧显示详细信息。
             await this.clickAt(benchSlotPoints[benchSlot]);
             await sleep(40);    //  下棋配置是25帧每秒，因此这里要等待一点时间以刷新画面。
-
-            const simpleRegion = detailChampionNameRegion[benchSlot]
-            const tessRegion = new Region(this.gameWindowRegion.x + simpleRegion.leftTop.x,
-                this.gameWindowRegion.y + simpleRegion.leftTop.y,
-                simpleRegion.rightBottom.x - simpleRegion.leftTop.x,
-                simpleRegion.rightBottom.y - simpleRegion.leftTop.y
-            )
+            const tessRegion = this.getRealRegion(detailChampionNameRegion[benchSlot])
             //  处理得到png
             const processedPng = await this.captureRegionAsPng(tessRegion);
             //  识别图片
@@ -423,12 +420,29 @@ class TftOperator {
             //  从数据集中找到对应英雄
             tftUnit = TFT_15_CHAMPION_DATA[cleanName];
             if (tftUnit) {
-                logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别成功-> ${tftUnit.displayName}-(${tftUnit.price}费)`);
+                //  星级探测，看当前的棋子是多少星
+                const tessRegion = this.getRealRegion(detailChampionStarRegion)
+                const starPng = await this.captureRegionAsPng(tessRegion)
+                //  做模板匹配
+
+                const rawData = await sharp(starPng)
+                    .ensureAlpha()//    如果用matFromImageData，必须保证有A才行。
+                    .raw()
+                    .toBuffer({resolveWithObject: true});
+                const processedMat = cv.matFromImageData({
+                    data: new Uint8Array(rawData.data),
+                    width: rawData.info.width,
+                    height: rawData.info.height
+                })
+
+                const starLevel = await this.findBestMatchStarLevel(processedMat);
+
+                logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别成功-> ${tftUnit.displayName}-(${tftUnit.price}费-${starLevel}星)`);
                 //  组装一下
                 const benchUnit: BenchUnit = {
                     location: benchSlot as BenchLocation,
                     tftUnit: tftUnit,         //  棋子信息
-                    starLevel: 1,             //  棋子星级
+                    starLevel: starLevel,             //  棋子星级
                     equips: []
                 }
                 //  TODO 这里需要完善星级和装备探测
@@ -454,6 +468,7 @@ class TftOperator {
         }
         return benchUnits;
     }
+
 
     // ----------------------   这下面都是private方法  ----------------------
 
@@ -598,7 +613,7 @@ class TftOperator {
         return result.data.text.trim();
     }
 
-    //  发条鸟试炼的布局
+    //  发条鸟试炼的对局阶段region，1-1的那个
     private getClockworkTrialsRegion(): Region {
         const originX = this.gameWindowRegion!.x;
         const originY = this.gameWindowRegion!.y;
@@ -754,6 +769,13 @@ class TftOperator {
     }
 
     /**
+     * 加载星级模板
+     */
+    private async loadStarLevelTemplates(){
+        // TODO 实现
+    }
+
+    /**
      *  传入一个Mat对象，并从图片模板中找到最匹配的装备，规定如果category为empty即为空模板。
      */
     private findBestMatchEquipTemplate(targetMat: cv.Mat): IdentifiedEquip | null {
@@ -886,6 +908,15 @@ class TftOperator {
     }
 
     /**
+     *  寻找某个英雄匹配的星级，模板来源为右键点击英雄，可以在右侧看到英雄的详细信息
+     */
+    private async findBestMatchStarLevel(targetMat: cv.Mat): Promise<1 | 2 | 3 | 4 | null> {
+        // TODO: 实现
+
+        return 1;
+    }
+
+    /**
      * 监听英雄模板文件夹变更
      */
     private setupChampionTemplateWatcher() {
@@ -898,6 +929,20 @@ class TftOperator {
                 this.loadChampionTemplates()
             }, 500);
         })
+    }
+
+    /**
+     * region转换，把自己定义的simpleRegion转换成实际屏幕中的region
+     */
+    private getRealRegion(simpleRegion: {
+        leftTop: { x: number, y: number },
+        rightBottom: { x: number, y: number }
+    }): Region {
+        return new Region(this.gameWindowRegion.x + simpleRegion.leftTop.x,
+            this.gameWindowRegion.y + simpleRegion.leftTop.y,
+            simpleRegion.rightBottom.x - simpleRegion.leftTop.x,
+            simpleRegion.rightBottom.y - simpleRegion.leftTop.y
+        )
     }
 
 }
