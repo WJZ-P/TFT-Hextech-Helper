@@ -218,3 +218,5 @@ export const TFT_15_JOB = [
         "job_color_list": "1:1"
     }
 ]
+
+export const TFT_16

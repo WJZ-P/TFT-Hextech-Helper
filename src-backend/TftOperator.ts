@@ -109,6 +109,11 @@ class TftOperator {
         return path.join(process.env.VITE_PUBLIC || '.', 'resources/assets/images/equipment');
     }
 
+    //  星级路径
+    private get starLevelTemplatePath(): string{
+        return path.join(process.env.VITE_PUBLIC || '.', 'resources/assets/images/starLevel');
+    }
+
     private constructor() {
         cv['onRuntimeInitialized'] = () => {
             this.emptyEquipSlotTemplate = new cv.Mat(24, 24, cv.CV_8UC4, new cv.Scalar(0, 0, 0, 255))
@@ -772,7 +777,50 @@ class TftOperator {
      * 加载星级模板
      */
     private async loadStarLevelTemplates(){
-        // TODO 实现
+        if (this.starLevelTemplates.size > 0) {
+            //  mat对象必须手动delete，因为它是指向C++内存地址的包装器
+            for (const mat of this.starLevelTemplates.values()) {
+                if (mat && !mat.isDeleted()) {
+                    mat.delete();
+                }
+            }
+            this.starLevelTemplates.clear();
+        }
+        logger.info(`[TftOperator] 开始加载星级模板...`)
+        if (!fs.existsSync(this.starLevelTemplatePath)) {
+            // 如果目录不存在，可能是第一次运行还没保存过失败图片，建一个
+            fs.ensureDirSync(this.starLevelTemplatePath);
+            logger.info(`[TftOperator] 星级模板目录不存在，已自动创建: ${this.starLevelTemplatePath}`);
+            return;
+        }
+        const files = fs.readdirSync(this.starLevelTemplatePath);
+
+        for (const file of files) {
+            const ext = path.extname(file).toLowerCase();
+            if (!['.png', '.jpg', '.jpeg'].includes(ext)) continue;
+
+            const starLevel = path.parse(file).name; // 直接是number,1,2,3
+            const filePath = path.join(this.starLevelTemplatePath, file);
+
+            try {
+                const fileBuf = fs.readFileSync(filePath);
+                const {data, info} = await sharp(fileBuf)
+                    .ensureAlpha() // 确保有 Alpha 通道 (4通道)，跟 captureRegionAsPng 对齐
+                    .raw()
+                    .toBuffer({resolveWithObject: true});
+
+                const mat = cv.matFromImageData({
+                    data: new Uint8Array(data),
+                    width: info.width,
+                    height: info.height
+                });
+
+                this.starLevelTemplates.set(starLevel, mat);
+            } catch (e) {
+                logger.error(`[TftOperator] 加载星级模板失败 [${file}]: ${e}`);
+            }
+        }
+        logger.info(`[TftOperator] 星级模板加载完成，共 ${this.starLevelTemplates.size} 个`);
     }
 
     /**
@@ -911,7 +959,7 @@ class TftOperator {
      *  寻找某个英雄匹配的星级，模板来源为右键点击英雄，可以在右侧看到英雄的详细信息
      */
     private async findBestMatchStarLevel(targetMat: cv.Mat): Promise<1 | 2 | 3 | 4 | null> {
-        // TODO: 实现
+        // TODO: 实现findBestMatchStarLevel
 
         return 1;
     }

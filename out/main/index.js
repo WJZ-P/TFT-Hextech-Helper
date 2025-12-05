@@ -5559,6 +5559,14 @@ const shopSlotNameRegions = {
     rightBottom: { x: 854, y: 758 }
   }
 };
+const detailChampionNameRegion = {
+  leftTop: { x: 870, y: 226 },
+  rightBottom: { x: 978, y: 244 }
+};
+const detailChampionStarRegion = {
+  leftTop: { x: 919, y: 122 },
+  rightBottom: { x: 974, y: 132 }
+};
 ({
   EQ_SLOT_1: new Point(20, 210),
   //+35
@@ -5652,7 +5660,7 @@ const equipmentRegion = {
   R4_C6: new Point(690, 475),
   R4_C7: new Point(780, 475)
 });
-({
+const benchSlotPoints = {
   //  x+=75
   SLOT_1: new Point(135, 555),
   SLOT_2: new Point(210, 555),
@@ -5664,7 +5672,7 @@ const equipmentRegion = {
   SLOT_8: new Point(660, 555),
   SLOT_9: new Point(735, 555),
   SLOT_10: new Point(810, 555)
-});
+};
 ({
   //  x+=295
   SLOT_1: new Point(215, 410),
@@ -7321,16 +7329,18 @@ class TftOperator {
   chessWorker = null;
   //  当前的游戏模式
   tftMode;
-  //  当前战场状态，初始化为空 Map
-  currentBoardState = {
-    cells: /* @__PURE__ */ new Map()
-  };
+  //  当前战场上的棋子状态，初始化为空 Map
+  currentBoardState = /* @__PURE__ */ new Map();
   //  当前装备状态。
   currentEquipState = [];
+  //  当前备战席状态。
+  currentBenchState = [];
   // 缓存装备图片模板 (分层存储)
   equipTemplates = [];
   // 缓存商店栏英雄ID模板
   championTemplates = /* @__PURE__ */ new Map();
+  // 缓存星级模板
+  starLevelTemplates = /* @__PURE__ */ new Map();
   // ⚡️ 全黑的空装备槽位模板，宽高均为24
   emptyEquipSlotTemplate = null;
   //  每次使用计算路径，避免初始化的时候产生process.env的属性未定义的问题。
@@ -7341,12 +7351,17 @@ class TftOperator {
   get equipTemplatePath() {
     return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/equipment");
   }
+  //  星级路径
+  get starLevelTemplatePath() {
+    return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/starLevel");
+  }
   constructor() {
     cv["onRuntimeInitialized"] = () => {
       this.emptyEquipSlotTemplate = new cv.Mat(24, 24, cv.CV_8UC4, new cv.Scalar(0, 0, 0, 255));
       logger.info("[TftOperator] OpenCV (WASM) 核心模块加载完毕！");
       this.loadEquipTemplates();
       this.loadChampionTemplates();
+      this.loadStarLevelTemplates();
       this.setupChampionTemplateWatcher();
     };
   }
@@ -7429,13 +7444,7 @@ class TftOperator {
     const shopUnits = [];
     for (let i = 1; i <= 5; i++) {
       const slotKey = `SLOT_${i}`;
-      const simpleRegion = shopSlotNameRegions[slotKey];
-      const tessRegion = new Region(
-        this.gameWindowRegion.x + simpleRegion.leftTop.x,
-        this.gameWindowRegion.y + simpleRegion.leftTop.y,
-        simpleRegion.rightBottom.x - simpleRegion.leftTop.x,
-        simpleRegion.rightBottom.y - simpleRegion.leftTop.y
-      );
+      const tessRegion = this.getRealRegion(shopSlotNameRegions[slotKey]);
       const processedPng = await this.captureRegionAsPng(tessRegion);
       const text = await this.ocr(processedPng, worker);
       let tftUnit = null;
@@ -7463,7 +7472,7 @@ class TftOperator {
             logger.warn(`[商店槽位 ${i}] 成功匹配到模板，但识别到未知名称: ${cleanName}，请检查是否拼写有误！`);
         } else {
           logger.warn(`[商店槽位 ${i}] 识别失败，保存截图...`);
-          const filename = `fail_slot_${i}_${Date.now()}.png`;
+          const filename = `fail_shop_slot_${i}_${Date.now()}.png`;
           fs.writeFileSync(path.join(this.championTemplatePath, filename), processedPng);
         }
         shopUnits.push(null);
@@ -7540,6 +7549,68 @@ class TftOperator {
     await sleep(50);
     await this.clickAt(targetPoint);
   }
+  /**
+   * 获取当前备战席的棋子信息。
+   */
+  async getBunchInfo() {
+    const benchUnits = [];
+    const worker = this.getChessWorker();
+    for (const benchSlot of Object.keys(benchSlotPoints)) {
+      await this.clickAt(benchSlotPoints[benchSlot]);
+      await sleep(40);
+      const tessRegion = this.getRealRegion(detailChampionNameRegion[benchSlot]);
+      const processedPng = await this.captureRegionAsPng(tessRegion);
+      const text = await this.ocr(processedPng, worker);
+      let tftUnit = null;
+      let cleanName = text.replace(/\s/g, "");
+      tftUnit = TFT_15_CHAMPION_DATA[cleanName];
+      if (!tftUnit) {
+        logger.warn(`[备战席槽位${benchSlot.slice(-1)}] OCR识别失败！尝试模板匹配...`);
+        const rawData = await sharp(processedPng).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+        const processedMat = cv.matFromImageData({
+          data: new Uint8Array(rawData.data),
+          width: rawData.info.width,
+          height: rawData.info.height
+        });
+        cleanName = this.findBestMatchChampionTemplate(processedMat);
+      }
+      tftUnit = TFT_15_CHAMPION_DATA[cleanName];
+      if (tftUnit) {
+        const tessRegion2 = this.getRealRegion(detailChampionStarRegion);
+        const starPng = await this.captureRegionAsPng(tessRegion2);
+        const rawData = await sharp(starPng).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+        const processedMat = cv.matFromImageData({
+          data: new Uint8Array(rawData.data),
+          width: rawData.info.width,
+          height: rawData.info.height
+        });
+        const starLevel = await this.findBestMatchStarLevel(processedMat);
+        logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别成功-> ${tftUnit.displayName}-(${tftUnit.price}费-${starLevel}星)`);
+        const benchUnit = {
+          location: benchSlot,
+          tftUnit,
+          //  棋子信息
+          starLevel,
+          //  棋子星级
+          equips: []
+        };
+        benchUnits.push(benchUnit);
+      } else {
+        if (cleanName?.length > 0) {
+          if (cleanName === "empty")
+            logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别为空槽位`);
+          else
+            logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] 成功匹配到模板，但识别到未知名称: ${cleanName}，请检查是否拼写有误！`);
+        } else {
+          logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] 识别失败，保存截图...`);
+          const filename = `fail_bench_slot_${benchSlot.slice(-1)}_${Date.now()}.png`;
+          fs.writeFileSync(path.join(this.championTemplatePath, filename), processedPng);
+        }
+        benchUnits.push(null);
+      }
+    }
+    return benchUnits;
+  }
   // ----------------------   这下面都是private方法  ----------------------
   //  处理点击事件
   async clickAt(offset) {
@@ -7556,9 +7627,9 @@ class TftOperator {
     try {
       const nutPoint = new Point(target.x, target.y);
       await mouse.move([nutPoint]);
-      await new Promise((resolve) => setTimeout(resolve, 30));
+      await sleep(10);
       await mouse.click(Button.LEFT);
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await sleep(20);
     } catch (e) {
       logger.error(`[TftOperator] 模拟鼠标点击失败: ${e.message}`);
     }
@@ -7653,7 +7724,7 @@ class TftOperator {
     const result = await worker.recognize(pngBuffer);
     return result.data.text.trim();
   }
-  //  发条鸟试炼的布局
+  //  发条鸟试炼的对局阶段region，1-1的那个
   getClockworkTrialsRegion() {
     const originX = this.gameWindowRegion.x;
     const originY = this.gameWindowRegion.y;
@@ -7762,6 +7833,45 @@ class TftOperator {
     logger.info(`[TftOperator] 英雄模板加载完成，共 ${this.championTemplates.size} 个`);
   }
   /**
+   * 加载星级模板
+   */
+  async loadStarLevelTemplates() {
+    if (this.starLevelTemplates.size > 0) {
+      for (const mat of this.starLevelTemplates.values()) {
+        if (mat && !mat.isDeleted()) {
+          mat.delete();
+        }
+      }
+      this.starLevelTemplates.clear();
+    }
+    logger.info(`[TftOperator] 开始加载星级模板...`);
+    if (!fs.existsSync(this.starLevelTemplatePath)) {
+      fs.ensureDirSync(this.starLevelTemplatePath);
+      logger.info(`[TftOperator] 星级模板目录不存在，已自动创建: ${this.starLevelTemplatePath}`);
+      return;
+    }
+    const files = fs.readdirSync(this.starLevelTemplatePath);
+    for (const file2 of files) {
+      const ext = path.extname(file2).toLowerCase();
+      if (![".png", ".jpg", ".jpeg"].includes(ext)) continue;
+      const starLevel = path.parse(file2).name;
+      const filePath = path.join(this.starLevelTemplatePath, file2);
+      try {
+        const fileBuf = fs.readFileSync(filePath);
+        const { data, info } = await sharp(fileBuf).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+        const mat = cv.matFromImageData({
+          data: new Uint8Array(data),
+          width: info.width,
+          height: info.height
+        });
+        this.starLevelTemplates.set(starLevel, mat);
+      } catch (e) {
+        logger.error(`[TftOperator] 加载星级模板失败 [${file2}]: ${e}`);
+      }
+    }
+    logger.info(`[TftOperator] 星级模板加载完成，共 ${this.starLevelTemplates.size} 个`);
+  }
+  /**
    *  传入一个Mat对象，并从图片模板中找到最匹配的装备，规定如果category为empty即为空模板。
    */
   findBestMatchEquipTemplate(targetMat) {
@@ -7854,6 +7964,12 @@ class TftOperator {
     return null;
   }
   /**
+   *  寻找某个英雄匹配的星级，模板来源为右键点击英雄，可以在右侧看到英雄的详细信息
+   */
+  async findBestMatchStarLevel(targetMat) {
+    return 1;
+  }
+  /**
    * 监听英雄模板文件夹变更
    */
   setupChampionTemplateWatcher() {
@@ -7866,6 +7982,17 @@ class TftOperator {
         this.loadChampionTemplates();
       }, 500);
     });
+  }
+  /**
+   * region转换，把自己定义的simpleRegion转换成实际屏幕中的region
+   */
+  getRealRegion(simpleRegion) {
+    return new Region(
+      this.gameWindowRegion.x + simpleRegion.leftTop.x,
+      this.gameWindowRegion.y + simpleRegion.leftTop.y,
+      simpleRegion.rightBottom.x - simpleRegion.leftTop.x,
+      simpleRegion.rightBottom.y - simpleRegion.leftTop.y
+    );
   }
 }
 function parseStageStringToEnum(stageText) {
