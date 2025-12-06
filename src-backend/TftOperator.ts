@@ -22,8 +22,8 @@ import {
     GameStageType,
     shopSlot,
     shopSlotNameRegions,
-    TFT_15_CHAMPION_DATA,
-    TFT_15_EQUIP_DATA,
+    TFT_16_CHAMPION_DATA,
+    TFT_16_EQUIP_DATA,
     TFTEquip,
     TFTMode,
     TFTUnit
@@ -247,7 +247,7 @@ class TftOperator {
 
             let cleanName = text.replace(/\s/g, "")
             //  看能否从OCR结果中找到匹配的英雄
-            tftUnit = TFT_15_CHAMPION_DATA[cleanName];
+            tftUnit = TFT_16_CHAMPION_DATA[cleanName];
 
             if (!tftUnit) {
                 logger.warn(`[商店槽位 ${i}] OCR识别失败！尝试模板匹配...`);
@@ -265,7 +265,7 @@ class TftOperator {
             }
 
             //  从数据集中找到对应英雄
-            tftUnit = TFT_15_CHAMPION_DATA[cleanName];
+            tftUnit = TFT_16_CHAMPION_DATA[cleanName];
             if (tftUnit) {
                 logger.info(`[商店槽位 ${i}] 识别成功-> ${tftUnit.displayName}-(${tftUnit.price}费)`);
                 shopUnits.push(tftUnit)
@@ -405,7 +405,7 @@ class TftOperator {
 
             let cleanName = text.replace(/\s/g, "")
             //  看能否从OCR结果中找到匹配的英雄
-            tftUnit = TFT_15_CHAMPION_DATA[cleanName];
+            tftUnit = TFT_16_CHAMPION_DATA[cleanName];
 
             if (!tftUnit) {
                 logger.warn(`[备战席槽位${benchSlot.slice(-1)}] OCR识别失败！尝试模板匹配...`);
@@ -423,7 +423,7 @@ class TftOperator {
             }
 
             //  从数据集中找到对应英雄
-            tftUnit = TFT_15_CHAMPION_DATA[cleanName];
+            tftUnit = TFT_16_CHAMPION_DATA[cleanName];
             if (tftUnit) {
                 //  星级探测，看当前的棋子是多少星
                 const tessRegion = this.getRealRegion(detailChampionStarRegion)
@@ -558,7 +558,7 @@ class TftOperator {
             cachePath: localLangPath,
         })
         //  识别字体白名单做一下处理
-        const uniqueChars = [...new Set(Object.keys(TFT_15_CHAMPION_DATA).join(''))].join('')
+        const uniqueChars = [...new Set(Object.keys(TFT_16_CHAMPION_DATA).join(''))].join('')
         await worker.setParameters({
                 tessedit_char_whitelist: uniqueChars,
                 tessedit_pageseg_mode: PSM.SINGLE_LINE, // 单行模式
@@ -871,7 +871,7 @@ class TftOperator {
                         //  匹配度高，说明已经找到了图片
                         //console.log(`模板已匹配！当前模板：${templateName}，匹配度：${(result.maxVal * 100).toFixed(4)}%`)
                         maxConfidence = result.maxVal
-                        bestMatchEquip = Object.values(TFT_15_EQUIP_DATA).find(e => e.englishName.toLowerCase() === templateName.toLowerCase())
+                        bestMatchEquip = Object.values(TFT_16_EQUIP_DATA).find(e => e.englishName.toLowerCase() === templateName.toLowerCase())
                         hasFind = true;
                         break;
                     }
