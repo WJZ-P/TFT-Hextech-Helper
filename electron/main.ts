@@ -220,5 +220,6 @@ function registerHandler() {
     //  TFT相关操作
     ipcMain.handle(IpcChannel.TFT_BUY_AT_SLOT, async (event, slot: number) => tftOperator.buyAtSlot(slot))
     ipcMain.handle(IpcChannel.TFT_GET_SHOP_INFO, async (event) => tftOperator.getShopInfo())
-    ipcMain.handle(IpcChannel.TFT_GET_EQUIP_INFO, async (event) =>tftOperator.getEquipInfo())
+    ipcMain.handle(IpcChannel.TFT_GET_EQUIP_INFO, async (event) => tftOperator.getEquipInfo())
+    ipcMain.handle(IpcChannel.TFT_GET_BENCH_INFO, async (event) => tftOperator.getBenchInfo())
 }

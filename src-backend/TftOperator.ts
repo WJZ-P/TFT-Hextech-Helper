@@ -386,17 +386,17 @@ class TftOperator {
     /**
      * 获取当前备战席的棋子信息。
      */
-    public async getBunchInfo(): Promise<BenchUnit[]> {
+    public async getBenchInfo(): Promise<BenchUnit[]> {
         const benchUnits: BenchUnit[] = [];
         //  拿到我们的worker。
-        const worker = this.getChessWorker();
+        const worker = await this.getChessWorker();
         for (const benchSlot of Object.keys(benchSlotPoints)) {
             // TODO 这里还需要判断英雄的星级
 
             //  先用鼠标右键点击槽位，以在右侧显示详细信息。
-            await this.clickAt(benchSlotPoints[benchSlot]);
+            await this.clickAt(benchSlotPoints[benchSlot],Button.RIGHT);
             await sleep(40);    //  下棋配置是25帧每秒，因此这里要等待一点时间以刷新画面。
-            const tessRegion = this.getRealRegion(detailChampionNameRegion[benchSlot])
+            const tessRegion = this.getRealRegion(detailChampionNameRegion)
             //  处理得到png
             const processedPng = await this.captureRegionAsPng(tessRegion);
             //  识别图片
@@ -427,9 +427,9 @@ class TftOperator {
             if (tftUnit) {
                 //  星级探测，看当前的棋子是多少星
                 const tessRegion = this.getRealRegion(detailChampionStarRegion)
-                const starPng = await this.captureRegionAsPng(tessRegion)
-                //  做模板匹配
+                const starPng = await this.captureRegionAsPng(tessRegion,false)
 
+                //  做模板匹配
                 const rawData = await sharp(starPng)
                     .ensureAlpha()//    如果用matFromImageData，必须保证有A才行。
                     .raw()
@@ -479,7 +479,7 @@ class TftOperator {
 
 
     //  处理点击事件
-    private async clickAt(offset: Point) {
+    private async clickAt(offset: Point,clickType = Button.LEFT) {
         if (!this.gameWindowRegion) {
             if (!this.init()) {
                 throw new Error("TftOperator 尚未初始化。");
@@ -498,7 +498,7 @@ class TftOperator {
 
             await mouse.move([nutPoint]);
             await sleep(10);    //  每次鼠标操作给定一定的间隔时间
-            await mouse.click(Button.LEFT);
+            await mouse.click(clickType);
             await sleep(20);
         } catch (e: any) {
             logger.error(`[TftOperator] 模拟鼠标点击失败: ${e.message}`);
@@ -900,7 +900,7 @@ class TftOperator {
     private findBestMatchChampionTemplate(targetMat: cv.Mat): string | null {
         let bestMatchName: string | null = null;
         let maxConfidence = 0;
-        const THRESHOLD = 0.80; // 匹配阈值
+        const THRESHOLD = 0.70; // 匹配阈值
         const mask = new cv.Mat()
         const resultMat = new cv.Mat();
 
@@ -966,18 +966,18 @@ class TftOperator {
         const resultMat = new cv.Mat();
 
         try {
-            // 1. 快速空检查：基于标准差判断是否为纯色/纯黑图片
-            const mean = new cv.Mat();
-            const stddev = new cv.Mat();
-            cv.meanStdDev(targetMat, mean, stddev);
-            const deviation = stddev.doubleAt(0, 0); // 获取第一个通道的标准差
-            mean.delete();
-            stddev.delete();
-
-            // 如果标准差太小，说明图片几乎没有内容
-            if (deviation < 10) {
-                return -1;
-            }
+            // // 1. 快速空检查：基于标准差判断是否为纯色/纯黑图片
+            // const mean = new cv.Mat();
+            // const stddev = new cv.Mat();
+            // cv.meanStdDev(targetMat, mean, stddev);
+            // const deviation = stddev.doubleAt(0, 0); // 获取第一个通道的标准差
+            // mean.delete();
+            // stddev.delete();
+            //
+            // // 如果标准差太小，说明图片几乎没有内容
+            // if (deviation < 10) {
+            //     return -1;
+            // }
 
             // 2. 遍历所有星级模板，寻找首个匹配模板
             for (const [levelStr, templateMat] of this.starLevelTemplates) {
@@ -1003,7 +1003,7 @@ class TftOperator {
 
             // 3. 最终判断
             if (maxConfidence >= THRESHOLD && bestMatchLevel !== null) {
-                // logger.info(`[TftOperator] 星级识别成功: ${bestMatchLevel}星 (相似度: ${(maxConfidence * 100).toFixed(1)}%)`);
+                logger.info(`[TftOperator] 星级识别成功: ${bestMatchLevel}星 (相似度: ${(maxConfidence * 100).toFixed(1)}%)`);
                 return bestMatchLevel;
             } else {
                 // 如果有一定匹配度但没达到阈值，打印警告方便调试
@@ -1026,7 +1026,7 @@ class TftOperator {
             const fileName = `fail_star_${Date.now()}.png`;
             const savePath = path.join(this.starLevelTemplatePath, fileName);
 
-            // 注意：调用处 getBunchInfo 使用了 ensureAlpha()，所以这里 targetMat 是 4 通道 (RGBA)
+            // 注意：调用处 getBenchInfo 使用了 ensureAlpha()，所以这里 targetMat 是 4 通道 (RGBA)
             const pngBuffer = await sharp(targetMat.data, {
                 raw: {
                     width: targetMat.cols,

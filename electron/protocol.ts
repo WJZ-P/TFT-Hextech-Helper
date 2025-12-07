@@ -8,4 +8,5 @@ export enum IpcChannel {
     TFT_BUY_AT_SLOT = 'tft-buy-at-slot',
     TFT_GET_SHOP_INFO = 'tft-get-shop-info',
     TFT_GET_EQUIP_INFO = 'tft-get-equip-info',
+    TFT_GET_BENCH_INFO = 'tft-get-bench-info',
 }
