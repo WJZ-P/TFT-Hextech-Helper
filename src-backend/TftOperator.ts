@@ -68,7 +68,7 @@ export type BenchLocation = keyof typeof benchSlotPoints;
 export interface BenchUnit {
     location: BenchLocation;   //  位置信息
     tftUnit: TFTUnit;         //  棋子信息
-    starLevel: 1 | 2 | 3 | 4;         //  棋子星级
+    starLevel: -1 | 1 | 2 | 3 | 4;         //  棋子星级
     equips: TFTEquip[]
 }
 
@@ -94,7 +94,7 @@ class TftOperator {
     // 缓存商店栏英雄ID模板
     private championTemplates: Map<string, cv.Mat> = new Map();
     // 缓存星级模板
-    private starLevelTemplates:Map<string,cv.Mat> = new Map();
+    private starLevelTemplates: Map<string, cv.Mat> = new Map();
 
     // ⚡️ 全黑的空装备槽位模板，宽高均为24
     private emptyEquipSlotTemplate: cv.Mat = null;
@@ -110,7 +110,7 @@ class TftOperator {
     }
 
     //  星级路径
-    private get starLevelTemplatePath(): string{
+    private get starLevelTemplatePath(): string {
         return path.join(process.env.VITE_PUBLIC || '.', 'resources/assets/images/starLevel');
     }
 
@@ -776,7 +776,7 @@ class TftOperator {
     /**
      * 加载星级模板
      */
-    private async loadStarLevelTemplates(){
+    private async loadStarLevelTemplates() {
         if (this.starLevelTemplates.size > 0) {
             //  mat对象必须手动delete，因为它是指向C++内存地址的包装器
             for (const mat of this.starLevelTemplates.values()) {
@@ -956,12 +956,92 @@ class TftOperator {
     }
 
     /**
-     *  寻找某个英雄匹配的星级，模板来源为右键点击英雄，可以在右侧看到英雄的详细信息
+     * 寻找某个英雄匹配的星级，模板来源为右键点击英雄，可以在右侧看到英雄的详细信息
      */
-    private async findBestMatchStarLevel(targetMat: cv.Mat): Promise<1 | 2 | 3 | 4 | null> {
-        // TODO: 实现findBestMatchStarLevel
+    private async findBestMatchStarLevel(targetMat: cv.Mat): Promise<-1 | 1 | 2 | 3 | 4> {
+        let bestMatchLevel: 1 | 2 | 3 | 4 | null = null;
+        let maxConfidence = 0;
+        const THRESHOLD = 0.85; // 星级图标通常特征非常明显，阈值可以设高一点以减少误判
+        const mask = new cv.Mat();
+        const resultMat = new cv.Mat();
 
-        return 1;
+        try {
+            // 1. 快速空检查：基于标准差判断是否为纯色/纯黑图片
+            const mean = new cv.Mat();
+            const stddev = new cv.Mat();
+            cv.meanStdDev(targetMat, mean, stddev);
+            const deviation = stddev.doubleAt(0, 0); // 获取第一个通道的标准差
+            mean.delete();
+            stddev.delete();
+
+            // 如果标准差太小，说明图片几乎没有内容
+            if (deviation < 10) {
+                return -1;
+            }
+
+            // 2. 遍历所有星级模板，寻找首个匹配模板
+            for (const [levelStr, templateMat] of this.starLevelTemplates) {
+                // 尺寸防御：模板必须小于等于目标区域
+                if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) continue;
+
+                cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
+                const result = cv.minMaxLoc(resultMat, mask);
+
+                // logging 调试用 (如果发现识别不准可以打开)
+                // console.log(`星级尝试: ${levelStr} -> ${(result.maxVal * 100).toFixed(2)}%`);
+
+                if (result.maxVal > maxConfidence) {
+                    maxConfidence = result.maxVal;
+                    const lvl = parseInt(levelStr);
+                    // 确保是合法的 1-4 星
+                    if (!isNaN(lvl) && [1, 2, 3, 4].includes(lvl)) {
+                        bestMatchLevel = lvl as 1 | 2 | 3 | 4;
+                    }
+                }
+                break;
+            }
+
+            // 3. 最终判断
+            if (maxConfidence >= THRESHOLD && bestMatchLevel !== null) {
+                // logger.info(`[TftOperator] 星级识别成功: ${bestMatchLevel}星 (相似度: ${(maxConfidence * 100).toFixed(1)}%)`);
+                return bestMatchLevel;
+            } else {
+                // 如果有一定匹配度但没达到阈值，打印警告方便调试
+                if (maxConfidence > 0.5) {
+                    logger.warn(`[TftOperator] 星级识别未达标 (最高相似度: ${(maxConfidence * 100).toFixed(1)}%, 判定为: ${bestMatchLevel}星)`);
+                }
+            }
+
+        } catch (e) {
+            logger.error(`[TftOperator] 星级匹配出错: ${e}`);
+        } finally {
+            // 释放内存
+            if (mask && !mask.isDeleted()) mask.delete();
+            if (resultMat && !resultMat.isDeleted()) resultMat.delete();
+        }
+
+        // --- 4. 识别失败处理：保存图片到本地 ---
+        try {
+            logger.warn(`[TftOperator] 无法识别星级，正在保存失败样本...`);
+            const fileName = `fail_star_${Date.now()}.png`;
+            const savePath = path.join(this.starLevelTemplatePath, fileName);
+
+            // 注意：调用处 getBunchInfo 使用了 ensureAlpha()，所以这里 targetMat 是 4 通道 (RGBA)
+            const pngBuffer = await sharp(targetMat.data, {
+                raw: {
+                    width: targetMat.cols,
+                    height: targetMat.rows,
+                    channels: 4
+                }
+            }).png().toBuffer();
+
+            fs.writeFileSync(savePath, pngBuffer);
+            logger.info(`[TftOperator] 已保存失败样本至: ${savePath}`);
+        } catch (saveErr) {
+            logger.error(`[TftOperator] 保存星级失败样本时出错: ${saveErr}`);
+        }
+
+        return -1; // 未找到匹配，返回-1星
     }
 
     /**
