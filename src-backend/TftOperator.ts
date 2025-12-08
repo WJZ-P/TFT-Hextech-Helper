@@ -41,19 +41,23 @@ import {
 import {
     GAME_WIDTH,
     GAME_HEIGHT,
+    ocrService,
+    OcrWorkerType,
+    templateLoader,
+    templateMatcher,
+    screenCapture,
+    mouseController,
+    parseStageStringToEnum,
+    isValidStageFormat,
+} from "./tft";
+import type {
     IdentifiedEquip,
     BenchUnit,
     BenchLocation,
     BoardUnit,
     BoardLocation,
     ShopUnit,
-} from "./tft/types";
-import { ocrService, OcrWorkerType } from "./tft/recognition/OcrService";
-import { templateLoader } from "./tft/recognition/TemplateLoader";
-import { templateMatcher } from "./tft/recognition/TemplateMatcher";
-import { screenCapture } from "./tft/recognition/ScreenCapture";
-import { mouseController } from "./tft/input/MouseController";
-import { parseStageStringToEnum, isValidStageFormat } from "./tft/utils/GameStageParser";
+} from "./tft";
 import { sleep } from "./utils/HelperTools";
 
 // ============================================================================
@@ -379,7 +383,7 @@ class TftOperator {
         for (const benchSlot of Object.keys(benchSlotPoints)) {
             // 右键点击槽位显示详细信息
             await mouseController.clickAt(benchSlotPoints[benchSlot], Button.RIGHT);
-            await sleep(40); // 等待 UI 刷新 (游戏 25fps)
+            await sleep(50); // 等待 UI 刷新 (游戏 25fps，额外给10ms缓冲时间)
 
             // 识别英雄名称
             const nameRegion = screenCapture.toAbsoluteRegion(detailChampionNameRegion);

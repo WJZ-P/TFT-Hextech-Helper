@@ -11,3 +11,6 @@ export * from "./recognition";
 
 // 输入模块
 export * from "./input";
+
+// 工具模块
+export * from "./utils/GameStageParser";

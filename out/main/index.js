@@ -1,4 +1,4 @@
-import { app, screen, BrowserWindow, globalShortcut, ipcMain } from "electron";
+import { app, screen as screen$1, BrowserWindow, globalShortcut, ipcMain } from "electron";
 import { EventEmitter } from "events";
 import require$$1 from "os";
 import cp from "child_process";
@@ -12,10 +12,10 @@ import path from "path";
 import WebSocket from "ws";
 import https from "https";
 import axios from "axios";
-import { Point, Region, screen as screen$1, Button, mouse } from "@nut-tree-fork/nut-js";
-import { createWorker, PSM } from "tesseract.js";
+import { Point, Region, screen, Button, mouse } from "@nut-tree-fork/nut-js";
 import sharp from "sharp";
 import cv from "@techstark/opencv-js";
+import { createWorker, PSM } from "tesseract.js";
 import Store from "electron-store";
 import { is, optimizer } from "@electron-toolkit/utils";
 import __cjs_mod__ from "node:module";
@@ -2687,41 +2687,135 @@ function requireLib() {
 }
 var libExports = requireLib();
 const fs = /* @__PURE__ */ getDefaultExportFromCjs(libExports);
+const LOG_LEVEL_PRIORITY = {
+  debug: 0,
+  info: 1,
+  warn: 2,
+  error: 3
+};
+const LOG_LEVEL_COLORS = {
+  debug: "\x1B[36m",
+  // 青色
+  info: "\x1B[32m",
+  // 绿色
+  warn: "\x1B[33m",
+  // 黄色
+  error: "\x1B[31m"
+  // 红色
+};
+const COLOR_RESET = "\x1B[0m";
 class Logger {
-  //  单例模式
   static instance = null;
   window;
+  /** 当前日志级别，低于此级别的日志不会输出 */
+  minLevel = "debug";
+  /** 是否启用时间戳 */
+  enableTimestamp = true;
+  /**
+   * 获取 Logger 单例
+   */
   static getInstance() {
-    if (!Logger.instance)
+    if (!Logger.instance) {
       Logger.instance = new Logger();
+    }
     return Logger.instance;
   }
   constructor() {
   }
+  /**
+   * 初始化 Logger
+   * @param window Electron BrowserWindow 实例，用于向前端推送日志
+   */
   init(window2) {
     this.window = window2;
   }
+  /**
+   * 设置最低日志级别
+   * @param level 日志级别
+   */
+  setMinLevel(level) {
+    this.minLevel = level;
+  }
+  /**
+   * 设置是否启用时间戳
+   * @param enable 是否启用
+   */
+  setTimestampEnabled(enable) {
+    this.enableTimestamp = enable;
+  }
+  /**
+   * 格式化时间戳
+   * @returns 格式化的时间字符串 [HH:MM:SS.mmm]
+   */
+  getTimestamp() {
+    if (!this.enableTimestamp) return "";
+    const now = /* @__PURE__ */ new Date();
+    const hours = now.getHours().toString().padStart(2, "0");
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    const seconds = now.getSeconds().toString().padStart(2, "0");
+    const ms = now.getMilliseconds().toString().padStart(3, "0");
+    return `[${hours}:${minutes}:${seconds}.${ms}]`;
+  }
+  /**
+   * 检查日志级别是否应该输出
+   * @param level 要检查的日志级别
+   */
+  shouldLog(level) {
+    return LOG_LEVEL_PRIORITY[level] >= LOG_LEVEL_PRIORITY[this.minLevel];
+  }
+  /**
+   * 输出 debug 级别日志
+   * @param message 日志消息
+   */
+  debug(message) {
+    this.log(message, "debug");
+  }
+  /**
+   * 输出 info 级别日志
+   * @param message 日志消息
+   */
   info(message) {
-    this.sendLogToFrontend(message, "info");
-    console.log(`[info] ${message}`);
+    this.log(message, "info");
   }
+  /**
+   * 输出 warn 级别日志
+   * @param message 日志消息
+   */
   warn(message) {
-    this.sendLogToFrontend(message, "warn");
-    console.log(`[warn] ${message}`);
+    this.log(message, "warn");
   }
+  /**
+   * 输出 error 级别日志
+   * @param message 日志消息或 Error 对象
+   */
   error(message) {
     const msg = message instanceof Error ? message.message : message;
-    this.sendLogToFrontend(msg, "error");
-    console.log(`[error] ${message}`);
-    if (message instanceof Error) {
+    this.log(msg, "error");
+    if (message instanceof Error && message.stack) {
       console.error(message.stack);
     }
   }
-  sendLogToFrontend(message, level = "info") {
+  /**
+   * 核心日志方法
+   * @param message 日志消息
+   * @param level 日志级别
+   */
+  log(message, level) {
+    if (!this.shouldLog(level)) return;
+    const timestamp = this.getTimestamp();
+    const color = LOG_LEVEL_COLORS[level];
+    const levelTag = `[${level.toUpperCase()}]`.padEnd(7);
+    console.log(`${color}${timestamp}${levelTag}${COLOR_RESET} ${message}`);
+    this.sendLogToFrontend(`${timestamp}${levelTag} ${message}`, level);
+  }
+  /**
+   * 向前端发送日志
+   * @param message 日志消息
+   * @param level 日志级别
+   */
+  sendLogToFrontend(message, level) {
     if (this.window) {
       this.window.webContents.send("log-message", { message, level });
-    } else {
-      console.error("[Logger] window还未初始化，无法把消息发给前端");
     }
   }
 }
@@ -2865,7 +2959,7 @@ class LCUManager extends EventEmitter {
     this.api = axios.create({
       baseURL: `https://127.0.0.1:${this.port}`,
       httpsAgent: this.httpsAgent,
-      // 把我们的“通行证”交给 axios
+      // 把我们的"通行证"交给 axios
       proxy: false,
       // ← 关键：禁止任何系统/环境变量代理!!!这里debug找了一万年才发现是这个问题。
       auth: {
@@ -2979,17 +3073,28 @@ class LCUManager extends EventEmitter {
     }
   }
   /**
-   * 喵~ 一个有礼貌的函数，会一直“敲门”直到后厨回应
+   * 确认 LCU API 服务就绪
+   * @description 轮询检测 API 是否可用，带超时机制防止无限等待
+   * @param timeoutMs 超时时间 (ms)，默认 30 秒
+   * @throws 超时后抛出错误
    */
-  async confirmApiReady() {
+  async confirmApiReady(timeoutMs = 3e4) {
+    const startTime = Date.now();
+    const retryIntervalMs = 2e3;
     while (true) {
+      if (Date.now() - startTime > timeoutMs) {
+        throw new Error(
+          `[LCUManager] API 服务在 ${timeoutMs / 1e3} 秒内未就绪，请检查客户端状态`
+        );
+      }
       try {
         await this.request("GET", "/riotclient/ux-state");
         console.log("✅ [LCUManager] API 服务已就绪！");
         return;
       } catch (error) {
-        console.log("⏳ [LCUManager] API 服务尚未就绪，1秒后重试...", error);
-        await new Promise((resolve) => setTimeout(resolve, 2e3));
+        const elapsed = Math.round((Date.now() - startTime) / 1e3);
+        console.log(`⏳ [LCUManager] API 服务尚未就绪 (已等待 ${elapsed}s)，${retryIntervalMs / 1e3}s 后重试...`);
+        await new Promise((resolve) => setTimeout(resolve, retryIntervalMs));
       }
     }
   }
@@ -5475,6 +5580,42 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["TFT_GET_BENCH_INFO"] = "tft-get-bench-info";
   return IpcChannel2;
 })(IpcChannel || {});
+class IdleState {
+  /** 状态名称 */
+  name = "IdleState";
+  /**
+   * 执行空闲状态逻辑
+   * @param _signal AbortSignal (此状态不需要，但为保持接口一致性保留)
+   * @returns 返回自身，保持空闲状态
+   * @description 空闲状态下不做任何操作，等待外部触发状态转换
+   */
+  async action(_signal) {
+    return this;
+  }
+}
+class EndState {
+  /** 状态名称 */
+  name = "EndState";
+  /**
+   * 执行结束状态逻辑
+   * @param _signal AbortSignal (此状态不需要，但为保持接口一致性保留)
+   * @returns 返回 IdleState，回到空闲状态
+   */
+  async action(_signal) {
+    logger.info("[EndState] 正在恢复客户端设置...");
+    try {
+      await GameConfigHelper.restore();
+      logger.info("[EndState] 客户端设置恢复完成");
+    } catch (error) {
+      logger.error("[EndState] 恢复设置失败，可能需要手动恢复");
+      if (error instanceof Error) {
+        logger.error(error);
+      }
+    }
+    logger.info("[EndState] 海克斯科技已关闭，回到空闲状态");
+    return new IdleState();
+  }
+}
 var Queue = /* @__PURE__ */ ((Queue2) => {
   Queue2[Queue2["NORMAL_DRAFT"] = 400] = "NORMAL_DRAFT";
   Queue2[Queue2["RANKED_SOLO_DUO"] = 420] = "RANKED_SOLO_DUO";
@@ -5505,15 +5646,6 @@ function debounce(func, delay) {
       func(...args);
     }, delay);
   };
-}
-class EndState {
-  async action() {
-    logger.info("正在恢复客户端设置...");
-    await GameConfigHelper.restore();
-    logger.info("客户端设置恢复完成");
-    logger.info("[HexService] 海克斯科技关闭。");
-    return new IdleState();
-  }
 }
 var GameStageType = /* @__PURE__ */ ((GameStageType2) => {
   GameStageType2["PVE"] = "PVE";
@@ -8717,387 +8849,699 @@ const TFT_16_EQUIP_DATA = {
 };
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
-const equipResourcePath = ["component", "special", "core", "emblem", "artifact", "radiant"];
-class TftOperator {
+const EQUIP_CATEGORY_PRIORITY = [
+  "component",
+  "special",
+  "core",
+  "emblem",
+  "artifact",
+  "radiant"
+];
+var OcrWorkerType = /* @__PURE__ */ ((OcrWorkerType2) => {
+  OcrWorkerType2["GAME_STAGE"] = "GAME_STAGE";
+  OcrWorkerType2["CHESS"] = "CHESS";
+  return OcrWorkerType2;
+})(OcrWorkerType || {});
+class OcrService {
   static instance;
-  //  缓存游戏窗口的左上角坐标
-  gameWindowRegion;
-  //  用来判断游戏阶段的Worker
+  /** 游戏阶段识别 Worker (英文+数字) */
   gameStageWorker = null;
-  //  用来判断棋子内容的Worker
+  /** 棋子名称识别 Worker (中文) */
   chessWorker = null;
-  //  当前的游戏模式
-  tftMode;
-  //  当前战场上的棋子状态，初始化为空 Map
-  currentBoardState = /* @__PURE__ */ new Map();
-  //  当前装备状态。
-  currentEquipState = [];
-  //  当前备战席状态。
-  currentBenchState = [];
-  // 缓存装备图片模板 (分层存储)
-  equipTemplates = [];
-  // 缓存商店栏英雄ID模板
-  championTemplates = /* @__PURE__ */ new Map();
-  // 缓存星级模板
-  starLevelTemplates = /* @__PURE__ */ new Map();
-  // ⚡️ 全黑的空装备槽位模板，宽高均为24
-  emptyEquipSlotTemplate = null;
-  //  每次使用计算路径，避免初始化的时候产生process.env的属性未定义的问题。
-  get championTemplatePath() {
-    return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/champion");
-  }
-  // 3. 同样的，之前的装备路径也可以这样改，防止同样的问题
-  get equipTemplatePath() {
-    return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/equipment");
-  }
-  //  星级路径
-  get starLevelTemplatePath() {
-    return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/starLevel");
+  /** Tesseract 语言包路径 */
+  get langPath() {
+    return path.join(process.env.VITE_PUBLIC || ".", "resources/tessdata");
   }
   constructor() {
-    cv["onRuntimeInitialized"] = () => {
-      this.emptyEquipSlotTemplate = new cv.Mat(24, 24, cv.CV_8UC4, new cv.Scalar(0, 0, 0, 255));
-      logger.info("[TftOperator] OpenCV (WASM) 核心模块加载完毕！");
-      this.loadEquipTemplates();
-      this.loadChampionTemplates();
-      this.loadStarLevelTemplates();
-      this.setupChampionTemplateWatcher();
-    };
   }
+  /**
+   * 获取 OcrService 单例
+   */
   static getInstance() {
-    if (!TftOperator.instance) {
-      TftOperator.instance = new TftOperator();
+    if (!OcrService.instance) {
+      OcrService.instance = new OcrService();
     }
-    return TftOperator.instance;
+    return OcrService.instance;
   }
   /**
-   * 初始化，通过electron找到屏幕中心点，LOL窗口默认居中，以此判断布局。
+   * 获取指定类型的 OCR Worker
+   * @param type Worker 类型
+   * @returns Tesseract Worker 实例
    */
-  init() {
-    try {
-      const primaryDisplay = screen.getPrimaryDisplay();
-      const scaleFactor = primaryDisplay.scaleFactor;
-      const { width: logicalWidth, height: logicalHeight } = primaryDisplay.size;
-      const screenWidth = Math.round(logicalWidth * scaleFactor);
-      const screenHeight = Math.round(logicalHeight * scaleFactor);
-      const screenCenterX = screenWidth / 2;
-      const screenCenterY = screenHeight / 2;
-      const originX = screenCenterX - GAME_WIDTH / 2;
-      const originY = screenCenterY - GAME_HEIGHT / 2;
-      this.gameWindowRegion = new Point(originX, originY);
-      logger.info(`[TftOperator] 屏幕尺寸: ${screenWidth}x${screenHeight}.`);
-      logger.info(`[TftOperator] 游戏基准点 (0,0) 已计算在: (${originX}, ${originY})`);
-      return true;
-    } catch (e) {
-      logger.error(`[TftOperator] 无法从 Electron 获取屏幕尺寸: ${e.message}`);
-      this.gameWindowRegion = null;
-      return false;
-    }
-  }
-  //  获取当前游戏阶段
-  async getGameStage() {
-    try {
-      const isValidStageFormat = (text) => {
-        return /^d+\s*[-]\s*\d+$/.test(text.trim());
-      };
-      const worker = await this.getGameStageWorker();
-      let stageText = "";
-      const normalRegion = this.getStageAbsoluteRegion(false);
-      const normalPng = await this.captureRegionAsPng(normalRegion);
-      stageText = await this.ocr(normalPng, worker);
-      if (!isValidStageFormat(stageText)) {
-        logger.info(`[TftOperator] 标准区域识别未命中: "${stageText}"，尝试 Stage-1 区域...`);
-        const stageOneRegion = this.getStageAbsoluteRegion(true);
-        const stageOnePng = await this.captureRegionAsPng(stageOneRegion);
-        stageText = await this.ocr(stageOnePng, worker);
-      }
-      if (!isValidStageFormat(stageText)) {
-        const clockworkRegion = this.getClockworkTrialsRegion();
-        const clockPng = await this.captureRegionAsPng(clockworkRegion);
-        const clockText = await this.ocr(clockPng, worker);
-        if (clockText && clockText.length > 2) {
-          this.tftMode = TFTMode.CLOCKWORK_TRAILS;
-          logger.info("[TftOperator] 识别为发条鸟试炼模式，直接返回PVP。");
-          return GameStageType.PVP;
-        }
-      }
-      const stageType = parseStageStringToEnum(stageText);
-      if (stageType !== GameStageType.UNKNOWN) {
-        logger.info(`[TftOperator] 识别阶段: [${stageText}] -> 判定为: ${stageType}`);
-        this.tftMode = TFTMode.CLASSIC;
-      } else {
-        logger.warn(`[TftOperator] 无法识别当前阶段: "${stageText ?? "null"}"`);
-      }
-      return stageType;
-    } catch (e) {
-      logger.error(`[TftOperator] 阶段识别流程异常: ${e.message}`);
-      return GameStageType.UNKNOWN;
+  async getWorker(type) {
+    switch (type) {
+      case "GAME_STAGE":
+        return this.getGameStageWorker();
+      case "CHESS":
+        return this.getChessWorker();
+      default:
+        throw new Error(`未知的 OCR Worker 类型: ${type}`);
     }
   }
   /**
-   * 获取当前商店的所有棋子信息
+   * 执行 OCR 识别
+   * @param imageBuffer PNG 图片 Buffer
+   * @param type Worker 类型
+   * @returns 识别结果文本
    */
-  async getShopInfo() {
-    const worker = await this.getChessWorker();
-    logger.info("[TftOperator] 正在扫描商店中的 5 个槽位...");
-    const shopUnits = [];
-    for (let i = 1; i <= 5; i++) {
-      const slotKey = `SLOT_${i}`;
-      const tessRegion = this.getRealRegion(shopSlotNameRegions[slotKey]);
-      const processedPng = await this.captureRegionAsPng(tessRegion);
-      const text = await this.ocr(processedPng, worker);
-      let tftUnit = null;
-      let cleanName = text.replace(/\s/g, "");
-      tftUnit = TFT_16_CHAMPION_DATA[cleanName];
-      if (!tftUnit) {
-        logger.warn(`[商店槽位 ${i}] OCR识别失败！尝试模板匹配...`);
-        const rawData = await sharp(processedPng).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-        const processedMat = cv.matFromImageData({
-          data: new Uint8Array(rawData.data),
-          width: rawData.info.width,
-          height: rawData.info.height
-        });
-        cleanName = this.findBestMatchChampionTemplate(processedMat);
-      }
-      tftUnit = TFT_16_CHAMPION_DATA[cleanName];
-      if (tftUnit) {
-        logger.info(`[商店槽位 ${i}] 识别成功-> ${tftUnit.displayName}-(${tftUnit.price}费)`);
-        shopUnits.push(tftUnit);
-      } else {
-        if (cleanName?.length > 0) {
-          if (cleanName === "empty")
-            logger.info(`[商店槽位 ${i}] 识别为空槽位`);
-          else
-            logger.warn(`[商店槽位 ${i}] 成功匹配到模板，但识别到未知名称: ${cleanName}，请检查是否拼写有误！`);
-        } else {
-          logger.warn(`[商店槽位 ${i}] 识别失败，保存截图...`);
-          const filename = `fail_shop_slot_${i}_${Date.now()}.png`;
-          fs.writeFileSync(path.join(this.championTemplatePath, filename), processedPng);
-        }
-        shopUnits.push(null);
-      }
-    }
-    return shopUnits;
-  }
-  async getEquipInfo() {
-    if (!this.gameWindowRegion) {
-      logger.error("[TftOperator] 尚未初始化游戏窗口位置！");
-      return [];
-    }
-    if (this.equipTemplates.length === 0) {
-      logger.warn("[TftOperator] 装备模板为空，跳过识别");
-      return [];
-    }
-    const resultEquips = [];
-    logger.info("[TftOperator] 开始扫描装备栏...");
-    for (const [slotName, regionDef] of Object.entries(equipmentRegion)) {
-      const targetRegion = new Region(
-        this.gameWindowRegion.x + regionDef.leftTop.x,
-        this.gameWindowRegion.y + regionDef.leftTop.y,
-        regionDef.rightBottom.x - regionDef.leftTop.x + 1,
-        regionDef.rightBottom.y - regionDef.leftTop.y + 1
-      );
-      let targetMat;
-      try {
-        const screenshot = await screen$1.grabRegion(targetRegion);
-        targetMat = new cv.Mat(screenshot.height, screenshot.width, cv.CV_8UC4);
-        targetMat.data.set(new Uint8Array(screenshot.data));
-        cv.cvtColor(targetMat, targetMat, cv.COLOR_BGRA2RGB);
-        const matchResult = this.findBestMatchEquipTemplate(targetMat);
-        if (matchResult) {
-          logger.info(`[TftOperator] ${slotName} 识别成功: ${matchResult.name} (相似度: ${(matchResult.confidence * 100).toFixed(1)}%)`);
-          matchResult.slot = slotName;
-          resultEquips.push(matchResult);
-        } else {
-          logger.error(`[TftOperator] ${slotName} 槽位识别失败。`);
-          const fileName = `equip_${slotName}${Date.now()}.png`;
-          const pngBuffer = await sharp(targetMat.data, {
-            raw: {
-              width: targetMat.cols,
-              // OpenCV 的宽
-              height: targetMat.rows,
-              // OpenCV 的高
-              channels: 3
-              // RGBA 是 4 通道
-            }
-          }).png().toBuffer();
-          fs.writeFileSync(path.join(this.equipTemplatePath, fileName), pngBuffer);
-          logger.info(`[TftOperator] 槽位${slotName}图片已保存到本地。`);
-        }
-      } catch (e) {
-        logger.error(`[TftOperator] ${slotName} 扫描流程异常: ${e.message}`);
-      } finally {
-        targetMat.delete();
-      }
-    }
-    return resultEquips;
+  async recognize(imageBuffer, type) {
+    const worker = await this.getWorker(type);
+    const result = await worker.recognize(imageBuffer);
+    return result.data.text.trim();
   }
   /**
-   * 购买指定槽位的棋子
-   * @param slot 槽位编号 (1, 2, 3, 4, 或 5)
+   * 获取游戏阶段识别 Worker
+   * @description 配置为只识别数字和连字符 (如 "2-1", "3-5")
    */
-  async buyAtSlot(slot) {
-    const slotKey = `SHOP_SLOT_${slot}`;
-    const targetPoint = shopSlot[slotKey];
-    if (!targetPoint) {
-      logger.error(`[TftOperator] 尝试购买一个无效的槽位: ${slot}。只接受 1-5。`);
-      return;
-    }
-    logger.info(`[TftOperator] 正在购买棋子，槽位：${slot}...`);
-    await this.clickAt(targetPoint);
-    await sleep(50);
-    await this.clickAt(targetPoint);
-  }
-  /**
-   * 获取当前备战席的棋子信息。
-   */
-  async getBenchInfo() {
-    const benchUnits = [];
-    const worker = await this.getChessWorker();
-    for (const benchSlot of Object.keys(benchSlotPoints)) {
-      await this.clickAt(benchSlotPoints[benchSlot], Button.RIGHT);
-      await sleep(40);
-      const tessRegion = this.getRealRegion(detailChampionNameRegion);
-      const processedPng = await this.captureRegionAsPng(tessRegion);
-      const text = await this.ocr(processedPng, worker);
-      let tftUnit = null;
-      let cleanName = text.replace(/\s/g, "");
-      tftUnit = TFT_16_CHAMPION_DATA[cleanName];
-      if (!tftUnit) {
-        logger.warn(`[备战席槽位${benchSlot.slice(-1)}] OCR识别失败！尝试模板匹配...`);
-        const rawData = await sharp(processedPng).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-        const processedMat = cv.matFromImageData({
-          data: new Uint8Array(rawData.data),
-          width: rawData.info.width,
-          height: rawData.info.height
-        });
-        cleanName = this.findBestMatchChampionTemplate(processedMat);
-      }
-      tftUnit = TFT_16_CHAMPION_DATA[cleanName];
-      if (tftUnit) {
-        const tessRegion2 = this.getRealRegion(detailChampionStarRegion);
-        const starPng = await this.captureRegionAsPng(tessRegion2, false);
-        const rawData = await sharp(starPng).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-        const processedMat = cv.matFromImageData({
-          data: new Uint8Array(rawData.data),
-          width: rawData.info.width,
-          height: rawData.info.height
-        });
-        const starLevel = await this.findBestMatchStarLevel(processedMat);
-        logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别成功-> ${tftUnit.displayName}-(${tftUnit.price}费-${starLevel}星)`);
-        const benchUnit = {
-          location: benchSlot,
-          tftUnit,
-          //  棋子信息
-          starLevel,
-          //  棋子星级
-          equips: []
-        };
-        benchUnits.push(benchUnit);
-      } else {
-        if (cleanName?.length > 0) {
-          if (cleanName === "empty")
-            logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别为空槽位`);
-          else
-            logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] 成功匹配到模板，但识别到未知名称: ${cleanName}，请检查是否拼写有误！`);
-        } else {
-          logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] 识别失败，保存截图...`);
-          const filename = `fail_bench_slot_${benchSlot.slice(-1)}_${Date.now()}.png`;
-          fs.writeFileSync(path.join(this.championTemplatePath, filename), processedPng);
-        }
-        benchUnits.push(null);
-      }
-    }
-    return benchUnits;
-  }
-  // ----------------------   这下面都是private方法  ----------------------
-  //  处理点击事件
-  async clickAt(offset, clickType = Button.LEFT) {
-    if (!this.gameWindowRegion) {
-      if (!this.init()) {
-        throw new Error("TftOperator 尚未初始化。");
-      }
-    }
-    const target = {
-      x: this.gameWindowRegion.x + offset.x,
-      y: this.gameWindowRegion.y + offset.y
-    };
-    logger.info(`[TftOperator] 正在点击: (Origin: ${this.gameWindowRegion.x},${this.gameWindowRegion.y}) + (Offset: ${offset.x},${offset.y}) -> (Target: ${target.x},${target.y})`);
-    try {
-      const nutPoint = new Point(target.x, target.y);
-      await mouse.move([nutPoint]);
-      await sleep(10);
-      await mouse.click(clickType);
-      await sleep(20);
-    } catch (e) {
-      logger.error(`[TftOperator] 模拟鼠标点击失败: ${e.message}`);
-    }
-  }
-  // 获取游戏里表示战斗阶段(如1-1)的Region
-  getStageAbsoluteRegion(isStageOne = false) {
-    if (!this.gameWindowRegion) {
-      logger.error("[TftOperator] 尝试在 init() 之前计算 Region！");
-      if (!this.init()) throw new Error("[TftOperator] 未初始化，请先调用 init()");
-    }
-    const originX = this.gameWindowRegion.x;
-    const originY = this.gameWindowRegion.y;
-    const display = isStageOne ? gameStageDisplayStageOne : gameStageDisplayNormal;
-    const x = Math.round(originX + display.leftTop.x);
-    const y = Math.round(originY + display.leftTop.y);
-    const width = Math.round(display.rightBottom.x - display.leftTop.x);
-    const height = Math.round(display.rightBottom.y - display.leftTop.y);
-    return new Region(x, y, width, height);
-  }
-  //  一个懒加载的 Tesseract worker
   async getGameStageWorker() {
-    if (this.gameStageWorker) return this.gameStageWorker;
-    logger.info("[TftOperator] 正在创建 Tesseract worker...");
-    const localLangPath = path.join(process.env.VITE_PUBLIC, "resources/tessdata");
-    logger.info(`[TftOperator] Tesseract 本地语言包路径: ${localLangPath}`);
+    if (this.gameStageWorker) {
+      return this.gameStageWorker;
+    }
+    logger.info("[OcrService] 正在创建游戏阶段识别 Worker...");
     const worker = await createWorker("eng", 1, {
-      //logger: m => logger.info(`[Tesseract] ${m.status}: ${Math.round(m.progress * 100)}%`),
-      langPath: localLangPath,
-      cachePath: localLangPath
+      langPath: this.langPath,
+      cachePath: this.langPath
     });
     await worker.setParameters({
       tessedit_char_whitelist: "0123456789-",
       tessedit_pageseg_mode: PSM.SINGLE_LINE
-      //  图片排版模式为简单的单行
     });
     this.gameStageWorker = worker;
-    logger.info("[TftOperator] Tesseract worker 准备就绪！");
+    logger.info("[OcrService] 游戏阶段识别 Worker 准备就绪");
     return this.gameStageWorker;
   }
-  //  同样懒加载Worker，用来识别棋子名字，中文模型
+  /**
+   * 获取棋子名称识别 Worker
+   * @description 配置为中文识别，白名单限制为所有棋子名称中的字符
+   */
   async getChessWorker() {
-    if (this.chessWorker) return this.chessWorker;
-    logger.info("[TftOperator] 正在创建 Tesseract worker...");
-    const localLangPath = path.join(process.env.VITE_PUBLIC, "resources/tessdata");
-    logger.info(`[TftOperator] Tesseract 本地语言包路径: ${localLangPath}`);
+    if (this.chessWorker) {
+      return this.chessWorker;
+    }
+    logger.info("[OcrService] 正在创建棋子名称识别 Worker...");
     const worker = await createWorker("chi_sim", 1, {
-      //logger: m => logger.info(`[Tesseract] ${m.status}: ${Math.round(m.progress * 100)}%`),
-      langPath: localLangPath,
-      cachePath: localLangPath
+      langPath: this.langPath,
+      cachePath: this.langPath
     });
     const uniqueChars = [...new Set(Object.keys(TFT_16_CHAMPION_DATA).join(""))].join("");
-    await worker.setParameters(
-      {
-        tessedit_char_whitelist: uniqueChars,
-        tessedit_pageseg_mode: PSM.SINGLE_LINE,
-        // 单行模式
-        preserve_interword_spaces: "1"
-        // 还可以尝试这个参数，强制将其视为单词
-      }
-    );
+    await worker.setParameters({
+      tessedit_char_whitelist: uniqueChars,
+      tessedit_pageseg_mode: PSM.SINGLE_LINE,
+      preserve_interword_spaces: "1"
+    });
     this.chessWorker = worker;
-    logger.info("[TftOperator] Tesseract worker 准备就绪！");
+    logger.info("[OcrService] 棋子名称识别 Worker 准备就绪");
     return this.chessWorker;
   }
-  // ======================================
-  // 工具函数：截图某区域并输出 PNG buffer
-  // ======================================
+  /**
+   * 销毁所有 Worker，释放资源
+   * @description 在应用退出时调用
+   */
+  async destroy() {
+    if (this.gameStageWorker) {
+      await this.gameStageWorker.terminate();
+      this.gameStageWorker = null;
+      logger.info("[OcrService] 游戏阶段识别 Worker 已销毁");
+    }
+    if (this.chessWorker) {
+      await this.chessWorker.terminate();
+      this.chessWorker = null;
+      logger.info("[OcrService] 棋子名称识别 Worker 已销毁");
+    }
+  }
+}
+const ocrService = OcrService.getInstance();
+const VALID_IMAGE_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg"];
+class TemplateLoader {
+  static instance;
+  /** 装备模板缓存 (按分类存储) */
+  equipTemplates = /* @__PURE__ */ new Map();
+  /** 英雄名称模板缓存 */
+  championTemplates = /* @__PURE__ */ new Map();
+  /** 星级模板缓存 */
+  starLevelTemplates = /* @__PURE__ */ new Map();
+  /** 空装备槽位模板 (24x24 纯黑) */
+  emptyEquipSlotTemplate = null;
+  /** 文件监听器防抖定时器 */
+  watcherDebounceTimer = null;
+  /** 模板加载完成标志 */
+  isLoaded = false;
+  // ========== 路径 Getter ==========
+  get championTemplatePath() {
+    return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/champion");
+  }
+  get equipTemplatePath() {
+    return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/equipment");
+  }
+  get starLevelTemplatePath() {
+    return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/starLevel");
+  }
+  constructor() {
+  }
+  /**
+   * 获取 TemplateLoader 单例
+   */
+  static getInstance() {
+    if (!TemplateLoader.instance) {
+      TemplateLoader.instance = new TemplateLoader();
+    }
+    return TemplateLoader.instance;
+  }
+  /**
+   * 初始化模板加载器
+   * @description 在 OpenCV 初始化完成后调用，加载所有模板并启动文件监听
+   */
+  async initialize() {
+    if (this.isLoaded) {
+      logger.warn("[TemplateLoader] 模板已加载，跳过重复初始化");
+      return;
+    }
+    logger.info("[TemplateLoader] 开始初始化模板加载器...");
+    this.createEmptySlotTemplate();
+    await Promise.all([
+      this.loadEquipTemplates(),
+      this.loadChampionTemplates(),
+      this.loadStarLevelTemplates()
+    ]);
+    this.setupChampionTemplateWatcher();
+    this.isLoaded = true;
+    logger.info("[TemplateLoader] 模板加载器初始化完成");
+  }
+  // ========== 公共访问方法 ==========
+  /**
+   * 获取装备模板
+   */
+  getEquipTemplates() {
+    return this.equipTemplates;
+  }
+  /**
+   * 获取英雄模板
+   */
+  getChampionTemplates() {
+    return this.championTemplates;
+  }
+  /**
+   * 获取星级模板
+   */
+  getStarLevelTemplates() {
+    return this.starLevelTemplates;
+  }
+  /**
+   * 获取空装备槽位模板
+   */
+  getEmptyEquipSlotTemplate() {
+    return this.emptyEquipSlotTemplate;
+  }
+  /**
+   * 检查模板是否已加载
+   */
+  isReady() {
+    return this.isLoaded;
+  }
+  // ========== 私有加载方法 ==========
+  /**
+   * 创建空槽位模板 (24x24 纯黑)
+   */
+  createEmptySlotTemplate() {
+    const TEMPLATE_SIZE = 24;
+    try {
+      this.emptyEquipSlotTemplate = new cv.Mat(
+        TEMPLATE_SIZE,
+        TEMPLATE_SIZE,
+        cv.CV_8UC4,
+        new cv.Scalar(0, 0, 0, 255)
+      );
+      logger.info("[TemplateLoader] 空槽位模板创建成功");
+    } catch (e) {
+      logger.error(`[TemplateLoader] 创建空槽位模板失败: ${e}`);
+    }
+  }
+  /**
+   * 加载装备模板
+   * @description 按分类加载装备图片，统一缩放到 24x24，移除 Alpha 通道
+   */
+  async loadEquipTemplates() {
+    this.clearEquipTemplates();
+    logger.info("[TemplateLoader] 开始加载装备模板...");
+    const TEMPLATE_SIZE = 24;
+    for (const category of EQUIP_CATEGORY_PRIORITY) {
+      const resourcePath = path.join(this.equipTemplatePath, category);
+      const categoryMap = /* @__PURE__ */ new Map();
+      if (!fs.existsSync(resourcePath)) {
+        logger.warn(`[TemplateLoader] 装备模板目录不存在: ${resourcePath}`);
+        this.equipTemplates.set(category, categoryMap);
+        continue;
+      }
+      const files = fs.readdirSync(resourcePath);
+      for (const file2 of files) {
+        const ext = path.extname(file2).toLowerCase();
+        if (!VALID_IMAGE_EXTENSIONS.includes(ext)) continue;
+        const filePath = path.join(resourcePath, file2);
+        const templateName = path.parse(file2).name;
+        try {
+          const mat = await this.loadImageAsMat(filePath, {
+            ensureAlpha: false,
+            removeAlpha: true,
+            targetSize: { width: TEMPLATE_SIZE, height: TEMPLATE_SIZE }
+          });
+          if (mat) {
+            categoryMap.set(templateName, mat);
+          }
+        } catch (e) {
+          logger.error(`[TemplateLoader] 加载装备模板失败 [${file2}]: ${e}`);
+        }
+      }
+      logger.info(`[TemplateLoader] 加载 [${category}] 模板: ${categoryMap.size} 个`);
+      this.equipTemplates.set(category, categoryMap);
+    }
+    logger.info("[TemplateLoader] 装备模板加载完成");
+  }
+  /**
+   * 加载英雄模板
+   * @description 用于商店和备战席的棋子名称识别
+   */
+  async loadChampionTemplates() {
+    this.clearChampionTemplates();
+    logger.info("[TemplateLoader] 开始加载英雄模板...");
+    if (!fs.existsSync(this.championTemplatePath)) {
+      fs.ensureDirSync(this.championTemplatePath);
+      logger.info(`[TemplateLoader] 英雄模板目录不存在，已自动创建: ${this.championTemplatePath}`);
+      return;
+    }
+    const files = fs.readdirSync(this.championTemplatePath);
+    for (const file2 of files) {
+      const ext = path.extname(file2).toLowerCase();
+      if (!VALID_IMAGE_EXTENSIONS.includes(ext)) continue;
+      const championName = path.parse(file2).name;
+      const filePath = path.join(this.championTemplatePath, file2);
+      try {
+        const mat = await this.loadImageAsMat(filePath, { ensureAlpha: true });
+        if (mat) {
+          this.championTemplates.set(championName, mat);
+        }
+      } catch (e) {
+        logger.error(`[TemplateLoader] 加载英雄模板失败 [${file2}]: ${e}`);
+      }
+    }
+    logger.info(`[TemplateLoader] 英雄模板加载完成，共 ${this.championTemplates.size} 个`);
+  }
+  /**
+   * 加载星级模板
+   * @description 用于识别棋子星级 (1-4 星)
+   */
+  async loadStarLevelTemplates() {
+    this.clearStarLevelTemplates();
+    logger.info("[TemplateLoader] 开始加载星级模板...");
+    if (!fs.existsSync(this.starLevelTemplatePath)) {
+      fs.ensureDirSync(this.starLevelTemplatePath);
+      logger.info(`[TemplateLoader] 星级模板目录不存在，已自动创建: ${this.starLevelTemplatePath}`);
+      return;
+    }
+    const files = fs.readdirSync(this.starLevelTemplatePath);
+    for (const file2 of files) {
+      const ext = path.extname(file2).toLowerCase();
+      if (!VALID_IMAGE_EXTENSIONS.includes(ext)) continue;
+      const starLevel = path.parse(file2).name;
+      const filePath = path.join(this.starLevelTemplatePath, file2);
+      try {
+        const mat = await this.loadImageAsMat(filePath, { ensureAlpha: true });
+        if (mat) {
+          this.starLevelTemplates.set(starLevel, mat);
+        }
+      } catch (e) {
+        logger.error(`[TemplateLoader] 加载星级模板失败 [${file2}]: ${e}`);
+      }
+    }
+    logger.info(`[TemplateLoader] 星级模板加载完成，共 ${this.starLevelTemplates.size} 个`);
+  }
+  // ========== 工具方法 ==========
+  /**
+   * 加载图片为 OpenCV Mat
+   * @param filePath 图片路径
+   * @param config 加载配置
+   * @returns OpenCV Mat 对象
+   */
+  async loadImageAsMat(filePath, config) {
+    try {
+      const fileBuf = fs.readFileSync(filePath);
+      let pipeline = sharp(fileBuf);
+      if (config.targetSize) {
+        pipeline = pipeline.resize(config.targetSize.width, config.targetSize.height, {
+          fit: "fill"
+        });
+      }
+      if (config.removeAlpha) {
+        pipeline = pipeline.removeAlpha();
+      } else if (config.ensureAlpha) {
+        pipeline = pipeline.ensureAlpha();
+      }
+      const { data, info } = await pipeline.raw().toBuffer({ resolveWithObject: true });
+      const channels = config.removeAlpha ? 3 : 4;
+      const expectedLength = info.width * info.height * channels;
+      if (data.length !== expectedLength) {
+        logger.warn(`[TemplateLoader] 图片数据长度异常: ${filePath}`);
+        return null;
+      }
+      const matType = config.removeAlpha ? cv.CV_8UC3 : cv.CV_8UC4;
+      const mat = new cv.Mat(info.height, info.width, matType);
+      mat.data.set(new Uint8Array(data));
+      return mat;
+    } catch (e) {
+      logger.error(`[TemplateLoader] 加载图片失败 [${filePath}]: ${e}`);
+      return null;
+    }
+  }
+  /**
+   * 设置英雄模板文件夹监听
+   * @description 监听文件变更，自动重新加载模板
+   */
+  setupChampionTemplateWatcher() {
+    if (!fs.existsSync(this.championTemplatePath)) {
+      fs.ensureDirSync(this.championTemplatePath);
+    }
+    fs.watch(this.championTemplatePath, (event, filename) => {
+      if (this.watcherDebounceTimer) {
+        clearTimeout(this.watcherDebounceTimer);
+      }
+      this.watcherDebounceTimer = setTimeout(() => {
+        logger.info(`[TemplateLoader] 检测到英雄模板变更 (${event}: ${filename})，重新加载...`);
+        this.loadChampionTemplates();
+      }, 500);
+    });
+    logger.info("[TemplateLoader] 英雄模板文件监听已启动");
+  }
+  // ========== 清理方法 ==========
+  /**
+   * 清理装备模板缓存
+   */
+  clearEquipTemplates() {
+    for (const categoryMap of this.equipTemplates.values()) {
+      for (const mat of categoryMap.values()) {
+        if (mat && !mat.isDeleted()) {
+          mat.delete();
+        }
+      }
+    }
+    this.equipTemplates.clear();
+  }
+  /**
+   * 清理英雄模板缓存
+   */
+  clearChampionTemplates() {
+    for (const mat of this.championTemplates.values()) {
+      if (mat && !mat.isDeleted()) {
+        mat.delete();
+      }
+    }
+    this.championTemplates.clear();
+  }
+  /**
+   * 清理星级模板缓存
+   */
+  clearStarLevelTemplates() {
+    for (const mat of this.starLevelTemplates.values()) {
+      if (mat && !mat.isDeleted()) {
+        mat.delete();
+      }
+    }
+    this.starLevelTemplates.clear();
+  }
+  /**
+   * 销毁所有资源
+   */
+  destroy() {
+    this.clearEquipTemplates();
+    this.clearChampionTemplates();
+    this.clearStarLevelTemplates();
+    if (this.emptyEquipSlotTemplate && !this.emptyEquipSlotTemplate.isDeleted()) {
+      this.emptyEquipSlotTemplate.delete();
+      this.emptyEquipSlotTemplate = null;
+    }
+    if (this.watcherDebounceTimer) {
+      clearTimeout(this.watcherDebounceTimer);
+    }
+    this.isLoaded = false;
+    logger.info("[TemplateLoader] 模板加载器资源已释放");
+  }
+}
+const templateLoader = TemplateLoader.getInstance();
+const MATCH_THRESHOLDS = {
+  /** 装备匹配阈值 */
+  EQUIP: 0.75,
+  /** 英雄匹配阈值 */
+  CHAMPION: 0.7,
+  /** 星级匹配阈值 (星级图标特征明显，阈值设高) */
+  STAR_LEVEL: 0.85,
+  /** 空槽位标准差阈值 (低于此值判定为空) */
+  EMPTY_SLOT_STDDEV: 10
+};
+class TemplateMatcher {
+  static instance;
+  constructor() {
+  }
+  /**
+   * 获取 TemplateMatcher 单例
+   */
+  static getInstance() {
+    if (!TemplateMatcher.instance) {
+      TemplateMatcher.instance = new TemplateMatcher();
+    }
+    return TemplateMatcher.instance;
+  }
+  // ========== 公共匹配方法 ==========
+  /**
+   * 检测是否为空槽位
+   * @description 基于图像标准差快速判断，纯色/纯黑图片标准差接近 0
+   * @param targetMat 目标图像
+   * @returns 是否为空槽位
+   */
+  isEmptySlot(targetMat) {
+    const mean = new cv.Mat();
+    const stddev = new cv.Mat();
+    try {
+      cv.meanStdDev(targetMat, mean, stddev);
+      const deviation = stddev.doubleAt(0, 0);
+      return deviation < MATCH_THRESHOLDS.EMPTY_SLOT_STDDEV;
+    } finally {
+      mean.delete();
+      stddev.delete();
+    }
+  }
+  /**
+   * 匹配装备模板
+   * @description 按分类优先级顺序匹配，找到即返回
+   * @param targetMat 目标图像 (需要是 RGB 3 通道)
+   * @returns 匹配到的装备信息，未匹配返回 null
+   */
+  matchEquip(targetMat) {
+    if (this.isEmptySlot(targetMat)) {
+      return {
+        name: "空槽位",
+        confidence: 1,
+        slot: "",
+        category: "empty"
+      };
+    }
+    const equipTemplates = templateLoader.getEquipTemplates();
+    if (equipTemplates.size === 0) {
+      logger.warn("[TemplateMatcher] 装备模板为空，跳过匹配");
+      return null;
+    }
+    const mask = new cv.Mat();
+    const resultMat = new cv.Mat();
+    try {
+      for (const category of EQUIP_CATEGORY_PRIORITY) {
+        const categoryMap = equipTemplates.get(category);
+        if (!categoryMap || categoryMap.size === 0) continue;
+        for (const [templateName, templateMat] of categoryMap) {
+          if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) {
+            continue;
+          }
+          cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
+          const result = cv.minMaxLoc(resultMat, mask);
+          if (result.maxVal >= MATCH_THRESHOLDS.EQUIP) {
+            const equipData = Object.values(TFT_16_EQUIP_DATA).find(
+              (e) => e.englishName.toLowerCase() === templateName.toLowerCase()
+            );
+            if (equipData) {
+              return {
+                ...equipData,
+                slot: "",
+                confidence: result.maxVal,
+                category
+              };
+            }
+          }
+        }
+      }
+      return null;
+    } catch (e) {
+      logger.error(`[TemplateMatcher] 装备匹配出错: ${e}`);
+      return null;
+    } finally {
+      mask.delete();
+      resultMat.delete();
+    }
+  }
+  /**
+   * 匹配英雄模板
+   * @description 用于商店和备战席的棋子名称识别
+   * @param targetMat 目标图像 (需要是 RGBA 4 通道)
+   * @returns 匹配到的英雄名称，空槽位返回 "empty"，未匹配返回 null
+   */
+  matchChampion(targetMat) {
+    if (this.isEmptySlot(targetMat)) {
+      return "empty";
+    }
+    const championTemplates = templateLoader.getChampionTemplates();
+    if (championTemplates.size === 0) {
+      logger.warn("[TemplateMatcher] 英雄模板为空，跳过匹配");
+      return null;
+    }
+    const mask = new cv.Mat();
+    const resultMat = new cv.Mat();
+    try {
+      let bestMatchName = null;
+      let maxConfidence = 0;
+      for (const [name, templateMat] of championTemplates) {
+        if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) {
+          continue;
+        }
+        cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
+        const result = cv.minMaxLoc(resultMat, mask);
+        if (result.maxVal >= MATCH_THRESHOLDS.CHAMPION && result.maxVal > maxConfidence) {
+          maxConfidence = result.maxVal;
+          bestMatchName = name;
+        }
+      }
+      if (bestMatchName) {
+        logger.info(
+          `[TemplateMatcher] 英雄模板匹配成功: ${bestMatchName} (相似度 ${(maxConfidence * 100).toFixed(1)}%)`
+        );
+      }
+      return bestMatchName;
+    } catch (e) {
+      logger.error(`[TemplateMatcher] 英雄匹配出错: ${e}`);
+      return null;
+    } finally {
+      mask.delete();
+      resultMat.delete();
+    }
+  }
+  /**
+   * 匹配星级模板
+   * @description 识别棋子星级 (1-4 星)
+   * @param targetMat 目标图像 (需要是 RGBA 4 通道)
+   * @returns 星级 (1-4)，未识别返回 -1
+   */
+  matchStarLevel(targetMat) {
+    const starLevelTemplates = templateLoader.getStarLevelTemplates();
+    if (starLevelTemplates.size === 0) {
+      logger.warn("[TemplateMatcher] 星级模板为空，跳过匹配");
+      return -1;
+    }
+    const mask = new cv.Mat();
+    const resultMat = new cv.Mat();
+    try {
+      let bestMatchLevel = null;
+      let maxConfidence = 0;
+      for (const [levelStr, templateMat] of starLevelTemplates) {
+        if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) {
+          continue;
+        }
+        cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
+        const result = cv.minMaxLoc(resultMat, mask);
+        if (result.maxVal > maxConfidence) {
+          maxConfidence = result.maxVal;
+          const lvl = parseInt(levelStr);
+          if (!isNaN(lvl) && [1, 2, 3, 4].includes(lvl)) {
+            bestMatchLevel = lvl;
+          }
+        }
+      }
+      if (maxConfidence >= MATCH_THRESHOLDS.STAR_LEVEL && bestMatchLevel !== null) {
+        logger.info(
+          `[TemplateMatcher] 星级识别成功: ${bestMatchLevel}星 (相似度: ${(maxConfidence * 100).toFixed(1)}%)`
+        );
+        return bestMatchLevel;
+      }
+      if (maxConfidence > 0.5) {
+        logger.warn(
+          `[TemplateMatcher] 星级识别未达标 (最高相似度: ${(maxConfidence * 100).toFixed(1)}%)`
+        );
+      }
+      return -1;
+    } catch (e) {
+      logger.error(`[TemplateMatcher] 星级匹配出错: ${e}`);
+      return -1;
+    } finally {
+      mask.delete();
+      resultMat.delete();
+    }
+  }
+}
+const templateMatcher = TemplateMatcher.getInstance();
+class ScreenCapture {
+  static instance;
+  /** 游戏窗口基准点 (左上角坐标) */
+  gameWindowOrigin = null;
+  constructor() {
+  }
+  /**
+   * 获取 ScreenCapture 单例
+   */
+  static getInstance() {
+    if (!ScreenCapture.instance) {
+      ScreenCapture.instance = new ScreenCapture();
+    }
+    return ScreenCapture.instance;
+  }
+  /**
+   * 设置游戏窗口基准点
+   * @param origin 游戏窗口左上角坐标
+   */
+  setGameWindowOrigin(origin) {
+    this.gameWindowOrigin = origin;
+  }
+  /**
+   * 获取游戏窗口基准点
+   */
+  getGameWindowOrigin() {
+    return this.gameWindowOrigin;
+  }
+  /**
+   * 检查是否已初始化
+   */
+  isInitialized() {
+    return this.gameWindowOrigin !== null;
+  }
+  // ========== 坐标转换 ==========
+  /**
+   * 将游戏内相对区域转换为屏幕绝对区域
+   * @param simpleRegion 游戏内相对区域定义
+   * @returns nut-js Region 对象
+   * @throws 如果未初始化游戏窗口基准点
+   */
+  toAbsoluteRegion(simpleRegion) {
+    if (!this.gameWindowOrigin) {
+      throw new Error("[ScreenCapture] 尚未设置游戏窗口基准点");
+    }
+    return new Region(
+      this.gameWindowOrigin.x + simpleRegion.leftTop.x,
+      this.gameWindowOrigin.y + simpleRegion.leftTop.y,
+      simpleRegion.rightBottom.x - simpleRegion.leftTop.x,
+      simpleRegion.rightBottom.y - simpleRegion.leftTop.y
+    );
+  }
+  // ========== 截图方法 ==========
+  /**
+   * 截取指定区域并输出为 PNG Buffer
+   * @param region nut-js Region 对象 (屏幕绝对坐标)
+   * @param forOCR 是否针对 OCR 进行预处理
+   * @returns PNG 格式的 Buffer
+   */
   async captureRegionAsPng(region, forOCR = true) {
-    const screenshot = await screen$1.grabRegion(region);
+    const screenshot = await screen.grabRegion(region);
     let pipeline = sharp(screenshot.data, {
       raw: {
         width: screenshot.width,
@@ -9109,360 +9553,576 @@ class TftOperator {
     if (forOCR) {
       pipeline = pipeline.resize({
         width: Math.round(screenshot.width * 3),
-        // 放大 3 倍以提高 OCR 精度
         height: Math.round(screenshot.height * 3),
         kernel: "lanczos3"
       }).grayscale().normalize().threshold(160).sharpen();
     }
     return await pipeline.toFormat("png").toBuffer();
   }
-  // ======================================
-  // 工具函数：OCR 识别
-  // ======================================
-  async ocr(pngBuffer, worker) {
-    const result = await worker.recognize(pngBuffer);
-    return result.data.text.trim();
+  /**
+   * 截取游戏内相对区域并输出为 PNG Buffer
+   * @param simpleRegion 游戏内相对区域定义
+   * @param forOCR 是否针对 OCR 进行预处理
+   * @returns PNG 格式的 Buffer
+   */
+  async captureGameRegionAsPng(simpleRegion, forOCR = true) {
+    const absoluteRegion = this.toAbsoluteRegion(simpleRegion);
+    return this.captureRegionAsPng(absoluteRegion, forOCR);
   }
-  //  发条鸟试炼的对局阶段region，1-1的那个
-  getClockworkTrialsRegion() {
-    const originX = this.gameWindowRegion.x;
-    const originY = this.gameWindowRegion.y;
+  /**
+   * 截取指定区域并转换为 OpenCV Mat
+   * @description 用于模板匹配，自动进行 BGRA -> RGB 颜色转换
+   * @param region nut-js Region 对象 (屏幕绝对坐标)
+   * @returns OpenCV Mat 对象 (RGB 3 通道)
+   */
+  async captureRegionAsMat(region) {
+    const screenshot = await screen.grabRegion(region);
+    const mat = new cv.Mat(screenshot.height, screenshot.width, cv.CV_8UC4);
+    mat.data.set(new Uint8Array(screenshot.data));
+    cv.cvtColor(mat, mat, cv.COLOR_BGRA2RGB);
+    return mat;
+  }
+  /**
+   * 截取游戏内相对区域并转换为 OpenCV Mat
+   * @param simpleRegion 游戏内相对区域定义
+   * @returns OpenCV Mat 对象 (RGB 3 通道)
+   */
+  async captureGameRegionAsMat(simpleRegion) {
+    const absoluteRegion = this.toAbsoluteRegion(simpleRegion);
+    return this.captureRegionAsMat(absoluteRegion);
+  }
+  // ========== 图像转换工具 ==========
+  /**
+   * 将 PNG Buffer 转换为 OpenCV Mat (RGBA 4 通道)
+   * @param pngBuffer PNG 格式的 Buffer
+   * @returns OpenCV Mat 对象 (RGBA 4 通道)
+   */
+  async pngBufferToMat(pngBuffer) {
+    const { data, info } = await sharp(pngBuffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    const mat = cv.matFromImageData({
+      data: new Uint8Array(data),
+      width: info.width,
+      height: info.height
+    });
+    return mat;
+  }
+  /**
+   * 将 OpenCV Mat 转换为 PNG Buffer
+   * @param mat OpenCV Mat 对象
+   * @param channels 通道数 (3 或 4)
+   * @returns PNG 格式的 Buffer
+   */
+  async matToPngBuffer(mat, channels = 4) {
+    return await sharp(mat.data, {
+      raw: {
+        width: mat.cols,
+        height: mat.rows,
+        channels
+      }
+    }).png().toBuffer();
+  }
+}
+const screenCapture = ScreenCapture.getInstance();
+const MOUSE_CONFIG = {
+  /** 移动后等待时间 (ms) */
+  MOVE_DELAY: 10,
+  /** 点击后等待时间 (ms) */
+  CLICK_DELAY: 20
+};
+class MouseController {
+  static instance;
+  /** 游戏窗口基准点 (左上角坐标) */
+  gameWindowOrigin = null;
+  constructor() {
+  }
+  /**
+   * 获取 MouseController 单例
+   */
+  static getInstance() {
+    if (!MouseController.instance) {
+      MouseController.instance = new MouseController();
+    }
+    return MouseController.instance;
+  }
+  /**
+   * 设置游戏窗口基准点
+   * @param origin 游戏窗口左上角坐标
+   */
+  setGameWindowOrigin(origin) {
+    this.gameWindowOrigin = origin;
+    logger.info(`[MouseController] 游戏窗口基准点已设置: (${origin.x}, ${origin.y})`);
+  }
+  /**
+   * 获取游戏窗口基准点
+   */
+  getGameWindowOrigin() {
+    return this.gameWindowOrigin;
+  }
+  /**
+   * 检查是否已初始化
+   */
+  isInitialized() {
+    return this.gameWindowOrigin !== null;
+  }
+  /**
+   * 在游戏窗口内点击指定位置
+   * @description 自动将游戏内相对坐标转换为屏幕绝对坐标
+   * @param offset 相对于游戏窗口左上角的偏移坐标
+   * @param button 鼠标按键 (默认左键)
+   * @throws 如果未初始化游戏窗口基准点
+   */
+  async clickAt(offset, button = Button.LEFT) {
+    if (!this.gameWindowOrigin) {
+      throw new Error("[MouseController] 尚未设置游戏窗口基准点，请先调用 setGameWindowOrigin()");
+    }
+    const target = new Point(
+      this.gameWindowOrigin.x + offset.x,
+      this.gameWindowOrigin.y + offset.y
+    );
+    logger.info(
+      `[MouseController] 点击: (Origin: ${this.gameWindowOrigin.x},${this.gameWindowOrigin.y}) + (Offset: ${offset.x},${offset.y}) -> (Target: ${target.x},${target.y})`
+    );
+    try {
+      await mouse.move([target]);
+      await sleep(MOUSE_CONFIG.MOVE_DELAY);
+      await mouse.click(button);
+      await sleep(MOUSE_CONFIG.CLICK_DELAY);
+    } catch (e) {
+      logger.error(`[MouseController] 鼠标点击失败: ${e.message}`);
+      throw e;
+    }
+  }
+  /**
+   * 在游戏窗口内双击指定位置
+   * @description 用于需要双击的操作 (如购买棋子时为了确保成功)
+   * @param offset 相对于游戏窗口左上角的偏移坐标
+   * @param button 鼠标按键 (默认左键)
+   * @param interval 两次点击之间的间隔 (ms)
+   */
+  async doubleClickAt(offset, button = Button.LEFT, interval = 50) {
+    await this.clickAt(offset, button);
+    await sleep(interval);
+    await this.clickAt(offset, button);
+  }
+  /**
+   * 移动鼠标到指定位置 (不点击)
+   * @param offset 相对于游戏窗口左上角的偏移坐标
+   */
+  async moveTo(offset) {
+    if (!this.gameWindowOrigin) {
+      throw new Error("[MouseController] 尚未设置游戏窗口基准点");
+    }
+    const target = new Point(
+      this.gameWindowOrigin.x + offset.x,
+      this.gameWindowOrigin.y + offset.y
+    );
+    try {
+      await mouse.move([target]);
+      await sleep(MOUSE_CONFIG.MOVE_DELAY);
+    } catch (e) {
+      logger.error(`[MouseController] 鼠标移动失败: ${e.message}`);
+      throw e;
+    }
+  }
+  /**
+   * 在屏幕绝对坐标点击
+   * @description 用于不需要游戏窗口偏移的场景
+   * @param position 屏幕绝对坐标
+   * @param button 鼠标按键 (默认左键)
+   */
+  async clickAtAbsolute(position, button = Button.LEFT) {
+    try {
+      await mouse.move([position]);
+      await sleep(MOUSE_CONFIG.MOVE_DELAY);
+      await mouse.click(button);
+      await sleep(MOUSE_CONFIG.CLICK_DELAY);
+    } catch (e) {
+      logger.error(`[MouseController] 鼠标点击失败: ${e.message}`);
+      throw e;
+    }
+  }
+}
+const mouseController = MouseController.getInstance();
+function parseStageStringToEnum(stageText) {
+  try {
+    const cleanText = stageText.replace(/\s/g, "");
+    const match = cleanText.match(/^(\d+)-(\d+)$/);
+    if (!match) {
+      return GameStageType.UNKNOWN;
+    }
+    const stage = parseInt(match[1]);
+    const round = parseInt(match[2]);
+    if (stage === 1) {
+      return GameStageType.PVE;
+    }
+    if (round === 2) {
+      return GameStageType.AUGMENT;
+    }
+    if (round === 4) {
+      return GameStageType.CAROUSEL;
+    }
+    if (round === 7) {
+      return GameStageType.PVE;
+    }
+    return GameStageType.PVP;
+  } catch (e) {
+    console.error("[GameStageParser] 解析阶段字符串失败:", e);
+    return GameStageType.UNKNOWN;
+  }
+}
+function isValidStageFormat(text) {
+  return /^\d+\s*[-]\s*\d+$/.test(text.trim());
+}
+class TftOperator {
+  static instance;
+  /** 游戏窗口左上角坐标 */
+  gameWindowRegion = null;
+  /** 当前游戏模式 */
+  tftMode = TFTMode.CLASSIC;
+  /** 当前棋盘状态 */
+  currentBoardState = /* @__PURE__ */ new Map();
+  /** 当前装备状态 */
+  currentEquipState = [];
+  /** 当前备战席状态 */
+  currentBenchState = [];
+  /** OpenCV 是否已初始化 */
+  isOpenCVReady = false;
+  // ========== 路径 Getter ==========
+  get championTemplatePath() {
+    return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/champion");
+  }
+  get equipTemplatePath() {
+    return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/equipment");
+  }
+  get starLevelTemplatePath() {
+    return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/starLevel");
+  }
+  // ========== 构造函数 ==========
+  constructor() {
+    this.initOpenCV();
+  }
+  /**
+   * 初始化 OpenCV
+   * @description 在 OpenCV WASM 加载完成后初始化模板加载器
+   */
+  initOpenCV() {
+    cv["onRuntimeInitialized"] = async () => {
+      logger.info("[TftOperator] OpenCV (WASM) 核心模块加载完毕");
+      this.isOpenCVReady = true;
+      await templateLoader.initialize();
+    };
+  }
+  /**
+   * 获取 TftOperator 单例
+   */
+  static getInstance() {
+    if (!TftOperator.instance) {
+      TftOperator.instance = new TftOperator();
+    }
+    return TftOperator.instance;
+  }
+  // ============================================================================
+  // 公共接口 (Public API)
+  // ============================================================================
+  /**
+   * 初始化操作器
+   * @description 计算游戏窗口位置，LOL 窗口默认居中显示
+   * @returns 是否初始化成功
+   */
+  init() {
+    try {
+      const primaryDisplay = screen$1.getPrimaryDisplay();
+      const scaleFactor = primaryDisplay.scaleFactor;
+      const { width: logicalWidth, height: logicalHeight } = primaryDisplay.size;
+      const screenWidth = Math.round(logicalWidth * scaleFactor);
+      const screenHeight = Math.round(logicalHeight * scaleFactor);
+      const screenCenterX = screenWidth / 2;
+      const screenCenterY = screenHeight / 2;
+      const originX = screenCenterX - GAME_WIDTH / 2;
+      const originY = screenCenterY - GAME_HEIGHT / 2;
+      this.gameWindowRegion = new Point(originX, originY);
+      screenCapture.setGameWindowOrigin(this.gameWindowRegion);
+      mouseController.setGameWindowOrigin(this.gameWindowRegion);
+      logger.info(`[TftOperator] 屏幕尺寸: ${screenWidth}x${screenHeight}`);
+      logger.info(`[TftOperator] 游戏基准点: (${originX}, ${originY})`);
+      return true;
+    } catch (e) {
+      logger.error(`[TftOperator] 初始化失败: ${e.message}`);
+      this.gameWindowRegion = null;
+      return false;
+    }
+  }
+  /**
+   * 获取当前游戏阶段
+   * @description 通过 OCR 识别游戏阶段 (如 "2-1", "3-5")
+   * @returns 游戏阶段枚举
+   */
+  async getGameStage() {
+    try {
+      let stageText = "";
+      const normalRegion = this.getStageAbsoluteRegion(false);
+      const normalPng = await screenCapture.captureRegionAsPng(normalRegion);
+      stageText = await ocrService.recognize(normalPng, OcrWorkerType.GAME_STAGE);
+      if (!isValidStageFormat(stageText)) {
+        logger.info(`[TftOperator] 标准区域识别未命中: "${stageText}"，尝试 Stage-1 区域...`);
+        const stageOneRegion = this.getStageAbsoluteRegion(true);
+        const stageOnePng = await screenCapture.captureRegionAsPng(stageOneRegion);
+        stageText = await ocrService.recognize(stageOnePng, OcrWorkerType.GAME_STAGE);
+      }
+      if (!isValidStageFormat(stageText)) {
+        const clockworkRegion = this.getClockworkTrialsRegion();
+        const clockPng = await screenCapture.captureRegionAsPng(clockworkRegion);
+        const clockText = await ocrService.recognize(clockPng, OcrWorkerType.GAME_STAGE);
+        if (clockText && clockText.length > 2) {
+          this.tftMode = TFTMode.CLOCKWORK_TRAILS;
+          logger.info("[TftOperator] 识别为发条鸟试炼模式");
+          return GameStageType.PVP;
+        }
+      }
+      const stageType = parseStageStringToEnum(stageText);
+      if (stageType !== GameStageType.UNKNOWN) {
+        logger.info(`[TftOperator] 识别阶段: [${stageText}] -> ${stageType}`);
+        this.tftMode = TFTMode.CLASSIC;
+      } else {
+        logger.warn(`[TftOperator] 无法识别当前阶段: "${stageText ?? "null"}"`);
+      }
+      return stageType;
+    } catch (e) {
+      logger.error(`[TftOperator] 阶段识别异常: ${e.message}`);
+      return GameStageType.UNKNOWN;
+    }
+  }
+  /**
+   * 获取当前商店的所有棋子信息
+   * @description 扫描商店 5 个槽位，通过 OCR + 模板匹配识别棋子
+   * @returns 商店中的棋子数组 (空槽位为 null)
+   */
+  async getShopInfo() {
+    logger.info("[TftOperator] 正在扫描商店中的 5 个槽位...");
+    const shopUnits = [];
+    for (let i = 1; i <= 5; i++) {
+      const slotKey = `SLOT_${i}`;
+      const region = screenCapture.toAbsoluteRegion(shopSlotNameRegions[slotKey]);
+      const processedPng = await screenCapture.captureRegionAsPng(region);
+      const text = await ocrService.recognize(processedPng, OcrWorkerType.CHESS);
+      let cleanName = text.replace(/\s/g, "");
+      let tftUnit = TFT_16_CHAMPION_DATA[cleanName] || null;
+      if (!tftUnit) {
+        logger.warn(`[商店槽位 ${i}] OCR 识别失败，尝试模板匹配...`);
+        const mat = await screenCapture.pngBufferToMat(processedPng);
+        cleanName = templateMatcher.matchChampion(mat) || "";
+        mat.delete();
+      }
+      tftUnit = TFT_16_CHAMPION_DATA[cleanName] || null;
+      if (tftUnit) {
+        logger.info(`[商店槽位 ${i}] 识别成功 -> ${tftUnit.displayName} (${tftUnit.price}费)`);
+        shopUnits.push(tftUnit);
+      } else {
+        this.handleRecognitionFailure("shop", i, cleanName, processedPng);
+        shopUnits.push(null);
+      }
+    }
+    return shopUnits;
+  }
+  /**
+   * 获取当前装备栏信息
+   * @description 扫描装备栏所有槽位，通过模板匹配识别装备
+   * @returns 识别到的装备数组
+   */
+  async getEquipInfo() {
+    if (!this.gameWindowRegion) {
+      logger.error("[TftOperator] 尚未初始化游戏窗口位置");
+      return [];
+    }
+    if (!templateLoader.isReady()) {
+      logger.warn("[TftOperator] 模板未加载完成，跳过识别");
+      return [];
+    }
+    const resultEquips = [];
+    logger.info("[TftOperator] 开始扫描装备栏...");
+    for (const [slotName, regionDef] of Object.entries(equipmentRegion)) {
+      const targetRegion = new Region(
+        this.gameWindowRegion.x + regionDef.leftTop.x,
+        this.gameWindowRegion.y + regionDef.leftTop.y,
+        regionDef.rightBottom.x - regionDef.leftTop.x + 1,
+        regionDef.rightBottom.y - regionDef.leftTop.y + 1
+      );
+      let targetMat = null;
+      try {
+        targetMat = await screenCapture.captureRegionAsMat(targetRegion);
+        const matchResult = templateMatcher.matchEquip(targetMat);
+        if (matchResult) {
+          logger.info(
+            `[TftOperator] ${slotName} 识别成功: ${matchResult.name} (相似度: ${(matchResult.confidence * 100).toFixed(1)}%)`
+          );
+          matchResult.slot = slotName;
+          resultEquips.push(matchResult);
+        } else {
+          logger.error(`[TftOperator] ${slotName} 槽位识别失败`);
+          await this.saveFailedImage("equip", slotName, targetMat, 3);
+        }
+      } catch (e) {
+        logger.error(`[TftOperator] ${slotName} 扫描异常: ${e.message}`);
+      } finally {
+        if (targetMat && !targetMat.isDeleted()) {
+          targetMat.delete();
+        }
+      }
+    }
+    return resultEquips;
+  }
+  /**
+   * 购买指定槽位的棋子
+   * @param slot 槽位编号 (1-5)
+   */
+  async buyAtSlot(slot) {
+    const slotKey = `SHOP_SLOT_${slot}`;
+    const targetPoint = shopSlot[slotKey];
+    if (!targetPoint) {
+      logger.error(`[TftOperator] 无效的槽位: ${slot}，只接受 1-5`);
+      return;
+    }
+    logger.info(`[TftOperator] 正在购买棋子，槽位: ${slot}...`);
+    await mouseController.doubleClickAt(targetPoint, Button.LEFT, 50);
+  }
+  /**
+   * 获取当前备战席的棋子信息
+   * @description 通过右键点击棋子，识别详情面板中的英雄名和星级
+   * @returns 备战席棋子数组 (空槽位为 null)
+   */
+  async getBenchInfo() {
+    const benchUnits = [];
+    for (const benchSlot of Object.keys(benchSlotPoints)) {
+      await mouseController.clickAt(benchSlotPoints[benchSlot], Button.RIGHT);
+      await sleep(50);
+      const nameRegion = screenCapture.toAbsoluteRegion(detailChampionNameRegion);
+      const namePng = await screenCapture.captureRegionAsPng(nameRegion);
+      const text = await ocrService.recognize(namePng, OcrWorkerType.CHESS);
+      let cleanName = text.replace(/\s/g, "");
+      let tftUnit = TFT_16_CHAMPION_DATA[cleanName] || null;
+      if (!tftUnit) {
+        logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] OCR 识别失败，尝试模板匹配...`);
+        const mat = await screenCapture.pngBufferToMat(namePng);
+        cleanName = templateMatcher.matchChampion(mat) || "";
+        mat.delete();
+      }
+      tftUnit = TFT_16_CHAMPION_DATA[cleanName] || null;
+      if (tftUnit) {
+        const starRegion = screenCapture.toAbsoluteRegion(detailChampionStarRegion);
+        const starPng = await screenCapture.captureRegionAsPng(starRegion, false);
+        const starMat = await screenCapture.pngBufferToMat(starPng);
+        const starLevel = templateMatcher.matchStarLevel(starMat);
+        starMat.delete();
+        logger.info(
+          `[备战席槽位 ${benchSlot.slice(-1)}] 识别成功 -> ${tftUnit.displayName} (${tftUnit.price}费-${starLevel}星)`
+        );
+        benchUnits.push({
+          location: benchSlot,
+          tftUnit,
+          starLevel,
+          equips: []
+        });
+      } else {
+        this.handleRecognitionFailure("bench", benchSlot.slice(-1), cleanName, namePng);
+        benchUnits.push(null);
+      }
+    }
+    return benchUnits;
+  }
+  // ============================================================================
+  // 私有方法 (Private Methods)
+  // ============================================================================
+  /**
+   * 获取游戏阶段显示区域
+   * @param isStageOne 是否为第一阶段 (UI 位置不同)
+   */
+  getStageAbsoluteRegion(isStageOne = false) {
+    this.ensureInitialized();
+    const display = isStageOne ? gameStageDisplayStageOne : gameStageDisplayNormal;
     return new Region(
-      originX + gameStageDisplayTheClockworkTrails.leftTop.x,
-      originY + gameStageDisplayTheClockworkTrails.leftTop.y,
+      Math.round(this.gameWindowRegion.x + display.leftTop.x),
+      Math.round(this.gameWindowRegion.y + display.leftTop.y),
+      Math.round(display.rightBottom.x - display.leftTop.x),
+      Math.round(display.rightBottom.y - display.leftTop.y)
+    );
+  }
+  /**
+   * 获取发条鸟试炼模式的阶段显示区域
+   */
+  getClockworkTrialsRegion() {
+    return new Region(
+      this.gameWindowRegion.x + gameStageDisplayTheClockworkTrails.leftTop.x,
+      this.gameWindowRegion.y + gameStageDisplayTheClockworkTrails.leftTop.y,
       gameStageDisplayTheClockworkTrails.rightBottom.x - gameStageDisplayTheClockworkTrails.leftTop.x,
       gameStageDisplayTheClockworkTrails.rightBottom.y - gameStageDisplayTheClockworkTrails.leftTop.y
     );
   }
   /**
-   * 加载装备模板
+   * 确保操作器已初始化
+   * @throws 如果未初始化
    */
-  async loadEquipTemplates() {
-    if (this.equipTemplates.length > 0) {
-      for (const category of this.equipTemplates) {
-        for (const mat of category.values()) {
-          if (mat && !mat.isDeleted()) mat.delete();
-        }
-      }
-      this.equipTemplates.length = 0;
-    }
-    logger.info(`[TftOperator] 开始加载装备模板...`);
-    const TEMPLATE_SIZE = 24;
-    if (!this.emptyEquipSlotTemplate) {
-      try {
-        this.emptyEquipSlotTemplate = new cv.Mat(TEMPLATE_SIZE, TEMPLATE_SIZE, cv.CV_8UC4, new cv.Scalar(0, 0, 0, 255));
-      } catch (e) {
-        logger.error(`[TftOperator] 创建空模板失败: ${e}`);
+  ensureInitialized() {
+    if (!this.gameWindowRegion) {
+      logger.error("[TftOperator] 尝试在 init() 之前操作");
+      if (!this.init()) {
+        throw new Error("[TftOperator] 未初始化，请先调用 init()");
       }
     }
-    const validExtensions = [".png", ".webp", ".jpg", ".jpeg"];
-    for (const category of equipResourcePath) {
-      const resourcePath = path.join(this.equipTemplatePath, category);
-      const categoryMap = /* @__PURE__ */ new Map();
-      if (!fs.existsSync(resourcePath)) {
-        logger.warn(`[TftOperator] 装备模板目录不存在: ${resourcePath}`);
-        continue;
-      }
-      const files = fs.readdirSync(resourcePath);
-      for (const file2 of files) {
-        const ext = path.extname(file2).toLowerCase();
-        if (!validExtensions.includes(ext)) continue;
-        const filePath = path.join(resourcePath, file2);
-        const fileNameNotExt = path.parse(file2).name;
-        const processedBaseDir = path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/processed_equipment");
-        fs.ensureDirSync(processedBaseDir);
-        try {
-          const fileBuf = fs.readFileSync(filePath);
-          const pipeline = sharp(fileBuf).resize(TEMPLATE_SIZE, TEMPLATE_SIZE, { fit: "fill" }).removeAlpha();
-          const { data, info } = await pipeline.clone().raw().toBuffer({ resolveWithObject: true });
-          const uint8Data = new Uint8Array(data);
-          if (uint8Data.length !== info.width * info.height * 3) {
-            logger.warn(`[TftOperator] 图片数据长度异常: ${file2}`);
-            continue;
-          }
-          const mat = new cv.Mat(info.height, info.width, cv.CV_8UC3);
-          mat.data.set(uint8Data);
-          categoryMap.set(fileNameNotExt, mat);
-        } catch (e) {
-          logger.error(`[TftOperator] 加载模板失败 [${file2}]: ${e}`);
-        }
-      }
-      logger.info(`[TftOperator] 加载 [${category}] 模板: ${categoryMap.size} 个`);
-      this.equipTemplates.push(categoryMap);
-    }
-    logger.info(`[TftOperator] 图片模板加载完成！`);
   }
   /**
-   * 加载英雄ID模板
+   * 处理识别失败的情况
+   * @param type 识别类型 (shop/bench)
+   * @param slot 槽位标识
+   * @param recognizedName 识别到的名称
+   * @param imageBuffer 截图 Buffer
    */
-  async loadChampionTemplates() {
-    if (this.championTemplates.size > 0) {
-      for (const mat of this.championTemplates.values()) {
-        if (mat && !mat.isDeleted()) {
-          mat.delete();
-        }
-      }
-      this.championTemplates.clear();
+  handleRecognitionFailure(type, slot, recognizedName, imageBuffer) {
+    if (recognizedName === "empty") {
+      logger.info(`[${type}槽位 ${slot}] 识别为空槽位`);
+    } else if (recognizedName && recognizedName.length > 0) {
+      logger.warn(`[${type}槽位 ${slot}] 匹配到模板但名称未知: ${recognizedName}`);
+    } else {
+      logger.warn(`[${type}槽位 ${slot}] 识别失败，保存截图...`);
+      const filename = `fail_${type}_slot_${slot}_${Date.now()}.png`;
+      fs.writeFileSync(path.join(this.championTemplatePath, filename), imageBuffer);
     }
-    logger.info(`[TftOperator] 开始加载英雄模板...`);
-    if (!fs.existsSync(this.championTemplatePath)) {
-      fs.ensureDirSync(this.championTemplatePath);
-      logger.info(`[TftOperator] 英雄模板目录不存在，已自动创建: ${this.championTemplatePath}`);
-      return;
-    }
-    const files = fs.readdirSync(this.championTemplatePath);
-    for (const file2 of files) {
-      const ext = path.extname(file2).toLowerCase();
-      if (![".png", ".jpg", ".jpeg"].includes(ext)) continue;
-      const championName = path.parse(file2).name;
-      const filePath = path.join(this.championTemplatePath, file2);
-      try {
-        const fileBuf = fs.readFileSync(filePath);
-        const { data, info } = await sharp(fileBuf).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-        const mat = cv.matFromImageData({
-          data: new Uint8Array(data),
-          width: info.width,
-          height: info.height
-        });
-        this.championTemplates.set(championName, mat);
-      } catch (e) {
-        logger.error(`[TftOperator] 加载英雄模板失败 [${file2}]: ${e}`);
-      }
-    }
-    logger.info(`[TftOperator] 英雄模板加载完成，共 ${this.championTemplates.size} 个`);
   }
   /**
-   * 加载星级模板
+   * 保存识别失败的图片
+   * @param type 类型标识
+   * @param slot 槽位标识
+   * @param mat OpenCV Mat 对象
+   * @param channels 通道数
    */
-  async loadStarLevelTemplates() {
-    if (this.starLevelTemplates.size > 0) {
-      for (const mat of this.starLevelTemplates.values()) {
-        if (mat && !mat.isDeleted()) {
-          mat.delete();
-        }
-      }
-      this.starLevelTemplates.clear();
-    }
-    logger.info(`[TftOperator] 开始加载星级模板...`);
-    if (!fs.existsSync(this.starLevelTemplatePath)) {
-      fs.ensureDirSync(this.starLevelTemplatePath);
-      logger.info(`[TftOperator] 星级模板目录不存在，已自动创建: ${this.starLevelTemplatePath}`);
-      return;
-    }
-    const files = fs.readdirSync(this.starLevelTemplatePath);
-    for (const file2 of files) {
-      const ext = path.extname(file2).toLowerCase();
-      if (![".png", ".jpg", ".jpeg"].includes(ext)) continue;
-      const starLevel = path.parse(file2).name;
-      const filePath = path.join(this.starLevelTemplatePath, file2);
-      try {
-        const fileBuf = fs.readFileSync(filePath);
-        const { data, info } = await sharp(fileBuf).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-        const mat = cv.matFromImageData({
-          data: new Uint8Array(data),
-          width: info.width,
-          height: info.height
-        });
-        this.starLevelTemplates.set(starLevel, mat);
-      } catch (e) {
-        logger.error(`[TftOperator] 加载星级模板失败 [${file2}]: ${e}`);
-      }
-    }
-    logger.info(`[TftOperator] 星级模板加载完成，共 ${this.starLevelTemplates.size} 个`);
-  }
-  /**
-   *  传入一个Mat对象，并从图片模板中找到最匹配的装备，规定如果category为empty即为空模板。
-   */
-  findBestMatchEquipTemplate(targetMat) {
-    let bestMatchEquip = null;
-    let maxConfidence = 0;
-    let foundCategory = "";
-    const THRESHOLD = 0.75;
-    const mask = new cv.Mat();
-    const resultMat = new cv.Mat();
+  async saveFailedImage(type, slot, mat, channels) {
     try {
-      const mean = new cv.Mat();
-      const stddev = new cv.Mat();
-      cv.meanStdDev(targetMat, mean, stddev);
-      const deviation = stddev.doubleAt(0, 0);
-      mean.delete();
-      stddev.delete();
-      if (deviation < 10) {
-        return { name: "空槽位", confidence: 1 - deviation };
-      }
-      for (let i = 0; i < this.equipTemplates.length; i++) {
-        const currentMap = this.equipTemplates[i];
-        if (currentMap.size === 0) continue;
-        let hasFind = false;
-        for (const [templateName, templateMat] of currentMap) {
-          if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) continue;
-          cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
-          const result = cv.minMaxLoc(resultMat, mask);
-          if (result.maxVal >= THRESHOLD) {
-            maxConfidence = result.maxVal;
-            bestMatchEquip = Object.values(TFT_16_EQUIP_DATA).find((e) => e.englishName.toLowerCase() === templateName.toLowerCase());
-            hasFind = true;
-            break;
-          }
-        }
-        if (hasFind) break;
-      }
-    } catch (e) {
-      logger.error("[TftOperator] 匹配过程出错: " + e);
-    } finally {
-      mask.delete();
-      resultMat.delete();
-    }
-    return bestMatchEquip ? {
-      ...bestMatchEquip,
-      slot: "",
-      //  槽位信息留给外面加
-      confidence: maxConfidence,
-      category: foundCategory
-    } : null;
-  }
-  /**
-   * 😺 新增：寻找最匹配的英雄 (兜底逻辑)
-   */
-  findBestMatchChampionTemplate(targetMat) {
-    let bestMatchName = null;
-    let maxConfidence = 0;
-    const THRESHOLD = 0.7;
-    const mask = new cv.Mat();
-    const resultMat = new cv.Mat();
-    try {
-      const mean = new cv.Mat();
-      const stddev = new cv.Mat();
-      cv.meanStdDev(targetMat, mean, stddev);
-      const deviation = stddev.doubleAt(0, 0);
-      mean.delete();
-      stddev.delete();
-      if (deviation < 10) {
-        return "empty";
-      }
-      for (const [name, templateMat] of this.championTemplates) {
-        if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) continue;
-        cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
-        const result = cv.minMaxLoc(resultMat, mask);
-        console.log(`英雄模板名：${name}，相似度：${(result.maxVal * 100).toFixed(3)}%`);
-        if (result.maxVal >= THRESHOLD) {
-          maxConfidence = result.maxVal;
-          bestMatchName = name;
-          break;
-        }
-      }
-      if (bestMatchName) {
-        logger.info(`[TftOperator] 🛡️ 模板匹配挽救成功: ${bestMatchName} (相似度 ${(maxConfidence * 100).toFixed(1)}%)`);
-        return bestMatchName;
-      }
-    } catch (e) {
-      logger.error(`[TftOperator] 英雄模板匹配出错: ${e}`);
-    } finally {
-      resultMat.delete();
-    }
-    return null;
-  }
-  /**
-   * 寻找某个英雄匹配的星级，模板来源为右键点击英雄，可以在右侧看到英雄的详细信息
-   */
-  async findBestMatchStarLevel(targetMat) {
-    let bestMatchLevel = null;
-    let maxConfidence = 0;
-    const THRESHOLD = 0.85;
-    const mask = new cv.Mat();
-    const resultMat = new cv.Mat();
-    try {
-      for (const [levelStr, templateMat] of this.starLevelTemplates) {
-        if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) continue;
-        cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
-        const result = cv.minMaxLoc(resultMat, mask);
-        if (result.maxVal > maxConfidence) {
-          maxConfidence = result.maxVal;
-          const lvl = parseInt(levelStr);
-          if (!isNaN(lvl) && [1, 2, 3, 4].includes(lvl)) {
-            bestMatchLevel = lvl;
-          }
-        }
-        break;
-      }
-      if (maxConfidence >= THRESHOLD && bestMatchLevel !== null) {
-        logger.info(`[TftOperator] 星级识别成功: ${bestMatchLevel}星 (相似度: ${(maxConfidence * 100).toFixed(1)}%)`);
-        return bestMatchLevel;
-      } else {
-        if (maxConfidence > 0.5) {
-          logger.warn(`[TftOperator] 星级识别未达标 (最高相似度: ${(maxConfidence * 100).toFixed(1)}%, 判定为: ${bestMatchLevel}星)`);
-        }
-      }
-    } catch (e) {
-      logger.error(`[TftOperator] 星级匹配出错: ${e}`);
-    } finally {
-      if (mask && !mask.isDeleted()) mask.delete();
-      if (resultMat && !resultMat.isDeleted()) resultMat.delete();
-    }
-    try {
-      logger.warn(`[TftOperator] 无法识别星级，正在保存失败样本...`);
-      const fileName = `fail_star_${Date.now()}.png`;
-      const savePath = path.join(this.starLevelTemplatePath, fileName);
-      const pngBuffer = await sharp(targetMat.data, {
+      const fileName = `${type}_${slot}_${Date.now()}.png`;
+      const pngBuffer = await sharp(mat.data, {
         raw: {
-          width: targetMat.cols,
-          height: targetMat.rows,
-          channels: 4
+          width: mat.cols,
+          height: mat.rows,
+          channels
         }
       }).png().toBuffer();
-      fs.writeFileSync(savePath, pngBuffer);
-      logger.info(`[TftOperator] 已保存失败样本至: ${savePath}`);
-    } catch (saveErr) {
-      logger.error(`[TftOperator] 保存星级失败样本时出错: ${saveErr}`);
+      fs.writeFileSync(path.join(this.equipTemplatePath, fileName), pngBuffer);
+      logger.info(`[TftOperator] 已保存失败样本: ${fileName}`);
+    } catch (e) {
+      logger.error(`[TftOperator] 保存失败样本出错: ${e}`);
     }
-    return -1;
-  }
-  /**
-   * 监听英雄模板文件夹变更
-   */
-  setupChampionTemplateWatcher() {
-    if (!fs.existsSync(this.championTemplatePath)) fs.ensureDirSync(this.championTemplatePath);
-    let debounceTimer;
-    fs.watch(this.championTemplatePath, (event, filename) => {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
-        logger.info(`[TftOperator] 检测到英雄模板变更 (${event}: ${filename})，重新加载英雄模板...`);
-        this.loadChampionTemplates();
-      }, 500);
-    });
-  }
-  /**
-   * region转换，把自己定义的simpleRegion转换成实际屏幕中的region
-   */
-  getRealRegion(simpleRegion) {
-    return new Region(
-      this.gameWindowRegion.x + simpleRegion.leftTop.x,
-      this.gameWindowRegion.y + simpleRegion.leftTop.y,
-      simpleRegion.rightBottom.x - simpleRegion.leftTop.x,
-      simpleRegion.rightBottom.y - simpleRegion.leftTop.y
-    );
-  }
-}
-function parseStageStringToEnum(stageText) {
-  try {
-    const cleanText = stageText.replace(/\s/g, "");
-    const match = cleanText.match(/^(\d+)-(\d+)$/);
-    if (!match) return GameStageType.UNKNOWN;
-    const stage = parseInt(match[1]);
-    const round = parseInt(match[2]);
-    if (stage === 1) return GameStageType.PVE;
-    if (round === 2) return GameStageType.AUGMENT;
-    if (round === 4) return GameStageType.CAROUSEL;
-    if (round === 7) return GameStageType.PVE;
-    return GameStageType.PVP;
-  } catch (e) {
-    console.log(e);
-    return GameStageType.UNKNOWN;
   }
 }
 const tftOperator = TftOperator.getInstance();
+const STAGE_CHECK_INTERVAL_MS = 1e3;
 class GameStageState {
+  /** 状态名称 */
+  name = "GameStageState";
+  /**
+   * 执行游戏阶段状态逻辑
+   * @param signal AbortSignal 用于取消操作
+   * @returns 下一个状态 (目前保持自身循环)
+   */
   async action(signal) {
+    signal.throwIfAborted();
     const currentGameStage = await tftOperator.getGameStage();
     switch (currentGameStage) {
       case GameStageType.PVE:
@@ -9478,156 +10138,251 @@ class GameStageState {
         logger.info("[GameStageState] 玩家对战环节，准备战斗...");
         break;
       case GameStageType.UNKNOWN:
+        logger.debug("[GameStageState] 未知阶段，等待中...");
         break;
     }
-    await sleep(1e3);
+    await sleep(STAGE_CHECK_INTERVAL_MS);
     return this;
   }
 }
+const IN_GAME_API_PORT = 2999;
+const REQUEST_TIMEOUT_MS = 1e3;
 const inGameApi = axios.create({
-  baseURL: "https://127.0.0.1:2999",
-  //  What the fuck???
+  baseURL: `https://127.0.0.1:${IN_GAME_API_PORT}`,
   httpsAgent: new https.Agent({
     rejectUnauthorized: false
+    // 游戏使用自签名证书
   }),
-  timeout: 1e3,
-  // 设置一个较短的超时，方便快速轮询
+  timeout: REQUEST_TIMEOUT_MS,
   proxy: false
+  // 禁用代理，避免连接问题
 });
+const InGameApiEndpoints = {
+  /** 获取所有游戏数据 */
+  ALL_GAME_DATA: "/liveclientdata/allgamedata",
+  /** 获取当前玩家信息 */
+  ACTIVE_PLAYER: "/liveclientdata/activeplayer",
+  /** 获取所有玩家列表 */
+  PLAYER_LIST: "/liveclientdata/playerlist",
+  /** 获取游戏事件 */
+  EVENT_DATA: "/liveclientdata/eventdata",
+  /** 获取游戏统计数据 */
+  GAME_STATS: "/liveclientdata/gamestats"
+};
+const POLL_INTERVAL_MS = 2e3;
 class GameLoadingState {
+  /** 状态名称 */
+  name = "GameLoadingState";
+  /**
+   * 执行游戏加载状态逻辑
+   * @param signal AbortSignal 用于取消等待
+   * @returns 下一个状态 (GameStageState 或 EndState)
+   */
   async action(signal) {
     signal.throwIfAborted();
     logger.info("[GameLoadingState] 等待进入对局...");
-    const isGameLoaded = await this.waitForGameToLoad();
+    const isGameLoaded = await this.waitForGameToLoad(signal);
     if (isGameLoaded) {
       logger.info("[GameLoadingState] 对局已开始！");
       return new GameStageState();
     } else {
+      logger.info("[GameLoadingState] 加载被中断");
       return new EndState();
     }
   }
-  waitForGameToLoad() {
-    let task;
+  /**
+   * 等待游戏加载完成
+   * @param signal AbortSignal 用于取消轮询
+   * @returns true 表示游戏已加载，false 表示被取消
+   */
+  waitForGameToLoad(signal) {
     return new Promise((resolve) => {
-      const checkIfGameStart = async () => {
-        try {
-          if (!hexService.isRunning) return resolve(false);
-          await inGameApi.get("/liveclientdata/allgamedata");
-          clearTimeout(task);
-          resolve(true);
-        } catch (e) {
-          logger.info("[GameLoadingState] 游戏仍在加载中...");
+      let intervalId = null;
+      const cleanup = () => {
+        if (intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
         }
       };
-      task = setInterval(checkIfGameStart, 2e3);
+      const onAbort = () => {
+        logger.info("[GameLoadingState] 收到取消信号，停止轮询");
+        cleanup();
+        resolve(false);
+      };
+      signal.addEventListener("abort", onAbort, { once: true });
+      const checkIfGameStart = async () => {
+        if (signal.aborted) {
+          cleanup();
+          return;
+        }
+        try {
+          await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);
+          signal.removeEventListener("abort", onAbort);
+          cleanup();
+          resolve(true);
+        } catch {
+          logger.debug("[GameLoadingState] 游戏仍在加载中...");
+        }
+      };
+      intervalId = setInterval(checkIfGameStart, POLL_INTERVAL_MS);
+      checkIfGameStart();
     });
   }
 }
+const LOBBY_CREATE_DELAY_MS = 500;
+const RETRY_DELAY_MS = 1e3;
+const ABORT_CHECK_INTERVAL_MS = 500;
 class LobbyState {
+  /** 状态名称 */
+  name = "LobbyState";
   lcuManager = LCUManager.getInstance();
-  signal;
+  /**
+   * 执行大厅状态逻辑
+   * @param signal AbortSignal 用于取消操作
+   * @returns 下一个状态
+   */
   async action(signal) {
     signal.throwIfAborted();
-    this.signal = signal;
-    if (!this.lcuManager) throw Error("[LobbyState] 检测到客户端未启动！");
+    if (!this.lcuManager) {
+      throw Error("[LobbyState] 检测到客户端未启动！");
+    }
     logger.info("[LobbyState] 正在创建房间...");
     await this.lcuManager.createLobbyByQueueId(Queue.TFT_FATIAO);
-    await sleep(500);
+    await sleep(LOBBY_CREATE_DELAY_MS);
     logger.info("[LobbyState] 正在开始排队...");
     await this.lcuManager.startMatch();
-    const isGameStarted = await this.waitForGameToStart();
+    const isGameStarted = await this.waitForGameToStart(signal);
     if (isGameStarted) {
-      logger.info("[LobbyState] 游戏已开始！流转到 InGameRunningState");
+      logger.info("[LobbyState] 游戏已开始！流转到 GameLoadingState");
       return new GameLoadingState();
+    } else if (signal.aborted) {
+      return new EndState();
     } else {
-      if (!hexService.isRunning) {
-        return new EndState();
-      } else {
-        logger.warn("[LobbyState] 流程中断 (如秒退)，将重新排队...");
-        await sleep(1e3);
-        return this;
-      }
+      logger.warn("[LobbyState] 流程中断 (如秒退)，将重新排队...");
+      await sleep(RETRY_DELAY_MS);
+      return this;
     }
   }
   /**
-   * 辅助函数：等待从“排队”到“游戏开始”的完整流程
-   * @returns Promise<boolean> - true 表示游戏成功开始, false 表示流程中断(被停止或被秒退)
+   * 等待从"排队"到"游戏开始"的完整流程
+   * @param signal AbortSignal 用于取消等待
+   * @returns true 表示游戏成功开始，false 表示流程中断
    */
-  waitForGameToStart() {
+  waitForGameToStart(signal) {
     return new Promise((resolve) => {
+      let stopCheckInterval = null;
+      let isResolved = false;
+      const safeResolve = (value) => {
+        if (isResolved) return;
+        isResolved = true;
+        cleanup();
+        resolve(value);
+      };
       const cleanup = () => {
         this.lcuManager?.off(LcuEventUri.READY_CHECK, onReadyCheck);
         this.lcuManager?.off(LcuEventUri.GAMEFLOW_PHASE, onGameflowPhase);
-        clearInterval(stopCheckInterval);
+        if (stopCheckInterval) {
+          clearInterval(stopCheckInterval);
+          stopCheckInterval = null;
+        }
+      };
+      const onAbort = () => {
+        logger.info("[LobbyState] 收到取消信号，停止等待");
+        safeResolve(false);
       };
       const onReadyCheck = (eventData) => {
         if (eventData.data?.state === "InProgress") {
           logger.info("[LobbyState] 已找到对局！正在自动接受...");
           this.lcuManager?.acceptMatch().catch((reason) => {
-            console.log(reason);
+            logger.warn(`[LobbyState] 接受对局失败: ${reason}`);
           });
         }
       };
       const onGameflowPhase = (eventData) => {
         const phase = eventData.data?.phase;
-        console.log("onGameflowPhase" + JSON.stringify(eventData, null, 4));
+        logger.debug(`[LobbyState] 游戏阶段: ${JSON.stringify(eventData, null, 2)}`);
         logger.info(`[LobbyState] 监听到游戏阶段: ${phase}`);
         if (phase === "InProgress") {
           logger.info("[LobbyState] 监听到 GAMEFLOW 变为 InProgress");
-          cleanup();
-          resolve(true);
+          safeResolve(true);
         }
       };
-      const onCheckStopSignal = () => {
-        if (!hexService.isRunning) {
-          logger.info("[LobbyState] 检测到用户停止运行");
-          cleanup();
-          resolve(false);
-        }
-      };
+      signal.addEventListener("abort", onAbort, { once: true });
       this.lcuManager?.on(LcuEventUri.READY_CHECK, onReadyCheck);
       this.lcuManager?.on(LcuEventUri.GAMEFLOW_PHASE, onGameflowPhase);
-      const stopCheckInterval = setInterval(onCheckStopSignal, 500);
+      stopCheckInterval = setInterval(() => {
+        if (signal.aborted) {
+          safeResolve(false);
+        }
+      }, ABORT_CHECK_INTERVAL_MS);
     });
   }
 }
 class StartState {
+  /** 状态名称 */
+  name = "StartState";
+  /**
+   * 执行启动状态逻辑
+   * @param signal AbortSignal 用于取消操作
+   * @returns 下一个状态 (LobbyState 或 GameLoadingState)
+   */
   async action(signal) {
     signal.throwIfAborted();
-    const isClientExist = LCUManager?.getInstance()?.isConnected;
-    if (isClientExist !== true) {
-      logger.error("[StartState] 客户端未启动!");
-      return new IdleState();
+    logger.info("[StartState] 正在初始化...");
+    await this.backupGameConfig();
+    const isInGame = await this.checkIfInGame();
+    if (isInGame) {
+      logger.info("[StartState] 检测到已在游戏中，直接进入游戏状态");
+      return new GameLoadingState();
     }
-    logger.info("[HexService] 正在备份当前客户端配置...");
-    await GameConfigHelper.backup();
-    logger.info("[HexService] 正在应用云顶之弈配置...");
-    await GameConfigHelper.applyTFTConfig();
+    logger.info("[StartState] 初始化完成，进入大厅状态");
+    return new LobbyState();
+  }
+  /**
+   * 备份游戏配置
+   * @description 在修改游戏设置前先备份，以便结束时恢复
+   */
+  async backupGameConfig() {
     try {
-      await inGameApi.get("/liveclientdata/allgamedata");
-      logger.info("[HexService] 检测到游戏已开启，流转到GameStageState");
-      return new GameStageState();
-    } catch (e) {
-      return new LobbyState();
+      logger.info("[StartState] 正在备份游戏配置...");
+      await GameConfigHelper.backup();
+      logger.info("[StartState] 游戏配置备份完成");
+    } catch (error) {
+      logger.warn("[StartState] 游戏配置备份失败，继续执行");
+      if (error instanceof Error) {
+        logger.debug(error.message);
+      }
+    }
+  }
+  /**
+   * 检查是否已在游戏中
+   * @returns true 表示已在游戏中
+   */
+  async checkIfInGame() {
+    try {
+      await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);
+      return true;
+    } catch {
+      return false;
     }
   }
 }
-class IdleState {
-  async action(signal) {
-    signal.throwIfAborted();
-    return new StartState();
-  }
-}
+const STATE_TRANSITION_DELAY_MS = 2e3;
 class HexService {
   static instance = null;
-  //  状态
+  /** 取消控制器，用于优雅停止 */
   abortController = null;
+  /** 当前状态 */
   currentState;
-  TICK_RATE_MS = 3e3;
-  // looper的心跳间隔。
+  /**
+   * 私有构造函数，确保单例
+   */
   constructor() {
     this.currentState = new IdleState();
   }
+  /**
+   * 获取 HexService 单例
+   */
   static getInstance() {
     if (!HexService.instance) {
       HexService.instance = new HexService();
@@ -9635,13 +10390,15 @@ class HexService {
     return HexService.instance;
   }
   /**
-   * 我们检查 abortController 是不是存在
+   * 检查服务是否正在运行
+   * @description 通过 abortController 是否存在来判断
    */
   get isRunning() {
     return this.abortController !== null;
   }
   /**
-   * 海克斯科技，启动！
+   * 启动海克斯科技
+   * @returns true 表示启动成功
    */
   async start() {
     if (this.isRunning) {
@@ -9661,6 +10418,10 @@ class HexService {
       return false;
     }
   }
+  /**
+   * 停止海克斯科技
+   * @returns true 表示停止成功
+   */
   async stop() {
     if (!this.isRunning) {
       logger.warn("[HexService] 服务已停止，无需重复操作。");
@@ -9670,8 +10431,8 @@ class HexService {
       logger.info("———————— [HexService] ————————");
       logger.info("[HexService] 海克斯科技，关闭！");
       this.abortController?.abort("user stop");
-      const configHelper2 = GameConfigHelper.getInstance();
-      if (configHelper2?.isTFTConfig === true) {
+      const configHelper = GameConfigHelper.getInstance();
+      if (configHelper?.isTFTConfig === true) {
         await GameConfigHelper.restore();
       }
       return true;
@@ -9682,7 +10443,8 @@ class HexService {
     }
   }
   /**
-   * 创建状态机引擎
+   * 状态机主循环
+   * @param signal AbortSignal 用于控制循环退出
    */
   async runMainLoop(signal) {
     logger.info("[HexService-Looper] 启动事件循环。");
@@ -9690,22 +10452,25 @@ class HexService {
       signal.throwIfAborted();
       while (true) {
         signal.throwIfAborted();
-        logger.info(`[HexService-Looper] -> 当前状态: ${this.currentState.constructor.name}`);
-        this.currentState = await this.currentState.action(signal);
-        if (this.currentState === null) {
-          logger.error("[HexService-Looper] -> 上个状态未返回State，流程中止！");
+        logger.info(`[HexService-Looper] -> 当前状态: ${this.currentState.name}`);
+        const nextState = await this.currentState.action(signal);
+        if (nextState === null) {
+          logger.error("[HexService-Looper] -> 状态返回 null，流程中止！");
           break;
         }
-        await sleep(2e3);
+        this.currentState = nextState;
+        await sleep(STATE_TRANSITION_DELAY_MS);
       }
     } catch (error) {
-      if (error.name === "AbortError") {
-        logger.info(`[HexService-Looper] -> 用户手动退出，挂机流程结束`);
-      } else {
-        logger.error(`[HexService-Looper] 状态机在 [${this.currentState}] 状态下发生严重错误: ${error.message}`);
+      if (error instanceof Error && error.name === "AbortError") {
+        logger.info("[HexService-Looper] -> 用户手动退出，挂机流程结束");
+      } else if (error instanceof Error) {
+        logger.error(
+          `[HexService-Looper] 状态机在 [${this.currentState.name}] 状态下发生严重错误: ${error.message}`
+        );
       }
     } finally {
-      this.currentState = await new EndState().action();
+      this.currentState = await new EndState().action(signal);
       this.abortController = null;
     }
   }
