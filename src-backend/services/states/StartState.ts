@@ -1,38 +1,76 @@
-import {IState} from "./IState";
-import LCUManager from "../../lcu/LCUManager";
-import {logger} from "../../utils/Logger.ts";
-import GameConfigHelper from "../../utils/GameConfigHelper";
-import {LobbyState} from "./LobbyState";
-import {IdleState} from "./IdleState.ts";
-import {inGameApi} from "./GameLoadingState";
-import {GameStageState} from "./GameStageState";
+/**
+ * 启动状态
+ * @module StartState
+ * @description 海克斯科技启动后的初始化状态
+ */
 
-/// 服务开始阶段，判断客户端是否开启，备份用户配置，应用云顶挂机配置
+import { IState } from "./IState";
+import { logger } from "../../utils/Logger.ts";
+import { LobbyState } from "./LobbyState.ts";
+import { inGameApi, InGameApiEndpoints } from "../../lcu/InGameApi.ts";
+import { GameLoadingState } from "./GameLoadingState.ts";
+import GameConfigHelper from "../../utils/GameConfigHelper.ts";
+
+/**
+ * 启动状态类
+ * @description 负责初始化检查和配置备份，决定进入哪个后续状态
+ */
 export class StartState implements IState {
+    /** 状态名称 */
+    public readonly name = "StartState";
+
+    /**
+     * 执行启动状态逻辑
+     * @param signal AbortSignal 用于取消操作
+     * @returns 下一个状态 (LobbyState 或 GameLoadingState)
+     */
     async action(signal: AbortSignal): Promise<IState> {
-        signal.throwIfAborted()
+        signal.throwIfAborted();
 
-        /// 开始启动服务
-        const isClientExist = LCUManager?.getInstance()?.isConnected
-        if (isClientExist !== true) {
-            logger.error('[StartState] 客户端未启动!')
-            return new IdleState()
-        }
-        //  备份当前客户端设置
-        logger.info('[HexService] 正在备份当前客户端配置...')
-        await GameConfigHelper.backup()
-        logger.info('[HexService] 正在应用云顶之弈配置...')
-        await GameConfigHelper.applyTFTConfig()
+        logger.info("[StartState] 正在初始化...");
 
-        //  这里会存在State分叉，如果游戏已经开始，那么就直接进入GameStageState，判断游戏处于哪个状态。
-        try{
-            //  如果这里成功了，说明游戏已开启。
-            await inGameApi.get('/liveclientdata/allgamedata')
-            logger.info('[HexService] 检测到游戏已开启，流转到GameStageState')
-            return new GameStageState()
-        }catch (e){
-             return new LobbyState()
+        // 备份当前游戏配置
+        await this.backupGameConfig();
+
+        // 检查是否已经在游戏中
+        const isInGame = await this.checkIfInGame();
+
+        if (isInGame) {
+            logger.info("[StartState] 检测到已在游戏中，直接进入游戏状态");
+            return new GameLoadingState();
         }
 
+        logger.info("[StartState] 初始化完成，进入大厅状态");
+        return new LobbyState();
+    }
+
+    /**
+     * 备份游戏配置
+     * @description 在修改游戏设置前先备份，以便结束时恢复
+     */
+    private async backupGameConfig(): Promise<void> {
+        try {
+            logger.info("[StartState] 正在备份游戏配置...");
+            await GameConfigHelper.backup();
+            logger.info("[StartState] 游戏配置备份完成");
+        } catch (error) {
+            logger.warn("[StartState] 游戏配置备份失败，继续执行");
+            if (error instanceof Error) {
+                logger.debug(error.message);
+            }
+        }
+    }
+
+    /**
+     * 检查是否已在游戏中
+     * @returns true 表示已在游戏中
+     */
+    private async checkIfInGame(): Promise<boolean> {
+        try {
+            await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);
+            return true;
+        } catch {
+            return false;
+        }
     }
 }

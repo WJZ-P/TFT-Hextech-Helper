@@ -1,52 +1,104 @@
-import {IState} from "./IState";
-import {logger} from "../../utils/Logger.ts";
-import https from "https";
-import axios, {AxiosInstance} from "axios";
-import {EndState} from "./EndState.ts";
-import {hexService} from "../HexService.ts";
-import {GameStageState} from "./GameStageState.ts";
+/**
+ * 游戏加载状态
+ * @module GameLoadingState
+ * @description 等待游戏加载完成的状态
+ */
 
-export const inGameApi: AxiosInstance = axios.create({
-    baseURL: 'https://127.0.0.1:2999',  //  What the fuck???
-    httpsAgent: new https.Agent({
-        rejectUnauthorized: false,
-    }),
-    timeout: 1000, // 设置一个较短的超时，方便快速轮询
-    proxy: false,
-});
+import { IState } from "./IState";
+import { logger } from "../../utils/Logger.ts";
+import { EndState } from "./EndState.ts";
+import { GameStageState } from "./GameStageState.ts";
+import { inGameApi, InGameApiEndpoints } from "../../lcu/InGameApi.ts";
 
-//  开局后游戏加载中，等待进入游戏的状态。
+/** 轮询间隔 (ms) */
+const POLL_INTERVAL_MS = 2000;
+
+/**
+ * 游戏加载状态类
+ * @description 开局后等待游戏加载完成，轮询检测游戏是否已启动
+ */
 export class GameLoadingState implements IState {
+    /** 状态名称 */
+    public readonly name = "GameLoadingState";
 
+    /**
+     * 执行游戏加载状态逻辑
+     * @param signal AbortSignal 用于取消等待
+     * @returns 下一个状态 (GameStageState 或 EndState)
+     */
     async action(signal: AbortSignal): Promise<IState> {
-        signal.throwIfAborted()
-        logger.info('[GameLoadingState] 等待进入对局...');
-        const isGameLoaded = await this.waitForGameToLoad();
+        signal.throwIfAborted();
+        logger.info("[GameLoadingState] 等待进入对局...");
+
+        const isGameLoaded = await this.waitForGameToLoad(signal);
 
         if (isGameLoaded) {
-            // 游戏加载完成！
-            logger.info('[GameLoadingState] 对局已开始！');
+            logger.info("[GameLoadingState] 对局已开始！");
             return new GameStageState();
         } else {
-            // 被用户停止了
+            logger.info("[GameLoadingState] 加载被中断");
             return new EndState();
         }
     }
 
-    private waitForGameToLoad(): Promise<boolean> {
-        let task :NodeJS.Timeout;
+    /**
+     * 等待游戏加载完成
+     * @param signal AbortSignal 用于取消轮询
+     * @returns true 表示游戏已加载，false 表示被取消
+     */
+    private waitForGameToLoad(signal: AbortSignal): Promise<boolean> {
         return new Promise((resolve) => {
-            const checkIfGameStart = async () =>{
-                try {
-                    if (!hexService.isRunning) return resolve(false)
-                    await inGameApi.get('/liveclientdata/allgamedata')
-                    clearTimeout(task)
-                    resolve(true)
-                } catch (e) {
-                    logger.info('[GameLoadingState] 游戏仍在加载中...')
+            let intervalId: NodeJS.Timeout | null = null;
+
+            /**
+             * 清理函数：确保定时器被正确清除
+             */
+            const cleanup = () => {
+                if (intervalId) {
+                    clearInterval(intervalId);
+                    intervalId = null;
                 }
-            }
-            task = setInterval(checkIfGameStart,2000)//  每两秒钟遍历一次
-        })
+            };
+
+            /**
+             * 处理 abort 事件
+             */
+            const onAbort = () => {
+                logger.info("[GameLoadingState] 收到取消信号，停止轮询");
+                cleanup();
+                resolve(false);
+            };
+
+            // 监听 abort 事件，确保信号触发时能清理定时器
+            signal.addEventListener("abort", onAbort, { once: true });
+
+            /**
+             * 轮询检测游戏是否启动
+             */
+            const checkIfGameStart = async () => {
+                // 双重检查：如果已经 abort，直接返回
+                if (signal.aborted) {
+                    cleanup();
+                    return;
+                }
+
+                try {
+                    await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);
+                    // 请求成功，游戏已加载
+                    signal.removeEventListener("abort", onAbort);
+                    cleanup();
+                    resolve(true);
+                } catch {
+                    // 请求失败，游戏仍在加载中
+                    logger.debug("[GameLoadingState] 游戏仍在加载中...");
+                }
+            };
+
+            // 启动轮询
+            intervalId = setInterval(checkIfGameStart, POLL_INTERVAL_MS);
+
+            // 立即执行一次检测，不用等第一个间隔
+            checkIfGameStart();
+        });
     }
 }

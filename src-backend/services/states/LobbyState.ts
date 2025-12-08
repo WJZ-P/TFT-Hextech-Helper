@@ -1,97 +1,153 @@
-import {IState} from "./IState";
-import LCUManager, {LcuEventUri, LCUWebSocketMessage} from "../../lcu/LCUManager.ts";
-import {Queue} from "../../lcu/utils/LCUProtocols.ts";
-import {sleep} from "../../utils/HelperTools.ts";
-import {logger} from "../../utils/Logger.ts";
-import {GameLoadingState} from "./GameLoadingState.ts";
-import {hexService} from "../HexService.ts";
-import {EndState} from "./EndState.ts";
+/**
+ * 大厅状态
+ * @module LobbyState
+ * @description 客户端已启动，创建房间、选择模式、排队匹配
+ */
+
+import { IState } from "./IState";
+import LCUManager, { LcuEventUri, LCUWebSocketMessage } from "../../lcu/LCUManager.ts";
+import { Queue } from "../../lcu/utils/LCUProtocols.ts";
+import { sleep } from "../../utils/HelperTools.ts";
+import { logger } from "../../utils/Logger.ts";
+import { GameLoadingState } from "./GameLoadingState.ts";
+import { EndState } from "./EndState.ts";
+
+/** 创建房间后的等待时间 (ms) */
+const LOBBY_CREATE_DELAY_MS = 500;
+
+/** 流程中断后重试前的等待时间 (ms) */
+const RETRY_DELAY_MS = 1000;
+
+/** abort 信号轮询间隔 (ms)，作为事件监听的兜底 */
+const ABORT_CHECK_INTERVAL_MS = 500;
 
 /**
- * 表示当前已经启动了客户端，要选择下棋模式，进入队伍中排队开启游戏。
+ * 大厅状态类
+ * @description 负责创建房间、开始匹配、等待游戏开始
  */
 export class LobbyState implements IState {
-    private lcuManager = LCUManager.getInstance()
-    private signal: AbortSignal
+    /** 状态名称 */
+    public readonly name = "LobbyState";
 
+    private lcuManager = LCUManager.getInstance();
+
+    /**
+     * 执行大厅状态逻辑
+     * @param signal AbortSignal 用于取消操作
+     * @returns 下一个状态
+     */
     async action(signal: AbortSignal): Promise<IState> {
-        signal.throwIfAborted()
-        this.signal = signal
-        //  创建游戏房间，选择下棋模式
-        if (!this.lcuManager) throw Error("[LobbyState] 检测到客户端未启动！")
+        signal.throwIfAborted();
 
-        logger.info('[LobbyState] 正在创建房间...');
-        await this.lcuManager.createLobbyByQueueId(Queue.TFT_FATIAO) //  先用发条鸟试炼模式测试效果
-        await sleep(500)    //  等待一会
-        logger.info('[LobbyState] 正在开始排队...')
-        await this.lcuManager.startMatch()   //  开始排队
-        const isGameStarted = await this.waitForGameToStart();
-
-        if (isGameStarted) {
-            // (关键) 整个流程完成！流转到“游戏中”状态
-            logger.info('[LobbyState] 游戏已开始！流转到 InGameRunningState');
-            return new GameLoadingState();
-        } else {
-            // 如果返回 false，说明是被用户停止了，或者流程意外中断（如秒退）
-            // 检查总开关，决定是“停止”还是“重新排队”
-            if (!hexService.isRunning) {
-                return new EndState(); // 用户按了停止
-            } else {
-                logger.warn('[LobbyState] 流程中断 (如秒退)，将重新排队...');
-                await sleep(1000); // 防止因 LCU 状态延迟导致死循环
-                return this; // 返回 this，Looper 会在下次循环重新执行整个 action
-            }
+        if (!this.lcuManager) {
+            throw Error("[LobbyState] 检测到客户端未启动！");
         }
 
+        // 创建房间
+        logger.info("[LobbyState] 正在创建房间...");
+        await this.lcuManager.createLobbyByQueueId(Queue.TFT_FATIAO);
+        await sleep(LOBBY_CREATE_DELAY_MS);
+
+        // 开始排队
+        logger.info("[LobbyState] 正在开始排队...");
+        await this.lcuManager.startMatch();
+
+        // 等待游戏开始
+        const isGameStarted = await this.waitForGameToStart(signal);
+
+        if (isGameStarted) {
+            logger.info("[LobbyState] 游戏已开始！流转到 GameLoadingState");
+            return new GameLoadingState();
+        } else if (signal.aborted) {
+            // 用户主动停止
+            return new EndState();
+        } else {
+            // 流程中断 (如秒退)，重新排队
+            logger.warn("[LobbyState] 流程中断 (如秒退)，将重新排队...");
+            await sleep(RETRY_DELAY_MS);
+            return this;
+        }
     }
 
     /**
-     * 辅助函数：等待从“排队”到“游戏开始”的完整流程
-     * @returns Promise<boolean> - true 表示游戏成功开始, false 表示流程中断(被停止或被秒退)
+     * 等待从"排队"到"游戏开始"的完整流程
+     * @param signal AbortSignal 用于取消等待
+     * @returns true 表示游戏成功开始，false 表示流程中断
      */
-    private waitForGameToStart(): Promise<boolean> {
+    private waitForGameToStart(signal: AbortSignal): Promise<boolean> {
         return new Promise((resolve) => {
+            let stopCheckInterval: NodeJS.Timeout | null = null;
+            let isResolved = false;
+
+            /**
+             * 安全的 resolve，防止重复调用
+             */
+            const safeResolve = (value: boolean) => {
+                if (isResolved) return;
+                isResolved = true;
+                cleanup();
+                resolve(value);
+            };
+
+            /**
+             * 清理所有监听器和定时器
+             */
             const cleanup = () => {
                 this.lcuManager?.off(LcuEventUri.READY_CHECK, onReadyCheck);
                 this.lcuManager?.off(LcuEventUri.GAMEFLOW_PHASE, onGameflowPhase);
-                clearInterval(stopCheckInterval);
-            };
-
-            // --- 监听器 1：处理“找到对局” ---
-            const onReadyCheck = (eventData: LCUWebSocketMessage) => {
-                if (eventData.data?.state === 'InProgress') {
-                    logger.info('[LobbyState] 已找到对局！正在自动接受...');
-                        this.lcuManager?.acceptMatch().catch((reason)=>{console.log(reason)})
+                if (stopCheckInterval) {
+                    clearInterval(stopCheckInterval);
+                    stopCheckInterval = null;
                 }
             };
 
-            // --- 监听器 2：处理“游戏阶段变化” (真正的状态决策者) ---
+            /**
+             * 处理 abort 事件
+             */
+            const onAbort = () => {
+                logger.info("[LobbyState] 收到取消信号，停止等待");
+                safeResolve(false);
+            };
+
+            /**
+             * 监听"找到对局"事件，自动接受
+             */
+            const onReadyCheck = (eventData: LCUWebSocketMessage) => {
+                if (eventData.data?.state === "InProgress") {
+                    logger.info("[LobbyState] 已找到对局！正在自动接受...");
+                    this.lcuManager?.acceptMatch().catch((reason) => {
+                        logger.warn(`[LobbyState] 接受对局失败: ${reason}`);
+                    });
+                }
+            };
+
+            /**
+             * 监听"游戏阶段变化"事件
+             */
             const onGameflowPhase = (eventData: LCUWebSocketMessage) => {
                 const phase = eventData.data?.phase;
-                console.log('onGameflowPhase'+JSON.stringify(eventData,null,4))
+                logger.debug(`[LobbyState] 游戏阶段: ${JSON.stringify(eventData, null, 2)}`);
                 logger.info(`[LobbyState] 监听到游戏阶段: ${phase}`);
 
-                if (phase === 'InProgress') {
-                    logger.info('[LobbyState] 监听到 GAMEFLOW 变为 InProgress');
-                    cleanup();
-                    resolve(true); // 成功！游戏已开始！
+                if (phase === "InProgress") {
+                    logger.info("[LobbyState] 监听到 GAMEFLOW 变为 InProgress");
+                    safeResolve(true);
                 }
             };
 
-            // --- 监听器 3：处理“用户停止” ---
-            const onCheckStopSignal = () => {
-                if (!hexService.isRunning) {
-                    logger.info('[LobbyState] 检测到用户停止运行');
-                    cleanup();
-                    resolve(false); // 流程失败(被用户停止)
-                }
-            };
+            // 监听 abort 事件
+            signal.addEventListener("abort", onAbort, { once: true });
 
-            // --- 注册所有监听器 ---
+            // 注册 LCU 事件监听器
             this.lcuManager?.on(LcuEventUri.READY_CHECK, onReadyCheck);
             this.lcuManager?.on(LcuEventUri.GAMEFLOW_PHASE, onGameflowPhase);
-            const stopCheckInterval = setInterval(onCheckStopSignal, 500);
 
+            // 定期检查 signal 状态 (作为 abort 事件的兜底)
+            stopCheckInterval = setInterval(() => {
+                if (signal.aborted) {
+                    safeResolve(false);
+                }
+            }, ABORT_CHECK_INTERVAL_MS);
         });
     }
 }

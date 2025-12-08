@@ -92,7 +92,7 @@ class LCUManager extends EventEmitter {
         // 创建一个配置好的 axios 实例
         this.api = axios.create({
             baseURL: `https://127.0.0.1:${this.port}`,
-            httpsAgent: this.httpsAgent, // 把我们的“通行证”交给 axios
+            httpsAgent: this.httpsAgent, // 把我们的"通行证"交给 axios
             proxy: false,   // ← 关键：禁止任何系统/环境变量代理!!!这里debug找了一万年才发现是这个问题。
             auth: {
                 username: 'riot',
@@ -126,8 +126,8 @@ class LCUManager extends EventEmitter {
         this.ws.on('open', () => {
             this.isConnected = true;
             console.log('✅ [LCUManager] WebSocket 连接成功！');
-            this.emit('connect'); // 只有在此时，才广播“真正连接成功”的事件
-            //  "OnJsonApiEvent" 是一个“总事件”，它会把 LCU 上所有的 API 事件（创建、更新、删除）都通过这一个通道推送给你。
+            this.emit('connect'); // 只有在此时，才广播"真正连接成功"的事件
+            //  "OnJsonApiEvent" 是一个"总事件"，它会把 LCU 上所有的 API 事件（创建、更新、删除）都通过这一个通道推送给你。
             this.subscribe('OnJsonApiEvent');
         });
 
@@ -227,19 +227,32 @@ class LCUManager extends EventEmitter {
     }
 
     /**
-     * 喵~ 一个有礼貌的函数，会一直“敲门”直到后厨回应
+     * 确认 LCU API 服务就绪
+     * @description 轮询检测 API 是否可用，带超时机制防止无限等待
+     * @param timeoutMs 超时时间 (ms)，默认 30 秒
+     * @throws 超时后抛出错误
      */
-    private async confirmApiReady(): Promise<void> {
-        // eslint-disable-next-line no-constant-condition
+    private async confirmApiReady(timeoutMs: number = 30000): Promise<void> {
+        const startTime = Date.now();
+        const retryIntervalMs = 2000;
+
         while (true) {
+            // 检查是否超时
+            if (Date.now() - startTime > timeoutMs) {
+                throw new Error(
+                    `[LCUManager] API 服务在 ${timeoutMs / 1000} 秒内未就绪，请检查客户端状态`
+                );
+            }
+
             try {
-                // 像 willump 一样，使用 /riotclient/ux-state 作为“敲门”方式
-                await this.request('GET', '/riotclient/ux-state');
-                console.log('✅ [LCUManager] API 服务已就绪！');
-                return; // API 准备好了，退出循环
+                // 使用 /riotclient/ux-state 作为健康检查端点
+                await this.request("GET", "/riotclient/ux-state");
+                console.log("✅ [LCUManager] API 服务已就绪！");
+                return;
             } catch (error) {
-                console.log('⏳ [LCUManager] API 服务尚未就绪，1秒后重试...', error);
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                const elapsed = Math.round((Date.now() - startTime) / 1000);
+                console.log(`⏳ [LCUManager] API 服务尚未就绪 (已等待 ${elapsed}s)，${retryIntervalMs / 1000}s 后重试...`);
+                await new Promise((resolve) => setTimeout(resolve, retryIntervalMs));
             }
         }
     }

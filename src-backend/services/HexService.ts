@@ -1,26 +1,43 @@
-import {logger} from "../utils/Logger.ts";
-import {IState} from "./states/IState.ts";
-import {IdleState} from "./states/IdleState.ts";
-import {EndState} from "./states/EndState.ts";
-import {StartState} from "./states/StartState.ts";
-import {sleep} from "../utils/HelperTools.ts";
-import configHelper from "../utils/GameConfigHelper.ts";
+/**
+ * 海克斯科技核心服务
+ * @module HexService
+ * @description 自动下棋的状态机引擎，管理整个自动化流程的生命周期
+ */
+
+import { logger } from "../utils/Logger.ts";
+import { IState } from "./states/IState.ts";
+import { IdleState } from "./states/IdleState.ts";
+import { EndState } from "./states/EndState.ts";
+import { StartState } from "./states/StartState.ts";
+import { sleep } from "../utils/HelperTools.ts";
 import GameConfigHelper from "../utils/GameConfigHelper.ts";
 
-//  海克斯科技核心逻辑！
-export class HexService {
-    private static instance: HexService | null = null
-    //  状态
-    private abortController: AbortController | null = null;
-    private currentState: IState;
-    private readonly TICK_RATE_MS = 3000;// looper的心跳间隔。
+/** 状态转换间隔 (ms) */
+const STATE_TRANSITION_DELAY_MS = 2000;
 
+/**
+ * 海克斯科技服务类
+ * @description 单例模式的状态机引擎，负责协调各个状态的执行
+ */
+export class HexService {
+    private static instance: HexService | null = null;
+
+    /** 取消控制器，用于优雅停止 */
+    private abortController: AbortController | null = null;
+
+    /** 当前状态 */
+    private currentState: IState;
+
+    /**
+     * 私有构造函数，确保单例
+     */
     private constructor() {
-        //  私有构造函数，确保是单例
-        //  初始状态为空闲
-        this.currentState = new IdleState()
+        this.currentState = new IdleState();
     }
 
+    /**
+     * 获取 HexService 单例
+     */
     public static getInstance(): HexService {
         if (!HexService.instance) {
             HexService.instance = new HexService();
@@ -29,95 +46,115 @@ export class HexService {
     }
 
     /**
-     * 我们检查 abortController 是不是存在
+     * 检查服务是否正在运行
+     * @description 通过 abortController 是否存在来判断
      */
     public get isRunning(): boolean {
-        // 只要 abortController 不是 null，就说明服务已启动
         return this.abortController !== null;
     }
 
     /**
-     * 海克斯科技，启动！
+     * 启动海克斯科技
+     * @returns true 表示启动成功
      */
     public async start(): Promise<boolean> {
         if (this.isRunning) {
-            logger.warn('[HexService] 引擎已在运行中，无需重复启动。');
+            logger.warn("[HexService] 引擎已在运行中，无需重复启动。");
             return true;
         }
+
         try {
-            logger.info('———————— [HexService] ————————')
-            logger.info('[HexService] 海克斯科技，启动！')
-            this.abortController = new AbortController()
+            logger.info("———————— [HexService] ————————");
+            logger.info("[HexService] 海克斯科技，启动！");
+
+            this.abortController = new AbortController();
             this.currentState = new StartState();
 
-            //  点火
-            this.runMainLoop(this.abortController.signal)
+            // 启动主循环 (异步，不阻塞)
+            this.runMainLoop(this.abortController.signal);
 
-            return true
-        } catch (e: unknown) {
-            logger.error('[HexService] 启动失败！')
-            console.error(e)
-            return false
-        }
-    }
-
-    public async stop(): Promise<boolean> {
-        if (!this.isRunning) {
-            logger.warn('[HexService] 服务已停止，无需重复操作。');
             return true;
-        }
-        try {
-            logger.info('———————— [HexService] ————————')
-            logger.info('[HexService] 海克斯科技，关闭！')
-
-            this.abortController?.abort('user stop')
-
-            //  这里做一个恢复备份设置的兜底，防止没有恢复备份
-            const configHelper = GameConfigHelper.getInstance()
-            if(configHelper?.isTFTConfig === true){
-                await GameConfigHelper.restore()
-            }
-            return true
         } catch (e: unknown) {
-            console.error(e)
-            logger.error('[HexService] 海克斯科技关闭失败！')
-            return false
+            logger.error("[HexService] 启动失败！");
+            console.error(e);
+            return false;
         }
     }
 
     /**
-     * 创建状态机引擎
+     * 停止海克斯科技
+     * @returns true 表示停止成功
      */
-    private async runMainLoop(signal: AbortSignal) {
-        logger.info('[HexService-Looper] 启动事件循环。')
+    public async stop(): Promise<boolean> {
+        if (!this.isRunning) {
+            logger.warn("[HexService] 服务已停止，无需重复操作。");
+            return true;
+        }
+
         try {
-            //  开始前先检查一次
-            signal.throwIfAborted()
+            logger.info("———————— [HexService] ————————");
+            logger.info("[HexService] 海克斯科技，关闭！");
+
+            // 触发取消信号
+            this.abortController?.abort("user stop");
+
+            // 兜底：确保配置被恢复
+            const configHelper = GameConfigHelper.getInstance();
+            if (configHelper?.isTFTConfig === true) {
+                await GameConfigHelper.restore();
+            }
+
+            return true;
+        } catch (e: unknown) {
+            console.error(e);
+            logger.error("[HexService] 海克斯科技关闭失败！");
+            return false;
+        }
+    }
+
+    /**
+     * 状态机主循环
+     * @param signal AbortSignal 用于控制循环退出
+     */
+    private async runMainLoop(signal: AbortSignal): Promise<void> {
+        logger.info("[HexService-Looper] 启动事件循环。");
+
+        try {
+            signal.throwIfAborted();
 
             // eslint-disable-next-line no-constant-condition
             while (true) {
-                signal.throwIfAborted()
-                logger.info(`[HexService-Looper] -> 当前状态: ${this.currentState.constructor.name}`);
-                /// 执行当前state操作
-                this.currentState = await this.currentState.action(signal);
-                if(this.currentState === null){
-                    logger.error('[HexService-Looper] -> 上个状态未返回State，流程中止！')
-                    break
+                signal.throwIfAborted();
+
+                // 使用状态的 name 属性输出日志
+                logger.info(`[HexService-Looper] -> 当前状态: ${this.currentState.name}`);
+
+                // 执行当前状态的 action
+                const nextState = await this.currentState.action(signal);
+
+                if (nextState === null) {
+                    logger.error("[HexService-Looper] -> 状态返回 null，流程中止！");
+                    break;
                 }
-                await sleep(2000)
+
+                this.currentState = nextState;
+                await sleep(STATE_TRANSITION_DELAY_MS);
             }
-        } catch (error: any) {
-            if (error.name === 'AbortError') {
-                logger.info(`[HexService-Looper] -> 用户手动退出，挂机流程结束`);
-            } else {
-                logger.error(`[HexService-Looper] 状态机在 [${this.currentState}] 状态下发生严重错误: ${error.message}`)
+        } catch (error: unknown) {
+            if (error instanceof Error && error.name === "AbortError") {
+                logger.info("[HexService-Looper] -> 用户手动退出，挂机流程结束");
+            } else if (error instanceof Error) {
+                logger.error(
+                    `[HexService-Looper] 状态机在 [${this.currentState.name}] 状态下发生严重错误: ${error.message}`
+                );
             }
         } finally {
-            //  收尾工作
-            this.currentState = await new EndState().action()
-            this.abortController = null
+            // 收尾工作
+            this.currentState = await new EndState().action(signal);
+            this.abortController = null;
         }
     }
 }
 
+/** 导出 HexService 单例 */
 export const hexService = HexService.getInstance();
