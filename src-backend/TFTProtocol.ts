@@ -86,7 +86,7 @@ export const equipmentRegion = {   //  宽24，高25
     },
     SLOT_2: {
         leftTop: {x: 9, y: 234},
-        rightBottom: {x: 32, y: 259}
+        rightBottom: {x: 32, y: 258}
     },
     SLOT_3: {
         leftTop: {x: 9, y: 271},
@@ -94,7 +94,7 @@ export const equipmentRegion = {   //  宽24，高25
     },
     SLOT_4: {
         leftTop: {x: 9, y: 307},
-        rightBottom: {x: 32, y: 332}
+        rightBottom: {x: 32, y: 331}
     },
     SLOT_5: {
         leftTop: {x: 9, y: 344},
@@ -158,17 +158,16 @@ export const fightBoardSlot = {
     R4_C7: new Point(780, 475),
 }
 //  备战席
-export const benchSlotPoints = { //  x+=75
+export const benchSlotPoints = {
     SLOT_1: new Point(135, 555),
     SLOT_2: new Point(210, 555),
-    SLOT_3: new Point(285, 555),
-    SLOT_4: new Point(360, 555),
-    SLOT_5: new Point(435, 555),
-    SLOT_6: new Point(510, 555),
-    SLOT_7: new Point(585, 555),
-    SLOT_8: new Point(660, 555),
-    SLOT_9: new Point(735, 555),
-    SLOT_10: new Point(810, 555),
+    SLOT_3: new Point(295, 555),
+    SLOT_4: new Point(385, 555),
+    SLOT_5: new Point(465, 555),
+    SLOT_6: new Point(550, 555),
+    SLOT_7: new Point(630, 555),
+    SLOT_8: new Point(720, 555),
+    SLOT_9: new Point(800, 555),
 }
 //  海克斯选择槽位
 export const hexSlot = {   //  x+=295
@@ -977,7 +976,7 @@ const specialEquip: Record<string, TFTEquip> = {
         formula: ""
     },
     "装备重铸器": {
-        name: "微型英雄复制器",
+        name: "装备重铸器",
         englishName: "TFT_Item_Reforger",
         equipId: "-1",  //  不知道装备ID
         formula: ""

@@ -5723,7 +5723,7 @@ const equipmentRegion = {
   },
   SLOT_2: {
     leftTop: { x: 9, y: 234 },
-    rightBottom: { x: 32, y: 259 }
+    rightBottom: { x: 32, y: 258 }
   },
   SLOT_3: {
     leftTop: { x: 9, y: 271 },
@@ -5731,7 +5731,7 @@ const equipmentRegion = {
   },
   SLOT_4: {
     leftTop: { x: 9, y: 307 },
-    rightBottom: { x: 32, y: 332 }
+    rightBottom: { x: 32, y: 331 }
   },
   SLOT_5: {
     leftTop: { x: 9, y: 344 },
@@ -5794,17 +5794,15 @@ const equipmentRegion = {
   R4_C7: new Point(780, 475)
 });
 const benchSlotPoints = {
-  //  x+=75
   SLOT_1: new Point(135, 555),
   SLOT_2: new Point(210, 555),
-  SLOT_3: new Point(285, 555),
-  SLOT_4: new Point(360, 555),
-  SLOT_5: new Point(435, 555),
-  SLOT_6: new Point(510, 555),
-  SLOT_7: new Point(585, 555),
-  SLOT_8: new Point(660, 555),
-  SLOT_9: new Point(735, 555),
-  SLOT_10: new Point(810, 555)
+  SLOT_3: new Point(295, 555),
+  SLOT_4: new Point(385, 555),
+  SLOT_5: new Point(465, 555),
+  SLOT_6: new Point(550, 555),
+  SLOT_7: new Point(630, 555),
+  SLOT_8: new Point(720, 555),
+  SLOT_9: new Point(800, 555)
 };
 ({
   //  x+=295
@@ -7392,7 +7390,7 @@ const specialEquip = {
     formula: ""
   },
   "装备重铸器": {
-    name: "微型英雄复制器",
+    name: "装备重铸器",
     englishName: "TFT_Item_Reforger",
     equipId: "-1",
     //  不知道装备ID
@@ -8971,13 +8969,16 @@ class OcrService {
   }
 }
 const ocrService = OcrService.getInstance();
+const DILATE_KERNEL_SIZE$1 = 7;
 const VALID_IMAGE_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg"];
 class TemplateLoader {
   static instance;
   /** 装备模板缓存 (按分类存储) */
   equipTemplates = /* @__PURE__ */ new Map();
-  /** 英雄名称模板缓存 */
+  /** 英雄名称模板缓存 (原始图像) */
   championTemplates = /* @__PURE__ */ new Map();
+  /** 英雄名称模板缓存 (膨胀后的灰度图，用于模板匹配) */
+  championDilatedTemplates = /* @__PURE__ */ new Map();
   /** 星级模板缓存 */
   starLevelTemplates = /* @__PURE__ */ new Map();
   /** 空装备槽位模板 (24x24 纯黑) */
@@ -9035,10 +9036,17 @@ class TemplateLoader {
     return this.equipTemplates;
   }
   /**
-   * 获取英雄模板
+   * 获取英雄模板 (原始图像)
    */
   getChampionTemplates() {
     return this.championTemplates;
+  }
+  /**
+   * 获取英雄模板 (膨胀后的灰度图)
+   * @description 用于模板匹配，预膨胀可以提升匹配性能
+   */
+  getChampionDilatedTemplates() {
+    return this.championDilatedTemplates;
   }
   /**
    * 获取星级模板
@@ -9119,6 +9127,7 @@ class TemplateLoader {
   /**
    * 加载英雄模板
    * @description 用于商店和备战席的棋子名称识别
+   * 同时生成膨胀后的灰度图版本，用于模板匹配时提升容错性
    */
   async loadChampionTemplates() {
     this.clearChampionTemplates();
@@ -9138,12 +9147,42 @@ class TemplateLoader {
         const mat = await this.loadImageAsMat(filePath, { ensureAlpha: true });
         if (mat) {
           this.championTemplates.set(championName, mat);
+          const dilatedMat = this.createDilatedGrayMat(mat);
+          this.championDilatedTemplates.set(championName, dilatedMat);
         }
       } catch (e) {
         logger.error(`[TemplateLoader] 加载英雄模板失败 [${file2}]: ${e}`);
       }
     }
-    logger.info(`[TemplateLoader] 英雄模板加载完成，共 ${this.championTemplates.size} 个`);
+    logger.info(`[TemplateLoader] 英雄模板加载完成，共 ${this.championTemplates.size} 个 (含膨胀版本)`);
+  }
+  /**
+   * 创建膨胀后的灰度图
+   * @description 将图像转为灰度图后进行形态学膨胀
+   * 膨胀让文字笔画"变粗"，容忍像素级偏移，提升模板匹配成功率
+   * @param mat 原始图像 (RGBA/RGB/灰度)
+   * @returns 膨胀后的灰度图
+   */
+  createDilatedGrayMat(mat) {
+    let grayMat;
+    if (mat.channels() === 4) {
+      grayMat = new cv.Mat();
+      cv.cvtColor(mat, grayMat, cv.COLOR_RGBA2GRAY);
+    } else if (mat.channels() === 3) {
+      grayMat = new cv.Mat();
+      cv.cvtColor(mat, grayMat, cv.COLOR_RGB2GRAY);
+    } else {
+      grayMat = mat.clone();
+    }
+    const kernel = cv.getStructuringElement(
+      cv.MORPH_RECT,
+      new cv.Size(DILATE_KERNEL_SIZE$1, DILATE_KERNEL_SIZE$1)
+    );
+    const dilated = new cv.Mat();
+    cv.dilate(grayMat, dilated, kernel);
+    kernel.delete();
+    grayMat.delete();
+    return dilated;
   }
   /**
    * 加载星级模板
@@ -9245,7 +9284,7 @@ class TemplateLoader {
     this.equipTemplates.clear();
   }
   /**
-   * 清理英雄模板缓存
+   * 清理英雄模板缓存 (包括原始和膨胀版本)
    */
   clearChampionTemplates() {
     for (const mat of this.championTemplates.values()) {
@@ -9254,6 +9293,12 @@ class TemplateLoader {
       }
     }
     this.championTemplates.clear();
+    for (const mat of this.championDilatedTemplates.values()) {
+      if (mat && !mat.isDeleted()) {
+        mat.delete();
+      }
+    }
+    this.championDilatedTemplates.clear();
   }
   /**
    * 清理星级模板缓存
@@ -9295,9 +9340,15 @@ const MATCH_THRESHOLDS = {
   /** 空槽位标准差阈值 (低于此值判定为空) */
   EMPTY_SLOT_STDDEV: 10
 };
+const DILATE_KERNEL_SIZE = 7;
 class TemplateMatcher {
   static instance;
   constructor() {
+  }
+  // ========== 路径 Getter ==========
+  /** 星级识别失败图片保存路径 (运行时获取，确保 VITE_PUBLIC 已设置) */
+  get starLevelFailPath() {
+    return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/starLevel");
   }
   /**
    * 获取 TemplateMatcher 单例
@@ -9384,8 +9435,36 @@ class TemplateMatcher {
     }
   }
   /**
+   * 对图像进行形态学膨胀
+   * @description 膨胀操作让文字笔画"变粗"，容忍像素级偏移
+   * @param mat 输入图像 (会被转换为灰度图处理)
+   * @returns 膨胀后的灰度图
+   */
+  dilateMat(mat) {
+    let grayMat;
+    if (mat.channels() === 4) {
+      grayMat = new cv.Mat();
+      cv.cvtColor(mat, grayMat, cv.COLOR_RGBA2GRAY);
+    } else if (mat.channels() === 3) {
+      grayMat = new cv.Mat();
+      cv.cvtColor(mat, grayMat, cv.COLOR_RGB2GRAY);
+    } else {
+      grayMat = mat.clone();
+    }
+    const kernel = cv.getStructuringElement(
+      cv.MORPH_RECT,
+      new cv.Size(DILATE_KERNEL_SIZE, DILATE_KERNEL_SIZE)
+    );
+    const dilated = new cv.Mat();
+    cv.dilate(grayMat, dilated, kernel);
+    kernel.delete();
+    grayMat.delete();
+    return dilated;
+  }
+  /**
    * 匹配英雄模板
    * @description 用于商店和备战席的棋子名称识别
+   * 使用预膨胀的模板进行匹配，解决文字渲染位置偏移导致的匹配失败问题
    * @param targetMat 目标图像 (需要是 RGBA 4 通道)
    * @returns 匹配到的英雄名称，空槽位返回 "empty"，未匹配返回 null
    */
@@ -9393,21 +9472,22 @@ class TemplateMatcher {
     if (this.isEmptySlot(targetMat)) {
       return "empty";
     }
-    const championTemplates = templateLoader.getChampionTemplates();
-    if (championTemplates.size === 0) {
+    const championDilatedTemplates = templateLoader.getChampionDilatedTemplates();
+    if (championDilatedTemplates.size === 0) {
       logger.warn("[TemplateMatcher] 英雄模板为空，跳过匹配");
       return null;
     }
     const mask = new cv.Mat();
     const resultMat = new cv.Mat();
+    const dilatedTarget = this.dilateMat(targetMat);
     try {
       let bestMatchName = null;
       let maxConfidence = 0;
-      for (const [name, templateMat] of championTemplates) {
-        if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) {
+      for (const [name, dilatedTemplate] of championDilatedTemplates) {
+        if (dilatedTemplate.rows > dilatedTarget.rows || dilatedTemplate.cols > dilatedTarget.cols) {
           continue;
         }
-        cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
+        cv.matchTemplate(dilatedTarget, dilatedTemplate, resultMat, cv.TM_CCOEFF_NORMED, mask);
         const result = cv.minMaxLoc(resultMat, mask);
         if (result.maxVal >= MATCH_THRESHOLDS.CHAMPION && result.maxVal > maxConfidence) {
           maxConfidence = result.maxVal;
@@ -9426,6 +9506,7 @@ class TemplateMatcher {
     } finally {
       mask.delete();
       resultMat.delete();
+      dilatedTarget.delete();
     }
   }
   /**
@@ -9470,6 +9551,7 @@ class TemplateMatcher {
           `[TemplateMatcher] 星级识别未达标 (最高相似度: ${(maxConfidence * 100).toFixed(1)}%)`
         );
       }
+      this.saveFailedStarLevelImage(targetMat);
       return -1;
     } catch (e) {
       logger.error(`[TemplateMatcher] 星级匹配出错: ${e}`);
@@ -9477,6 +9559,33 @@ class TemplateMatcher {
     } finally {
       mask.delete();
       resultMat.delete();
+    }
+  }
+  /**
+   * 保存星级识别失败的图片
+   * @description 将识别失败的图片保存到本地，方便排查问题
+   * @param mat 目标图像
+   */
+  async saveFailedStarLevelImage(mat) {
+    try {
+      const savePath = this.starLevelFailPath;
+      fs.ensureDirSync(savePath);
+      const timestamp = Date.now();
+      const filename = `fail_star_${timestamp}.png`;
+      const filePath = path.join(savePath, filename);
+      const channels = mat.channels();
+      const width = mat.cols;
+      const height = mat.rows;
+      await sharp(Buffer.from(mat.data), {
+        raw: {
+          width,
+          height,
+          channels
+        }
+      }).png().toFile(filePath);
+      logger.info(`[TemplateMatcher] 星级识别失败图片已保存: ${filePath}`);
+    } catch (e) {
+      logger.error(`[TemplateMatcher] 保存星级失败图片出错: ${e}`);
     }
   }
 }
