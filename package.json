@@ -50,6 +50,7 @@
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.21",
     "babel-plugin-styled-components": "^2.1.4",
+    "canvas": "^3.2.0",
     "electron": "^32.1.2",
     "electron-builder": "^24.13.3",
     "electron-devtools-installer": "^4.0.0",

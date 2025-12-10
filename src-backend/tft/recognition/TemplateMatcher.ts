@@ -8,10 +8,10 @@ import cv from "@techstark/opencv-js";
 import path from "path";
 import fs from "fs-extra";
 import sharp from "sharp";
-import { logger } from "../../utils/Logger";
-import { IdentifiedEquip, EquipCategory, EQUIP_CATEGORY_PRIORITY } from "../types";
-import { TFT_16_EQUIP_DATA } from "../../TFTProtocol";
-import { templateLoader } from "./TemplateLoader";
+import {logger} from "../../utils/Logger";
+import {IdentifiedEquip, EquipCategory, EQUIP_CATEGORY_PRIORITY} from "../types";
+import {TFT_16_EQUIP_DATA} from "../../TFTProtocol";
+import {templateLoader} from "./TemplateLoader";
 
 /**
  * 匹配阈值配置
@@ -31,7 +31,7 @@ const MATCH_THRESHOLDS = {
 /**
  * 模板匹配器
  * @description 单例模式，提供各种模板匹配功能
- * 
+ *
  * 核心功能：
  * - 装备识别：支持分类优先级匹配
  * - 英雄识别：用于商店/备战席棋子识别
@@ -41,7 +41,8 @@ const MATCH_THRESHOLDS = {
 export class TemplateMatcher {
     private static instance: TemplateMatcher;
 
-    private constructor() {}
+    private constructor() {
+    }
 
     // ========== 路径 Getter ==========
 
