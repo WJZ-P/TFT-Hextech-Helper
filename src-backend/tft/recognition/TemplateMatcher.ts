@@ -29,14 +29,6 @@ const MATCH_THRESHOLDS = {
 } as const;
 
 /**
- * 形态学膨胀核大小
- * @description 用于英雄名称模板匹配前的预处理
- * 膨胀操作可以让文字笔画"变粗"，从而容忍 1-2 像素的渲染偏移
- * 核=5 在"容忍偏移"和"保留特征"之间取得平衡，避免单字英雄(慎/烬)糊成一团
- */
-const DILATE_KERNEL_SIZE = 5;
-
-/**
  * 模板匹配器
  * @description 单例模式，提供各种模板匹配功能
  * 
@@ -160,46 +152,8 @@ export class TemplateMatcher {
     }
 
     /**
-     * 对图像进行形态学膨胀
-     * @description 膨胀操作让文字笔画"变粗"，容忍像素级偏移
-     * @param mat 输入图像 (会被转换为灰度图处理)
-     * @returns 膨胀后的灰度图
-     */
-    private dilateMat(mat: cv.Mat): cv.Mat {
-        // 先转换为灰度图 (如果是多通道)
-        let grayMat: cv.Mat;
-        if (mat.channels() === 4) {
-            grayMat = new cv.Mat();
-            cv.cvtColor(mat, grayMat, cv.COLOR_RGBA2GRAY);
-        } else if (mat.channels() === 3) {
-            grayMat = new cv.Mat();
-            cv.cvtColor(mat, grayMat, cv.COLOR_RGB2GRAY);
-        } else {
-            // 已经是灰度图，克隆一份
-            grayMat = mat.clone();
-        }
-
-        // 创建膨胀核 (矩形结构元素)
-        const kernel = cv.getStructuringElement(
-            cv.MORPH_RECT,
-            new cv.Size(DILATE_KERNEL_SIZE, DILATE_KERNEL_SIZE)
-        );
-
-        // 执行膨胀
-        const dilated = new cv.Mat();
-        cv.dilate(grayMat, dilated, kernel);
-
-        // 清理
-        kernel.delete();
-        grayMat.delete();
-
-        return dilated;
-    }
-
-    /**
      * 匹配英雄模板
      * @description 用于商店和备战席的棋子名称识别
-     * 使用预膨胀的模板进行匹配，解决文字渲染位置偏移导致的匹配失败问题
      * @param targetMat 目标图像 (需要是 RGBA 4 通道)
      * @returns 匹配到的英雄名称，空槽位返回 "empty"，未匹配返回 null
      */
@@ -209,9 +163,8 @@ export class TemplateMatcher {
             return "empty";
         }
 
-        // 获取预膨胀的英雄模板 (在 TemplateLoader 加载时已经膨胀好了)
-        const championDilatedTemplates = templateLoader.getChampionDilatedTemplates();
-        if (championDilatedTemplates.size === 0) {
+        const championTemplates = templateLoader.getChampionTemplates();
+        if (championTemplates.size === 0) {
             logger.warn("[TemplateMatcher] 英雄模板为空，跳过匹配");
             return null;
         }
@@ -219,24 +172,18 @@ export class TemplateMatcher {
         const mask = new cv.Mat();
         const resultMat = new cv.Mat();
 
-        // 只需要对目标图像进行膨胀 (模板已经预膨胀了)
-        const dilatedTarget = this.dilateMat(targetMat);
-
         try {
             let bestMatchName: string | null = null;
             let maxConfidence = 0;
 
-            for (const [name, dilatedTemplate] of championDilatedTemplates) {
+            for (const [name, templateMat] of championTemplates) {
                 // 尺寸检查
-                if (dilatedTemplate.rows > dilatedTarget.rows || dilatedTemplate.cols > dilatedTarget.cols) {
+                if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) {
                     continue;
                 }
 
-                cv.matchTemplate(dilatedTarget, dilatedTemplate, resultMat, cv.TM_CCOEFF_NORMED, mask);
+                cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
                 const result = cv.minMaxLoc(resultMat, mask);
-
-                // 调试日志
-                // logger.debug(`英雄模板名：${name}，相似度：${(result.maxVal * 100).toFixed(3)}%`);
 
                 if (result.maxVal >= MATCH_THRESHOLDS.CHAMPION && result.maxVal > maxConfidence) {
                     maxConfidence = result.maxVal;
@@ -257,7 +204,6 @@ export class TemplateMatcher {
         } finally {
             mask.delete();
             resultMat.delete();
-            dilatedTarget.delete();
         }
     }
 

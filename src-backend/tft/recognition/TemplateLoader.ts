@@ -11,15 +11,6 @@ import cv from "@techstark/opencv-js";
 import { logger } from "../../utils/Logger";
 import { EQUIP_CATEGORY_PRIORITY, EquipCategory } from "../types";
 
-/**
- * 形态学膨胀核大小
- * @description 用于英雄名称模板的预处理
- * 膨胀操作让文字笔画"变粗"，容忍 1-2 像素的渲染偏移
- * 核=5 在"容忍偏移"和"保留特征"之间取得平衡，避免单字英雄(慎/烬)糊成一团
- * 注意：此值需要与 TemplateMatcher 中的 DILATE_KERNEL_SIZE 保持一致
- */
-const DILATE_KERNEL_SIZE = 5;
-
 /** 支持的图片扩展名 */
 const VALID_IMAGE_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg"];
 
@@ -50,11 +41,8 @@ export class TemplateLoader {
     /** 装备模板缓存 (按分类存储) */
     private equipTemplates: Map<EquipCategory, Map<string, cv.Mat>> = new Map();
 
-    /** 英雄名称模板缓存 (原始图像) */
+    /** 英雄名称模板缓存 */
     private championTemplates: Map<string, cv.Mat> = new Map();
-
-    /** 英雄名称模板缓存 (膨胀后的灰度图，用于模板匹配) */
-    private championDilatedTemplates: Map<string, cv.Mat> = new Map();
 
     /** 星级模板缓存 */
     private starLevelTemplates: Map<string, cv.Mat> = new Map();
@@ -133,18 +121,10 @@ export class TemplateLoader {
     }
 
     /**
-     * 获取英雄模板 (原始图像)
+     * 获取英雄模板
      */
     public getChampionTemplates(): Map<string, cv.Mat> {
         return this.championTemplates;
-    }
-
-    /**
-     * 获取英雄模板 (膨胀后的灰度图)
-     * @description 用于模板匹配，预膨胀可以提升匹配性能
-     */
-    public getChampionDilatedTemplates(): Map<string, cv.Mat> {
-        return this.championDilatedTemplates;
     }
 
     /**
@@ -243,7 +223,6 @@ export class TemplateLoader {
     /**
      * 加载英雄模板
      * @description 用于商店和备战席的棋子名称识别
-     * 同时生成膨胀后的灰度图版本，用于模板匹配时提升容错性
      */
     private async loadChampionTemplates(): Promise<void> {
         // 清理旧模板
@@ -270,56 +249,14 @@ export class TemplateLoader {
                 const mat = await this.loadImageAsMat(filePath, { ensureAlpha: true });
 
                 if (mat) {
-                    // 保存原始模板
                     this.championTemplates.set(championName, mat);
-
-                    // 生成并保存膨胀后的灰度图版本
-                    const dilatedMat = this.createDilatedGrayMat(mat);
-                    this.championDilatedTemplates.set(championName, dilatedMat);
                 }
             } catch (e) {
                 logger.error(`[TemplateLoader] 加载英雄模板失败 [${file}]: ${e}`);
             }
         }
 
-        logger.info(`[TemplateLoader] 英雄模板加载完成，共 ${this.championTemplates.size} 个 (含膨胀版本)`);
-    }
-
-    /**
-     * 创建膨胀后的灰度图
-     * @description 将图像转为灰度图后进行形态学膨胀
-     * 膨胀让文字笔画"变粗"，容忍像素级偏移，提升模板匹配成功率
-     * @param mat 原始图像 (RGBA/RGB/灰度)
-     * @returns 膨胀后的灰度图
-     */
-    private createDilatedGrayMat(mat: cv.Mat): cv.Mat {
-        // 1. 转换为灰度图
-        let grayMat: cv.Mat;
-        if (mat.channels() === 4) {
-            grayMat = new cv.Mat();
-            cv.cvtColor(mat, grayMat, cv.COLOR_RGBA2GRAY);
-        } else if (mat.channels() === 3) {
-            grayMat = new cv.Mat();
-            cv.cvtColor(mat, grayMat, cv.COLOR_RGB2GRAY);
-        } else {
-            grayMat = mat.clone();
-        }
-
-        // 2. 创建膨胀核 (矩形结构元素)
-        const kernel = cv.getStructuringElement(
-            cv.MORPH_RECT,
-            new cv.Size(DILATE_KERNEL_SIZE, DILATE_KERNEL_SIZE)
-        );
-
-        // 3. 执行膨胀
-        const dilated = new cv.Mat();
-        cv.dilate(grayMat, dilated, kernel);
-
-        // 4. 清理临时对象
-        kernel.delete();
-        grayMat.delete();
-
-        return dilated;
+        logger.info(`[TemplateLoader] 英雄模板加载完成，共 ${this.championTemplates.size} 个`);
     }
 
     /**
@@ -452,24 +389,15 @@ export class TemplateLoader {
     }
 
     /**
-     * 清理英雄模板缓存 (包括原始和膨胀版本)
+     * 清理英雄模板缓存
      */
     private clearChampionTemplates(): void {
-        // 清理原始模板
         for (const mat of this.championTemplates.values()) {
             if (mat && !mat.isDeleted()) {
                 mat.delete();
             }
         }
         this.championTemplates.clear();
-
-        // 清理膨胀版本
-        for (const mat of this.championDilatedTemplates.values()) {
-            if (mat && !mat.isDeleted()) {
-                mat.delete();
-            }
-        }
-        this.championDilatedTemplates.clear();
     }
 
     /**

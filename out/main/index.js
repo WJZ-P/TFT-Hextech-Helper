@@ -8969,16 +8969,13 @@ class OcrService {
   }
 }
 const ocrService = OcrService.getInstance();
-const DILATE_KERNEL_SIZE$1 = 7;
 const VALID_IMAGE_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg"];
 class TemplateLoader {
   static instance;
   /** 装备模板缓存 (按分类存储) */
   equipTemplates = /* @__PURE__ */ new Map();
-  /** 英雄名称模板缓存 (原始图像) */
+  /** 英雄名称模板缓存 */
   championTemplates = /* @__PURE__ */ new Map();
-  /** 英雄名称模板缓存 (膨胀后的灰度图，用于模板匹配) */
-  championDilatedTemplates = /* @__PURE__ */ new Map();
   /** 星级模板缓存 */
   starLevelTemplates = /* @__PURE__ */ new Map();
   /** 空装备槽位模板 (24x24 纯黑) */
@@ -9036,17 +9033,10 @@ class TemplateLoader {
     return this.equipTemplates;
   }
   /**
-   * 获取英雄模板 (原始图像)
+   * 获取英雄模板
    */
   getChampionTemplates() {
     return this.championTemplates;
-  }
-  /**
-   * 获取英雄模板 (膨胀后的灰度图)
-   * @description 用于模板匹配，预膨胀可以提升匹配性能
-   */
-  getChampionDilatedTemplates() {
-    return this.championDilatedTemplates;
   }
   /**
    * 获取星级模板
@@ -9127,7 +9117,6 @@ class TemplateLoader {
   /**
    * 加载英雄模板
    * @description 用于商店和备战席的棋子名称识别
-   * 同时生成膨胀后的灰度图版本，用于模板匹配时提升容错性
    */
   async loadChampionTemplates() {
     this.clearChampionTemplates();
@@ -9147,42 +9136,12 @@ class TemplateLoader {
         const mat = await this.loadImageAsMat(filePath, { ensureAlpha: true });
         if (mat) {
           this.championTemplates.set(championName, mat);
-          const dilatedMat = this.createDilatedGrayMat(mat);
-          this.championDilatedTemplates.set(championName, dilatedMat);
         }
       } catch (e) {
         logger.error(`[TemplateLoader] 加载英雄模板失败 [${file2}]: ${e}`);
       }
     }
-    logger.info(`[TemplateLoader] 英雄模板加载完成，共 ${this.championTemplates.size} 个 (含膨胀版本)`);
-  }
-  /**
-   * 创建膨胀后的灰度图
-   * @description 将图像转为灰度图后进行形态学膨胀
-   * 膨胀让文字笔画"变粗"，容忍像素级偏移，提升模板匹配成功率
-   * @param mat 原始图像 (RGBA/RGB/灰度)
-   * @returns 膨胀后的灰度图
-   */
-  createDilatedGrayMat(mat) {
-    let grayMat;
-    if (mat.channels() === 4) {
-      grayMat = new cv.Mat();
-      cv.cvtColor(mat, grayMat, cv.COLOR_RGBA2GRAY);
-    } else if (mat.channels() === 3) {
-      grayMat = new cv.Mat();
-      cv.cvtColor(mat, grayMat, cv.COLOR_RGB2GRAY);
-    } else {
-      grayMat = mat.clone();
-    }
-    const kernel = cv.getStructuringElement(
-      cv.MORPH_RECT,
-      new cv.Size(DILATE_KERNEL_SIZE$1, DILATE_KERNEL_SIZE$1)
-    );
-    const dilated = new cv.Mat();
-    cv.dilate(grayMat, dilated, kernel);
-    kernel.delete();
-    grayMat.delete();
-    return dilated;
+    logger.info(`[TemplateLoader] 英雄模板加载完成，共 ${this.championTemplates.size} 个`);
   }
   /**
    * 加载星级模板
@@ -9284,7 +9243,7 @@ class TemplateLoader {
     this.equipTemplates.clear();
   }
   /**
-   * 清理英雄模板缓存 (包括原始和膨胀版本)
+   * 清理英雄模板缓存
    */
   clearChampionTemplates() {
     for (const mat of this.championTemplates.values()) {
@@ -9293,12 +9252,6 @@ class TemplateLoader {
       }
     }
     this.championTemplates.clear();
-    for (const mat of this.championDilatedTemplates.values()) {
-      if (mat && !mat.isDeleted()) {
-        mat.delete();
-      }
-    }
-    this.championDilatedTemplates.clear();
   }
   /**
    * 清理星级模板缓存
@@ -9340,7 +9293,6 @@ const MATCH_THRESHOLDS = {
   /** 空槽位标准差阈值 (低于此值判定为空) */
   EMPTY_SLOT_STDDEV: 10
 };
-const DILATE_KERNEL_SIZE = 7;
 class TemplateMatcher {
   static instance;
   constructor() {
@@ -9435,36 +9387,8 @@ class TemplateMatcher {
     }
   }
   /**
-   * 对图像进行形态学膨胀
-   * @description 膨胀操作让文字笔画"变粗"，容忍像素级偏移
-   * @param mat 输入图像 (会被转换为灰度图处理)
-   * @returns 膨胀后的灰度图
-   */
-  dilateMat(mat) {
-    let grayMat;
-    if (mat.channels() === 4) {
-      grayMat = new cv.Mat();
-      cv.cvtColor(mat, grayMat, cv.COLOR_RGBA2GRAY);
-    } else if (mat.channels() === 3) {
-      grayMat = new cv.Mat();
-      cv.cvtColor(mat, grayMat, cv.COLOR_RGB2GRAY);
-    } else {
-      grayMat = mat.clone();
-    }
-    const kernel = cv.getStructuringElement(
-      cv.MORPH_RECT,
-      new cv.Size(DILATE_KERNEL_SIZE, DILATE_KERNEL_SIZE)
-    );
-    const dilated = new cv.Mat();
-    cv.dilate(grayMat, dilated, kernel);
-    kernel.delete();
-    grayMat.delete();
-    return dilated;
-  }
-  /**
    * 匹配英雄模板
    * @description 用于商店和备战席的棋子名称识别
-   * 使用预膨胀的模板进行匹配，解决文字渲染位置偏移导致的匹配失败问题
    * @param targetMat 目标图像 (需要是 RGBA 4 通道)
    * @returns 匹配到的英雄名称，空槽位返回 "empty"，未匹配返回 null
    */
@@ -9472,22 +9396,21 @@ class TemplateMatcher {
     if (this.isEmptySlot(targetMat)) {
       return "empty";
     }
-    const championDilatedTemplates = templateLoader.getChampionDilatedTemplates();
-    if (championDilatedTemplates.size === 0) {
+    const championTemplates = templateLoader.getChampionTemplates();
+    if (championTemplates.size === 0) {
       logger.warn("[TemplateMatcher] 英雄模板为空，跳过匹配");
       return null;
     }
     const mask = new cv.Mat();
     const resultMat = new cv.Mat();
-    const dilatedTarget = this.dilateMat(targetMat);
     try {
       let bestMatchName = null;
       let maxConfidence = 0;
-      for (const [name, dilatedTemplate] of championDilatedTemplates) {
-        if (dilatedTemplate.rows > dilatedTarget.rows || dilatedTemplate.cols > dilatedTarget.cols) {
+      for (const [name, templateMat] of championTemplates) {
+        if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) {
           continue;
         }
-        cv.matchTemplate(dilatedTarget, dilatedTemplate, resultMat, cv.TM_CCOEFF_NORMED, mask);
+        cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
         const result = cv.minMaxLoc(resultMat, mask);
         if (result.maxVal >= MATCH_THRESHOLDS.CHAMPION && result.maxVal > maxConfidence) {
           maxConfidence = result.maxVal;
@@ -9506,7 +9429,6 @@ class TemplateMatcher {
     } finally {
       mask.delete();
       resultMat.delete();
-      dilatedTarget.delete();
     }
   }
   /**
