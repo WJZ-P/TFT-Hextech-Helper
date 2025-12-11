@@ -9,6 +9,7 @@ import { tftOperator } from "../../TftOperator.ts";
 import { sleep } from "../../utils/HelperTools.ts";
 import { GameStageType } from "../../TFTProtocol";
 import { logger } from "../../utils/Logger";
+import { strategyService } from "../StrategyService";
 
 /** 阶段检测间隔 (ms)，避免高频 OCR 占用 CPU */
 const STAGE_CHECK_INTERVAL_MS = 1000;
@@ -35,6 +36,8 @@ export class GameStageState implements IState {
             case GameStageType.PVE:
                 // TODO: 返回 new PVEState() -> 摆位，捡球
                 logger.info("[GameStageState] 正在打野怪，准备捡球...");
+                // 在野怪环节我们也尝试拿牌，不错过任何发育机会
+                await strategyService.analyzeAndBuy();
                 break;
 
             case GameStageType.CAROUSEL:
@@ -50,6 +53,8 @@ export class GameStageState implements IState {
             case GameStageType.PVP:
                 // TODO: 返回 new PvPState() -> D牌，升级，调整站位
                 logger.info("[GameStageState] 玩家对战环节，准备战斗...");
+                // 核心逻辑：自动拿牌
+                await strategyService.analyzeAndBuy();
                 break;
 
             case GameStageType.UNKNOWN:
