@@ -9287,7 +9287,7 @@ const MATCH_THRESHOLDS = {
   /** 装备匹配阈值 */
   EQUIP: 0.75,
   /** 英雄匹配阈值 */
-  CHAMPION: 0.7,
+  CHAMPION: 0.5,
   /** 星级匹配阈值 (星级图标特征明显，阈值设高) */
   STAR_LEVEL: 0.85,
   /** 空槽位标准差阈值 (低于此值判定为空) */
@@ -9940,7 +9940,8 @@ class TftOperator {
       let tftUnit = TFT_16_CHAMPION_DATA[cleanName] || null;
       if (!tftUnit) {
         logger.warn(`[商店槽位 ${i}] OCR 识别失败，尝试模板匹配...`);
-        const mat = await screenCapture.pngBufferToMat(processedPng);
+        const rawPng = await screenCapture.captureRegionAsPng(region, false);
+        const mat = await screenCapture.pngBufferToMat(rawPng);
         cleanName = templateMatcher.matchChampion(mat) || "";
         mat.delete();
       }
@@ -10033,7 +10034,8 @@ class TftOperator {
       let tftUnit = TFT_16_CHAMPION_DATA[cleanName] || null;
       if (!tftUnit) {
         logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] OCR 识别失败，尝试模板匹配...`);
-        const mat = await screenCapture.pngBufferToMat(namePng);
+        const rawPng = await screenCapture.captureRegionAsPng(nameRegion, false);
+        const mat = await screenCapture.pngBufferToMat(rawPng);
         cleanName = templateMatcher.matchChampion(mat) || "";
         mat.delete();
       }
@@ -10113,9 +10115,7 @@ class TftOperator {
     } else if (recognizedName && recognizedName.length > 0) {
       logger.warn(`[${type}槽位 ${slot}] 匹配到模板但名称未知: ${recognizedName}`);
     } else {
-      logger.warn(`[${type}槽位 ${slot}] 识别失败，保存截图...`);
-      const filename = `fail_${type}_slot_${slot}_${Date.now()}.png`;
-      fs.writeFileSync(path.join(this.championTemplatePath, filename), imageBuffer);
+      logger.warn(`[${type}槽位 ${slot}] 识别失败，兜底判定为空槽位`);
     }
   }
   /**
@@ -10143,6 +10143,52 @@ class TftOperator {
   }
 }
 const tftOperator = TftOperator.getInstance();
+const MY_DREAM_COMP = {
+  // 这里的名字必须和 TFT_16_CHAMPION_DATA 里的 displayName 一致
+  // 包含：莎弥拉(1), 卡西奥佩娅(1), 斯维因(2), 克烈(2), 德莱厄斯(3), 卡特琳娜(3), 赛恩(5)
+  // 注意：TFTProtocol 中目前可能缺少部分棋子数据，我们暂时只填 Protocol 里有的
+  targetUnits: ["莎弥拉", "卡西奥佩娅", "斯维因", "克烈", "德莱厄斯", "卡特琳娜", "赛恩"]
+};
+class StrategyService {
+  static instance;
+  constructor() {
+  }
+  /**
+   * 获取单例实例
+   */
+  static getInstance() {
+    if (!StrategyService.instance) {
+      StrategyService.instance = new StrategyService();
+    }
+    return StrategyService.instance;
+  }
+  /**
+   * 分析商店并执行购买
+   * @description 获取当前商店棋子信息，对比目标阵容，自动购买需要的棋子
+   */
+  async analyzeAndBuy() {
+    const shopUnits = await tftOperator.getShopInfo();
+    for (let i = 0; i < shopUnits.length; i++) {
+      const unit = shopUnits[i];
+      if (!unit) continue;
+      if (this.shouldIBuy(unit)) {
+        logger.info(`[StrategyService] 发现目标棋子: ${unit.displayName} (￥${unit.price})，正在购买...`);
+        await tftOperator.buyAtSlot(i + 1);
+      } else {
+        logger.debug(`[StrategyService] 路人棋子: ${unit.displayName}，跳过`);
+      }
+    }
+  }
+  /**
+   * 判断某个棋子是否应该购买
+   * @param unit 商店里的棋子信息
+   * @returns true 表示建议购买，false 表示不买
+   */
+  shouldIBuy(unit) {
+    return MY_DREAM_COMP.targetUnits.includes(unit.displayName);
+  }
+}
+const strategyService = StrategyService.getInstance();
 const STAGE_CHECK_INTERVAL_MS = 1e3;
 class GameStageState {
   /** 状态名称 */
@@ -10158,6 +10204,7 @@ class GameStageState {
     switch (currentGameStage) {
       case GameStageType.PVE:
         logger.info("[GameStageState] 正在打野怪，准备捡球...");
+        await strategyService.analyzeAndBuy();
         break;
       case GameStageType.CAROUSEL:
         logger.info("[GameStageState] 选秀环节，准备抢装备...");
@@ -10167,6 +10214,7 @@ class GameStageState {
         break;
       case GameStageType.PVP:
         logger.info("[GameStageState] 玩家对战环节，准备战斗...");
+        await strategyService.analyzeAndBuy();
         break;
       case GameStageType.UNKNOWN:
         logger.debug("[GameStageState] 未知阶段，等待中...");
