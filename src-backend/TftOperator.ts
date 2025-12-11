@@ -502,10 +502,10 @@ class TftOperator {
         } else if (recognizedName && recognizedName.length > 0) {
             logger.warn(`[${type}槽位 ${slot}] 匹配到模板但名称未知: ${recognizedName}`);
         } else {
-            // logger.warn(`[${type}槽位 ${slot}] 识别失败，保存截图...`);
-            // const filename = `fail_${type}_slot_${slot}_${Date.now()}.png`;
-            // fs.writeFileSync(path.join(this.championTemplatePath, filename), imageBuffer);
-            logger.warn(`[${type}槽位 ${slot}] 识别失败，兜底判定为空槽位`);
+            logger.warn(`[${type}槽位 ${slot}] 识别失败，保存截图...`);
+            const filename = `fail_${type}_slot_${slot}_${Date.now()}.png`;
+            fs.writeFileSync(path.join(this.championTemplatePath, filename), imageBuffer);
+            //logger.warn(`[${type}槽位 ${slot}] 识别失败，兜底判定为空槽位`);
         }
     }
 

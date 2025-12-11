@@ -9287,7 +9287,7 @@ const MATCH_THRESHOLDS = {
   /** 装备匹配阈值 */
   EQUIP: 0.75,
   /** 英雄匹配阈值 */
-  CHAMPION: 0.5,
+  CHAMPION: 0.3,
   /** 星级匹配阈值 (星级图标特征明显，阈值设高) */
   STAR_LEVEL: 0.85,
   /** 空槽位标准差阈值 (低于此值判定为空) */
@@ -10115,7 +10115,9 @@ class TftOperator {
     } else if (recognizedName && recognizedName.length > 0) {
       logger.warn(`[${type}槽位 ${slot}] 匹配到模板但名称未知: ${recognizedName}`);
     } else {
-      logger.warn(`[${type}槽位 ${slot}] 识别失败，兜底判定为空槽位`);
+      logger.warn(`[${type}槽位 ${slot}] 识别失败，保存截图...`);
+      const filename = `fail_${type}_slot_${slot}_${Date.now()}.png`;
+      fs.writeFileSync(path.join(this.championTemplatePath, filename), imageBuffer);
     }
   }
   /**
