@@ -5578,6 +5578,8 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["TFT_GET_SHOP_INFO"] = "tft-get-shop-info";
   IpcChannel2["TFT_GET_EQUIP_INFO"] = "tft-get-equip-info";
   IpcChannel2["TFT_GET_BENCH_INFO"] = "tft-get-bench-info";
+  IpcChannel2["TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT"] = "tft-test-save-bench-slot-snapshot";
+  IpcChannel2["TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT"] = "tft-test-save-fight-board-slot-snapshot";
   return IpcChannel2;
 })(IpcChannel || {});
 class IdleState {
@@ -5793,6 +5795,163 @@ const equipmentRegion = {
   R4_C6: new Point(690, 475),
   R4_C7: new Point(780, 475)
 });
+const fightBoardSlotRegion = {
+  // x+=80
+  //  第一行的棋子位置
+  R1_C1: {
+    leftTop: { x: 210, y: 300 },
+    rightBottom: { x: 255, y: 330 }
+  },
+  R1_C2: {
+    leftTop: { x: 290, y: 300 },
+    rightBottom: { x: 340, y: 330 }
+  },
+  R1_C3: {
+    leftTop: { x: 370, y: 300 },
+    rightBottom: { x: 420, y: 330 }
+  },
+  R1_C4: {
+    leftTop: { x: 450, y: 300 },
+    rightBottom: { x: 500, y: 330 }
+  },
+  R1_C5: {
+    leftTop: { x: 530, y: 300 },
+    rightBottom: { x: 585, y: 330 }
+  },
+  R1_C6: {
+    leftTop: { x: 615, y: 300 },
+    rightBottom: { x: 665, y: 330 }
+  },
+  R1_C7: {
+    leftTop: { x: 695, y: 300 },
+    rightBottom: { x: 750, y: 330 }
+  },
+  //  第二行的棋子位置        //  x+=85
+  R2_C1: {
+    leftTop: { x: 240, y: 350 },
+    rightBottom: { x: 285, y: 385 }
+  },
+  R2_C2: {
+    leftTop: { x: 325, y: 350 },
+    rightBottom: { x: 370, y: 385 }
+  },
+  R2_C3: {
+    leftTop: { x: 410, y: 350 },
+    rightBottom: { x: 455, y: 385 }
+  },
+  R2_C4: {
+    leftTop: { x: 495, y: 350 },
+    rightBottom: { x: 540, y: 385 }
+  },
+  R2_C5: {
+    leftTop: { x: 575, y: 350 },
+    rightBottom: { x: 625, y: 385 }
+  },
+  R2_C6: {
+    leftTop: { x: 660, y: 350 },
+    rightBottom: { x: 710, y: 385 }
+  },
+  R2_C7: {
+    leftTop: { x: 745, y: 350 },
+    rightBottom: { x: 795, y: 385 }
+  },
+  //  第三行棋子的位置        //  x+=90
+  R3_C1: {
+    leftTop: { x: 185, y: 405 },
+    rightBottom: { x: 230, y: 440 }
+  },
+  R3_C2: {
+    leftTop: { x: 275, y: 405 },
+    rightBottom: { x: 320, y: 440 }
+  },
+  R3_C3: {
+    leftTop: { x: 360, y: 405 },
+    rightBottom: { x: 410, y: 440 }
+  },
+  R3_C4: {
+    leftTop: { x: 445, y: 405 },
+    rightBottom: { x: 495, y: 440 }
+  },
+  R3_C5: {
+    leftTop: { x: 535, y: 405 },
+    rightBottom: { x: 585, y: 440 }
+  },
+  R3_C6: {
+    leftTop: { x: 620, y: 405 },
+    rightBottom: { x: 675, y: 440 }
+  },
+  R3_C7: {
+    leftTop: { x: 705, y: 405 },
+    rightBottom: { x: 760, y: 440 }
+  },
+  //  第四行棋子的位置        //  x+=90
+  R4_C1: {
+    leftTop: { x: 215, y: 465 },
+    rightBottom: { x: 265, y: 500 }
+  },
+  R4_C2: {
+    leftTop: { x: 310, y: 465 },
+    rightBottom: { x: 355, y: 500 }
+  },
+  R4_C3: {
+    leftTop: { x: 395, y: 465 },
+    rightBottom: { x: 450, y: 500 }
+  },
+  R4_C4: {
+    leftTop: { x: 490, y: 465 },
+    rightBottom: { x: 540, y: 500 }
+  },
+  R4_C5: {
+    leftTop: { x: 580, y: 465 },
+    rightBottom: { x: 635, y: 500 }
+  },
+  R4_C6: {
+    leftTop: { x: 670, y: 465 },
+    rightBottom: { x: 725, y: 500 }
+  },
+  R4_C7: {
+    leftTop: { x: 760, y: 465 },
+    rightBottom: { x: 815, y: 500 }
+  }
+};
+const benchSlotRegion = {
+  SLOT_1: {
+    leftTop: { x: 105, y: 530 },
+    rightBottom: { x: 155, y: 585 }
+  },
+  SLOT_2: {
+    leftTop: { x: 190, y: 530 },
+    rightBottom: { x: 245, y: 585 }
+  },
+  SLOT_3: {
+    leftTop: { x: 270, y: 530 },
+    rightBottom: { x: 325, y: 585 }
+  },
+  SLOT_4: {
+    leftTop: { x: 355, y: 530 },
+    rightBottom: { x: 410, y: 585 }
+  },
+  SLOT_5: {
+    leftTop: { x: 435, y: 530 },
+    rightBottom: { x: 495, y: 585 }
+  },
+  SLOT_6: {
+    leftTop: { x: 520, y: 530 },
+    rightBottom: { x: 580, y: 585 }
+  },
+  SLOT_7: {
+    leftTop: { x: 600, y: 530 },
+    rightBottom: { x: 665, y: 585 }
+  },
+  SLOT_8: {
+    leftTop: { x: 680, y: 530 },
+    rightBottom: { x: 750, y: 585 }
+  },
+  SLOT_9: {
+    leftTop: { x: 765, y: 530 },
+    rightBottom: { x: 830, y: 585 }
+  }
+};
 const benchSlotPoints = {
   SLOT_1: new Point(135, 555),
   SLOT_2: new Point(210, 555),
@@ -8980,6 +9139,8 @@ class TemplateLoader {
   championTemplates = /* @__PURE__ */ new Map();
   /** 星级模板缓存 */
   starLevelTemplates = /* @__PURE__ */ new Map();
+  /** 备战席槽位模板缓存 (RGBA 彩色图，用于空槽检测) */
+  benchSlotTemplates = /* @__PURE__ */ new Map();
   /** 空装备槽位模板 (24x24 纯黑) */
   emptyEquipSlotTemplate = null;
   /** 文件监听器防抖定时器 */
@@ -8995,6 +9156,9 @@ class TemplateLoader {
   }
   get starLevelTemplatePath() {
     return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/starLevel");
+  }
+  get benchEmptySlotTemplatePath() {
+    return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/benchSlot");
   }
   constructor() {
   }
@@ -9021,7 +9185,8 @@ class TemplateLoader {
     await Promise.all([
       this.loadEquipTemplates(),
       this.loadChampionTemplates(),
-      this.loadStarLevelTemplates()
+      this.loadStarLevelTemplates(),
+      this.loadBenchSlotTemplates()
     ]);
     this.setupChampionTemplateWatcher();
     this.isLoaded = true;
@@ -9047,6 +9212,14 @@ class TemplateLoader {
     return this.starLevelTemplates;
   }
   /**
+   * 获取备战席槽位模板
+   * @param slotKey 槽位 key，例如 "SLOT_1"
+   * @returns 对应的 RGBA 模板 Mat，未找到返回 null
+   */
+  getBenchSlotTemplate(slotKey) {
+    return this.benchSlotTemplates.get(slotKey) || null;
+  }
+  /**
    * 获取空装备槽位模板
    */
   getEmptyEquipSlotTemplate() {
@@ -9058,7 +9231,7 @@ class TemplateLoader {
   isReady() {
     return this.isLoaded;
   }
-  // ========== 私有加载方法 ==========
+  // ========== 私有加载方法 ========== 
   /**
    * 创建空槽位模板 (24x24 纯黑)
    */
@@ -9177,6 +9350,40 @@ class TemplateLoader {
     }
     logger.info(`[TemplateLoader] 星级模板加载完成，共 ${this.starLevelTemplates.size} 个`);
   }
+  /**
+   * 加载备战席槽位模板
+   * @description 用于判断备战席槽位是否有棋子占用
+   * 文件命名格式：SLOT_1.png ~ SLOT_9.png，保留 RGBA 彩色信息
+   */
+  async loadBenchSlotTemplates() {
+    this.clearBenchSlotTemplates();
+    logger.info("[TemplateLoader] 开始加载备战席槽位模板...");
+    if (!fs.existsSync(this.benchEmptySlotTemplatePath)) {
+      fs.ensureDirSync(this.benchEmptySlotTemplatePath);
+      logger.info(`[TemplateLoader] 备战席槽位模板目录不存在，已自动创建: ${this.benchEmptySlotTemplatePath}`);
+      return;
+    }
+    for (let i = 1; i <= 9; i++) {
+      const slotKey = `SLOT_${i}`;
+      const filePath = path.join(this.benchEmptySlotTemplatePath, `${slotKey}.png`);
+      if (!fs.existsSync(filePath)) {
+        logger.warn(`[TemplateLoader] 未找到槽位模板: ${slotKey}.png`);
+        continue;
+      }
+      try {
+        const mat = await this.loadImageAsMat(filePath, {
+          ensureAlpha: true,
+          grayscale: false
+        });
+        if (mat) {
+          this.benchSlotTemplates.set(slotKey, mat);
+        }
+      } catch (e) {
+        logger.error(`[TemplateLoader] 加载备战席槽位模板失败 [${slotKey}]: ${e}`);
+      }
+    }
+    logger.info(`[TemplateLoader] 备战席槽位模板加载完成，共 ${this.benchSlotTemplates.size} 个`);
+  }
   // ========== 工具方法 ==========
   /**
    * 加载图片为 OpenCV Mat
@@ -9280,12 +9487,24 @@ class TemplateLoader {
     this.starLevelTemplates.clear();
   }
   /**
+   * 清理备战席槽位模板缓存
+   */
+  clearBenchSlotTemplates() {
+    for (const mat of this.benchSlotTemplates.values()) {
+      if (mat && !mat.isDeleted()) {
+        mat.delete();
+      }
+    }
+    this.benchSlotTemplates.clear();
+  }
+  /**
    * 销毁所有资源
    */
   destroy() {
     this.clearEquipTemplates();
     this.clearChampionTemplates();
     this.clearStarLevelTemplates();
+    this.clearBenchSlotTemplates();
     if (this.emptyEquipSlotTemplate && !this.emptyEquipSlotTemplate.isDeleted()) {
       this.emptyEquipSlotTemplate.delete();
       this.emptyEquipSlotTemplate = null;
@@ -9597,12 +9816,16 @@ class ScreenCapture {
    */
   async captureRegionAsPng(region, forOCR = true) {
     const screenshot = await screen.grabRegion(region);
-    let pipeline = sharp(screenshot.data, {
+    const mat = new cv.Mat(screenshot.height, screenshot.width, cv.CV_8UC4);
+    mat.data.set(new Uint8Array(screenshot.data));
+    cv.cvtColor(mat, mat, cv.COLOR_BGRA2RGBA);
+    const rgbaBuffer = Buffer.from(mat.data);
+    let pipeline = sharp(rgbaBuffer, {
       raw: {
         width: screenshot.width,
         height: screenshot.height,
         channels: 4
-        // RGBA / BGRA
+        // RGBA
       }
     });
     if (forOCR) {
@@ -9612,7 +9835,11 @@ class ScreenCapture {
         kernel: "lanczos3"
       }).grayscale().normalize().threshold(160).sharpen();
     }
-    return await pipeline.toFormat("png").toBuffer();
+    try {
+      return await pipeline.toFormat("png").toBuffer();
+    } finally {
+      mat.delete();
+    }
   }
   /**
    * 截取游戏内相对区域并输出为 PNG Buffer
@@ -9840,6 +10067,8 @@ class TftOperator {
   currentEquipState = [];
   /** 当前备战席状态 */
   currentBenchState = [];
+  /** 空槽匹配阈值：平均像素差值大于此值视为"有棋子占用" */
+  benchEmptyDiffThreshold = 12;
   /** OpenCV 是否已初始化 */
   isOpenCVReady = false;
   // ========== 路径 Getter ==========
@@ -9851,6 +10080,12 @@ class TftOperator {
   }
   get starLevelTemplatePath() {
     return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/starLevel");
+  }
+  get benchSlotSnapshotPath() {
+    return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/benchSlot");
+  }
+  get fightBoardSlotSnapshotPath() {
+    return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/fightBoardSlot");
   }
   // ========== 构造函数 ==========
   constructor() {
@@ -10051,6 +10286,13 @@ class TftOperator {
   async getBenchInfo() {
     const benchUnits = [];
     for (const benchSlot of Object.keys(benchSlotPoints)) {
+      const benchRegion = screenCapture.toAbsoluteRegion(benchSlotRegion[benchSlot]);
+      const isEmpty = await this.isBenchSlotEmpty(benchSlot, benchRegion);
+      if (isEmpty) {
+        logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 检测为空，跳过点击`);
+        benchUnits.push(null);
+        continue;
+      }
       await mouseController.clickAt(benchSlotPoints[benchSlot], Button.RIGHT);
       await sleep(50);
       const nameRegion = screenCapture.toAbsoluteRegion(detailChampionNameRegion);
@@ -10090,9 +10332,88 @@ class TftOperator {
     }
     return benchUnits;
   }
+  /**
+   * 保存备战席槽位截图到本地 (benchSlotRegion)
+   * 用于采集空槽/有子样本，帮助后续做占用检测或模板生成
+   */
+  async saveBenchSlotSnapshots() {
+    this.ensureInitialized();
+    const saveDir = this.benchSlotSnapshotPath;
+    fs.ensureDirSync(saveDir);
+    for (const [slotKey, regionDef] of Object.entries(benchSlotRegion)) {
+      try {
+        const region = screenCapture.toAbsoluteRegion(regionDef);
+        const pngBuffer = await screenCapture.captureRegionAsPng(region, false);
+        const filename = `bench_${slotKey.toLowerCase()}_${Date.now()}.png`;
+        fs.writeFileSync(path.join(saveDir, filename), pngBuffer);
+        logger.info(`[TftOperator] 保存备战席槽位截图: ${slotKey} -> ${filename}`);
+      } catch (e) {
+        logger.error(`[TftOperator] 保存备战席槽位截图失败: ${slotKey}, ${e.message}`);
+      }
+    }
+  }
+  /**
+   * 保存棋盘槽位截图到本地 (fightBoardSlotRegion)
+   * 文件名直接使用对象 key (如 R1_C1.png)
+   */
+  async saveFightBoardSlotSnapshots() {
+    this.ensureInitialized();
+    const saveDir = this.fightBoardSlotSnapshotPath;
+    fs.ensureDirSync(saveDir);
+    for (const [slotKey, regionDef] of Object.entries(fightBoardSlotRegion)) {
+      try {
+        const region = screenCapture.toAbsoluteRegion(regionDef);
+        const pngBuffer = await screenCapture.captureRegionAsPng(region, false);
+        const filename = `${slotKey}.png`;
+        fs.writeFileSync(path.join(saveDir, filename), pngBuffer);
+        logger.info(`[TftOperator] 保存棋盘槽位截图: ${slotKey} -> ${filename}`);
+      } catch (e) {
+        logger.error(`[TftOperator] 保存棋盘槽位截图失败: ${slotKey}, ${e.message}`);
+      }
+    }
+  }
   // ============================================================================
   // 私有方法 (Private Methods)
   // ============================================================================
+  /**
+   * 判断备战席槽位是否为空
+   * @description 通过 templateLoader 获取空槽模板，比较当前截图的 RGBA 均值差异
+   * @param slotKey 槽位 key，例如 SLOT_1
+   * @param region nut-js Region (绝对坐标)
+   */
+  async isBenchSlotEmpty(slotKey, region) {
+    if (!templateLoader.isReady()) {
+      logger.warn("[TftOperator] 模板未加载完成，空槽检测暂时跳过");
+      return false;
+    }
+    const tmpl = templateLoader.getBenchSlotTemplate(slotKey);
+    if (!tmpl) {
+      logger.warn(`[TftOperator] 未找到槽位模板: ${slotKey}，跳过空槽检测`);
+      return false;
+    }
+    const pngBuffer = await screenCapture.captureRegionAsPng(region, false);
+    let mat = await screenCapture.pngBufferToMat(pngBuffer);
+    if (mat.channels() === 3) {
+      cv.cvtColor(mat, mat, cv.COLOR_RGB2RGBA);
+    }
+    if (mat.cols !== tmpl.cols || mat.rows !== tmpl.rows) {
+      const resized = new cv.Mat();
+      cv.resize(mat, resized, new cv.Size(tmpl.cols, tmpl.rows), 0, 0, cv.INTER_AREA);
+      mat.delete();
+      mat = resized;
+    }
+    const diff = new cv.Mat();
+    cv.absdiff(mat, tmpl, diff);
+    const meanScalar = cv.mean(diff);
+    const meanDiff = (meanScalar[0] + meanScalar[1] + meanScalar[2]) / 3;
+    diff.delete();
+    mat.delete();
+    const isEmpty = meanDiff < this.benchEmptyDiffThreshold;
+    if (!isEmpty) {
+      logger.debug(`[TftOperator] 槽位 ${slotKey} 判定为占用, meanDiff=${meanDiff.toFixed(2)}`);
+    }
+    return isEmpty;
+  }
   /**
    * 获取游戏阶段显示区域
    * @param isStageOne 是否为第一阶段 (UI 位置不同)
@@ -10786,6 +11107,8 @@ function registerHandler() {
   ipcMain.handle(IpcChannel.TFT_GET_SHOP_INFO, async (event) => tftOperator.getShopInfo());
   ipcMain.handle(IpcChannel.TFT_GET_EQUIP_INFO, async (event) => tftOperator.getEquipInfo());
   ipcMain.handle(IpcChannel.TFT_GET_BENCH_INFO, async (event) => tftOperator.getBenchInfo());
+  ipcMain.handle(IpcChannel.TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT, async (event) => tftOperator.saveBenchSlotSnapshots());
+  ipcMain.handle(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT, async (event) => tftOperator.saveFightBoardSlotSnapshots());
 }
 export {
   MAIN_DIST,

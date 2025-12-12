@@ -92,11 +92,19 @@ export class ScreenCapture {
     public async captureRegionAsPng(region: Region, forOCR: boolean = true): Promise<Buffer> {
         const screenshot = await nutScreen.grabRegion(region);
 
-        let pipeline = sharp(screenshot.data, {
+        // nut-js 返回 BGRA，需要先转换为 RGBA，否则颜色会偏/颠倒
+        const mat = new cv.Mat(screenshot.height, screenshot.width, cv.CV_8UC4);
+        mat.data.set(new Uint8Array(screenshot.data));
+        cv.cvtColor(mat, mat, cv.COLOR_BGRA2RGBA);
+
+        // 拷贝一份 RGBA Buffer 供 sharp 使用，避免 mat.delete() 释放内存后被引用
+        const rgbaBuffer = Buffer.from(mat.data);
+
+        let pipeline = sharp(rgbaBuffer, {
             raw: {
                 width: screenshot.width,
                 height: screenshot.height,
-                channels: 4, // RGBA / BGRA
+                channels: 4, // RGBA
             },
         });
 
@@ -115,8 +123,13 @@ export class ScreenCapture {
         }
         // 非 OCR 场景保持原图，不做任何处理
 
-        return await pipeline.toFormat("png").toBuffer();
+        try {
+            return await pipeline.toFormat("png").toBuffer();
+        } finally {
+            mat.delete();
+        }
     }
+
 
     /**
      * 截取游戏内相对区域并输出为 PNG Buffer

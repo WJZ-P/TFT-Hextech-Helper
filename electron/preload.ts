@@ -71,6 +71,8 @@ const tftApi = {
     getShopInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_SHOP_INFO),
     getEquipInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_EQUIP_INFO),
     getBenchInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_BENCH_INFO),
+    saveBenchSlotSnapshots : ()=> ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT),
+    saveFightBoardSlotSnapshots : ()=>ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT),
 }
 export type TftApi = typeof tftApi
 contextBridge.exposeInMainWorld('tft', tftApi)

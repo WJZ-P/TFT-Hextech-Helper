@@ -22,9 +22,11 @@ import cv from "@techstark/opencv-js";
 // 协议层导入
 import {
     benchSlotPoints,
+    benchSlotRegion,
     detailChampionNameRegion,
     detailChampionStarRegion,
     equipmentRegion,
+    fightBoardSlotRegion,
     gameStageDisplayNormal,
     gameStageDisplayStageOne,
     gameStageDisplayTheClockworkTrails,
@@ -36,6 +38,8 @@ import {
     TFTMode,
     TFTUnit,
 } from "./TFTProtocol";
+
+
 
 // 内部模块导入
 import {
@@ -110,10 +114,14 @@ class TftOperator {
     /** 当前备战席状态 */
     private currentBenchState: TFTUnit[] = [];
 
+    /** 空槽匹配阈值：平均像素差值大于此值视为"有棋子占用" */
+    private readonly benchEmptyDiffThreshold = 12;
+
     /** OpenCV 是否已初始化 */
     private isOpenCVReady = false;
 
     // ========== 路径 Getter ==========
+
 
     private get failChampionTemplatePath(): string {
         return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/英雄备份");
@@ -126,6 +134,17 @@ class TftOperator {
     private get starLevelTemplatePath(): string {
         return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/starLevel");
     }
+
+    private get benchSlotSnapshotPath(): string {
+        return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/benchSlot");
+    }
+
+    private get fightBoardSlotSnapshotPath(): string {
+        return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/fightBoardSlot");
+    }
+
+
+
 
     // ========== 构造函数 ==========
 
@@ -390,6 +409,17 @@ class TftOperator {
 
         for (const benchSlot of Object.keys(benchSlotPoints)) {
             // 右键点击槽位显示详细信息
+            // 先检测该槽位是否为空：对比空槽模板
+            const benchRegion = screenCapture.toAbsoluteRegion(benchSlotRegion[benchSlot as keyof typeof benchSlotRegion]);
+            const isEmpty = await this.isBenchSlotEmpty(benchSlot, benchRegion);
+
+            if (isEmpty) {
+                logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 检测为空，跳过点击`);
+                benchUnits.push(null);
+                continue;
+            }
+
+            // 右键点击槽位显示详细信息
             await mouseController.clickAt(benchSlotPoints[benchSlot], Button.RIGHT);
             await sleep(50); // 等待 UI 刷新 (游戏 25fps，额外给10ms缓冲时间)
 
@@ -398,6 +428,7 @@ class TftOperator {
             const namePng = await screenCapture.captureRegionAsPng(nameRegion);
             const text = await ocrService.recognize(namePng, OcrWorkerType.CHESS);
             let cleanName = text.replace(/\s/g, "");
+
 
             // 尝试从 OCR 结果中找到匹配的英雄
             let tftUnit: TFTUnit | null = TFT_16_CHAMPION_DATA[cleanName] || null;
@@ -446,14 +477,118 @@ class TftOperator {
         return benchUnits;
     }
 
+    /**
+     * 保存备战席槽位截图到本地 (benchSlotRegion)
+     * 用于采集空槽/有子样本，帮助后续做占用检测或模板生成
+     */
+    public async saveBenchSlotSnapshots(): Promise<void> {
+        this.ensureInitialized();
+        const saveDir = this.benchSlotSnapshotPath;
+        fs.ensureDirSync(saveDir);
+
+        for (const [slotKey, regionDef] of Object.entries(benchSlotRegion)) {
+            try {
+                const region = screenCapture.toAbsoluteRegion(regionDef);
+                // 不放大，拿 1x 原图，便于做差异/模板
+                const pngBuffer = await screenCapture.captureRegionAsPng(region, false);
+                const filename = `bench_${slotKey.toLowerCase()}_${Date.now()}.png`;
+                fs.writeFileSync(path.join(saveDir, filename), pngBuffer);
+                logger.info(`[TftOperator] 保存备战席槽位截图: ${slotKey} -> ${filename}`);
+            } catch (e: any) {
+                logger.error(`[TftOperator] 保存备战席槽位截图失败: ${slotKey}, ${e.message}`);
+            }
+        }
+    }
+
+    /**
+     * 保存棋盘槽位截图到本地 (fightBoardSlotRegion)
+     * 文件名直接使用对象 key (如 R1_C1.png)
+     */
+    public async saveFightBoardSlotSnapshots(): Promise<void> {
+        this.ensureInitialized();
+        const saveDir = this.fightBoardSlotSnapshotPath;
+        fs.ensureDirSync(saveDir);
+
+        for (const [slotKey, regionDef] of Object.entries(fightBoardSlotRegion)) {
+            try {
+                const region = screenCapture.toAbsoluteRegion(regionDef);
+                // 不放大，使用 1x 原始截图，便于差异/占用检测
+                const pngBuffer = await screenCapture.captureRegionAsPng(region, false);
+                const filename = `${slotKey}.png`;
+                fs.writeFileSync(path.join(saveDir, filename), pngBuffer);
+                logger.info(`[TftOperator] 保存棋盘槽位截图: ${slotKey} -> ${filename}`);
+            } catch (e: any) {
+                logger.error(`[TftOperator] 保存棋盘槽位截图失败: ${slotKey}, ${e.message}`);
+            }
+        }
+    }
+
     // ============================================================================
     // 私有方法 (Private Methods)
     // ============================================================================
 
     /**
+     * 判断备战席槽位是否为空
+     * @description 通过 templateLoader 获取空槽模板，比较当前截图的 RGBA 均值差异
+     * @param slotKey 槽位 key，例如 SLOT_1
+     * @param region nut-js Region (绝对坐标)
+     */
+    private async isBenchSlotEmpty(slotKey: string, region: Region): Promise<boolean> {
+        if (!templateLoader.isReady()) {
+            logger.warn("[TftOperator] 模板未加载完成，空槽检测暂时跳过");
+            return false; // 无法判断时，默认继续点击以保证功能
+        }
+
+        // 从 templateLoader 获取槽位模板 (RGBA)
+        const tmpl = templateLoader.getBenchSlotTemplate(slotKey);
+        if (!tmpl) {
+            logger.warn(`[TftOperator] 未找到槽位模板: ${slotKey}，跳过空槽检测`);
+            return false;
+        }
+
+        // 截取当前槽位 1x 原图 (RGBA)
+        const pngBuffer = await screenCapture.captureRegionAsPng(region, false);
+        let mat = await screenCapture.pngBufferToMat(pngBuffer);
+
+        // 确保通道数一致：都转为 RGBA
+        if (mat.channels() === 3) {
+            cv.cvtColor(mat, mat, cv.COLOR_RGB2RGBA);
+        }
+
+        // 尺寸对齐：如果当前图尺寸与模板不同，按模板尺寸缩放
+        if (mat.cols !== tmpl.cols || mat.rows !== tmpl.rows) {
+            const resized = new cv.Mat();
+            cv.resize(mat, resized, new cv.Size(tmpl.cols, tmpl.rows), 0, 0, cv.INTER_AREA);
+            mat.delete();
+            mat = resized;
+        }
+
+        // 计算绝对差值并求均值 (RGBA 四通道取平均)
+        const diff = new cv.Mat();
+        cv.absdiff(mat, tmpl, diff);
+        const meanScalar = cv.mean(diff); // [R_mean, G_mean, B_mean, A_mean]
+        // 取 RGB 三通道的平均值（忽略 Alpha）
+        const meanDiff = (meanScalar[0] + meanScalar[1] + meanScalar[2]) / 3;
+
+        diff.delete();
+        mat.delete();
+
+        // 平均差值大于阈值 -> 判定"有棋子占用"
+        const isEmpty = meanDiff < this.benchEmptyDiffThreshold;
+
+        if (!isEmpty) {
+            logger.debug(`[TftOperator] 槽位 ${slotKey} 判定为占用, meanDiff=${meanDiff.toFixed(2)}`);
+        }
+
+        return isEmpty;
+    }
+
+
+    /**
      * 获取游戏阶段显示区域
      * @param isStageOne 是否为第一阶段 (UI 位置不同)
      */
+
     private getStageAbsoluteRegion(isStageOne: boolean = false): Region {
         this.ensureInitialized();
 

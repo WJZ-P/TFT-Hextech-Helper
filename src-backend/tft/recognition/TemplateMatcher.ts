@@ -273,6 +273,7 @@ export class TemplateMatcher {
             }
 
             // 识别失败时保存图片到本地，方便排查问题
+            // TODO: 我擦，这里居然星级的RGB没反转
             this.saveFailedStarLevelImage(targetMat);
 
             return -1;

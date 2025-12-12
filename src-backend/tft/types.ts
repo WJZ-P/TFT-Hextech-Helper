@@ -6,7 +6,7 @@
 
 import {
     benchSlotPoints,
-    fightBoardSlot,
+    fightBoardSlotPoint,
     TFTEquip,
     TFTUnit
 } from "../TFTProtocol";
@@ -47,8 +47,8 @@ export type EquipCategory = typeof EQUIP_CATEGORY_PRIORITY[number];
 // 位置类型
 // ============================================================================
 
-/** 战斗棋盘位置 (从协议中的 fightBoardSlot 推导) */
-export type BoardLocation = keyof typeof fightBoardSlot;
+/** 战斗棋盘位置 (从协议中的 fightBoardSlotPoint 推导) */
+export type BoardLocation = keyof typeof fightBoardSlotPoint;
 
 /** 备战席位置 (从协议中的 benchSlotPoints 推导) */
 export type BenchLocation = keyof typeof benchSlotPoints;

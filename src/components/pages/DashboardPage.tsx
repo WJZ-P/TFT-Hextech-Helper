@@ -119,6 +119,14 @@ const DashboardPage = () => {
                 console.log(await window.tft.getBenchInfo())
             }}>点我查看当前备战席信息
             </button>
+            <button onClick={async () => {
+                console.log(await window.tft.saveBenchSlotSnapshots())
+            }}>测试：保存备战席图片
+            </button>
+            <button onClick={async () => {
+                console.log(await window.tft.saveFightBoardSlotSnapshots())
+            }}>测试：保存棋盘槽位图片
+            </button>
         </PageContaier>
     );
 }

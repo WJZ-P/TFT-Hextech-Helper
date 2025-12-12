@@ -49,6 +49,9 @@ export class TemplateLoader {
     /** 星级模板缓存 */
     private starLevelTemplates: Map<string, cv.Mat> = new Map();
 
+    /** 备战席槽位模板缓存 (RGBA 彩色图，用于空槽检测) */
+    private benchSlotTemplates: Map<string, cv.Mat> = new Map();
+
     /** 空装备槽位模板 (24x24 纯黑) */
     private emptyEquipSlotTemplate: cv.Mat | null = null;
 
@@ -70,6 +73,10 @@ export class TemplateLoader {
 
     private get starLevelTemplatePath(): string {
         return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/starLevel");
+    }
+
+    private get benchEmptySlotTemplatePath(): string {
+        return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/benchSlot");
     }
 
     private constructor() {}
@@ -104,6 +111,7 @@ export class TemplateLoader {
             this.loadEquipTemplates(),
             this.loadChampionTemplates(),
             this.loadStarLevelTemplates(),
+            this.loadBenchSlotTemplates(),
         ]);
 
         // 启动文件监听
@@ -137,6 +145,15 @@ export class TemplateLoader {
     }
 
     /**
+     * 获取备战席槽位模板
+     * @param slotKey 槽位 key，例如 "SLOT_1"
+     * @returns 对应的 RGBA 模板 Mat，未找到返回 null
+     */
+    public getBenchSlotTemplate(slotKey: string): cv.Mat | null {
+        return this.benchSlotTemplates.get(slotKey) || null;
+    }
+
+    /**
      * 获取空装备槽位模板
      */
     public getEmptyEquipSlotTemplate(): cv.Mat | null {
@@ -150,7 +167,8 @@ export class TemplateLoader {
         return this.isLoaded;
     }
 
-    // ========== 私有加载方法 ==========
+    // ========== 私有加载方法 ========== 
+
 
     /**
      * 创建空槽位模板 (24x24 纯黑)
@@ -304,6 +322,51 @@ export class TemplateLoader {
         logger.info(`[TemplateLoader] 星级模板加载完成，共 ${this.starLevelTemplates.size} 个`);
     }
 
+    /**
+     * 加载备战席槽位模板
+     * @description 用于判断备战席槽位是否有棋子占用
+     * 文件命名格式：SLOT_1.png ~ SLOT_9.png，保留 RGBA 彩色信息
+     */
+    private async loadBenchSlotTemplates(): Promise<void> {
+        // 清理旧模板
+        this.clearBenchSlotTemplates();
+
+        logger.info("[TemplateLoader] 开始加载备战席槽位模板...");
+
+        if (!fs.existsSync(this.benchEmptySlotTemplatePath)) {
+            fs.ensureDirSync(this.benchEmptySlotTemplatePath);
+            logger.info(`[TemplateLoader] 备战席槽位模板目录不存在，已自动创建: ${this.benchEmptySlotTemplatePath}`);
+            return;
+        }
+
+        // 备战席共 9 个槽位：SLOT_1 ~ SLOT_9
+        for (let i = 1; i <= 9; i++) {
+            const slotKey = `SLOT_${i}`;
+            const filePath = path.join(this.benchEmptySlotTemplatePath, `${slotKey}.png`);
+
+            if (!fs.existsSync(filePath)) {
+                logger.warn(`[TemplateLoader] 未找到槽位模板: ${slotKey}.png`);
+                continue;
+            }
+
+            try {
+                // 保留 RGBA 彩色信息，空槽检测需要颜色差异来区分有无棋子
+                const mat = await this.loadImageAsMat(filePath, {
+                    ensureAlpha: true,
+                    grayscale: false,
+                });
+
+                if (mat) {
+                    this.benchSlotTemplates.set(slotKey, mat);
+                }
+            } catch (e) {
+                logger.error(`[TemplateLoader] 加载备战席槽位模板失败 [${slotKey}]: ${e}`);
+            }
+        }
+
+        logger.info(`[TemplateLoader] 备战席槽位模板加载完成，共 ${this.benchSlotTemplates.size} 个`);
+    }
+
     // ========== 工具方法 ==========
 
     /**
@@ -443,12 +506,25 @@ export class TemplateLoader {
     }
 
     /**
+     * 清理备战席槽位模板缓存
+     */
+    private clearBenchSlotTemplates(): void {
+        for (const mat of this.benchSlotTemplates.values()) {
+            if (mat && !mat.isDeleted()) {
+                mat.delete();
+            }
+        }
+        this.benchSlotTemplates.clear();
+    }
+
+    /**
      * 销毁所有资源
      */
     public destroy(): void {
         this.clearEquipTemplates();
         this.clearChampionTemplates();
         this.clearStarLevelTemplates();
+        this.clearBenchSlotTemplates();
 
         if (this.emptyEquipSlotTemplate && !this.emptyEquipSlotTemplate.isDeleted()) {
             this.emptyEquipSlotTemplate.delete();
