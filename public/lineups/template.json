@@ -1,0 +1,88 @@
+{
+  "name": "诺克萨斯帝国示例阵容",
+  "description": "这是一个基于S16赛季诺克萨斯羁绊的示例阵容模板。核心是3费的德莱厄斯。",
+  "earlyGame": [
+    {
+      "name": "贝蕾亚",
+      "isCore": false,
+      "starTarget": 2
+    },
+    {
+      "name": "赛恩",
+      "isCore": false,
+      "starTarget": 2
+    }
+  ],
+  "midGame": [
+    {
+      "name": "德莱厄斯",
+      "isCore": true,
+      "items": [
+        "饮血剑",
+        "无尽之刃",
+        "泰坦的坚决"
+      ],
+      "starTarget": 3
+    },
+    {
+      "name": "乐芙兰",
+      "isCore": false,
+      "items": [
+        "蓝霸符",
+        "珠光护手"
+      ],
+      "starTarget": 2
+    },
+    {
+      "name": "赛恩",
+      "isCore": false,
+      "starTarget": 2
+    },
+    {
+      "name": "贝蕾亚",
+      "isCore": false,
+      "starTarget": 2
+    }
+  ],
+  "lateGame": [
+    {
+      "name": "德莱厄斯",
+      "isCore": true,
+      "items": [
+        "饮血剑",
+        "无尽之刃",
+        "泰坦的坚决"
+      ],
+      "starTarget": 3
+    },
+    {
+      "name": "斯维因",
+      "isCore": true,
+      "items": [
+        "狂徒铠甲",
+        "棘刺背心",
+        "巨龙之爪"
+      ],
+      "starTarget": 2
+    },
+    {
+      "name": "安蓓萨",
+      "isCore": false,
+      "items": [
+        "正义之手",
+        "夜之锋刃"
+      ],
+      "starTarget": 2
+    },
+    {
+      "name": "梅尔",
+      "isCore": false,
+      "starTarget": 2
+    },
+    {
+      "name": "乐芙兰",
+      "isCore": false,
+      "starTarget": 2
+    }
+  ]
+}

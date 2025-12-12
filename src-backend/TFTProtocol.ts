@@ -277,7 +277,7 @@ export enum UnitClass {
     Warden = "神盾使",
 }
 
-export const TFT_16_CHAMPION_DATA: Record<string, TFTUnit> = {
+const _TFT_16_CHAMPION_DATA = {
     // 1 费棋子
     "俄洛伊": {
         displayName: "俄洛伊",
@@ -926,7 +926,11 @@ export const TFT_16_CHAMPION_DATA: Record<string, TFTUnit> = {
         origins: [UnitOrigin.Darkin, UnitOrigin.Immortal],
         classes: []
     },
-};
+} satisfies Record<string, TFTUnit>;
+
+export const TFT_16_CHAMPION_DATA: Record<keyof typeof _TFT_16_CHAMPION_DATA, TFTUnit> = _TFT_16_CHAMPION_DATA;
+
+
 
 
 
@@ -2406,4 +2410,28 @@ export const TFT_16_EQUIP_DATA: Record<string, TFTEquip> ={
         equipId: "91417",
         formula: "508,507"
     }
-};
+} satisfies Record<string, TFTEquip>;
+
+export const TFT_16_EQUIP_DATA: Record<keyof typeof _TFT_16_EQUIP_DATA, TFTEquip> = _TFT_16_EQUIP_DATA;
+
+// ==========================================
+// 策略相关的类型定义
+// ==========================================
+
+export type ChampionKey = keyof typeof TFT_16_CHAMPION_DATA;
+export type EquipKey = keyof typeof TFT_16_EQUIP_DATA;
+
+export interface LineupUnit {
+    name: ChampionKey;
+    isCore: boolean;
+    items?: EquipKey[];
+    starTarget?: 1 | 2 | 3;
+}
+
+export interface TeamComposition {
+    name: string;
+    description?: string;
+    earlyGame: LineupUnit[];
+    midGame: LineupUnit[];
+    lateGame: LineupUnit[];
+}
