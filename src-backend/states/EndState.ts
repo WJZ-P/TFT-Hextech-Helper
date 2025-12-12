@@ -6,8 +6,8 @@
 
 import { IState } from "./IState";
 import { IdleState } from "./IdleState.ts";
-import { logger } from "../../utils/Logger.ts";
-import GameConfigHelper from "../../utils/GameConfigHelper.ts";
+import { logger } from "../utils/Logger.ts";
+import GameConfigHelper from "../utils/GameConfigHelper.ts";
 
 /**
  * 结束状态类

@@ -5,10 +5,10 @@
  */
 
 import { IState } from "./IState";
-import { logger } from "../../utils/Logger.ts";
+import { logger } from "../utils/Logger.ts";
 import { EndState } from "./EndState.ts";
 import { GameStageState } from "./GameStageState.ts";
-import { inGameApi, InGameApiEndpoints } from "../../lcu/InGameApi.ts";
+import { inGameApi, InGameApiEndpoints } from "../lcu/InGameApi.ts";
 
 /** 轮询间隔 (ms) */
 const POLL_INTERVAL_MS = 2000;

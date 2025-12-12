@@ -5,7 +5,7 @@
  */
 import { tftOperator } from "../TftOperator";
 import { logger } from "../utils/Logger";
-import { TFTUnit } from "../TFTProtocol";
+import { TFTUnit, GameStageType } from "../TFTProtocol";
 
 // 定义一个简单的目标阵容（演示用）
 // 这里为了演示，硬编码了一个诺克萨斯阵容
@@ -37,10 +37,76 @@ export class StrategyService {
     }
 
     /**
+     * 执行当前阶段的策略逻辑
+     * @param stage 当前游戏阶段
+     */
+    public async executeStrategy(stage: GameStageType) {
+        switch (stage) {
+            case GameStageType.PVE:
+                await this.handlePve();
+                break;
+            case GameStageType.PVP:
+                await this.handlePvp();
+                break;
+            case GameStageType.CAROUSEL:
+                await this.handleCarousel();
+                break;
+            case GameStageType.AUGMENT:
+                await this.handleAugment();
+                break;
+            case GameStageType.UNKNOWN:
+            default:
+                logger.debug(`[StrategyService] 未处理的阶段: ${stage}`);
+                break;
+        }
+    }
+
+    /**
+     * 处理 PVE 阶段 (打野怪)
+     */
+    private async handlePve() {
+        logger.info("[StrategyService] PVE阶段：除了捡球，我们也要盯着商店...");
+        // 野怪回合也可能刷出关键牌
+        await this.analyzeAndBuy();
+        
+        // TODO: 添加捡战利品球的逻辑
+        // await this.pickUpOrbs();
+    }
+
+    /**
+     * 处理 PVP 阶段 (玩家对战)
+     */
+    private async handlePvp() {
+        logger.info("[StrategyService] PVP阶段：全力运营...");
+        // 核心：拿牌
+        await this.analyzeAndBuy();
+
+        // TODO: 添加升级(F)、D牌(D)、调整站位逻辑
+        // await this.levelUpOrRoll();
+        // await this.adjustPosition();
+    }
+
+    /**
+     * 处理 选秀阶段
+     */
+    private async handleCarousel() {
+        logger.info("[StrategyService] 选秀阶段：寻找最优装备/英雄...");
+        // TODO: 识别场上单位，控制鼠标移动抢夺
+    }
+
+    /**
+     * 处理 海克斯选择阶段
+     */
+    private async handleAugment() {
+        logger.info("[StrategyService] 海克斯阶段：分析最优强化...");
+        // TODO: 识别三个海克斯，选择胜率最高的
+    }
+
+    /**
      * 分析商店并执行购买
      * @description 获取当前商店棋子信息，对比目标阵容，自动购买需要的棋子
      */
-    public async analyzeAndBuy() {
+    private async analyzeAndBuy() {
         // 1. 获取商店信息
         // getShopInfo 内部会截图并进行 OCR 识别，这是一步相对耗时的操作
         // 返回的是一个长度为 5 的数组，对应商店的 5 个格子

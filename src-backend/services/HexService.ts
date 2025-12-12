@@ -5,10 +5,10 @@
  */
 
 import { logger } from "../utils/Logger.ts";
-import { IState } from "./states/IState.ts";
-import { IdleState } from "./states/IdleState.ts";
-import { EndState } from "./states/EndState.ts";
-import { StartState } from "./states/StartState.ts";
+import { IState } from "../states/IState.ts";
+import { IdleState } from "../states/IdleState.ts";
+import { EndState } from "../states/EndState.ts";
+import { StartState } from "../states/StartState.ts";
 import { sleep } from "../utils/HelperTools.ts";
 import GameConfigHelper from "../utils/GameConfigHelper.ts";
 
