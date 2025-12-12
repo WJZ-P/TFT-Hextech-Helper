@@ -115,7 +115,7 @@ class TftOperator {
     private currentBenchState: TFTUnit[] = [];
 
     /** 空槽匹配阈值：平均像素差值大于此值视为"有棋子占用" */
-    private readonly benchEmptyDiffThreshold = 12;
+    private readonly benchEmptyDiffThreshold = 30;
 
     /** OpenCV 是否已初始化 */
     private isOpenCVReady = false;
