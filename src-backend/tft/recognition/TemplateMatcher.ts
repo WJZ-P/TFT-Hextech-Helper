@@ -21,7 +21,7 @@ const MATCH_THRESHOLDS = {
     /** 装备匹配阈值 */
     EQUIP: 0.75,
     /** 英雄匹配阈值 */
-    CHAMPION: 0.30,
+    CHAMPION: 0.50,
     /** 星级匹配阈值 (星级图标特征明显，阈值设高) */
     STAR_LEVEL: 0.85,
     /** 空槽位标准差阈值 (低于此值判定为空) */
@@ -155,7 +155,7 @@ export class TemplateMatcher {
     /**
      * 匹配英雄模板
      * @description 用于商店和备战席的棋子名称识别
-     * @param targetMat 目标图像 (需要是 RGBA 4 通道)
+     * @param targetMat 目标图像 (需要是 Gray 单通道)
      * @returns 匹配到的英雄名称，空槽位返回 "empty"，未匹配返回 null
      */
     public matchChampion(targetMat: cv.Mat): string | null {
@@ -180,6 +180,13 @@ export class TemplateMatcher {
             for (const [name, templateMat] of championTemplates) {
                 // 尺寸检查
                 if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) {
+                    logger.debug(`[TemplateMatcher] 模板尺寸过大: ${name} (${templateMat.cols}x${templateMat.rows}) > 目标 (${targetMat.cols}x${targetMat.rows})`);
+                    continue;
+                }
+
+                // 通道检查 (防止崩溃)
+                if (templateMat.type() !== targetMat.type()) {
+                    logger.warn(`[TemplateMatcher] 通道类型不匹配: ${name} (${templateMat.type()}) vs 目标 (${targetMat.type()})`);
                     continue;
                 }
 
@@ -196,6 +203,11 @@ export class TemplateMatcher {
                 logger.info(
                     `[TemplateMatcher] 英雄模板匹配成功: ${bestMatchName} (相似度 ${(maxConfidence * 100).toFixed(1)}%)`
                 );
+            } else {
+                // 记录最高分但未达标的情况，方便调试
+                if (maxConfidence > 0.3) {
+                    logger.debug(`[TemplateMatcher] 英雄匹配失败，最高分: ${(maxConfidence * 100).toFixed(1)}%`);
+                }
             }
 
             return bestMatchName;

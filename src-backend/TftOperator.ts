@@ -115,8 +115,8 @@ class TftOperator {
 
     // ========== 路径 Getter ==========
 
-    private get championTemplatePath(): string {
-        return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/champion");
+    private get failChampionTemplatePath(): string {
+        return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/英雄备份");
     }
 
     private get equipTemplatePath(): string {
@@ -277,11 +277,15 @@ class TftOperator {
             // OCR 失败时使用模板匹配兜底
             if (!tftUnit) {
                 logger.warn(`[商店槽位 ${i}] OCR 识别失败，尝试模板匹配...`);
-                // 喵~ 注意啦！OCR 用的图片是放大 3 倍的，但我们的模板是 1x 原尺寸的。
-                // 所以这里必须重新截取一张不放大的原图 (forOCR=false) 来做匹配，
-                // 否则尺寸对不上，匹配率会是 0% 哦！
-                const rawPng = await screenCapture.captureRegionAsPng(region, false);
-                const mat = await screenCapture.pngBufferToMat(rawPng);
+                // 复用 processedPng (已经是 3x 放大后的了)
+                const mat = await screenCapture.pngBufferToMat(processedPng);
+
+                // 关键步骤：转为灰度图！
+                // 因为我们的模板是灰度/单通道的，而 captureRegionAsPng 返回的是 RGB/RGBA。
+                if (mat.channels() > 1) {
+                    cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
+                }
+
                 cleanName = templateMatcher.matchChampion(mat) || "";
                 mat.delete();
             }
@@ -401,9 +405,13 @@ class TftOperator {
             // OCR 失败时使用模板匹配兜底
             if (!tftUnit) {
                 logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] OCR 识别失败，尝试模板匹配...`);
-                // 喵~ 同样的，这里也要重新截取 1x 原图来匹配，不能用 OCR 的 3x 大图！
-                const rawPng = await screenCapture.captureRegionAsPng(nameRegion, false);
-                const mat = await screenCapture.pngBufferToMat(rawPng);
+                // 喵~ 同样的，复用 namePng (3x 放大后的图片)
+                const mat = await screenCapture.pngBufferToMat(namePng);
+                // 转灰度
+                if (mat.channels() > 1) {
+                    cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
+                }
+
                 cleanName = templateMatcher.matchChampion(mat) || "";
                 mat.delete();
             }
@@ -504,7 +512,7 @@ class TftOperator {
         } else {
             logger.warn(`[${type}槽位 ${slot}] 识别失败，保存截图...`);
             const filename = `fail_${type}_slot_${slot}_${Date.now()}.png`;
-            fs.writeFileSync(path.join(this.championTemplatePath, filename), imageBuffer);
+            fs.writeFileSync(path.join(this.failChampionTemplatePath, filename), imageBuffer);
             //logger.warn(`[${type}槽位 ${slot}] 识别失败，兜底判定为空槽位`);
         }
     }

@@ -24,6 +24,8 @@ interface TemplateLoadConfig {
     targetSize?: { width: number; height: number };
     /** 是否移除 Alpha 通道 */
     removeAlpha?: boolean;
+    /** 是否转换为灰度图 */
+    grayscale?: boolean;
 }
 
 /**
@@ -246,7 +248,11 @@ export class TemplateLoader {
             const filePath = path.join(this.championTemplatePath, file);
 
             try {
-                const mat = await this.loadImageAsMat(filePath, { ensureAlpha: true });
+                // 加载为灰度图，以匹配 TftOperator 中转换后的灰度截图
+                const mat = await this.loadImageAsMat(filePath, { 
+                    ensureAlpha: false,
+                    grayscale: true 
+                });
 
                 if (mat) {
                     this.championTemplates.set(championName, mat);
@@ -319,16 +325,32 @@ export class TemplateLoader {
                 });
             }
 
+            // 灰度处理
+            if (config.grayscale) {
+                pipeline = pipeline.grayscale();
+            }
+
             // Alpha 通道处理
             if (config.removeAlpha) {
                 pipeline = pipeline.removeAlpha();
-            } else if (config.ensureAlpha) {
+            } else if (config.ensureAlpha && !config.grayscale) {
+                // 灰度图通常只有 1 或 2 通道 (含Alpha)，sharp 的 grayscale() 会移除色彩信息
+                // 如果需要 Alpha，sharp 会保留。但 OpenCV 的灰度通常指单通道。
+                // 如果 config.grayscale 为 true，我们期望得到单通道 (CV_8UC1)
+                // sharp output for grayscale is usually 1 channel if no alpha, 2 if alpha.
+                // 我们这里假设灰度不需要 Alpha，或者如果是模板匹配，通常用单通道。
+                // 强制确保 Alpha 在灰度模式下可能有点复杂，这里简单处理：
+                // 如果是灰度，就不要 ensureAlpha 了，除非明确要求。
+                // 但为了保险，如果是灰度，我们通常只想要单通道。
                 pipeline = pipeline.ensureAlpha();
             }
 
             const { data, info } = await pipeline.raw().toBuffer({ resolveWithObject: true });
 
-            const channels = config.removeAlpha ? 3 : 4;
+            let channels = info.channels;
+            // sharp 的 info.channels 会返回实际通道数
+            
+            // 验证数据长度
             const expectedLength = info.width * info.height * channels;
 
             if (data.length !== expectedLength) {
@@ -337,7 +359,15 @@ export class TemplateLoader {
             }
 
             // 创建 Mat
-            const matType = config.removeAlpha ? cv.CV_8UC3 : cv.CV_8UC4;
+            let matType;
+            if (channels === 1) matType = cv.CV_8UC1;
+            else if (channels === 3) matType = cv.CV_8UC3;
+            else if (channels === 4) matType = cv.CV_8UC4;
+            else {
+                 logger.warn(`[TemplateLoader] 不支持的通道数 [${channels}]: ${filePath}`);
+                 return null;
+            }
+
             const mat = new cv.Mat(info.height, info.width, matType);
             mat.data.set(new Uint8Array(data));
 

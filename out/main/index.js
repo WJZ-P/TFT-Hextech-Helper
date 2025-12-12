@@ -5822,7 +5822,7 @@ const gameStageDisplayTheClockworkTrails = {
   leftTop: { x: 337, y: 6 },
   rightBottom: { x: 366, y: 22 }
 };
-const TFT_16_CHAMPION_DATA = {
+const _TFT_16_CHAMPION_DATA = {
   // 1 费棋子
   "俄洛伊": {
     displayName: "俄洛伊",
@@ -7359,6 +7359,7 @@ const TFT_16_CHAMPION_DATA = {
     classes: []
   }
 };
+const TFT_16_CHAMPION_DATA = _TFT_16_CHAMPION_DATA;
 const specialEquip = {
   //  特殊类型的装备，比如装备拆卸器，强化果实等
   "强化果实": {
@@ -7397,7 +7398,7 @@ const specialEquip = {
     formula: ""
   }
 };
-const TFT_16_EQUIP_DATA = {
+const _TFT_16_EQUIP_DATA = {
   ...specialEquip,
   // ==========================================
   // Type 1: 基础散件 (Base Items)
@@ -8845,6 +8846,7 @@ const TFT_16_EQUIP_DATA = {
     formula: "508,507"
   }
 };
+const TFT_16_EQUIP_DATA = _TFT_16_EQUIP_DATA;
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
 const EQUIP_CATEGORY_PRIORITY = [
@@ -9133,7 +9135,10 @@ class TemplateLoader {
       const championName = path.parse(file2).name;
       const filePath = path.join(this.championTemplatePath, file2);
       try {
-        const mat = await this.loadImageAsMat(filePath, { ensureAlpha: true });
+        const mat = await this.loadImageAsMat(filePath, {
+          ensureAlpha: false,
+          grayscale: true
+        });
         if (mat) {
           this.championTemplates.set(championName, mat);
         }
@@ -9188,19 +9193,29 @@ class TemplateLoader {
           fit: "fill"
         });
       }
+      if (config.grayscale) {
+        pipeline = pipeline.grayscale();
+      }
       if (config.removeAlpha) {
         pipeline = pipeline.removeAlpha();
-      } else if (config.ensureAlpha) {
+      } else if (config.ensureAlpha && !config.grayscale) {
         pipeline = pipeline.ensureAlpha();
       }
       const { data, info } = await pipeline.raw().toBuffer({ resolveWithObject: true });
-      const channels = config.removeAlpha ? 3 : 4;
+      let channels = info.channels;
       const expectedLength = info.width * info.height * channels;
       if (data.length !== expectedLength) {
         logger.warn(`[TemplateLoader] 图片数据长度异常: ${filePath}`);
         return null;
       }
-      const matType = config.removeAlpha ? cv.CV_8UC3 : cv.CV_8UC4;
+      let matType;
+      if (channels === 1) matType = cv.CV_8UC1;
+      else if (channels === 3) matType = cv.CV_8UC3;
+      else if (channels === 4) matType = cv.CV_8UC4;
+      else {
+        logger.warn(`[TemplateLoader] 不支持的通道数 [${channels}]: ${filePath}`);
+        return null;
+      }
       const mat = new cv.Mat(info.height, info.width, matType);
       mat.data.set(new Uint8Array(data));
       return mat;
@@ -9287,7 +9302,7 @@ const MATCH_THRESHOLDS = {
   /** 装备匹配阈值 */
   EQUIP: 0.75,
   /** 英雄匹配阈值 */
-  CHAMPION: 0.7,
+  CHAMPION: 0.5,
   /** 星级匹配阈值 (星级图标特征明显，阈值设高) */
   STAR_LEVEL: 0.85,
   /** 空槽位标准差阈值 (低于此值判定为空) */
@@ -9389,7 +9404,7 @@ class TemplateMatcher {
   /**
    * 匹配英雄模板
    * @description 用于商店和备战席的棋子名称识别
-   * @param targetMat 目标图像 (需要是 RGBA 4 通道)
+   * @param targetMat 目标图像 (需要是 Gray 单通道)
    * @returns 匹配到的英雄名称，空槽位返回 "empty"，未匹配返回 null
    */
   matchChampion(targetMat) {
@@ -9408,6 +9423,11 @@ class TemplateMatcher {
       let maxConfidence = 0;
       for (const [name, templateMat] of championTemplates) {
         if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) {
+          logger.debug(`[TemplateMatcher] 模板尺寸过大: ${name} (${templateMat.cols}x${templateMat.rows}) > 目标 (${targetMat.cols}x${targetMat.rows})`);
+          continue;
+        }
+        if (templateMat.type() !== targetMat.type()) {
+          logger.warn(`[TemplateMatcher] 通道类型不匹配: ${name} (${templateMat.type()}) vs 目标 (${targetMat.type()})`);
           continue;
         }
         cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
@@ -9421,6 +9441,10 @@ class TemplateMatcher {
         logger.info(
           `[TemplateMatcher] 英雄模板匹配成功: ${bestMatchName} (相似度 ${(maxConfidence * 100).toFixed(1)}%)`
         );
+      } else {
+        if (maxConfidence > 0.3) {
+          logger.debug(`[TemplateMatcher] 英雄匹配失败，最高分: ${(maxConfidence * 100).toFixed(1)}%`);
+        }
       }
       return bestMatchName;
     } catch (e) {
@@ -9819,8 +9843,8 @@ class TftOperator {
   /** OpenCV 是否已初始化 */
   isOpenCVReady = false;
   // ========== 路径 Getter ==========
-  get championTemplatePath() {
-    return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/champion");
+  get failChampionTemplatePath() {
+    return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/英雄备份");
   }
   get equipTemplatePath() {
     return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/equipment");
@@ -9941,6 +9965,9 @@ class TftOperator {
       if (!tftUnit) {
         logger.warn(`[商店槽位 ${i}] OCR 识别失败，尝试模板匹配...`);
         const mat = await screenCapture.pngBufferToMat(processedPng);
+        if (mat.channels() > 1) {
+          cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
+        }
         cleanName = templateMatcher.matchChampion(mat) || "";
         mat.delete();
       }
@@ -10034,6 +10061,9 @@ class TftOperator {
       if (!tftUnit) {
         logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] OCR 识别失败，尝试模板匹配...`);
         const mat = await screenCapture.pngBufferToMat(namePng);
+        if (mat.channels() > 1) {
+          cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
+        }
         cleanName = templateMatcher.matchChampion(mat) || "";
         mat.delete();
       }
@@ -10115,7 +10145,7 @@ class TftOperator {
     } else {
       logger.warn(`[${type}槽位 ${slot}] 识别失败，保存截图...`);
       const filename = `fail_${type}_slot_${slot}_${Date.now()}.png`;
-      fs.writeFileSync(path.join(this.championTemplatePath, filename), imageBuffer);
+      fs.writeFileSync(path.join(this.failChampionTemplatePath, filename), imageBuffer);
     }
   }
   /**

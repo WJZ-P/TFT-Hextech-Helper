@@ -987,7 +987,7 @@ const specialEquip: Record<string, TFTEquip> = {
     },
 }
 
-export const TFT_16_EQUIP_DATA: Record<string, TFTEquip> ={
+const _TFT_16_EQUIP_DATA: Record<string, TFTEquip> ={
     ...specialEquip,
     // ==========================================
     // Type 1: 基础散件 (Base Items)
