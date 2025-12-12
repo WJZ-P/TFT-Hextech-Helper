@@ -9287,7 +9287,7 @@ const MATCH_THRESHOLDS = {
   /** 装备匹配阈值 */
   EQUIP: 0.75,
   /** 英雄匹配阈值 */
-  CHAMPION: 0.3,
+  CHAMPION: 0.7,
   /** 星级匹配阈值 (星级图标特征明显，阈值设高) */
   STAR_LEVEL: 0.85,
   /** 空槽位标准差阈值 (低于此值判定为空) */
@@ -9940,8 +9940,7 @@ class TftOperator {
       let tftUnit = TFT_16_CHAMPION_DATA[cleanName] || null;
       if (!tftUnit) {
         logger.warn(`[商店槽位 ${i}] OCR 识别失败，尝试模板匹配...`);
-        const rawPng = await screenCapture.captureRegionAsPng(region, false);
-        const mat = await screenCapture.pngBufferToMat(rawPng);
+        const mat = await screenCapture.pngBufferToMat(processedPng);
         cleanName = templateMatcher.matchChampion(mat) || "";
         mat.delete();
       }
@@ -10034,8 +10033,7 @@ class TftOperator {
       let tftUnit = TFT_16_CHAMPION_DATA[cleanName] || null;
       if (!tftUnit) {
         logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] OCR 识别失败，尝试模板匹配...`);
-        const rawPng = await screenCapture.captureRegionAsPng(nameRegion, false);
-        const mat = await screenCapture.pngBufferToMat(rawPng);
+        const mat = await screenCapture.pngBufferToMat(namePng);
         cleanName = templateMatcher.matchChampion(mat) || "";
         mat.delete();
       }
@@ -10165,6 +10163,56 @@ class StrategyService {
     return StrategyService.instance;
   }
   /**
+   * 执行当前阶段的策略逻辑
+   * @param stage 当前游戏阶段
+   */
+  async executeStrategy(stage) {
+    switch (stage) {
+      case GameStageType.PVE:
+        await this.handlePve();
+        break;
+      case GameStageType.PVP:
+        await this.handlePvp();
+        break;
+      case GameStageType.CAROUSEL:
+        await this.handleCarousel();
+        break;
+      case GameStageType.AUGMENT:
+        await this.handleAugment();
+        break;
+      case GameStageType.UNKNOWN:
+      default:
+        logger.debug(`[StrategyService] 未处理的阶段: ${stage}`);
+        break;
+    }
+  }
+  /**
+   * 处理 PVE 阶段 (打野怪)
+   */
+  async handlePve() {
+    logger.info("[StrategyService] PVE阶段：除了捡球，我们也要盯着商店...");
+    await this.analyzeAndBuy();
+  }
+  /**
+   * 处理 PVP 阶段 (玩家对战)
+   */
+  async handlePvp() {
+    logger.info("[StrategyService] PVP阶段：全力运营...");
+    await this.analyzeAndBuy();
+  }
+  /**
+   * 处理 选秀阶段
+   */
+  async handleCarousel() {
+    logger.info("[StrategyService] 选秀阶段：寻找最优装备/英雄...");
+  }
+  /**
+   * 处理 海克斯选择阶段
+   */
+  async handleAugment() {
+    logger.info("[StrategyService] 海克斯阶段：分析最优强化...");
+  }
+  /**
    * 分析商店并执行购买
    * @description 获取当前商店棋子信息，对比目标阵容，自动购买需要的棋子
    */
@@ -10203,24 +10251,10 @@ class GameStageState {
   async action(signal) {
     signal.throwIfAborted();
     const currentGameStage = await tftOperator.getGameStage();
-    switch (currentGameStage) {
-      case GameStageType.PVE:
-        logger.info("[GameStageState] 正在打野怪，准备捡球...");
-        await strategyService.analyzeAndBuy();
-        break;
-      case GameStageType.CAROUSEL:
-        logger.info("[GameStageState] 选秀环节，准备抢装备...");
-        break;
-      case GameStageType.AUGMENT:
-        logger.info("[GameStageState] 海克斯选择环节，准备分析...");
-        break;
-      case GameStageType.PVP:
-        logger.info("[GameStageState] 玩家对战环节，准备战斗...");
-        await strategyService.analyzeAndBuy();
-        break;
-      case GameStageType.UNKNOWN:
-        logger.debug("[GameStageState] 未知阶段，等待中...");
-        break;
+    if (currentGameStage !== GameStageType.UNKNOWN) {
+      await strategyService.executeStrategy(currentGameStage);
+    } else {
+      logger.debug("[GameStageState] 未知阶段，等待中...");
     }
     await sleep(STAGE_CHECK_INTERVAL_MS);
     return this;

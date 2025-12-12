@@ -5,11 +5,11 @@
  */
 
 import { IState } from "./IState";
-import { logger } from "../../utils/Logger.ts";
+import { logger } from "../utils/Logger.ts";
 import { LobbyState } from "./LobbyState.ts";
-import { inGameApi, InGameApiEndpoints } from "../../lcu/InGameApi.ts";
+import { inGameApi, InGameApiEndpoints } from "../lcu/InGameApi.ts";
 import { GameLoadingState } from "./GameLoadingState.ts";
-import GameConfigHelper from "../../utils/GameConfigHelper.ts";
+import GameConfigHelper from "../utils/GameConfigHelper.ts";
 
 /**
  * 启动状态类

@@ -5,10 +5,10 @@
  */
 
 import { IState } from "./IState";
-import LCUManager, { LcuEventUri, LCUWebSocketMessage } from "../../lcu/LCUManager.ts";
-import { Queue } from "../../lcu/utils/LCUProtocols.ts";
-import { sleep } from "../../utils/HelperTools.ts";
-import { logger } from "../../utils/Logger.ts";
+import LCUManager, { LcuEventUri, LCUWebSocketMessage } from "../lcu/LCUManager.ts";
+import { Queue } from "../lcu/utils/LCUProtocols.ts";
+import { sleep } from "../utils/HelperTools.ts";
+import { logger } from "../utils/Logger.ts";
 import { GameLoadingState } from "./GameLoadingState.ts";
 import { EndState } from "./EndState.ts";
 
