@@ -59,12 +59,20 @@ export const detailChampionNameRegion = {
     leftTop: {x: 870, y: 226},
     rightBottom: {x: 978, y: 244},
 }
-//  基础装备锻造器浮窗名称区域
-//  注意：这是相对于鼠标右键点击位置的偏移量，不是屏幕绝对坐标！
+//  基础装备锻造器浮窗名称区域（槽位 1-5 使用）
+//  注意：X 和 Y 都是相对于鼠标右键点击位置的偏移量，不是屏幕绝对坐标！
 //  右键基础装备锻造器时，会以点击位置为左上角起点，在右下方弹出浮窗
 export const itemForgeTooltipRegion = {
-    leftTop: {x: 56 , y: 7 },
-    rightBottom: {x: 176 , y: 27 },
+    leftTop: {x: 56, y: 7},
+    rightBottom: {x: 176, y: 27},
+}
+//  基础装备锻造器浮窗名称区域（槽位 6-9 边缘情况使用）
+//  当槽位靠近屏幕右边缘时，浮窗会向左弹出，位置计算规则不同：
+//  - X 坐标：基于游戏窗口的绝对坐标（不依赖鼠标点击位置）
+//  - Y 坐标：基于鼠标点击位置的偏移量（仍需加上 clickPoint.y）
+export const itemForgeTooltipRegionEdge = {
+    leftTop: {x: 585, y: 7},
+    rightBottom: {x: 695, y: 27},
 }
 //  选中英雄时，右侧查看英雄星级的
 export const detailChampionStarRegion = {

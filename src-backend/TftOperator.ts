@@ -32,6 +32,7 @@ import {
     gameStageDisplayTheClockworkTrails,
     GameStageType,
     itemForgeTooltipRegion,
+    itemForgeTooltipRegionEdge,
     shopSlot,
     shopSlotNameRegions,
     TFT_16_CHAMPION_DATA,
@@ -422,7 +423,8 @@ class TftOperator {
 
             // 右键点击槽位显示详细信息
             await mouseController.clickAt(benchSlotPoints[benchSlot], Button.RIGHT);
-            await sleep(50); // 等待 UI 刷新 (游戏 25fps，额外给10ms缓冲时间)
+
+            await sleep(10); // 等待 UI 渲染完成（右键后游戏会立即刷新 UI，10ms 足够）
 
             // 识别英雄名称
             const nameRegion = screenCapture.toAbsoluteRegion(detailChampionNameRegion);
@@ -472,9 +474,13 @@ class TftOperator {
             } else {
                 // 英雄识别失败，尝试检测是否为基础装备锻造器
                 const clickPoint = benchSlotPoints[benchSlot as keyof typeof benchSlotPoints];
-                //await sleep(250);//  额外等一段时间，看看是不是延迟问题导致浮窗未生成
-                const isItemForge = await this.checkItemForgeTooltip(clickPoint);
+                // 从槽位名称中提取槽位索引 (SLOT_1 -> 1, SLOT_9 -> 9)
+                const slotIndex = parseInt(benchSlot.slice(-1));
+                const isItemForge = await this.checkItemForgeTooltip(clickPoint, slotIndex);
 
+                // 关闭浮窗：再次右键点击同一位置，避免浮窗遮挡后续槽位的检测
+                await mouseController.clickAt(benchSlotPoints[benchSlot], Button.RIGHT);
+                await sleep(10) // 等待 UI 渲染完成（右键后游戏会立即刷新 UI，10ms 足够）
                 if (isItemForge) {
                     logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别为基础装备锻造器`);
                     // 基础装备锻造器作为特殊单位处理，
@@ -605,19 +611,38 @@ class TftOperator {
      * @description 基础装备锻造器右键后不会在固定位置显示详情，
      *              而是在鼠标点击位置附近弹出浮窗，需要用相对偏移量计算实际区域
      * @param clickPoint 右键点击的位置 (游戏内相对坐标)
+     * @param slotIndex 备战席槽位索引 (1-9)，用于判断是否为边缘情况
      * @returns 是否为基础装备锻造器
      */
-    private async checkItemForgeTooltip(clickPoint: Point): Promise<boolean> {
+    private async checkItemForgeTooltip(clickPoint: Point, slotIndex: number): Promise<boolean> {
         this.ensureInitialized();
 
+        // 判断是否为边缘情况 (槽位 6-9 靠近屏幕右边缘，浮窗会向左弹出)
+        const isEdgeCase = slotIndex >= 6;
+        const tooltipRegion = isEdgeCase ? itemForgeTooltipRegionEdge : itemForgeTooltipRegion;
+
         // 计算浮窗名称区域的绝对坐标
-        // itemForgeTooltipRegion 是相对于点击位置的偏移量
-        const absoluteRegion = new Region(
-            Math.round(this.gameWindowRegion!.x + clickPoint.x + itemForgeTooltipRegion.leftTop.x),
-            Math.round(this.gameWindowRegion!.y + clickPoint.y + itemForgeTooltipRegion.leftTop.y),
-            Math.round(itemForgeTooltipRegion.rightBottom.x - itemForgeTooltipRegion.leftTop.x),
-            Math.round(itemForgeTooltipRegion.rightBottom.y - itemForgeTooltipRegion.leftTop.y)
-        );
+        let absoluteRegion: Region;
+        if (isEdgeCase) {
+            // 边缘情况（槽位 6-9）：
+            // - X 坐标：基于游戏窗口的绝对坐标（tooltipRegion.leftTop.x 已经是相对游戏窗口的）
+            // - Y 坐标：基于鼠标点击位置的偏移量（需要加上 clickPoint.y）
+            absoluteRegion = new Region(
+                Math.round(this.gameWindowRegion!.x + tooltipRegion.leftTop.x),
+                Math.round(this.gameWindowRegion!.y + clickPoint.y + tooltipRegion.leftTop.y),
+                Math.round(tooltipRegion.rightBottom.x - tooltipRegion.leftTop.x),
+                Math.round(tooltipRegion.rightBottom.y - tooltipRegion.leftTop.y)
+            );
+            logger.debug(`[TftOperator] 边缘槽位 ${slotIndex}，X坐标固定=${tooltipRegion.leftTop.x}，Y偏移=${tooltipRegion.leftTop.y}`);
+        } else {
+            // 正常情况（槽位 1-5）：X、Y 坐标都相对于鼠标点击位置计算
+            absoluteRegion = new Region(
+                Math.round(this.gameWindowRegion!.x + clickPoint.x + tooltipRegion.leftTop.x),
+                Math.round(this.gameWindowRegion!.y + clickPoint.y + tooltipRegion.leftTop.y),
+                Math.round(tooltipRegion.rightBottom.x - tooltipRegion.leftTop.x),
+                Math.round(tooltipRegion.rightBottom.y - tooltipRegion.leftTop.y)
+            );
+        }
 
         // 截图时不做任何预处理 (forOCR = false)
         // 锻造器浮窗的文字在二值化/灰度化后会变得细碎，直接用原图 OCR
@@ -639,10 +664,10 @@ class TftOperator {
         if (!isItemForge) {
             const saveDir = this.failChampionTemplatePath;
             fs.ensureDirSync(saveDir);
-            const filename = `itemForge_debug_${Date.now()}.png`;
+            const filename = `itemForge_slot${slotIndex}_${Date.now()}.png`;
             const savePath = path.join(saveDir, filename);
             fs.writeFileSync(savePath, rawPngBuffer);  // 保存原图，方便排查
-            logger.warn(`[TftOperator] 锻造器识别失败，已保存截图: ${filename}`);
+            logger.warn(`[TftOperator] 锻造器识别失败(槽位${slotIndex})，已保存截图: ${filename}`);
         }
 
         return isItemForge;

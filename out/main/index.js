@@ -5702,6 +5702,10 @@ const itemForgeTooltipRegion = {
   leftTop: { x: 56, y: 7 },
   rightBottom: { x: 176, y: 27 }
 };
+const itemForgeTooltipRegionEdge = {
+  leftTop: { x: 585, y: 7 },
+  rightBottom: { x: 695, y: 27 }
+};
 const detailChampionStarRegion = {
   leftTop: { x: 919, y: 122 },
   rightBottom: { x: 974, y: 132 }
@@ -10328,7 +10332,7 @@ class TftOperator {
         continue;
       }
       await mouseController.clickAt(benchSlotPoints[benchSlot], Button.RIGHT);
-      await sleep(50);
+      await sleep(10);
       const nameRegion = screenCapture.toAbsoluteRegion(detailChampionNameRegion);
       const namePng = await screenCapture.captureRegionAsPng(nameRegion);
       const text = await ocrService.recognize(namePng, OcrWorkerType.CHESS);
@@ -10361,7 +10365,10 @@ class TftOperator {
         });
       } else {
         const clickPoint = benchSlotPoints[benchSlot];
-        const isItemForge = await this.checkItemForgeTooltip(clickPoint);
+        const slotIndex = parseInt(benchSlot.slice(-1));
+        const isItemForge = await this.checkItemForgeTooltip(clickPoint, slotIndex);
+        await mouseController.clickAt(benchSlotPoints[benchSlot], Button.RIGHT);
+        await sleep(10);
         if (isItemForge) {
           logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别为基础装备锻造器`);
           benchUnits.push({
@@ -10466,16 +10473,30 @@ class TftOperator {
    * @description 基础装备锻造器右键后不会在固定位置显示详情，
    *              而是在鼠标点击位置附近弹出浮窗，需要用相对偏移量计算实际区域
    * @param clickPoint 右键点击的位置 (游戏内相对坐标)
+   * @param slotIndex 备战席槽位索引 (1-9)，用于判断是否为边缘情况
    * @returns 是否为基础装备锻造器
    */
-  async checkItemForgeTooltip(clickPoint) {
+  async checkItemForgeTooltip(clickPoint, slotIndex) {
     this.ensureInitialized();
-    const absoluteRegion = new Region(
-      Math.round(this.gameWindowRegion.x + clickPoint.x + itemForgeTooltipRegion.leftTop.x),
-      Math.round(this.gameWindowRegion.y + clickPoint.y + itemForgeTooltipRegion.leftTop.y),
-      Math.round(itemForgeTooltipRegion.rightBottom.x - itemForgeTooltipRegion.leftTop.x),
-      Math.round(itemForgeTooltipRegion.rightBottom.y - itemForgeTooltipRegion.leftTop.y)
-    );
+    const isEdgeCase = slotIndex >= 6;
+    const tooltipRegion = isEdgeCase ? itemForgeTooltipRegionEdge : itemForgeTooltipRegion;
+    let absoluteRegion;
+    if (isEdgeCase) {
+      absoluteRegion = new Region(
+        Math.round(this.gameWindowRegion.x + tooltipRegion.leftTop.x),
+        Math.round(this.gameWindowRegion.y + clickPoint.y + tooltipRegion.leftTop.y),
+        Math.round(tooltipRegion.rightBottom.x - tooltipRegion.leftTop.x),
+        Math.round(tooltipRegion.rightBottom.y - tooltipRegion.leftTop.y)
+      );
+      logger.debug(`[TftOperator] 边缘槽位 ${slotIndex}，X坐标固定=${tooltipRegion.leftTop.x}，Y偏移=${tooltipRegion.leftTop.y}`);
+    } else {
+      absoluteRegion = new Region(
+        Math.round(this.gameWindowRegion.x + clickPoint.x + tooltipRegion.leftTop.x),
+        Math.round(this.gameWindowRegion.y + clickPoint.y + tooltipRegion.leftTop.y),
+        Math.round(tooltipRegion.rightBottom.x - tooltipRegion.leftTop.x),
+        Math.round(tooltipRegion.rightBottom.y - tooltipRegion.leftTop.y)
+      );
+    }
     const rawPngBuffer = await screenCapture.captureRegionAsPng(absoluteRegion, false);
     const text = await ocrService.recognize(rawPngBuffer, OcrWorkerType.CHESS);
     const cleanText = text.replace(/\s/g, "");
@@ -10484,10 +10505,10 @@ class TftOperator {
     if (!isItemForge) {
       const saveDir = this.failChampionTemplatePath;
       fs.ensureDirSync(saveDir);
-      const filename = `itemForge_debug_${Date.now()}.png`;
+      const filename = `itemForge_slot${slotIndex}_${Date.now()}.png`;
       const savePath = path.join(saveDir, filename);
       fs.writeFileSync(savePath, rawPngBuffer);
-      logger.warn(`[TftOperator] 锻造器识别失败，已保存截图: ${filename}`);
+      logger.warn(`[TftOperator] 锻造器识别失败(槽位${slotIndex})，已保存截图: ${filename}`);
     }
     return isItemForge;
   }
