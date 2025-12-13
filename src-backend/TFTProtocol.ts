@@ -59,6 +59,13 @@ export const detailChampionNameRegion = {
     leftTop: {x: 870, y: 226},
     rightBottom: {x: 978, y: 244},
 }
+//  基础装备锻造器浮窗名称区域
+//  注意：这是相对于鼠标右键点击位置的偏移量，不是屏幕绝对坐标！
+//  右键基础装备锻造器时，会以点击位置为左上角起点，在右下方弹出浮窗
+export const itemForgeTooltipRegion = {
+    leftTop: {x: 56 , y: 7 },
+    rightBottom: {x: 176 , y: 27 },
+}
 //  选中英雄时，右侧查看英雄星级的
 export const detailChampionStarRegion = {
     leftTop: {x: 919, y: 122},
@@ -202,11 +209,11 @@ export const fightBoardSlotRegion = {
         leftTop: {x: 410, y: 350},
         rightBottom: {x: 455, y: 385}
     },
-    R2_C4:{
+    R2_C4: {
         leftTop: {x: 495, y: 350},
         rightBottom: {x: 540, y: 385}
     },
-    R2_C5:  {
+    R2_C5: {
         leftTop: {x: 575, y: 350},
         rightBottom: {x: 625, y: 385}
     },
@@ -214,7 +221,7 @@ export const fightBoardSlotRegion = {
         leftTop: {x: 660, y: 350},
         rightBottom: {x: 710, y: 385}
     },
-    R2_C7:  {
+    R2_C7: {
         leftTop: {x: 745, y: 350},
         rightBottom: {x: 795, y: 385}
     },
@@ -256,11 +263,11 @@ export const fightBoardSlotRegion = {
         leftTop: {x: 310, y: 465},
         rightBottom: {x: 355, y: 500}
     },
-    R4_C3:{
+    R4_C3: {
         leftTop: {x: 395, y: 465},
         rightBottom: {x: 450, y: 500}
     },
-    R4_C4:{
+    R4_C4: {
         leftTop: {x: 490, y: 465},
         rightBottom: {x: 540, y: 500}
     },
@@ -438,7 +445,21 @@ export enum UnitClass {
     Warden = "神盾使",
 }
 
+const TFT_SPECIAL_CHESS = {
+    //  特殊的棋子，比如基础装备锻造器，这种不属于英雄
+    "基础装备锻造器": {
+        displayName: "基础装备锻造器",
+        price: 8,   // what the fuck? 但数据是这么写的
+        traits: [],
+        origins: [],
+        classes: []
+    },
+}
+
 const _TFT_16_CHAMPION_DATA = {
+    //  特殊棋子
+    ...TFT_SPECIAL_CHESS,
+
     // 1 费棋子
     "俄洛伊": {
         displayName: "俄洛伊",
@@ -772,6 +793,13 @@ const _TFT_16_CHAMPION_DATA = {
         traits: [UnitOrigin.Demacia, UnitClass.Longshot],
         origins: [UnitOrigin.Demacia],
         classes: [UnitClass.Longshot]
+    },
+    "蒙多医生": {
+        displayName: "蒙多医生",
+        price: 3,
+        traits: [UnitOrigin.Zaun, UnitClass.Bruiser],
+        origins: [UnitOrigin.Zaun],
+        classes: [UnitClass.Bruiser]
     },
 
     // 4 费棋子

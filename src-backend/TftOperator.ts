@@ -31,6 +31,7 @@ import {
     gameStageDisplayStageOne,
     gameStageDisplayTheClockworkTrails,
     GameStageType,
+    itemForgeTooltipRegion,
     shopSlot,
     shopSlotNameRegions,
     TFT_16_CHAMPION_DATA,
@@ -115,7 +116,7 @@ class TftOperator {
     private currentBenchState: TFTUnit[] = [];
 
     /** 空槽匹配阈值：平均像素差值大于此值视为"有棋子占用" */
-    private readonly benchEmptyDiffThreshold = 30;
+    private readonly benchEmptyDiffThreshold = 12;
 
     /** OpenCV 是否已初始化 */
     private isOpenCVReady = false;
@@ -469,8 +470,24 @@ class TftOperator {
                     equips: [],
                 });
             } else {
-                this.handleRecognitionFailure("bench", benchSlot.slice(-1), cleanName, namePng);
-                benchUnits.push(null);
+                // 英雄识别失败，尝试检测是否为基础装备锻造器
+                const clickPoint = benchSlotPoints[benchSlot as keyof typeof benchSlotPoints];
+                //await sleep(250);//  额外等一段时间，看看是不是延迟问题导致浮窗未生成
+                const isItemForge = await this.checkItemForgeTooltip(clickPoint);
+
+                if (isItemForge) {
+                    logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别为基础装备锻造器`);
+                    // 基础装备锻造器作为特殊单位处理，
+                    benchUnits.push({
+                        location: benchSlot as BenchLocation,
+                        tftUnit: TFT_16_CHAMPION_DATA.基础装备锻造器,
+                        starLevel: -1,  // 锻造器无星级
+                        equips: [],
+                    });
+                } else {
+                    this.handleRecognitionFailure("bench", benchSlot.slice(-1), cleanName, namePng);
+                    benchUnits.push(null);
+                }
             }
         }
 
@@ -581,6 +598,54 @@ class TftOperator {
         }
 
         return isEmpty;
+    }
+
+    /**
+     * 检测当前是否显示基础装备锻造器的浮窗
+     * @description 基础装备锻造器右键后不会在固定位置显示详情，
+     *              而是在鼠标点击位置附近弹出浮窗，需要用相对偏移量计算实际区域
+     * @param clickPoint 右键点击的位置 (游戏内相对坐标)
+     * @returns 是否为基础装备锻造器
+     */
+    private async checkItemForgeTooltip(clickPoint: Point): Promise<boolean> {
+        this.ensureInitialized();
+
+        // 计算浮窗名称区域的绝对坐标
+        // itemForgeTooltipRegion 是相对于点击位置的偏移量
+        const absoluteRegion = new Region(
+            Math.round(this.gameWindowRegion!.x + clickPoint.x + itemForgeTooltipRegion.leftTop.x),
+            Math.round(this.gameWindowRegion!.y + clickPoint.y + itemForgeTooltipRegion.leftTop.y),
+            Math.round(itemForgeTooltipRegion.rightBottom.x - itemForgeTooltipRegion.leftTop.x),
+            Math.round(itemForgeTooltipRegion.rightBottom.y - itemForgeTooltipRegion.leftTop.y)
+        );
+
+        // 截图时不做任何预处理 (forOCR = false)
+        // 锻造器浮窗的文字在二值化/灰度化后会变得细碎，直接用原图 OCR
+        const rawPngBuffer = await screenCapture.captureRegionAsPng(absoluteRegion, false);
+
+        // 直接用原图进行 OCR，不做任何图像处理
+        const text = await ocrService.recognize(rawPngBuffer, OcrWorkerType.CHESS);
+        const cleanText = text.replace(/\s/g, "");
+
+        logger.debug(`[TftOperator] 锻造器浮窗 OCR 结果: "${cleanText}"`);
+
+        // 判断是否包含"基础装备锻造器"关键字
+        // 使用模糊匹配，因为 OCR 可能有误差
+        const isItemForge = cleanText.includes("基础装备锻造器") ||
+                           cleanText.includes("基础装备") ||
+                           cleanText.includes("锻造器");
+
+        // 识别失败时保存截图到英雄备份文件夹，方便排查问题
+        if (!isItemForge) {
+            const saveDir = this.failChampionTemplatePath;
+            fs.ensureDirSync(saveDir);
+            const filename = `itemForge_debug_${Date.now()}.png`;
+            const savePath = path.join(saveDir, filename);
+            fs.writeFileSync(savePath, rawPngBuffer);  // 保存原图，方便排查
+            logger.warn(`[TftOperator] 锻造器识别失败，已保存截图: ${filename}`);
+        }
+
+        return isItemForge;
     }
 
 

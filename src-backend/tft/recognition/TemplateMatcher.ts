@@ -21,7 +21,7 @@ const MATCH_THRESHOLDS = {
     /** 装备匹配阈值 */
     EQUIP: 0.75,
     /** 英雄匹配阈值 */
-    CHAMPION: 0.50,
+    CHAMPION: 0.40,
     /** 星级匹配阈值 (星级图标特征明显，阈值设高) */
     STAR_LEVEL: 0.85,
     /** 空槽位标准差阈值 (低于此值判定为空) */

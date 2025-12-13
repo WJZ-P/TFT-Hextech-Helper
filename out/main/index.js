@@ -5698,6 +5698,10 @@ const detailChampionNameRegion = {
   leftTop: { x: 870, y: 226 },
   rightBottom: { x: 978, y: 244 }
 };
+const itemForgeTooltipRegion = {
+  leftTop: { x: 56, y: 7 },
+  rightBottom: { x: 176, y: 27 }
+};
 const detailChampionStarRegion = {
   leftTop: { x: 919, y: 122 },
   rightBottom: { x: 974, y: 132 }
@@ -5981,7 +5985,20 @@ const gameStageDisplayTheClockworkTrails = {
   leftTop: { x: 337, y: 6 },
   rightBottom: { x: 366, y: 22 }
 };
+const TFT_SPECIAL_CHESS = {
+  //  特殊的棋子，比如基础装备锻造器，这种不属于英雄
+  "基础装备锻造器": {
+    displayName: "基础装备锻造器",
+    price: 8,
+    // what the fuck? 但数据是这么写的
+    traits: [],
+    origins: [],
+    classes: []
+  }
+};
 const _TFT_16_CHAMPION_DATA = {
+  //  特殊棋子
+  ...TFT_SPECIAL_CHESS,
   // 1 费棋子
   "俄洛伊": {
     displayName: "俄洛伊",
@@ -6794,6 +6811,23 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "狙神"
       /* Longshot */
+    ]
+  },
+  "蒙多医生": {
+    displayName: "蒙多医生",
+    price: 3,
+    traits: [
+      "祖安",
+      "斗士"
+      /* Bruiser */
+    ],
+    origins: [
+      "祖安"
+      /* Zaun */
+    ],
+    classes: [
+      "斗士"
+      /* Bruiser */
     ]
   },
   // 4 费棋子
@@ -9521,7 +9555,7 @@ const MATCH_THRESHOLDS = {
   /** 装备匹配阈值 */
   EQUIP: 0.75,
   /** 英雄匹配阈值 */
-  CHAMPION: 0.5,
+  CHAMPION: 0.4,
   /** 星级匹配阈值 (星级图标特征明显，阈值设高) */
   STAR_LEVEL: 0.85,
   /** 空槽位标准差阈值 (低于此值判定为空) */
@@ -10326,8 +10360,21 @@ class TftOperator {
           equips: []
         });
       } else {
-        this.handleRecognitionFailure("bench", benchSlot.slice(-1), cleanName, namePng);
-        benchUnits.push(null);
+        const clickPoint = benchSlotPoints[benchSlot];
+        const isItemForge = await this.checkItemForgeTooltip(clickPoint);
+        if (isItemForge) {
+          logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别为基础装备锻造器`);
+          benchUnits.push({
+            location: benchSlot,
+            tftUnit: TFT_16_CHAMPION_DATA.基础装备锻造器,
+            starLevel: -1,
+            // 锻造器无星级
+            equips: []
+          });
+        } else {
+          this.handleRecognitionFailure("bench", benchSlot.slice(-1), cleanName, namePng);
+          benchUnits.push(null);
+        }
       }
     }
     return benchUnits;
@@ -10413,6 +10460,36 @@ class TftOperator {
       logger.debug(`[TftOperator] 槽位 ${slotKey} 判定为占用, meanDiff=${meanDiff.toFixed(2)}`);
     }
     return isEmpty;
+  }
+  /**
+   * 检测当前是否显示基础装备锻造器的浮窗
+   * @description 基础装备锻造器右键后不会在固定位置显示详情，
+   *              而是在鼠标点击位置附近弹出浮窗，需要用相对偏移量计算实际区域
+   * @param clickPoint 右键点击的位置 (游戏内相对坐标)
+   * @returns 是否为基础装备锻造器
+   */
+  async checkItemForgeTooltip(clickPoint) {
+    this.ensureInitialized();
+    const absoluteRegion = new Region(
+      Math.round(this.gameWindowRegion.x + clickPoint.x + itemForgeTooltipRegion.leftTop.x),
+      Math.round(this.gameWindowRegion.y + clickPoint.y + itemForgeTooltipRegion.leftTop.y),
+      Math.round(itemForgeTooltipRegion.rightBottom.x - itemForgeTooltipRegion.leftTop.x),
+      Math.round(itemForgeTooltipRegion.rightBottom.y - itemForgeTooltipRegion.leftTop.y)
+    );
+    const rawPngBuffer = await screenCapture.captureRegionAsPng(absoluteRegion, false);
+    const text = await ocrService.recognize(rawPngBuffer, OcrWorkerType.CHESS);
+    const cleanText = text.replace(/\s/g, "");
+    logger.debug(`[TftOperator] 锻造器浮窗 OCR 结果: "${cleanText}"`);
+    const isItemForge = cleanText.includes("基础装备锻造器") || cleanText.includes("基础装备") || cleanText.includes("锻造器");
+    if (!isItemForge) {
+      const saveDir = this.failChampionTemplatePath;
+      fs.ensureDirSync(saveDir);
+      const filename = `itemForge_debug_${Date.now()}.png`;
+      const savePath = path.join(saveDir, filename);
+      fs.writeFileSync(savePath, rawPngBuffer);
+      logger.warn(`[TftOperator] 锻造器识别失败，已保存截图: ${filename}`);
+    }
+    return isItemForge;
   }
   /**
    * 获取游戏阶段显示区域
