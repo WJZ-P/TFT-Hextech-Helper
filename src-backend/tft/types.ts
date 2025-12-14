@@ -92,8 +92,8 @@ export interface BoardUnit {
     location: BoardLocation;
     /** 棋子基础信息 */
     tftUnit: TFTUnit;
-    /** 棋子星级 (1-4 星) */
-    starLevel: 1 | 2 | 3 | 4;
+    /** 棋子星级 (-1 表示未识别，1-4 为正常星级) */
+    starLevel: -1 | 1 | 2 | 3 | 4;
     /** 棋子携带的装备列表 */
     equips: TFTEquip[];
 }

@@ -5578,6 +5578,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["TFT_GET_SHOP_INFO"] = "tft-get-shop-info";
   IpcChannel2["TFT_GET_EQUIP_INFO"] = "tft-get-equip-info";
   IpcChannel2["TFT_GET_BENCH_INFO"] = "tft-get-bench-info";
+  IpcChannel2["TFT_GET_FIGHT_BOARD_INFO"] = "tft-get-fight-board-info";
   IpcChannel2["TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT"] = "tft-test-save-bench-slot-snapshot";
   IpcChannel2["TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT"] = "tft-test-save-fight-board-slot-snapshot";
   return IpcChannel2;
@@ -5768,7 +5769,7 @@ const equipmentRegion = {
     rightBottom: { x: 32, y: 550 }
   }
 };
-({
+const fightBoardSlotPoint = {
   // x+=80
   //  第一行的棋子位置
   R1_C1: new Point(230, 315),
@@ -5802,162 +5803,162 @@ const equipmentRegion = {
   R4_C5: new Point(600, 475),
   R4_C6: new Point(690, 475),
   R4_C7: new Point(780, 475)
-});
+};
 const fightBoardSlotRegion = {
   // x+=80
   //  第一行的棋子位置
   R1_C1: {
-    leftTop: { x: 210, y: 300 },
-    rightBottom: { x: 255, y: 330 }
+    leftTop: { x: 210 + 5, y: 300 - 10 },
+    rightBottom: { x: 255 - 5, y: 330 }
   },
   R1_C2: {
-    leftTop: { x: 290, y: 300 },
-    rightBottom: { x: 340, y: 330 }
+    leftTop: { x: 290 + 5, y: 300 - 10 },
+    rightBottom: { x: 340 - 5, y: 330 }
   },
   R1_C3: {
-    leftTop: { x: 370, y: 300 },
-    rightBottom: { x: 420, y: 330 }
+    leftTop: { x: 370 + 5, y: 300 - 10 },
+    rightBottom: { x: 420 - 5, y: 330 }
   },
   R1_C4: {
-    leftTop: { x: 450, y: 300 },
-    rightBottom: { x: 500, y: 330 }
+    leftTop: { x: 450 + 5, y: 300 - 10 },
+    rightBottom: { x: 500 - 5, y: 330 }
   },
   R1_C5: {
-    leftTop: { x: 530, y: 300 },
-    rightBottom: { x: 585, y: 330 }
+    leftTop: { x: 530 + 5, y: 300 - 10 },
+    rightBottom: { x: 585 - 5, y: 330 }
   },
   R1_C6: {
-    leftTop: { x: 615, y: 300 },
-    rightBottom: { x: 665, y: 330 }
+    leftTop: { x: 615 + 5, y: 300 - 10 },
+    rightBottom: { x: 665 - 5, y: 330 }
   },
   R1_C7: {
-    leftTop: { x: 695, y: 300 },
-    rightBottom: { x: 750, y: 330 }
+    leftTop: { x: 695 + 5, y: 300 - 10 },
+    rightBottom: { x: 750 - 5, y: 330 }
   },
   //  第二行的棋子位置        //  x+=85
   R2_C1: {
-    leftTop: { x: 240, y: 350 },
-    rightBottom: { x: 285, y: 385 }
+    leftTop: { x: 240 + 5, y: 350 - 10 },
+    rightBottom: { x: 285 - 5, y: 385 }
   },
   R2_C2: {
-    leftTop: { x: 325, y: 350 },
-    rightBottom: { x: 370, y: 385 }
+    leftTop: { x: 325 + 5, y: 350 - 10 },
+    rightBottom: { x: 370 - 5, y: 385 }
   },
   R2_C3: {
-    leftTop: { x: 410, y: 350 },
-    rightBottom: { x: 455, y: 385 }
+    leftTop: { x: 410 + 5, y: 350 - 10 },
+    rightBottom: { x: 455 - 5, y: 385 }
   },
   R2_C4: {
-    leftTop: { x: 495, y: 350 },
-    rightBottom: { x: 540, y: 385 }
+    leftTop: { x: 495 + 5, y: 350 - 10 },
+    rightBottom: { x: 540 - 5, y: 385 }
   },
   R2_C5: {
-    leftTop: { x: 575, y: 350 },
-    rightBottom: { x: 625, y: 385 }
+    leftTop: { x: 575 + 5, y: 350 - 10 },
+    rightBottom: { x: 625 - 5, y: 385 }
   },
   R2_C6: {
-    leftTop: { x: 660, y: 350 },
-    rightBottom: { x: 710, y: 385 }
+    leftTop: { x: 660 + 5, y: 350 - 10 },
+    rightBottom: { x: 710 - 5, y: 385 }
   },
   R2_C7: {
-    leftTop: { x: 745, y: 350 },
-    rightBottom: { x: 795, y: 385 }
+    leftTop: { x: 745 + 5, y: 350 - 10 },
+    rightBottom: { x: 795 - 5, y: 385 }
   },
   //  第三行棋子的位置        //  x+=90
   R3_C1: {
-    leftTop: { x: 185, y: 405 },
-    rightBottom: { x: 230, y: 440 }
+    leftTop: { x: 185 + 5, y: 405 - 10 },
+    rightBottom: { x: 230 - 5, y: 440 }
   },
   R3_C2: {
-    leftTop: { x: 275, y: 405 },
-    rightBottom: { x: 320, y: 440 }
+    leftTop: { x: 275 + 5, y: 405 - 10 },
+    rightBottom: { x: 320 - 5, y: 440 }
   },
   R3_C3: {
-    leftTop: { x: 360, y: 405 },
-    rightBottom: { x: 410, y: 440 }
+    leftTop: { x: 360 + 5, y: 405 - 10 },
+    rightBottom: { x: 410 - 5, y: 440 }
   },
   R3_C4: {
-    leftTop: { x: 445, y: 405 },
-    rightBottom: { x: 495, y: 440 }
+    leftTop: { x: 445 + 5, y: 405 - 10 },
+    rightBottom: { x: 495 - 5, y: 440 }
   },
   R3_C5: {
-    leftTop: { x: 535, y: 405 },
-    rightBottom: { x: 585, y: 440 }
+    leftTop: { x: 535 + 5, y: 405 - 10 },
+    rightBottom: { x: 585 - 5, y: 440 }
   },
   R3_C6: {
-    leftTop: { x: 620, y: 405 },
-    rightBottom: { x: 675, y: 440 }
+    leftTop: { x: 620 + 5, y: 405 - 10 },
+    rightBottom: { x: 675 - 5, y: 440 }
   },
   R3_C7: {
-    leftTop: { x: 705, y: 405 },
-    rightBottom: { x: 760, y: 440 }
+    leftTop: { x: 705 + 5, y: 405 - 10 },
+    rightBottom: { x: 760 - 5, y: 440 }
   },
   //  第四行棋子的位置        //  x+=90
   R4_C1: {
-    leftTop: { x: 215, y: 465 },
-    rightBottom: { x: 265, y: 500 }
+    leftTop: { x: 215 + 5, y: 465 - 10 },
+    rightBottom: { x: 265 - 5, y: 500 }
   },
   R4_C2: {
-    leftTop: { x: 310, y: 465 },
-    rightBottom: { x: 355, y: 500 }
+    leftTop: { x: 310 + 5, y: 465 - 10 },
+    rightBottom: { x: 355 - 5, y: 500 }
   },
   R4_C3: {
-    leftTop: { x: 395, y: 465 },
-    rightBottom: { x: 450, y: 500 }
+    leftTop: { x: 395 + 5, y: 465 - 10 },
+    rightBottom: { x: 450 - 5, y: 500 }
   },
   R4_C4: {
-    leftTop: { x: 490, y: 465 },
-    rightBottom: { x: 540, y: 500 }
+    leftTop: { x: 490 + 5, y: 465 - 10 },
+    rightBottom: { x: 540 - 5, y: 500 }
   },
   R4_C5: {
-    leftTop: { x: 580, y: 465 },
-    rightBottom: { x: 635, y: 500 }
+    leftTop: { x: 580 + 5, y: 465 - 10 },
+    rightBottom: { x: 635 - 5, y: 500 }
   },
   R4_C6: {
-    leftTop: { x: 670, y: 465 },
-    rightBottom: { x: 725, y: 500 }
+    leftTop: { x: 670 + 5, y: 465 - 10 },
+    rightBottom: { x: 725 - 5, y: 500 }
   },
   R4_C7: {
-    leftTop: { x: 760, y: 465 },
-    rightBottom: { x: 815, y: 500 }
+    leftTop: { x: 760 + 5, y: 465 - 10 },
+    rightBottom: { x: 815 - 5, y: 500 }
   }
 };
 const benchSlotRegion = {
   SLOT_1: {
-    leftTop: { x: 105, y: 530 },
-    rightBottom: { x: 155, y: 585 }
+    leftTop: { x: 105 + 5, y: 530 - 15 },
+    rightBottom: { x: 155 - 5, y: 585 }
   },
   SLOT_2: {
-    leftTop: { x: 190, y: 530 },
-    rightBottom: { x: 245, y: 585 }
+    leftTop: { x: 190 + 5, y: 530 - 15 },
+    rightBottom: { x: 245 - 5, y: 585 }
   },
   SLOT_3: {
-    leftTop: { x: 270, y: 530 },
-    rightBottom: { x: 325, y: 585 }
+    leftTop: { x: 270 + 5, y: 530 - 15 },
+    rightBottom: { x: 325 - 5, y: 585 }
   },
   SLOT_4: {
-    leftTop: { x: 355, y: 530 },
-    rightBottom: { x: 410, y: 585 }
+    leftTop: { x: 355 + 5, y: 530 - 15 },
+    rightBottom: { x: 410 - 5, y: 585 }
   },
   SLOT_5: {
-    leftTop: { x: 435, y: 530 },
-    rightBottom: { x: 495, y: 585 }
+    leftTop: { x: 435 + 5, y: 530 - 15 },
+    rightBottom: { x: 495 - 5, y: 585 }
   },
   SLOT_6: {
-    leftTop: { x: 520, y: 530 },
-    rightBottom: { x: 580, y: 585 }
+    leftTop: { x: 520 + 5, y: 530 - 15 },
+    rightBottom: { x: 580 - 5, y: 585 }
   },
   SLOT_7: {
-    leftTop: { x: 600, y: 530 },
-    rightBottom: { x: 665, y: 585 }
+    leftTop: { x: 600 + 5, y: 530 - 15 },
+    rightBottom: { x: 665 - 5, y: 585 }
   },
   SLOT_8: {
-    leftTop: { x: 680, y: 530 },
-    rightBottom: { x: 750, y: 585 }
+    leftTop: { x: 680 + 5, y: 530 - 15 },
+    rightBottom: { x: 750 - 5, y: 585 }
   },
   SLOT_9: {
-    leftTop: { x: 765, y: 530 },
-    rightBottom: { x: 830, y: 585 }
+    leftTop: { x: 765 + 5, y: 530 - 15 },
+    rightBottom: { x: 830 - 5, y: 585 }
   }
 };
 const benchSlotPoints = {
@@ -5994,6 +5995,14 @@ const TFT_SPECIAL_CHESS = {
   "基础装备锻造器": {
     displayName: "基础装备锻造器",
     price: 8,
+    // what the fuck? 但数据是这么写的
+    traits: [],
+    origins: [],
+    classes: []
+  },
+  "训练假人": {
+    displayName: "训练假人",
+    price: 1,
     // what the fuck? 但数据是这么写的
     traits: [],
     origins: [],
@@ -9179,6 +9188,8 @@ class TemplateLoader {
   starLevelTemplates = /* @__PURE__ */ new Map();
   /** 备战席槽位模板缓存 (RGBA 彩色图，用于空槽检测) */
   benchSlotTemplates = /* @__PURE__ */ new Map();
+  /** 棋盘槽位模板缓存 (RGBA 彩色图，用于空槽检测) */
+  fightBoardSlotTemplates = /* @__PURE__ */ new Map();
   /** 空装备槽位模板 (24x24 纯黑) */
   emptyEquipSlotTemplate = null;
   /** 文件监听器防抖定时器 */
@@ -9197,6 +9208,9 @@ class TemplateLoader {
   }
   get benchEmptySlotTemplatePath() {
     return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/benchSlot");
+  }
+  get fightBoardSlotTemplatePath() {
+    return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/fightBoardSlot");
   }
   constructor() {
   }
@@ -9224,7 +9238,8 @@ class TemplateLoader {
       this.loadEquipTemplates(),
       this.loadChampionTemplates(),
       this.loadStarLevelTemplates(),
-      this.loadBenchSlotTemplates()
+      this.loadBenchSlotTemplates(),
+      this.loadFightBoardSlotTemplates()
     ]);
     this.setupChampionTemplateWatcher();
     this.isLoaded = true;
@@ -9256,6 +9271,14 @@ class TemplateLoader {
    */
   getBenchSlotTemplate(slotKey) {
     return this.benchSlotTemplates.get(slotKey) || null;
+  }
+  /**
+   * 获取棋盘槽位模板
+   * @param slotKey 槽位 key，例如 "R1_C1"
+   * @returns 对应的 RGBA 模板 Mat，未找到返回 null
+   */
+  getFightBoardSlotTemplate(slotKey) {
+    return this.fightBoardSlotTemplates.get(slotKey) || null;
   }
   /**
    * 获取空装备槽位模板
@@ -9422,6 +9445,41 @@ class TemplateLoader {
     }
     logger.info(`[TemplateLoader] 备战席槽位模板加载完成，共 ${this.benchSlotTemplates.size} 个`);
   }
+  /**
+   * 加载棋盘槽位模板
+   * @description 棋盘共 4 行 7 列，共 28 个槽位 (R1_C1 ~ R4_C7)
+   */
+  async loadFightBoardSlotTemplates() {
+    this.clearFightBoardSlotTemplates();
+    logger.info("[TemplateLoader] 开始加载棋盘槽位模板...");
+    if (!fs.existsSync(this.fightBoardSlotTemplatePath)) {
+      fs.ensureDirSync(this.fightBoardSlotTemplatePath);
+      logger.info(`[TemplateLoader] 棋盘槽位模板目录不存在，已自动创建: ${this.fightBoardSlotTemplatePath}`);
+      return;
+    }
+    for (let row = 1; row <= 4; row++) {
+      for (let col = 1; col <= 7; col++) {
+        const slotKey = `R${row}_C${col}`;
+        const filePath = path.join(this.fightBoardSlotTemplatePath, `${slotKey}.png`);
+        if (!fs.existsSync(filePath)) {
+          logger.warn(`[TemplateLoader] 未找到棋盘槽位模板: ${slotKey}.png`);
+          continue;
+        }
+        try {
+          const mat = await this.loadImageAsMat(filePath, {
+            ensureAlpha: true,
+            grayscale: false
+          });
+          if (mat) {
+            this.fightBoardSlotTemplates.set(slotKey, mat);
+          }
+        } catch (e) {
+          logger.error(`[TemplateLoader] 加载棋盘槽位模板失败 [${slotKey}]: ${e}`);
+        }
+      }
+    }
+    logger.info(`[TemplateLoader] 棋盘槽位模板加载完成，共 ${this.fightBoardSlotTemplates.size} 个`);
+  }
   // ========== 工具方法 ==========
   /**
    * 加载图片为 OpenCV Mat
@@ -9536,6 +9594,17 @@ class TemplateLoader {
     this.benchSlotTemplates.clear();
   }
   /**
+   * 清理棋盘槽位模板缓存
+   */
+  clearFightBoardSlotTemplates() {
+    for (const mat of this.fightBoardSlotTemplates.values()) {
+      if (mat && !mat.isDeleted()) {
+        mat.delete();
+      }
+    }
+    this.fightBoardSlotTemplates.clear();
+  }
+  /**
    * 销毁所有资源
    */
   destroy() {
@@ -9543,6 +9612,7 @@ class TemplateLoader {
     this.clearChampionTemplates();
     this.clearStarLevelTemplates();
     this.clearBenchSlotTemplates();
+    this.clearFightBoardSlotTemplates();
     if (this.emptyEquipSlotTemplate && !this.emptyEquipSlotTemplate.isDeleted()) {
       this.emptyEquipSlotTemplate.delete();
       this.emptyEquipSlotTemplate = null;
@@ -10106,7 +10176,7 @@ class TftOperator {
   /** 当前备战席状态 */
   currentBenchState = [];
   /** 空槽匹配阈值：平均像素差值大于此值视为"有棋子占用" */
-  benchEmptyDiffThreshold = 12;
+  benchEmptyDiffThreshold = 6;
   /** OpenCV 是否已初始化 */
   isOpenCVReady = false;
   // ========== 路径 Getter ==========
@@ -10387,6 +10457,89 @@ class TftOperator {
     return benchUnits;
   }
   /**
+   * 获取当前棋盘上的棋子信息
+   * @description 通过右键点击棋子，识别详情面板中的英雄名和星级
+   *              棋盘为 4 行 7 列，共 28 个槽位
+   * @returns 棋盘棋子数组 (空槽位为 null)
+   */
+  async getFightBoardInfo() {
+    logger.info("[TftOperator] 正在扫描棋盘上的 28 个槽位...");
+    const boardUnits = [];
+    for (const boardSlot of Object.keys(fightBoardSlotPoint)) {
+      const boardRegion = screenCapture.toAbsoluteRegion(
+        fightBoardSlotRegion[boardSlot]
+      );
+      const isEmpty = await this.isFightBoardSlotEmpty(boardSlot, boardRegion);
+      if (isEmpty) {
+        logger.debug(`[棋盘槽位 ${boardSlot}] 检测为空，跳过点击`);
+        boardUnits.push(null);
+        continue;
+      }
+      const clickPoint = fightBoardSlotPoint[boardSlot];
+      await mouseController.clickAt(clickPoint, Button.RIGHT);
+      await sleep(10);
+      const nameRegion = screenCapture.toAbsoluteRegion(detailChampionNameRegion);
+      const namePng = await screenCapture.captureRegionAsPng(nameRegion);
+      const text = await ocrService.recognize(namePng, OcrWorkerType.CHESS);
+      let cleanName = text.replace(/\s/g, "");
+      let tftUnit = TFT_16_CHAMPION_DATA[cleanName] || null;
+      if (!tftUnit) {
+        logger.warn(`[棋盘槽位 ${boardSlot}] OCR 识别失败，尝试模板匹配...`);
+        const mat = await screenCapture.pngBufferToMat(namePng);
+        if (mat.channels() > 1) {
+          cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
+        }
+        cleanName = templateMatcher.matchChampion(mat) || "";
+        mat.delete();
+      }
+      tftUnit = TFT_16_CHAMPION_DATA[cleanName] || null;
+      if (tftUnit) {
+        const starRegion = screenCapture.toAbsoluteRegion(detailChampionStarRegion);
+        const starPng = await screenCapture.captureRegionAsPng(starRegion, false);
+        const starMat = await screenCapture.pngBufferToMat(starPng);
+        const starLevel = templateMatcher.matchStarLevel(starMat);
+        starMat.delete();
+        logger.info(
+          `[棋盘槽位 ${boardSlot}] 识别成功 -> ${tftUnit.displayName} (${tftUnit.price}费-${starLevel}星)`
+        );
+        boardUnits.push({
+          location: boardSlot,
+          tftUnit,
+          starLevel,
+          equips: []
+        });
+      } else {
+        this.handleRecognitionFailure("board", boardSlot, cleanName, namePng);
+        boardUnits.push(null);
+      }
+    }
+    logger.info(`[TftOperator] 棋盘扫描完成，识别到 ${boardUnits.filter((u) => u !== null).length} 个棋子`);
+    return boardUnits;
+  }
+  /**
+   * 判断棋盘槽位是否为空
+   * @description 通过 templateLoader 获取空槽模板，比较当前截图的 RGBA 均值差异
+   * @param slotKey 槽位 key，例如 R1_C1
+   * @param region nut-js Region (绝对坐标)
+   */
+  async isFightBoardSlotEmpty(slotKey, region) {
+    if (!templateLoader.isReady()) {
+      logger.warn("[TftOperator] 模板未加载完成，空槽检测暂时跳过");
+      return false;
+    }
+    const tmpl = templateLoader.getFightBoardSlotTemplate(slotKey);
+    if (!tmpl) {
+      logger.warn(`[TftOperator] 未找到棋盘槽位模板: ${slotKey}，跳过空槽检测`);
+      return false;
+    }
+    const meanDiff = await this.calculateSlotDifference(region, tmpl);
+    const isEmpty = meanDiff < this.benchEmptyDiffThreshold;
+    if (!isEmpty) {
+      logger.debug(`[TftOperator] 棋盘槽位 ${slotKey} 判定为占用, meanDiff=${meanDiff.toFixed(2)}`);
+    }
+    return isEmpty;
+  }
+  /**
    * 保存备战席槽位截图到本地 (benchSlotRegion)
    * 用于采集空槽/有子样本，帮助后续做占用检测或模板生成
    */
@@ -10398,7 +10551,7 @@ class TftOperator {
       try {
         const region = screenCapture.toAbsoluteRegion(regionDef);
         const pngBuffer = await screenCapture.captureRegionAsPng(region, false);
-        const filename = `bench_${slotKey.toLowerCase()}_${Date.now()}.png`;
+        const filename = `${slotKey}.png`;
         fs.writeFileSync(path.join(saveDir, filename), pngBuffer);
         logger.info(`[TftOperator] 保存备战席槽位截图: ${slotKey} -> ${filename}`);
       } catch (e) {
@@ -10430,21 +10583,13 @@ class TftOperator {
   // 私有方法 (Private Methods)
   // ============================================================================
   /**
-   * 判断备战席槽位是否为空
-   * @description 通过 templateLoader 获取空槽模板，比较当前截图的 RGBA 均值差异
-   * @param slotKey 槽位 key，例如 SLOT_1
-   * @param region nut-js Region (绝对坐标)
+   * 比较截图与模板的 RGBA 均值差异，判断槽位是否为空
+   * @description 通用的空槽检测方法，供备战席和棋盘槽位复用
+   * @param region 槽位的绝对坐标区域
+   * @param tmpl 空槽模板 (RGBA 格式的 cv.Mat)
+   * @returns 平均像素差值 (RGB 三通道均值)
    */
-  async isBenchSlotEmpty(slotKey, region) {
-    if (!templateLoader.isReady()) {
-      logger.warn("[TftOperator] 模板未加载完成，空槽检测暂时跳过");
-      return false;
-    }
-    const tmpl = templateLoader.getBenchSlotTemplate(slotKey);
-    if (!tmpl) {
-      logger.warn(`[TftOperator] 未找到槽位模板: ${slotKey}，跳过空槽检测`);
-      return false;
-    }
+  async calculateSlotDifference(region, tmpl) {
     const pngBuffer = await screenCapture.captureRegionAsPng(region, false);
     let mat = await screenCapture.pngBufferToMat(pngBuffer);
     if (mat.channels() === 3) {
@@ -10462,6 +10607,25 @@ class TftOperator {
     const meanDiff = (meanScalar[0] + meanScalar[1] + meanScalar[2]) / 3;
     diff.delete();
     mat.delete();
+    return meanDiff;
+  }
+  /**
+   * 判断备战席槽位是否为空
+   * @description 通过 templateLoader 获取空槽模板，比较当前截图的 RGBA 均值差异
+   * @param slotKey 槽位 key，例如 SLOT_1
+   * @param region nut-js Region (绝对坐标)
+   */
+  async isBenchSlotEmpty(slotKey, region) {
+    if (!templateLoader.isReady()) {
+      logger.warn("[TftOperator] 模板未加载完成，空槽检测暂时跳过");
+      return false;
+    }
+    const tmpl = templateLoader.getBenchSlotTemplate(slotKey);
+    if (!tmpl) {
+      logger.warn(`[TftOperator] 未找到槽位模板: ${slotKey}，跳过空槽检测`);
+      return false;
+    }
+    const meanDiff = await this.calculateSlotDifference(region, tmpl);
     const isEmpty = meanDiff < this.benchEmptyDiffThreshold;
     if (!isEmpty) {
       logger.debug(`[TftOperator] 槽位 ${slotKey} 判定为占用, meanDiff=${meanDiff.toFixed(2)}`);
@@ -11205,6 +11369,7 @@ function registerHandler() {
   ipcMain.handle(IpcChannel.TFT_GET_SHOP_INFO, async (event) => tftOperator.getShopInfo());
   ipcMain.handle(IpcChannel.TFT_GET_EQUIP_INFO, async (event) => tftOperator.getEquipInfo());
   ipcMain.handle(IpcChannel.TFT_GET_BENCH_INFO, async (event) => tftOperator.getBenchInfo());
+  ipcMain.handle(IpcChannel.TFT_GET_FIGHT_BOARD_INFO, async (event) => tftOperator.getFightBoardInfo());
   ipcMain.handle(IpcChannel.TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT, async (event) => tftOperator.saveBenchSlotSnapshots());
   ipcMain.handle(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT, async (event) => tftOperator.saveFightBoardSlotSnapshots());
 }

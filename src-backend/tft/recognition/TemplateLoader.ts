@@ -52,6 +52,9 @@ export class TemplateLoader {
     /** 备战席槽位模板缓存 (RGBA 彩色图，用于空槽检测) */
     private benchSlotTemplates: Map<string, cv.Mat> = new Map();
 
+    /** 棋盘槽位模板缓存 (RGBA 彩色图，用于空槽检测) */
+    private fightBoardSlotTemplates: Map<string, cv.Mat> = new Map();
+
     /** 空装备槽位模板 (24x24 纯黑) */
     private emptyEquipSlotTemplate: cv.Mat | null = null;
 
@@ -77,6 +80,10 @@ export class TemplateLoader {
 
     private get benchEmptySlotTemplatePath(): string {
         return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/benchSlot");
+    }
+
+    private get fightBoardSlotTemplatePath(): string {
+        return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/fightBoardSlot");
     }
 
     private constructor() {}
@@ -112,6 +119,7 @@ export class TemplateLoader {
             this.loadChampionTemplates(),
             this.loadStarLevelTemplates(),
             this.loadBenchSlotTemplates(),
+            this.loadFightBoardSlotTemplates(),
         ]);
 
         // 启动文件监听
@@ -151,6 +159,15 @@ export class TemplateLoader {
      */
     public getBenchSlotTemplate(slotKey: string): cv.Mat | null {
         return this.benchSlotTemplates.get(slotKey) || null;
+    }
+
+    /**
+     * 获取棋盘槽位模板
+     * @param slotKey 槽位 key，例如 "R1_C1"
+     * @returns 对应的 RGBA 模板 Mat，未找到返回 null
+     */
+    public getFightBoardSlotTemplate(slotKey: string): cv.Mat | null {
+        return this.fightBoardSlotTemplates.get(slotKey) || null;
     }
 
     /**
@@ -367,6 +384,52 @@ export class TemplateLoader {
         logger.info(`[TemplateLoader] 备战席槽位模板加载完成，共 ${this.benchSlotTemplates.size} 个`);
     }
 
+    /**
+     * 加载棋盘槽位模板
+     * @description 棋盘共 4 行 7 列，共 28 个槽位 (R1_C1 ~ R4_C7)
+     */
+    private async loadFightBoardSlotTemplates(): Promise<void> {
+        // 清理旧模板
+        this.clearFightBoardSlotTemplates();
+
+        logger.info("[TemplateLoader] 开始加载棋盘槽位模板...");
+
+        if (!fs.existsSync(this.fightBoardSlotTemplatePath)) {
+            fs.ensureDirSync(this.fightBoardSlotTemplatePath);
+            logger.info(`[TemplateLoader] 棋盘槽位模板目录不存在，已自动创建: ${this.fightBoardSlotTemplatePath}`);
+            return;
+        }
+
+        // 棋盘共 4 行 7 列：R1_C1 ~ R4_C7
+        for (let row = 1; row <= 4; row++) {
+            for (let col = 1; col <= 7; col++) {
+                const slotKey = `R${row}_C${col}`;
+                const filePath = path.join(this.fightBoardSlotTemplatePath, `${slotKey}.png`);
+
+                if (!fs.existsSync(filePath)) {
+                    logger.warn(`[TemplateLoader] 未找到棋盘槽位模板: ${slotKey}.png`);
+                    continue;
+                }
+
+                try {
+                    // 保留 RGBA 彩色信息，空槽检测需要颜色差异来区分有无棋子
+                    const mat = await this.loadImageAsMat(filePath, {
+                        ensureAlpha: true,
+                        grayscale: false,
+                    });
+
+                    if (mat) {
+                        this.fightBoardSlotTemplates.set(slotKey, mat);
+                    }
+                } catch (e) {
+                    logger.error(`[TemplateLoader] 加载棋盘槽位模板失败 [${slotKey}]: ${e}`);
+                }
+            }
+        }
+
+        logger.info(`[TemplateLoader] 棋盘槽位模板加载完成，共 ${this.fightBoardSlotTemplates.size} 个`);
+    }
+
     // ========== 工具方法 ==========
 
     /**
@@ -518,6 +581,18 @@ export class TemplateLoader {
     }
 
     /**
+     * 清理棋盘槽位模板缓存
+     */
+    private clearFightBoardSlotTemplates(): void {
+        for (const mat of this.fightBoardSlotTemplates.values()) {
+            if (mat && !mat.isDeleted()) {
+                mat.delete();
+            }
+        }
+        this.fightBoardSlotTemplates.clear();
+    }
+
+    /**
      * 销毁所有资源
      */
     public destroy(): void {
@@ -525,6 +600,7 @@ export class TemplateLoader {
         this.clearChampionTemplates();
         this.clearStarLevelTemplates();
         this.clearBenchSlotTemplates();
+        this.clearFightBoardSlotTemplates();
 
         if (this.emptyEquipSlotTemplate && !this.emptyEquipSlotTemplate.isDeleted()) {
             this.emptyEquipSlotTemplate.delete();

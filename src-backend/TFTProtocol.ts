@@ -173,163 +173,167 @@ export const fightBoardSlotPoint = {
     R4_C7: new Point(780, 475),
 }
 //  棋子在战场上的region，用来判断是否有棋子
+//  leftTop.y 使用 -10 偏移，兼容 3D 飞行棋子的高度
+//  leftTop.x +5, rightBottom.x -5，避免宽体棋子占据邻居位置导致误判
 export const fightBoardSlotRegion = {
     // x+=80
     //  第一行的棋子位置
     R1_C1: {
-        leftTop: {x: 210, y: 300},
-        rightBottom: {x: 255, y: 330}
+        leftTop: {x: 210 + 5, y: 300 - 10},
+        rightBottom: {x: 255 - 5, y: 330}
     },
     R1_C2: {
-        leftTop: {x: 290, y: 300},
-        rightBottom: {x: 340, y: 330}
+        leftTop: {x: 290 + 5, y: 300 - 10},
+        rightBottom: {x: 340 - 5, y: 330}
     },
     R1_C3: {
-        leftTop: {x: 370, y: 300},
-        rightBottom: {x: 420, y: 330}
+        leftTop: {x: 370 + 5, y: 300 - 10},
+        rightBottom: {x: 420 - 5, y: 330}
     },
     R1_C4: {
-        leftTop: {x: 450, y: 300},
-        rightBottom: {x: 500, y: 330}
+        leftTop: {x: 450 + 5, y: 300 - 10},
+        rightBottom: {x: 500 - 5, y: 330}
     },
     R1_C5: {
-        leftTop: {x: 530, y: 300},
-        rightBottom: {x: 585, y: 330}
+        leftTop: {x: 530 + 5, y: 300 - 10},
+        rightBottom: {x: 585 - 5, y: 330}
     },
     R1_C6: {
-        leftTop: {x: 615, y: 300},
-        rightBottom: {x: 665, y: 330}
+        leftTop: {x: 615 + 5, y: 300 - 10},
+        rightBottom: {x: 665 - 5, y: 330}
     },
     R1_C7: {
-        leftTop: {x: 695, y: 300},
-        rightBottom: {x: 750, y: 330}
+        leftTop: {x: 695 + 5, y: 300 - 10},
+        rightBottom: {x: 750 - 5, y: 330}
     },
     //  第二行的棋子位置        //  x+=85
     R2_C1: {
-        leftTop: {x: 240, y: 350},
-        rightBottom: {x: 285, y: 385}
+        leftTop: {x: 240 + 5, y: 350 - 10},
+        rightBottom: {x: 285 - 5, y: 385}
     },
     R2_C2: {
-        leftTop: {x: 325, y: 350},
-        rightBottom: {x: 370, y: 385}
+        leftTop: {x: 325 + 5, y: 350 - 10},
+        rightBottom: {x: 370 - 5, y: 385}
     },
     R2_C3: {
-        leftTop: {x: 410, y: 350},
-        rightBottom: {x: 455, y: 385}
+        leftTop: {x: 410 + 5, y: 350 - 10},
+        rightBottom: {x: 455 - 5, y: 385}
     },
     R2_C4: {
-        leftTop: {x: 495, y: 350},
-        rightBottom: {x: 540, y: 385}
+        leftTop: {x: 495 + 5, y: 350 - 10},
+        rightBottom: {x: 540 - 5, y: 385}
     },
     R2_C5: {
-        leftTop: {x: 575, y: 350},
-        rightBottom: {x: 625, y: 385}
+        leftTop: {x: 575 + 5, y: 350 - 10},
+        rightBottom: {x: 625 - 5, y: 385}
     },
     R2_C6: {
-        leftTop: {x: 660, y: 350},
-        rightBottom: {x: 710, y: 385}
+        leftTop: {x: 660 + 5, y: 350 - 10},
+        rightBottom: {x: 710 - 5, y: 385}
     },
     R2_C7: {
-        leftTop: {x: 745, y: 350},
-        rightBottom: {x: 795, y: 385}
+        leftTop: {x: 745 + 5, y: 350 - 10},
+        rightBottom: {x: 795 - 5, y: 385}
     },
     //  第三行棋子的位置        //  x+=90
     R3_C1: {
-        leftTop: {x: 185, y: 405},
-        rightBottom: {x: 230, y: 440}
+        leftTop: {x: 185 + 5, y: 405 - 10},
+        rightBottom: {x: 230 - 5, y: 440}
     },
     R3_C2: {
-        leftTop: {x: 275, y: 405},
-        rightBottom: {x: 320, y: 440}
+        leftTop: {x: 275 + 5, y: 405 - 10},
+        rightBottom: {x: 320 - 5, y: 440}
     },
     R3_C3: {
-        leftTop: {x: 360, y: 405},
-        rightBottom: {x: 410, y: 440}
+        leftTop: {x: 360 + 5, y: 405 - 10},
+        rightBottom: {x: 410 - 5, y: 440}
     },
     R3_C4: {
-        leftTop: {x: 445, y: 405},
-        rightBottom: {x: 495, y: 440}
+        leftTop: {x: 445 + 5, y: 405 - 10},
+        rightBottom: {x: 495 - 5, y: 440}
     },
     R3_C5: {
-        leftTop: {x: 535, y: 405},
-        rightBottom: {x: 585, y: 440}
+        leftTop: {x: 535 + 5, y: 405 - 10},
+        rightBottom: {x: 585 - 5, y: 440}
     },
     R3_C6: {
-        leftTop: {x: 620, y: 405},
-        rightBottom: {x: 675, y: 440}
+        leftTop: {x: 620 + 5, y: 405 - 10},
+        rightBottom: {x: 675 - 5, y: 440}
     },
     R3_C7: {
-        leftTop: {x: 705, y: 405},
-        rightBottom: {x: 760, y: 440}
+        leftTop: {x: 705 + 5, y: 405 - 10},
+        rightBottom: {x: 760 - 5, y: 440}
     },
     //  第四行棋子的位置        //  x+=90
     R4_C1: {
-        leftTop: {x: 215, y: 465},
-        rightBottom: {x: 265, y: 500}
+        leftTop: {x: 215 + 5, y: 465 - 10},
+        rightBottom: {x: 265 - 5, y: 500}
     },
     R4_C2: {
-        leftTop: {x: 310, y: 465},
-        rightBottom: {x: 355, y: 500}
+        leftTop: {x: 310 + 5, y: 465 - 10},
+        rightBottom: {x: 355 - 5, y: 500}
     },
     R4_C3: {
-        leftTop: {x: 395, y: 465},
-        rightBottom: {x: 450, y: 500}
+        leftTop: {x: 395 + 5, y: 465 - 10},
+        rightBottom: {x: 450 - 5, y: 500}
     },
     R4_C4: {
-        leftTop: {x: 490, y: 465},
-        rightBottom: {x: 540, y: 500}
+        leftTop: {x: 490 + 5, y: 465 - 10},
+        rightBottom: {x: 540 - 5, y: 500}
     },
     R4_C5: {
-        leftTop: {x: 580, y: 465},
-        rightBottom: {x: 635, y: 500}
+        leftTop: {x: 580 + 5, y: 465 - 10},
+        rightBottom: {x: 635 - 5, y: 500}
     },
     R4_C6: {
-        leftTop: {x: 670, y: 465},
-        rightBottom: {x: 725, y: 500}
+        leftTop: {x: 670 + 5, y: 465 - 10},
+        rightBottom: {x: 725 - 5, y: 500}
     },
     R4_C7: {
-        leftTop: {x: 760, y: 465},
-        rightBottom: {x: 815, y: 500}
+        leftTop: {x: 760 + 5, y: 465 - 10},
+        rightBottom: {x: 815 - 5, y: 500}
     },
 }
 
 //  棋子在备战席的region，用来判断是否有棋子
+//  leftTop.y 使用 -15 偏移，兼容 3D 飞行棋子的高度
+//  leftTop.x +5, rightBottom.x -5，避免宽体棋子占据邻居位置导致误判
 export const benchSlotRegion = {
     SLOT_1: {
-        leftTop: {x: 105, y: 530},
-        rightBottom: {x: 155, y: 585}
+        leftTop: {x: 105 + 5, y: 530 - 15},
+        rightBottom: {x: 155 - 5, y: 585}
     },
     SLOT_2: {
-        leftTop: {x: 190, y: 530},
-        rightBottom: {x: 245, y: 585}
+        leftTop: {x: 190 + 5, y: 530 - 15},
+        rightBottom: {x: 245 - 5, y: 585}
     },
     SLOT_3: {
-        leftTop: {x: 270, y: 530},
-        rightBottom: {x: 325, y: 585}
+        leftTop: {x: 270 + 5, y: 530 - 15},
+        rightBottom: {x: 325 - 5, y: 585}
     },
     SLOT_4: {
-        leftTop: {x: 355, y: 530},
-        rightBottom: {x: 410, y: 585}
+        leftTop: {x: 355 + 5, y: 530 - 15},
+        rightBottom: {x: 410 - 5, y: 585}
     },
     SLOT_5: {
-        leftTop: {x: 435, y: 530},
-        rightBottom: {x: 495, y: 585}
+        leftTop: {x: 435 + 5, y: 530 - 15},
+        rightBottom: {x: 495 - 5, y: 585}
     },
     SLOT_6: {
-        leftTop: {x: 520, y: 530},
-        rightBottom: {x: 580, y: 585}
+        leftTop: {x: 520 + 5, y: 530 - 15},
+        rightBottom: {x: 580 - 5, y: 585}
     },
     SLOT_7: {
-        leftTop: {x: 600, y: 530},
-        rightBottom: {x: 665, y: 585}
+        leftTop: {x: 600 + 5, y: 530 - 15},
+        rightBottom: {x: 665 - 5, y: 585}
     },
     SLOT_8: {
-        leftTop: {x: 680, y: 530},
-        rightBottom: {x: 750, y: 585}
+        leftTop: {x: 680 + 5, y: 530 - 15},
+        rightBottom: {x: 750 - 5, y: 585}
     },
     SLOT_9: {
-        leftTop: {x: 765, y: 530},
-        rightBottom: {x: 830, y: 585}
+        leftTop: {x: 765 + 5, y: 530 - 15},
+        rightBottom: {x: 830 - 5, y: 585}
     },
 }
 
@@ -458,6 +462,13 @@ const TFT_SPECIAL_CHESS = {
     "基础装备锻造器": {
         displayName: "基础装备锻造器",
         price: 8,   // what the fuck? 但数据是这么写的
+        traits: [],
+        origins: [],
+        classes: []
+    },
+    "训练假人": {
+        displayName: "训练假人",
+        price: 1,   // what the fuck? 但数据是这么写的
         traits: [],
         origins: [],
         classes: []

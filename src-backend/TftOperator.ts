@@ -26,6 +26,7 @@ import {
     detailChampionNameRegion,
     detailChampionStarRegion,
     equipmentRegion,
+    fightBoardSlotPoint,
     fightBoardSlotRegion,
     gameStageDisplayNormal,
     gameStageDisplayStageOne,
@@ -117,7 +118,7 @@ class TftOperator {
     private currentBenchState: TFTUnit[] = [];
 
     /** 空槽匹配阈值：平均像素差值大于此值视为"有棋子占用" */
-    private readonly benchEmptyDiffThreshold = 12;
+    private readonly benchEmptyDiffThreshold = 6;
 
     /** OpenCV 是否已初始化 */
     private isOpenCVReady = false;
@@ -501,6 +502,121 @@ class TftOperator {
     }
 
     /**
+     * 获取当前棋盘上的棋子信息
+     * @description 通过右键点击棋子，识别详情面板中的英雄名和星级
+     *              棋盘为 4 行 7 列，共 28 个槽位
+     * @returns 棋盘棋子数组 (空槽位为 null)
+     */
+    public async getFightBoardInfo(): Promise<(BoardUnit | null)[]> {
+        logger.info("[TftOperator] 正在扫描棋盘上的 28 个槽位...");
+        const boardUnits: (BoardUnit | null)[] = [];
+
+        // 遍历所有棋盘槽位 (R1_C1 ~ R4_C7)
+        for (const boardSlot of Object.keys(fightBoardSlotPoint)) {
+            // 先检测该槽位是否为空：对比空槽模板
+            const boardRegion = screenCapture.toAbsoluteRegion(
+                fightBoardSlotRegion[boardSlot as keyof typeof fightBoardSlotRegion]
+            );
+            const isEmpty = await this.isFightBoardSlotEmpty(boardSlot, boardRegion);
+
+            if (isEmpty) {
+                logger.debug(`[棋盘槽位 ${boardSlot}] 检测为空，跳过点击`);
+                boardUnits.push(null);
+                continue;
+            }
+
+            // 右键点击槽位显示详细信息
+            const clickPoint = fightBoardSlotPoint[boardSlot as keyof typeof fightBoardSlotPoint];
+            await mouseController.clickAt(clickPoint, Button.RIGHT);
+
+            await sleep(10); // 等待 UI 渲染完成（右键后游戏会立即刷新 UI，10ms 足够）
+
+            // 识别英雄名称
+            const nameRegion = screenCapture.toAbsoluteRegion(detailChampionNameRegion);
+            const namePng = await screenCapture.captureRegionAsPng(nameRegion);
+            const text = await ocrService.recognize(namePng, OcrWorkerType.CHESS);
+            let cleanName = text.replace(/\s/g, "");
+
+            // 尝试从 OCR 结果中找到匹配的英雄
+            let tftUnit: TFTUnit | null = TFT_16_CHAMPION_DATA[cleanName] || null;
+
+            // OCR 失败时使用模板匹配兜底
+            if (!tftUnit) {
+                logger.warn(`[棋盘槽位 ${boardSlot}] OCR 识别失败，尝试模板匹配...`);
+                const mat = await screenCapture.pngBufferToMat(namePng);
+                // 转灰度
+                if (mat.channels() > 1) {
+                    cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
+                }
+                cleanName = templateMatcher.matchChampion(mat) || "";
+                mat.delete();
+            }
+
+            tftUnit = TFT_16_CHAMPION_DATA[cleanName] || null;
+
+            if (tftUnit) {
+                // 识别星级
+                const starRegion = screenCapture.toAbsoluteRegion(detailChampionStarRegion);
+                const starPng = await screenCapture.captureRegionAsPng(starRegion, false);
+                const starMat = await screenCapture.pngBufferToMat(starPng);
+                const starLevel = templateMatcher.matchStarLevel(starMat);
+                starMat.delete();
+
+                logger.info(
+                    `[棋盘槽位 ${boardSlot}] 识别成功 -> ` +
+                    `${tftUnit.displayName} (${tftUnit.price}费-${starLevel}星)`
+                );
+
+                boardUnits.push({
+                    location: boardSlot as BoardLocation,
+                    tftUnit,
+                    starLevel,
+                    equips: [],
+                });
+            } else {
+                // 识别失败
+                this.handleRecognitionFailure("board", boardSlot, cleanName, namePng);
+                boardUnits.push(null);
+            }
+        }
+
+        logger.info(`[TftOperator] 棋盘扫描完成，识别到 ${boardUnits.filter(u => u !== null).length} 个棋子`);
+        return boardUnits;
+    }
+
+    /**
+     * 判断棋盘槽位是否为空
+     * @description 通过 templateLoader 获取空槽模板，比较当前截图的 RGBA 均值差异
+     * @param slotKey 槽位 key，例如 R1_C1
+     * @param region nut-js Region (绝对坐标)
+     */
+    private async isFightBoardSlotEmpty(slotKey: string, region: Region): Promise<boolean> {
+        if (!templateLoader.isReady()) {
+            logger.warn("[TftOperator] 模板未加载完成，空槽检测暂时跳过");
+            return false; // 无法判断时，默认继续点击以保证功能
+        }
+
+        // 从 templateLoader 获取槽位模板 (RGBA)
+        const tmpl = templateLoader.getFightBoardSlotTemplate(slotKey);
+        if (!tmpl) {
+            logger.warn(`[TftOperator] 未找到棋盘槽位模板: ${slotKey}，跳过空槽检测`);
+            return false;
+        }
+
+        // 计算与模板的差异
+        const meanDiff = await this.calculateSlotDifference(region, tmpl);
+
+        // 棋盘槽位的阈值可能需要调整，暂时复用备战席的阈值
+        const isEmpty = meanDiff < this.benchEmptyDiffThreshold;
+
+        if (!isEmpty) {
+            logger.debug(`[TftOperator] 棋盘槽位 ${slotKey} 判定为占用, meanDiff=${meanDiff.toFixed(2)}`);
+        }
+
+        return isEmpty;
+    }
+
+    /**
      * 保存备战席槽位截图到本地 (benchSlotRegion)
      * 用于采集空槽/有子样本，帮助后续做占用检测或模板生成
      */
@@ -514,7 +630,7 @@ class TftOperator {
                 const region = screenCapture.toAbsoluteRegion(regionDef);
                 // 不放大，拿 1x 原图，便于做差异/模板
                 const pngBuffer = await screenCapture.captureRegionAsPng(region, false);
-                const filename = `bench_${slotKey.toLowerCase()}_${Date.now()}.png`;
+                const filename = `${slotKey}.png`;
                 fs.writeFileSync(path.join(saveDir, filename), pngBuffer);
                 logger.info(`[TftOperator] 保存备战席槽位截图: ${slotKey} -> ${filename}`);
             } catch (e: any) {
@@ -551,24 +667,13 @@ class TftOperator {
     // ============================================================================
 
     /**
-     * 判断备战席槽位是否为空
-     * @description 通过 templateLoader 获取空槽模板，比较当前截图的 RGBA 均值差异
-     * @param slotKey 槽位 key，例如 SLOT_1
-     * @param region nut-js Region (绝对坐标)
+     * 比较截图与模板的 RGBA 均值差异，判断槽位是否为空
+     * @description 通用的空槽检测方法，供备战席和棋盘槽位复用
+     * @param region 槽位的绝对坐标区域
+     * @param tmpl 空槽模板 (RGBA 格式的 cv.Mat)
+     * @returns 平均像素差值 (RGB 三通道均值)
      */
-    private async isBenchSlotEmpty(slotKey: string, region: Region): Promise<boolean> {
-        if (!templateLoader.isReady()) {
-            logger.warn("[TftOperator] 模板未加载完成，空槽检测暂时跳过");
-            return false; // 无法判断时，默认继续点击以保证功能
-        }
-
-        // 从 templateLoader 获取槽位模板 (RGBA)
-        const tmpl = templateLoader.getBenchSlotTemplate(slotKey);
-        if (!tmpl) {
-            logger.warn(`[TftOperator] 未找到槽位模板: ${slotKey}，跳过空槽检测`);
-            return false;
-        }
-
+    private async calculateSlotDifference(region: Region, tmpl: cv.Mat): Promise<number> {
         // 截取当前槽位 1x 原图 (RGBA)
         const pngBuffer = await screenCapture.captureRegionAsPng(region, false);
         let mat = await screenCapture.pngBufferToMat(pngBuffer);
@@ -593,8 +698,34 @@ class TftOperator {
         // 取 RGB 三通道的平均值（忽略 Alpha）
         const meanDiff = (meanScalar[0] + meanScalar[1] + meanScalar[2]) / 3;
 
+        // 释放资源
         diff.delete();
         mat.delete();
+
+        return meanDiff;
+    }
+
+    /**
+     * 判断备战席槽位是否为空
+     * @description 通过 templateLoader 获取空槽模板，比较当前截图的 RGBA 均值差异
+     * @param slotKey 槽位 key，例如 SLOT_1
+     * @param region nut-js Region (绝对坐标)
+     */
+    private async isBenchSlotEmpty(slotKey: string, region: Region): Promise<boolean> {
+        if (!templateLoader.isReady()) {
+            logger.warn("[TftOperator] 模板未加载完成，空槽检测暂时跳过");
+            return false; // 无法判断时，默认继续点击以保证功能
+        }
+
+        // 从 templateLoader 获取槽位模板 (RGBA)
+        const tmpl = templateLoader.getBenchSlotTemplate(slotKey);
+        if (!tmpl) {
+            logger.warn(`[TftOperator] 未找到槽位模板: ${slotKey}，跳过空槽检测`);
+            return false;
+        }
+
+        // 计算与模板的差异
+        const meanDiff = await this.calculateSlotDifference(region, tmpl);
 
         // 平均差值大于阈值 -> 判定"有棋子占用"
         const isEmpty = meanDiff < this.benchEmptyDiffThreshold;
@@ -725,7 +856,7 @@ class TftOperator {
      * @param imageBuffer 截图 Buffer
      */
     private handleRecognitionFailure(
-        type: "shop" | "bench",
+        type: "shop" | "bench" | "board",
         slot: string | number,
         recognizedName: string | null,
         imageBuffer: Buffer

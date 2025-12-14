@@ -9,6 +9,7 @@ export enum IpcChannel {
     TFT_GET_SHOP_INFO = 'tft-get-shop-info',
     TFT_GET_EQUIP_INFO = 'tft-get-equip-info',
     TFT_GET_BENCH_INFO = 'tft-get-bench-info',
+    TFT_GET_FIGHT_BOARD_INFO = 'tft-get-fight-board-info',
     TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT = 'tft-test-save-bench-slot-snapshot',
     TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT = 'tft-test-save-fight-board-slot-snapshot',
 }

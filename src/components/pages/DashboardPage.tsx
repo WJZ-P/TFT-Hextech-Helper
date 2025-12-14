@@ -120,6 +120,10 @@ const DashboardPage = () => {
             }}>点我查看当前备战席信息
             </button>
             <button onClick={async () => {
+                console.log(await window.tft.getFightBoardInfo())
+            }}>点我查看当前棋盘信息
+            </button>
+            <button onClick={async () => {
                 console.log(await window.tft.saveBenchSlotSnapshots())
             }}>测试：保存备战席图片
             </button>
