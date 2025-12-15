@@ -25,6 +25,7 @@ import {
     benchSlotRegion,
     detailChampionNameRegion,
     detailChampionStarRegion,
+    detailEquipRegion,
     equipmentRegion,
     fightBoardSlotPoint,
     fightBoardSlotRegion,
@@ -384,6 +385,59 @@ class TftOperator {
     }
 
     /**
+     * 识别详情面板中棋子携带的装备
+     * @description 当右键点击棋子后，会在右侧详情面板显示该棋子的装备（最多 3 件）
+     *              此方法扫描详情面板的 3 个装备槽位，通过模板匹配识别装备
+     *              复用了 templateMatcher.matchEquip 方法，与装备栏识别逻辑一致
+     * @returns 识别到的装备数组（TFTEquip 类型，不包含槽位信息，空槽位会被过滤）
+     */
+    private async getDetailPanelEquips(): Promise<TFTEquip[]> {
+        const equips: TFTEquip[] = [];
+
+        // 遍历详情面板的 3 个装备槽位 (SLOT_1, SLOT_2, SLOT_3)
+        for (const [slotName, regionDef] of Object.entries(detailEquipRegion)) {
+            // 将相对坐标转换为屏幕绝对坐标
+            const targetRegion = screenCapture.toAbsoluteRegion(regionDef);
+
+            let targetMat: cv.Mat | null = null;
+
+            try {
+                // 截取装备槽位区域的图像
+                targetMat = await screenCapture.captureRegionAsMat(targetRegion);
+                
+                // 使用模板匹配识别装备（复用装备栏的识别逻辑）
+                // matchEquip 内部会将图像缩放到 24x24 以匹配模板尺寸
+                const matchResult = templateMatcher.matchEquip(targetMat);
+
+                // 过滤掉空槽位，只保留实际装备
+                if (matchResult && matchResult.name !== "空槽位") {
+                    logger.debug(
+                        `[详情面板装备 ${slotName}] 识别成功: ${matchResult.name} ` +
+                        `(相似度: ${(matchResult.confidence * 100).toFixed(1)}%)`
+                    );
+                    // 只保留 TFTEquip 的基础信息，不需要 slot/confidence 等额外字段
+                    equips.push({
+                        name: matchResult.name,
+                        englishName: matchResult.englishName,
+                        equipId: matchResult.equipId,
+                        formula: matchResult.formula,
+                    });
+                }
+                // 注意：如果槽位为空或识别失败，不添加到数组中（棋子可能没有装备或只有 1-2 件）
+            } catch (e: any) {
+                logger.warn(`[详情面板装备 ${slotName}] 扫描异常: ${e.message}`);
+            } finally {
+                // 释放 OpenCV Mat 内存，防止内存泄漏
+                if (targetMat && !targetMat.isDeleted()) {
+                    targetMat.delete();
+                }
+            }
+        }
+
+        return equips;
+    }
+
+    /**
      * 购买指定槽位的棋子
      * @param slot 槽位编号 (1-5)
      */
@@ -461,16 +515,20 @@ class TftOperator {
                 const starLevel = templateMatcher.matchStarLevel(starMat);
                 starMat.delete();
 
+                // 识别棋子携带的装备（详情面板右键后已显示，直接读取即可）
+                const equips = await this.getDetailPanelEquips();
+
                 logger.info(
                     `[备战席槽位 ${benchSlot.slice(-1)}] 识别成功 -> ` +
-                    `${tftUnit.displayName} (${tftUnit.price}费-${starLevel}星)`
+                    `${tftUnit.displayName} (${tftUnit.price}费-${starLevel}星)` +
+                    (equips.length > 0 ? ` [装备: ${equips.map(e => e.name).join(', ')}]` : '')
                 );
 
                 benchUnits.push({
                     location: benchSlot as BenchLocation,
                     tftUnit,
                     starLevel,
-                    equips: [],
+                    equips,
                 });
             } else {
                 // 英雄识别失败，尝试检测是否为基础装备锻造器
@@ -562,16 +620,20 @@ class TftOperator {
                 const starLevel = templateMatcher.matchStarLevel(starMat);
                 starMat.delete();
 
+                // 识别棋子携带的装备（详情面板右键后已显示，直接读取即可）
+                const equips = await this.getDetailPanelEquips();
+
                 logger.info(
                     `[棋盘槽位 ${boardSlot}] 识别成功 -> ` +
-                    `${tftUnit.displayName} (${tftUnit.price}费-${starLevel}星)`
+                    `${tftUnit.displayName} (${tftUnit.price}费-${starLevel}星)` +
+                    (equips.length > 0 ? ` [装备: ${equips.map(e => e.name).join(', ')}]` : '')
                 );
 
                 boardUnits.push({
                     location: boardSlot as BoardLocation,
                     tftUnit,
                     starLevel,
-                    equips: [],
+                    equips,
                 });
             } else {
                 // 识别失败

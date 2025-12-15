@@ -5699,6 +5699,20 @@ const detailChampionNameRegion = {
   leftTop: { x: 870, y: 226 },
   rightBottom: { x: 978, y: 244 }
 };
+const detailEquipRegion = {
+  SLOT_1: {
+    leftTop: { x: 881, y: 347 },
+    rightBottom: { x: 919, y: 385 }
+  },
+  SLOT_2: {
+    leftTop: { x: 927, y: 347 },
+    rightBottom: { x: 965, y: 385 }
+  },
+  SLOT_3: {
+    leftTop: { x: 973, y: 347 },
+    rightBottom: { x: 1011, y: 385 }
+  }
+};
 const itemForgeTooltipRegion = {
   leftTop: { x: 56, y: 7 },
   rightBottom: { x: 176, y: 27 }
@@ -9675,57 +9689,68 @@ class TemplateMatcher {
   /**
    * 匹配装备模板
    * @description 按分类优先级顺序匹配，找到即返回
+   *              会将输入图像缩放到 24x24 以匹配模板尺寸
    * @param targetMat 目标图像 (需要是 RGB 3 通道)
    * @returns 匹配到的装备信息，未匹配返回 null
    */
   matchEquip(targetMat) {
-    if (this.isEmptySlot(targetMat)) {
-      return {
-        name: "空槽位",
-        confidence: 1,
-        slot: "",
-        category: "empty"
-      };
-    }
-    const equipTemplates = templateLoader.getEquipTemplates();
-    if (equipTemplates.size === 0) {
-      logger.warn("[TemplateMatcher] 装备模板为空，跳过匹配");
-      return null;
-    }
-    const mask = new cv.Mat();
-    const resultMat = new cv.Mat();
+    const TEMPLATE_SIZE = 24;
+    let resizedMat = null;
     try {
-      for (const category of EQUIP_CATEGORY_PRIORITY) {
-        const categoryMap = equipTemplates.get(category);
-        if (!categoryMap || categoryMap.size === 0) continue;
-        for (const [templateName, templateMat] of categoryMap) {
-          if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) {
-            continue;
-          }
-          cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
-          const result = cv.minMaxLoc(resultMat, mask);
-          if (result.maxVal >= MATCH_THRESHOLDS.EQUIP) {
-            const equipData = Object.values(TFT_16_EQUIP_DATA).find(
-              (e) => e.englishName.toLowerCase() === templateName.toLowerCase()
-            );
-            if (equipData) {
-              return {
-                ...equipData,
-                slot: "",
-                confidence: result.maxVal,
-                category
-              };
+      resizedMat = new cv.Mat();
+      cv.resize(targetMat, resizedMat, new cv.Size(TEMPLATE_SIZE, TEMPLATE_SIZE), 0, 0, cv.INTER_AREA);
+      if (this.isEmptySlot(resizedMat)) {
+        return {
+          name: "空槽位",
+          confidence: 1,
+          slot: "",
+          category: "empty"
+        };
+      }
+      const equipTemplates = templateLoader.getEquipTemplates();
+      if (equipTemplates.size === 0) {
+        logger.warn("[TemplateMatcher] 装备模板为空，跳过匹配");
+        return null;
+      }
+      const mask = new cv.Mat();
+      const resultMat = new cv.Mat();
+      try {
+        for (const category of EQUIP_CATEGORY_PRIORITY) {
+          const categoryMap = equipTemplates.get(category);
+          if (!categoryMap || categoryMap.size === 0) continue;
+          for (const [templateName, templateMat] of categoryMap) {
+            if (templateMat.rows > resizedMat.rows || templateMat.cols > resizedMat.cols) {
+              continue;
+            }
+            cv.matchTemplate(resizedMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
+            const result = cv.minMaxLoc(resultMat, mask);
+            if (result.maxVal >= MATCH_THRESHOLDS.EQUIP) {
+              const equipData = Object.values(TFT_16_EQUIP_DATA).find(
+                (e) => e.englishName.toLowerCase() === templateName.toLowerCase()
+              );
+              if (equipData) {
+                return {
+                  ...equipData,
+                  slot: "",
+                  confidence: result.maxVal,
+                  category
+                };
+              }
             }
           }
         }
+        return null;
+      } finally {
+        mask.delete();
+        resultMat.delete();
       }
-      return null;
     } catch (e) {
       logger.error(`[TemplateMatcher] 装备匹配出错: ${e}`);
       return null;
     } finally {
-      mask.delete();
-      resultMat.delete();
+      if (resizedMat && !resizedMat.isDeleted()) {
+        resizedMat.delete();
+      }
     }
   }
   /**
@@ -10373,6 +10398,42 @@ class TftOperator {
     return resultEquips;
   }
   /**
+   * 识别详情面板中棋子携带的装备
+   * @description 当右键点击棋子后，会在右侧详情面板显示该棋子的装备（最多 3 件）
+   *              此方法扫描详情面板的 3 个装备槽位，通过模板匹配识别装备
+   *              复用了 templateMatcher.matchEquip 方法，与装备栏识别逻辑一致
+   * @returns 识别到的装备数组（TFTEquip 类型，不包含槽位信息，空槽位会被过滤）
+   */
+  async getDetailPanelEquips() {
+    const equips = [];
+    for (const [slotName, regionDef] of Object.entries(detailEquipRegion)) {
+      const targetRegion = screenCapture.toAbsoluteRegion(regionDef);
+      let targetMat = null;
+      try {
+        targetMat = await screenCapture.captureRegionAsMat(targetRegion);
+        const matchResult = templateMatcher.matchEquip(targetMat);
+        if (matchResult && matchResult.name !== "空槽位") {
+          logger.debug(
+            `[详情面板装备 ${slotName}] 识别成功: ${matchResult.name} (相似度: ${(matchResult.confidence * 100).toFixed(1)}%)`
+          );
+          equips.push({
+            name: matchResult.name,
+            englishName: matchResult.englishName,
+            equipId: matchResult.equipId,
+            formula: matchResult.formula
+          });
+        }
+      } catch (e) {
+        logger.warn(`[详情面板装备 ${slotName}] 扫描异常: ${e.message}`);
+      } finally {
+        if (targetMat && !targetMat.isDeleted()) {
+          targetMat.delete();
+        }
+      }
+    }
+    return equips;
+  }
+  /**
    * 购买指定槽位的棋子
    * @param slot 槽位编号 (1-5)
    */
@@ -10424,14 +10485,15 @@ class TftOperator {
         const starMat = await screenCapture.pngBufferToMat(starPng);
         const starLevel = templateMatcher.matchStarLevel(starMat);
         starMat.delete();
+        const equips = await this.getDetailPanelEquips();
         logger.info(
-          `[备战席槽位 ${benchSlot.slice(-1)}] 识别成功 -> ${tftUnit.displayName} (${tftUnit.price}费-${starLevel}星)`
+          `[备战席槽位 ${benchSlot.slice(-1)}] 识别成功 -> ${tftUnit.displayName} (${tftUnit.price}费-${starLevel}星)` + (equips.length > 0 ? ` [装备: ${equips.map((e) => e.name).join(", ")}]` : "")
         );
         benchUnits.push({
           location: benchSlot,
           tftUnit,
           starLevel,
-          equips: []
+          equips
         });
       } else {
         const clickPoint = benchSlotPoints[benchSlot];
@@ -10499,14 +10561,15 @@ class TftOperator {
         const starMat = await screenCapture.pngBufferToMat(starPng);
         const starLevel = templateMatcher.matchStarLevel(starMat);
         starMat.delete();
+        const equips = await this.getDetailPanelEquips();
         logger.info(
-          `[棋盘槽位 ${boardSlot}] 识别成功 -> ${tftUnit.displayName} (${tftUnit.price}费-${starLevel}星)`
+          `[棋盘槽位 ${boardSlot}] 识别成功 -> ${tftUnit.displayName} (${tftUnit.price}费-${starLevel}星)` + (equips.length > 0 ? ` [装备: ${equips.map((e) => e.name).join(", ")}]` : "")
         );
         boardUnits.push({
           location: boardSlot,
           tftUnit,
           starLevel,
-          equips: []
+          equips
         });
       } else {
         this.handleRecognitionFailure("board", boardSlot, cleanName, namePng);
@@ -11058,6 +11121,7 @@ class StartState {
     signal.throwIfAborted();
     logger.info("[StartState] 正在初始化...");
     await this.backupGameConfig();
+    await this.applyTFTConfig();
     const isInGame = await this.checkIfInGame();
     if (isInGame) {
       logger.info("[StartState] 检测到已在游戏中，直接进入游戏状态");
@@ -11077,6 +11141,27 @@ class StartState {
       logger.info("[StartState] 游戏配置备份完成");
     } catch (error) {
       logger.warn("[StartState] 游戏配置备份失败，继续执行");
+      if (error instanceof Error) {
+        logger.debug(error.message);
+      }
+    }
+  }
+  /**
+   * 应用 TFT 专用配置
+   * @description 将预设的 TFT 配置（分辨率 1024x768、低画质等）应用到游戏
+   *              这样可以确保截图识别的坐标准确，同时降低系统资源占用
+   */
+  async applyTFTConfig() {
+    try {
+      logger.info("[StartState] 正在应用 TFT 专用配置...");
+      const success = await GameConfigHelper.applyTFTConfig();
+      if (success) {
+        logger.info("[StartState] TFT 专用配置应用成功");
+      } else {
+        logger.warn("[StartState] TFT 专用配置应用失败，将使用当前游戏设置");
+      }
+    } catch (error) {
+      logger.warn("[StartState] TFT 专用配置应用异常，继续执行");
       if (error instanceof Error) {
         logger.debug(error.message);
       }

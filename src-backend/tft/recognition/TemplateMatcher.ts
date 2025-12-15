@@ -86,69 +86,87 @@ export class TemplateMatcher {
     /**
      * 匹配装备模板
      * @description 按分类优先级顺序匹配，找到即返回
+     *              会将输入图像缩放到 24x24 以匹配模板尺寸
      * @param targetMat 目标图像 (需要是 RGB 3 通道)
      * @returns 匹配到的装备信息，未匹配返回 null
      */
     public matchEquip(targetMat: cv.Mat): IdentifiedEquip | null {
-        // 快速空槽位检测
-        if (this.isEmptySlot(targetMat)) {
-            return {
-                name: "空槽位",
-                confidence: 1,
-                slot: "",
-                category: "empty",
-            } as IdentifiedEquip;
-        }
-
-        const equipTemplates = templateLoader.getEquipTemplates();
-        if (equipTemplates.size === 0) {
-            logger.warn("[TemplateMatcher] 装备模板为空，跳过匹配");
-            return null;
-        }
-
-        const mask = new cv.Mat();
-        const resultMat = new cv.Mat();
+        // 模板统一尺寸为 24x24，需要将输入图像也缩放到相同尺寸
+        const TEMPLATE_SIZE = 24;
+        let resizedMat: cv.Mat | null = null;
 
         try {
-            // 按优先级顺序遍历各分类
-            for (const category of EQUIP_CATEGORY_PRIORITY) {
-                const categoryMap = equipTemplates.get(category);
-                if (!categoryMap || categoryMap.size === 0) continue;
+            // 缩放输入图像到 24x24，与模板尺寸一致
+            // 使用 INTER_AREA 插值算法，适合缩小图像，能保持更好的细节
+            resizedMat = new cv.Mat();
+            cv.resize(targetMat, resizedMat, new cv.Size(TEMPLATE_SIZE, TEMPLATE_SIZE), 0, 0, cv.INTER_AREA);
 
-                for (const [templateName, templateMat] of categoryMap) {
-                    // 尺寸检查：模板必须小于等于目标
-                    if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) {
-                        continue;
-                    }
+            // 快速空槽位检测（使用缩放后的图像）
+            if (this.isEmptySlot(resizedMat)) {
+                return {
+                    name: "空槽位",
+                    confidence: 1,
+                    slot: "",
+                    category: "empty",
+                } as IdentifiedEquip;
+            }
 
-                    cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
-                    const result = cv.minMaxLoc(resultMat, mask);
+            const equipTemplates = templateLoader.getEquipTemplates();
+            if (equipTemplates.size === 0) {
+                logger.warn("[TemplateMatcher] 装备模板为空，跳过匹配");
+                return null;
+            }
 
-                    if (result.maxVal >= MATCH_THRESHOLDS.EQUIP) {
-                        // 从数据集中查找装备信息
-                        const equipData = Object.values(TFT_16_EQUIP_DATA).find(
-                            (e) => e.englishName.toLowerCase() === templateName.toLowerCase()
-                        );
+            const mask = new cv.Mat();
+            const resultMat = new cv.Mat();
 
-                        if (equipData) {
-                            return {
-                                ...equipData,
-                                slot: "",
-                                confidence: result.maxVal,
-                                category,
-                            };
+            try {
+                // 按优先级顺序遍历各分类
+                for (const category of EQUIP_CATEGORY_PRIORITY) {
+                    const categoryMap = equipTemplates.get(category);
+                    if (!categoryMap || categoryMap.size === 0) continue;
+
+                    for (const [templateName, templateMat] of categoryMap) {
+                        // 由于已经统一缩放到 24x24，尺寸应该完全匹配
+                        // 但为了安全起见，仍然保留检查
+                        if (templateMat.rows > resizedMat.rows || templateMat.cols > resizedMat.cols) {
+                            continue;
+                        }
+
+                        cv.matchTemplate(resizedMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
+                        const result = cv.minMaxLoc(resultMat, mask);
+
+                        if (result.maxVal >= MATCH_THRESHOLDS.EQUIP) {
+                            // 从数据集中查找装备信息
+                            const equipData = Object.values(TFT_16_EQUIP_DATA).find(
+                                (e) => e.englishName.toLowerCase() === templateName.toLowerCase()
+                            );
+
+                            if (equipData) {
+                                return {
+                                    ...equipData,
+                                    slot: "",
+                                    confidence: result.maxVal,
+                                    category,
+                                };
+                            }
                         }
                     }
                 }
-            }
 
-            return null;
+                return null;
+            } finally {
+                mask.delete();
+                resultMat.delete();
+            }
         } catch (e) {
             logger.error(`[TemplateMatcher] 装备匹配出错: ${e}`);
             return null;
         } finally {
-            mask.delete();
-            resultMat.delete();
+            // 释放缩放后的图像内存
+            if (resizedMat && !resizedMat.isDeleted()) {
+                resizedMat.delete();
+            }
         }
     }
 

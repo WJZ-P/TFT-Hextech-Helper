@@ -32,6 +32,9 @@ export class StartState implements IState {
         // 备份当前游戏配置
         await this.backupGameConfig();
 
+        // 应用 TFT 专用配置（分辨率、画质等）
+        await this.applyTFTConfig();
+
         // 检查是否已经在游戏中
         const isInGame = await this.checkIfInGame();
 
@@ -55,6 +58,28 @@ export class StartState implements IState {
             logger.info("[StartState] 游戏配置备份完成");
         } catch (error) {
             logger.warn("[StartState] 游戏配置备份失败，继续执行");
+            if (error instanceof Error) {
+                logger.debug(error.message);
+            }
+        }
+    }
+
+    /**
+     * 应用 TFT 专用配置
+     * @description 将预设的 TFT 配置（分辨率 1024x768、低画质等）应用到游戏
+     *              这样可以确保截图识别的坐标准确，同时降低系统资源占用
+     */
+    private async applyTFTConfig(): Promise<void> {
+        try {
+            logger.info("[StartState] 正在应用 TFT 专用配置...");
+            const success = await GameConfigHelper.applyTFTConfig();
+            if (success) {
+                logger.info("[StartState] TFT 专用配置应用成功");
+            } else {
+                logger.warn("[StartState] TFT 专用配置应用失败，将使用当前游戏设置");
+            }
+        } catch (error) {
+            logger.warn("[StartState] TFT 专用配置应用异常，继续执行");
             if (error instanceof Error) {
                 logger.debug(error.message);
             }

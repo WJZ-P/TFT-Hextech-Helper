@@ -59,6 +59,21 @@ export const detailChampionNameRegion = {
     leftTop: {x: 870, y: 226},
     rightBottom: {x: 978, y: 244},
 }
+export const detailEquipRegion = {
+    SLOT_1: {
+        leftTop: {x: 881, y: 347},
+        rightBottom: {x: 919, y: 385},
+    },
+    SLOT_2: {
+        leftTop: {x: 927, y: 347},
+        rightBottom: {x: 965, y: 385},
+    },
+    SLOT_3: {
+        leftTop: {x: 973, y: 347},
+        rightBottom: {x: 1011, y: 385},
+    },
+}
+
 //  基础装备锻造器浮窗名称区域（槽位 1-5 使用）
 //  注意：X 和 Y 都是相对于鼠标右键点击位置的偏移量，不是屏幕绝对坐标！
 //  右键基础装备锻造器时，会以点击位置为左上角起点，在右下方弹出浮窗
