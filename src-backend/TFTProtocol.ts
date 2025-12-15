@@ -17,7 +17,7 @@ export enum TFTMode {
     CLASSIC = 'CLASSIC',    //  经典模式，包括匹配和排位。
     NORMAL = 'NORMAL',      //  匹配模式
     RANK = 'RANK',          //  排位模式
-    CLOCKWORK_TRAILS,       //  PVE，发条鸟的试炼。
+    CLOCKWORK_TRAILS = 'CLOCKWORK_TRAILS',       //  PVE，发条鸟的试炼。
 }
 
 
