@@ -5,55 +5,71 @@
     "champions": [
       {
         "name": "贝蕾亚",
-        "position": "R4_C5"
+        "isCore": false,
+        "position": "R4_C5",
+        "starTarget": 2
       },
       {
         "name": "崔斯特",
-        "position": "R1_C7"
+        "isCore": false,
+        "position": "R1_C7",
+        "starTarget": 3
       },
       {
         "name": "德莱文",
-        "position": "R1_C1",
+        "isCore": true,
         "items": [
           "鬼索的狂暴之刃",
           "巨人杀手",
           "海妖之怒"
-        ]
+        ],
+        "position": "R1_C1",
+        "starTarget": 3
       },
       {
         "name": "普朗克",
-        "position": "R4_C3",
+        "isCore": true,
         "items": [
           "巨人杀手",
           "水银",
           "正义之手"
-        ]
+        ],
+        "position": "R4_C3",
+        "starTarget": 3
       },
       {
         "name": "诺提勒斯",
-        "position": "R4_C2",
+        "isCore": true,
         "items": [
           "日炎斗篷",
           "薄暮法袍",
           "狂徒铠甲"
-        ]
+        ],
+        "position": "R4_C2",
+        "starTarget": 3
       },
       {
         "name": "安蓓萨",
-        "position": "R4_C4",
+        "isCore": false,
         "items": [
           "水银",
           "斯特拉克的挑战护手",
           "正义之手"
-        ]
+        ],
+        "position": "R4_C4",
+        "starTarget": 2
       },
       {
         "name": "布隆",
-        "position": "R4_C6"
+        "isCore": false,
+        "position": "R4_C6",
+        "starTarget": 2
       },
       {
         "name": "费德提克",
-        "position": "R3_C3"
+        "isCore": false,
+        "position": "R3_C3",
+        "starTarget": 2
       }
     ],
     "traits": [
@@ -109,18 +125,22 @@
       "champions": [
         {
           "name": "俄洛伊",
+          "isCore": false,
           "position": "R4_C4"
         },
         {
           "name": "慎",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "格雷福斯",
+          "isCore": false,
           "position": "R3_C3"
         },
         {
           "name": "崔斯特",
+          "isCore": false,
           "position": "R1_C1"
         }
       ],
@@ -156,22 +176,27 @@
       "champions": [
         {
           "name": "俄洛伊",
+          "isCore": false,
           "position": "R4_C5"
         },
         {
           "name": "格雷福斯",
+          "isCore": false,
           "position": "R3_C3"
         },
         {
           "name": "崔斯特",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "普朗克",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "诺提勒斯",
+          "isCore": false,
           "position": "R4_C4"
         }
       ],
@@ -222,26 +247,32 @@
       "champions": [
         {
           "name": "贝蕾亚",
+          "isCore": false,
           "position": "R4_C2"
         },
         {
           "name": "俄洛伊",
+          "isCore": false,
           "position": "R4_C5"
         },
         {
           "name": "格雷福斯",
+          "isCore": false,
           "position": "R3_C3"
         },
         {
           "name": "崔斯特",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "普朗克",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "诺提勒斯",
+          "isCore": false,
           "position": "R4_C4"
         }
       ],
@@ -297,30 +328,37 @@
       "champions": [
         {
           "name": "贝蕾亚",
+          "isCore": false,
           "position": "R4_C1"
         },
         {
           "name": "崔斯特",
+          "isCore": false,
           "position": "R1_C7"
         },
         {
           "name": "德莱文",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "普朗克",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "洛里斯",
+          "isCore": false,
           "position": "R4_C5"
         },
         {
           "name": "诺提勒斯",
+          "isCore": false,
           "position": "R4_C4"
         },
         {
           "name": "安蓓萨",
+          "isCore": false,
           "position": "R4_C2"
         }
       ],
@@ -371,34 +409,42 @@
       "champions": [
         {
           "name": "贝蕾亚",
+          "isCore": false,
           "position": "R4_C1"
         },
         {
           "name": "崔斯特",
+          "isCore": false,
           "position": "R1_C7"
         },
         {
           "name": "德莱文",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "普朗克",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "诺提勒斯",
+          "isCore": false,
           "position": "R4_C4"
         },
         {
           "name": "安蓓萨",
+          "isCore": false,
           "position": "R4_C2"
         },
         {
           "name": "布隆",
+          "isCore": false,
           "position": "R4_C6"
         },
         {
           "name": "斯维因",
+          "isCore": false,
           "position": "R4_C5"
         }
       ],
@@ -454,38 +500,47 @@
       "champions": [
         {
           "name": "贝蕾亚",
+          "isCore": false,
           "position": "R4_C1"
         },
         {
           "name": "崔斯特",
+          "isCore": false,
           "position": "R1_C7"
         },
         {
           "name": "德莱文",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "普朗克",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "诺提勒斯",
+          "isCore": false,
           "position": "R4_C4"
         },
         {
           "name": "安蓓萨",
+          "isCore": false,
           "position": "R4_C2"
         },
         {
           "name": "布隆",
+          "isCore": false,
           "position": "R4_C6"
         },
         {
           "name": "斯维因",
+          "isCore": false,
           "position": "R4_C5"
         },
         {
           "name": "梅尔",
+          "isCore": false,
           "position": "R1_C4"
         }
       ],
@@ -546,42 +601,52 @@
       "champions": [
         {
           "name": "贝蕾亚",
+          "isCore": false,
           "position": "R4_C2"
         },
         {
           "name": "崔斯特",
+          "isCore": false,
           "position": "R1_C2"
         },
         {
           "name": "德莱文",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "普朗克",
+          "isCore": false,
           "position": "R4_C4"
         },
         {
           "name": "诺提勒斯",
+          "isCore": false,
           "position": "R4_C5"
         },
         {
           "name": "安蓓萨",
+          "isCore": false,
           "position": "R3_C3"
         },
         {
           "name": "布隆",
+          "isCore": false,
           "position": "R4_C6"
         },
         {
           "name": "斯维因",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "费德提克",
+          "isCore": false,
           "position": "R3_C4"
         },
         {
           "name": "梅尔",
+          "isCore": false,
           "position": "R1_C7"
         }
       ],

@@ -5,59 +5,77 @@
     "champions": [
       {
         "name": "阿狸",
-        "position": "R1_C5"
+        "isCore": false,
+        "position": "R1_C5",
+        "starTarget": 2
       },
       {
         "name": "斯维因",
-        "position": "R4_C4"
+        "isCore": false,
+        "position": "R4_C4",
+        "starTarget": 2
       },
       {
         "name": "塔里克",
-        "position": "R4_C5",
+        "isCore": false,
         "items": [
           "石像鬼石板甲",
           "日炎斗篷",
           "振奋盔甲"
-        ]
+        ],
+        "position": "R4_C5",
+        "starTarget": 2
       },
       {
         "name": "芸阿娜",
-        "position": "R1_C7"
+        "isCore": false,
+        "position": "R1_C7",
+        "starTarget": 2
       },
       {
         "name": "费德提克",
-        "position": "R3_C4"
+        "isCore": false,
+        "position": "R3_C4",
+        "starTarget": 2
       },
       {
         "name": "千珏",
-        "position": "R1_C3",
+        "isCore": true,
         "items": [
           "鬼索的狂暴之刃",
           "无尽之刃",
           "海妖之怒"
-        ]
+        ],
+        "position": "R1_C3",
+        "starTarget": 2
       },
       {
         "name": "卢锡安与赛娜",
-        "position": "R1_C1",
+        "isCore": true,
         "items": [
           "无尽之刃",
           "最后的轻语",
           "朔极之矛"
-        ]
+        ],
+        "position": "R1_C1",
+        "starTarget": 2
       },
       {
         "name": "瑟提",
-        "position": "R4_C3",
+        "isCore": true,
         "items": [
           "海克斯科技枪刃",
           "珠光护手",
           "强袭者的链枷"
-        ]
+        ],
+        "position": "R4_C3",
+        "starTarget": 2
       },
       {
         "name": "希瓦娜",
-        "position": "R3_C3"
+        "isCore": false,
+        "position": "R3_C3",
+        "starTarget": 2
       }
     ],
     "traits": [
@@ -133,18 +151,22 @@
       "champions": [
         {
           "name": "烬",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "慎",
+          "isCore": false,
           "position": "R4_C5"
         },
         {
           "name": "赵信",
+          "isCore": false,
           "position": "R4_C4"
         },
         {
           "name": "亚索",
+          "isCore": false,
           "position": "R4_C3"
         }
       ],
@@ -185,22 +207,27 @@
       "champions": [
         {
           "name": "俄洛伊",
+          "isCore": false,
           "position": "R4_C5"
         },
         {
           "name": "格雷福斯",
+          "isCore": false,
           "position": "R3_C3"
         },
         {
           "name": "崔斯特",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "普朗克",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "诺提勒斯",
+          "isCore": false,
           "position": "R4_C4"
         }
       ],
@@ -251,26 +278,32 @@
       "champions": [
         {
           "name": "璐璐",
+          "isCore": false,
           "position": "R1_C3"
         },
         {
           "name": "兰博",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "波比",
+          "isCore": false,
           "position": "R4_C2"
         },
         {
           "name": "提莫",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "崔丝塔娜",
+          "isCore": false,
           "position": "R1_C2"
         },
         {
           "name": "凯南",
+          "isCore": false,
           "position": "R4_C4"
         }
       ],
@@ -321,30 +354,37 @@
       "champions": [
         {
           "name": "烬",
+          "isCore": false,
           "position": "R1_C2"
         },
         {
           "name": "慎",
+          "isCore": false,
           "position": "R4_C5"
         },
         {
           "name": "赵信",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "亚索",
+          "isCore": false,
           "position": "R4_C2"
         },
         {
           "name": "阿狸",
+          "isCore": false,
           "position": "R1_C3"
         },
         {
           "name": "凯南",
+          "isCore": false,
           "position": "R4_C4"
         },
         {
           "name": "芸阿娜",
+          "isCore": false,
           "position": "R1_C1"
         }
       ],
@@ -405,34 +445,42 @@
       "champions": [
         {
           "name": "璐璐",
+          "isCore": false,
           "position": "R1_C3"
         },
         {
           "name": "兰博",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "波比",
+          "isCore": false,
           "position": "R4_C2"
         },
         {
           "name": "提莫",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "崔丝塔娜",
+          "isCore": false,
           "position": "R1_C2"
         },
         {
           "name": "凯南",
+          "isCore": false,
           "position": "R4_C4"
         },
         {
           "name": "可酷伯与悠米",
+          "isCore": false,
           "position": "R4_C5"
         },
         {
           "name": "菲兹",
+          "isCore": false,
           "position": "R4_C6"
         }
       ],
@@ -498,38 +546,47 @@
       "champions": [
         {
           "name": "阿狸",
+          "isCore": false,
           "position": "R1_C5"
         },
         {
           "name": "斯维因",
+          "isCore": false,
           "position": "R4_C4"
         },
         {
           "name": "塔里克",
+          "isCore": false,
           "position": "R4_C5"
         },
         {
           "name": "芸阿娜",
+          "isCore": false,
           "position": "R1_C7"
         },
         {
           "name": "费德提克",
+          "isCore": false,
           "position": "R3_C4"
         },
         {
           "name": "千珏",
+          "isCore": false,
           "position": "R1_C3"
         },
         {
           "name": "卢锡安与赛娜",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "瑟提",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "希瓦娜",
+          "isCore": false,
           "position": "R3_C3"
         }
       ],
@@ -605,42 +662,52 @@
       "champions": [
         {
           "name": "阿狸",
+          "isCore": false,
           "position": "R1_C3"
         },
         {
           "name": "斯维因",
+          "isCore": false,
           "position": "R4_C4"
         },
         {
           "name": "塔里克",
+          "isCore": false,
           "position": "R4_C5"
         },
         {
           "name": "芸阿娜",
+          "isCore": false,
           "position": "R1_C7"
         },
         {
           "name": "费德提克",
+          "isCore": false,
           "position": "R3_C4"
         },
         {
           "name": "千珏",
+          "isCore": false,
           "position": "R1_C4"
         },
         {
           "name": "卢锡安与赛娜",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "奥恩",
+          "isCore": false,
           "position": "R2_C1"
         },
         {
           "name": "瑟提",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "希瓦娜",
+          "isCore": false,
           "position": "R3_C3"
         }
       ],

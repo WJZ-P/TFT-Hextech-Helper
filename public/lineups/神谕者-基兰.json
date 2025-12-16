@@ -5,59 +5,77 @@
     "champions": [
       {
         "name": "可酷伯与悠米",
-        "position": "R4_C7"
+        "isCore": false,
+        "position": "R4_C7",
+        "starTarget": 2
       },
       {
         "name": "米利欧",
-        "position": "R1_C7"
+        "isCore": false,
+        "position": "R1_C7",
+        "starTarget": 2
       },
       {
         "name": "布隆",
-        "position": "R4_C2",
+        "isCore": true,
         "items": [
           "石像鬼石板甲",
           "振奋盔甲",
           "狂徒铠甲"
-        ]
+        ],
+        "position": "R4_C2",
+        "starTarget": 2
       },
       {
         "name": "丽桑卓",
-        "position": "R1_C3",
+        "isCore": false,
         "items": [
           "珠光护手",
           "纳什之牙",
           "朔极之矛"
-        ]
+        ],
+        "position": "R1_C3",
+        "starTarget": 2
       },
       {
         "name": "斯卡纳",
-        "position": "R3_C3"
+        "isCore": false,
+        "position": "R3_C3",
+        "starTarget": 2
       },
       {
         "name": "奥恩",
-        "position": "R4_C5"
+        "isCore": false,
+        "position": "R4_C5",
+        "starTarget": 2
       },
       {
         "name": "沃利贝尔",
-        "position": "R3_C1"
+        "isCore": false,
+        "position": "R3_C1",
+        "starTarget": 2
       },
       {
         "name": "基兰",
-        "position": "R1_C1",
+        "isCore": true,
         "items": [
           "蓝霸符",
           "莫雷洛秘典",
           "虚空之杖"
-        ]
+        ],
+        "position": "R1_C1",
+        "starTarget": 2
       },
       {
         "name": "可酷伯与悠米",
-        "position": "R4_C3",
+        "isCore": true,
         "items": [
           "饮血剑",
           "无尽之刃",
           "正义之手"
-        ]
+        ],
+        "position": "R4_C3",
+        "starTarget": 2
       }
     ],
     "traits": [
@@ -108,18 +126,22 @@
       "champions": [
         {
           "name": "奇亚娜",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "巴德",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "妮蔻",
+          "isCore": false,
           "position": "R4_C4"
         },
         {
           "name": "米利欧",
+          "isCore": false,
           "position": "R1_C2"
         }
       ],
@@ -160,22 +182,27 @@
       "champions": [
         {
           "name": "艾尼维亚",
+          "isCore": false,
           "position": "R1_C2"
         },
         {
           "name": "奇亚娜",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "妮蔻",
+          "isCore": false,
           "position": "R4_C4"
         },
         {
           "name": "蔚",
+          "isCore": false,
           "position": "R4_C5"
         },
         {
           "name": "米利欧",
+          "isCore": false,
           "position": "R1_C1"
         }
       ],
@@ -226,26 +253,32 @@
       "champions": [
         {
           "name": "艾尼维亚",
+          "isCore": false,
           "position": "R1_C3"
         },
         {
           "name": "奇亚娜",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "巴德",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "妮蔻",
+          "isCore": false,
           "position": "R4_C4"
         },
         {
           "name": "蔚",
+          "isCore": false,
           "position": "R4_C2"
         },
         {
           "name": "米利欧",
+          "isCore": false,
           "position": "R1_C2"
         }
       ],
@@ -301,30 +334,37 @@
       "champions": [
         {
           "name": "璐璐",
+          "isCore": false,
           "position": "R1_C7"
         },
         {
           "name": "兰博",
+          "isCore": false,
           "position": "R4_C6"
         },
         {
           "name": "妮蔻",
+          "isCore": false,
           "position": "R4_C4"
         },
         {
           "name": "提莫",
+          "isCore": false,
           "position": "R1_C2"
         },
         {
           "name": "可酷伯与悠米",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "米利欧",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "斯卡纳",
+          "isCore": false,
           "position": "R4_C5"
         }
       ],
@@ -370,34 +410,42 @@
       "champions": [
         {
           "name": "艾尼维亚",
+          "isCore": false,
           "position": "R1_C4"
         },
         {
           "name": "奇亚娜",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "巴德",
+          "isCore": false,
           "position": "R1_C7"
         },
         {
           "name": "妮蔻",
+          "isCore": false,
           "position": "R4_C4"
         },
         {
           "name": "可酷伯与悠米",
+          "isCore": false,
           "position": "R2_C3"
         },
         {
           "name": "米利欧",
+          "isCore": false,
           "position": "R1_C3"
         },
         {
           "name": "布隆",
+          "isCore": false,
           "position": "R4_C5"
         },
         {
           "name": "丽桑卓",
+          "isCore": false,
           "position": "R1_C1"
         }
       ],
@@ -458,38 +506,47 @@
       "champions": [
         {
           "name": "可酷伯与悠米",
+          "isCore": false,
           "position": "R4_C7"
         },
         {
           "name": "米利欧",
+          "isCore": false,
           "position": "R1_C7"
         },
         {
           "name": "布隆",
+          "isCore": false,
           "position": "R4_C2"
         },
         {
           "name": "丽桑卓",
+          "isCore": false,
           "position": "R1_C3"
         },
         {
           "name": "斯卡纳",
+          "isCore": false,
           "position": "R3_C3"
         },
         {
           "name": "奥恩",
+          "isCore": false,
           "position": "R4_C5"
         },
         {
           "name": "沃利贝尔",
+          "isCore": false,
           "position": "R3_C1"
         },
         {
           "name": "基兰",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "可酷伯与悠米",
+          "isCore": false,
           "position": "R4_C3"
         }
       ],

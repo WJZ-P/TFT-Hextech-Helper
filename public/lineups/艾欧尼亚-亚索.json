@@ -5,59 +5,77 @@
     "champions": [
       {
         "name": "慎",
-        "position": "R4_C6"
+        "isCore": false,
+        "position": "R4_C6",
+        "starTarget": 2
       },
       {
         "name": "赵信",
-        "position": "R4_C7"
+        "isCore": false,
+        "position": "R4_C7",
+        "starTarget": 3
       },
       {
         "name": "亚索",
-        "position": "R4_C3",
+        "isCore": true,
         "items": [
           "夜之锋刃",
           "无尽之刃",
           "正义之手"
-        ]
+        ],
+        "position": "R4_C3",
+        "starTarget": 3
       },
       {
         "name": "凯南",
-        "position": "R4_C5"
+        "isCore": false,
+        "position": "R4_C5",
+        "starTarget": 2
       },
       {
         "name": "卑尔维斯",
-        "position": "R3_C4"
+        "isCore": false,
+        "position": "R3_C4",
+        "starTarget": 2
       },
       {
         "name": "孙悟空",
-        "position": "R4_C4",
+        "isCore": false,
         "items": [
           "日炎斗篷",
           "振奋盔甲",
           "薄暮法袍"
-        ]
+        ],
+        "position": "R4_C4",
+        "starTarget": 2
       },
       {
         "name": "永恩",
-        "position": "R4_C2",
+        "isCore": true,
         "items": [
           "饮血剑",
           "鬼索的狂暴之刃",
           "泰坦的坚决"
-        ]
+        ],
+        "position": "R4_C2",
+        "starTarget": 2
       },
       {
         "name": "芸阿娜",
-        "position": "R1_C1",
+        "isCore": true,
         "items": [
           "鬼索的狂暴之刃",
           "无尽之刃",
           "海妖之怒"
-        ]
+        ],
+        "position": "R1_C1",
+        "starTarget": 2
       },
       {
         "name": "亚托克斯",
-        "position": "R4_C1"
+        "isCore": false,
+        "position": "R4_C1",
+        "starTarget": 2
       }
     ],
     "traits": [
@@ -123,18 +141,22 @@
       "champions": [
         {
           "name": "烬",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "慎",
+          "isCore": false,
           "position": "R4_C5"
         },
         {
           "name": "赵信",
+          "isCore": false,
           "position": "R4_C4"
         },
         {
           "name": "亚索",
+          "isCore": false,
           "position": "R4_C3"
         }
       ],
@@ -175,22 +197,27 @@
       "champions": [
         {
           "name": "烬",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "慎",
+          "isCore": false,
           "position": "R4_C4"
         },
         {
           "name": "赵信",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "亚索",
+          "isCore": false,
           "position": "R4_C2"
         },
         {
           "name": "阿狸",
+          "isCore": false,
           "position": "R1_C2"
         }
       ],
@@ -236,26 +263,32 @@
       "champions": [
         {
           "name": "烬",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "慎",
+          "isCore": false,
           "position": "R4_C6"
         },
         {
           "name": "赵信",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "亚索",
+          "isCore": false,
           "position": "R4_C2"
         },
         {
           "name": "凯南",
+          "isCore": false,
           "position": "R4_C5"
         },
         {
           "name": "孙悟空",
+          "isCore": false,
           "position": "R4_C4"
         }
       ],
@@ -306,30 +339,37 @@
       "champions": [
         {
           "name": "烬",
+          "isCore": false,
           "position": "R1_C2"
         },
         {
           "name": "慎",
+          "isCore": false,
           "position": "R4_C6"
         },
         {
           "name": "赵信",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "亚索",
+          "isCore": false,
           "position": "R4_C2"
         },
         {
           "name": "凯南",
+          "isCore": false,
           "position": "R4_C5"
         },
         {
           "name": "孙悟空",
+          "isCore": false,
           "position": "R4_C4"
         },
         {
           "name": "芸阿娜",
+          "isCore": false,
           "position": "R1_C1"
         }
       ],
@@ -385,34 +425,42 @@
       "champions": [
         {
           "name": "慎",
+          "isCore": false,
           "position": "R4_C6"
         },
         {
           "name": "赵信",
+          "isCore": false,
           "position": "R4_C1"
         },
         {
           "name": "亚索",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "凯南",
+          "isCore": false,
           "position": "R4_C5"
         },
         {
           "name": "孙悟空",
+          "isCore": false,
           "position": "R4_C4"
         },
         {
           "name": "永恩",
+          "isCore": false,
           "position": "R4_C2"
         },
         {
           "name": "芸阿娜",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "千珏",
+          "isCore": false,
           "position": "R1_C7"
         }
       ],
@@ -468,38 +516,47 @@
       "champions": [
         {
           "name": "慎",
+          "isCore": false,
           "position": "R4_C6"
         },
         {
           "name": "赵信",
+          "isCore": false,
           "position": "R4_C7"
         },
         {
           "name": "亚索",
+          "isCore": false,
           "position": "R4_C3"
         },
         {
           "name": "凯南",
+          "isCore": false,
           "position": "R4_C5"
         },
         {
           "name": "卑尔维斯",
+          "isCore": false,
           "position": "R3_C4"
         },
         {
           "name": "孙悟空",
+          "isCore": false,
           "position": "R4_C4"
         },
         {
           "name": "永恩",
+          "isCore": false,
           "position": "R4_C2"
         },
         {
           "name": "芸阿娜",
+          "isCore": false,
           "position": "R1_C1"
         },
         {
           "name": "亚托克斯",
+          "isCore": false,
           "position": "R4_C1"
         }
       ],
