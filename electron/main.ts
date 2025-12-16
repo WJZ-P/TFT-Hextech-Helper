@@ -13,6 +13,7 @@ import {debounce} from "../src-backend/utils/HelperTools.ts";
 import {tftOperator} from "../src-backend/TftOperator.ts";
 import {Point} from "@nut-tree-fork/nut-js";
 import {is, optimizer} from "@electron-toolkit/utils";
+import {lineupLoader} from "../src-backend/lineup";  // 导入阵容加载器
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -123,6 +124,10 @@ app.whenReady().then(async () => {
     createWindow()  //  创建窗口
     init()  //  执行LCU相关函数
     registerHandler()
+    
+    // 加载阵容配置
+    const lineupCount = await lineupLoader.loadAllLineups()
+    console.log(`📦 [Main] 已加载 ${lineupCount} 个阵容配置`)
 })
 
 function init() {
@@ -225,4 +230,8 @@ function registerHandler() {
     ipcMain.handle(IpcChannel.TFT_GET_FIGHT_BOARD_INFO, async (event) => tftOperator.getFightBoardInfo())
     ipcMain.handle(IpcChannel.TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT, async (event) => tftOperator.saveBenchSlotSnapshots())
     ipcMain.handle(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT, async (event) => tftOperator.saveFightBoardSlotSnapshots())
+    
+    // 阵容相关
+    ipcMain.handle(IpcChannel.LINEUP_GET_ALL, async () => lineupLoader.getAllLineups())
+    ipcMain.handle(IpcChannel.LINEUP_GET_BY_ID, async (_event, id: string) => lineupLoader.getLineup(id))
 }

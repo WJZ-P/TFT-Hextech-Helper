@@ -78,6 +78,16 @@ const tftApi = {
 export type TftApi = typeof tftApi
 contextBridge.exposeInMainWorld('tft', tftApi)
 
+// lineupApi: 阵容配置相关操作
+const lineupApi = {
+    /** 获取所有已加载的阵容配置 */
+    getAll: () => ipcRenderer.invoke(IpcChannel.LINEUP_GET_ALL),
+    /** 根据 ID 获取单个阵容配置 */
+    getById: (id: string) => ipcRenderer.invoke(IpcChannel.LINEUP_GET_BY_ID, id),
+}
+export type LineupApi = typeof lineupApi
+contextBridge.exposeInMainWorld('lineup', lineupApi)
+
 const lcuApi = {
     getSummonerInfo: (): Promise<{ data?: SummonerInfo; error?: string }> => {
         return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-summoner/v1/current-summoner');

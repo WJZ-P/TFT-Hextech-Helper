@@ -7,6 +7,7 @@ import {HomePage} from "./components/pages/HomePage.tsx";
 
 const DashboardPage = lazy(() => import('./components/pages/DashboardPage'));
 const SettingsPage = lazy(() => import('./components/pages/SettingsPage'));
+const LineupsPage = lazy(() => import('./components/pages/LineupsPage')); // 阵容搭配页面
 
 
 const LoadingSpinner = () => (
@@ -29,6 +30,14 @@ export const router = createHashRouter([
                 element: (
                     <Suspense fallback={<LoadingSpinner/>}>
                         <HomePage/>
+                    </Suspense>
+                )
+            },
+            {
+                path: 'lineups',
+                element: (
+                    <Suspense fallback={<LoadingSpinner/>}>
+                        <LineupsPage/>
                     </Suspense>
                 )
             },

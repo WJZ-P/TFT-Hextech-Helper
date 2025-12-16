@@ -7,6 +7,7 @@ const lightPalette = {
     navActiveText: '#ffffff',
     background: '#f8f9fa',
     sidebarBg: '#ffffff',
+    cardBg: '#eef1f5',          // 卡片背景色（浅灰蓝，与背景 #f8f9fa 有明显对比）
     elementBg: '#ffffff',
     elementHover: '#f1f3f5',
     text: '#212529',
@@ -30,6 +31,7 @@ const darkPalette = {
     navActiveText: '#0D1117',
     background: '#111827',
     sidebarBg: '#1F2937',
+    cardBg: '#1F2937',          // 卡片背景色（比背景稍亮，形成层次）
     elementBg: '#374151',
     elementHover: '#4B5563',
     text: '#F9FAFB',

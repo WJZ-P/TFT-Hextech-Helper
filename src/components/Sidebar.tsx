@@ -8,9 +8,11 @@ import React, {useContext, useRef, useState} from "react"; // 一个好看的闪
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import HomeIcon from '@mui/icons-material/Home'; // 新增：导入 Home 图标
+import ExtensionIcon from '@mui/icons-material/Extension'; // 阵容搭配图标（拼图块，代表组合搭配）
 
 const navItems = [
     {path: '/',label:'主界面',icon:HomeIcon},
+    {path: '/lineups', label: '阵容搭配', icon: ExtensionIcon},
     {path: '/dashboard', label: '仪表盘', icon: DashboardIcon},
     {path: '/settings', label: '设置', icon: SettingsIcon},
 ]

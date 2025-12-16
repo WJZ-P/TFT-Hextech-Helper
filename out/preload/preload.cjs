@@ -13,6 +13,8 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["TFT_GET_FIGHT_BOARD_INFO"] = "tft-get-fight-board-info";
   IpcChannel2["TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT"] = "tft-test-save-bench-slot-snapshot";
   IpcChannel2["TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT"] = "tft-test-save-fight-board-slot-snapshot";
+  IpcChannel2["LINEUP_GET_ALL"] = "lineup-get-all";
+  IpcChannel2["LINEUP_GET_BY_ID"] = "lineup-get-by-id";
   return IpcChannel2;
 })(IpcChannel || {});
 electron.contextBridge.exposeInMainWorld("ipcRenderer", {
@@ -75,6 +77,13 @@ const tftApi = {
   saveFightBoardSlotSnapshots: () => electron.ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT)
 };
 electron.contextBridge.exposeInMainWorld("tft", tftApi);
+const lineupApi = {
+  /** 获取所有已加载的阵容配置 */
+  getAll: () => electron.ipcRenderer.invoke(IpcChannel.LINEUP_GET_ALL),
+  /** 根据 ID 获取单个阵容配置 */
+  getById: (id) => electron.ipcRenderer.invoke(IpcChannel.LINEUP_GET_BY_ID, id)
+};
+electron.contextBridge.exposeInMainWorld("lineup", lineupApi);
 const lcuApi = {
   getSummonerInfo: () => {
     return electron.ipcRenderer.invoke(IpcChannel.LCU_REQUEST, "GET", "/lol-summoner/v1/current-summoner");
