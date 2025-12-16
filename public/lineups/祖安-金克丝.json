@@ -1,0 +1,531 @@
+{
+  "id": "92649a10e3384bb554ba5398ba862ca2",
+  "name": "祖安 金克丝",
+  "finalComp": {
+    "champions": [
+      {
+        "name": "布里茨",
+        "position": "R4_C6"
+      },
+      {
+        "name": "艾克",
+        "position": "R4_C2"
+      },
+      {
+        "name": "蔚",
+        "position": "R4_C1"
+      },
+      {
+        "name": "蒙多医生",
+        "position": "R4_C4",
+        "items": [
+          "棘刺背心",
+          "振奋盔甲",
+          "薄暮法袍"
+        ]
+      },
+      {
+        "name": "金克丝",
+        "position": "R1_C1",
+        "items": [
+          "鬼索的狂暴之刃",
+          "无尽之刃",
+          "海妖之怒"
+        ]
+      },
+      {
+        "name": "辛吉德",
+        "position": "R4_C5",
+        "items": [
+          "饮血剑",
+          "莫雷洛秘典",
+          "虚空之杖"
+        ]
+      },
+      {
+        "name": "沃里克",
+        "position": "R4_C3",
+        "items": [
+          "饮血剑",
+          "斯特拉克的挑战护手",
+          "泰坦的坚决"
+        ]
+      },
+      {
+        "name": "卢锡安与赛娜",
+        "position": "R1_C7"
+      }
+    ],
+    "traits": [
+      {
+        "key": "TFT16_Soulbound",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_Zaun",
+        "style": 4,
+        "numUnits": 7
+      },
+      {
+        "key": "TFT16_Juggernaut",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT16_Gunslinger",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT16_Brawler",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_Magus",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_Piltover",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_Defender",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_Rapidfire",
+        "style": 0,
+        "numUnits": 1
+      }
+    ]
+  },
+  "stages": {
+    "level4": {
+      "champions": [
+        {
+          "name": "布里茨",
+          "position": "R4_C4"
+        },
+        {
+          "name": "艾克",
+          "position": "R4_C3"
+        },
+        {
+          "name": "蔚",
+          "position": "R4_C2"
+        },
+        {
+          "name": "金克丝",
+          "position": "R1_C1"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Zaun",
+          "style": 1,
+          "numUnits": 4
+        },
+        {
+          "key": "TFT16_Juggernaut",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Magus",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Piltover",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Defender",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Gunslinger",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level5": {
+      "champions": [
+        {
+          "name": "布里茨",
+          "position": "R4_C5"
+        },
+        {
+          "name": "艾克",
+          "position": "R4_C3"
+        },
+        {
+          "name": "蔚",
+          "position": "R4_C2"
+        },
+        {
+          "name": "蒙多医生",
+          "position": "R4_C4"
+        },
+        {
+          "name": "金克丝",
+          "position": "R1_C1"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Zaun",
+          "style": 3,
+          "numUnits": 5
+        },
+        {
+          "key": "TFT16_Juggernaut",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Magus",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Piltover",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Defender",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Brawler",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Gunslinger",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level6": {
+      "champions": [
+        {
+          "name": "布里茨",
+          "position": "R4_C6"
+        },
+        {
+          "name": "艾克",
+          "position": "R4_C3"
+        },
+        {
+          "name": "蔚",
+          "position": "R4_C2"
+        },
+        {
+          "name": "蒙多医生",
+          "position": "R4_C4"
+        },
+        {
+          "name": "金克丝",
+          "position": "R1_C1"
+        },
+        {
+          "name": "辛吉德",
+          "position": "R4_C5"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Zaun",
+          "style": 3,
+          "numUnits": 6
+        },
+        {
+          "key": "TFT16_Juggernaut",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Magus",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Piltover",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Defender",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Brawler",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Gunslinger",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level7": {
+      "champions": [
+        {
+          "name": "布里茨",
+          "position": "R4_C6"
+        },
+        {
+          "name": "艾克",
+          "position": "R4_C2"
+        },
+        {
+          "name": "蔚",
+          "position": "R4_C1"
+        },
+        {
+          "name": "蒙多医生",
+          "position": "R4_C4"
+        },
+        {
+          "name": "金克丝",
+          "position": "R1_C1"
+        },
+        {
+          "name": "辛吉德",
+          "position": "R4_C5"
+        },
+        {
+          "name": "沃里克",
+          "position": "R4_C3"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Zaun",
+          "style": 4,
+          "numUnits": 7
+        },
+        {
+          "key": "TFT16_Juggernaut",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Magus",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Piltover",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Defender",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Brawler",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Gunslinger",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level8": {
+      "champions": [
+        {
+          "name": "布里茨",
+          "position": "R4_C6"
+        },
+        {
+          "name": "艾克",
+          "position": "R4_C2"
+        },
+        {
+          "name": "蔚",
+          "position": "R4_C1"
+        },
+        {
+          "name": "蒙多医生",
+          "position": "R4_C4"
+        },
+        {
+          "name": "金克丝",
+          "position": "R1_C1"
+        },
+        {
+          "name": "辛吉德",
+          "position": "R4_C5"
+        },
+        {
+          "name": "沃里克",
+          "position": "R4_C3"
+        },
+        {
+          "name": "卢锡安与赛娜",
+          "position": "R1_C7"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Soulbound",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Zaun",
+          "style": 4,
+          "numUnits": 7
+        },
+        {
+          "key": "TFT16_Juggernaut",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Gunslinger",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Magus",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Piltover",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Defender",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Brawler",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level9": {
+      "champions": [
+        {
+          "name": "布里茨",
+          "position": "R4_C6"
+        },
+        {
+          "name": "艾克",
+          "position": "R4_C5"
+        },
+        {
+          "name": "蔚",
+          "position": "R4_C2"
+        },
+        {
+          "name": "蒙多医生",
+          "position": "R4_C4"
+        },
+        {
+          "name": "金克丝",
+          "position": "R1_C1"
+        },
+        {
+          "name": "萨勒芬妮",
+          "position": "R1_C7"
+        },
+        {
+          "name": "辛吉德",
+          "position": "R3_C1"
+        },
+        {
+          "name": "沃里克",
+          "position": "R4_C3"
+        },
+        {
+          "name": "千珏",
+          "position": "R1_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_KindredUnique",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Zaun",
+          "style": 4,
+          "numUnits": 7
+        },
+        {
+          "key": "TFT16_Juggernaut",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Magus",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Piltover",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Defender",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Brawler",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Gunslinger",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    }
+  }
+}

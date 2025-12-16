@@ -392,6 +392,7 @@ export const gameStageDisplayTheClockworkTrails = {
 //  棋子类型接口
 export interface TFTUnit {
     displayName: string;                //  棋子的英雄名称，用于ocr
+    englishId: string;                  //  英文ID，如 "TFT16_Graves"，用于解析外部数据（如 OP.GG）
     price: number;                       //  棋子的购买花费
     traits: (UnitOrigin | UnitClass)[]; //  棋子所属羁绊，含种族和职业
     origins: UnitOrigin[];              //  棋子种族
@@ -476,6 +477,7 @@ const TFT_SPECIAL_CHESS = {
     //  特殊的棋子，比如基础装备锻造器，这种不属于英雄
     "基础装备锻造器": {
         displayName: "基础装备锻造器",
+        englishId: "TFT16_ItemForge",
         price: 8,   // what the fuck? 但数据是这么写的
         traits: [],
         origins: [],
@@ -483,6 +485,7 @@ const TFT_SPECIAL_CHESS = {
     },
     "训练假人": {
         displayName: "训练假人",
+        englishId: "TFT16_TrainingDummy",
         price: 1,   // what the fuck? 但数据是这么写的
         traits: [],
         origins: [],
@@ -497,6 +500,7 @@ const _TFT_16_CHAMPION_DATA = {
     // 1 费棋子
     "俄洛伊": {
         displayName: "俄洛伊",
+        englishId: "TFT16_Illaoi",
         price: 1,
         traits: [UnitOrigin.Bilgewater, UnitClass.Bruiser],
         origins: [UnitOrigin.Bilgewater],
@@ -504,6 +508,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "贝蕾亚": {
         displayName: "贝蕾亚",
+        englishId: "TFT16_Briar",
         price: 1,
         traits: [UnitOrigin.Noxus, UnitClass.Slayer, UnitClass.Juggernaut],
         origins: [UnitOrigin.Noxus],
@@ -511,6 +516,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "艾尼维亚": {
         displayName: "艾尼维亚",
+        englishId: "TFT16_Anivia",
         price: 1,
         traits: [UnitOrigin.Freljord, UnitClass.Invoker],
         origins: [UnitOrigin.Freljord],
@@ -518,6 +524,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "嘉文四世": {
         displayName: "嘉文四世",
+        englishId: "TFT16_JarvanIV",
         price: 1,
         traits: [UnitOrigin.Demacia, UnitClass.Defender],
         origins: [UnitOrigin.Demacia],
@@ -525,6 +532,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "烬": {
         displayName: "烬",
+        englishId: "TFT16_Jhin",
         price: 1,
         traits: [UnitOrigin.Ionia, UnitClass.Gunslinger],
         origins: [UnitOrigin.Ionia],
@@ -532,6 +540,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "凯特琳": {
         displayName: "凯特琳",
+        englishId: "TFT16_Caitlyn",
         price: 1,
         traits: [UnitOrigin.Piltover, UnitClass.Longshot],
         origins: [UnitOrigin.Piltover],
@@ -539,6 +548,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "克格莫": {
         displayName: "克格莫",
+        englishId: "TFT16_KogMaw",
         price: 1,
         traits: [UnitOrigin.Void, UnitClass.Sorcerer, UnitClass.Longshot],
         origins: [UnitOrigin.Void],
@@ -546,6 +556,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "璐璐": {
         displayName: "璐璐",
+        englishId: "TFT16_Lulu",
         price: 1,
         traits: [UnitOrigin.Yordle, UnitClass.Sorcerer],
         origins: [UnitOrigin.Yordle],
@@ -553,6 +564,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "奇亚娜": {
         displayName: "奇亚娜",
+        englishId: "TFT16_Qiyana",
         price: 1,
         traits: [UnitOrigin.Ixtal, UnitClass.Slayer],
         origins: [UnitOrigin.Ixtal],
@@ -560,6 +572,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "兰博": {
         displayName: "兰博",
+        englishId: "TFT16_Rumble",
         price: 1,
         traits: [UnitOrigin.Yordle, UnitClass.Defender],
         origins: [UnitOrigin.Yordle],
@@ -567,6 +580,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "慎": {
         displayName: "慎",
+        englishId: "TFT16_Shen",
         price: 1,
         traits: [UnitOrigin.Ionia, UnitClass.Bruiser],
         origins: [UnitOrigin.Ionia],
@@ -574,6 +588,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "娑娜": {
         displayName: "娑娜",
+        englishId: "TFT16_Sona",
         price: 1,
         traits: [UnitOrigin.Demacia, UnitClass.Invoker],
         origins: [UnitOrigin.Demacia],
@@ -581,6 +596,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "佛耶戈": {
         displayName: "佛耶戈",
+        englishId: "TFT16_Viego",
         price: 1,
         traits: [UnitOrigin.ShadowIsles, UnitClass.Rapidfire],
         origins: [UnitOrigin.ShadowIsles],
@@ -588,6 +604,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "布里茨": {
         displayName: "布里茨",
+        englishId: "TFT16_Blitzcrank",
         price: 1,
         traits: [UnitOrigin.Zaun, UnitClass.Juggernaut],
         origins: [UnitOrigin.Zaun],
@@ -597,6 +614,7 @@ const _TFT_16_CHAMPION_DATA = {
     // 2 费棋子
     "厄斐琉斯": {
         displayName: "厄斐琉斯",
+        englishId: "TFT16_Aphelios",
         price: 2,
         traits: [UnitOrigin.Targon],
         origins: [UnitOrigin.Targon],
@@ -604,6 +622,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "艾希": {
         displayName: "艾希",
+        englishId: "TFT16_Ashe",
         price: 2,
         traits: [UnitOrigin.Freljord, UnitClass.Rapidfire],
         origins: [UnitOrigin.Freljord],
@@ -611,6 +630,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "科加斯": {
         displayName: "科加斯",
+        englishId: "TFT16_ChoGath",
         price: 2,
         traits: [UnitOrigin.Void, UnitClass.Juggernaut],
         origins: [UnitOrigin.Void],
@@ -618,6 +638,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "崔斯特": {
         displayName: "崔斯特",
+        englishId: "TFT16_TwistedFate",
         price: 2,
         traits: [UnitOrigin.Bilgewater, UnitClass.Rapidfire],
         origins: [UnitOrigin.Bilgewater],
@@ -625,6 +646,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "艾克": {
         displayName: "艾克",
+        englishId: "TFT16_Ekko",
         price: 2,
         traits: [UnitOrigin.Zaun, UnitClass.Magus],
         origins: [UnitOrigin.Zaun],
@@ -632,6 +654,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "格雷福斯": {
         displayName: "格雷福斯",
+        englishId: "TFT16_Graves",
         price: 2,
         traits: [UnitOrigin.Bilgewater, UnitClass.Gunslinger],
         origins: [UnitOrigin.Bilgewater],
@@ -639,6 +662,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "妮蔻": {
         displayName: "妮蔻",
+        englishId: "TFT16_Neeko",
         price: 2,
         traits: [UnitOrigin.Ixtal, UnitClass.Sorcerer, UnitClass.Defender],
         origins: [UnitOrigin.Ixtal],
@@ -646,6 +670,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "奥莉安娜": {
         displayName: "奥莉安娜",
+        englishId: "TFT16_Orianna",
         price: 2,
         traits: [UnitOrigin.Piltover, UnitClass.Invoker],
         origins: [UnitOrigin.Piltover],
@@ -653,6 +678,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "波比": {
         displayName: "波比",
+        englishId: "TFT16_Poppy",
         price: 2,
         traits: [UnitOrigin.Demacia, UnitOrigin.Yordle, UnitClass.Juggernaut],
         origins: [UnitOrigin.Demacia, UnitOrigin.Yordle],
@@ -660,6 +686,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "雷克塞": {
         displayName: "雷克塞",
+        englishId: "TFT16_RekSai",
         price: 2,
         traits: [UnitOrigin.Void, UnitClass.Vanquisher],
         origins: [UnitOrigin.Void],
@@ -667,6 +694,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "赛恩": {
         displayName: "赛恩",
+        englishId: "TFT16_Sion",
         price: 2,
         traits: [UnitOrigin.Noxus, UnitClass.Bruiser],
         origins: [UnitOrigin.Noxus],
@@ -674,6 +702,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "提莫": {
         displayName: "提莫",
+        englishId: "TFT16_Teemo",
         price: 2,
         traits: [UnitOrigin.Yordle, UnitClass.Longshot],
         origins: [UnitOrigin.Yordle],
@@ -681,6 +710,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "崔丝塔娜": {
         displayName: "崔丝塔娜",
+        englishId: "TFT16_Tristana",
         price: 2,
         traits: [UnitOrigin.Yordle, UnitClass.Gunslinger],
         origins: [UnitOrigin.Yordle],
@@ -688,6 +718,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "蔚": {
         displayName: "蔚",
+        englishId: "TFT16_Vi",
         price: 2,
         traits: [UnitOrigin.Piltover, UnitOrigin.Zaun, UnitClass.Defender],
         origins: [UnitOrigin.Piltover, UnitOrigin.Zaun],
@@ -695,6 +726,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "亚索": {
         displayName: "亚索",
+        englishId: "TFT16_Yasuo",
         price: 2,
         traits: [UnitOrigin.Ionia, UnitClass.Slayer],
         origins: [UnitOrigin.Ionia],
@@ -702,6 +734,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "约里克": {
         displayName: "约里克",
+        englishId: "TFT16_Yorick",
         price: 2,
         traits: [UnitOrigin.ShadowIsles, UnitClass.Warden],
         origins: [UnitOrigin.ShadowIsles],
@@ -709,6 +742,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "赵信": {
         displayName: "赵信",
+        englishId: "TFT16_XinZhao",
         price: 2,
         traits: [UnitOrigin.Demacia, UnitOrigin.Ionia, UnitClass.Warden],
         origins: [UnitOrigin.Demacia, UnitOrigin.Ionia],
@@ -718,6 +752,7 @@ const _TFT_16_CHAMPION_DATA = {
     // 3 费棋子
     "阿狸": {
         displayName: "阿狸",
+        englishId: "TFT16_Ahri",
         price: 3,
         traits: [UnitOrigin.Ionia, UnitClass.Sorcerer],
         origins: [UnitOrigin.Ionia],
@@ -725,6 +760,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "巴德": {
         displayName: "巴德",
+        englishId: "TFT16_Bard",
         price: 3,
         traits: [UnitOrigin.Caretaker],
         origins: [UnitOrigin.Caretaker],
@@ -732,6 +768,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "德莱文": {
         displayName: "德莱文",
+        englishId: "TFT16_Draven",
         price: 3,
         traits: [UnitOrigin.Noxus, UnitClass.Rapidfire],
         origins: [UnitOrigin.Noxus],
@@ -739,6 +776,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "德莱厄斯": {
         displayName: "德莱厄斯",
+        englishId: "TFT16_Darius",
         price: 3,
         traits: [UnitOrigin.Noxus, UnitClass.Defender],
         origins: [UnitOrigin.Noxus],
@@ -746,6 +784,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "格温": {
         displayName: "格温",
+        englishId: "TFT16_Gwen",
         price: 3,
         traits: [UnitOrigin.ShadowIsles, UnitClass.Magus],
         origins: [UnitOrigin.ShadowIsles],
@@ -753,6 +792,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "金克丝": {
         displayName: "金克丝",
+        englishId: "TFT16_Jinx",
         price: 3,
         traits: [UnitOrigin.Zaun, UnitClass.Gunslinger],
         origins: [UnitOrigin.Zaun],
@@ -760,6 +800,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "凯南": {
         displayName: "凯南",
+        englishId: "TFT16_Kennen",
         price: 3,
         traits: [UnitOrigin.Ionia, UnitOrigin.Yordle, UnitClass.Defender],
         origins: [UnitOrigin.Ionia, UnitOrigin.Yordle],
@@ -767,6 +808,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "可酷伯与悠米": {
         displayName: "可酷伯与悠米",
+        englishId: "TFT16_KoobAndYuumi",
         price: 3,
         traits: [UnitOrigin.Yordle, UnitClass.Bruiser, UnitClass.Invoker],
         origins: [UnitOrigin.Yordle],
@@ -774,6 +816,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "乐芙兰": {
         displayName: "乐芙兰",
+        englishId: "TFT16_Leblanc",
         price: 3,
         traits: [UnitOrigin.Noxus, UnitClass.Invoker],
         origins: [UnitOrigin.Noxus],
@@ -781,6 +824,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "洛里斯": {
         displayName: "洛里斯",
+        englishId: "TFT16_Loris",
         price: 3,
         traits: [UnitOrigin.Piltover, UnitClass.Warden],
         origins: [UnitOrigin.Piltover],
@@ -788,6 +832,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "玛尔扎哈": {
         displayName: "玛尔扎哈",
+        englishId: "TFT16_Malzahar",
         price: 3,
         traits: [UnitOrigin.Void, UnitClass.Magus],
         origins: [UnitOrigin.Void],
@@ -795,6 +840,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "米利欧": {
         displayName: "米利欧",
+        englishId: "TFT16_Milio",
         price: 3,
         traits: [UnitOrigin.Ixtal, UnitClass.Invoker],
         origins: [UnitOrigin.Ixtal],
@@ -802,6 +848,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "诺提勒斯": {
         displayName: "诺提勒斯",
+        englishId: "TFT16_Nautilus",
         price: 3,
         traits: [UnitOrigin.Bilgewater, UnitClass.Juggernaut, UnitClass.Warden],
         origins: [UnitOrigin.Bilgewater],
@@ -809,6 +856,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "普朗克": {
         displayName: "普朗克",
+        englishId: "TFT16_Gangplank",
         price: 3,
         traits: [UnitOrigin.Bilgewater, UnitClass.Slayer, UnitClass.Vanquisher],
         origins: [UnitOrigin.Bilgewater],
@@ -816,6 +864,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "瑟庄妮": {
         displayName: "瑟庄妮",
+        englishId: "TFT16_Sejuani",
         price: 3,
         traits: [UnitOrigin.Freljord, UnitClass.Defender],
         origins: [UnitOrigin.Freljord],
@@ -823,6 +872,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "薇恩": {
         displayName: "薇恩",
+        englishId: "TFT16_Vayne",
         price: 3,
         traits: [UnitOrigin.Demacia, UnitClass.Longshot],
         origins: [UnitOrigin.Demacia],
@@ -830,6 +880,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "蒙多医生": {
         displayName: "蒙多医生",
+        englishId: "TFT16_DrMundo",
         price: 3,
         traits: [UnitOrigin.Zaun, UnitClass.Bruiser],
         origins: [UnitOrigin.Zaun],
@@ -839,6 +890,7 @@ const _TFT_16_CHAMPION_DATA = {
     // 4 费棋子
     "安蓓萨": {
         displayName: "安蓓萨",
+        englishId: "TFT16_Ambessa",
         price: 4,
         traits: [UnitOrigin.Noxus, UnitClass.Vanquisher],
         origins: [UnitOrigin.Noxus],
@@ -846,6 +898,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "卑尔维斯": {
         displayName: "卑尔维斯",
+        englishId: "TFT16_Belveth",
         price: 4,
         traits: [UnitOrigin.Void, UnitClass.Slayer],
         origins: [UnitOrigin.Void],
@@ -853,6 +906,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "布隆": {
         displayName: "布隆",
+        englishId: "TFT16_Braum",
         price: 4,
         traits: [UnitOrigin.Freljord, UnitClass.Warden],
         origins: [UnitOrigin.Freljord],
@@ -860,6 +914,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "黛安娜": {
         displayName: "黛安娜",
+        englishId: "TFT16_Diana",
         price: 4,
         traits: [UnitOrigin.Targon],
         origins: [UnitOrigin.Targon],
@@ -867,6 +922,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "盖伦": {
         displayName: "盖伦",
+        englishId: "TFT16_Garen",
         price: 4,
         traits: [UnitOrigin.Demacia, UnitClass.Defender],
         origins: [UnitOrigin.Demacia],
@@ -874,6 +930,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "卡莉丝塔": {
         displayName: "卡莉丝塔",
+        englishId: "TFT16_Kalista",
         price: 4,
         traits: [UnitOrigin.ShadowIsles, UnitClass.Vanquisher],
         origins: [UnitOrigin.ShadowIsles],
@@ -881,6 +938,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "卡莎": {
         displayName: "卡莎",
+        englishId: "TFT16_KaiSa",
         price: 4,
         traits: [UnitOrigin.Assimilator, UnitOrigin.Void, UnitClass.Longshot],
         origins: [UnitOrigin.Assimilator, UnitOrigin.Void],
@@ -888,6 +946,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "蕾欧娜": {
         displayName: "蕾欧娜",
+        englishId: "TFT16_Leona",
         price: 4,
         traits: [UnitOrigin.Targon],
         origins: [UnitOrigin.Targon],
@@ -895,6 +954,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "丽桑卓": {
         displayName: "丽桑卓",
+        englishId: "TFT16_Lissandra",
         price: 4,
         traits: [UnitOrigin.Freljord, UnitClass.Invoker],
         origins: [UnitOrigin.Freljord],
@@ -902,6 +962,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "拉克丝": {
         displayName: "拉克丝",
+        englishId: "TFT16_Lux",
         price: 4,
         traits: [UnitOrigin.Demacia, UnitClass.Sorcerer],
         origins: [UnitOrigin.Demacia],
@@ -909,6 +970,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "厄运小姐": {
         displayName: "厄运小姐",
+        englishId: "TFT16_MissFortune",
         price: 4,
         traits: [UnitOrigin.Bilgewater, UnitClass.Gunslinger],
         origins: [UnitOrigin.Bilgewater],
@@ -916,6 +978,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "内瑟斯": {
         displayName: "内瑟斯",
+        englishId: "TFT16_Nasus",
         price: 4,
         traits: [UnitOrigin.Shurima],
         origins: [UnitOrigin.Shurima],
@@ -923,6 +986,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "奈德丽": {
         displayName: "奈德丽",
+        englishId: "TFT16_Nidalee",
         price: 4,
         traits: [UnitOrigin.Ixtal, UnitOrigin.Huntress],
         origins: [UnitOrigin.Ixtal, UnitOrigin.Huntress],
@@ -930,6 +994,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "雷克顿": {
         displayName: "雷克顿",
+        englishId: "TFT16_Renekton",
         price: 4,
         traits: [UnitOrigin.Shurima],
         origins: [UnitOrigin.Shurima],
@@ -937,6 +1002,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "萨勒芬妮": {
         displayName: "萨勒芬妮",
+        englishId: "TFT16_Seraphine",
         price: 4,
         traits: [UnitOrigin.Piltover, UnitClass.Magus],
         origins: [UnitOrigin.Piltover],
@@ -944,6 +1010,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "辛吉德": {
         displayName: "辛吉德",
+        englishId: "TFT16_Singed",
         price: 4,
         traits: [UnitOrigin.Zaun, UnitClass.Juggernaut],
         origins: [UnitOrigin.Zaun],
@@ -951,6 +1018,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "斯卡纳": {
         displayName: "斯卡纳",
+        englishId: "TFT16_Skarner",
         price: 4,
         traits: [UnitOrigin.Ixtal],
         origins: [UnitOrigin.Ixtal],
@@ -958,6 +1026,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "斯维因": {
         displayName: "斯维因",
+        englishId: "TFT16_Swain",
         price: 4,
         traits: [UnitOrigin.Noxus, UnitClass.Sorcerer, UnitClass.Juggernaut],
         origins: [UnitOrigin.Noxus],
@@ -965,6 +1034,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "孙悟空": {
         displayName: "孙悟空",
+        englishId: "TFT16_MonkeyKing",
         price: 4,
         traits: [UnitOrigin.Ionia, UnitClass.Bruiser],
         origins: [UnitOrigin.Ionia],
@@ -972,6 +1042,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "塔里克": {
         displayName: "塔里克",
+        englishId: "TFT16_Taric",
         price: 4,
         traits: [UnitOrigin.Targon],
         origins: [UnitOrigin.Targon],
@@ -979,6 +1050,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "维迦": {
         displayName: "维迦",
+        englishId: "TFT16_Veigar",
         price: 4,
         traits: [UnitOrigin.Yordle, UnitClass.Sorcerer],
         origins: [UnitOrigin.Yordle],
@@ -986,6 +1058,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "沃里克": {
         displayName: "沃里克",
+        englishId: "TFT16_Warwick",
         price: 4,
         traits: [UnitOrigin.Zaun, UnitClass.Rapidfire],
         origins: [UnitOrigin.Zaun],
@@ -993,6 +1066,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "永恩": {
         displayName: "永恩",
+        englishId: "TFT16_Yone",
         price: 4,
         traits: [UnitOrigin.Ionia, UnitClass.Slayer],
         origins: [UnitOrigin.Ionia],
@@ -1000,6 +1074,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "芸阿娜": {
         displayName: "芸阿娜",
+        englishId: "TFT16_Yuumi",
         price: 4,
         traits: [UnitOrigin.Ionia, UnitClass.Rapidfire],
         origins: [UnitOrigin.Ionia],
@@ -1009,6 +1084,7 @@ const _TFT_16_CHAMPION_DATA = {
     // 5 费棋子
     "亚托克斯": {
         displayName: "亚托克斯",
+        englishId: "TFT16_Aatrox",
         price: 5,
         traits: [UnitOrigin.Darkin, UnitClass.Slayer],
         origins: [UnitOrigin.Darkin],
@@ -1016,6 +1092,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "安妮": {
         displayName: "安妮",
+        englishId: "TFT16_Annie",
         price: 5,
         traits: [UnitOrigin.DarkChild, UnitClass.Sorcerer],
         origins: [UnitOrigin.DarkChild],
@@ -1023,6 +1100,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "阿兹尔": {
         displayName: "阿兹尔",
+        englishId: "TFT16_Azir",
         price: 5,
         traits: [UnitOrigin.Shurima, UnitOrigin.Emperor, UnitClass.Magus],
         origins: [UnitOrigin.Shurima, UnitOrigin.Emperor],
@@ -1030,6 +1108,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "费德提克": {
         displayName: "费德提克",
+        englishId: "TFT16_Fiddlesticks",
         price: 5,
         traits: [UnitOrigin.Harvester, UnitClass.Vanquisher],
         origins: [UnitOrigin.Harvester],
@@ -1037,6 +1116,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "吉格斯": {
         displayName: "吉格斯",
+        englishId: "TFT16_Ziggs",
         price: 5,
         traits: [UnitOrigin.Zaun, UnitOrigin.Yordle, UnitClass.Longshot],
         origins: [UnitOrigin.Zaun, UnitOrigin.Yordle],
@@ -1044,6 +1124,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "加里奥": {
         displayName: "加里奥",
+        englishId: "TFT16_Galio",
         price: 5,
         traits: [UnitOrigin.Demacia, UnitOrigin.Heroic],
         origins: [UnitOrigin.Demacia, UnitOrigin.Heroic],
@@ -1051,6 +1132,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "基兰": {
         displayName: "基兰",
+        englishId: "TFT16_Zilean",
         price: 5,
         traits: [UnitOrigin.Chronokeeper, UnitClass.Invoker],
         origins: [UnitOrigin.Chronokeeper],
@@ -1058,6 +1140,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "千珏": {
         displayName: "千珏",
+        englishId: "TFT16_Kindred",
         price: 5,
         traits: [UnitOrigin.Kindred, UnitClass.Rapidfire],
         origins: [UnitOrigin.Kindred],
@@ -1065,6 +1148,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "卢锡安与赛娜": {
         displayName: "卢锡安与赛娜",
+        englishId: "TFT16_Lucian",
         price: 5,
         traits: [UnitOrigin.Soulbound, UnitClass.Gunslinger],
         origins: [UnitOrigin.Soulbound],
@@ -1072,6 +1156,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "梅尔": {
         displayName: "梅尔",
+        englishId: "TFT16_Mel",
         price: 5,
         traits: [UnitOrigin.Noxus, UnitClass.Magus],
         origins: [UnitOrigin.Noxus],
@@ -1079,6 +1164,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "奥恩": {
         displayName: "奥恩",
+        englishId: "TFT16_Ornn",
         price: 5,
         traits: [UnitOrigin.Blacksmith, UnitClass.Warden],
         origins: [UnitOrigin.Blacksmith],
@@ -1086,6 +1172,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "瑟提": {
         displayName: "瑟提",
+        englishId: "TFT16_Sett",
         price: 5,
         traits: [UnitOrigin.Ionia, UnitOrigin.TheBoss],
         origins: [UnitOrigin.Ionia, UnitOrigin.TheBoss],
@@ -1093,6 +1180,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "希瓦娜": {
         displayName: "希瓦娜",
+        englishId: "TFT16_Shyvana",
         price: 5,
         traits: [UnitOrigin.Dragonborn, UnitClass.Juggernaut],
         origins: [UnitOrigin.Dragonborn],
@@ -1100,6 +1188,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "塔姆": {
         displayName: "塔姆",
+        englishId: "TFT16_TahmKench",
         price: 5,
         traits: [UnitOrigin.Bilgewater, UnitOrigin.Glutton, UnitClass.Bruiser],
         origins: [UnitOrigin.Bilgewater, UnitOrigin.Glutton],
@@ -1107,6 +1196,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "锤石": {
         displayName: "锤石",
+        englishId: "TFT16_Thresh",
         price: 5,
         traits: [UnitOrigin.ShadowIsles, UnitClass.Warden],
         origins: [UnitOrigin.ShadowIsles],
@@ -1114,6 +1204,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "沃利贝尔": {
         displayName: "沃利贝尔",
+        englishId: "TFT16_Volibear",
         price: 5,
         traits: [UnitOrigin.Freljord, UnitClass.Bruiser],
         origins: [UnitOrigin.Freljord],
@@ -1123,6 +1214,7 @@ const _TFT_16_CHAMPION_DATA = {
     // 特殊/高费羁绊单位（价格 7）
     "奥瑞利安·索尔": {
         displayName: "奥瑞利安·索尔",
+        englishId: "TFT16_AurelionSol",
         price: 7,
         traits: [UnitOrigin.Starforger, UnitOrigin.Targon],
         origins: [UnitOrigin.Starforger, UnitOrigin.Targon],
@@ -1130,6 +1222,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "纳什男爵": {
         displayName: "纳什男爵",
+        englishId: "TFT16_BaronNashor",
         price: 7,
         traits: [UnitOrigin.Void, UnitOrigin.Baron],
         origins: [UnitOrigin.Void, UnitOrigin.Baron],
@@ -1137,6 +1230,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "瑞兹": {
         displayName: "瑞兹",
+        englishId: "TFT16_Ryze",
         price: 7,
         traits: [UnitOrigin.RuneMage],
         origins: [UnitOrigin.RuneMage],
@@ -1144,10 +1238,37 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "亚恒": {
         displayName: "亚恒",
+        englishId: "TFT16_Xayah",
         price: 7,
         traits: [UnitOrigin.Darkin, UnitOrigin.Immortal],
         origins: [UnitOrigin.Darkin, UnitOrigin.Immortal],
         classes: []
+    },
+    
+    // 特殊召唤物/机甲/其他
+    "海克斯霸龙": {
+        displayName: "海克斯霸龙",
+        englishId: "TFT16_THex",
+        price: 5, // 官方数据是5费
+        traits: [UnitOrigin.HexMech, UnitOrigin.Piltover, UnitClass.Gunslinger],
+        origins: [UnitOrigin.HexMech, UnitOrigin.Piltover],
+        classes: [UnitClass.Gunslinger]
+    },
+    "佐伊": {
+        displayName: "佐伊",
+        englishId: "TFT16_Zoe",
+        price: 3, // 官方数据是3费
+        traits: [UnitOrigin.Targon],
+        origins: [UnitOrigin.Targon],
+        classes: []
+    },
+    "菲兹": {
+        displayName: "菲兹",
+        englishId: "TFT16_Fizz",
+        price: 4, // 官方数据是4费
+        traits: [UnitOrigin.Bilgewater, UnitOrigin.Yordle],
+        origins: [UnitOrigin.Bilgewater, UnitOrigin.Yordle],
+        classes: [] // 官方数据 jobs 为空
     },
 } satisfies Record<string, TFTUnit>;
 
@@ -2630,6 +2751,60 @@ export const TFT_16_EQUIP_DATA: Record<keyof typeof _TFT_16_EQUIP_DATA, TFTEquip
 
 export type ChampionKey = keyof typeof TFT_16_CHAMPION_DATA;
 export type EquipKey = keyof typeof TFT_16_EQUIP_DATA;
+
+// ==========================================
+// 英文ID到中文名的映射表 (自动从数据生成，用于解析 OP.GG 等外部数据)
+// ==========================================
+
+/**
+ * 英雄英文ID到中文名的映射
+ * @example "TFT16_Graves" -> "格雷福斯"
+ */
+export const CHAMPION_EN_TO_CN: Record<string, ChampionKey> = {};
+
+// 自动从 TFT_16_CHAMPION_DATA 生成英文到中文的映射
+for (const [cnName, champion] of Object.entries(TFT_16_CHAMPION_DATA)) {
+    if (champion.englishId) {
+        CHAMPION_EN_TO_CN[champion.englishId] = cnName as ChampionKey;
+    }
+}
+
+// 添加 OP.GG 使用的别名（与我们的 englishId 不同的情况）
+const CHAMPION_ALIASES: Record<string, ChampionKey> = {
+    "TFT16_Kaisa": "卡莎",           // OP.GG 用 Kaisa，我们用 KaiSa
+    "TFT16_BelVeth": "卑尔维斯",      // OP.GG 用 BelVeth，我们用 Belveth
+    "TFT16_Wukong": "孙悟空",         // OP.GG 用 Wukong，我们用 MonkeyKing
+    "TFT16_Yunara": "芸阿娜",         // OP.GG 用的别名
+    "TFT16_Kobuko": "可酷伯与悠米",    // OP.GG 用的别名
+    "TFT16_Brock": "可酷伯与悠米",    // OP.GG 用的另一个别名
+    "TFT16_THex": "海克斯霸龙",       // 海克斯霸龙特殊棋子
+    "TFT16_Zoe": "佐伊",             // 巨神峰棋子
+    "TFT16_Fizz": "菲兹",            // 小鱼人
+};
+Object.assign(CHAMPION_EN_TO_CN, CHAMPION_ALIASES);
+
+/**
+ * 装备英文ID到中文名的映射
+ * @example "TFT_Item_InfinityEdge" -> "无尽之刃"
+ */
+export const EQUIP_EN_TO_CN: Record<string, EquipKey> = {};
+
+// 自动从 TFT_16_EQUIP_DATA 生成英文到中文的映射
+for (const [cnName, equip] of Object.entries(TFT_16_EQUIP_DATA)) {
+    // englishName 可能包含逗号分隔的多个名称
+    const englishNames = equip.englishName.split(',');
+    for (const enName of englishNames) {
+        EQUIP_EN_TO_CN[enName.trim()] = cnName as EquipKey;
+    }
+}
+
+// 添加 OP.GG 使用的装备别名
+const EQUIP_ALIASES: Record<string, EquipKey> = {
+    "TFT16_Item_Bilgewater_DeadmansDagger": "亡者的短剑",
+    "TFT16_Item_Bilgewater_FirstMatesFlintlock": "大副的燧发枪",
+    "TFT16_Item_Bilgewater_PileOCitrus": "成堆柑橘",
+};
+Object.assign(EQUIP_EN_TO_CN, EQUIP_ALIASES);
 
 export interface LineupUnit {
     name: ChampionKey;

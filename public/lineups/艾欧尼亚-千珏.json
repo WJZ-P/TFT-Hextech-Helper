@@ -1,0 +1,726 @@
+{
+  "id": "7c9a2390df3f209efaf58adcfe1544dc",
+  "name": "艾欧尼亚 千珏",
+  "finalComp": {
+    "champions": [
+      {
+        "name": "阿狸",
+        "position": "R1_C5"
+      },
+      {
+        "name": "斯维因",
+        "position": "R4_C4"
+      },
+      {
+        "name": "塔里克",
+        "position": "R4_C5",
+        "items": [
+          "石像鬼石板甲",
+          "日炎斗篷",
+          "振奋盔甲"
+        ]
+      },
+      {
+        "name": "芸阿娜",
+        "position": "R1_C7"
+      },
+      {
+        "name": "费德提克",
+        "position": "R3_C4"
+      },
+      {
+        "name": "千珏",
+        "position": "R1_C3",
+        "items": [
+          "鬼索的狂暴之刃",
+          "无尽之刃",
+          "海妖之怒"
+        ]
+      },
+      {
+        "name": "卢锡安与赛娜",
+        "position": "R1_C1",
+        "items": [
+          "无尽之刃",
+          "最后的轻语",
+          "朔极之矛"
+        ]
+      },
+      {
+        "name": "瑟提",
+        "position": "R4_C3",
+        "items": [
+          "海克斯科技枪刃",
+          "珠光护手",
+          "强袭者的链枷"
+        ]
+      },
+      {
+        "name": "希瓦娜",
+        "position": "R3_C3"
+      }
+    ],
+    "traits": [
+      {
+        "key": "TFT16_Harvester",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_KindredUnique",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_Soulbound",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_TheBoss",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_ShyvanaUnique",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_Targon",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_Sorcerer",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT16_Rapidfire",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT16_Juggernaut",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT16_Ionia",
+        "style": 1,
+        "numUnits": 3
+      },
+      {
+        "key": "TFT16_Vanquisher",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_Gunslinger",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_Noxus",
+        "style": 0,
+        "numUnits": 1
+      }
+    ]
+  },
+  "stages": {
+    "level4": {
+      "champions": [
+        {
+          "name": "烬",
+          "position": "R1_C1"
+        },
+        {
+          "name": "慎",
+          "position": "R4_C5"
+        },
+        {
+          "name": "赵信",
+          "position": "R4_C4"
+        },
+        {
+          "name": "亚索",
+          "position": "R4_C3"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Ionia",
+          "style": 1,
+          "numUnits": 4
+        },
+        {
+          "key": "TFT16_Gunslinger",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Brawler",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Demacia",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Slayer",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level5": {
+      "champions": [
+        {
+          "name": "俄洛伊",
+          "position": "R4_C5"
+        },
+        {
+          "name": "格雷福斯",
+          "position": "R3_C3"
+        },
+        {
+          "name": "崔斯特",
+          "position": "R1_C1"
+        },
+        {
+          "name": "普朗克",
+          "position": "R4_C3"
+        },
+        {
+          "name": "诺提勒斯",
+          "position": "R4_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Bilgewater",
+          "style": 3,
+          "numUnits": 5
+        },
+        {
+          "key": "TFT16_Brawler",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Gunslinger",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Slayer",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Vanquisher",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Juggernaut",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level6": {
+      "champions": [
+        {
+          "name": "璐璐",
+          "position": "R1_C3"
+        },
+        {
+          "name": "兰博",
+          "position": "R4_C3"
+        },
+        {
+          "name": "波比",
+          "position": "R4_C2"
+        },
+        {
+          "name": "提莫",
+          "position": "R1_C1"
+        },
+        {
+          "name": "崔丝塔娜",
+          "position": "R1_C2"
+        },
+        {
+          "name": "凯南",
+          "position": "R4_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Yordle",
+          "style": 3,
+          "numUnits": 6
+        },
+        {
+          "key": "TFT16_Defender",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Sorcerer",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Demacia",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Juggernaut",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Longshot",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Gunslinger",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Ionia",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level7": {
+      "champions": [
+        {
+          "name": "烬",
+          "position": "R1_C2"
+        },
+        {
+          "name": "慎",
+          "position": "R4_C5"
+        },
+        {
+          "name": "赵信",
+          "position": "R4_C3"
+        },
+        {
+          "name": "亚索",
+          "position": "R4_C2"
+        },
+        {
+          "name": "阿狸",
+          "position": "R1_C3"
+        },
+        {
+          "name": "凯南",
+          "position": "R4_C4"
+        },
+        {
+          "name": "芸阿娜",
+          "position": "R1_C1"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Ionia",
+          "style": 4,
+          "numUnits": 7
+        },
+        {
+          "key": "TFT16_Gunslinger",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Brawler",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Demacia",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Slayer",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Sorcerer",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Yordle",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Defender",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level8": {
+      "champions": [
+        {
+          "name": "璐璐",
+          "position": "R1_C3"
+        },
+        {
+          "name": "兰博",
+          "position": "R4_C3"
+        },
+        {
+          "name": "波比",
+          "position": "R4_C2"
+        },
+        {
+          "name": "提莫",
+          "position": "R1_C1"
+        },
+        {
+          "name": "崔丝塔娜",
+          "position": "R1_C2"
+        },
+        {
+          "name": "凯南",
+          "position": "R4_C4"
+        },
+        {
+          "name": "可酷伯与悠米",
+          "position": "R4_C5"
+        },
+        {
+          "name": "菲兹",
+          "position": "R4_C6"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Yordle",
+          "style": 4,
+          "numUnits": 8
+        },
+        {
+          "key": "TFT16_Defender",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Sorcerer",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Demacia",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Juggernaut",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Longshot",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Gunslinger",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Ionia",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Brawler",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Invoker",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Bilgewater",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level9": {
+      "champions": [
+        {
+          "name": "阿狸",
+          "position": "R1_C5"
+        },
+        {
+          "name": "斯维因",
+          "position": "R4_C4"
+        },
+        {
+          "name": "塔里克",
+          "position": "R4_C5"
+        },
+        {
+          "name": "芸阿娜",
+          "position": "R1_C7"
+        },
+        {
+          "name": "费德提克",
+          "position": "R3_C4"
+        },
+        {
+          "name": "千珏",
+          "position": "R1_C3"
+        },
+        {
+          "name": "卢锡安与赛娜",
+          "position": "R1_C1"
+        },
+        {
+          "name": "瑟提",
+          "position": "R4_C3"
+        },
+        {
+          "name": "希瓦娜",
+          "position": "R3_C3"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Targon",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Harvester",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_KindredUnique",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Soulbound",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_TheBoss",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_ShyvanaUnique",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Sorcerer",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Juggernaut",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Ionia",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT16_Noxus",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Vanquisher",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Gunslinger",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level10": {
+      "champions": [
+        {
+          "name": "阿狸",
+          "position": "R1_C3"
+        },
+        {
+          "name": "斯维因",
+          "position": "R4_C4"
+        },
+        {
+          "name": "塔里克",
+          "position": "R4_C5"
+        },
+        {
+          "name": "芸阿娜",
+          "position": "R1_C7"
+        },
+        {
+          "name": "费德提克",
+          "position": "R3_C4"
+        },
+        {
+          "name": "千珏",
+          "position": "R1_C4"
+        },
+        {
+          "name": "卢锡安与赛娜",
+          "position": "R1_C1"
+        },
+        {
+          "name": "奥恩",
+          "position": "R2_C1"
+        },
+        {
+          "name": "瑟提",
+          "position": "R4_C3"
+        },
+        {
+          "name": "希瓦娜",
+          "position": "R3_C3"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Targon",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Harvester",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_KindredUnique",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Soulbound",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Blacksmith",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_TheBoss",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_ShyvanaUnique",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Sorcerer",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Juggernaut",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Ionia",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT16_Noxus",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Vanquisher",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Gunslinger",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    }
+  }
+}

@@ -5662,7 +5662,7 @@ var TFTMode = /* @__PURE__ */ ((TFTMode2) => {
   TFTMode2["CLASSIC"] = "CLASSIC";
   TFTMode2["NORMAL"] = "NORMAL";
   TFTMode2["RANK"] = "RANK";
-  TFTMode2[TFTMode2["CLOCKWORK_TRAILS"] = void 0] = "CLOCKWORK_TRAILS";
+  TFTMode2["CLOCKWORK_TRAILS"] = "CLOCKWORK_TRAILS";
   return TFTMode2;
 })(TFTMode || {});
 const shopSlot = {

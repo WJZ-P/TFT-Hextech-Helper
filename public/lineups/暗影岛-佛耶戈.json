@@ -1,0 +1,636 @@
+{
+  "id": "1f141e70a289e113a37ebf1e594f4d41",
+  "name": "暗影岛 佛耶戈",
+  "finalComp": {
+    "champions": [
+      {
+        "name": "佛耶戈",
+        "position": "R4_C1",
+        "items": [
+          "饮血剑",
+          "夜之锋刃",
+          "泰坦的坚决"
+        ]
+      },
+      {
+        "name": "约里克",
+        "position": "R4_C3"
+      },
+      {
+        "name": "格温",
+        "position": "R3_C3"
+      },
+      {
+        "name": "布隆",
+        "position": "R4_C5",
+        "items": [
+          "石像鬼石板甲",
+          "振奋盔甲",
+          "狂徒铠甲"
+        ]
+      },
+      {
+        "name": "卡莉丝塔",
+        "position": "R1_C1",
+        "items": [
+          "最后的轻语",
+          "强袭者的链枷",
+          "朔极之矛"
+        ]
+      },
+      {
+        "name": "费德提克",
+        "position": "R3_C4"
+      },
+      {
+        "name": "千珏",
+        "position": "R1_C2"
+      },
+      {
+        "name": "奥恩",
+        "position": "R4_C2"
+      },
+      {
+        "name": "锤石",
+        "position": "R4_C4",
+        "items": [
+          "饮血剑",
+          "莫雷洛秘典",
+          "虚空之杖"
+        ]
+      }
+    ],
+    "traits": [
+      {
+        "key": "TFT16_Harvester",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_KindredUnique",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_Blacksmith",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_ShadowIsles",
+        "style": 4,
+        "numUnits": 5
+      },
+      {
+        "key": "TFT16_Warden",
+        "style": 3,
+        "numUnits": 4
+      },
+      {
+        "key": "TFT16_Vanquisher",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT16_Rapidfire",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT16_Freljord",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_Magus",
+        "style": 0,
+        "numUnits": 1
+      }
+    ]
+  },
+  "stages": {
+    "level4": {
+      "champions": [
+        {
+          "name": "佛耶戈",
+          "position": "R4_C3"
+        },
+        {
+          "name": "艾希",
+          "position": "R1_C1"
+        },
+        {
+          "name": "赵信",
+          "position": "R4_C2"
+        },
+        {
+          "name": "约里克",
+          "position": "R4_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_ShadowIsles",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Freljord",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Demacia",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Ionia",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level5": {
+      "champions": [
+        {
+          "name": "佛耶戈",
+          "position": "R4_C3"
+        },
+        {
+          "name": "艾希",
+          "position": "R1_C1"
+        },
+        {
+          "name": "赵信",
+          "position": "R4_C2"
+        },
+        {
+          "name": "约里克",
+          "position": "R4_C4"
+        },
+        {
+          "name": "格温",
+          "position": "R3_C3"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_ShadowIsles",
+          "style": 3,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Freljord",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Demacia",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Ionia",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Magus",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level6": {
+      "champions": [
+        {
+          "name": "佛耶戈",
+          "position": "R4_C3"
+        },
+        {
+          "name": "艾希",
+          "position": "R1_C1"
+        },
+        {
+          "name": "赵信",
+          "position": "R4_C2"
+        },
+        {
+          "name": "约里克",
+          "position": "R4_C4"
+        },
+        {
+          "name": "格温",
+          "position": "R3_C3"
+        },
+        {
+          "name": "洛里斯",
+          "position": "R4_C1"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_ShadowIsles",
+          "style": 3,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 3,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Freljord",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Demacia",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Ionia",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Magus",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Piltover",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level7": {
+      "champions": [
+        {
+          "name": "佛耶戈",
+          "position": "R4_C3"
+        },
+        {
+          "name": "艾希",
+          "position": "R1_C2"
+        },
+        {
+          "name": "赵信",
+          "position": "R4_C2"
+        },
+        {
+          "name": "约里克",
+          "position": "R4_C4"
+        },
+        {
+          "name": "格温",
+          "position": "R3_C3"
+        },
+        {
+          "name": "洛里斯",
+          "position": "R4_C1"
+        },
+        {
+          "name": "卡莉丝塔",
+          "position": "R1_C1"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Warden",
+          "style": 3,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT16_ShadowIsles",
+          "style": 3,
+          "numUnits": 4
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Freljord",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Demacia",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Ionia",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Magus",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Piltover",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Vanquisher",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level8": {
+      "champions": [
+        {
+          "name": "佛耶戈",
+          "position": "R4_C3"
+        },
+        {
+          "name": "约里克",
+          "position": "R4_C5"
+        },
+        {
+          "name": "格温",
+          "position": "R3_C3"
+        },
+        {
+          "name": "布隆",
+          "position": "R4_C2"
+        },
+        {
+          "name": "卡莉丝塔",
+          "position": "R1_C1"
+        },
+        {
+          "name": "费德提克",
+          "position": "R3_C4"
+        },
+        {
+          "name": "奥恩",
+          "position": "R4_C6"
+        },
+        {
+          "name": "锤石",
+          "position": "R4_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Harvester",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Blacksmith",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_ShadowIsles",
+          "style": 4,
+          "numUnits": 5
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 3,
+          "numUnits": 4
+        },
+        {
+          "key": "TFT16_Vanquisher",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Magus",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Freljord",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level9": {
+      "champions": [
+        {
+          "name": "佛耶戈",
+          "position": "R4_C1"
+        },
+        {
+          "name": "约里克",
+          "position": "R4_C3"
+        },
+        {
+          "name": "格温",
+          "position": "R3_C3"
+        },
+        {
+          "name": "布隆",
+          "position": "R4_C5"
+        },
+        {
+          "name": "卡莉丝塔",
+          "position": "R1_C1"
+        },
+        {
+          "name": "费德提克",
+          "position": "R3_C4"
+        },
+        {
+          "name": "千珏",
+          "position": "R1_C2"
+        },
+        {
+          "name": "奥恩",
+          "position": "R4_C2"
+        },
+        {
+          "name": "锤石",
+          "position": "R4_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Harvester",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_KindredUnique",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Blacksmith",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_ShadowIsles",
+          "style": 4,
+          "numUnits": 5
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 3,
+          "numUnits": 4
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Vanquisher",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Magus",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Freljord",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level10": {
+      "champions": [
+        {
+          "name": "佛耶戈",
+          "position": "R4_C3"
+        },
+        {
+          "name": "约里克",
+          "position": "R4_C5"
+        },
+        {
+          "name": "格温",
+          "position": "R3_C3"
+        },
+        {
+          "name": "洛里斯",
+          "position": "R4_C7"
+        },
+        {
+          "name": "布隆",
+          "position": "R4_C2"
+        },
+        {
+          "name": "卡莉丝塔",
+          "position": "R1_C1"
+        },
+        {
+          "name": "费德提克",
+          "position": "R3_C4"
+        },
+        {
+          "name": "千珏",
+          "position": "R1_C3"
+        },
+        {
+          "name": "奥恩",
+          "position": "R4_C6"
+        },
+        {
+          "name": "锤石",
+          "position": "R4_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Harvester",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_KindredUnique",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Blacksmith",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_ShadowIsles",
+          "style": 4,
+          "numUnits": 5
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 4,
+          "numUnits": 5
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Vanquisher",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Magus",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Piltover",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Freljord",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    }
+  }
+}
