@@ -1,0 +1,712 @@
+{
+  "id": "3eadf5327b469573095e20f7cfd1fcdf",
+  "name": "诺克萨斯 德莱文",
+  "finalComp": {
+    "champions": [
+      {
+        "name": "贝蕾亚",
+        "isCore": false,
+        "position": "R4_C5",
+        "starTarget": 2
+      },
+      {
+        "name": "崔斯特",
+        "isCore": false,
+        "position": "R1_C7",
+        "starTarget": 3
+      },
+      {
+        "name": "德莱文",
+        "isCore": true,
+        "items": [
+          "鬼索的狂暴之刃",
+          "巨人杀手",
+          "海妖之怒"
+        ],
+        "position": "R1_C1",
+        "starTarget": 3
+      },
+      {
+        "name": "普朗克",
+        "isCore": true,
+        "items": [
+          "巨人杀手",
+          "水银",
+          "正义之手"
+        ],
+        "position": "R4_C3",
+        "starTarget": 3
+      },
+      {
+        "name": "诺提勒斯",
+        "isCore": true,
+        "items": [
+          "日炎斗篷",
+          "薄暮法袍",
+          "狂徒铠甲"
+        ],
+        "position": "R4_C2",
+        "starTarget": 3
+      },
+      {
+        "name": "安蓓萨",
+        "isCore": false,
+        "items": [
+          "水银",
+          "斯特拉克的挑战护手",
+          "正义之手"
+        ],
+        "position": "R4_C4",
+        "starTarget": 2
+      },
+      {
+        "name": "布隆",
+        "isCore": false,
+        "position": "R4_C6",
+        "starTarget": 2
+      },
+      {
+        "name": "费德提克",
+        "isCore": false,
+        "position": "R3_C3",
+        "starTarget": 2
+      }
+    ],
+    "traits": [
+      {
+        "key": "TFT16_Harvester",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_Vanquisher",
+        "style": 3,
+        "numUnits": 3
+      },
+      {
+        "key": "TFT16_Warden",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT16_Slayer",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT16_Juggernaut",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT16_Rapidfire",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT16_Noxus",
+        "style": 1,
+        "numUnits": 3
+      },
+      {
+        "key": "TFT16_Bilgewater",
+        "style": 1,
+        "numUnits": 3
+      },
+      {
+        "key": "TFT16_Freljord",
+        "style": 0,
+        "numUnits": 1
+      }
+    ]
+  },
+  "stages": {
+    "level4": {
+      "champions": [
+        {
+          "name": "俄洛伊",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "慎",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "格雷福斯",
+          "isCore": false,
+          "position": "R3_C3"
+        },
+        {
+          "name": "崔斯特",
+          "isCore": false,
+          "position": "R1_C1"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Brawler",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Bilgewater",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT16_Ionia",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Gunslinger",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level5": {
+      "champions": [
+        {
+          "name": "俄洛伊",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "格雷福斯",
+          "isCore": false,
+          "position": "R3_C3"
+        },
+        {
+          "name": "崔斯特",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "普朗克",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "诺提勒斯",
+          "isCore": false,
+          "position": "R4_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Bilgewater",
+          "style": 3,
+          "numUnits": 5
+        },
+        {
+          "key": "TFT16_Brawler",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Gunslinger",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Slayer",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Vanquisher",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Juggernaut",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level6": {
+      "champions": [
+        {
+          "name": "贝蕾亚",
+          "isCore": false,
+          "position": "R4_C2"
+        },
+        {
+          "name": "俄洛伊",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "格雷福斯",
+          "isCore": false,
+          "position": "R3_C3"
+        },
+        {
+          "name": "崔斯特",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "普朗克",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "诺提勒斯",
+          "isCore": false,
+          "position": "R4_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Bilgewater",
+          "style": 3,
+          "numUnits": 5
+        },
+        {
+          "key": "TFT16_Slayer",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Juggernaut",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Noxus",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Brawler",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Gunslinger",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Vanquisher",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level7": {
+      "champions": [
+        {
+          "name": "贝蕾亚",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "崔斯特",
+          "isCore": false,
+          "position": "R1_C7"
+        },
+        {
+          "name": "德莱文",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "普朗克",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "洛里斯",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "诺提勒斯",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "安蓓萨",
+          "isCore": false,
+          "position": "R4_C2"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Slayer",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Juggernaut",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Vanquisher",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Noxus",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT16_Bilgewater",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT16_Piltover",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level8": {
+      "champions": [
+        {
+          "name": "贝蕾亚",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "崔斯特",
+          "isCore": false,
+          "position": "R1_C7"
+        },
+        {
+          "name": "德莱文",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "普朗克",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "诺提勒斯",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "安蓓萨",
+          "isCore": false,
+          "position": "R4_C2"
+        },
+        {
+          "name": "布隆",
+          "isCore": false,
+          "position": "R4_C6"
+        },
+        {
+          "name": "斯维因",
+          "isCore": false,
+          "position": "R4_C5"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Slayer",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Vanquisher",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Juggernaut",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT16_Bilgewater",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT16_Noxus",
+          "style": 1,
+          "numUnits": 4
+        },
+        {
+          "key": "TFT16_Freljord",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Sorcerer",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level9": {
+      "champions": [
+        {
+          "name": "贝蕾亚",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "崔斯特",
+          "isCore": false,
+          "position": "R1_C7"
+        },
+        {
+          "name": "德莱文",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "普朗克",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "诺提勒斯",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "安蓓萨",
+          "isCore": false,
+          "position": "R4_C2"
+        },
+        {
+          "name": "布隆",
+          "isCore": false,
+          "position": "R4_C6"
+        },
+        {
+          "name": "斯维因",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "梅尔",
+          "isCore": false,
+          "position": "R1_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Noxus",
+          "style": 3,
+          "numUnits": 5
+        },
+        {
+          "key": "TFT16_Slayer",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Vanquisher",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Juggernaut",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT16_Bilgewater",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT16_Freljord",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Sorcerer",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Magus",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level10": {
+      "champions": [
+        {
+          "name": "贝蕾亚",
+          "isCore": false,
+          "position": "R4_C2"
+        },
+        {
+          "name": "崔斯特",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "德莱文",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "普朗克",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "诺提勒斯",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "安蓓萨",
+          "isCore": false,
+          "position": "R3_C3"
+        },
+        {
+          "name": "布隆",
+          "isCore": false,
+          "position": "R4_C6"
+        },
+        {
+          "name": "斯维因",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "费德提克",
+          "isCore": false,
+          "position": "R3_C4"
+        },
+        {
+          "name": "梅尔",
+          "isCore": false,
+          "position": "R1_C7"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Harvester",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Vanquisher",
+          "style": 3,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT16_Noxus",
+          "style": 3,
+          "numUnits": 5
+        },
+        {
+          "key": "TFT16_Slayer",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Rapidfire",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Juggernaut",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT16_Bilgewater",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT16_Freljord",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Sorcerer",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Magus",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    }
+  }
+}

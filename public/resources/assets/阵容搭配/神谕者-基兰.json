@@ -1,0 +1,6117 @@
+{
+    "id": "099f82d1c2235cada42c829a7c632d18",
+    "name": {
+        "ar_AE": "Ø¹Ø±Ø§Ù Ø²ÙŠÙ„ÙŠØ§Ù†",
+        "cs_CZ": "KouzelnÃ­k Zilean",
+        "de_DE": "Anrufer Zilean",
+        "el_GR": "ÎœÏ…Î¿ÏÎ¼ÎµÎ½Î¿Ï‚ Î–Î¯Î»ÎµÎ±Î½",
+        "en_AU": "Invoker Zilean",
+        "en_GB": "Invoker Zilean",
+        "en_PH": "Invoker Zilean",
+        "en_SG": "Invoker Zilean",
+        "en_US": "Invoker Zilean",
+        "es_AR": "Conjurador Zilean",
+        "es_ES": "Conjurador Zilean",
+        "es_MX": "Conjurador Zilean",
+        "fr_FR": "Incantateur Zilean",
+        "hu_HU": "SzellemidÃ©zÅ‘ Zilean",
+        "it_IT": "Evocatore Zilean",
+        "ja_JP": "ã‚¤ãƒ³ãƒ´ã‚©ãƒ¼ã‚«ãƒ¼ ã‚¸ãƒªã‚¢ãƒ³",
+        "ko_KR": "ê¸°ì›ìž ì§ˆë¦¬ì–¸",
+        "pl_PL": "WzywajÄ…cy Zilean",
+        "pt_BR": "Emanador Zilean",
+        "ro_RO": "Invocator Zilean",
+        "ru_RU": "ÐšÐ¾Ð»Ð´ÑƒÐ½ Ð—Ð¸Ð»ÐµÐ°Ð½",
+        "th_TH": "Invoker Zilean",
+        "tr_TR": "Manabaz Zilean",
+        "vi_VN": "Thuáº­t SÄ© Zilean",
+        "zh_CN": "ç¥žè°•è€… åŸºå…°",
+        "zh_MY": "ç¥žè°•è€… æžçµ",
+        "zh_TW": "ç¥žè«­è€… æ¥µéˆ"
+    },
+    "cost": 120,
+    "teamCode": "0203534234034101a35737335a363000TFTSet16",
+    "units": [
+        {
+            "key": "TFT16_Kobuko",
+            "items": [],
+            "tier": 2,
+            "cell": {
+                "x": 7,
+                "y": 4
+            },
+            "isCore": false,
+            "priority": null
+        },
+        {
+            "key": "TFT16_Milio",
+            "items": [],
+            "tier": 2,
+            "cell": {
+                "x": 7,
+                "y": 1
+            },
+            "isCore": false,
+            "priority": null
+        },
+        {
+            "key": "TFT16_Braum",
+            "items": [
+                "TFT_Item_GargoyleStoneplate",
+                "TFT_Item_Redemption",
+                "TFT_Item_WarmogsArmor"
+            ],
+            "tier": 2,
+            "cell": {
+                "x": 2,
+                "y": 4
+            },
+            "isCore": true,
+            "priority": 3
+        },
+        {
+            "key": "TFT16_Lissandra",
+            "items": [
+                "TFT_Item_JeweledGauntlet",
+                "TFT_Item_Leviathan",
+                "TFT_Item_SpearOfShojin"
+            ],
+            "tier": 2,
+            "cell": {
+                "x": 3,
+                "y": 1
+            },
+            "isCore": false,
+            "priority": null
+        },
+        {
+            "key": "TFT16_Skarner",
+            "items": [],
+            "tier": 2,
+            "cell": {
+                "x": 3,
+                "y": 3
+            },
+            "isCore": false,
+            "priority": null
+        },
+        {
+            "key": "TFT16_Ornn",
+            "items": [],
+            "tier": 2,
+            "cell": {
+                "x": 5,
+                "y": 4
+            },
+            "isCore": false,
+            "priority": null
+        },
+        {
+            "key": "TFT16_Volibear",
+            "items": [],
+            "tier": 2,
+            "cell": {
+                "x": 1,
+                "y": 3
+            },
+            "isCore": false,
+            "priority": null
+        },
+        {
+            "key": "TFT16_Zilean",
+            "items": [
+                "TFT_Item_BlueBuff",
+                "TFT_Item_Morellonomicon",
+                "TFT_Item_StatikkShiv"
+            ],
+            "tier": 2,
+            "cell": {
+                "x": 1,
+                "y": 1
+            },
+            "isCore": true,
+            "priority": 1
+        },
+        {
+            "key": "TFT16_Brock",
+            "items": [
+                "TFT_Item_Bloodthirster",
+                "TFT_Item_InfinityEdge",
+                "TFT_Item_UnstableConcoction"
+            ],
+            "tier": 2,
+            "cell": {
+                "x": 3,
+                "y": 4
+            },
+            "isCore": true,
+            "priority": 2
+        }
+    ],
+    "traits": [
+        {
+            "key": "TFT16_Blacksmith",
+            "style": 4,
+            "numUnits": 1
+        },
+        {
+            "key": "TFT16_Chronokeeper",
+            "style": 4,
+            "numUnits": 1
+        },
+        {
+            "key": "TFT16_Invoker",
+            "style": 4,
+            "numUnits": 4
+        },
+        {
+            "key": "TFT16_Warden",
+            "style": 1,
+            "numUnits": 2
+        },
+        {
+            "key": "TFT16_Brawler",
+            "style": 1,
+            "numUnits": 2
+        },
+        {
+            "key": "TFT16_Freljord",
+            "style": 1,
+            "numUnits": 3
+        },
+        {
+            "key": "TFT16_Explorer",
+            "style": 1,
+            "numUnits": 3
+        },
+        {
+            "key": "TFT16_Yordle",
+            "style": 0,
+            "numUnits": 1
+        }
+    ],
+    "badge": [
+        {
+            "key": "difficulty",
+            "value": 3
+        },
+        {
+            "key": "tempo",
+            "value": 9
+        },
+        {
+            "key": "reroll",
+            "value": 8
+        },
+        {
+            "key": "honey",
+            "value": true
+        },
+        {
+            "key": "ppm",
+            "value": null
+        }
+    ],
+    "stat": {
+        "originHash": "099f82d1c2235cada42c829a7c632d18",
+        "labelNumber": 55,
+        "opTier": "C",
+        "opScore": 0.023190687340451446,
+        "deck": {
+            "totalCount": 6662157,
+            "compsCount": 750,
+            "avgPlacement": 2.44,
+            "winCount": 311,
+            "top4Count": 660,
+            "winRate": 0.4147,
+            "top4Rate": 0.88,
+            "pickRate": 0.00011257615213811382
+        },
+        "label": {
+            "totalCount": 6662157,
+            "compsCount": 1000,
+            "avgPlacement": 2.27,
+            "winCount": 471,
+            "top4Count": 898,
+            "winRate": 0.471,
+            "top4Rate": 0.898,
+            "pickRate": 0.00015010153618415177
+        },
+        "representative": true
+    },
+    "buildUp": [
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "2d3876b27c86af7d19b3646eb2bf1cc7",
+            "level": "4",
+            "units": [
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Bard",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Caretaker",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 5474,
+            "win": 1326,
+            "lose": 3843
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "64d20e698a077361acf73a36ed285521",
+            "level": "4",
+            "units": [
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Vi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Defender",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Piltover",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Zaun",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 1032,
+            "win": 406,
+            "lose": 561
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "33a62a87be632a21a59f36eafcf0f337",
+            "level": "4",
+            "units": [
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 522,
+            "win": 85,
+            "lose": 406
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "78ca3929d76bda1fbe83158f080ac9f6",
+            "level": "4",
+            "units": [
+                {
+                    "characterId": "TFT16_Lulu",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Yordle",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 295,
+            "win": 72,
+            "lose": 210
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "a1c822e9438bb04b34faf707d8984244",
+            "level": "4",
+            "units": [
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Malzahar",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Void",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Magus",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 0,
+                    "numUnits": 2
+                }
+            ],
+            "play": 5,
+            "win": 2,
+            "lose": 3
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "67ae0806202feb28ddd1976847167bd4",
+            "level": "4",
+            "units": [
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Tristana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Nautilus",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Yordle",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Gunslinger",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Bilgewater",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Juggernaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Warden",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 0,
+                    "numUnits": 2
+                }
+            ],
+            "play": 1,
+            "win": 0,
+            "lose": 1
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "38eeca439ac19a6212882ca55068d553",
+            "level": "5",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Vi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Piltover",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Zaun",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 218,
+            "win": 95,
+            "lose": 113
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "c5c9000156a97e23961fd8a65d92f286",
+            "level": "5",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Bard",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Caretaker",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 209,
+            "win": 63,
+            "lose": 144
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "2539697d5232f714143b8e9beafde108",
+            "level": "5",
+            "units": [
+                {
+                    "characterId": "TFT16_Briar",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Vi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Noxus",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Juggernaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Piltover",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Zaun",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 199,
+            "win": 82,
+            "lose": 111
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "2dea39d41b2e1dbf735c638f028a5a6e",
+            "level": "5",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Briar",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Noxus",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Juggernaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 149,
+            "win": 46,
+            "lose": 92
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "0b8f6384eee677d731a5c29064d18be8",
+            "level": "5",
+            "units": [
+                {
+                    "characterId": "TFT16_Lulu",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Vi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Yordle",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Piltover",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Zaun",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 37,
+            "win": 7,
+            "lose": 27
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "7ebdaf0186da5fec99233de0cc31a997",
+            "level": "5",
+            "units": [
+                {
+                    "characterId": "TFT16_Lulu",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Yordle",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 33,
+            "win": 4,
+            "lose": 28
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "cb441e6121a65585d9c91c95d791fd31",
+            "level": "5",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Briar",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_ChoGath",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Juggernaut",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Noxus",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Void",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 0,
+                    "numUnits": 2
+                }
+            ],
+            "play": 4,
+            "win": 3,
+            "lose": 1
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "7916d99395ab35fe08b38d12b6f0e618",
+            "level": "6",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Bard",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Vi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Caretaker",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Piltover",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Zaun",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 149,
+            "win": 53,
+            "lose": 92
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "bfb615a6a59d4b99f2fd4ceea190b496",
+            "level": "6",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Briar",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Vi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Noxus",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Juggernaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Piltover",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Zaun",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 49,
+            "win": 9,
+            "lose": 39
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "bc46de8878ac03b3006f8f5d6e4d8aba",
+            "level": "6",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Vi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Lissandra",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Defender",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Piltover",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Zaun",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 0,
+                    "numUnits": 2
+                }
+            ],
+            "play": 14,
+            "win": 5,
+            "lose": 9
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "28ba439e932cef95a056c287fa0028ac",
+            "level": "6",
+            "units": [
+                {
+                    "characterId": "TFT16_Briar",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Vi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Loris",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Piltover",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Noxus",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Juggernaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Zaun",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Warden",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 14,
+            "win": 5,
+            "lose": 9
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "94369062ae482dc4f654fbafa147cc14",
+            "level": "6",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Lulu",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Vi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Yordle",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Piltover",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Zaun",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 12,
+            "win": 4,
+            "lose": 7
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "70c7c98df5797cb5aa323d7977a38910",
+            "level": "6",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Briar",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Wukong",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Noxus",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Juggernaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Ionia",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Brawler",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 4,
+            "win": 0,
+            "lose": 3
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "c603404e806ab7372d3a3b434e490ba9",
+            "level": "7",
+            "units": [
+                {
+                    "characterId": "TFT16_Lulu",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Rumble",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Teemo",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Kobuko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Skarner",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Yordle",
+                    "style": 3,
+                    "numUnits": 4
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Longshot",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Brawler",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 5,
+            "win": 0,
+            "lose": 5
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "ddc98e1ea25e839a097d272e0942c417",
+            "level": "7",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Illaoi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Lissandra",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Wukong",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Brawler",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Bilgewater",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Ionia",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 0,
+                    "numUnits": 2
+                }
+            ],
+            "play": 2,
+            "win": 1,
+            "lose": 1
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "ae1317550b0c63b2c09d90f196126199",
+            "level": "7",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Briar",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Vi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Noxus",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Juggernaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Piltover",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Zaun",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 2,
+            "win": 0,
+            "lose": 2
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "7c4d1c70b5a473a58405d4bc637fb75c",
+            "level": "7",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Illaoi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Vi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Lissandra",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Skarner",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Defender",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Bilgewater",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Brawler",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Piltover",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Zaun",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 0,
+                    "numUnits": 2
+                }
+            ],
+            "play": 1,
+            "win": 0,
+            "lose": 1
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "ddc744a40f0afe3d12ac8d72ffaef88f",
+            "level": "7",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Illaoi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Lissandra",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Skarner",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Wukong",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Brawler",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Bilgewater",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Ionia",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 0,
+                    "numUnits": 2
+                }
+            ],
+            "play": 1,
+            "win": 0,
+            "lose": 1
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "6b8c87ec6508d863e2cf781bb1a93eda",
+            "level": "7",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Bard",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Kobuko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 2
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Lissandra",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Caretaker",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 4,
+                    "numUnits": 4
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Yordle",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Brawler",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 0,
+                    "numUnits": 2
+                }
+            ],
+            "play": 1,
+            "win": 0,
+            "lose": 1
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "d791fd67bd49a04365122106fc7049fe",
+            "level": "8",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Bard",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Kobuko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 2
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Braum",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Lissandra",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Caretaker",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 4,
+                    "numUnits": 4
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Yordle",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Brawler",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Warden",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 6,
+            "win": 3,
+            "lose": 3
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "7544d10a6cc9ccc64f478aca57ebc3a9",
+            "level": "8",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Vi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 2
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Braum",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Lissandra",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Skarner",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Shyvana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_ShyvanaUnique",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Piltover",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Zaun",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Warden",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Juggernaut",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 3,
+            "win": 1,
+            "lose": 2
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "d40ed90873738b3940390ecd2887dcdc",
+            "level": "8",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Bard",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Vi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Braum",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Lissandra",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Skarner",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Brock",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Caretaker",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Piltover",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Zaun",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Warden",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 2,
+            "win": 2,
+            "lose": 0
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "5d81cd5c5923caf4e31b520b3a328d4e",
+            "level": "8",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Lulu",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Rumble",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Teemo",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Kobuko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Skarner",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Yordle",
+                    "style": 3,
+                    "numUnits": 4
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Longshot",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Brawler",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 1,
+            "win": 0,
+            "lose": 1
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "5411c801adc1671de895b7b10266b67a",
+            "level": "8",
+            "units": [
+                {
+                    "characterId": "TFT16_Bard",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Vi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Braum",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Lissandra",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Skarner",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Volibear",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Brock",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Caretaker",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Piltover",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Zaun",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Warden",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Brawler",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 1,
+            "win": 1,
+            "lose": 0
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "82eb6e125f137d7c6ba0eed890aa8fa2",
+            "level": "8",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Teemo",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Kobuko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Braum",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Skarner",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Ornn",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Brock",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 3
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Blacksmith",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Yordle",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Warden",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Longshot",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Brawler",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 0,
+                    "numUnits": 2
+                }
+            ],
+            "play": 1,
+            "win": 0,
+            "lose": 1
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "01b9b14feca68baeda0e9ebe51f19c3c",
+            "level": "8",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Briar",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Vi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Sejuani",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Braum",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Noxus",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Juggernaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Piltover",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Zaun",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Warden",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 1,
+            "win": 1,
+            "lose": 0
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "c23a33eaf3b3c96de29f10ffe586520d",
+            "level": "8",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Kobuko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 2
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Braum",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Lissandra",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Skarner",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Ornn",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 2
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Blacksmith",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 4,
+                    "numUnits": 4
+                },
+                {
+                    "key": "TFT16_Warden",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Yordle",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Brawler",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 1,
+            "win": 1,
+            "lose": 0
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "c558cc1fa73d3a517095217f1b35cbce",
+            "level": "8",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Sion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Kobuko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Braum",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Lissandra",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Skarner",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 4,
+                    "numUnits": 4
+                },
+                {
+                    "key": "TFT16_Brawler",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Noxus",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Yordle",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Warden",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 1,
+            "win": 1,
+            "lose": 0
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "f6f2c7912914882c9f1b144d93adb398",
+            "level": "8",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Bard",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Vi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Brock",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 3
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Caretaker",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Piltover",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Zaun",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 1,
+            "win": 0,
+            "lose": 1
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "099f82d1c2235cada42c829a7c632d18",
+            "level": "9",
+            "units": [
+                {
+                    "characterId": "TFT16_Kobuko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Braum",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Lissandra",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Skarner",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Ornn",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Volibear",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Zilean",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Brock",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Blacksmith",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Chronokeeper",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 4,
+                    "numUnits": 4
+                },
+                {
+                    "key": "TFT16_Brawler",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Warden",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Yordle",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 10,
+            "win": 6,
+            "lose": 4
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "268ed32021a97b8142e47a14c16f18e0",
+            "level": "9",
+            "units": [
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Kobuko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Braum",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Lissandra",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Skarner",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Zilean",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Brock",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Chronokeeper",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 4,
+                    "numUnits": 4
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 3,
+                    "numUnits": 5
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Yordle",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Brawler",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Warden",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 0,
+                    "numUnits": 2
+                }
+            ],
+            "play": 3,
+            "win": 2,
+            "lose": 1
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "19007a579c6348e6e404544787d3c7f0",
+            "level": "9",
+            "units": [
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Kobuko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Braum",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Lissandra",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Skarner",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Ornn",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Zilean",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Brock",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Blacksmith",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Chronokeeper",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 4,
+                    "numUnits": 4
+                },
+                {
+                    "key": "TFT16_Warden",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 4
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Yordle",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Brawler",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 0,
+                    "numUnits": 2
+                }
+            ],
+            "play": 2,
+            "win": 1,
+            "lose": 1
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "733a47be7021ec6bb33455f4c4847fde",
+            "level": "9",
+            "units": [
+                {
+                    "characterId": "TFT16_Bard",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Vi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Braum",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Lissandra",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Skarner",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Volibear",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Zilean",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 2
+                    }
+                },
+                {
+                    "characterId": "TFT16_Brock",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Caretaker",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Chronokeeper",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Piltover",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Zaun",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Warden",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Brawler",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 1,
+            "win": 1,
+            "lose": 0
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "829240a579398dc471da24e358c7bdb9",
+            "level": "9",
+            "units": [
+                {
+                    "characterId": "TFT16_Kobuko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Braum",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Lissandra",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Skarner",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Taric",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Volibear",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Zilean",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Brock",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Targon",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Chronokeeper",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 4,
+                    "numUnits": 4
+                },
+                {
+                    "key": "TFT16_Brawler",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Yordle",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Warden",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 1,
+            "win": 1,
+            "lose": 0
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "8c1819f2fb514a13982554ed8e829102",
+            "level": "9",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Qiyana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Sion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Kobuko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Braum",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Lissandra",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Skarner",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Brock",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 4,
+                    "numUnits": 4
+                },
+                {
+                    "key": "TFT16_Brawler",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 4
+                },
+                {
+                    "key": "TFT16_Slayer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Noxus",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Yordle",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Warden",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 1,
+            "win": 1,
+            "lose": 0
+        },
+        {
+            "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+            "deckId": "1fcbc1092c06f29971aa1087c6d21650",
+            "level": "9",
+            "units": [
+                {
+                    "characterId": "TFT16_Anivia",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Neeko",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT16_Vi",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 2
+                    }
+                },
+                {
+                    "characterId": "TFT16_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Braum",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Lissandra",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT16_Skarner",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_Azir",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 2
+                    }
+                },
+                {
+                    "characterId": "TFT16_Brock",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 2
+                    }
+                },
+                {
+                    "characterId": "TFT16_AzirSoldier",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT16_AzirSoldier",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT16_Emperor",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Defender",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT16_Freljord",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Invoker",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT16_Explorer",
+                    "style": 1,
+                    "numUnits": 4
+                },
+                {
+                    "key": "TFT16_Sorcerer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Piltover",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Zaun",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Warden",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Shurima",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT16_Magus",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 1,
+            "win": 0,
+            "lose": 1
+        }
+    ],
+    "early": {
+        "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+        "deckId": "38eeca439ac19a6212882ca55068d553",
+        "level": "5",
+        "units": [
+            {
+                "characterId": "TFT16_Anivia",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 2,
+                    "y": 1
+                }
+            },
+            {
+                "characterId": "TFT16_Qiyana",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 3,
+                    "y": 4
+                }
+            },
+            {
+                "characterId": "TFT16_Neeko",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 4,
+                    "y": 4
+                }
+            },
+            {
+                "characterId": "TFT16_Vi",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 5,
+                    "y": 4
+                }
+            },
+            {
+                "characterId": "TFT16_Milio",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 1,
+                    "y": 1
+                }
+            }
+        ],
+        "traits": [
+            {
+                "key": "TFT16_Invoker",
+                "style": 1,
+                "numUnits": 2
+            },
+            {
+                "key": "TFT16_Defender",
+                "style": 1,
+                "numUnits": 2
+            },
+            {
+                "key": "TFT16_Explorer",
+                "style": 1,
+                "numUnits": 3
+            },
+            {
+                "key": "TFT16_Freljord",
+                "style": 0,
+                "numUnits": 1
+            },
+            {
+                "key": "TFT16_Slayer",
+                "style": 0,
+                "numUnits": 1
+            },
+            {
+                "key": "TFT16_Sorcerer",
+                "style": 0,
+                "numUnits": 1
+            },
+            {
+                "key": "TFT16_Piltover",
+                "style": 0,
+                "numUnits": 1
+            },
+            {
+                "key": "TFT16_Zaun",
+                "style": 0,
+                "numUnits": 1
+            }
+        ],
+        "play": 218,
+        "win": 95,
+        "lose": 113
+    },
+    "middle": {
+        "finalDeckId": "099f82d1c2235cada42c829a7c632d18",
+        "deckId": "c603404e806ab7372d3a3b434e490ba9",
+        "level": "7",
+        "units": [
+            {
+                "characterId": "TFT16_Lulu",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 7,
+                    "y": 1
+                }
+            },
+            {
+                "characterId": "TFT16_Rumble",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 6,
+                    "y": 4
+                }
+            },
+            {
+                "characterId": "TFT16_Neeko",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 4,
+                    "y": 4
+                }
+            },
+            {
+                "characterId": "TFT16_Teemo",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 2,
+                    "y": 1
+                }
+            },
+            {
+                "characterId": "TFT16_Kobuko",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 3,
+                    "y": 4
+                }
+            },
+            {
+                "characterId": "TFT16_Milio",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 1,
+                    "y": 1
+                }
+            },
+            {
+                "characterId": "TFT16_Skarner",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 5,
+                    "y": 4
+                }
+            }
+        ],
+        "traits": [
+            {
+                "key": "TFT16_Yordle",
+                "style": 3,
+                "numUnits": 4
+            },
+            {
+                "key": "TFT16_Sorcerer",
+                "style": 1,
+                "numUnits": 2
+            },
+            {
+                "key": "TFT16_Defender",
+                "style": 1,
+                "numUnits": 2
+            },
+            {
+                "key": "TFT16_Invoker",
+                "style": 1,
+                "numUnits": 2
+            },
+            {
+                "key": "TFT16_Explorer",
+                "style": 1,
+                "numUnits": 3
+            },
+            {
+                "key": "TFT16_Longshot",
+                "style": 0,
+                "numUnits": 1
+            },
+            {
+                "key": "TFT16_Brawler",
+                "style": 0,
+                "numUnits": 1
+            }
+        ],
+        "play": 5,
+        "win": 0,
+        "lose": 5
+    },
+    "similarDecks": []
+}
