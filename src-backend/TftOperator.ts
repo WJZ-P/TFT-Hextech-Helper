@@ -12,7 +12,7 @@
  */
 
 import { logger } from "./utils/Logger";
-import { Button, Point, Region } from "@nut-tree-fork/nut-js";
+import { Button, Region } from "@nut-tree-fork/nut-js";
 import { screen } from "electron";
 import path from "path";
 import fs from "fs-extra";
@@ -41,6 +41,7 @@ import {
     TFTEquip,
     TFTMode,
     TFTUnit,
+    SimplePoint,
 } from "./TFTProtocol";
 
 
@@ -104,7 +105,7 @@ class TftOperator {
     private static instance: TftOperator;
 
     /** 游戏窗口左上角坐标 */
-    private gameWindowRegion: Point | null = null;
+    private gameWindowRegion: SimplePoint | null = null;
 
     /** 当前游戏模式 */
     private tftMode: TFTMode = TFTMode.CLASSIC;
@@ -207,7 +208,7 @@ class TftOperator {
             const originX = screenCenterX - GAME_WIDTH / 2;
             const originY = screenCenterY - GAME_HEIGHT / 2;
 
-            this.gameWindowRegion = new Point(originX, originY);
+            this.gameWindowRegion = { x: originX, y: originY };
 
             // 同步到子模块
             screenCapture.setGameWindowOrigin(this.gameWindowRegion);
@@ -807,7 +808,7 @@ class TftOperator {
      * @param slotIndex 备战席槽位索引 (1-9)，用于判断是否为边缘情况
      * @returns 是否为基础装备锻造器
      */
-    private async checkItemForgeTooltip(clickPoint: Point, slotIndex: number): Promise<boolean> {
+    private async checkItemForgeTooltip(clickPoint: SimplePoint, slotIndex: number): Promise<boolean> {
         this.ensureInitialized();
 
         // 判断是否为边缘情况 (槽位 6-9 靠近屏幕右边缘，浮窗会向左弹出)

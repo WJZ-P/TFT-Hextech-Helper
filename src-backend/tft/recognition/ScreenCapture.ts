@@ -4,11 +4,12 @@
  * @author TFT-Hextech-Helper
  */
 
-import { Point, Region, screen as nutScreen } from "@nut-tree-fork/nut-js";
+import { Region, screen as nutScreen } from "@nut-tree-fork/nut-js";
 import sharp from "sharp";
 import cv from "@techstark/opencv-js";
 import { logger } from "../../utils/Logger";
-import { SimpleRegion, GAME_WIDTH, GAME_HEIGHT } from "../types";
+import { SimpleRegion } from "../types";
+import { SimplePoint } from "../../TFTProtocol";
 
 /**
  * 截图服务
@@ -24,7 +25,7 @@ export class ScreenCapture {
     private static instance: ScreenCapture;
 
     /** 游戏窗口基准点 (左上角坐标) */
-    private gameWindowOrigin: Point | null = null;
+    private gameWindowOrigin: SimplePoint | null = null;
 
     private constructor() {}
 
@@ -42,14 +43,14 @@ export class ScreenCapture {
      * 设置游戏窗口基准点
      * @param origin 游戏窗口左上角坐标
      */
-    public setGameWindowOrigin(origin: Point): void {
+    public setGameWindowOrigin(origin: SimplePoint): void {
         this.gameWindowOrigin = origin;
     }
 
     /**
      * 获取游戏窗口基准点
      */
-    public getGameWindowOrigin(): Point | null {
+    public getGameWindowOrigin(): SimplePoint | null {
         return this.gameWindowOrigin;
     }
 

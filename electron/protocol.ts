@@ -15,4 +15,6 @@ export enum IpcChannel {
     // 阵容相关
     LINEUP_GET_ALL = 'lineup-get-all',          // 获取所有阵容
     LINEUP_GET_BY_ID = 'lineup-get-by-id',      // 根据 ID 获取单个阵容
+    // 棋子数据相关
+    TFT_GET_CHAMPION_CN_TO_EN_MAP = 'tft-get-champion-cn-to-en-map',  // 获取棋子中英文映射表
 }

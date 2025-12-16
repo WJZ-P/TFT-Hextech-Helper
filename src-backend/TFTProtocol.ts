@@ -22,14 +22,17 @@ export enum TFTMode {
 
 
 //  英雄购买槽坐标
-import {Point} from "@nut-tree-fork/nut-js";
+export interface SimplePoint {
+    x: number;
+    y: number;
+}
 
 export const shopSlot = {
-    SHOP_SLOT_1: new Point(240, 700),
-    SHOP_SLOT_2: new Point(380, 700),
-    SHOP_SLOT_3: new Point(520, 700),
-    SHOP_SLOT_4: new Point(660, 700),
-    SHOP_SLOT_5: new Point(800, 700),
+    SHOP_SLOT_1: {x: 240, y: 700},
+    SHOP_SLOT_2: {x: 380, y: 700},
+    SHOP_SLOT_3: {x: 520, y: 700},
+    SHOP_SLOT_4: {x: 660, y: 700},
+    SHOP_SLOT_5: {x: 800, y: 700},
 }
 //  英雄购买槽英雄名字Region
 export const shopSlotNameRegions = {
@@ -97,16 +100,16 @@ export const detailChampionStarRegion = {
 
 //  装备槽位坐标
 export const equipmentSlot = {
-    EQ_SLOT_1: new Point(20, 210),//+35
-    EQ_SLOT_2: new Point(20, 245),
-    EQ_SLOT_3: new Point(20, 280),
-    EQ_SLOT_4: new Point(20, 315),
-    EQ_SLOT_5: new Point(20, 350),
-    EQ_SLOT_6: new Point(20, 385),
-    EQ_SLOT_7: new Point(20, 430),//   这里重置下准确位置
-    EQ_SLOT_8: new Point(20, 465),
-    EQ_SLOT_9: new Point(20, 500),
-    EQ_SLOT_10: new Point(20, 535),
+    EQ_SLOT_1: {x: 20, y: 210},//+35
+    EQ_SLOT_2: {x: 20, y: 245},
+    EQ_SLOT_3: {x: 20, y: 280},
+    EQ_SLOT_4: {x: 20, y: 315},
+    EQ_SLOT_5: {x: 20, y: 350},
+    EQ_SLOT_6: {x: 20, y: 385},
+    EQ_SLOT_7: {x: 20, y: 430},//   这里重置下准确位置
+    EQ_SLOT_8: {x: 20, y: 465},
+    EQ_SLOT_9: {x: 20, y: 500},
+    EQ_SLOT_10: {x: 20, y: 535},
 }
 //  装备槽位具体区域
 export const equipmentRegion = {   //  宽24，高25
@@ -155,37 +158,37 @@ export const equipmentRegion = {   //  宽24，高25
 export const fightBoardSlotPoint = {
     // x+=80
     //  第一行的棋子位置
-    R1_C1: new Point(230, 315),
-    R1_C2: new Point(310, 315),
-    R1_C3: new Point(390, 315),
-    R1_C4: new Point(470, 315),
-    R1_C5: new Point(550, 315),
-    R1_C6: new Point(630, 315),
-    R1_C7: new Point(710, 315),
+    R1_C1: {x: 230, y: 315},
+    R1_C2: {x: 310, y: 315},
+    R1_C3: {x: 390, y: 315},
+    R1_C4: {x: 470, y: 315},
+    R1_C5: {x: 550, y: 315},
+    R1_C6: {x: 630, y: 315},
+    R1_C7: {x: 710, y: 315},
     //  第二行的棋子位置        //  x+=85
-    R2_C1: new Point(260, 370),
-    R2_C2: new Point(345, 370),
-    R2_C3: new Point(430, 370),
-    R2_C4: new Point(515, 370),
-    R2_C5: new Point(600, 370),
-    R2_C6: new Point(685, 370),
-    R2_C7: new Point(770, 370),
+    R2_C1: {x: 260, y: 370},
+    R2_C2: {x: 345, y: 370},
+    R2_C3: {x: 430, y: 370},
+    R2_C4: {x: 515, y: 370},
+    R2_C5: {x: 600, y: 370},
+    R2_C6: {x: 685, y: 370},
+    R2_C7: {x: 770, y: 370},
     //  第三行棋子的位置        //  x+=90
-    R3_C1: new Point(200, 420),
-    R3_C2: new Point(290, 420),
-    R3_C3: new Point(380, 420),
-    R3_C4: new Point(470, 420),
-    R3_C5: new Point(560, 420),
-    R3_C6: new Point(650, 420),
-    R3_C7: new Point(740, 420),
+    R3_C1: {x: 200, y: 420},
+    R3_C2: {x: 290, y: 420},
+    R3_C3: {x: 380, y: 420},
+    R3_C4: {x: 470, y: 420},
+    R3_C5: {x: 560, y: 420},
+    R3_C6: {x: 650, y: 420},
+    R3_C7: {x: 740, y: 420},
     //  第四行棋子的位置        //  x+=90
-    R4_C1: new Point(240, 475),
-    R4_C2: new Point(330, 475),
-    R4_C3: new Point(420, 475),
-    R4_C4: new Point(510, 475),
-    R4_C5: new Point(600, 475),
-    R4_C6: new Point(690, 475),
-    R4_C7: new Point(780, 475),
+    R4_C1: {x: 240, y: 475},
+    R4_C2: {x: 330, y: 475},
+    R4_C3: {x: 420, y: 475},
+    R4_C4: {x: 510, y: 475},
+    R4_C5: {x: 600, y: 475},
+    R4_C6: {x: 690, y: 475},
+    R4_C7: {x: 780, y: 475},
 }
 //  棋子在战场上的region，用来判断是否有棋子
 //  leftTop.y 使用 -10 偏移，兼容 3D 飞行棋子的高度
@@ -354,21 +357,21 @@ export const benchSlotRegion = {
 
 //  备战席点位
 export const benchSlotPoints = {
-    SLOT_1: new Point(135, 555),
-    SLOT_2: new Point(210, 555),
-    SLOT_3: new Point(295, 555),
-    SLOT_4: new Point(385, 555),
-    SLOT_5: new Point(465, 555),
-    SLOT_6: new Point(550, 555),
-    SLOT_7: new Point(630, 555),
-    SLOT_8: new Point(720, 555),
-    SLOT_9: new Point(800, 555),
+    SLOT_1: {x: 135, y: 555},
+    SLOT_2: {x: 210, y: 555},
+    SLOT_3: {x: 295, y: 555},
+    SLOT_4: {x: 385, y: 555},
+    SLOT_5: {x: 465, y: 555},
+    SLOT_6: {x: 550, y: 555},
+    SLOT_7: {x: 630, y: 555},
+    SLOT_8: {x: 720, y: 555},
+    SLOT_9: {x: 800, y: 555},
 }
 //  海克斯选择槽位
 export const hexSlot = {   //  x+=295
-    SLOT_1: new Point(215, 410),
-    SLOT_2: new Point(510, 410),
-    SLOT_3: new Point(805, 410),
+    SLOT_1: {x: 215, y: 410},
+    SLOT_2: {x: 510, y: 410},
+    SLOT_3: {x: 805, y: 410},
 }
 //  选秀站位，为离自己最近的棋子位置。
 export const sharedDraftPoint = {x: 530, y: 400}
@@ -491,7 +494,7 @@ const TFT_SPECIAL_CHESS = {
         origins: [],
         classes: []
     },
-}
+} satisfies Record<string, TFTUnit>;
 
 const _TFT_16_CHAMPION_DATA = {
     //  特殊棋子
@@ -808,7 +811,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "可酷伯与悠米": {
         displayName: "可酷伯与悠米",
-        englishId: "TFT16_KoobAndYuumi",
+        englishId: "TFT16_Kobuko",
         price: 3,
         traits: [UnitOrigin.Yordle, UnitClass.Bruiser, UnitClass.Invoker],
         origins: [UnitOrigin.Yordle],
@@ -898,7 +901,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "卑尔维斯": {
         displayName: "卑尔维斯",
-        englishId: "TFT16_Belveth",
+        englishId: "TFT16_BelVeth",
         price: 4,
         traits: [UnitOrigin.Void, UnitClass.Slayer],
         origins: [UnitOrigin.Void],
@@ -938,7 +941,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "卡莎": {
         displayName: "卡莎",
-        englishId: "TFT16_KaiSa",
+        englishId: "TFT16_Kaisa",
         price: 4,
         traits: [UnitOrigin.Assimilator, UnitOrigin.Void, UnitClass.Longshot],
         origins: [UnitOrigin.Assimilator, UnitOrigin.Void],
@@ -1034,7 +1037,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "孙悟空": {
         displayName: "孙悟空",
-        englishId: "TFT16_MonkeyKing",
+        englishId: "TFT16_Wukong",
         price: 4,
         traits: [UnitOrigin.Ionia, UnitClass.Bruiser],
         origins: [UnitOrigin.Ionia],
@@ -1074,7 +1077,7 @@ const _TFT_16_CHAMPION_DATA = {
     },
     "芸阿娜": {
         displayName: "芸阿娜",
-        englishId: "TFT16_Yuumi",
+        englishId: "TFT16_Yunara",
         price: 4,
         traits: [UnitOrigin.Ionia, UnitClass.Rapidfire],
         origins: [UnitOrigin.Ionia],
@@ -2750,6 +2753,7 @@ export const TFT_16_EQUIP_DATA: Record<keyof typeof _TFT_16_EQUIP_DATA, TFTEquip
 // ==========================================
 
 export type ChampionKey = keyof typeof TFT_16_CHAMPION_DATA;
+export type ChampionEnglishId = typeof _TFT_16_CHAMPION_DATA[keyof typeof _TFT_16_CHAMPION_DATA]['englishId'];
 export type EquipKey = keyof typeof TFT_16_EQUIP_DATA;
 
 // ==========================================
@@ -2760,28 +2764,16 @@ export type EquipKey = keyof typeof TFT_16_EQUIP_DATA;
  * 英雄英文ID到中文名的映射
  * @example "TFT16_Graves" -> "格雷福斯"
  */
-export const CHAMPION_EN_TO_CN: Record<string, ChampionKey> = {};
+export const CHAMPION_EN_TO_CN = {} as Record<ChampionEnglishId, ChampionKey>;
 
 // 自动从 TFT_16_CHAMPION_DATA 生成英文到中文的映射
 for (const [cnName, champion] of Object.entries(TFT_16_CHAMPION_DATA)) {
     if (champion.englishId) {
-        CHAMPION_EN_TO_CN[champion.englishId] = cnName as ChampionKey;
+        CHAMPION_EN_TO_CN[champion.englishId as ChampionEnglishId] = cnName as ChampionKey;
     }
 }
 
-// 添加 OP.GG 使用的别名（与我们的 englishId 不同的情况）
-const CHAMPION_ALIASES: Record<string, ChampionKey> = {
-    "TFT16_Kaisa": "卡莎",           // OP.GG 用 Kaisa，我们用 KaiSa
-    "TFT16_BelVeth": "卑尔维斯",      // OP.GG 用 BelVeth，我们用 Belveth
-    "TFT16_Wukong": "孙悟空",         // OP.GG 用 Wukong，我们用 MonkeyKing
-    "TFT16_Yunara": "芸阿娜",         // OP.GG 用的别名
-    "TFT16_Kobuko": "可酷伯与悠米",    // OP.GG 用的别名
-    "TFT16_Brock": "可酷伯与悠米",    // OP.GG 用的另一个别名
-    "TFT16_THex": "海克斯霸龙",       // 海克斯霸龙特殊棋子
-    "TFT16_Zoe": "佐伊",             // 巨神峰棋子
-    "TFT16_Fizz": "菲兹",            // 小鱼人
-};
-Object.assign(CHAMPION_EN_TO_CN, CHAMPION_ALIASES);
+
 
 /**
  * 装备英文ID到中文名的映射

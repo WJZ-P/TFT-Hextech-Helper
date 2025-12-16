@@ -6,6 +6,7 @@
 import React, {useEffect, useState} from 'react';
 import styled from 'styled-components';
 import {ThemeType} from '../../styles/theme';
+import {TFT_16_CHAMPION_DATA, TFTEquip} from "../../../src-backend/TFTProtocol";
 
 // ==================== 类型定义 ====================
 
@@ -17,8 +18,8 @@ interface ChampionConfig {
     isCore: boolean;        // 是否核心棋子
     starTarget: 1 | 2 | 3;  // 目标星级
     items?: {
-        core: string[];       // 核心装备
-        alternatives?: string[];
+        core: TFTEquip[];       // 核心装备
+        alternatives?: TFTEquip[];
     };
 }
 
@@ -47,15 +48,6 @@ interface LineupConfig {
     };
 }
 
-/**
- * 英雄数据（用于获取英文ID）
- */
-interface TFTUnit {
-    displayName: string;
-    englishId: string;
-    price: number;
-}
-
 // ==================== 常量 ====================
 
 /**
@@ -63,64 +55,6 @@ interface TFTUnit {
  * 将 {englishId} 替换为英雄英文ID即可获取头像
  */
 const OPGG_AVATAR_BASE = 'https://c-tft-api.op.gg/img/set/16/tft-champion/tiles/{englishId}.tft_set16.png?image=q_auto:good,f_webp&v=1765176243';
-
-/**
- * 中文名到英文ID的映射（核心英雄）
- * 完整映射在后端 TFTProtocol.ts 中，这里只放常用的
- */
-const CN_TO_EN_ID: Record<string, string> = {
-    // 1费
-    "俄洛伊": "TFT16_Illaoi", "贝蕾亚": "TFT16_Briar", "艾尼维亚": "TFT16_Anivia",
-    "嘉文四世": "TFT16_JarvanIV", "烬": "TFT16_Jhin", "凯特琳": "TFT16_Caitlyn",
-    "克格莫": "TFT16_KogMaw", "璐璐": "TFT16_Lulu", "奇亚娜": "TFT16_Qiyana",
-    "兰博": "TFT16_Rumble", "慎": "TFT16_Shen", "娑娜": "TFT16_Sona",
-    "佛耶戈": "TFT16_Viego", "布里茨": "TFT16_Blitzcrank",
-    // 2费
-    "厄斐琉斯": "TFT16_Aphelios", "艾希": "TFT16_Ashe", "科加斯": "TFT16_ChoGath",
-    "崔斯特": "TFT16_TwistedFate", "艾克": "TFT16_Ekko", "格雷福斯": "TFT16_Graves",
-    "妮蔻": "TFT16_Neeko", "奥莉安娜": "TFT16_Orianna", "波比": "TFT16_Poppy",
-    "雷克塞": "TFT16_RekSai", "赛恩": "TFT16_Sion", "提莫": "TFT16_Teemo",
-    "崔丝塔娜": "TFT16_Tristana", "蔚": "TFT16_Vi", "亚索": "TFT16_Yasuo",
-    "约里克": "TFT16_Yorick", "赵信": "TFT16_XinZhao", "佐伊": "TFT16_Zoe",
-    // 3费
-    "阿狸": "TFT16_Ahri", "巴德": "TFT16_Bard", "德莱文": "TFT16_Draven",
-    "德莱厄斯": "TFT16_Darius", "格温": "TFT16_Gwen", "金克丝": "TFT16_Jinx",
-    "凯南": "TFT16_Kennen", "可酷伯与悠米": "TFT16_KoobAndYuumi", "乐芙兰": "TFT16_Leblanc",
-    "洛里斯": "TFT16_Loris", "玛尔扎哈": "TFT16_Malzahar", "米利欧": "TFT16_Milio",
-    "诺提勒斯": "TFT16_Nautilus", "普朗克": "TFT16_Gangplank", "瑟庄妮": "TFT16_Sejuani",
-    "薇恩": "TFT16_Vayne", "蒙多医生": "TFT16_DrMundo", "菲兹": "TFT16_Fizz",
-    // 4费
-    "安蓓萨": "TFT16_Ambessa", "卑尔维斯": "TFT16_Belveth", "布隆": "TFT16_Braum",
-    "黛安娜": "TFT16_Diana", "盖伦": "TFT16_Garen", "卡莉丝塔": "TFT16_Kalista",
-    "卡莎": "TFT16_KaiSa", "蕾欧娜": "TFT16_Leona", "丽桑卓": "TFT16_Lissandra",
-    "拉克丝": "TFT16_Lux", "厄运小姐": "TFT16_MissFortune", "内瑟斯": "TFT16_Nasus",
-    "奈德丽": "TFT16_Nidalee", "雷克顿": "TFT16_Renekton", "萨勒芬妮": "TFT16_Seraphine",
-    "辛吉德": "TFT16_Singed", "斯卡纳": "TFT16_Skarner", "斯维因": "TFT16_Swain",
-    "孙悟空": "TFT16_MonkeyKing", "塔里克": "TFT16_Taric", "维迦": "TFT16_Veigar",
-    "沃里克": "TFT16_Warwick", "永恩": "TFT16_Yone", "芸阿娜": "TFT16_Yuumi",
-    // 5费
-    "亚托克斯": "TFT16_Aatrox", "安妮": "TFT16_Annie", "阿兹尔": "TFT16_Azir",
-    "费德提克": "TFT16_Fiddlesticks", "吉格斯": "TFT16_Ziggs", "加里奥": "TFT16_Galio",
-    "基兰": "TFT16_Zilean", "千珏": "TFT16_Kindred", "卢锡安与赛娜": "TFT16_Lucian",
-    "梅尔": "TFT16_Mel", "奥恩": "TFT16_Ornn", "瑟提": "TFT16_Sett",
-    "希瓦娜": "TFT16_Shyvana", "塔姆": "TFT16_TahmKench", "锤石": "TFT16_Thresh",
-    "沃利贝尔": "TFT16_Volibear",
-    // 7费特殊
-    "奥瑞利安·索尔": "TFT16_AurelionSol", "纳什男爵": "TFT16_BaronNashor",
-    "瑞兹": "TFT16_Ryze", "亚恒": "TFT16_Xayah", "海克斯霸龙": "TFT16_THex",
-};
-
-/**
- * 根据中文名获取头像 URL
- */
-const getAvatarUrl = (cnName: string): string => {
-    const englishId = CN_TO_EN_ID[cnName];
-    if (!englishId) {
-        console.warn(`未找到英雄 "${cnName}" 的英文ID`);
-        return '';
-    }
-    return OPGG_AVATAR_BASE.replace('{englishId}', englishId);
-};
 
 // ==================== 样式组件 ====================
 
@@ -293,10 +227,32 @@ const AvatarPlaceholder = styled.div`
 // ==================== 子组件 ====================
 
 /**
+ * 英雄头像组件 Props
+ */
+interface ChampionAvatarProps {
+    champion: ChampionConfig;
+}
+
+/**
+ * 根据中文名获取头像 URL
+ * @param cnName 棋子中文名
+ */
+const getAvatarUrl = (cnName: string): string => {
+    // @ts-ignore
+    const champion = TFT_16_CHAMPION_DATA[cnName];
+    if (!champion) {
+        console.warn(`未找到英雄 "${cnName}" 的数据`);
+        return '';
+    }
+    const englishId = champion.englishId;
+    return OPGG_AVATAR_BASE.replace('{englishId}', englishId);
+};
+
+/**
  * 英雄头像组件
  * 处理图片加载失败的情况
  */
-const ChampionAvatarComponent: React.FC<{ champion: ChampionConfig }> = ({champion}) => {
+const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion}) => {
     const [imgError, setImgError] = useState(false);
     const avatarUrl = getAvatarUrl(champion.name);
 
@@ -335,19 +291,22 @@ const LineupsPage: React.FC = () => {
 
     // 组件挂载时从后端加载阵容数据
     useEffect(() => {
-        const fetchLineups = async () => {
+        const fetchData = async () => {
             try {
-                const data = await window.lineup.getAll();
-                setLineups(data || []);
+                // 并行获取阵容数据，提高加载效率
+                const [lineupsData] = await Promise.all([
+                    window.lineup.getAll(),
+                ]);
+                setLineups(lineupsData || []);
             } catch (error) {
-                console.error('加载阵容失败:', error);
+                console.error('加载数据失败:', error);
                 setLineups([]);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchLineups();
+        fetchData();
     }, []);
 
     /**
@@ -355,7 +314,6 @@ const LineupsPage: React.FC = () => {
      * 优先显示 level8 的阵容（成型阵容）
      */
     const getDisplayChampions = (lineup: LineupConfig): ChampionConfig[] => {
-        // 优先使用 level8，这是大多数阵容的成型点
         const stage =
             lineup.stages.level10 ||
             lineup.stages.level9 ||

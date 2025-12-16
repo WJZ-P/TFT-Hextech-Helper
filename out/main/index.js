@@ -14,7 +14,7 @@ import path__default from "path";
 import WebSocket from "ws";
 import https from "https";
 import axios from "axios";
-import { Point, Region, screen, Button, mouse } from "@nut-tree-fork/nut-js";
+import { Region, screen, Button, Point, mouse } from "@nut-tree-fork/nut-js";
 import sharp from "sharp";
 import cv from "@techstark/opencv-js";
 import { createWorker, PSM } from "tesseract.js";
@@ -5585,6 +5585,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT"] = "tft-test-save-fight-board-slot-snapshot";
   IpcChannel2["LINEUP_GET_ALL"] = "lineup-get-all";
   IpcChannel2["LINEUP_GET_BY_ID"] = "lineup-get-by-id";
+  IpcChannel2["TFT_GET_CHAMPION_CN_TO_EN_MAP"] = "tft-get-champion-cn-to-en-map";
   return IpcChannel2;
 })(IpcChannel || {});
 class IdleState {
@@ -5670,11 +5671,11 @@ var TFTMode = /* @__PURE__ */ ((TFTMode2) => {
   return TFTMode2;
 })(TFTMode || {});
 const shopSlot = {
-  SHOP_SLOT_1: new Point(240, 700),
-  SHOP_SLOT_2: new Point(380, 700),
-  SHOP_SLOT_3: new Point(520, 700),
-  SHOP_SLOT_4: new Point(660, 700),
-  SHOP_SLOT_5: new Point(800, 700)
+  SHOP_SLOT_1: { x: 240, y: 700 },
+  SHOP_SLOT_2: { x: 380, y: 700 },
+  SHOP_SLOT_3: { x: 520, y: 700 },
+  SHOP_SLOT_4: { x: 660, y: 700 },
+  SHOP_SLOT_5: { x: 800, y: 700 }
 };
 const shopSlotNameRegions = {
   SLOT_1: {
@@ -5729,20 +5730,6 @@ const detailChampionStarRegion = {
   leftTop: { x: 919, y: 122 },
   rightBottom: { x: 974, y: 132 }
 };
-({
-  EQ_SLOT_1: new Point(20, 210),
-  //+35
-  EQ_SLOT_2: new Point(20, 245),
-  EQ_SLOT_3: new Point(20, 280),
-  EQ_SLOT_4: new Point(20, 315),
-  EQ_SLOT_5: new Point(20, 350),
-  EQ_SLOT_6: new Point(20, 385),
-  EQ_SLOT_7: new Point(20, 430),
-  //   这里重置下准确位置
-  EQ_SLOT_8: new Point(20, 465),
-  EQ_SLOT_9: new Point(20, 500),
-  EQ_SLOT_10: new Point(20, 535)
-});
 const equipmentRegion = {
   //  宽24，高25
   SLOT_1: {
@@ -5790,37 +5777,37 @@ const equipmentRegion = {
 const fightBoardSlotPoint = {
   // x+=80
   //  第一行的棋子位置
-  R1_C1: new Point(230, 315),
-  R1_C2: new Point(310, 315),
-  R1_C3: new Point(390, 315),
-  R1_C4: new Point(470, 315),
-  R1_C5: new Point(550, 315),
-  R1_C6: new Point(630, 315),
-  R1_C7: new Point(710, 315),
+  R1_C1: { x: 230, y: 315 },
+  R1_C2: { x: 310, y: 315 },
+  R1_C3: { x: 390, y: 315 },
+  R1_C4: { x: 470, y: 315 },
+  R1_C5: { x: 550, y: 315 },
+  R1_C6: { x: 630, y: 315 },
+  R1_C7: { x: 710, y: 315 },
   //  第二行的棋子位置        //  x+=85
-  R2_C1: new Point(260, 370),
-  R2_C2: new Point(345, 370),
-  R2_C3: new Point(430, 370),
-  R2_C4: new Point(515, 370),
-  R2_C5: new Point(600, 370),
-  R2_C6: new Point(685, 370),
-  R2_C7: new Point(770, 370),
+  R2_C1: { x: 260, y: 370 },
+  R2_C2: { x: 345, y: 370 },
+  R2_C3: { x: 430, y: 370 },
+  R2_C4: { x: 515, y: 370 },
+  R2_C5: { x: 600, y: 370 },
+  R2_C6: { x: 685, y: 370 },
+  R2_C7: { x: 770, y: 370 },
   //  第三行棋子的位置        //  x+=90
-  R3_C1: new Point(200, 420),
-  R3_C2: new Point(290, 420),
-  R3_C3: new Point(380, 420),
-  R3_C4: new Point(470, 420),
-  R3_C5: new Point(560, 420),
-  R3_C6: new Point(650, 420),
-  R3_C7: new Point(740, 420),
+  R3_C1: { x: 200, y: 420 },
+  R3_C2: { x: 290, y: 420 },
+  R3_C3: { x: 380, y: 420 },
+  R3_C4: { x: 470, y: 420 },
+  R3_C5: { x: 560, y: 420 },
+  R3_C6: { x: 650, y: 420 },
+  R3_C7: { x: 740, y: 420 },
   //  第四行棋子的位置        //  x+=90
-  R4_C1: new Point(240, 475),
-  R4_C2: new Point(330, 475),
-  R4_C3: new Point(420, 475),
-  R4_C4: new Point(510, 475),
-  R4_C5: new Point(600, 475),
-  R4_C6: new Point(690, 475),
-  R4_C7: new Point(780, 475)
+  R4_C1: { x: 240, y: 475 },
+  R4_C2: { x: 330, y: 475 },
+  R4_C3: { x: 420, y: 475 },
+  R4_C4: { x: 510, y: 475 },
+  R4_C5: { x: 600, y: 475 },
+  R4_C6: { x: 690, y: 475 },
+  R4_C7: { x: 780, y: 475 }
 };
 const fightBoardSlotRegion = {
   // x+=80
@@ -5980,22 +5967,16 @@ const benchSlotRegion = {
   }
 };
 const benchSlotPoints = {
-  SLOT_1: new Point(135, 555),
-  SLOT_2: new Point(210, 555),
-  SLOT_3: new Point(295, 555),
-  SLOT_4: new Point(385, 555),
-  SLOT_5: new Point(465, 555),
-  SLOT_6: new Point(550, 555),
-  SLOT_7: new Point(630, 555),
-  SLOT_8: new Point(720, 555),
-  SLOT_9: new Point(800, 555)
+  SLOT_1: { x: 135, y: 555 },
+  SLOT_2: { x: 210, y: 555 },
+  SLOT_3: { x: 295, y: 555 },
+  SLOT_4: { x: 385, y: 555 },
+  SLOT_5: { x: 465, y: 555 },
+  SLOT_6: { x: 550, y: 555 },
+  SLOT_7: { x: 630, y: 555 },
+  SLOT_8: { x: 720, y: 555 },
+  SLOT_9: { x: 800, y: 555 }
 };
-({
-  //  x+=295
-  SLOT_1: new Point(215, 410),
-  SLOT_2: new Point(510, 410),
-  SLOT_3: new Point(805, 410)
-});
 const gameStageDisplayStageOne = {
   leftTop: { x: 411, y: 6 },
   rightBottom: { x: 442, y: 22 }
@@ -6727,7 +6708,7 @@ const _TFT_16_CHAMPION_DATA = {
   },
   "可酷伯与悠米": {
     displayName: "可酷伯与悠米",
-    englishId: "TFT16_KoobAndYuumi",
+    englishId: "TFT16_Kobuko",
     price: 3,
     traits: [
       "约德尔人",
@@ -6932,7 +6913,7 @@ const _TFT_16_CHAMPION_DATA = {
   },
   "卑尔维斯": {
     displayName: "卑尔维斯",
-    englishId: "TFT16_Belveth",
+    englishId: "TFT16_BelVeth",
     price: 4,
     traits: [
       "虚空",
@@ -7018,7 +6999,7 @@ const _TFT_16_CHAMPION_DATA = {
   },
   "卡莎": {
     displayName: "卡莎",
-    englishId: "TFT16_KaiSa",
+    englishId: "TFT16_Kaisa",
     price: 4,
     traits: [
       "虚空之女",
@@ -7220,7 +7201,7 @@ const _TFT_16_CHAMPION_DATA = {
   },
   "孙悟空": {
     displayName: "孙悟空",
-    englishId: "TFT16_MonkeyKing",
+    englishId: "TFT16_Wukong",
     price: 4,
     traits: [
       "艾欧尼亚",
@@ -7306,7 +7287,7 @@ const _TFT_16_CHAMPION_DATA = {
   },
   "芸阿娜": {
     displayName: "芸阿娜",
-    englishId: "TFT16_Yuumi",
+    englishId: "TFT16_Yunara",
     price: 4,
     traits: [
       "艾欧尼亚",
@@ -9226,27 +9207,6 @@ for (const [cnName, champion] of Object.entries(TFT_16_CHAMPION_DATA)) {
     CHAMPION_EN_TO_CN[champion.englishId] = cnName;
   }
 }
-const CHAMPION_ALIASES = {
-  "TFT16_Kaisa": "卡莎",
-  // OP.GG 用 Kaisa，我们用 KaiSa
-  "TFT16_BelVeth": "卑尔维斯",
-  // OP.GG 用 BelVeth，我们用 Belveth
-  "TFT16_Wukong": "孙悟空",
-  // OP.GG 用 Wukong，我们用 MonkeyKing
-  "TFT16_Yunara": "芸阿娜",
-  // OP.GG 用的别名
-  "TFT16_Kobuko": "可酷伯与悠米",
-  // OP.GG 用的别名
-  "TFT16_Brock": "可酷伯与悠米",
-  // OP.GG 用的另一个别名
-  "TFT16_THex": "海克斯霸龙",
-  // 海克斯霸龙特殊棋子
-  "TFT16_Zoe": "佐伊",
-  // 巨神峰棋子
-  "TFT16_Fizz": "菲兹"
-  // 小鱼人
-};
-Object.assign(CHAMPION_EN_TO_CN, CHAMPION_ALIASES);
 const EQUIP_EN_TO_CN = {};
 for (const [cnName, equip] of Object.entries(TFT_16_EQUIP_DATA)) {
   const englishNames = equip.englishName.split(",");
@@ -10340,7 +10300,8 @@ class MouseController {
    */
   async clickAtAbsolute(position, button = Button.LEFT) {
     try {
-      await mouse.move([position]);
+      const target = new Point(position.x, position.y);
+      await mouse.move([target]);
       await sleep(MOUSE_CONFIG.MOVE_DELAY);
       await mouse.click(button);
       await sleep(MOUSE_CONFIG.CLICK_DELAY);
@@ -10456,7 +10417,7 @@ class TftOperator {
       const screenCenterY = screenHeight / 2;
       const originX = screenCenterX - GAME_WIDTH / 2;
       const originY = screenCenterY - GAME_HEIGHT / 2;
-      this.gameWindowRegion = new Point(originX, originY);
+      this.gameWindowRegion = { x: originX, y: originY };
       screenCapture.setGameWindowOrigin(this.gameWindowRegion);
       mouseController.setGameWindowOrigin(this.gameWindowRegion);
       logger.info(`[TftOperator] 屏幕尺寸: ${screenWidth}x${screenHeight}`);
@@ -11824,6 +11785,13 @@ function registerHandler() {
   ipcMain.handle(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT, async (event) => tftOperator.saveFightBoardSlotSnapshots());
   ipcMain.handle(IpcChannel.LINEUP_GET_ALL, async () => lineupLoader.getAllLineups());
   ipcMain.handle(IpcChannel.LINEUP_GET_BY_ID, async (_event, id) => lineupLoader.getLineup(id));
+  ipcMain.handle(IpcChannel.TFT_GET_CHAMPION_CN_TO_EN_MAP, async () => {
+    const cnToEnMap = {};
+    for (const [cnName, unitData] of Object.entries(TFT_16_CHAMPION_DATA)) {
+      cnToEnMap[cnName] = unitData.englishId;
+    }
+    return cnToEnMap;
+  });
 }
 export {
   MAIN_DIST,

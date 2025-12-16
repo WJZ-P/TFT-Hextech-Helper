@@ -13,6 +13,6 @@ declare global {
         config:ConfigApi
         hex:HexApi
         tft:TftApi
-        lineup:LineupApi  // 阵容配置 API
+        lineup:LineupApi      // 阵容配置 API
     }
 }

@@ -14,21 +14,43 @@ const FONT_SIZE = 31;
 const FONT_WEIGHT = "bold";
 const LETTER_SPACING = 5;
 
-// 英雄列表 (从 TFTProtocol.ts 提取)
-const championNames = [
-    // 1 费
-    "俄洛伊", "贝蕾亚", "艾尼维亚", "嘉文四世", "烬", "凯特琳", "克格莫", "璐璐", "奇亚娜", "兰博", "慎", "娑娜", "佛耶戈", "布里茨",
-    // 2 费
-    "厄斐琉斯", "艾希", "科加斯", "崔斯特", "艾克", "格雷福斯", "妮蔻", "奥莉安娜", "波比", "雷克塞", "赛恩", "提莫", "崔丝塔娜", "蔚", "亚索", "约里克", "赵信",
-    // 3 费
-    "阿狸", "巴德", "德莱文", "德莱厄斯", "格温", "金克丝", "凯南", "可酷伯与悠米", "乐芙兰", "洛里斯", "玛尔扎哈", "米利欧", "诺提勒斯", "普朗克", "瑟庄妮", "薇恩","蒙多医生",
-    // 4 费
-    "安蓓萨", "卑尔维斯", "布隆", "黛安娜", "盖伦", "卡莉丝塔", "卡莎", "蕾欧娜", "丽桑卓", "拉克丝", "厄运小姐", "内瑟斯", "奈德丽", "雷克顿", "萨勒芬妮", "辛吉德", "斯卡纳", "斯维因", "孙悟空", "塔里克", "维迦", "沃里克", "永恩", "芸阿娜",
-    // 5 费
-    "亚托克斯", "安妮", "阿兹尔", "费德提克", "吉格斯", "加里奥", "基兰", "千珏", "卢锡安与赛娜", "梅尔", "奥恩", "瑟提", "希瓦娜", "塔姆", "锤石", "沃利贝尔",
-    // 7 费
-    "奥瑞利安·索尔", "纳什男爵", "瑞兹", "亚恒"
-];
+// ==========================================
+// 动态提取英雄列表
+// ==========================================
+const PROTOCOL_PATH = path.join(__dirname, '../src-backend/TFTProtocol.ts');
+
+function getChampionNames() {
+    try {
+        const content = fs.readFileSync(PROTOCOL_PATH, 'utf-8');
+        // 只读取 _TFT_16_EQUIP_DATA 之前的内容，避免读取到装备
+        // 同时只保留 const TFT_SPECIAL_CHESS 之后的内容（虽然之前也没啥，但为了保险）
+        const startIndex = content.indexOf('const TFT_SPECIAL_CHESS');
+        const endIndex = content.indexOf('const _TFT_16_EQUIP_DATA');
+        
+        if (startIndex === -1 || endIndex === -1) {
+            console.error('TFTProtocol.ts 文件结构不符合预期，无法定位数据区域');
+            return [];
+        }
+
+        const relevantContent = content.substring(startIndex, endIndex);
+        
+        const names = [];
+        // 匹配 "Name": { 格式的 Key
+        const regex = /"([^"]+)"\s*:\s*\{/g;
+        let match;
+        
+        while ((match = regex.exec(relevantContent)) !== null) {
+            names.push(match[1]);
+        }
+        
+        return [...new Set(names)];
+    } catch (error) {
+        console.error('无法读取 TFTProtocol.ts:', error);
+        return [];
+    }
+}
+
+const championNames = getChampionNames();
 
 // ==========================================
 // 主逻辑

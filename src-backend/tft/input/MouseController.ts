@@ -7,6 +7,7 @@
 import { Button, mouse, Point } from "@nut-tree-fork/nut-js";
 import { logger } from "../../utils/Logger";
 import { sleep } from "../../utils/HelperTools";
+import { SimplePoint } from "../../TFTProtocol";
 
 /**
  * 鼠标操作配置
@@ -31,7 +32,7 @@ export class MouseController {
     private static instance: MouseController;
 
     /** 游戏窗口基准点 (左上角坐标) */
-    private gameWindowOrigin: Point | null = null;
+    private gameWindowOrigin: SimplePoint | null = null;
 
     private constructor() {}
 
@@ -49,7 +50,7 @@ export class MouseController {
      * 设置游戏窗口基准点
      * @param origin 游戏窗口左上角坐标
      */
-    public setGameWindowOrigin(origin: Point): void {
+    public setGameWindowOrigin(origin: SimplePoint): void {
         this.gameWindowOrigin = origin;
         logger.info(`[MouseController] 游戏窗口基准点已设置: (${origin.x}, ${origin.y})`);
     }
@@ -57,7 +58,7 @@ export class MouseController {
     /**
      * 获取游戏窗口基准点
      */
-    public getGameWindowOrigin(): Point | null {
+    public getGameWindowOrigin(): SimplePoint | null {
         return this.gameWindowOrigin;
     }
 
@@ -75,7 +76,7 @@ export class MouseController {
      * @param button 鼠标按键 (默认左键)
      * @throws 如果未初始化游戏窗口基准点
      */
-    public async clickAt(offset: Point, button: Button = Button.LEFT): Promise<void> {
+    public async clickAt(offset: SimplePoint, button: Button = Button.LEFT): Promise<void> {
         if (!this.gameWindowOrigin) {
             throw new Error("[MouseController] 尚未设置游戏窗口基准点，请先调用 setGameWindowOrigin()");
         }
@@ -110,7 +111,7 @@ export class MouseController {
      * @param interval 两次点击之间的间隔 (ms)
      */
     public async doubleClickAt(
-        offset: Point,
+        offset: SimplePoint,
         button: Button = Button.LEFT,
         interval: number = 50
     ): Promise<void> {
@@ -123,7 +124,7 @@ export class MouseController {
      * 移动鼠标到指定位置 (不点击)
      * @param offset 相对于游戏窗口左上角的偏移坐标
      */
-    public async moveTo(offset: Point): Promise<void> {
+    public async moveTo(offset: SimplePoint): Promise<void> {
         if (!this.gameWindowOrigin) {
             throw new Error("[MouseController] 尚未设置游戏窗口基准点");
         }
@@ -148,9 +149,11 @@ export class MouseController {
      * @param position 屏幕绝对坐标
      * @param button 鼠标按键 (默认左键)
      */
-    public async clickAtAbsolute(position: Point, button: Button = Button.LEFT): Promise<void> {
+    public async clickAtAbsolute(position: SimplePoint, button: Button = Button.LEFT): Promise<void> {
         try {
-            await mouse.move([position]);
+            // nut-js mouse.move expects Point[]
+            const target = new Point(position.x, position.y);
+            await mouse.move([target]);
             await sleep(MOUSE_CONFIG.MOVE_DELAY);
             await mouse.click(button);
             await sleep(MOUSE_CONFIG.CLICK_DELAY);
