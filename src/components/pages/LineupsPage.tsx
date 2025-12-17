@@ -111,7 +111,6 @@ const LineupCard = styled.div<{ theme: ThemeType }>`
 
 // 卡片头部：阵容名称
 const CardHeader = styled.div`
-  flex: 1;
 `;
 
 const CardTitle = styled.h3`
@@ -119,7 +118,7 @@ const CardTitle = styled.h3`
   font-weight: 600;
   color: ${props => props.theme.colors.text};
   text-align: right;
-  padding-right: ${props => props.theme.spacing.large};
+  padding-right: ${props => props.theme.spacing.medium};
 `;
 
 // 英雄头像列表容器
@@ -128,6 +127,7 @@ const ChampionsList = styled.div`
   flex-wrap: wrap;
   gap: 8px;
   align-items: flex-end;
+  flex: 1;
 `;
 
 // 单个英雄容器（包含头像和名字）
@@ -139,14 +139,24 @@ const ChampionItem = styled.div`
 `;
 
 // 英雄头像容器 - 带边框和星级标记
-const ChampionAvatar = styled.div<{ $isCore: boolean; $starTarget: number }>`
+const ChampionAvatar = styled.div<{ $isCore: boolean; $starTarget: number; $cost?: number }>`
   position: relative;
   width: 48px;
   height: 48px;
   border-radius: 6px;
   overflow: hidden;
   /* 核心棋子用金色边框，普通棋子用灰色边框 */
-  border: 2px solid ${props => props.$isCore ? '#FFD700' : props.theme.colors.border};
+  /* isCore 暂时不作为边框颜色判断依据，保留参数备用 */
+  /* border: 2px solid ${props => props.$isCore ? '#FFD700' : props.theme.colors.border}; */
+  
+  /* 根据英雄费用显示不同颜色的边框 */
+  border: 2px solid ${props => {
+      const cost = props.$cost;
+      // @ts-ignore
+      const color = props.theme.colors.championCost[cost];
+      return color || props.theme.colors.championCost.default;
+  }};
+  
   background-color: ${props => props.theme.colors.elementBg};
 
   /* 核心棋子添加发光效果 */
@@ -261,9 +271,18 @@ const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion}) => {
     const [imgError, setImgError] = useState(false);
     const avatarUrl = getAvatarUrl(champion.name);
 
+    // 获取英雄费用
+    // @ts-ignore
+    const tftUnit = TFT_16_CHAMPION_DATA[champion.name];
+    const cost = tftUnit ? tftUnit.price : 0;
+
     return (
         <ChampionItem>
-            <ChampionAvatar $isCore={champion.isCore} $starTarget={champion.starTarget}>
+            <ChampionAvatar 
+                $isCore={champion.isCore} 
+                $starTarget={champion.starTarget}
+                $cost={cost}
+            >
                 {!imgError && avatarUrl ? (
                     <AvatarImg
                         src={avatarUrl}
