@@ -16,7 +16,6 @@ import {TFT_16_CHAMPION_DATA, TFTEquip} from "../../../src-backend/TFTProtocol";
 interface ChampionConfig {
     name: string;           // 中文名
     isCore: boolean;        // 是否核心棋子
-    starTarget: 1 | 2 | 3;  // 目标星级
     items?: {
         core: TFTEquip[];       // 核心装备
         alternatives?: TFTEquip[];
@@ -139,10 +138,10 @@ const ChampionItem = styled.div`
 `;
 
 // 英雄头像容器 - 带边框和星级标记
-const ChampionAvatar = styled.div<{ $isCore: boolean; $starTarget: number; $cost?: number }>`
+const ChampionAvatar = styled.div<{ $isCore: boolean; $cost?: number }>`
   position: relative;
-  width: 48px;
-  height: 48px;
+  width: 64px;
+  height: 64px;
   border-radius: 6px;
   overflow: hidden;
   /* 核心棋子用金色边框，普通棋子用灰色边框 */
@@ -150,7 +149,7 @@ const ChampionAvatar = styled.div<{ $isCore: boolean; $starTarget: number; $cost
   /* border: 2px solid ${props => props.$isCore ? '#FFD700' : props.theme.colors.border}; */
   
   /* 根据英雄费用显示不同颜色的边框 */
-  border: 2px solid ${props => {
+  border: 2.5px solid ${props => {
       const cost = props.$cost;
       // @ts-ignore
       const color = props.theme.colors.championCost[cost];
@@ -172,36 +171,15 @@ const AvatarImg = styled.img`
   object-fit: cover;
 `;
 
-// 星级标记 - 显示在头像右上角
-const StarBadge = styled.div<{ $stars: number }>`
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 4px;
-  border-radius: 9px;
-  font-size: 10px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* 根据星级显示不同颜色：3星金色，2星银色，1星铜色 */
-  background-color: ${props =>
-          props.$stars === 3 ? '#FFD700' :
-                  props.$stars === 2 ? '#C0C0C0' :
-                          '#CD7F32'
-  };
-  color: ${props => props.$stars === 2 ? '#333' : '#fff'};
-  border: 1px solid rgba(0, 0, 0, 0.2);
-`;
+
 
 // 英雄名字
 const ChampionName = styled.span`
-  font-size: 11px;
+  font-size: 13px;
+  font-weight: 800;
   color: ${props => props.theme.colors.textSecondary};
   text-align: center;
-  max-width: 52px;
+  max-width: 64px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -280,7 +258,6 @@ const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion}) => {
         <ChampionItem>
             <ChampionAvatar 
                 $isCore={champion.isCore} 
-                $starTarget={champion.starTarget}
                 $cost={cost}
             >
                 {!imgError && avatarUrl ? (
@@ -292,12 +269,6 @@ const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion}) => {
                     />
                 ) : (
                     <AvatarPlaceholder>{champion.name.slice(0, 2)}</AvatarPlaceholder>
-                )}
-                {/* 星级标记：只显示2星和3星 */}
-                {champion.starTarget > 1 && (
-                    <StarBadge $stars={champion.starTarget}>
-                        {champion.starTarget}
-                    </StarBadge>
                 )}
             </ChampionAvatar>
             <ChampionName>{champion.name}</ChampionName>
