@@ -93,10 +93,13 @@ const LineupsList = styled.div`
 
 // 单个阵容卡片 - 仿 OP.GG 风格
 const LineupCard = styled.div<{ theme: ThemeType }>`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.small};
   background-color: ${props => props.theme.colors.cardBg};
-  border: 1px solid ${props => props.theme.colors.border};
+  border: 1.5px solid ${props => props.theme.colors.border};
   border-radius: ${props => props.theme.borderRadius};
-  padding: ${props => props.theme.spacing.medium};
+  padding: ${props => props.theme.spacing.small};
   cursor: pointer;
   transition: all 0.2s ease-in-out;
 
@@ -108,13 +111,15 @@ const LineupCard = styled.div<{ theme: ThemeType }>`
 
 // 卡片头部：阵容名称
 const CardHeader = styled.div`
-  margin-bottom: ${props => props.theme.spacing.small};
+  flex: 1;
 `;
 
 const CardTitle = styled.h3`
   font-size: 1rem;
   font-weight: 600;
   color: ${props => props.theme.colors.text};
+  text-align: right;
+  padding-right: ${props => props.theme.spacing.large};
 `;
 
 // 英雄头像列表容器
@@ -350,9 +355,6 @@ const LineupsPage: React.FC = () => {
                         const champions = getDisplayChampions(lineup);
                         return (
                             <LineupCard key={lineup.id}>
-                                <CardHeader>
-                                    <CardTitle>{lineup.name}</CardTitle>
-                                </CardHeader>
                                 <ChampionsList>
                                     {champions.map((champion, index) => (
                                         <ChampionAvatarComponent
@@ -361,6 +363,9 @@ const LineupsPage: React.FC = () => {
                                         />
                                     ))}
                                 </ChampionsList>
+                                <CardHeader>
+                                    <CardTitle>{lineup.name}</CardTitle>
+                                </CardHeader>
                             </LineupCard>
                         );
                     })}
