@@ -6,7 +6,7 @@
 import React, {useEffect, useState} from 'react';
 import styled from 'styled-components';
 import {ThemeType} from '../../styles/theme';
-import {TFT_16_CHAMPION_DATA, TFTEquip} from "../../../src-backend/TFTProtocol";
+import {TFT_16_CHAMPION_DATA, TFTEquip, TFT_16_TRAIT_DATA, TraitData} from "../../../src-backend/TFTProtocol";
 
 // ==================== 类型定义 ====================
 
@@ -36,6 +36,7 @@ interface StageConfig {
 interface LineupConfig {
     id: string;
     name: string;
+    finalComp?: StageConfig; // 最终成型阵容
     stages: {
         level4?: StageConfig;
         level5?: StageConfig;
@@ -54,6 +55,11 @@ interface LineupConfig {
  * 将 {englishId} 替换为英雄英文ID即可获取头像
  */
 const OPGG_AVATAR_BASE = 'https://c-tft-api.op.gg/img/set/16/tft-champion/tiles/{englishId}.tft_set16.png?image=q_auto:good,f_webp&v=1765176243';
+
+/**
+ * 羁绊图标 API 基础 URL
+ */
+const TRAIT_ICON_BASE = 'https://game.gtimg.cn/images/lol/act/img/tft';
 
 // ==================== 样式组件 ====================
 
@@ -202,7 +208,7 @@ const SelectionActions = styled.div`
 
 // 操作按钮样式
 const ActionButton = styled.button<{ theme: ThemeType }>`
-  padding: 4px 12px;
+  padding: 6px 12px;
   font-size: 14px;
   font-weight: 800;
   border: none;
@@ -217,13 +223,69 @@ const ActionButton = styled.button<{ theme: ThemeType }>`
   }
 `;
 
+// 内容容器（包裹羁绊列表和英雄列表）
+const ContentWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+`;
+
+// 羁绊列表容器
+const TraitsListContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+`;
+
+// 单个羁绊项
+const TraitItem = styled.div<{ $active: boolean; theme: ThemeType }>`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px 2px 2px;
+  border-radius: 10px;
+  background-color: ${props => props.$active 
+    ? 'rgba(0, 0, 0, 0.8)' 
+    : 'rgba(0, 0, 0, 0.4)'};
+  border: 1px solid ${props => props.$active 
+    ? props.theme.colors.border 
+    : 'transparent'};
+  opacity: ${props => props.$active ? 1 : 0.6};
+  transition: all 0.2s ease;
+  
+  &:hover {
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.9);
+  }
+`;
+
+// 羁绊图标
+const TraitIcon = styled.img`
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  /* 如果是黑色图标可能需要反色，视具体资源而定，先不做处理 */
+`;
+
+// 羁绊文本（数量+名称）
+const TraitInfo = styled.span<{ theme: ThemeType }>`
+  font-size: 11px;
+  color: #fff;
+  font-weight: bold;
+  line-height: 1;
+  padding-top: 1px; // 微调垂直对齐
+`;
+
 // 英雄头像列表容器
 const ChampionsList = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   align-items: flex-end;
-  flex: 1;
+  /* flex: 1;  移交给 ContentWrapper */
 `;
 
 // 单个英雄容器（包含头像和名字）
@@ -552,14 +614,17 @@ const LineupsPage: React.FC = () => {
 
     /**
      * 获取阵容的展示棋子列表
-     * 优先显示 高level 的阵容（成型阵容）
+     * 优先显示 finalComp（成型阵容），如果没有则显示最高等级阵容
      */
     const getDisplayChampions = (lineup: LineupConfig): ChampionConfig[] => {
+        if (lineup.finalComp) {
+            return lineup.finalComp.champions;
+        }
+        
         const stage =
             lineup.stages.level10 ||
             lineup.stages.level9 ||
             lineup.stages.level8 ||
-            lineup.stages.level9 ||
             lineup.stages.level7 ||
             lineup.stages.level6;
         return stage?.champions || [];
@@ -585,6 +650,55 @@ const LineupsPage: React.FC = () => {
         });
         
         return levels;
+    };
+
+    /**
+     * 计算当前阵容的激活羁绊
+     */
+    const calculateTraits = (champions: ChampionConfig[]) => {
+        const traitCounts: Record<string, number> = {};
+        const uniqueChamps = new Set<string>();
+
+        champions.forEach(champ => {
+            // 同名英雄去重，不重复计算羁绊
+            if (uniqueChamps.has(champ.name)) return;
+            uniqueChamps.add(champ.name);
+
+            // @ts-ignore
+            const unitData = TFT_16_CHAMPION_DATA[champ.name];
+            if (unitData) {
+                // 合并 origins 和 classes
+                const traits = [...(unitData.origins || []), ...(unitData.classes || [])];
+                traits.forEach(traitName => {
+                    traitCounts[traitName] = (traitCounts[traitName] || 0) + 1;
+                });
+            }
+        });
+
+        // 转换为数组并排序
+        return Object.entries(traitCounts)
+            .map(([name, count]) => {
+                const data = TFT_16_TRAIT_DATA[name];
+                return { name, count, data };
+            })
+            .filter(item => item.data) // 过滤掉无效羁绊
+            .sort((a, b) => {
+                // 排序逻辑：
+                // 1. 是否激活 (count >= levels[0])
+                // 2. 数量降序
+                const isActiveA = a.count >= a.data.levels[0];
+                const isActiveB = b.count >= b.data.levels[0];
+                
+                if (isActiveA !== isActiveB) return isActiveA ? -1 : 1;
+                return b.count - a.count;
+            });
+    };
+
+    /**
+     * 获取羁绊图标 URL
+     */
+    const getTraitIconUrl = (trait: TraitData) => {
+        return `${TRAIT_ICON_BASE}/${trait.type}/${trait.id}.png`;
     };
 
     // 加载中状态
@@ -628,6 +742,7 @@ const LineupsPage: React.FC = () => {
                         const availableLevels = getAvailableLevels(lineup);
                         const isExpanded = expandedIds.has(lineup.id);
                         const isSelected = selectedIds.has(lineup.id);
+                        const activeTraits = calculateTraits(champions);
                         
                         return (
                             <LineupCardWrapper key={lineup.id} $expanded={isExpanded}>
@@ -641,14 +756,35 @@ const LineupsPage: React.FC = () => {
                                         <Checkbox $checked={isSelected} />
                                     </CheckboxWrapper>
                                     
-                                    <ChampionsList>
-                                        {champions.map((champion, index) => (
-                                            <ChampionAvatarComponent
-                                                key={`${lineup.id}-${champion.name}-${index}`}
-                                                champion={champion}
-                                            />
-                                        ))}
-                                    </ChampionsList>
+                                    <ContentWrapper>
+                                        {/* 羁绊列表 */}
+                                        <TraitsListContainer>
+                                            {activeTraits.map((trait, idx) => {
+                                                const isActive = trait.count >= trait.data.levels[0];
+                                                // 只显示激活的羁绊，或者显示所有？
+                                                // 用户说“每个羁绊列出单独的Item表示”，这里我们显示所有存在的羁绊，用样式区分激活状态
+                                                // 或者只显示激活的会让界面更干净？通常阵容网只显示激活的。
+                                                // 这里我们稍微宽容一点，只要有1个单位就显示，通过透明度区分
+                                                
+                                                return (
+                                                    <TraitItem key={`${lineup.id}-trait-${idx}`} $active={isActive}>
+                                                        <TraitIcon src={getTraitIconUrl(trait.data)} alt={trait.name} />
+                                                        <TraitInfo>{trait.count} {trait.name}</TraitInfo>
+                                                    </TraitItem>
+                                                );
+                                            })}
+                                        </TraitsListContainer>
+
+                                        <ChampionsList>
+                                            {champions.map((champion, index) => (
+                                                <ChampionAvatarComponent
+                                                    key={`${lineup.id}-${champion.name}-${index}`}
+                                                    champion={champion}
+                                                />
+                                            ))}
+                                        </ChampionsList>
+                                    </ContentWrapper>
+
                                     <CardHeader>
                                         <CardTitle>{lineup.name}</CardTitle>
                                         <Arrow $expanded={isExpanded}>▼</Arrow>
