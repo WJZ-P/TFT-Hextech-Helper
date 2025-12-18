@@ -84,6 +84,10 @@ const lineupApi = {
     getAll: () => ipcRenderer.invoke(IpcChannel.LINEUP_GET_ALL),
     /** 根据 ID 获取单个阵容配置 */
     getById: (id: string) => ipcRenderer.invoke(IpcChannel.LINEUP_GET_BY_ID, id),
+    /** 获取用户选中的阵容 ID 列表 */
+    getSelectedIds: (): Promise<string[]> => ipcRenderer.invoke(IpcChannel.LINEUP_GET_SELECTED_IDS),
+    /** 保存用户选中的阵容 ID 列表 */
+    setSelectedIds: (ids: string[]): Promise<void> => ipcRenderer.invoke(IpcChannel.LINEUP_SET_SELECTED_IDS, ids),
 }
 export type LineupApi = typeof lineupApi
 contextBridge.exposeInMainWorld('lineup', lineupApi)

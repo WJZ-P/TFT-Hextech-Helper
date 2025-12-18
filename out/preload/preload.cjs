@@ -15,6 +15,8 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT"] = "tft-test-save-fight-board-slot-snapshot";
   IpcChannel2["LINEUP_GET_ALL"] = "lineup-get-all";
   IpcChannel2["LINEUP_GET_BY_ID"] = "lineup-get-by-id";
+  IpcChannel2["LINEUP_GET_SELECTED_IDS"] = "lineup-get-selected-ids";
+  IpcChannel2["LINEUP_SET_SELECTED_IDS"] = "lineup-set-selected-ids";
   IpcChannel2["TFT_GET_CHAMPION_CN_TO_EN_MAP"] = "tft-get-champion-cn-to-en-map";
   return IpcChannel2;
 })(IpcChannel || {});
@@ -82,7 +84,11 @@ const lineupApi = {
   /** 获取所有已加载的阵容配置 */
   getAll: () => electron.ipcRenderer.invoke(IpcChannel.LINEUP_GET_ALL),
   /** 根据 ID 获取单个阵容配置 */
-  getById: (id) => electron.ipcRenderer.invoke(IpcChannel.LINEUP_GET_BY_ID, id)
+  getById: (id) => electron.ipcRenderer.invoke(IpcChannel.LINEUP_GET_BY_ID, id),
+  /** 获取用户选中的阵容 ID 列表 */
+  getSelectedIds: () => electron.ipcRenderer.invoke(IpcChannel.LINEUP_GET_SELECTED_IDS),
+  /** 保存用户选中的阵容 ID 列表 */
+  setSelectedIds: (ids) => electron.ipcRenderer.invoke(IpcChannel.LINEUP_SET_SELECTED_IDS, ids)
 };
 electron.contextBridge.exposeInMainWorld("lineup", lineupApi);
 const lcuApi = {

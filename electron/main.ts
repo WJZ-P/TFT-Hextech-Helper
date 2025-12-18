@@ -235,6 +235,11 @@ function registerHandler() {
     // 阵容相关
     ipcMain.handle(IpcChannel.LINEUP_GET_ALL, async () => lineupLoader.getAllLineups())
     ipcMain.handle(IpcChannel.LINEUP_GET_BY_ID, async (_event, id: string) => lineupLoader.getLineup(id))
+    // 阵容选中状态持久化
+    ipcMain.handle(IpcChannel.LINEUP_GET_SELECTED_IDS, async () => settingsStore.get('selectedLineupIds'))
+    ipcMain.handle(IpcChannel.LINEUP_SET_SELECTED_IDS, async (_event, ids: string[]) => {
+        settingsStore.set('selectedLineupIds', ids)
+    })
     
     // 棋子数据相关：从 TFT_16_CHAMPION_DATA 动态生成中英文映射表
     ipcMain.handle(IpcChannel.TFT_GET_CHAMPION_CN_TO_EN_MAP, async () => {

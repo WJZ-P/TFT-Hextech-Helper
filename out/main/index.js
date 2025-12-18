@@ -5585,6 +5585,8 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT"] = "tft-test-save-fight-board-slot-snapshot";
   IpcChannel2["LINEUP_GET_ALL"] = "lineup-get-all";
   IpcChannel2["LINEUP_GET_BY_ID"] = "lineup-get-by-id";
+  IpcChannel2["LINEUP_GET_SELECTED_IDS"] = "lineup-get-selected-ids";
+  IpcChannel2["LINEUP_SET_SELECTED_IDS"] = "lineup-set-selected-ids";
   IpcChannel2["TFT_GET_CHAMPION_CN_TO_EN_MAP"] = "tft-get-champion-cn-to-en-map";
   return IpcChannel2;
 })(IpcChannel || {});
@@ -11461,7 +11463,9 @@ class SettingsStore {
         //  第一次启动，默认为null
         isMaximized: false
         //  默认不最大化窗口
-      }
+      },
+      selectedLineupIds: []
+      //  默认没有选中任何阵容
     };
     this.store = new Store({ defaults });
   }
@@ -11785,6 +11789,10 @@ function registerHandler() {
   ipcMain.handle(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT, async (event) => tftOperator.saveFightBoardSlotSnapshots());
   ipcMain.handle(IpcChannel.LINEUP_GET_ALL, async () => lineupLoader.getAllLineups());
   ipcMain.handle(IpcChannel.LINEUP_GET_BY_ID, async (_event, id) => lineupLoader.getLineup(id));
+  ipcMain.handle(IpcChannel.LINEUP_GET_SELECTED_IDS, async () => settingsStore.get("selectedLineupIds"));
+  ipcMain.handle(IpcChannel.LINEUP_SET_SELECTED_IDS, async (_event, ids) => {
+    settingsStore.set("selectedLineupIds", ids);
+  });
   ipcMain.handle(IpcChannel.TFT_GET_CHAMPION_CN_TO_EN_MAP, async () => {
     const cnToEnMap = {};
     for (const [cnName, unitData] of Object.entries(TFT_16_CHAMPION_DATA)) {

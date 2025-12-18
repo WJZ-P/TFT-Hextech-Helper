@@ -31,7 +31,8 @@ interface AppSettings {
     window: {
         bounds: WindowBounds | null, // 上次关闭时的窗口信息
         isMaximized: boolean,   //  上次关闭是否最大化
-    }
+    },
+    selectedLineupIds: string[],  // 用户选中的阵容 ID 列表
 }
 
 class SettingsStore {
@@ -52,7 +53,8 @@ class SettingsStore {
             window: {
                 bounds: null,           //  第一次启动，默认为null
                 isMaximized: false     //  默认不最大化窗口
-            }
+            },
+            selectedLineupIds: []       //  默认没有选中任何阵容
         }
         this.store = new Store<AppSettings>({defaults})
     }
