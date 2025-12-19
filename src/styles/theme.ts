@@ -21,6 +21,10 @@ const lightPalette = {
     error: '#EF4444',
     resizer: '#ced4da',        // 拖拽条的默认颜色
     resizerHover: '#66ccff',    // 鼠标悬停在拖拽条上时的颜色 (主色调)
+    // 羁绊激活色 (深琥珀橙 #B46414)，不同透明度用 8 位十六进制 RRGGBBAA 表示
+    traitActiveFull: '#1890FF',      // 100% 不透明 - 激活态
+    traitActiveHover: '#1890FF99',   // 60% 不透明 (0x99 ≈ 153/255 ≈ 60%) - Hover 未激活态
+    traitActiveInactive: '#1890FF66', // 40% 不透明 (0x66 ≈ 102/255 ≈ 40%) - 未激活态
     championCost: {
         1: 'rgb(154, 164, 175)',
         2: 'rgb(0, 174, 10)',
@@ -54,6 +58,10 @@ const darkPalette = {
     error: '#EF4444',
     resizer: '#4B5563',        // 拖拽条的默认颜色
     resizerHover: '#66ccff',    // 鼠标悬停在拖拽条上时的颜色 (主色调)
+    // 羁绊激活色 (深琥珀橙 #B46414)，不同透明度用 8 位十六进制 RRGGBBAA 表示
+    traitActiveFull: '#B46414',      // 100% 不透明 - 激活态
+    traitActiveHover: '#B4641499',   // 60% 不透明 (0x99 ≈ 153/255 ≈ 60%) - Hover 未激活态
+    traitActiveInactive: '#B4641466', // 40% 不透明 (0x66 ≈ 102/255 ≈ 40%) - 未激活态
     championCost: {
         1: 'rgb(154, 164, 175)',
         2: 'rgb(0, 174, 10)',

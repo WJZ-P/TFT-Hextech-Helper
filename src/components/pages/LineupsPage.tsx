@@ -7,6 +7,8 @@ import React, {useEffect, useState} from 'react';
 import styled from 'styled-components';
 import {ThemeType} from '../../styles/theme';
 import {TFT_16_CHAMPION_DATA, TFTEquip, TFT_16_TRAIT_DATA, TraitData} from "../../../src-backend/TFTProtocol";
+// 导入 S16 棋子数据，用于获取英雄原画 ID
+import {TFT_16_CHESS} from "../../../public/TFTInfo/chess";
 
 // ==================== 类型定义 ====================
 
@@ -60,6 +62,12 @@ const OPGG_AVATAR_BASE = 'https://c-tft-api.op.gg/img/set/16/tft-champion/tiles/
  * 羁绊图标 API 基础 URL
  */
 const TRAIT_ICON_BASE = 'https://game.gtimg.cn/images/lol/act/img/tft';
+
+/**
+ * 英雄原画 API 基础 URL
+ * 将 {chessId} 替换为英雄的 chessId 即可获取原画
+ */
+const SPLASH_ART_BASE = 'https://game.gtimg.cn/images/lol/tftstore/s16/624x318/{chessId}.jpg';
 
 // ==================== 样式组件 ====================
 
@@ -244,39 +252,62 @@ const TraitsListContainer = styled.div`
 const TraitItem = styled.div<{ $active: boolean; theme: ThemeType }>`
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 6px 2px 2px;
-  border-radius: 10px;
+  justify-content: center;
+  gap: 1px;
+  padding: 2px 4px;
+  border-radius: 12px;
+  
+  /* 背景颜色：激活时不透明，未激活时 40% 透明度 */
   background-color: ${props => props.$active 
-    ? 'rgba(0, 0, 0, 0.8)' 
-    : 'rgba(0, 0, 0, 0.4)'};
+    ? props.theme.colors.traitActiveFull 
+    : props.theme.colors.traitActiveInactive};
+
+  /* 边框：与背景同色 */
   border: 1px solid ${props => props.$active 
-    ? props.theme.colors.border 
-    : 'transparent'};
-  opacity: ${props => props.$active ? 1 : 0.6};
+    ? props.theme.colors.traitActiveFull 
+    : props.theme.colors.traitActiveInactive};
+    
+  /* 文字颜色：统一白色，加阴影保证对比度 */
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+
+  /* 阴影（仅激活时） */
+  box-shadow: ${props => props.$active ? '0 2px 4px rgba(0, 0, 0, 0.25)' : 'none'};
+  
   transition: all 0.2s ease;
   
   &:hover {
-    opacity: 1;
-    background-color: rgba(0, 0, 0, 0.9);
+    transform: translateY(-1px);
+    /* Hover 时：激活态保持不变，未激活态增加到 60% 不透明度 */
+    background-color: ${props => props.$active 
+      ? props.theme.colors.traitActiveFull 
+      : props.theme.colors.traitActiveHover};
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   }
 `;
 
 // 羁绊图标
 const TraitIcon = styled.img`
-  width: 16px;
-  height: 16px;
+  width: 17px;
+  height: 17px;
   object-fit: contain;
   /* 如果是黑色图标可能需要反色，视具体资源而定，先不做处理 */
 `;
 
-// 羁绊文本（数量+名称）
-const TraitInfo = styled.span<{ theme: ThemeType }>`
+// 羁绊数量（大号字体突出显示）
+const TraitCount = styled.span`
+  font-size: 14px;
+  color: #fff;
+  font-weight: bold;
+  line-height: 18px;
+`;
+
+// 羁绊名称（小号字体）
+const TraitName = styled.span`
   font-size: 11px;
   color: #fff;
   font-weight: bold;
-  line-height: 1;
-  padding-top: 1px; // 微调垂直对齐
+  line-height: 18px;
 `;
 
 // 英雄头像列表容器
@@ -288,16 +319,91 @@ const ChampionsList = styled.div`
   /* flex: 1;  移交给 ContentWrapper */
 `;
 
-// 单个英雄容器（包含头像和名字）
+// 单个英雄容器（包含头像和名字）- 使用相对定位作为悬浮框的锚点
+// 添加 perspective 为子元素提供 3D 透视效果
 const ChampionItem = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  position: relative;  /* 作为悬浮框的定位参考 */
+  perspective: 500px;  /* 透视距离，数值越小 3D 效果越明显 */
+`;
+
+// 英雄原画悬浮框容器
+// $showBelow: 当顶部空间不足时，改为在下方显示
+// $horizontalOffset: 水平偏移量（px），用于左右边界检测后的位置调整
+const SplashArtTooltip = styled.div<{ $visible: boolean; $showBelow: boolean; $horizontalOffset: number }>`
+  position: absolute;
+  z-index: 1000;
+  
+  /* 水平定位：默认居中，根据 $horizontalOffset 进行偏移调整 */
+  left: 50%;
+  transform: translateX(calc(-50% + ${props => props.$horizontalOffset}px));
+  
+  /* 根据 $showBelow 决定显示在上方还是下方 */
+  ${props => props.$showBelow ? `
+    top: 100%;
+    margin-top: 8px;
+  ` : `
+    bottom: 100%;
+    margin-bottom: 8px;
+  `}
+  
+  /* 显示/隐藏动画 */
+  opacity: ${props => props.$visible ? 1 : 0};
+  visibility: ${props => props.$visible ? 'visible' : 'hidden'};
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  
+  /* 防止鼠标移到悬浮框上时触发 mouseleave */
+  pointer-events: none;
+`;
+
+// 原画图片容器（带圆角和阴影）
+const SplashArtContainer = styled.div`
+  position: relative;  /* 作为名字和渐变蒙版的定位参考 */
+  width: ${624*0.7}px;   /* 原图 624px 的一半 */
+  height: ${318*0.7}px;  /* 原图 318px 的一半 */
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background-color: ${props => props.theme.colors.elementBg};
+`;
+
+// 原画图片
+const SplashArtImg = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+// 原画底部渐变蒙版 + 英雄名字容器
+const SplashArtOverlay = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20%;  /* 渐变覆盖底部 50% 区域 */
+  /* 从透明到半透明黑色的渐变 */
+  background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.5) 100%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 8px;
+`;
+
+// 原画中的英雄名字
+const SplashArtName = styled.span`
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 `;
 
 // 英雄头像容器 - 带边框和星级标记
-const ChampionAvatar = styled.div<{ $isCore: boolean; $cost?: number }>`
+// 添加 3D 倾斜效果相关样式
+const ChampionAvatar = styled.div<{ $isCore: boolean; $cost?: number; $rotateX?: number; $rotateY?: number }>`
   position: relative;
   width: 64px;
   height: 64px;
@@ -321,6 +427,16 @@ const ChampionAvatar = styled.div<{ $isCore: boolean; $cost?: number }>`
   ${props => props.$isCore && `
     box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
   `}
+  
+  /* 3D 倾斜效果 */
+  transform-style: preserve-3d;  /* 保持子元素的 3D 变换 */
+  transform: rotateX(${props => props.$rotateX || 0}deg) rotateY(${props => props.$rotateY || 0}deg);
+  transition: transform 0.1s ease-out, box-shadow 0.2s ease;  /* 平滑过渡 */
+  
+  /* Hover 时添加阴影增强立体感 */
+  &:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  }
 `;
 
 // 英雄头像图片
@@ -483,23 +599,155 @@ const getAvatarUrl = (cnName: string): string => {
 };
 
 /**
+ * 根据中文名获取英雄原画 URL
+ * 从 TFT_16_CHESS 数据中查找对应的 chessId
+ * @param cnName 棋子中文名
+ */
+const getSplashArtUrl = (cnName: string): string => {
+    // 在 TFT_16_CHESS 数组中查找匹配的英雄
+    const chessData = TFT_16_CHESS.find(chess => chess.displayName === cnName);
+    if (!chessData) {
+        console.warn(`未找到英雄 "${cnName}" 的原画数据`);
+        return '';
+    }
+    return SPLASH_ART_BASE.replace('{chessId}', chessData.chessId);
+};
+
+/**
  * 英雄头像组件
- * 处理图片加载失败的情况
+ * 处理图片加载失败的情况，并在 hover 时显示原画
+ * 自动检测边界，当顶部空间不足时改为在下方显示，左右超出时自动偏移
+ * 添加 3D 倾斜效果：鼠标 hover 时卡片会朝鼠标方向轻微倾斜
  */
 const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion}) => {
     const [imgError, setImgError] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);  // hover 状态
+    const [splashError, setSplashError] = useState(false);  // 原画加载失败状态
+    const [showBelow, setShowBelow] = useState(false);  // 是否在下方显示悬浮框
+    const [horizontalOffset, setHorizontalOffset] = useState(0);  // 水平偏移量
+    
+    // 3D 倾斜效果的旋转角度状态
+    const [rotateX, setRotateX] = useState(0);  // X 轴旋转（上下倾斜）
+    const [rotateY, setRotateY] = useState(0);  // Y 轴旋转（左右倾斜）
+    
+    // 用于获取元素位置的 ref
+    const containerRef = React.useRef<HTMLDivElement>(null);
+    // 头像元素的 ref，用于计算鼠标相对位置
+    const avatarRef = React.useRef<HTMLDivElement>(null);
+    
     const avatarUrl = getAvatarUrl(champion.name);
+    const splashArtUrl = getSplashArtUrl(champion.name);  // 获取原画 URL
 
     // 获取英雄费用
     // @ts-ignore
     const tftUnit = TFT_16_CHAMPION_DATA[champion.name];
     const cost = tftUnit ? tftUnit.price : 0;
 
+    /**
+     * 鼠标进入时检测边界并显示原画
+     */
+    const handleMouseEnter = () => {
+        if (containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            
+            // 悬浮框尺寸
+            const tooltipWidth = 624*0.7;
+            const tooltipHeight = 318*0.7;  // 高度 + margin 预留余量
+            
+            // === 垂直边界检测 ===
+            // 如果元素顶部距离视口顶部的距离小于悬浮框高度，则在下方显示
+            setShowBelow(rect.top < tooltipHeight);
+            
+            // === 水平边界检测 ===
+            // 计算悬浮框居中时的左右边缘位置
+            const elementCenterX = rect.left + rect.width / 2;
+            const tooltipLeft = elementCenterX - tooltipWidth / 2;
+            const tooltipRight = elementCenterX + tooltipWidth / 2;
+            
+            let offset = 0;
+            const padding = 100;  // 距离视口边缘的安全距离
+            
+            if (tooltipLeft < padding) {
+                // 左边超出：向右偏移
+                offset = padding - tooltipLeft;
+            } else if (tooltipRight > viewportWidth - padding) {
+                // 右边超出：向左偏移（负值）
+                offset = (viewportWidth - padding) - tooltipRight;
+            }
+            
+            setHorizontalOffset(offset);
+        }
+        setIsHovered(true);
+    };
+
+    /**
+     * 鼠标在头像上移动时，计算倾斜角度
+     * 原理：根据鼠标相对于头像中心的偏移量，计算 X/Y 轴的旋转角度
+     */
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!avatarRef.current) return;
+        
+        const rect = avatarRef.current.getBoundingClientRect();
+        
+        // 计算鼠标相对于头像中心的偏移（-0.5 到 0.5 的范围）
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        // 鼠标位置相对于中心的偏移比例（-0.5 ~ 0.5）
+        const offsetX = (e.clientX - centerX) / rect.width;
+        const offsetY = (e.clientY - centerY) / rect.height;
+        
+        // 最大倾斜角度（度）
+        const maxTilt = 15;
+        
+        // 计算旋转角度
+        // rotateY: 鼠标在右边时向右转（正值），在左边时向左转（负值）
+        // rotateX: 鼠标在上方时向后仰（负值），在下方时向前倾（正值）
+        // 注意：rotateX 的方向是反的，所以用负号
+        setRotateY(offsetX * maxTilt);
+        setRotateX(-offsetY * maxTilt);
+    };
+
+    /**
+     * 鼠标离开时重置旋转角度
+     */
+    const handleMouseLeave = () => {
+        setIsHovered(false);
+        setRotateX(0);
+        setRotateY(0);
+    };
+
     return (
-        <ChampionItem>
+        <ChampionItem
+            ref={containerRef}
+            onMouseEnter={handleMouseEnter}   // 鼠标进入时检测边界并显示原画
+            onMouseLeave={handleMouseLeave}   // 鼠标离开时隐藏原画并重置倾斜
+            onMouseMove={handleMouseMove}     // 鼠标移动时更新倾斜角度
+        >
+            {/* 原画悬浮框 - 只有在有原画 URL 且未加载失败时才显示 */}
+            {splashArtUrl && !splashError && (
+                <SplashArtTooltip $visible={isHovered} $showBelow={showBelow} $horizontalOffset={horizontalOffset}>
+                    <SplashArtContainer>
+                        <SplashArtImg
+                            src={splashArtUrl}
+                            alt={`${champion.name} 原画`}
+                            onError={() => setSplashError(true)}
+                        />
+                        {/* 底部渐变蒙版 + 英雄名字 */}
+                        <SplashArtOverlay>
+                            <SplashArtName>{champion.name}</SplashArtName>
+                        </SplashArtOverlay>
+                    </SplashArtContainer>
+                </SplashArtTooltip>
+            )}
+            
             <ChampionAvatar 
+                ref={avatarRef}
                 $isCore={champion.isCore} 
                 $cost={cost}
+                $rotateX={rotateX}
+                $rotateY={rotateY}
             >
                 {!imgError && avatarUrl ? (
                     <AvatarImg
@@ -769,7 +1017,8 @@ const LineupsPage: React.FC = () => {
                                                 return (
                                                     <TraitItem key={`${lineup.id}-trait-${idx}`} $active={isActive}>
                                                         <TraitIcon src={getTraitIconUrl(trait.data)} alt={trait.name} />
-                                                        <TraitInfo>{trait.count} {trait.name}</TraitInfo>
+                                                        <TraitCount>{trait.count}</TraitCount>
+                                                        <TraitName>{trait.name}</TraitName>
                                                     </TraitItem>
                                                 );
                                             })}
