@@ -327,7 +327,7 @@ const ChampionItem = styled.div`
   align-items: center;
   gap: 4px;
   position: relative;  /* 作为悬浮框的定位参考 */
-  perspective: 500px;  /* 透视距离，数值越小 3D 效果越明显 */
+  perspective: 100px;  /* 透视距离，数值越小 3D 效果越明显 */
 `;
 
 // 英雄原画悬浮框容器
@@ -699,7 +699,7 @@ const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion}) => {
         const offsetY = (e.clientY - centerY) / rect.height;
         
         // 最大倾斜角度（度）
-        const maxTilt = 15;
+        const maxTilt = 30;
         
         // 计算旋转角度
         // rotateY: 鼠标在右边时向右转（正值），在左边时向左转（负值）
