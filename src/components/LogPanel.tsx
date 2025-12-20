@@ -1,6 +1,7 @@
 import React, {useState, useEffect, useRef} from 'react';
 import styled, {css} from 'styled-components';
 import {ThemeType} from '../styles/theme';
+import {logStore, LogEntry, LogLevel} from '../stores/logStore';
 
 // 引入图标
 import InfoIcon from '@mui/icons-material/InfoOutlined';
@@ -10,16 +11,9 @@ import TerminalIcon from '@mui/icons-material/Terminal';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 
 // -------------------------------------------------------------------
-// 类型定义
+// 类型定义（从 logStore 重新导出，保持兼容）
 // -------------------------------------------------------------------
-export type LogLevel = 'info' | 'warn' | 'error';
-
-interface LogEntry {
-    id: number;
-    timestamp: string;
-    level: LogLevel;
-    message: string;
-}
+export type {LogLevel, LogEntry} from '../stores/logStore';
 
 // -------------------------------------------------------------------
 // 样式组件定义
@@ -352,78 +346,28 @@ const getLogIcon = (level: LogLevel) => {
     }
 };
 
-/**
- * 解析后端日志消息，提取时间戳和正文
- * 后端格式: "[HH:MM:SS][LEVEL] message" 或 "[HH:MM:SS][LEVEL]  message"
- * 返回: { timestamp: string, content: string }
- */
-const parseLogMessage = (message: string): { timestamp: string; content: string } => {
-    // 正则匹配: [时间][级别] 正文
-    // 例如: "[14:30:25][INFO]  购买英雄成功" -> timestamp="14:30:25", content="购买英雄成功"
-    const regex = /^\[([^\]]+)\]\[[^\]]+\]\s*/;
-    const match = message.match(regex);
-    
-    if (match) {
-        return {
-            timestamp: match[1],           // 提取时间部分
-            content: message.slice(match[0].length)  // 去掉前缀后的正文
-        };
-    }
-    
-    // 如果不匹配格式，使用当前时间，原消息作为正文
-    return {
-        timestamp: new Date().toLocaleTimeString(),
-        content: message
-    };
-};
-
 export const LogPanel: React.FC<LogPanelProps> = ({isVisible}) => {
-    const [logs, setLogs] = useState<LogEntry[]>([])
+    const [logs, setLogs] = useState<LogEntry[]>(logStore.getLogs())
     const logPanelRef = useRef<HTMLDivElement | null>(null)
     const [isUserScrollUp, setIsUserScrollUp] = useState(false)
 
-    // 添加一条日志（解析后端格式）
-    const addLog = (message: string, level: LogLevel = 'info') => {
-        const parsed = parseLogMessage(message);
-        const newLog: LogEntry = {
-            id: Date.now() + Math.random(),
-            timestamp: parsed.timestamp,
-            level,
-            message: parsed.content
-        }
-        setLogs(prevLogs => [...prevLogs, newLog]);
-    }
+    // 初始化全局日志存储 + 订阅变化
+    useEffect(() => {
+        // 初始化 IPC 监听（只会执行一次）
+        logStore.init();
+        
+        // 订阅日志变化
+        const unsubscribe = logStore.subscribe((newLogs) => {
+            setLogs(newLogs);
+        });
+        
+        return unsubscribe;
+    }, []);
 
     // 清空所有日志
     const clearLogs = () => {
-        setLogs([]);
+        logStore.clearLogs();
     }
-
-    // 监听 IPC 消息以添加日志
-    useEffect(() => {
-        let cleanup = () => {};
-        
-        if (window.ipc?.on) {
-            const handleLogMessage = (logData: { message: string, level?: LogLevel }) => {
-                if (logData) {
-                    addLog(logData.message, logData.level || 'info');
-                } else {
-                    console.warn("Received invalid log data from IPC:", logData);
-                }
-            };
-            try {
-                cleanup = window.ipc.on('log-message', handleLogMessage)
-                addLog('日志监听器已就绪');
-            } catch (error) {
-                console.error('设置IPC监听失败', error)
-                addLog('日志监听器启动失败！', 'error')
-            }
-        } else {
-            console.warn('IPC listener for logs not available.');
-            addLog('无法连接到后端日志通道', 'warn');
-        }
-        return cleanup;
-    }, []);
 
     // 日志自动滚动逻辑：新日志来时自动滚到底部（除非用户手动上滚）
     useEffect(() => {
