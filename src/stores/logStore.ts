@@ -10,14 +10,24 @@ export interface LogEntry {
     timestamp: string;
     level: LogLevel;
     message: string;
+    count: number;  // 重复次数，默认为1
 }
 
 // 日志变化监听器类型
 type LogListener = (logs: LogEntry[]) => void;
 
 /**
+ * 格式化时间戳，只保留 HH:MM:SS，去掉毫秒部分
+ */
+const formatTimestamp = (timestamp: string): string => {
+    // 匹配 HH:MM:SS 部分，忽略后面的 .mmm 毫秒
+    const match = timestamp.match(/^(\d{1,2}:\d{2}:\d{2})/);
+    return match ? match[1] : timestamp;
+};
+
+/**
  * 解析后端日志消息，提取时间戳和正文
- * 后端格式: "[HH:MM:SS][LEVEL] message"
+ * 后端格式: "[HH:MM:SS.mmm][LEVEL] message"
  */
 const parseLogMessage = (message: string): { timestamp: string; content: string } => {
     const regex = /^\[([^\]]+)\]\[[^\]]+\]\s*/;
@@ -25,13 +35,14 @@ const parseLogMessage = (message: string): { timestamp: string; content: string 
     
     if (match) {
         return {
-            timestamp: match[1],
+            timestamp: formatTimestamp(match[1]),
             content: message.slice(match[0].length)
         };
     }
     
     return {
-        timestamp: new Date().toLocaleTimeString(),
+        // hour12: false 使用24小时制，只显示时:分:秒
+        timestamp: new Date().toLocaleTimeString('zh-CN', { hour12: false }),
         content: message
     };
 };
@@ -69,16 +80,32 @@ class LogStore {
 
     /**
      * 添加一条日志
+     * 如果与最后一条日志内容和级别相同，则增加计数而非新增
      */
     addLog(message: string, level: LogLevel = 'info') {
         const parsed = parseLogMessage(message);
-        const newLog: LogEntry = {
-            id: Date.now() + Math.random(),
-            timestamp: parsed.timestamp,
-            level,
-            message: parsed.content
-        };
-        this.logs = [...this.logs, newLog];
+        
+        // 检查是否与最后一条日志重复（内容和级别都相同）
+        const lastLog = this.logs[this.logs.length - 1];
+        if (lastLog && lastLog.message === parsed.content && lastLog.level === level) {
+            // 重复日志：更新计数和时间戳
+            const updatedLog = {
+                ...lastLog,
+                count: lastLog.count + 1,
+                timestamp: parsed.timestamp  // 更新为最新时间
+            };
+            this.logs = [...this.logs.slice(0, -1), updatedLog];
+        } else {
+            // 新日志
+            const newLog: LogEntry = {
+                id: Date.now() + Math.random(),
+                timestamp: parsed.timestamp,
+                level,
+                message: parsed.content,
+                count: 1
+            };
+            this.logs = [...this.logs, newLog];
+        }
         this.notifyListeners();
     }
 

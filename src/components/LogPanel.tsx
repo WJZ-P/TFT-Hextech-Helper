@@ -286,6 +286,36 @@ const LogIcon = styled.div<{ level: LogLevel; theme: ThemeType }>`
   }
 `;
 
+// 重复计数徽章 - 类似浏览器控制台的圆形计数器
+const RepeatBadge = styled.span<{ level: LogLevel; theme: ThemeType }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 11px;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  
+  /* 根据日志级别设置背景色 */
+  background: ${({level, theme}) => {
+    switch (level) {
+      case 'error':
+        return theme.colors.error;
+      case 'warn':
+        return theme.colors.warning;
+      case 'info':
+      default:
+        return theme.colors.primary;
+    }
+  }};
+  
+  /* 文字颜色：警告用深色，其他用白色 */
+  color: ${({level}) => level === 'warn' ? '#333' : '#fff'};
+`;
+
 // 日志消息样式 - 字号大、字体粗
 const LogMessage = styled.span<{ theme: ThemeType }>`
   flex: 1;
@@ -415,6 +445,10 @@ export const LogPanel: React.FC<LogPanelProps> = ({isVisible}) => {
                             <LogIcon level={log.level}>
                                 {getLogIcon(log.level)}
                             </LogIcon>
+                            {/* 重复计数徽章 - 仅当 count > 1 时显示 */}
+                            {log.count > 1 && (
+                                <RepeatBadge level={log.level}>{log.count}</RepeatBadge>
+                            )}
                             {/* 中间正文 - 字大加粗 */}
                             <LogMessage>{log.message}</LogMessage>
                             {/* 右侧时间戳 */}

@@ -166,6 +166,9 @@ function init() {
             console.log('LCUManager 已断开');
             // 使用 IpcChannel 枚举发送断开事件给前端
             win?.webContents.send(IpcChannel.LCU_DISCONNECT);
+            // 重新启动 connector 轮询，等待客户端重新连接
+            console.log('🔄 [Main] 重新启动 LCU 连接监听...');
+            connector.start();
         });
 
         lcuManager.on('lcu-event', (event) => {

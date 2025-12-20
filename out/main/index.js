@@ -11749,6 +11749,8 @@ function init() {
     lcuManager.on("disconnect", () => {
       console.log("LCUManager 已断开");
       win?.webContents.send(IpcChannel.LCU_DISCONNECT);
+      console.log("🔄 [Main] 重新启动 LCU 连接监听...");
+      connector.start();
     });
     lcuManager.on("lcu-event", (event) => {
       console.log("收到LCU事件:", event.uri, event.eventType);

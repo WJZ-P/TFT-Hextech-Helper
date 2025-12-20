@@ -434,20 +434,37 @@ export const HomePage = () => {
     /**
      * 获取召唤师信息的函数
      * 只有在 LCU 已连接时才会调用
+     * 支持重试机制，最多重试 3 次
      */
-    const fetchSummonerInfo = async () => {
+    const fetchSummonerInfo = async (retryCount = 0) => {
+        const maxRetries = 3;
+        const retryDelay = 1000; // 1秒后重试
+        
         setIsLoading(true);
         try {
             const result = await window.lcu.getSummonerInfo();
             if (result.data) {
                 setSummonerInfo(result.data);
+                setIsLoading(false);
             } else if (result.error) {
                 console.warn('获取召唤师信息失败:', result.error);
+                // 失败时重试
+                if (retryCount < maxRetries) {
+                    console.log(`⏳ 将在 ${retryDelay/1000}s 后重试 (${retryCount + 1}/${maxRetries})...`);
+                    setTimeout(() => fetchSummonerInfo(retryCount + 1), retryDelay);
+                } else {
+                    setIsLoading(false); // 重试次数用尽
+                }
             }
         } catch (error) {
             console.error('获取召唤师信息异常:', error);
-        } finally {
-            setIsLoading(false);
+            // 异常时也重试
+            if (retryCount < maxRetries) {
+                console.log(`⏳ 将在 ${retryDelay/1000}s 后重试 (${retryCount + 1}/${maxRetries})...`);
+                setTimeout(() => fetchSummonerInfo(retryCount + 1), retryDelay);
+            } else {
+                setIsLoading(false); // 重试次数用尽
+            }
         }
     };
 
