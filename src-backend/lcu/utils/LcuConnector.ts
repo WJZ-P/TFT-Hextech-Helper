@@ -165,6 +165,7 @@ class LCUConnector extends EventEmitter {
      */
     private clearProcessWatcher(){
         clearInterval(this.processWatcher)
+        this.processWatcher = null as any;  // 重置为 null，允许下次重新创建定时器
     }
 
 }
