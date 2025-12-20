@@ -3,6 +3,11 @@ export enum IpcChannel {
     CONFIG_BACKUP = 'config-backup',
     CONFIG_RESTORE = 'config-restore',
     LCU_REQUEST = 'lcu-request',
+    // LCU 连接状态事件（主进程 -> 渲染进程）
+    LCU_CONNECT = 'lcu-connect',           // LOL 客户端已连接
+    LCU_DISCONNECT = 'lcu-disconnect',     // LOL 客户端已断开
+    // LCU 连接状态查询（渲染进程 -> 主进程）
+    LCU_GET_CONNECTION_STATUS = 'lcu-get-connection-status',  // 获取当前连接状态
     HEX_START = 'hex-start',
     HEX_STOP = 'hex-stop',
     TFT_BUY_AT_SLOT = 'tft-buy-at-slot',

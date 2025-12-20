@@ -5574,6 +5574,9 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["CONFIG_BACKUP"] = "config-backup";
   IpcChannel2["CONFIG_RESTORE"] = "config-restore";
   IpcChannel2["LCU_REQUEST"] = "lcu-request";
+  IpcChannel2["LCU_CONNECT"] = "lcu-connect";
+  IpcChannel2["LCU_DISCONNECT"] = "lcu-disconnect";
+  IpcChannel2["LCU_GET_CONNECTION_STATUS"] = "lcu-get-connection-status";
   IpcChannel2["HEX_START"] = "hex-start";
   IpcChannel2["HEX_STOP"] = "hex-stop";
   IpcChannel2["TFT_BUY_AT_SLOT"] = "tft-buy-at-slot";
@@ -11731,12 +11734,11 @@ function init() {
   tftOperator.init();
   connector.on("connect", (data) => {
     console.log("LOL客户端已登录！", data);
-    sendToRenderer("lcu-connect", data);
     const lcuManager = LCUManager.init(data);
     GameConfigHelper.init(data.installDirectory);
     lcuManager.start();
     lcuManager.on("connect", async () => {
-      sendToRenderer("lcu-connect", data);
+      win?.webContents.send(IpcChannel.LCU_CONNECT);
       try {
         const summoner = await lcuManager.request("GET", "/lol-summoner/v1/current-summoner");
         console.log("召唤师信息:", summoner);
@@ -11746,7 +11748,7 @@ function init() {
     });
     lcuManager.on("disconnect", () => {
       console.log("LCUManager 已断开");
-      sendToRenderer("lcu-disconnect");
+      win?.webContents.send(IpcChannel.LCU_DISCONNECT);
     });
     lcuManager.on("lcu-event", (event) => {
       console.log("收到LCU事件:", event.uri, event.eventType);
@@ -11754,14 +11756,15 @@ function init() {
   });
   connector.on("disconnect", () => {
     console.log("LOL客户端登出！");
-    sendToRenderer("lcu-disconnect");
+    win?.webContents.send(IpcChannel.LCU_DISCONNECT);
   });
   connector.start();
 }
-function sendToRenderer(channel, ...args) {
-  return win?.webContents.send(channel, ...args);
-}
 function registerHandler() {
+  ipcMain.handle(IpcChannel.LCU_GET_CONNECTION_STATUS, async () => {
+    const lcu = LCUManager.getInstance();
+    return lcu?.isConnected ?? false;
+  });
   ipcMain.handle(IpcChannel.LCU_REQUEST, async (_event, method, endpoint, body) => {
     const lcu = LCUManager.getInstance();
     if (!lcu || !lcu.isConnected) {
@@ -11770,7 +11773,8 @@ function registerHandler() {
     }
     try {
       console.log(`📞 [IPC] 收到请求: ${method} ${endpoint}`);
-      return await lcu.request(method, endpoint, body);
+      const data = await lcu.request(method, endpoint, body);
+      return { data };
     } catch (e) {
       console.error(`❌ [IPC] 处理请求 ${method} ${endpoint} 时出错:`, e);
       return { error: e.message };

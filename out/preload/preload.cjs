@@ -4,6 +4,9 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["CONFIG_BACKUP"] = "config-backup";
   IpcChannel2["CONFIG_RESTORE"] = "config-restore";
   IpcChannel2["LCU_REQUEST"] = "lcu-request";
+  IpcChannel2["LCU_CONNECT"] = "lcu-connect";
+  IpcChannel2["LCU_DISCONNECT"] = "lcu-disconnect";
+  IpcChannel2["LCU_GET_CONNECTION_STATUS"] = "lcu-get-connection-status";
   IpcChannel2["HEX_START"] = "hex-start";
   IpcChannel2["HEX_STOP"] = "hex-stop";
   IpcChannel2["TFT_BUY_AT_SLOT"] = "tft-buy-at-slot";
@@ -92,8 +95,38 @@ const lineupApi = {
 };
 electron.contextBridge.exposeInMainWorld("lineup", lineupApi);
 const lcuApi = {
+  /**
+   * 获取当前召唤师信息
+   */
   getSummonerInfo: () => {
     return electron.ipcRenderer.invoke(IpcChannel.LCU_REQUEST, "GET", "/lol-summoner/v1/current-summoner");
+  },
+  /**
+   * 获取当前 LCU 连接状态
+   * @returns 是否已连接
+   */
+  getConnectionStatus: () => {
+    return electron.ipcRenderer.invoke(IpcChannel.LCU_GET_CONNECTION_STATUS);
+  },
+  /**
+   * 监听 LCU 连接事件
+   * @param callback - 连接成功时的回调函数
+   * @returns 清理函数，用于取消监听
+   */
+  onConnect: (callback) => {
+    const listener = () => callback();
+    electron.ipcRenderer.on(IpcChannel.LCU_CONNECT, listener);
+    return () => electron.ipcRenderer.removeListener(IpcChannel.LCU_CONNECT, listener);
+  },
+  /**
+   * 监听 LCU 断开事件
+   * @param callback - 断开连接时的回调函数
+   * @returns 清理函数，用于取消监听
+   */
+  onDisconnect: (callback) => {
+    const listener = () => callback();
+    electron.ipcRenderer.on(IpcChannel.LCU_DISCONNECT, listener);
+    return () => electron.ipcRenderer.removeListener(IpcChannel.LCU_DISCONNECT, listener);
   },
   createCustomLobby: (config) => {
     console.log("📬 [Preload] 向主进程发送创建房间请求:", config);

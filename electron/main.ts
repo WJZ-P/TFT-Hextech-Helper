@@ -1,6 +1,5 @@
 import {app, BrowserWindow, globalShortcut, ipcMain} from 'electron'
 import LCUConnector from "../src-backend/lcu/utils/LcuConnector.ts";
-import {ArgsFromIpcChannel, LCUIpcChannels} from "../src-backend/lcu/utils/LCUProtocols.ts";
 import LCUManager from "../src-backend/lcu/LCUManager.ts";
 import 'source-map-support/register';
 import GameConfigHelper from "../src-backend/utils/GameConfigHelper.ts";
@@ -143,10 +142,7 @@ function init() {
     connector.on('connect', (data) => {
         console.log("LOL客户端已登录！", data);
 
-        //  发消息给renderer线程，那边收到再做处理
-        sendToRenderer('lcu-connect', data)
-
-        // 喵~ 使用单例模式获取 LCUManager 实例，并把“钥匙”交给它
+        // 喵~ 使用单例模式获取 LCUManager 实例，并把"钥匙"交给它
         const lcuManager = LCUManager.init(data);
 
         //  注册configHelper
@@ -156,7 +152,8 @@ function init() {
         lcuManager.start();
 
         lcuManager.on('connect', async () => {
-            sendToRenderer('lcu-connect', data); // 通知前台
+            // 使用 IpcChannel 枚举发送连接事件给前端
+            win?.webContents.send(IpcChannel.LCU_CONNECT);
             try {
                 const summoner = await lcuManager.request('GET', '/lol-summoner/v1/current-summoner');
                 console.log('召唤师信息:', summoner);
@@ -167,7 +164,8 @@ function init() {
 
         lcuManager.on('disconnect', () => {
             console.log('LCUManager 已断开');
-            sendToRenderer('lcu-disconnect'); // 通知前台
+            // 使用 IpcChannel 枚举发送断开事件给前端
+            win?.webContents.send(IpcChannel.LCU_DISCONNECT);
         });
 
         lcuManager.on('lcu-event', (event) => {
@@ -178,19 +176,20 @@ function init() {
 
     connector.on('disconnect', () => {
         console.log("LOL客户端登出！")
-        sendToRenderer('lcu-disconnect')
+        win?.webContents.send(IpcChannel.LCU_DISCONNECT);
     })
 
     connector.start()
 
 }
 
-//  包装下webContents
-function sendToRenderer<E extends keyof LCUIpcChannels>(channel: E, ...args: ArgsFromIpcChannel<LCUIpcChannels[E]>) {
-    return win?.webContents.send(channel, ...args)
-}
-
 function registerHandler() {
+    // LCU 连接状态查询
+    ipcMain.handle(IpcChannel.LCU_GET_CONNECTION_STATUS, async () => {
+        const lcu = LCUManager.getInstance();
+        return lcu?.isConnected ?? false;
+    });
+
     ipcMain.handle(IpcChannel.LCU_REQUEST, async (
         _event, // 固定的第一个参数，包含了事件的源信息
         method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE', // 第二个参数：请求方法
@@ -210,7 +209,8 @@ function registerHandler() {
         try {
             console.log(`📞 [IPC] 收到请求: ${method} ${endpoint}`);
             // 成功后，把数据包装在 data 字段里返回给前台
-            return await lcu.request(method, endpoint, body);
+            const data = await lcu.request(method, endpoint, body);
+            return { data };  // 包装成 { data: ... } 格式
         } catch (e: any) {
             console.error(`❌ [IPC] 处理请求 ${method} ${endpoint} 时出错:`, e);
             // 失败后，把错误信息包装在 error 字段里返回

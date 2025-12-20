@@ -93,8 +93,38 @@ export type LineupApi = typeof lineupApi
 contextBridge.exposeInMainWorld('lineup', lineupApi)
 
 const lcuApi = {
+    /**
+     * 获取当前召唤师信息
+     */
     getSummonerInfo: (): Promise<{ data?: SummonerInfo; error?: string }> => {
         return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-summoner/v1/current-summoner');
+    },
+    /**
+     * 获取当前 LCU 连接状态
+     * @returns 是否已连接
+     */
+    getConnectionStatus: (): Promise<boolean> => {
+        return ipcRenderer.invoke(IpcChannel.LCU_GET_CONNECTION_STATUS);
+    },
+    /**
+     * 监听 LCU 连接事件
+     * @param callback - 连接成功时的回调函数
+     * @returns 清理函数，用于取消监听
+     */
+    onConnect: (callback: () => void): (() => void) => {
+        const listener = () => callback();
+        ipcRenderer.on(IpcChannel.LCU_CONNECT, listener);
+        return () => ipcRenderer.removeListener(IpcChannel.LCU_CONNECT, listener);
+    },
+    /**
+     * 监听 LCU 断开事件
+     * @param callback - 断开连接时的回调函数
+     * @returns 清理函数，用于取消监听
+     */
+    onDisconnect: (callback: () => void): (() => void) => {
+        const listener = () => callback();
+        ipcRenderer.on(IpcChannel.LCU_DISCONNECT, listener);
+        return () => ipcRenderer.removeListener(IpcChannel.LCU_DISCONNECT, listener);
     },
     createCustomLobby: (config: LobbyConfig): Promise<{ data?: any; error?: string }> => {
         console.log('📬 [Preload] 向主进程发送创建房间请求:', config);
