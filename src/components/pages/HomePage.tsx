@@ -228,35 +228,192 @@ const LoadingPlaceholder = styled.div<{ theme: ThemeType }>`
 // 控制按钮样式
 // ============================================
 
+/**
+ * 按钮动画定义
+ * - pulse: 呼吸光晕效果
+ * - shimmer: 光泽流动效果
+ * - rippleFloat: 水纹漂浮效果
+ */
+const buttonAnimations = `
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(102, 204, 255, 0.6);
+    }
+    70% {
+      box-shadow: 0 0 0 12px rgba(102, 204, 255, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(102, 204, 255, 0);
+    }
+  }
+  
+  @keyframes pulseRed {
+    0% {
+      box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.6);
+    }
+    70% {
+      box-shadow: 0 0 0 12px rgba(244, 67, 54, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
+    }
+  }
+  
+  /* 光泽流动 - 从左到右的高光扫过 */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%) skewX(-15deg);
+    }
+    100% {
+      transform: translateX(200%) skewX(-15deg);
+    }
+  }
+  
+  /* 水纹漂浮 - 模拟水面波动 */
+  @keyframes rippleFloat {
+    0%, 100% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0.15;
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.1);
+      opacity: 0.25;
+    }
+  }
+  
+  @keyframes rippleFloat2 {
+    0%, 100% {
+      transform: translate(-50%, -50%) scale(1.15);
+      opacity: 0.1;
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.25);
+      opacity: 0.2;
+    }
+  }
+`;
+
 const ControlButton = styled.button<{ $isRunning: boolean; theme: ThemeType }>`
+  ${buttonAnimations}
+  
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: ${props => props.theme.spacing.small};
-  padding: 0.8rem 2rem;
+  padding: 0.9rem 2.2rem;
   font-size: 1.1rem;
   font-weight: 600;
   border: none;
   border-radius: ${props => props.theme.borderRadius};
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out, transform 0.1s ease, box-shadow 0.2s ease;
-  min-width: 150px;
-  background-color: ${props => props.$isRunning ? props.theme.colors.error : props.theme.colors.primary};
+  min-width: 160px;
   color: ${props => props.theme.colors.textOnPrimary};
+  overflow: hidden;
+  
+  /* 渐变背景 - 66ccff 主题色系 */
+  background: ${props => props.$isRunning 
+    ? 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)' 
+    : 'linear-gradient(135deg, #66ccff 0%, #3399dd 50%, #2277bb 100%)'};
+  
+  /* 基础光晕 */
+  box-shadow: ${props => props.$isRunning
+    ? '0 4px 15px rgba(244, 67, 54, 0.4)'
+    : '0 4px 15px rgba(102, 204, 255, 0.5)'};
+  
+  /* 脉冲动画 */
+  animation: ${props => props.$isRunning ? 'pulseRed' : 'pulse'} 2s infinite;
+  
+  transition: transform 0.2s ease, box-shadow 0.3s ease, background 0.3s ease;
+  
+  /* 流动光泽效果 - 始终播放 */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.4) 50%,
+      transparent 100%
+    );
+    animation: shimmer 3s ease-in-out infinite;
+    pointer-events: none;
+  }
+  
+  /* 内部水纹效果 */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 150%;
+    height: 150%;
+    background: radial-gradient(
+      ellipse at center,
+      rgba(255, 255, 255, 0.3) 0%,
+      rgba(255, 255, 255, 0.1) 30%,
+      transparent 60%
+    );
+    border-radius: 50%;
+    animation: rippleFloat 2.5s ease-in-out infinite;
+    pointer-events: none;
+  }
 
   &:hover {
-    background-color: ${props => props.$isRunning ? '#D32F2F' : props.theme.colors.primaryHover};
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: ${props => props.$isRunning
+      ? '0 8px 25px rgba(244, 67, 54, 0.5)'
+      : '0 8px 25px rgba(102, 204, 255, 0.6)'};
   }
 
   &:active {
-    transform: translateY(0);
-    box-shadow: none;
+    transform: translateY(-1px) scale(0.98);
+    box-shadow: ${props => props.$isRunning
+      ? '0 2px 10px rgba(244, 67, 54, 0.4)'
+      : '0 2px 10px rgba(102, 204, 255, 0.4)'};
   }
 
   .MuiSvgIcon-root {
-    font-size: 1.4rem;
+    font-size: 1.5rem;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.15));
+    /* 图标相对于伪元素要在上层 */
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* 文字也要在上层 */
+  & > span, & > * {
+    position: relative;
+    z-index: 1;
+  }
+`;
+
+/** 水纹外层容器 - 第二层波纹 */
+const ButtonWrapper = styled.div`
+  position: relative;
+  display: inline-block;
+  
+  /* 外围水纹 - 始终显示 */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(
+      ellipse at center,
+      rgba(102, 204, 255, 0.3) 0%,
+      rgba(102, 204, 255, 0.1) 40%,
+      transparent 70%
+    );
+    border-radius: 50%;
+    animation: rippleFloat2 3s ease-in-out infinite;
+    pointer-events: none;
   }
 `;
 
@@ -435,11 +592,13 @@ export const HomePage = () => {
                 )}
             </SummonerSection>
 
-            {/* 控制按钮 */}
-            <ControlButton onClick={handleToggle} $isRunning={isRunning}>
-                {isRunning ? <StopCircleOutlinedIcon /> : <PlayCircleOutlineIcon />}
-                {isRunning ? '关闭' : '开始'}
-            </ControlButton>
+            {/* 控制按钮 - 带水纹效果 */}
+            <ButtonWrapper>
+                <ControlButton onClick={handleToggle} $isRunning={isRunning}>
+                    {isRunning ? <StopCircleOutlinedIcon /> : <PlayCircleOutlineIcon />}
+                    {isRunning ? '关闭' : '开始'}
+                </ControlButton>
+            </ButtonWrapper>
 
             {/* 日志面板 */}
             <LogPanel isVisible={true} />
