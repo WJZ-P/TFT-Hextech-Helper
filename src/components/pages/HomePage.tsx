@@ -10,11 +10,15 @@ const PageWrapper = styled.div<{ theme: ThemeType }>`
   display: flex;
   flex-direction: column; // 垂直排列
   align-items: center; // 水平居中
-  justify-content: center; // 垂直居中 (大致)
+  /* 移除 justify-content: center，让内容从顶部开始排列 */
   padding: ${props => props.theme.spacing.large};
   background-color: ${props => props.theme.colors.background};
   color: ${props => props.theme.colors.text};
   text-align: center; // 文本居中
+  /* 关键：让 PageWrapper 占满父容器的全部高度 */
+  height: 100%;
+  /* 防止内容溢出时出现问题 */
+  overflow: hidden;
 `;
 
 const Title = styled.h1<{ theme: ThemeType }>`
