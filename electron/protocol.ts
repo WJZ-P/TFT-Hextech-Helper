@@ -15,6 +15,7 @@ export enum IpcChannel {
     TFT_GET_EQUIP_INFO = 'tft-get-equip-info',
     TFT_GET_BENCH_INFO = 'tft-get-bench-info',
     TFT_GET_FIGHT_BOARD_INFO = 'tft-get-fight-board-info',
+    TFT_GET_LEVEL_INFO = 'tft-get-level-info',
     TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT = 'tft-test-save-bench-slot-snapshot',
     TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT = 'tft-test-save-fight-board-slot-snapshot',
     // 阵容相关

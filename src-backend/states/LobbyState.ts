@@ -126,7 +126,8 @@ export class LobbyState implements IState {
              */
             const onGameflowPhase = (eventData: LCUWebSocketMessage) => {
                 const phase = eventData.data?.phase;
-                logger.debug(`[LobbyState] 游戏阶段: ${JSON.stringify(eventData, null, 2)}`);
+                //  这个EventData.data 内容太多了。主要是跟对局相关的信息。
+                //logger.debug(`[LobbyState] 游戏阶段: ${JSON.stringify(eventData, null, 2)}`);
                 logger.info(`[LobbyState] 监听到游戏阶段: ${phase}`);
 
                 if (phase === "InProgress") {

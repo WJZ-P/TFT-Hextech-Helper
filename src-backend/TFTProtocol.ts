@@ -20,6 +20,11 @@ export enum TFTMode {
     CLOCKWORK_TRAILS = 'CLOCKWORK_TRAILS',       //  PVE，发条鸟的试炼。
 }
 
+//  左下角等级region
+export const levelRegion = {
+    leftTop: {x: 25, y: 625},
+    rightBottom: {x: 145, y: 645}
+}
 
 //  英雄购买槽坐标
 export interface SimplePoint {
@@ -487,59 +492,59 @@ export interface TraitData {
 // S16 羁绊详细数据 Map (key 为中文名)
 export const TFT_16_TRAIT_DATA: Record<string, TraitData> = {
     // === Origins (Race) ===
-    "铸星龙王": { id: "10216", name: "铸星龙王", type: "origins", levels: [1] },
-    "纳什男爵": { id: "10217", name: "纳什男爵", type: "origins", levels: [1] },
-    "比尔吉沃特": { id: "10218", name: "比尔吉沃特", type: "origins", levels: [3, 5, 7, 10] },
-    "山隐之焰": { id: "10219", name: "山隐之焰", type: "origins", levels: [1] },
-    "星界游神": { id: "10221", name: "星界游神", type: "origins", levels: [1] },
-    "时光守护者": { id: "10222", name: "时光守护者", type: "origins", levels: [1] },
-    "黑暗之女": { id: "10223", name: "黑暗之女", type: "origins", levels: [1] },
-    "暗裔": { id: "10224", name: "暗裔", type: "origins", levels: [1, 2, 3] },
-    "德玛西亚": { id: "10226", name: "德玛西亚", type: "origins", levels: [3, 5, 7, 11] },
-    "沙漠皇帝": { id: "10227", name: "沙漠皇帝", type: "origins", levels: [1] },
-    "以绪塔尔": { id: "10228", name: "以绪塔尔", type: "origins", levels: [3, 5, 7] },
-    "弗雷尔卓德": { id: "10229", name: "弗雷尔卓德", type: "origins", levels: [3, 5, 7] },
-    "河流之王": { id: "10230", name: "河流之王", type: "origins", levels: [1] },
-    "远古恐惧": { id: "10232", name: "远古恐惧", type: "origins", levels: [1] },
-    "正义巨像": { id: "10233", name: "正义巨像", type: "origins", levels: [1] },
-    "海克斯机甲": { id: "10234", name: "海克斯机甲", type: "origins", levels: [1] },
-    "狂野女猎手": { id: "10235", name: "狂野女猎手", type: "origins", levels: [1] },
-    "艾欧尼亚": { id: "10237", name: "艾欧尼亚", type: "origins", levels: [3, 5, 7] },
-    "虚空之女": { id: "10239", name: "虚空之女", type: "origins", levels: [1] },
-    "永猎双子": { id: "10240", name: "永猎双子", type: "origins", levels: [1] },
-    "诺克萨斯": { id: "10243", name: "诺克萨斯", type: "origins", levels: [3, 5, 7, 10] },
-    "皮尔特沃夫": { id: "10244", name: "皮尔特沃夫", type: "origins", levels: [2, 4, 6] },
-    "符文法师": { id: "10246", name: "符文法师", type: "origins", levels: [1] },
-    "暗影岛": { id: "10247", name: "暗影岛", type: "origins", levels: [2, 3, 4, 5] },
-    "恕瑞玛": { id: "10248", name: "恕瑞玛", type: "origins", levels: [2, 3, 4] },
-    "龙血武姬": { id: "10249", name: "龙血武姬", type: "origins", levels: [1] },
-    "系魂圣枪": { id: "10252", name: "系魂圣枪", type: "origins", levels: [1] },
-    "解脱者": { id: "10253", name: "解脱者", type: "origins", levels: [1] },
-    "巨神峰": { id: "10254", name: "巨神峰", type: "origins", levels: [1, 2, 3, 4, 5, 6] },
-    "巨龙卫士": { id: "10255", name: "巨龙卫士", type: "origins", levels: [2] },
-    "光明哨兵": { id: "10256", name: "光明哨兵", type: "origins", levels: [2] },
-    "绝命毒师": { id: "10257", name: "绝命毒师", type: "origins", levels: [2] },
-    "腕豪": { id: "10258", name: "腕豪", type: "origins", levels: [1] },
-    "虚空": { id: "10260", name: "虚空", type: "origins", levels: [2, 4, 6, 9] },
-    "远古巫灵": { id: "10262", name: "远古巫灵", type: "origins", levels: [1] },
-    "约德尔人": { id: "10263", name: "约德尔人", type: "origins", levels: [2, 4, 6, 8] },
-    "不落魔锋": { id: "10264", name: "不落魔锋", type: "origins", levels: [1] },
-    "祖安": { id: "10265", name: "祖安", type: "origins", levels: [3, 5, 7] },
-    "与狼共舞": { id: "10266", name: "与狼共舞", type: "origins", levels: [2] },
+    "铸星龙王": {id: "10216", name: "铸星龙王", type: "origins", levels: [1]},
+    "纳什男爵": {id: "10217", name: "纳什男爵", type: "origins", levels: [1]},
+    "比尔吉沃特": {id: "10218", name: "比尔吉沃特", type: "origins", levels: [3, 5, 7, 10]},
+    "山隐之焰": {id: "10219", name: "山隐之焰", type: "origins", levels: [1]},
+    "星界游神": {id: "10221", name: "星界游神", type: "origins", levels: [1]},
+    "时光守护者": {id: "10222", name: "时光守护者", type: "origins", levels: [1]},
+    "黑暗之女": {id: "10223", name: "黑暗之女", type: "origins", levels: [1]},
+    "暗裔": {id: "10224", name: "暗裔", type: "origins", levels: [1, 2, 3]},
+    "德玛西亚": {id: "10226", name: "德玛西亚", type: "origins", levels: [3, 5, 7, 11]},
+    "沙漠皇帝": {id: "10227", name: "沙漠皇帝", type: "origins", levels: [1]},
+    "以绪塔尔": {id: "10228", name: "以绪塔尔", type: "origins", levels: [3, 5, 7]},
+    "弗雷尔卓德": {id: "10229", name: "弗雷尔卓德", type: "origins", levels: [3, 5, 7]},
+    "河流之王": {id: "10230", name: "河流之王", type: "origins", levels: [1]},
+    "远古恐惧": {id: "10232", name: "远古恐惧", type: "origins", levels: [1]},
+    "正义巨像": {id: "10233", name: "正义巨像", type: "origins", levels: [1]},
+    "海克斯机甲": {id: "10234", name: "海克斯机甲", type: "origins", levels: [1]},
+    "狂野女猎手": {id: "10235", name: "狂野女猎手", type: "origins", levels: [1]},
+    "艾欧尼亚": {id: "10237", name: "艾欧尼亚", type: "origins", levels: [3, 5, 7]},
+    "虚空之女": {id: "10239", name: "虚空之女", type: "origins", levels: [1]},
+    "永猎双子": {id: "10240", name: "永猎双子", type: "origins", levels: [1]},
+    "诺克萨斯": {id: "10243", name: "诺克萨斯", type: "origins", levels: [3, 5, 7, 10]},
+    "皮尔特沃夫": {id: "10244", name: "皮尔特沃夫", type: "origins", levels: [2, 4, 6]},
+    "符文法师": {id: "10246", name: "符文法师", type: "origins", levels: [1]},
+    "暗影岛": {id: "10247", name: "暗影岛", type: "origins", levels: [2, 3, 4, 5]},
+    "恕瑞玛": {id: "10248", name: "恕瑞玛", type: "origins", levels: [2, 3, 4]},
+    "龙血武姬": {id: "10249", name: "龙血武姬", type: "origins", levels: [1]},
+    "系魂圣枪": {id: "10252", name: "系魂圣枪", type: "origins", levels: [1]},
+    "解脱者": {id: "10253", name: "解脱者", type: "origins", levels: [1]},
+    "巨神峰": {id: "10254", name: "巨神峰", type: "origins", levels: [1, 2, 3, 4, 5, 6]},
+    "巨龙卫士": {id: "10255", name: "巨龙卫士", type: "origins", levels: [2]},
+    "光明哨兵": {id: "10256", name: "光明哨兵", type: "origins", levels: [2]},
+    "绝命毒师": {id: "10257", name: "绝命毒师", type: "origins", levels: [2]},
+    "腕豪": {id: "10258", name: "腕豪", type: "origins", levels: [1]},
+    "虚空": {id: "10260", name: "虚空", type: "origins", levels: [2, 4, 6, 9]},
+    "远古巫灵": {id: "10262", name: "远古巫灵", type: "origins", levels: [1]},
+    "约德尔人": {id: "10263", name: "约德尔人", type: "origins", levels: [2, 4, 6, 8]},
+    "不落魔锋": {id: "10264", name: "不落魔锋", type: "origins", levels: [1]},
+    "祖安": {id: "10265", name: "祖安", type: "origins", levels: [3, 5, 7]},
+    "与狼共舞": {id: "10266", name: "与狼共舞", type: "origins", levels: [2]},
 
     // === Classes (Job) ===
-    "斗士": { id: "10220", name: "斗士", type: "classes", levels: [2, 4, 6] },
-    "护卫": { id: "10225", name: "护卫", type: "classes", levels: [2, 4, 6] },
-    "枪手": { id: "10231", name: "枪手", type: "classes", levels: [2, 4] },
-    "神谕者": { id: "10236", name: "神谕者", type: "classes", levels: [2, 4] },
-    "主宰": { id: "10238", name: "主宰", type: "classes", levels: [2, 4, 6] },
-    "狙神": { id: "10241", name: "狙神", type: "classes", levels: [2, 3, 4, 5] },
-    "耀光使": { id: "10242", name: "耀光使", type: "classes", levels: [2, 4] },
-    "迅击战士": { id: "10245", name: "迅击战士", type: "classes", levels: [2, 3, 4, 5] },
-    "裁决战士": { id: "10250", name: "裁决战士", type: "classes", levels: [2, 4, 6] },
-    "法师": { id: "10251", name: "法师", type: "classes", levels: [2, 4, 6] },
-    "征服者": { id: "10259", name: "征服者", type: "classes", levels: [2, 3, 4, 5] },
-    "神盾使": { id: "10261", name: "神盾使", type: "classes", levels: [2, 3, 4, 5] },
+    "斗士": {id: "10220", name: "斗士", type: "classes", levels: [2, 4, 6]},
+    "护卫": {id: "10225", name: "护卫", type: "classes", levels: [2, 4, 6]},
+    "枪手": {id: "10231", name: "枪手", type: "classes", levels: [2, 4]},
+    "神谕者": {id: "10236", name: "神谕者", type: "classes", levels: [2, 4]},
+    "主宰": {id: "10238", name: "主宰", type: "classes", levels: [2, 4, 6]},
+    "狙神": {id: "10241", name: "狙神", type: "classes", levels: [2, 3, 4, 5]},
+    "耀光使": {id: "10242", name: "耀光使", type: "classes", levels: [2, 4]},
+    "迅击战士": {id: "10245", name: "迅击战士", type: "classes", levels: [2, 3, 4, 5]},
+    "裁决战士": {id: "10250", name: "裁决战士", type: "classes", levels: [2, 4, 6]},
+    "法师": {id: "10251", name: "法师", type: "classes", levels: [2, 4, 6]},
+    "征服者": {id: "10259", name: "征服者", type: "classes", levels: [2, 3, 4, 5]},
+    "神盾使": {id: "10261", name: "神盾使", type: "classes", levels: [2, 3, 4, 5]},
 };
 
 const TFT_SPECIAL_CHESS = {
@@ -1313,7 +1318,7 @@ const _TFT_16_CHAMPION_DATA = {
         origins: [UnitOrigin.Darkin, UnitOrigin.Immortal],
         classes: []
     },
-    
+
     // 特殊召唤物/机甲/其他
     "海克斯霸龙": {
         displayName: "海克斯霸龙",
@@ -2838,7 +2843,6 @@ for (const [cnName, champion] of Object.entries(TFT_16_CHAMPION_DATA)) {
         CHAMPION_EN_TO_CN[champion.englishId as ChampionEnglishId] = cnName as ChampionKey;
     }
 }
-
 
 
 /**

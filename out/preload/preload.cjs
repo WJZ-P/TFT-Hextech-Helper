@@ -14,6 +14,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["TFT_GET_EQUIP_INFO"] = "tft-get-equip-info";
   IpcChannel2["TFT_GET_BENCH_INFO"] = "tft-get-bench-info";
   IpcChannel2["TFT_GET_FIGHT_BOARD_INFO"] = "tft-get-fight-board-info";
+  IpcChannel2["TFT_GET_LEVEL_INFO"] = "tft-get-level-info";
   IpcChannel2["TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT"] = "tft-test-save-bench-slot-snapshot";
   IpcChannel2["TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT"] = "tft-test-save-fight-board-slot-snapshot";
   IpcChannel2["LINEUP_GET_ALL"] = "lineup-get-all";
@@ -79,6 +80,7 @@ const tftApi = {
   getEquipInfo: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_EQUIP_INFO),
   getBenchInfo: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_BENCH_INFO),
   getFightBoardInfo: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_FIGHT_BOARD_INFO),
+  getLevelInfo: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_LEVEL_INFO),
   saveBenchSlotSnapshots: () => electron.ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT),
   saveFightBoardSlotSnapshots: () => electron.ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT)
 };

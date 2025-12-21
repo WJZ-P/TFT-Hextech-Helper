@@ -17,7 +17,9 @@ export enum OcrWorkerType {
     /** 游戏阶段识别 (英文数字，如 "2-1") */
     GAME_STAGE = "GAME_STAGE",
     /** 棋子名称识别 (中文) */
-    CHESS = "CHESS"
+    CHESS = "CHESS",
+    /** 等级识别 (中文"级"字 + 数字 + 斜杠) */
+    LEVEL = "LEVEL"
 }
 
 /**
@@ -37,6 +39,9 @@ export class OcrService {
 
     /** 棋子名称识别 Worker (中文) */
     private chessWorker: Tesseract.Worker | null = null;
+
+    /** 等级识别 Worker (中文"级"字 + 数字) */
+    private levelWorker: Tesseract.Worker | null = null;
 
     /** Tesseract 语言包路径 */
     private get langPath(): string {
@@ -66,6 +71,8 @@ export class OcrService {
                 return this.getGameStageWorker();
             case OcrWorkerType.CHESS:
                 return this.getChessWorker();
+            case OcrWorkerType.LEVEL:
+                return this.getLevelWorker();
             default:
                 throw new Error(`未知的 OCR Worker 类型: ${type}`);
         }
@@ -143,6 +150,34 @@ export class OcrService {
     }
 
     /**
+     * 获取等级识别 Worker
+     * @description 配置为识别中文"级"字、数字和斜杠 (如 "4级 4/6")
+     */
+    private async getLevelWorker(): Promise<Tesseract.Worker> {
+        if (this.levelWorker) {
+            return this.levelWorker;
+        }
+
+        logger.info("[OcrService] 正在创建等级识别 Worker...");
+
+        const worker = await createWorker("chi_sim", 1, {
+            langPath: this.langPath,
+            cachePath: this.langPath,
+        });
+
+        // 配置：只识别数字、斜杠和中文"级"字
+        await worker.setParameters({
+            tessedit_char_whitelist: "0123456789/级",
+            tessedit_pageseg_mode: PSM.SINGLE_LINE,
+        });
+
+        this.levelWorker = worker;
+        logger.info("[OcrService] 等级识别 Worker 准备就绪");
+
+        return this.levelWorker;
+    }
+
+    /**
      * 销毁所有 Worker，释放资源
      * @description 在应用退出时调用
      */
@@ -157,6 +192,12 @@ export class OcrService {
             await this.chessWorker.terminate();
             this.chessWorker = null;
             logger.info("[OcrService] 棋子名称识别 Worker 已销毁");
+        }
+
+        if (this.levelWorker) {
+            await this.levelWorker.terminate();
+            this.levelWorker = null;
+            logger.info("[OcrService] 等级识别 Worker 已销毁");
         }
     }
 }

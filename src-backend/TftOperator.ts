@@ -35,6 +35,7 @@ import {
     GameStageType,
     itemForgeTooltipRegion,
     itemForgeTooltipRegionEdge,
+    levelRegion,
     shopSlot,
     shopSlotNameRegions,
     TFT_16_CHAMPION_DATA,
@@ -965,6 +966,56 @@ class TftOperator {
             logger.info(`[TftOperator] 已保存失败样本: ${fileName}`);
         } catch (e) {
             logger.error(`[TftOperator] 保存失败样本出错: ${e}`);
+        }
+    }
+
+    /**
+     * 获取当前等级信息
+     * @description 通过 OCR 识别左下角等级区域，解析等级和经验值
+     * @returns 等级信息对象，包含当前等级、当前经验值、升级所需总经验值
+     * 
+     * @example
+     * // 扫描区域内容示例: "4级  4/6"
+     * const levelInfo = await operator.getLevelInfo();
+     * // 返回: { level: 4, currentXp: 4, totalXp: 6 }
+     */
+    public async getLevelInfo(): Promise<{ level: number; currentXp: number; totalXp: number } | null> {
+        this.ensureInitialized();
+
+        try {
+            // 1. 计算等级区域的绝对坐标
+            const absoluteRegion = new Region(
+                Math.round(this.gameWindowRegion!.x + levelRegion.leftTop.x),
+                Math.round(this.gameWindowRegion!.y + levelRegion.leftTop.y),
+                Math.round(levelRegion.rightBottom.x - levelRegion.leftTop.x),
+                Math.round(levelRegion.rightBottom.y - levelRegion.leftTop.y)
+            );
+
+            // 2. 截图并 OCR 识别
+            const pngBuffer = await screenCapture.captureRegionAsPng(absoluteRegion);
+            const text = await ocrService.recognize(pngBuffer, OcrWorkerType.LEVEL);
+            
+            // logger.info(`[TftOperator] 等级区域 OCR 结果: "${text}"`);
+
+            // 3. 解析文本，格式示例: "4级  4/6" 或 "4级 4/6"
+            // 正则匹配: 数字 + "级" + 空格 + 数字 + "/" + 数字
+            const match = text.match(/(\d+)\s*级\s*(\d+)\s*\/\s*(\d+)/);
+            
+            if (match) {
+                const level = parseInt(match[1], 10);
+                const currentXp = parseInt(match[2], 10);
+                const totalXp = parseInt(match[3], 10);
+
+                logger.info(`[TftOperator] 等级解析成功: Lv.${level}, 经验 ${currentXp}/${totalXp}`);
+                
+                return { level, currentXp, totalXp };
+            }
+
+            logger.warn(`[TftOperator] 等级解析失败，无法匹配格式: "${text}"`);
+            return null;
+        } catch (error) {
+            logger.error(`[TftOperator] 获取等级信息异常: ${error}`);
+            return null;
         }
     }
 }

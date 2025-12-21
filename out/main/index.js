@@ -2906,6 +2906,7 @@ class LCUConnector extends EventEmitter {
    */
   clearProcessWatcher() {
     clearInterval(this.processWatcher);
+    this.processWatcher = null;
   }
 }
 var LcuEventUri = /* @__PURE__ */ ((LcuEventUri2) => {
@@ -5584,6 +5585,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["TFT_GET_EQUIP_INFO"] = "tft-get-equip-info";
   IpcChannel2["TFT_GET_BENCH_INFO"] = "tft-get-bench-info";
   IpcChannel2["TFT_GET_FIGHT_BOARD_INFO"] = "tft-get-fight-board-info";
+  IpcChannel2["TFT_GET_LEVEL_INFO"] = "tft-get-level-info";
   IpcChannel2["TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT"] = "tft-test-save-bench-slot-snapshot";
   IpcChannel2["TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT"] = "tft-test-save-fight-board-slot-snapshot";
   IpcChannel2["LINEUP_GET_ALL"] = "lineup-get-all";
@@ -5675,6 +5677,10 @@ var TFTMode = /* @__PURE__ */ ((TFTMode2) => {
   TFTMode2["CLOCKWORK_TRAILS"] = "CLOCKWORK_TRAILS";
   return TFTMode2;
 })(TFTMode || {});
+const levelRegion = {
+  leftTop: { x: 25, y: 625 },
+  rightBottom: { x: 145, y: 645 }
+};
 const shopSlot = {
   SHOP_SLOT_1: { x: 240, y: 700 },
   SHOP_SLOT_2: { x: 380, y: 700 },
@@ -9238,6 +9244,7 @@ const EQUIP_CATEGORY_PRIORITY = [
 var OcrWorkerType = /* @__PURE__ */ ((OcrWorkerType2) => {
   OcrWorkerType2["GAME_STAGE"] = "GAME_STAGE";
   OcrWorkerType2["CHESS"] = "CHESS";
+  OcrWorkerType2["LEVEL"] = "LEVEL";
   return OcrWorkerType2;
 })(OcrWorkerType || {});
 class OcrService {
@@ -9246,6 +9253,8 @@ class OcrService {
   gameStageWorker = null;
   /** 棋子名称识别 Worker (中文) */
   chessWorker = null;
+  /** 等级识别 Worker (中文"级"字 + 数字) */
+  levelWorker = null;
   /** Tesseract 语言包路径 */
   get langPath() {
     return path__default.join(process.env.VITE_PUBLIC || ".", "resources/tessdata");
@@ -9272,6 +9281,8 @@ class OcrService {
         return this.getGameStageWorker();
       case "CHESS":
         return this.getChessWorker();
+      case "LEVEL":
+        return this.getLevelWorker();
       default:
         throw new Error(`未知的 OCR Worker 类型: ${type}`);
     }
@@ -9332,6 +9343,27 @@ class OcrService {
     return this.chessWorker;
   }
   /**
+   * 获取等级识别 Worker
+   * @description 配置为识别中文"级"字、数字和斜杠 (如 "4级 4/6")
+   */
+  async getLevelWorker() {
+    if (this.levelWorker) {
+      return this.levelWorker;
+    }
+    logger.info("[OcrService] 正在创建等级识别 Worker...");
+    const worker = await createWorker("chi_sim", 1, {
+      langPath: this.langPath,
+      cachePath: this.langPath
+    });
+    await worker.setParameters({
+      tessedit_char_whitelist: "0123456789/级",
+      tessedit_pageseg_mode: PSM.SINGLE_LINE
+    });
+    this.levelWorker = worker;
+    logger.info("[OcrService] 等级识别 Worker 准备就绪");
+    return this.levelWorker;
+  }
+  /**
    * 销毁所有 Worker，释放资源
    * @description 在应用退出时调用
    */
@@ -9345,6 +9377,11 @@ class OcrService {
       await this.chessWorker.terminate();
       this.chessWorker = null;
       logger.info("[OcrService] 棋子名称识别 Worker 已销毁");
+    }
+    if (this.levelWorker) {
+      await this.levelWorker.terminate();
+      this.levelWorker = null;
+      logger.info("[OcrService] 等级识别 Worker 已销毁");
     }
   }
 }
@@ -10976,6 +11013,42 @@ class TftOperator {
       logger.error(`[TftOperator] 保存失败样本出错: ${e}`);
     }
   }
+  /**
+   * 获取当前等级信息
+   * @description 通过 OCR 识别左下角等级区域，解析等级和经验值
+   * @returns 等级信息对象，包含当前等级、当前经验值、升级所需总经验值
+   * 
+   * @example
+   * // 扫描区域内容示例: "4级  4/6"
+   * const levelInfo = await operator.getLevelInfo();
+   * // 返回: { level: 4, currentXp: 4, totalXp: 6 }
+   */
+  async getLevelInfo() {
+    this.ensureInitialized();
+    try {
+      const absoluteRegion = new Region(
+        Math.round(this.gameWindowRegion.x + levelRegion.leftTop.x),
+        Math.round(this.gameWindowRegion.y + levelRegion.leftTop.y),
+        Math.round(levelRegion.rightBottom.x - levelRegion.leftTop.x),
+        Math.round(levelRegion.rightBottom.y - levelRegion.leftTop.y)
+      );
+      const pngBuffer = await screenCapture.captureRegionAsPng(absoluteRegion);
+      const text = await ocrService.recognize(pngBuffer, OcrWorkerType.LEVEL);
+      const match = text.match(/(\d+)\s*级\s*(\d+)\s*\/\s*(\d+)/);
+      if (match) {
+        const level = parseInt(match[1], 10);
+        const currentXp = parseInt(match[2], 10);
+        const totalXp = parseInt(match[3], 10);
+        logger.info(`[TftOperator] 等级解析成功: Lv.${level}, 经验 ${currentXp}/${totalXp}`);
+        return { level, currentXp, totalXp };
+      }
+      logger.warn(`[TftOperator] 等级解析失败，无法匹配格式: "${text}"`);
+      return null;
+    } catch (error) {
+      logger.error(`[TftOperator] 获取等级信息异常: ${error}`);
+      return null;
+    }
+  }
 }
 const tftOperator = TftOperator.getInstance();
 const MY_DREAM_COMP = {
@@ -11250,7 +11323,6 @@ class LobbyState {
       };
       const onGameflowPhase = (eventData) => {
         const phase = eventData.data?.phase;
-        logger.debug(`[LobbyState] 游戏阶段: ${JSON.stringify(eventData, null, 2)}`);
         logger.info(`[LobbyState] 监听到游戏阶段: ${phase}`);
         if (phase === "InProgress") {
           logger.info("[LobbyState] 监听到 GAMEFLOW 变为 InProgress");
@@ -11791,6 +11863,7 @@ function registerHandler() {
   ipcMain.handle(IpcChannel.TFT_GET_EQUIP_INFO, async (event) => tftOperator.getEquipInfo());
   ipcMain.handle(IpcChannel.TFT_GET_BENCH_INFO, async (event) => tftOperator.getBenchInfo());
   ipcMain.handle(IpcChannel.TFT_GET_FIGHT_BOARD_INFO, async (event) => tftOperator.getFightBoardInfo());
+  ipcMain.handle(IpcChannel.TFT_GET_LEVEL_INFO, async (event) => tftOperator.getLevelInfo());
   ipcMain.handle(IpcChannel.TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT, async (event) => tftOperator.saveBenchSlotSnapshots());
   ipcMain.handle(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT, async (event) => tftOperator.saveFightBoardSlotSnapshots());
   ipcMain.handle(IpcChannel.LINEUP_GET_ALL, async () => lineupLoader.getAllLineups());
