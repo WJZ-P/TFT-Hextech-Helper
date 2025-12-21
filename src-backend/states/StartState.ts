@@ -14,6 +14,9 @@ import GameConfigHelper from "../utils/GameConfigHelper.ts";
 /**
  * 启动状态类
  * @description 负责初始化检查和配置备份，决定进入哪个后续状态
+ * 
+ * 注意：策略服务的初始化已移至 GameStageState，
+ * 因为需要在游戏实际开始后才能正确读取棋子信息进行阵容匹配
  */
 export class StartState implements IState {
     /** 状态名称 */
@@ -30,7 +33,6 @@ export class StartState implements IState {
         logger.info("[StartState] 正在初始化...");
 
         // 备份当前游戏配置
-        await this.backupGameConfig();
 
         // 应用 TFT 专用配置（分辨率、画质等）
         await this.applyTFTConfig();

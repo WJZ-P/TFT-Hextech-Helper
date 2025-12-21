@@ -8,6 +8,8 @@ import { IState } from "./IState";
 import { IdleState } from "./IdleState.ts";
 import { logger } from "../utils/Logger.ts";
 import GameConfigHelper from "../utils/GameConfigHelper.ts";
+import { strategyService } from "../services/StrategyService.ts";
+import { GameStageState } from "./GameStageState.ts";
 
 /**
  * 结束状态类
@@ -24,6 +26,12 @@ export class EndState implements IState {
      */
     async action(_signal: AbortSignal): Promise<IdleState> {
         logger.info("[EndState] 正在恢复客户端设置...");
+
+        // 重置策略服务状态
+        strategyService.reset();
+        
+        // 重置 GameStageState 的初始化标志，确保下一局游戏可以重新初始化
+        GameStageState.resetStrategyInitialized();
 
         try {
             await GameConfigHelper.restore();
