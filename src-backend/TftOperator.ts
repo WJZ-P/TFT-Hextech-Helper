@@ -36,6 +36,7 @@ import {
     itemForgeTooltipRegion,
     itemForgeTooltipRegionEdge,
     levelRegion,
+    lootRegion,
     shopSlot,
     shopSlotNameRegions,
     TFT_16_CHAMPION_DATA,
@@ -67,6 +68,7 @@ import type {
     BoardUnit,
     BoardLocation,
     ShopUnit,
+    LootOrb,
 } from "./tft";
 import { sleep } from "./utils/HelperTools";
 
@@ -74,7 +76,7 @@ import { sleep } from "./utils/HelperTools";
 // 类型重导出 (保持向后兼容)
 // ============================================================================
 
-export { IdentifiedEquip, ShopUnit, BoardLocation, BoardUnit, BenchLocation, BenchUnit };
+export { IdentifiedEquip, ShopUnit, BoardLocation, BoardUnit, BenchLocation, BenchUnit, LootOrb };
 
 /** 装备资源路径优先级 (向后兼容导出) */
 export const equipResourcePath = ["component", "special", "core", "emblem", "artifact", "radiant"];
@@ -1016,6 +1018,67 @@ class TftOperator {
         } catch (error) {
             logger.error(`[TftOperator] 获取等级信息异常: ${error}`);
             return null;
+        }
+    }
+
+    /**
+     * 检测当前画面中的战利品球
+     * @description 扫描战利品掉落区域，通过模板匹配识别所有战利品球
+     *              支持识别普通(银色)、蓝色、金色三种等级的战利品球
+     * @returns 检测到的战利品球数组，包含位置、类型和置信度
+     * 
+     * @example
+     * const lootOrbs = await operator.getLootOrbs();
+     * // 返回: [{ x: 450, y: 300, type: 'gold', confidence: 0.92 }, ...]
+     */
+    public async getLootOrbs(): Promise<LootOrb[]> {
+        this.ensureInitialized();
+
+        if (!templateLoader.isReady()) {
+            logger.warn("[TftOperator] 模板未加载完成，跳过战利品球检测");
+            return [];
+        }
+
+        try {
+            // 1. 计算战利品掉落区域的绝对坐标
+            const absoluteRegion = new Region(
+                Math.round(this.gameWindowRegion!.x + lootRegion.leftTop.x),
+                Math.round(this.gameWindowRegion!.y + lootRegion.leftTop.y),
+                Math.round(lootRegion.rightBottom.x - lootRegion.leftTop.x),
+                Math.round(lootRegion.rightBottom.y - lootRegion.leftTop.y)
+            );
+
+            // 2. 截取区域图像 (captureRegionAsMat 返回 RGB 3 通道，正好用于模板匹配)
+            const targetMat = await screenCapture.captureRegionAsMat(absoluteRegion);
+
+            // 3. 执行多目标模板匹配
+            const relativeOrbs = templateMatcher.matchLootOrbs(targetMat);
+
+            // 4. 将相对坐标转换为游戏窗口内的坐标
+            const absoluteOrbs: LootOrb[] = relativeOrbs.map((orb) => {
+                const absX = orb.x + lootRegion.leftTop.x;
+                const absY = orb.y + lootRegion.leftTop.y;
+                logger.debug(
+                    `[TftOperator] 检测到战利品球: ${orb.type} ` +
+                    `位置 (${absX}, ${absY}), 置信度 ${(orb.confidence * 100).toFixed(1)}%`
+                );
+                return { ...orb, x: absX, y: absY };
+            });
+
+            // 5. 释放资源
+            targetMat.delete();
+
+            logger.info(
+                `[TftOperator] 战利品球检测完成: ` +
+                `普通 ${absoluteOrbs.filter(o => o.type === 'normal').length} 个, ` +
+                `蓝色 ${absoluteOrbs.filter(o => o.type === 'blue').length} 个, ` +
+                `金色 ${absoluteOrbs.filter(o => o.type === 'gold').length} 个`
+            );
+
+            return absoluteOrbs;
+        } catch (error) {
+            logger.error(`[TftOperator] 战利品球检测异常: ${error}`);
+            return [];
         }
     }
 }

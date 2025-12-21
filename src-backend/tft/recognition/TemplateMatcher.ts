@@ -9,7 +9,7 @@ import path from "path";
 import fs from "fs-extra";
 import sharp from "sharp";
 import {logger} from "../../utils/Logger";
-import {IdentifiedEquip, EquipCategory, EQUIP_CATEGORY_PRIORITY} from "../types";
+import {IdentifiedEquip, EquipCategory, EQUIP_CATEGORY_PRIORITY, LootOrb, LootOrbType} from "../types";
 import {TFT_16_EQUIP_DATA} from "../../TFTProtocol";
 import {templateLoader} from "./TemplateLoader";
 
@@ -26,6 +26,8 @@ const MATCH_THRESHOLDS = {
     STAR_LEVEL: 0.85,
     /** 空槽位标准差阈值 (低于此值判定为空) */
     EMPTY_SLOT_STDDEV: 10,
+    /** 战利品球匹配阈值 */
+    LOOT_ORB: 0.75,
 } as const;
 
 /**
@@ -341,6 +343,134 @@ export class TemplateMatcher {
         } catch (e) {
             logger.error(`[TemplateMatcher] 保存星级失败图片出错: ${e}`);
         }
+    }
+
+    /**
+     * 多目标匹配战利品球
+     * @description 在目标图像中查找所有战利品球，支持多种类型 (normal/blue/gold)
+     *              使用非极大值抑制 (NMS) 避免重复检测
+     * @param targetMat 目标图像 (需要是 RGB 3 通道)
+     * @returns 检测到的战利品球数组
+     */
+    public matchLootOrbs(targetMat: cv.Mat): LootOrb[] {
+        const lootOrbTemplates = templateLoader.getLootOrbTemplates();
+        if (lootOrbTemplates.size === 0) {
+            logger.warn("[TemplateMatcher] 战利品球模板为空，跳过匹配");
+            return [];
+        }
+
+        const results: LootOrb[] = [];
+        const mask = new cv.Mat();
+        const resultMat = new cv.Mat();
+
+        try {
+            // 遍历每种类型的模板
+            for (const [orbType, templateMat] of lootOrbTemplates) {
+                // 尺寸检查
+                if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) {
+                    logger.debug(`[TemplateMatcher] 战利品模板尺寸过大: ${orbType}`);
+                    continue;
+                }
+
+                // 通道检查
+                if (templateMat.type() !== targetMat.type()) {
+                    logger.warn(
+                        `[TemplateMatcher] 战利品模板通道不匹配: ${orbType} ` +
+                        `(模板: ${templateMat.type()}, 目标: ${targetMat.type()})`
+                    );
+                    continue;
+                }
+
+                // 执行模板匹配
+                cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
+
+                // 多目标检测：循环查找所有超过阈值的匹配点
+                const templateWidth = templateMat.cols;
+                const templateHeight = templateMat.rows;
+
+                // 使用循环查找所有匹配点
+                while (true) {
+                    const minMax = cv.minMaxLoc(resultMat, mask);
+                    
+                    if (minMax.maxVal < MATCH_THRESHOLDS.LOOT_ORB) {
+                        break; // 没有更多匹配点了
+                    }
+
+                    const matchX = minMax.maxLoc.x;
+                    const matchY = minMax.maxLoc.y;
+
+                    // 计算球心坐标 (模板左上角 + 模板尺寸的一半)
+                    const centerX = matchX + Math.floor(templateWidth / 2);
+                    const centerY = matchY + Math.floor(templateHeight / 2);
+
+                    results.push({
+                        x: centerX,
+                        y: centerY,
+                        type: orbType,
+                        confidence: minMax.maxVal,
+                    });
+
+                    // 抑制当前匹配区域，避免重复检测
+                    // 将匹配点周围区域的值设为 -1 (低于任何阈值)
+                    cv.rectangle(
+                        resultMat,
+                        new cv.Point(
+                            Math.max(0, matchX - templateWidth / 2),
+                            Math.max(0, matchY - templateHeight / 2)
+                        ),
+                        new cv.Point(
+                            Math.min(resultMat.cols - 1, matchX + templateWidth / 2),
+                            Math.min(resultMat.rows - 1, matchY + templateHeight / 2)
+                        ),
+                        new cv.Scalar(-1),
+                        -1 // 填充矩形
+                    );
+                }
+            }
+
+            // 对结果进行非极大值抑制 (NMS)，去除重叠的检测框
+            const nmsResults = this.applyNMS(results, 20); // 20 像素的距离阈值
+
+            logger.info(`[TemplateMatcher] 战利品球检测完成，共 ${nmsResults.length} 个`);
+            return nmsResults;
+        } catch (e) {
+            logger.error(`[TemplateMatcher] 战利品球匹配出错: ${e}`);
+            return [];
+        } finally {
+            mask.delete();
+            resultMat.delete();
+        }
+    }
+
+    /**
+     * 非极大值抑制 (NMS)
+     * @description 去除距离过近的重复检测结果，保留置信度最高的
+     * @param orbs 检测到的战利品球数组
+     * @param distanceThreshold 距离阈值 (像素)
+     * @returns 去重后的战利品球数组
+     */
+    private applyNMS(orbs: LootOrb[], distanceThreshold: number): LootOrb[] {
+        if (orbs.length === 0) return [];
+
+        // 按置信度降序排序
+        const sorted = [...orbs].sort((a, b) => b.confidence - a.confidence);
+        const kept: LootOrb[] = [];
+
+        for (const orb of sorted) {
+            // 检查是否与已保留的球距离过近
+            const isTooClose = kept.some((keptOrb) => {
+                const dx = orb.x - keptOrb.x;
+                const dy = orb.y - keptOrb.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                return distance < distanceThreshold;
+            });
+
+            if (!isTooClose) {
+                kept.push(orb);
+            }
+        }
+
+        return kept;
     }
 }
 

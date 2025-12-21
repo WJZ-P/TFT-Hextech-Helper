@@ -26,6 +26,12 @@ export const levelRegion = {
     rightBottom: {x: 145, y: 645}
 }
 
+//  战利品掉落region，可能的掉落区域
+export const lootRegion = {
+    leftTop:{x:200,y:125},
+    rightBottom:{x:855,y:585}
+}
+
 //  英雄购买槽坐标
 export interface SimplePoint {
     x: number;

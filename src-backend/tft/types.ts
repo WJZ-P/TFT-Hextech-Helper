@@ -142,3 +142,28 @@ export interface TemplateMatchResult<T = string> {
     /** 匹配置信度 (0-1) */
     confidence: number;
 }
+
+// ============================================================================
+// 战利品球类型
+// ============================================================================
+
+/**
+ * 战利品球等级
+ * @description 对应不同颜色的战利品球
+ */
+export type LootOrbType = 'normal' | 'blue' | 'gold';
+
+/**
+ * 检测到的战利品球
+ * @description 包含位置、类型和置信度信息
+ */
+export interface LootOrb {
+    /** 球心 X 坐标 (相对于游戏窗口) */
+    x: number;
+    /** 球心 Y 坐标 (相对于游戏窗口) */
+    y: number;
+    /** 球的类型/等级 */
+    type: LootOrbType;
+    /** 匹配置信度 (0-1) */
+    confidence: number;
+}

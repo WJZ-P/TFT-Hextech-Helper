@@ -9,12 +9,14 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["LCU_GET_CONNECTION_STATUS"] = "lcu-get-connection-status";
   IpcChannel2["HEX_START"] = "hex-start";
   IpcChannel2["HEX_STOP"] = "hex-stop";
+  IpcChannel2["HEX_GET_STATUS"] = "hex-get-status";
   IpcChannel2["TFT_BUY_AT_SLOT"] = "tft-buy-at-slot";
   IpcChannel2["TFT_GET_SHOP_INFO"] = "tft-get-shop-info";
   IpcChannel2["TFT_GET_EQUIP_INFO"] = "tft-get-equip-info";
   IpcChannel2["TFT_GET_BENCH_INFO"] = "tft-get-bench-info";
   IpcChannel2["TFT_GET_FIGHT_BOARD_INFO"] = "tft-get-fight-board-info";
   IpcChannel2["TFT_GET_LEVEL_INFO"] = "tft-get-level-info";
+  IpcChannel2["TFT_GET_LOOT_ORBS"] = "tft-get-loot-orbs";
   IpcChannel2["TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT"] = "tft-test-save-bench-slot-snapshot";
   IpcChannel2["TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT"] = "tft-test-save-fight-board-slot-snapshot";
   IpcChannel2["LINEUP_GET_ALL"] = "lineup-get-all";
@@ -71,6 +73,10 @@ const hexApi = {
   },
   stop: () => {
     return electron.ipcRenderer.invoke(IpcChannel.HEX_STOP);
+  },
+  /** 获取当前运行状态 */
+  getStatus: () => {
+    return electron.ipcRenderer.invoke(IpcChannel.HEX_GET_STATUS);
   }
 };
 electron.contextBridge.exposeInMainWorld("hex", hexApi);
@@ -81,6 +87,7 @@ const tftApi = {
   getBenchInfo: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_BENCH_INFO),
   getFightBoardInfo: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_FIGHT_BOARD_INFO),
   getLevelInfo: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_LEVEL_INFO),
+  getLootOrbs: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_LOOT_ORBS),
   saveBenchSlotSnapshots: () => electron.ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT),
   saveFightBoardSlotSnapshots: () => electron.ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT)
 };

@@ -60,7 +60,11 @@ const hexApi = {
     },
     stop: (): Promise<boolean> => {
         return ipcRenderer.invoke(IpcChannel.HEX_STOP)
-    }
+    },
+    /** 获取当前运行状态 */
+    getStatus: (): Promise<boolean> => {
+        return ipcRenderer.invoke(IpcChannel.HEX_GET_STATUS)
+    },
 }
 export type HexApi = typeof hexApi
 contextBridge.exposeInMainWorld('hex', hexApi)
@@ -73,6 +77,7 @@ const tftApi = {
     getBenchInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_BENCH_INFO),
     getFightBoardInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_FIGHT_BOARD_INFO),
     getLevelInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_LEVEL_INFO),
+    getLootOrbs: () => ipcRenderer.invoke(IpcChannel.TFT_GET_LOOT_ORBS),
     saveBenchSlotSnapshots : ()=> ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT),
     saveFightBoardSlotSnapshots : ()=>ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT),
 }

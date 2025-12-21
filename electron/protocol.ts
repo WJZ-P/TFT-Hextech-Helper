@@ -10,12 +10,14 @@ export enum IpcChannel {
     LCU_GET_CONNECTION_STATUS = 'lcu-get-connection-status',  // 获取当前连接状态
     HEX_START = 'hex-start',
     HEX_STOP = 'hex-stop',
+    HEX_GET_STATUS = 'hex-get-status',
     TFT_BUY_AT_SLOT = 'tft-buy-at-slot',
     TFT_GET_SHOP_INFO = 'tft-get-shop-info',
     TFT_GET_EQUIP_INFO = 'tft-get-equip-info',
     TFT_GET_BENCH_INFO = 'tft-get-bench-info',
     TFT_GET_FIGHT_BOARD_INFO = 'tft-get-fight-board-info',
     TFT_GET_LEVEL_INFO = 'tft-get-level-info',
+    TFT_GET_LOOT_ORBS = 'tft-get-loot-orbs',
     TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT = 'tft-test-save-bench-slot-snapshot',
     TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT = 'tft-test-save-fight-board-slot-snapshot',
     // 阵容相关

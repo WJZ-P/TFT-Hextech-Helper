@@ -2,10 +2,14 @@ import React, {useState, useEffect} from 'react';
 import styled from 'styled-components';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import StopCircleOutlinedIcon from '@mui/icons-material/StopCircleOutlined';
+import BlockIcon from '@mui/icons-material/Block';
 import {ThemeType} from "../../styles/theme.ts";
 import {LogPanel} from "../LogPanel.tsx";
 import {toast} from "../toast/toast-core.ts";
 import {SummonerInfo} from "../../../src-backend/lcu/utils/LCUProtocols.ts";
+
+// 导入 APP 图标（让 Vite 正确处理资源路径）
+import appIconUrl from '../../../public/icon.png';
 
 // ============================================
 // 样式组件定义
@@ -221,7 +225,7 @@ const LoadingPlaceholder = styled.div<{ theme: ThemeType }>`
   gap: ${props => props.theme.spacing.small};
   color: ${props => props.theme.colors.textSecondary};
   font-size: 0.9rem;
-  padding: ${props => props.theme.spacing.medium};
+  padding: ${props => props.theme.spacing.small};
 `;
 
 // ============================================
@@ -291,9 +295,60 @@ const buttonAnimations = `
       opacity: 0.2;
     }
   }
+
+  @keyframes pulseGray {
+    0% {
+      box-shadow: 0 0 0 0 rgba(120, 144, 156, 0.6);
+    }
+    70% {
+      box-shadow: 0 0 0 12px rgba(120, 144, 156, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(120, 144, 156, 0);
+    }
+  }
+
+  /* 标题流光特效 */
+  @keyframes titleFlow {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  /* 图标呼吸与旋转 */
+  @keyframes iconBreath {
+    0% {
+      box-shadow: 0 0 15px rgba(102, 204, 255, 0.3);
+      transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(102, 204, 255, 0.6);
+      transform: translate(-50%, -50%) scale(1.05);
+    }
+    100% {
+      box-shadow: 0 0 15px rgba(102, 204, 255, 0.3);
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+
+  /* 雷达扫描圈 */
+  @keyframes radarSpin {
+    0% {
+      transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+      transform: translate(-50%, -50%) rotate(360deg);
+    }
+  }
 `;
 
-const ControlButton = styled.button<{ $isRunning: boolean; theme: ThemeType }>`
+const ControlButton = styled.button<{ $isRunning: boolean; $disabled: boolean; theme: ThemeType }>`
   ${buttonAnimations}
   
   position: relative;
@@ -306,27 +361,37 @@ const ControlButton = styled.button<{ $isRunning: boolean; theme: ThemeType }>`
   font-weight: 600;
   border: none;
   border-radius: ${props => props.theme.borderRadius};
-  cursor: pointer;
+  cursor: ${props => props.$disabled ? 'not-allowed' : 'pointer'};
   min-width: 160px;
   color: ${props => props.theme.colors.textOnPrimary};
   overflow: hidden;
   
-  /* 渐变背景 - 66ccff 主题色系 */
-  background: ${props => props.$isRunning 
-    ? 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)' 
-    : 'linear-gradient(135deg, #66ccff 0%, #3399dd 50%, #2277bb 100%)'};
+  /* 渐变背景 - 根据状态切换 */
+  background: ${props => {
+    // 禁用/等待状态：使用科技灰/蓝灰渐变，保留高级感
+    if (props.$disabled) return 'linear-gradient(135deg, #78909c 0%, #455a64 100%)';
+    // 运行状态：红色
+    if (props.$isRunning) return 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)';
+    // 就绪状态：蓝色
+    return 'linear-gradient(135deg, #66ccff 0%, #3399dd 50%, #2277bb 100%)';
+  }};
   
   /* 基础光晕 */
-  box-shadow: ${props => props.$isRunning
-    ? '0 4px 15px rgba(244, 67, 54, 0.4)'
-    : '0 4px 15px rgba(102, 204, 255, 0.5)'};
+  box-shadow: ${props => {
+    if (props.$disabled) return '0 4px 15px rgba(120, 144, 156, 0.4)';
+    if (props.$isRunning) return '0 4px 15px rgba(244, 67, 54, 0.4)';
+    return '0 4px 15px rgba(102, 204, 255, 0.5)';
+  }};
   
-  /* 脉冲动画 */
-  animation: ${props => props.$isRunning ? 'pulseRed' : 'pulse'} 2s infinite;
+  /* 脉冲动画 - 禁用状态也播放，使用灰色脉冲 */
+  animation: ${props => {
+    if (props.$disabled) return 'pulseGray 2s infinite';
+    return props.$isRunning ? 'pulseRed 2s infinite' : 'pulse 2s infinite';
+  }};
   
   transition: transform 0.2s ease, box-shadow 0.3s ease, background 0.3s ease;
   
-  /* 流动光泽效果 - 始终播放 */
+  /* 流动光泽效果 - 始终显示 */
   &::before {
     content: '';
     position: absolute;
@@ -340,11 +405,12 @@ const ControlButton = styled.button<{ $isRunning: boolean; theme: ThemeType }>`
       rgba(255, 255, 255, 0.4) 50%,
       transparent 100%
     );
+    /* 禁用状态也播放动画 */
     animation: shimmer 3s ease-in-out infinite;
     pointer-events: none;
   }
   
-  /* 内部水纹效果 */
+  /* 内部水纹效果 - 始终显示 */
   &::after {
     content: '';
     position: absolute;
@@ -359,22 +425,28 @@ const ControlButton = styled.button<{ $isRunning: boolean; theme: ThemeType }>`
       transparent 60%
     );
     border-radius: 50%;
+    /* 禁用状态也播放动画 */
     animation: rippleFloat 2.5s ease-in-out infinite;
     pointer-events: none;
   }
 
   &:hover {
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: ${props => props.$isRunning
-      ? '0 8px 25px rgba(244, 67, 54, 0.5)'
-      : '0 8px 25px rgba(102, 204, 255, 0.6)'};
+    /* 禁用状态下 Hover 不做位移，但保持光影 */
+    transform: ${props => props.$disabled ? 'none' : 'translateY(-3px) scale(1.02)'};
+    box-shadow: ${props => {
+      if (props.$disabled) return '0 4px 15px rgba(120, 144, 156, 0.4)';
+      if (props.$isRunning) return '0 8px 25px rgba(244, 67, 54, 0.5)';
+      return '0 8px 25px rgba(102, 204, 255, 0.6)';
+    }};
   }
 
   &:active {
-    transform: translateY(-1px) scale(0.98);
-    box-shadow: ${props => props.$isRunning
-      ? '0 2px 10px rgba(244, 67, 54, 0.4)'
-      : '0 2px 10px rgba(102, 204, 255, 0.4)'};
+    transform: ${props => props.$disabled ? 'none' : 'translateY(-1px) scale(0.98)'};
+    box-shadow: ${props => {
+      if (props.$disabled) return '0 4px 15px rgba(120, 144, 156, 0.4)';
+      if (props.$isRunning) return '0 2px 10px rgba(244, 67, 54, 0.4)';
+      return '0 2px 10px rgba(102, 204, 255, 0.4)';
+    }};
   }
 
   .MuiSvgIcon-root {
@@ -416,6 +488,95 @@ const ButtonWrapper = styled.div`
     pointer-events: none;
   }
 `;
+
+/** 项目名称大标题 */
+const ProjectTitle = styled.h1<{ theme: ThemeType }>`
+  font-size: 2rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-top: -10px;
+  margin-bottom: 10px;
+  
+  /* 酷炫流光渐变 */
+  background: linear-gradient(
+    -45deg,
+    #2196f3,
+    #00bcd4,
+    #3f51b5,
+    #2196f3
+  );
+  background-size: 300% 300%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  
+  /* 发光阴影效果 */
+  filter: drop-shadow(0 0 10px rgba(33, 150, 243, 0.3));
+  
+  animation: titleFlow 6s ease infinite;
+`;
+
+/** APP图标容器 */
+const AppIconContainer = styled.div<{ theme: ThemeType }>`
+  position: relative;
+  width: 130px;
+  height: 130px;
+  margin: 0 auto;
+`;
+
+/** APP图标图片 */
+const AppIconImage = styled.img<{ theme: ThemeType }>`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 110px;
+  height: 110px;
+  border-radius: 50%; /* 圆形（球形）图标 */
+  z-index: 2;
+  border: 2px solid rgba(102, 204, 255, 0.3);
+  background-color: ${props => props.theme.colors.elementBg};
+  
+  /* 呼吸动画 */
+  animation: iconBreath 3s ease-in-out infinite;
+`;
+
+/** 雷达扫描圈 - 外圈 */
+const RadarCircle = styled.div<{ theme: ThemeType }>`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 1px dashed ${props => props.theme.colors.primary}40;
+  
+  /* 旋转动画 */
+  animation: radarSpin 10s linear infinite;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 50%;
+    width: 4px;
+    height: 4px;
+    background: ${props => props.theme.colors.primary};
+    border-radius: 50%;
+    box-shadow: 0 0 10px ${props => props.theme.colors.primary};
+  }
+`;
+
+/** 雷达扫描圈 - 内圈 */
+const RadarCircleInner = styled(RadarCircle)`
+  width: 100%;
+  height: 100%;
+  border: 1px solid ${props => props.theme.colors.primary}20;
+  border-left-color: ${props => props.theme.colors.primary}80;
+  animation: radarSpin 3s linear infinite;
+`;
+
 
 // ============================================
 // 组件主体
@@ -468,12 +629,18 @@ export const HomePage = () => {
         }
     };
 
-    // 组件挂载时：检查连接状态 + 监听连接/断开事件
+    // 组件挂载时：检查连接状态 + 监听连接/断开事件 + 获取运行状态
     useEffect(() => {
         // 1. 先检查当前是否已经连接
         const checkInitialStatus = async () => {
+            // 获取 LCU 连接状态
             const connected = await window.lcu.getConnectionStatus();
             setIsLcuConnected(connected);
+            
+            // 获取 HexService 运行状态（页面切换回来时恢复正确状态）
+            const running = await window.hex.getStatus();
+            setIsRunning(running);
+            
             if (connected) {
                 // 如果已经连接了，直接获取召唤师信息
                 fetchSummonerInfo();
@@ -507,6 +674,11 @@ export const HomePage = () => {
     }, []);
 
     const handleToggle = async () => {
+        // 未连接客户端时禁止操作
+        if (!isLcuConnected) {
+            return;
+        }
+        
         if (!isRunning) {
             const success = await window.hex.start();
             if (success) {
@@ -542,10 +714,15 @@ export const HomePage = () => {
                         <span>正在获取召唤师信息...</span>
                     </LoadingPlaceholder>
                 ) : !isLcuConnected ? (
-                    // 新增：未连接 LOL 客户端时的提示
+                    // 新增：未连接 LOL 客户端时的提示 - 海克斯科技风格
                     <LoadingPlaceholder>
-                        <span>等待 LOL 客户端连接...</span>
-                        <span>请启动并登录游戏客户端</span>
+                        <ProjectTitle>TFT-Hextech-Helper</ProjectTitle>
+                        
+                        <AppIconContainer>
+                            <RadarCircle />
+                            <RadarCircleInner />
+                            <AppIconImage src={appIconUrl} alt="App Icon" />
+                        </AppIconContainer>
                     </LoadingPlaceholder>
                 ) : summonerInfo ? (
                     <>
@@ -611,9 +788,27 @@ export const HomePage = () => {
 
             {/* 控制按钮 - 带水纹效果 */}
             <ButtonWrapper>
-                <ControlButton onClick={handleToggle} $isRunning={isRunning}>
-                    {isRunning ? <StopCircleOutlinedIcon /> : <PlayCircleOutlineIcon />}
-                    {isRunning ? '关闭' : '开始'}
+                <ControlButton 
+                    onClick={handleToggle} 
+                    $isRunning={isRunning}
+                    $disabled={!isLcuConnected}
+                >
+                    {!isLcuConnected ? (
+                        <>
+                            <BlockIcon />
+                            未检测到客户端
+                        </>
+                    ) : isRunning ? (
+                        <>
+                            <StopCircleOutlinedIcon />
+                            关闭
+                        </>
+                    ) : (
+                        <>
+                            <PlayCircleOutlineIcon />
+                            开始
+                        </>
+                    )}
                 </ControlButton>
             </ButtonWrapper>
 

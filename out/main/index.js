@@ -5580,12 +5580,14 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["LCU_GET_CONNECTION_STATUS"] = "lcu-get-connection-status";
   IpcChannel2["HEX_START"] = "hex-start";
   IpcChannel2["HEX_STOP"] = "hex-stop";
+  IpcChannel2["HEX_GET_STATUS"] = "hex-get-status";
   IpcChannel2["TFT_BUY_AT_SLOT"] = "tft-buy-at-slot";
   IpcChannel2["TFT_GET_SHOP_INFO"] = "tft-get-shop-info";
   IpcChannel2["TFT_GET_EQUIP_INFO"] = "tft-get-equip-info";
   IpcChannel2["TFT_GET_BENCH_INFO"] = "tft-get-bench-info";
   IpcChannel2["TFT_GET_FIGHT_BOARD_INFO"] = "tft-get-fight-board-info";
   IpcChannel2["TFT_GET_LEVEL_INFO"] = "tft-get-level-info";
+  IpcChannel2["TFT_GET_LOOT_ORBS"] = "tft-get-loot-orbs";
   IpcChannel2["TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT"] = "tft-test-save-bench-slot-snapshot";
   IpcChannel2["TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT"] = "tft-test-save-fight-board-slot-snapshot";
   IpcChannel2["LINEUP_GET_ALL"] = "lineup-get-all";
@@ -5680,6 +5682,10 @@ var TFTMode = /* @__PURE__ */ ((TFTMode2) => {
 const levelRegion = {
   leftTop: { x: 25, y: 625 },
   rightBottom: { x: 145, y: 645 }
+};
+const lootRegion = {
+  leftTop: { x: 200, y: 125 },
+  rightBottom: { x: 855, y: 585 }
 };
 const shopSlot = {
   SHOP_SLOT_1: { x: 240, y: 700 },
@@ -9399,6 +9405,8 @@ class TemplateLoader {
   benchSlotTemplates = /* @__PURE__ */ new Map();
   /** 棋盘槽位模板缓存 (RGBA 彩色图，用于空槽检测) */
   fightBoardSlotTemplates = /* @__PURE__ */ new Map();
+  /** 战利品球模板缓存 (RGB 彩色图，用于多目标匹配) */
+  lootOrbTemplates = /* @__PURE__ */ new Map();
   /** 空装备槽位模板 (24x24 纯黑) */
   emptyEquipSlotTemplate = null;
   /** 文件监听器防抖定时器 */
@@ -9420,6 +9428,9 @@ class TemplateLoader {
   }
   get fightBoardSlotTemplatePath() {
     return path__default.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/fightBoardSlot");
+  }
+  get lootOrbTemplatePath() {
+    return path__default.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/loot");
   }
   constructor() {
   }
@@ -9448,7 +9459,8 @@ class TemplateLoader {
       this.loadChampionTemplates(),
       this.loadStarLevelTemplates(),
       this.loadBenchSlotTemplates(),
-      this.loadFightBoardSlotTemplates()
+      this.loadFightBoardSlotTemplates(),
+      this.loadLootOrbTemplates()
     ]);
     this.setupChampionTemplateWatcher();
     this.isLoaded = true;
@@ -9488,6 +9500,13 @@ class TemplateLoader {
    */
   getFightBoardSlotTemplate(slotKey) {
     return this.fightBoardSlotTemplates.get(slotKey) || null;
+  }
+  /**
+   * 获取战利品球模板
+   * @returns 战利品球模板 Map (key 为类型: normal/blue/gold)
+   */
+  getLootOrbTemplates() {
+    return this.lootOrbTemplates;
   }
   /**
    * 获取空装备槽位模板
@@ -9689,6 +9708,46 @@ class TemplateLoader {
     }
     logger.info(`[TemplateLoader] 棋盘槽位模板加载完成，共 ${this.fightBoardSlotTemplates.size} 个`);
   }
+  /**
+   * 加载战利品球模板
+   * @description 加载 loot_normal.png, loot_blue.png, loot_gold.png
+   *              保留 RGB 彩色信息用于多目标模板匹配
+   */
+  async loadLootOrbTemplates() {
+    this.clearLootOrbTemplates();
+    logger.info("[TemplateLoader] 开始加载战利品球模板...");
+    if (!fs.existsSync(this.lootOrbTemplatePath)) {
+      fs.ensureDirSync(this.lootOrbTemplatePath);
+      logger.info(`[TemplateLoader] 战利品球模板目录不存在，已自动创建: ${this.lootOrbTemplatePath}`);
+      return;
+    }
+    const templateFiles = [
+      { filename: "loot_normal.png", type: "normal" },
+      { filename: "loot_blue.png", type: "blue" },
+      { filename: "loot_gold.png", type: "gold" }
+    ];
+    for (const { filename, type } of templateFiles) {
+      const filePath = path__default.join(this.lootOrbTemplatePath, filename);
+      if (!fs.existsSync(filePath)) {
+        logger.warn(`[TemplateLoader] 未找到战利品球模板: ${filename}`);
+        continue;
+      }
+      try {
+        const mat = await this.loadImageAsMat(filePath, {
+          ensureAlpha: false,
+          removeAlpha: true,
+          grayscale: false
+        });
+        if (mat) {
+          this.lootOrbTemplates.set(type, mat);
+          logger.info(`[TemplateLoader] 加载战利品球模板: ${type} (${mat.cols}x${mat.rows})`);
+        }
+      } catch (e) {
+        logger.error(`[TemplateLoader] 加载战利品球模板失败 [${filename}]: ${e}`);
+      }
+    }
+    logger.info(`[TemplateLoader] 战利品球模板加载完成，共 ${this.lootOrbTemplates.size} 个`);
+  }
   // ========== 工具方法 ==========
   /**
    * 加载图片为 OpenCV Mat
@@ -9814,6 +9873,17 @@ class TemplateLoader {
     this.fightBoardSlotTemplates.clear();
   }
   /**
+   * 清理战利品球模板缓存
+   */
+  clearLootOrbTemplates() {
+    for (const mat of this.lootOrbTemplates.values()) {
+      if (mat && !mat.isDeleted()) {
+        mat.delete();
+      }
+    }
+    this.lootOrbTemplates.clear();
+  }
+  /**
    * 销毁所有资源
    */
   destroy() {
@@ -9822,6 +9892,7 @@ class TemplateLoader {
     this.clearStarLevelTemplates();
     this.clearBenchSlotTemplates();
     this.clearFightBoardSlotTemplates();
+    this.clearLootOrbTemplates();
     if (this.emptyEquipSlotTemplate && !this.emptyEquipSlotTemplate.isDeleted()) {
       this.emptyEquipSlotTemplate.delete();
       this.emptyEquipSlotTemplate = null;
@@ -9842,7 +9913,9 @@ const MATCH_THRESHOLDS = {
   /** 星级匹配阈值 (星级图标特征明显，阈值设高) */
   STAR_LEVEL: 0.85,
   /** 空槽位标准差阈值 (低于此值判定为空) */
-  EMPTY_SLOT_STDDEV: 10
+  EMPTY_SLOT_STDDEV: 10,
+  /** 战利品球匹配阈值 */
+  LOOT_ORB: 0.75
 };
 class TemplateMatcher {
   static instance;
@@ -10080,6 +10153,103 @@ class TemplateMatcher {
     } catch (e) {
       logger.error(`[TemplateMatcher] 保存星级失败图片出错: ${e}`);
     }
+  }
+  /**
+   * 多目标匹配战利品球
+   * @description 在目标图像中查找所有战利品球，支持多种类型 (normal/blue/gold)
+   *              使用非极大值抑制 (NMS) 避免重复检测
+   * @param targetMat 目标图像 (需要是 RGB 3 通道)
+   * @returns 检测到的战利品球数组
+   */
+  matchLootOrbs(targetMat) {
+    const lootOrbTemplates = templateLoader.getLootOrbTemplates();
+    if (lootOrbTemplates.size === 0) {
+      logger.warn("[TemplateMatcher] 战利品球模板为空，跳过匹配");
+      return [];
+    }
+    const results = [];
+    const mask = new cv.Mat();
+    const resultMat = new cv.Mat();
+    try {
+      for (const [orbType, templateMat] of lootOrbTemplates) {
+        if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) {
+          logger.debug(`[TemplateMatcher] 战利品模板尺寸过大: ${orbType}`);
+          continue;
+        }
+        if (templateMat.type() !== targetMat.type()) {
+          logger.warn(
+            `[TemplateMatcher] 战利品模板通道不匹配: ${orbType} (模板: ${templateMat.type()}, 目标: ${targetMat.type()})`
+          );
+          continue;
+        }
+        cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
+        const templateWidth = templateMat.cols;
+        const templateHeight = templateMat.rows;
+        while (true) {
+          const minMax = cv.minMaxLoc(resultMat, mask);
+          if (minMax.maxVal < MATCH_THRESHOLDS.LOOT_ORB) {
+            break;
+          }
+          const matchX = minMax.maxLoc.x;
+          const matchY = minMax.maxLoc.y;
+          const centerX = matchX + Math.floor(templateWidth / 2);
+          const centerY = matchY + Math.floor(templateHeight / 2);
+          results.push({
+            x: centerX,
+            y: centerY,
+            type: orbType,
+            confidence: minMax.maxVal
+          });
+          cv.rectangle(
+            resultMat,
+            new cv.Point(
+              Math.max(0, matchX - templateWidth / 2),
+              Math.max(0, matchY - templateHeight / 2)
+            ),
+            new cv.Point(
+              Math.min(resultMat.cols - 1, matchX + templateWidth / 2),
+              Math.min(resultMat.rows - 1, matchY + templateHeight / 2)
+            ),
+            new cv.Scalar(-1),
+            -1
+            // 填充矩形
+          );
+        }
+      }
+      const nmsResults = this.applyNMS(results, 20);
+      logger.info(`[TemplateMatcher] 战利品球检测完成，共 ${nmsResults.length} 个`);
+      return nmsResults;
+    } catch (e) {
+      logger.error(`[TemplateMatcher] 战利品球匹配出错: ${e}`);
+      return [];
+    } finally {
+      mask.delete();
+      resultMat.delete();
+    }
+  }
+  /**
+   * 非极大值抑制 (NMS)
+   * @description 去除距离过近的重复检测结果，保留置信度最高的
+   * @param orbs 检测到的战利品球数组
+   * @param distanceThreshold 距离阈值 (像素)
+   * @returns 去重后的战利品球数组
+   */
+  applyNMS(orbs, distanceThreshold) {
+    if (orbs.length === 0) return [];
+    const sorted = [...orbs].sort((a, b) => b.confidence - a.confidence);
+    const kept = [];
+    for (const orb of sorted) {
+      const isTooClose = kept.some((keptOrb) => {
+        const dx = orb.x - keptOrb.x;
+        const dy = orb.y - keptOrb.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        return distance < distanceThreshold;
+      });
+      if (!isTooClose) {
+        kept.push(orb);
+      }
+    }
+    return kept;
   }
 }
 const templateMatcher = TemplateMatcher.getInstance();
@@ -11049,6 +11219,49 @@ class TftOperator {
       return null;
     }
   }
+  /**
+   * 检测当前画面中的战利品球
+   * @description 扫描战利品掉落区域，通过模板匹配识别所有战利品球
+   *              支持识别普通(银色)、蓝色、金色三种等级的战利品球
+   * @returns 检测到的战利品球数组，包含位置、类型和置信度
+   * 
+   * @example
+   * const lootOrbs = await operator.getLootOrbs();
+   * // 返回: [{ x: 450, y: 300, type: 'gold', confidence: 0.92 }, ...]
+   */
+  async getLootOrbs() {
+    this.ensureInitialized();
+    if (!templateLoader.isReady()) {
+      logger.warn("[TftOperator] 模板未加载完成，跳过战利品球检测");
+      return [];
+    }
+    try {
+      const absoluteRegion = new Region(
+        Math.round(this.gameWindowRegion.x + lootRegion.leftTop.x),
+        Math.round(this.gameWindowRegion.y + lootRegion.leftTop.y),
+        Math.round(lootRegion.rightBottom.x - lootRegion.leftTop.x),
+        Math.round(lootRegion.rightBottom.y - lootRegion.leftTop.y)
+      );
+      const targetMat = await screenCapture.captureRegionAsMat(absoluteRegion);
+      const relativeOrbs = templateMatcher.matchLootOrbs(targetMat);
+      const absoluteOrbs = relativeOrbs.map((orb) => {
+        const absX = orb.x + lootRegion.leftTop.x;
+        const absY = orb.y + lootRegion.leftTop.y;
+        logger.debug(
+          `[TftOperator] 检测到战利品球: ${orb.type} 位置 (${absX}, ${absY}), 置信度 ${(orb.confidence * 100).toFixed(1)}%`
+        );
+        return { ...orb, x: absX, y: absY };
+      });
+      targetMat.delete();
+      logger.info(
+        `[TftOperator] 战利品球检测完成: 普通 ${absoluteOrbs.filter((o) => o.type === "normal").length} 个, 蓝色 ${absoluteOrbs.filter((o) => o.type === "blue").length} 个, 金色 ${absoluteOrbs.filter((o) => o.type === "gold").length} 个`
+      );
+      return absoluteOrbs;
+    } catch (error) {
+      logger.error(`[TftOperator] 战利品球检测异常: ${error}`);
+      return [];
+    }
+  }
 }
 const tftOperator = TftOperator.getInstance();
 const MY_DREAM_COMP = {
@@ -11858,12 +12071,14 @@ function registerHandler() {
   ipcMain.handle(IpcChannel.CONFIG_RESTORE, async (event) => GameConfigHelper.restore());
   ipcMain.handle(IpcChannel.HEX_START, async (event) => hexService.start());
   ipcMain.handle(IpcChannel.HEX_STOP, async (event) => hexService.stop());
+  ipcMain.handle(IpcChannel.HEX_GET_STATUS, async (event) => hexService.isRunning);
   ipcMain.handle(IpcChannel.TFT_BUY_AT_SLOT, async (event, slot) => tftOperator.buyAtSlot(slot));
   ipcMain.handle(IpcChannel.TFT_GET_SHOP_INFO, async (event) => tftOperator.getShopInfo());
   ipcMain.handle(IpcChannel.TFT_GET_EQUIP_INFO, async (event) => tftOperator.getEquipInfo());
   ipcMain.handle(IpcChannel.TFT_GET_BENCH_INFO, async (event) => tftOperator.getBenchInfo());
   ipcMain.handle(IpcChannel.TFT_GET_FIGHT_BOARD_INFO, async (event) => tftOperator.getFightBoardInfo());
   ipcMain.handle(IpcChannel.TFT_GET_LEVEL_INFO, async (event) => tftOperator.getLevelInfo());
+  ipcMain.handle(IpcChannel.TFT_GET_LOOT_ORBS, async (event) => tftOperator.getLootOrbs());
   ipcMain.handle(IpcChannel.TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT, async (event) => tftOperator.saveBenchSlotSnapshots());
   ipcMain.handle(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT, async (event) => tftOperator.saveFightBoardSlotSnapshots());
   ipcMain.handle(IpcChannel.LINEUP_GET_ALL, async () => lineupLoader.getAllLineups());

@@ -9,7 +9,7 @@ import fs from "fs-extra";
 import sharp from "sharp";
 import cv from "@techstark/opencv-js";
 import { logger } from "../../utils/Logger";
-import { EQUIP_CATEGORY_PRIORITY, EquipCategory } from "../types";
+import { EQUIP_CATEGORY_PRIORITY, EquipCategory, LootOrbType } from "../types";
 
 /** 支持的图片扩展名 */
 const VALID_IMAGE_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg"];
@@ -55,6 +55,9 @@ export class TemplateLoader {
     /** 棋盘槽位模板缓存 (RGBA 彩色图，用于空槽检测) */
     private fightBoardSlotTemplates: Map<string, cv.Mat> = new Map();
 
+    /** 战利品球模板缓存 (RGB 彩色图，用于多目标匹配) */
+    private lootOrbTemplates: Map<LootOrbType, cv.Mat> = new Map();
+
     /** 空装备槽位模板 (24x24 纯黑) */
     private emptyEquipSlotTemplate: cv.Mat | null = null;
 
@@ -84,6 +87,10 @@ export class TemplateLoader {
 
     private get fightBoardSlotTemplatePath(): string {
         return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/fightBoardSlot");
+    }
+
+    private get lootOrbTemplatePath(): string {
+        return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/loot");
     }
 
     private constructor() {}
@@ -120,6 +127,7 @@ export class TemplateLoader {
             this.loadStarLevelTemplates(),
             this.loadBenchSlotTemplates(),
             this.loadFightBoardSlotTemplates(),
+            this.loadLootOrbTemplates(),
         ]);
 
         // 启动文件监听
@@ -168,6 +176,14 @@ export class TemplateLoader {
      */
     public getFightBoardSlotTemplate(slotKey: string): cv.Mat | null {
         return this.fightBoardSlotTemplates.get(slotKey) || null;
+    }
+
+    /**
+     * 获取战利品球模板
+     * @returns 战利品球模板 Map (key 为类型: normal/blue/gold)
+     */
+    public getLootOrbTemplates(): Map<LootOrbType, cv.Mat> {
+        return this.lootOrbTemplates;
     }
 
     /**
@@ -430,6 +446,58 @@ export class TemplateLoader {
         logger.info(`[TemplateLoader] 棋盘槽位模板加载完成，共 ${this.fightBoardSlotTemplates.size} 个`);
     }
 
+    /**
+     * 加载战利品球模板
+     * @description 加载 loot_normal.png, loot_blue.png, loot_gold.png
+     *              保留 RGB 彩色信息用于多目标模板匹配
+     */
+    private async loadLootOrbTemplates(): Promise<void> {
+        // 清理旧模板
+        this.clearLootOrbTemplates();
+
+        logger.info("[TemplateLoader] 开始加载战利品球模板...");
+
+        if (!fs.existsSync(this.lootOrbTemplatePath)) {
+            fs.ensureDirSync(this.lootOrbTemplatePath);
+            logger.info(`[TemplateLoader] 战利品球模板目录不存在，已自动创建: ${this.lootOrbTemplatePath}`);
+            return;
+        }
+
+        // 定义模板文件名与类型的映射
+        const templateFiles: { filename: string; type: LootOrbType }[] = [
+            { filename: "loot_normal.png", type: "normal" },
+            { filename: "loot_blue.png", type: "blue" },
+            { filename: "loot_gold.png", type: "gold" },
+        ];
+
+        for (const { filename, type } of templateFiles) {
+            const filePath = path.join(this.lootOrbTemplatePath, filename);
+
+            if (!fs.existsSync(filePath)) {
+                logger.warn(`[TemplateLoader] 未找到战利品球模板: ${filename}`);
+                continue;
+            }
+
+            try {
+                // 加载为 RGB 彩色图 (移除 Alpha 通道，因为模板匹配不需要)
+                const mat = await this.loadImageAsMat(filePath, {
+                    ensureAlpha: false,
+                    removeAlpha: true,
+                    grayscale: false,
+                });
+
+                if (mat) {
+                    this.lootOrbTemplates.set(type, mat);
+                    logger.info(`[TemplateLoader] 加载战利品球模板: ${type} (${mat.cols}x${mat.rows})`);
+                }
+            } catch (e) {
+                logger.error(`[TemplateLoader] 加载战利品球模板失败 [${filename}]: ${e}`);
+            }
+        }
+
+        logger.info(`[TemplateLoader] 战利品球模板加载完成，共 ${this.lootOrbTemplates.size} 个`);
+    }
+
     // ========== 工具方法 ==========
 
     /**
@@ -593,6 +661,18 @@ export class TemplateLoader {
     }
 
     /**
+     * 清理战利品球模板缓存
+     */
+    private clearLootOrbTemplates(): void {
+        for (const mat of this.lootOrbTemplates.values()) {
+            if (mat && !mat.isDeleted()) {
+                mat.delete();
+            }
+        }
+        this.lootOrbTemplates.clear();
+    }
+
+    /**
      * 销毁所有资源
      */
     public destroy(): void {
@@ -601,6 +681,7 @@ export class TemplateLoader {
         this.clearStarLevelTemplates();
         this.clearBenchSlotTemplates();
         this.clearFightBoardSlotTemplates();
+        this.clearLootOrbTemplates();
 
         if (this.emptyEquipSlotTemplate && !this.emptyEquipSlotTemplate.isDeleted()) {
             this.emptyEquipSlotTemplate.delete();

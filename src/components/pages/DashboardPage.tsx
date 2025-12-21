@@ -135,6 +135,10 @@ const DashboardPage = () => {
                 console.log(await window.tft.saveFightBoardSlotSnapshots())
             }}>测试：保存棋盘槽位图片
             </button>
+            <button onClick={async () => {
+                console.log(await window.tft.getLootOrbs())
+            }}>检测战利品球
+            </button>
         </PageContaier>
     );
 }
