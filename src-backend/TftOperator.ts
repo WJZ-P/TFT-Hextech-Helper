@@ -113,15 +113,6 @@ class TftOperator {
     /** 当前游戏模式 */
     private tftMode: TFTMode = TFTMode.CLASSIC;
 
-    /** 当前棋盘状态 */
-    private currentBoardState: Map<BoardLocation, TFTUnit | null> = new Map();
-
-    /** 当前装备状态 */
-    private currentEquipState: TFTEquip[] = [];
-
-    /** 当前备战席状态 */
-    private currentBenchState: TFTUnit[] = [];
-
     /** 空槽匹配阈值：平均像素差值大于此值视为"有棋子占用" */
     private readonly benchEmptyDiffThreshold = 6;
 

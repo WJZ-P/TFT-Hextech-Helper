@@ -429,7 +429,7 @@ export class TemplateMatcher {
             }
 
             // 对结果进行非极大值抑制 (NMS)，去除重叠的检测框
-            const nmsResults = this.applyNMS(results, 20); // 20 像素的距离阈值
+            const nmsResults = this.applyNMS(results, 10); // 10 像素的距离阈值
 
             logger.info(`[TemplateMatcher] 战利品球检测完成，共 ${nmsResults.length} 个`);
             return nmsResults;
