@@ -77,6 +77,7 @@ const tftApi = {
     getBenchInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_BENCH_INFO),
     getFightBoardInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_FIGHT_BOARD_INFO),
     getLevelInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_LEVEL_INFO),
+    getCoinCount: () => ipcRenderer.invoke(IpcChannel.TFT_GET_COIN_COUNT),
     getLootOrbs: () => ipcRenderer.invoke(IpcChannel.TFT_GET_LOOT_ORBS),
     saveBenchSlotSnapshots : ()=> ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT),
     saveFightBoardSlotSnapshots : ()=>ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT),

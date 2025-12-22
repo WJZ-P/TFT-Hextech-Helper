@@ -23,6 +23,7 @@ import cv from "@techstark/opencv-js";
 import {
     benchSlotPoints,
     benchSlotRegion,
+    coinRegion,
     detailChampionNameRegion,
     detailChampionStarRegion,
     detailEquipRegion,
@@ -1008,6 +1009,50 @@ class TftOperator {
             return null;
         } catch (error) {
             logger.error(`[TftOperator] 获取等级信息异常: ${error}`);
+            return null;
+        }
+    }
+
+    /**
+     * 获取当前持有的金币数量
+     * @description 通过 OCR 识别左下角金币区域，解析当前金币数
+     *              金币显示区域只会出现 0-9 的数字，复用 GAME_STAGE worker
+     * @returns 金币数量，识别失败返回 null
+     * 
+     * @example
+     * const coins = await operator.getCoinCount();
+     * // 返回: 50 (当前持有 50 金币)
+     */
+    public async getCoinCount(): Promise<number | null> {
+        this.ensureInitialized();
+
+        try {
+            // 1. 计算金币区域的绝对坐标
+            const absoluteRegion = new Region(
+                Math.round(this.gameWindowRegion!.x + coinRegion.leftTop.x),
+                Math.round(this.gameWindowRegion!.y + coinRegion.leftTop.y),
+                Math.round(coinRegion.rightBottom.x - coinRegion.leftTop.x),
+                Math.round(coinRegion.rightBottom.y - coinRegion.leftTop.y)
+            );
+
+            // 2. 截图并 OCR 识别
+            // 复用 GAME_STAGE worker，因为金币只会是 0-9 的数字
+            const pngBuffer = await screenCapture.captureRegionAsPng(absoluteRegion);
+            const text = await ocrService.recognize(pngBuffer, OcrWorkerType.GAME_STAGE);
+
+            // 3. 解析数字（去除空格和非数字字符）
+            const cleanText = text.replace(/\D/g, "");
+
+            if (cleanText.length > 0) {
+                const coinCount = parseInt(cleanText, 10);
+                logger.info(`[TftOperator] 金币识别成功: ${coinCount}`);
+                return coinCount;
+            }
+
+            logger.warn(`[TftOperator] 金币解析失败，OCR 结果: "${text}"`);
+            return null;
+        } catch (error) {
+            logger.error(`[TftOperator] 获取金币数量异常: ${error}`);
             return null;
         }
     }

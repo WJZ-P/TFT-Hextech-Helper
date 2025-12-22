@@ -128,6 +128,10 @@ const DashboardPage = () => {
             }}>点我获取当前等级信息
             </button>
             <button onClick={async () => {
+                console.log(await window.tft.getCoinCount())
+            }}>点我获取当前金币数
+            </button>
+            <button onClick={async () => {
                 console.log(await window.tft.saveBenchSlotSnapshots())
             }}>测试：保存备战席图片
             </button>

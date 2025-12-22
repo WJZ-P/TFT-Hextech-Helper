@@ -17,6 +17,7 @@ export enum IpcChannel {
     TFT_GET_BENCH_INFO = 'tft-get-bench-info',
     TFT_GET_FIGHT_BOARD_INFO = 'tft-get-fight-board-info',
     TFT_GET_LEVEL_INFO = 'tft-get-level-info',
+    TFT_GET_COIN_COUNT = 'tft-get-coin-count',
     TFT_GET_LOOT_ORBS = 'tft-get-loot-orbs',
     TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT = 'tft-test-save-bench-slot-snapshot',
     TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT = 'tft-test-save-fight-board-slot-snapshot',
