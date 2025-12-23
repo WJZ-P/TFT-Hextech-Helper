@@ -12236,6 +12236,7 @@ class StartState {
   async action(signal) {
     signal.throwIfAborted();
     logger.info("[StartState] 正在初始化...");
+    await this.backupGameConfig();
     await this.applyTFTConfig();
     const isInGame = await this.checkIfInGame();
     if (isInGame) {

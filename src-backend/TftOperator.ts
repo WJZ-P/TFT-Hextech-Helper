@@ -34,6 +34,7 @@ import {
     gameStageDisplayStageOne,
     gameStageDisplayTheClockworkTrails,
     GameStageType,
+    ItemForgeType,
     itemForgeTooltipRegion,
     itemForgeTooltipRegionEdge,
     levelRegion,
@@ -527,21 +528,28 @@ class TftOperator {
                     equips,
                 });
             } else {
-                // 英雄识别失败，尝试检测是否为基础装备锻造器
+                // 英雄识别失败，尝试检测是否为锻造器（基础装备锻造器 或 成装锻造器）
                 const clickPoint = benchSlotPoints[benchSlot as keyof typeof benchSlotPoints];
                 // 从槽位名称中提取槽位索引 (SLOT_1 -> 1, SLOT_9 -> 9)
                 const slotIndex = parseInt(benchSlot.slice(-1));
-                const isItemForge = await this.checkItemForgeTooltip(clickPoint, slotIndex);
+                const forgeType = await this.checkItemForgeTooltip(clickPoint, slotIndex);
 
                 // 关闭浮窗：再次右键点击同一位置，避免浮窗遮挡后续槽位的检测
                 await mouseController.clickAt(benchSlotPoints[benchSlot], Button.RIGHT);
                 await sleep(10) // 等待 UI 渲染完成（右键后游戏会立即刷新 UI，10ms 足够）
-                if (isItemForge) {
-                    logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别为基础装备锻造器`);
-                    // 基础装备锻造器作为特殊单位处理，
+                
+                if (forgeType !== ItemForgeType.NONE) {
+                    // 根据锻造器类型选择对应的棋子数据
+                    const forgeUnit = forgeType === ItemForgeType.COMPLETED 
+                        ? TFT_16_CHAMPION_DATA.成装锻造器 
+                        : TFT_16_CHAMPION_DATA.基础装备锻造器;
+                    const forgeName = forgeType === ItemForgeType.COMPLETED ? "成装锻造器" : "基础装备锻造器";
+                    
+                    logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别为${forgeName}`);
+                    // 锻造器作为特殊单位处理
                     benchUnits.push({
                         location: benchSlot as BenchLocation,
-                        tftUnit: TFT_16_CHAMPION_DATA.基础装备锻造器,
+                        tftUnit: forgeUnit,
                         starLevel: -1,  // 锻造器无星级
                         equips: [],
                     });
@@ -796,14 +804,15 @@ class TftOperator {
     }
 
     /**
-     * 检测当前是否显示基础装备锻造器的浮窗
-     * @description 基础装备锻造器右键后不会在固定位置显示详情，
+     * 检测当前是否显示锻造器的浮窗，并识别锻造器类型
+     * @description 锻造器右键后不会在固定位置显示详情，
      *              而是在鼠标点击位置附近弹出浮窗，需要用相对偏移量计算实际区域
+     *              支持识别：基础装备锻造器、成装锻造器
      * @param clickPoint 右键点击的位置 (游戏内相对坐标)
      * @param slotIndex 备战席槽位索引 (1-9)，用于判断是否为边缘情况
-     * @returns 是否为基础装备锻造器
+     * @returns 锻造器类型 (NONE 表示不是锻造器)
      */
-    private async checkItemForgeTooltip(clickPoint: SimplePoint, slotIndex: number): Promise<boolean> {
+    private async checkItemForgeTooltip(clickPoint: SimplePoint, slotIndex: number): Promise<ItemForgeType> {
         this.ensureInitialized();
 
         // 判断是否为边缘情况 (槽位 6-9 靠近屏幕右边缘，浮窗会向左弹出)
@@ -843,23 +852,39 @@ class TftOperator {
 
         logger.debug(`[TftOperator] 锻造器浮窗 OCR 结果: "${cleanText}"`);
 
-        // 判断是否包含"基础装备锻造器"关键字
+        // 判断锻造器类型
+        // 注意：成装锻造器的判断要放在基础装备锻造器之前，因为"成装"更具体
         // 使用模糊匹配，因为 OCR 可能有误差
-        const isItemForge = cleanText.includes("基础装备锻造器") ||
-                           cleanText.includes("基础装备") ||
-                           cleanText.includes("锻造器");
-
-        // 识别失败时保存截图到英雄备份文件夹，方便排查问题
-        if (!isItemForge) {
-            const saveDir = this.failChampionTemplatePath;
-            fs.ensureDirSync(saveDir);
-            const filename = `itemForge_slot${slotIndex}_${Date.now()}.png`;
-            const savePath = path.join(saveDir, filename);
-            fs.writeFileSync(savePath, rawPngBuffer);  // 保存原图，方便排查
-            logger.warn(`[TftOperator] 锻造器识别失败(槽位${slotIndex})，已保存截图: ${filename}`);
+        
+        // 成装锻造器判断
+        const isCompletedForge = cleanText.includes("成装锻造器") ||
+                                 cleanText.includes("成装锻造") ||
+                                 cleanText.includes("成装");
+        
+        if (isCompletedForge) {
+            logger.debug(`[TftOperator] 识别为成装锻造器`);
+            return ItemForgeType.COMPLETED;
+        }
+        
+        // 基础装备锻造器判断
+        const isBasicForge = cleanText.includes("基础装备锻造器") ||
+                            cleanText.includes("基础装备") ||
+                            cleanText.includes("锻造器");
+        
+        if (isBasicForge) {
+            logger.debug(`[TftOperator] 识别为基础装备锻造器`);
+            return ItemForgeType.BASIC;
         }
 
-        return isItemForge;
+        // 识别失败时保存截图到英雄备份文件夹，方便排查问题
+        const saveDir = this.failChampionTemplatePath;
+        fs.ensureDirSync(saveDir);
+        const filename = `itemForge_slot${slotIndex}_${Date.now()}.png`;
+        const savePath = path.join(saveDir, filename);
+        fs.writeFileSync(savePath, rawPngBuffer);  // 保存原图，方便排查
+        logger.warn(`[TftOperator] 锻造器识别失败(槽位${slotIndex})，已保存截图: ${filename}`);
+
+        return ItemForgeType.NONE;
     }
 
 

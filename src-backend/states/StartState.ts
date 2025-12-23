@@ -32,7 +32,8 @@ export class StartState implements IState {
 
         logger.info("[StartState] 正在初始化...");
 
-        // 备份当前游戏配置
+        // 备份当前游戏配置（必须在应用 TFT 配置之前！）
+        await this.backupGameConfig();
 
         // 应用 TFT 专用配置（分辨率、画质等）
         await this.applyTFTConfig();

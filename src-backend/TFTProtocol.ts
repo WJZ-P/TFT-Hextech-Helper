@@ -559,12 +559,33 @@ export const TFT_16_TRAIT_DATA: Record<string, TraitData> = {
     "神盾使": { id: "10261", name: "神盾使", type: "classes", levels: [2, 3, 4, 5] },
 };
 
+/**
+ * 锻造器类型枚举
+ * @description 用于区分不同类型的锻造器
+ */
+export enum ItemForgeType {
+    /** 不是锻造器 */
+    NONE = 'NONE',
+    /** 基础装备锻造器 - 可以选择基础散件 */
+    BASIC = 'BASIC',
+    /** 成装锻造器 - 可以选择完整装备 */
+    COMPLETED = 'COMPLETED',
+}
+
 const TFT_SPECIAL_CHESS = {
     //  特殊的棋子，比如基础装备锻造器，这种不属于英雄
     "基础装备锻造器": {
         displayName: "基础装备锻造器",
         englishId: "TFT16_ItemForge",
         price: 8,   // what the fuck? 但数据是这么写的
+        traits: [],
+        origins: [],
+        classes: []
+    },
+    "成装锻造器": {
+        displayName: "成装锻造器",
+        englishId: "TFT_ArmoryKeyCompleted",
+        price: 0,   // what the fuck? 但数据是这么写的
         traits: [],
         origins: [],
         classes: []
