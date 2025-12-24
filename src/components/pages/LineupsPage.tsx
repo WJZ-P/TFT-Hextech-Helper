@@ -321,6 +321,7 @@ const ChampionsList = styled.div`
 
 // 单个英雄容器（包含头像和名字）- 使用相对定位作为悬浮框的锚点
 // 添加 perspective 为子元素提供 3D 透视效果
+// 关键：hover 时提升 z-index，确保悬浮框不被其他头像遮挡
 const ChampionItem = styled.div`
   display: flex;
   flex-direction: column;
@@ -328,6 +329,11 @@ const ChampionItem = styled.div`
   gap: 4px;
   position: relative;  /* 作为悬浮框的定位参考 */
   perspective: 100px;  /* 透视距离，数值越小 3D 效果越明显 */
+  z-index: 1;  /* 默认层级 */
+  
+  &:hover {
+    z-index: 100;  /* hover 时提升层级，确保悬浮框在最上层 */
+  }
 `;
 
 // 英雄原画悬浮框容器
@@ -645,35 +651,44 @@ const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion}) => {
 
     /**
      * 鼠标进入时检测边界并显示原画
+     * 边界检测基于当前页面容器（PageWrapper），而非整个窗口
+     * 这样可以正确处理左侧有 SideBar 的情况
      */
     const handleMouseEnter = () => {
         if (containerRef.current) {
             const rect = containerRef.current.getBoundingClientRect();
-            const viewportWidth = window.innerWidth;
             
             // 悬浮框尺寸
-            const tooltipWidth = 624*0.7;
-            const tooltipHeight = 318*0.7;  // 高度 + margin 预留余量
+            const tooltipWidth = 624 * 0.7;
+            const tooltipHeight = 318 * 0.7;
+            
+            // 获取页面容器的边界（向上查找最近的 PageWrapper）
+            // PageWrapper 有 overflow-y: auto，是实际的滚动容器
+            const pageWrapper = containerRef.current.closest('[data-page-wrapper]');
+            const containerRect = pageWrapper 
+                ? pageWrapper.getBoundingClientRect() 
+                : { left: 0, right: window.innerWidth, top: 0 };
             
             // === 垂直边界检测 ===
-            // 如果元素顶部距离视口顶部的距离小于悬浮框高度，则在下方显示
-            setShowBelow(rect.top < tooltipHeight);
+            // 如果元素顶部距离容器顶部的距离小于悬浮框高度，则在下方显示
+            const topSpace = rect.top - containerRect.top;
+            setShowBelow(topSpace < tooltipHeight);
             
-            // === 水平边界检测 ===
-            // 计算悬浮框居中时的左右边缘位置
+            // === 水平边界检测（相对于页面容器，而非整个窗口）===
             const elementCenterX = rect.left + rect.width / 2;
             const tooltipLeft = elementCenterX - tooltipWidth / 2;
             const tooltipRight = elementCenterX + tooltipWidth / 2;
             
             let offset = 0;
-            const padding = 100;  // 距离视口边缘的安全距离
+            const padding = 16;  // 距离容器边缘的安全距离
             
-            if (tooltipLeft < padding) {
-                // 左边超出：向右偏移
-                offset = padding - tooltipLeft;
-            } else if (tooltipRight > viewportWidth - padding) {
-                // 右边超出：向左偏移（负值）
-                offset = (viewportWidth - padding) - tooltipRight;
+            // 左边界：使用容器的左边界，而非视口左边界
+            if (tooltipLeft < containerRect.left + padding) {
+                offset = (containerRect.left + padding) - tooltipLeft;
+            } 
+            // 右边界：使用容器的右边界（或视口右边界，取较小值）
+            else if (tooltipRight > containerRect.right - padding) {
+                offset = (containerRect.right - padding) - tooltipRight;
             }
             
             setHorizontalOffset(offset);
@@ -961,7 +976,7 @@ const LineupsPage: React.FC = () => {
     }
 
     return (
-        <PageWrapper>
+        <PageWrapper data-page-wrapper>
             {/* 状态提示栏（常驻） */}
             <SelectionInfo $hasSelection={selectedIds.size > 0}>
                 <SelectionText $hasSelection={selectedIds.size > 0}>

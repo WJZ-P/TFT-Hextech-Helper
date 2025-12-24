@@ -115,10 +115,7 @@ export class StrategyService {
             return false;
         }
         
-        // 3. 标记游戏开始（在 GameStateManager 中记录）
-        gameStateManager.startGame();
-        
-        // 4. 根据阵容数量决定状态
+        // 3. 根据阵容数量决定状态
         if (lineups.length === 1) {
             // 单阵容：直接锁定
             this.currentLineup = lineups[0];

@@ -10,6 +10,7 @@ import { sleep } from "../utils/HelperTools.ts";
 import { GameStageType } from "../TFTProtocol";
 import { logger } from "../utils/Logger";
 import { strategyService } from "../services/StrategyService";
+import { gameStateManager } from "../services/GameStateManager";
 
 /** 阶段检测间隔 (ms)，避免高频 OCR 占用 CPU */
 const STAGE_CHECK_INTERVAL_MS = 1000;
@@ -41,9 +42,14 @@ export class GameStageState implements IState {
     async action(signal: AbortSignal): Promise<IState> {
         signal.throwIfAborted();
 
-        // 首次进入时初始化策略服务
+        // 首次进入时：标记游戏开始 + 初始化策略服务
         if (!GameStageState.isStrategyInitialized) {
-            logger.info("[GameStageState] 首次进入游戏阶段，初始化策略服务...");
+            logger.info("[GameStageState] 首次进入游戏阶段，标记游戏开始...");
+            
+            // 1. 标记游戏开始（在 GameStateManager 中记录）
+            gameStateManager.startGame();
+            
+            // 2. 初始化策略服务（加载阵容配置）
             const success = strategyService.initialize();
             
             if (!success) {

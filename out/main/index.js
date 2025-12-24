@@ -5612,6 +5612,7 @@ class IdleState {
   }
 }
 var GameStageType = /* @__PURE__ */ ((GameStageType2) => {
+  GameStageType2["EARLY_PVE"] = "EARLY_PVE";
   GameStageType2["PVE"] = "PVE";
   GameStageType2["CAROUSEL"] = "CAROUSEL";
   GameStageType2["AUGMENT"] = "AUGMENT";
@@ -5957,12 +5958,27 @@ const gameStageDisplayTheClockworkTrails = {
   leftTop: { x: 337, y: 6 },
   rightBottom: { x: 366, y: 22 }
 };
+var ItemForgeType = /* @__PURE__ */ ((ItemForgeType2) => {
+  ItemForgeType2["NONE"] = "NONE";
+  ItemForgeType2["BASIC"] = "BASIC";
+  ItemForgeType2["COMPLETED"] = "COMPLETED";
+  return ItemForgeType2;
+})(ItemForgeType || {});
 const TFT_SPECIAL_CHESS = {
   //  特殊的棋子，比如基础装备锻造器，这种不属于英雄
   "基础装备锻造器": {
     displayName: "基础装备锻造器",
     englishId: "TFT16_ItemForge",
     price: 8,
+    // what the fuck? 但数据是这么写的
+    traits: [],
+    origins: [],
+    classes: []
+  },
+  "成装锻造器": {
+    displayName: "成装锻造器",
+    englishId: "TFT_ArmoryKeyCompleted",
+    price: 0,
     // what the fuck? 但数据是这么写的
     traits: [],
     origins: [],
@@ -10497,6 +10513,9 @@ function parseStageStringToEnum(stageText) {
     const stage = parseInt(match[1]);
     const round = parseInt(match[2]);
     if (stage === 1) {
+      if (round <= 2) {
+        return GameStageType.EARLY_PVE;
+      }
       return GameStageType.PVE;
     }
     if (round === 2) {
@@ -10601,7 +10620,7 @@ class TftOperator {
   /**
    * 获取当前游戏阶段
    * @description 通过 OCR 识别游戏阶段 (如 "2-1", "3-5")
-   * @returns 游戏阶段枚举
+   * @returns 游戏阶段结果，包含阶段类型和原始文本
    */
   async getGameStage() {
     try {
@@ -10622,7 +10641,7 @@ class TftOperator {
         if (clockText && clockText.length > 2) {
           this.tftMode = TFTMode.CLOCKWORK_TRAILS;
           logger.info("[TftOperator] 识别为发条鸟试炼模式");
-          return GameStageType.PVP;
+          return { type: GameStageType.PVP, stageText: "clockwork" };
         }
       }
       const stageType = parseStageStringToEnum(stageText);
@@ -10632,10 +10651,10 @@ class TftOperator {
       } else {
         logger.warn(`[TftOperator] 无法识别当前阶段: "${stageText ?? "null"}"`);
       }
-      return stageType;
+      return { type: stageType, stageText: stageText || "" };
     } catch (e) {
       logger.error(`[TftOperator] 阶段识别异常: ${e.message}`);
-      return GameStageType.UNKNOWN;
+      return { type: GameStageType.UNKNOWN, stageText: "" };
     }
   }
   /**
@@ -10821,14 +10840,16 @@ class TftOperator {
       } else {
         const clickPoint = benchSlotPoints[benchSlot];
         const slotIndex = parseInt(benchSlot.slice(-1));
-        const isItemForge = await this.checkItemForgeTooltip(clickPoint, slotIndex);
+        const forgeType = await this.checkItemForgeTooltip(clickPoint, slotIndex);
         await mouseController.clickAt(benchSlotPoints[benchSlot], Button.RIGHT);
         await sleep(10);
-        if (isItemForge) {
-          logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别为基础装备锻造器`);
+        if (forgeType !== ItemForgeType.NONE) {
+          const forgeUnit = forgeType === ItemForgeType.COMPLETED ? TFT_16_CHAMPION_DATA.成装锻造器 : TFT_16_CHAMPION_DATA.基础装备锻造器;
+          const forgeName = forgeType === ItemForgeType.COMPLETED ? "成装锻造器" : "基础装备锻造器";
+          logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别为${forgeName}`);
           benchUnits.push({
             location: benchSlot,
-            tftUnit: TFT_16_CHAMPION_DATA.基础装备锻造器,
+            tftUnit: forgeUnit,
             starLevel: -1,
             // 锻造器无星级
             equips: []
@@ -11019,12 +11040,13 @@ class TftOperator {
     return isEmpty;
   }
   /**
-   * 检测当前是否显示基础装备锻造器的浮窗
-   * @description 基础装备锻造器右键后不会在固定位置显示详情，
+   * 检测当前是否显示锻造器的浮窗，并识别锻造器类型
+   * @description 锻造器右键后不会在固定位置显示详情，
    *              而是在鼠标点击位置附近弹出浮窗，需要用相对偏移量计算实际区域
+   *              支持识别：基础装备锻造器、成装锻造器
    * @param clickPoint 右键点击的位置 (游戏内相对坐标)
    * @param slotIndex 备战席槽位索引 (1-9)，用于判断是否为边缘情况
-   * @returns 是否为基础装备锻造器
+   * @returns 锻造器类型 (NONE 表示不是锻造器)
    */
   async checkItemForgeTooltip(clickPoint, slotIndex) {
     this.ensureInitialized();
@@ -11051,16 +11073,23 @@ class TftOperator {
     const text = await ocrService.recognize(rawPngBuffer, OcrWorkerType.CHESS);
     const cleanText = text.replace(/\s/g, "");
     logger.debug(`[TftOperator] 锻造器浮窗 OCR 结果: "${cleanText}"`);
-    const isItemForge = cleanText.includes("基础装备锻造器") || cleanText.includes("基础装备") || cleanText.includes("锻造器");
-    if (!isItemForge) {
-      const saveDir = this.failChampionTemplatePath;
-      fs.ensureDirSync(saveDir);
-      const filename = `itemForge_slot${slotIndex}_${Date.now()}.png`;
-      const savePath = path__default.join(saveDir, filename);
-      fs.writeFileSync(savePath, rawPngBuffer);
-      logger.warn(`[TftOperator] 锻造器识别失败(槽位${slotIndex})，已保存截图: ${filename}`);
+    const isCompletedForge = cleanText.includes("成装锻造器") || cleanText.includes("成装锻造") || cleanText.includes("成装");
+    if (isCompletedForge) {
+      logger.debug(`[TftOperator] 识别为成装锻造器`);
+      return ItemForgeType.COMPLETED;
     }
-    return isItemForge;
+    const isBasicForge = cleanText.includes("基础装备锻造器") || cleanText.includes("基础装备") || cleanText.includes("锻造器");
+    if (isBasicForge) {
+      logger.debug(`[TftOperator] 识别为基础装备锻造器`);
+      return ItemForgeType.BASIC;
+    }
+    const saveDir = this.failChampionTemplatePath;
+    fs.ensureDirSync(saveDir);
+    const filename = `itemForge_slot${slotIndex}_${Date.now()}.png`;
+    const savePath = path__default.join(saveDir, filename);
+    fs.writeFileSync(savePath, rawPngBuffer);
+    logger.warn(`[TftOperator] 锻造器识别失败(槽位${slotIndex})，已保存截图: ${filename}`);
+    return ItemForgeType.NONE;
   }
   /**
    * 获取游戏阶段显示区域
@@ -11255,6 +11284,268 @@ class TftOperator {
   }
 }
 const tftOperator = TftOperator.getInstance();
+class GameStateManager {
+  static instance;
+  // ========== 游戏状态快照 ==========
+  /** 当前阶段的游戏状态快照 */
+  snapshot = null;
+  // ========== 游戏进程状态 ==========
+  /** 游戏进程信息 */
+  progress = {
+    currentStage: "",
+    currentStageType: GameStageType.UNKNOWN,
+    hasFirstPvpOccurred: false,
+    isGameRunning: false,
+    gameStartTime: 0
+  };
+  // ========== 等级相关（独立追踪，因为可能频繁变化）==========
+  /** 当前人口等级 */
+  currentLevel = 1;
+  constructor() {
+  }
+  /**
+   * 获取单例实例
+   */
+  static getInstance() {
+    if (!GameStateManager.instance) {
+      GameStateManager.instance = new GameStateManager();
+    }
+    return GameStateManager.instance;
+  }
+  // ============================================================================
+  // 快照管理
+  // ============================================================================
+  /**
+   * 刷新游戏状态快照
+   * @description 扫描备战席、棋盘、商店、装备栏等，缓存到快照
+   *              每个阶段开始时调用一次，后续决策直接读取缓存
+   * 
+   * 注意：getBenchInfo 和 getFightBoardInfo 需要操作鼠标（右键点击棋子），
+   *       所以这两个必须串行执行，不能并行！
+   * 
+   * @returns 刷新后的快照
+   */
+  async refreshSnapshot() {
+    logger.info("[GameStateManager] 开始刷新游戏状态快照...");
+    const [shopUnits, equipments, levelInfo, gold] = await Promise.all([
+      tftOperator.getShopInfo(),
+      tftOperator.getEquipInfo(),
+      tftOperator.getLevelInfo(),
+      tftOperator.getCoinCount()
+    ]);
+    const benchUnits = await tftOperator.getBenchInfo();
+    const boardUnits = await tftOperator.getFightBoardInfo();
+    if (levelInfo && levelInfo.level !== this.currentLevel) {
+      logger.info(`[GameStateManager] 人口变化: ${this.currentLevel} -> ${levelInfo.level}`);
+      this.currentLevel = levelInfo.level;
+    }
+    this.snapshot = {
+      benchUnits,
+      boardUnits,
+      shopUnits,
+      equipments,
+      level: levelInfo?.level ?? this.currentLevel,
+      currentXp: levelInfo?.currentXp ?? 0,
+      totalXp: levelInfo?.totalXp ?? 0,
+      gold: gold ?? 0,
+      timestamp: Date.now()
+    };
+    const benchCount = benchUnits.filter((u) => u !== null).length;
+    const boardCount = boardUnits.filter((u) => u !== null).length;
+    const shopCount = shopUnits.filter((u) => u !== null).length;
+    logger.info(
+      `[GameStateManager] 快照刷新完成: 备战席 ${benchCount}/9, 棋盘 ${boardCount}/28, 商店 ${shopCount}/5, 装备 ${equipments.length} 件, 等级 Lv.${this.snapshot.level}, 金币 ${this.snapshot.gold}`
+    );
+    return this.snapshot;
+  }
+  /**
+   * 获取当前快照
+   * @description 如果快照不存在，会自动刷新
+   * @returns 游戏状态快照
+   */
+  async getSnapshot() {
+    if (!this.snapshot) {
+      return this.refreshSnapshot();
+    }
+    return this.snapshot;
+  }
+  /**
+   * 获取当前快照（同步版本，不自动刷新）
+   * @returns 快照或 null（如果尚未刷新）
+   */
+  getSnapshotSync() {
+    return this.snapshot;
+  }
+  /**
+   * 检查快照是否存在
+   */
+  hasSnapshot() {
+    return this.snapshot !== null;
+  }
+  /**
+   * 清除当前快照
+   * @description 在阶段切换时调用，强制下次获取时重新扫描
+   */
+  clearSnapshot() {
+    this.snapshot = null;
+    logger.debug("[GameStateManager] 快照已清除");
+  }
+  // ============================================================================
+  // 便捷 Getter（直接从快照读取）
+  // ============================================================================
+  /**
+   * 获取备战席棋子
+   * @returns 备战席棋子数组，如果快照不存在返回空数组
+   */
+  getBenchUnits() {
+    return this.snapshot?.benchUnits ?? [];
+  }
+  /**
+   * 获取棋盘棋子
+   * @returns 棋盘棋子数组，如果快照不存在返回空数组
+   */
+  getBoardUnits() {
+    return this.snapshot?.boardUnits ?? [];
+  }
+  /**
+   * 获取商店棋子
+   * @returns 商店棋子数组，如果快照不存在返回空数组
+   */
+  getShopUnits() {
+    return this.snapshot?.shopUnits ?? [];
+  }
+  /**
+   * 获取装备栏装备
+   * @returns 装备数组，如果快照不存在返回空数组
+   */
+  getEquipments() {
+    return this.snapshot?.equipments ?? [];
+  }
+  /**
+   * 获取当前等级
+   * @returns 当前人口等级
+   */
+  getLevel() {
+    return this.currentLevel;
+  }
+  /**
+   * 获取当前金币
+   * @returns 金币数量，如果快照不存在返回 0
+   */
+  getGold() {
+    return this.snapshot?.gold ?? 0;
+  }
+  /**
+   * 获取当前经验值信息
+   * @returns 经验值对象 { current, total }
+   */
+  getXpInfo() {
+    return {
+      current: this.snapshot?.currentXp ?? 0,
+      total: this.snapshot?.totalXp ?? 0
+    };
+  }
+  /**
+   * 获取所有已拥有的棋子名称（备战席 + 棋盘）
+   * @returns 棋子名称集合
+   */
+  getOwnedChampionNames() {
+    const names = /* @__PURE__ */ new Set();
+    for (const unit of this.getBenchUnits()) {
+      if (unit?.tftUnit) {
+        names.add(unit.tftUnit.displayName);
+      }
+    }
+    for (const unit of this.getBoardUnits()) {
+      if (unit?.tftUnit) {
+        names.add(unit.tftUnit.displayName);
+      }
+    }
+    return names;
+  }
+  /**
+   * 获取所有可见棋子名称（备战席 + 棋盘 + 商店）
+   * @returns 棋子名称集合
+   */
+  getAllVisibleChampionNames() {
+    const names = this.getOwnedChampionNames();
+    for (const unit of this.getShopUnits()) {
+      if (unit) {
+        names.add(unit.displayName);
+      }
+    }
+    return names;
+  }
+  // ============================================================================
+  // 游戏进程管理
+  // ============================================================================
+  /**
+   * 获取游戏进程信息
+   */
+  getProgress() {
+    return { ...this.progress };
+  }
+  /**
+   * 更新当前阶段
+   * @param stage 阶段字符串 (如 "2-1")
+   * @param stageType 阶段类型
+   */
+  updateStage(stage, stageType) {
+    this.progress.currentStage = stage;
+    this.progress.currentStageType = stageType;
+    if (stageType === GameStageType.PVP && !this.progress.hasFirstPvpOccurred) {
+      this.progress.hasFirstPvpOccurred = true;
+      logger.info("[GameStateManager] 检测到第一个 PVP 阶段");
+    }
+  }
+  /**
+   * 标记游戏开始
+   */
+  startGame() {
+    this.progress.isGameRunning = true;
+    this.progress.gameStartTime = Date.now();
+    logger.info("[GameStateManager] 游戏开始");
+  }
+  /**
+   * 标记游戏结束
+   */
+  endGame() {
+    this.progress.isGameRunning = false;
+    logger.info("[GameStateManager] 游戏结束");
+  }
+  /**
+   * 检查游戏是否正在进行
+   */
+  isGameRunning() {
+    return this.progress.isGameRunning;
+  }
+  /**
+   * 检查是否已经过了第一个 PVP 阶段
+   */
+  hasFirstPvpOccurred() {
+    return this.progress.hasFirstPvpOccurred;
+  }
+  // ============================================================================
+  // 重置
+  // ============================================================================
+  /**
+   * 重置所有状态
+   * @description 在游戏结束或停止时调用，清理所有状态，准备下一局
+   */
+  reset() {
+    this.snapshot = null;
+    this.currentLevel = 1;
+    this.progress = {
+      currentStage: "",
+      currentStageType: GameStageType.UNKNOWN,
+      hasFirstPvpOccurred: false,
+      isGameRunning: false,
+      gameStartTime: 0
+    };
+    logger.info("[GameStateManager] 游戏状态已重置，准备下一局");
+  }
+}
+const gameStateManager = GameStateManager.getInstance();
 class SettingsStore {
   static instance;
   store;
@@ -11480,14 +11771,10 @@ class StrategyService {
   candidateLineups = [];
   /** 阵容选择状态 */
   selectionState = "NOT_INITIALIZED";
-  /** 当前人口等级，默认是从一级开始 */
-  currentLevel = 1;
   /** 当前阶段的目标棋子名称列表（缓存，避免重复计算） */
   targetChampionNames = /* @__PURE__ */ new Set();
-  /** 是否已经经历过第一个 PVP 阶段（用于触发阵容匹配） */
-  hasFirstPvpOccurred = false;
-  /** 当前阶段的游戏状态快照（每个阶段开始时刷新一次） */
-  stageSnapshot = null;
+  /** 当前阶段文本（如 "2-1"），用于判断是否进入新阶段 */
+  currentStageText = "";
   constructor() {
   }
   /**
@@ -11563,9 +11850,10 @@ class StrategyService {
   }
   /**
    * 获取当前人口等级
+   * @description 从 GameStateManager 获取
    */
   getCurrentLevel() {
-    return this.currentLevel;
+    return gameStateManager.getLevel();
   }
   /**
    * 更新目标棋子列表
@@ -11577,7 +11865,6 @@ class StrategyService {
       this.targetChampionNames.clear();
       return;
     }
-    this.currentLevel = level;
     const stageConfig = this.getStageConfigForLevel(level);
     if (!stageConfig) {
       logger.warn(`[StrategyService] 阵容 ${this.currentLineup.name} 没有 level${level} 及以下的配置`);
@@ -11631,9 +11918,15 @@ class StrategyService {
   }
   /**
    * 执行当前阶段的策略逻辑
-   * @param stage 当前游戏阶段
+   * @param stageResult 当前游戏阶段结果（包含类型和原始文本）
    */
-  async executeStrategy(stage) {
+  async executeStrategy(stageResult) {
+    const { type: stage, stageText } = stageResult;
+    const isNewStage = this.isNewStage(stageText);
+    if (isNewStage) {
+      logger.info(`[StrategyService] 进入新阶段: ${stageText}`);
+      this.currentStageText = stageText;
+    }
     if (this.selectionState === "NOT_INITIALIZED") {
       const success = this.initialize();
       if (!success) {
@@ -11642,10 +11935,9 @@ class StrategyService {
       }
     }
     if (stage === GameStageType.PVP && this.selectionState === "PENDING") {
-      if (!this.hasFirstPvpOccurred) {
+      if (!gameStateManager.hasFirstPvpOccurred()) {
         logger.info("[StrategyService] 检测到第一个 PVP 阶段，开始阵容匹配...");
         await this.matchAndLockLineup();
-        this.hasFirstPvpOccurred = true;
       }
     }
     if (stage === GameStageType.PVE && this.selectionState === "PENDING") {
@@ -11659,6 +11951,9 @@ class StrategyService {
     }
     await this.refreshCurrentLevel();
     switch (stage) {
+      case GameStageType.EARLY_PVE:
+        logger.debug("[StrategyService] 早期阶段 (1-1/1-2)，先休息一下喵~");
+        break;
       case GameStageType.PVE:
         await this.handlePve();
         break;
@@ -11678,9 +11973,17 @@ class StrategyService {
     }
   }
   /**
+   * 判断是否进入了新阶段
+   * @param stageText 当前阶段文本（如 "2-1"）
+   * @returns true 表示是新阶段，false 表示是重复进入的同一阶段
+   */
+  isNewStage(stageText) {
+    return stageText !== this.currentStageText;
+  }
+  /**
    * 根据当前棋子匹配并锁定最合适的阵容
-   * @description 获取备战席、棋盘和商店的棋子，计算与各候选阵容 level4 的匹配度，
-   *              选择匹配度最高的阵容并锁定
+   * @description 使用 GameStateManager 获取备战席、棋盘和商店的棋子，
+   *              计算与各候选阵容 level4 的匹配度，选择匹配度最高的阵容并锁定
    * 
    * 匹配优先级：
    * 1. 匹配分数（匹配到的棋子数量）最高
@@ -11691,25 +11994,8 @@ class StrategyService {
       logger.error("[StrategyService] 没有候选阵容可供匹配");
       return;
     }
-    const currentChampions = /* @__PURE__ */ new Set();
-    const benchUnits = await tftOperator.getBenchInfo();
-    for (const unit of benchUnits) {
-      if (unit && unit.tftUnit) {
-        currentChampions.add(unit.tftUnit.displayName);
-      }
-    }
-    const boardUnits = await tftOperator.getFightBoardInfo();
-    for (const unit of boardUnits) {
-      if (unit && unit.tftUnit) {
-        currentChampions.add(unit.tftUnit.displayName);
-      }
-    }
-    const shopUnits = await tftOperator.getShopInfo();
-    for (const unit of shopUnits) {
-      if (unit) {
-        currentChampions.add(unit.displayName);
-      }
-    }
+    await gameStateManager.refreshSnapshot();
+    const currentChampions = gameStateManager.getAllVisibleChampionNames();
     if (currentChampions.size === 0) {
       logger.warn("[StrategyService] 未检测到任何棋子，使用第一个候选阵容");
       this.lockLineup(this.candidateLineups[0]);
@@ -11771,69 +12057,23 @@ class StrategyService {
     this.currentLineup = lineup;
     this.selectionState = "LOCKED";
     this.candidateLineups = [];
-    this.updateTargetChampions(this.currentLevel);
+    this.updateTargetChampions(gameStateManager.getLevel());
     logger.info(`[StrategyService] 阵容已锁定: ${lineup.name} (${lineup.id})`);
   }
   /**
    * 刷新当前人口等级
-   * @description 通过 OCR 识别当前人口，并更新目标棋子列表
+   * @description 从 GameStateManager 获取最新等级，并更新目标棋子列表
    */
   async refreshCurrentLevel() {
-    const levelInfo = await tftOperator.getLevelInfo();
-    if (levelInfo && levelInfo.level !== this.currentLevel) {
-      logger.info(`[StrategyService] 人口变化: ${this.currentLevel} -> ${levelInfo.level}`);
-      this.updateTargetChampions(levelInfo.level);
+    await gameStateManager.getSnapshot();
+    const currentLevel = gameStateManager.getLevel();
+    const stageConfig = this.getStageConfigForLevel(currentLevel);
+    if (stageConfig) {
+      const newTargets = new Set(stageConfig.champions.map((c) => c.name));
+      if (newTargets.size !== this.targetChampionNames.size) {
+        this.updateTargetChampions(currentLevel);
+      }
     }
-  }
-  /**
-   * 刷新当前阶段的游戏状态快照
-   * @description 扫描备战席、棋盘、商店、装备栏等，缓存到 stageSnapshot
-   *              每个阶段开始时调用一次，后续决策直接读取缓存
-   * 
-   * 注意：getBenchInfo 和 getFightBoardInfo 需要操作鼠标（右键点击棋子），
-   *       所以这两个必须串行执行，不能并行！
-   */
-  async refreshStageSnapshot() {
-    logger.info("[StrategyService] 开始刷新游戏状态快照...");
-    const [shopUnits, equipments, levelInfo] = await Promise.all([
-      tftOperator.getShopInfo(),
-      tftOperator.getEquipInfo(),
-      tftOperator.getLevelInfo()
-    ]);
-    const benchUnits = await tftOperator.getBenchInfo();
-    const boardUnits = await tftOperator.getFightBoardInfo();
-    this.stageSnapshot = {
-      benchUnits,
-      boardUnits,
-      shopUnits,
-      equipments,
-      level: levelInfo?.level ?? this.currentLevel,
-      currentXp: levelInfo?.currentXp ?? 0,
-      totalXp: levelInfo?.totalXp ?? 0,
-      timestamp: Date.now()
-    };
-    if (levelInfo && levelInfo.level !== this.currentLevel) {
-      logger.info(`[StrategyService] 人口变化: ${this.currentLevel} -> ${levelInfo.level}`);
-      this.updateTargetChampions(levelInfo.level);
-    }
-    const benchCount = benchUnits.filter((u) => u !== null).length;
-    const boardCount = boardUnits.filter((u) => u !== null).length;
-    const shopCount = shopUnits.filter((u) => u !== null).length;
-    logger.info(
-      `[StrategyService] 快照刷新完成: 备战席 ${benchCount}/9, 棋盘 ${boardCount}/28, 商店 ${shopCount}/5, 装备 ${equipments.length} 件, 等级 Lv.${this.stageSnapshot.level}`
-    );
-    return this.stageSnapshot;
-  }
-  /**
-   * 获取当前阶段的游戏状态快照
-   * @description 如果快照不存在，会自动刷新
-   * @returns 游戏状态快照
-   */
-  async getStageSnapshot() {
-    if (!this.stageSnapshot) {
-      return this.refreshStageSnapshot();
-    }
-    return this.stageSnapshot;
   }
   /**
    * 处理 PVE 阶段 (打野怪)
@@ -11851,13 +12091,8 @@ class StrategyService {
    */
   async handleEarlyGame() {
     logger.info("[StrategyService] 前期阶段：随机拿牌，优先升星...");
-    const benchUnits = await tftOperator.getBenchInfo();
-    const ownedChampionNames = /* @__PURE__ */ new Set();
-    for (const unit of benchUnits) {
-      if (unit && unit.tftUnit) {
-        ownedChampionNames.add(unit.tftUnit.displayName);
-      }
-    }
+    await gameStateManager.refreshSnapshot();
+    const ownedChampionNames = gameStateManager.getOwnedChampionNames();
     const candidateTargetNames = /* @__PURE__ */ new Set();
     for (const lineup of this.candidateLineups) {
       const level4Config = lineup.stages.level4;
@@ -11870,7 +12105,7 @@ class StrategyService {
     logger.debug(
       `[StrategyService] 前期策略: 已有棋子 [${Array.from(ownedChampionNames).join(", ")}], 候选目标 [${Array.from(candidateTargetNames).join(", ")}]`
     );
-    const shopUnits = await tftOperator.getShopInfo();
+    const shopUnits = gameStateManager.getShopUnits();
     for (let i = 0; i < shopUnits.length; i++) {
       const unit = shopUnits[i];
       if (!unit) continue;
@@ -11945,7 +12180,7 @@ class StrategyService {
    */
   getTargetChampions() {
     if (!this.currentLineup) return [];
-    const stageConfig = this.getStageConfigForLevel(this.currentLevel);
+    const stageConfig = this.getStageConfigForLevel(gameStateManager.getLevel());
     return stageConfig?.champions ?? [];
   }
   /**
@@ -11957,16 +12192,16 @@ class StrategyService {
   }
   /**
    * 重置策略服务状态
-   * @description 在游戏结束或停止时调用，清理状态
+   * @description 在游戏结束或停止时调用，清理所有状态
+   *              会同时重置 GameStateManager
    */
   reset() {
     this.currentLineup = null;
     this.candidateLineups = [];
     this.selectionState = "NOT_INITIALIZED";
-    this.currentLevel = 1;
     this.targetChampionNames.clear();
-    this.hasFirstPvpOccurred = false;
-    this.stageSnapshot = null;
+    this.currentStageText = "";
+    gameStateManager.reset();
     logger.info("[StrategyService] 策略服务已重置");
   }
 }
@@ -11985,18 +12220,19 @@ class GameStageState {
   async action(signal) {
     signal.throwIfAborted();
     if (!GameStageState.isStrategyInitialized) {
-      logger.info("[GameStageState] 首次进入游戏阶段，初始化策略服务...");
+      logger.info("[GameStageState] 首次进入游戏阶段，标记游戏开始...");
+      gameStateManager.startGame();
       const success = strategyService.initialize();
       if (!success) {
         logger.error("[GameStageState] 策略服务初始化失败，请先选择阵容");
       }
       GameStageState.isStrategyInitialized = true;
     }
-    const currentGameStage = await tftOperator.getGameStage();
-    if (currentGameStage !== GameStageType.UNKNOWN) {
-      await strategyService.executeStrategy(currentGameStage);
+    const stageResult = await tftOperator.getGameStage();
+    if (stageResult.type !== GameStageType.UNKNOWN) {
+      await strategyService.executeStrategy(stageResult);
     } else {
-      logger.debug("[GameStageState] 未知阶段，等待中...");
+      logger.debug("[GameStageState] 未知阶段，稍后重试...");
     }
     await sleep(STAGE_CHECK_INTERVAL_MS);
     return this;
