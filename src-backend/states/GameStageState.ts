@@ -43,22 +43,7 @@ export class GameStageState implements IState {
         signal.throwIfAborted();
 
         // 首次进入时：标记游戏开始 + 初始化策略服务
-        if (!GameStageState.isStrategyInitialized) {
-            logger.info("[GameStageState] 首次进入游戏阶段，标记游戏开始...");
-            
-            // 1. 标记游戏开始（在 GameStateManager 中记录）
-            gameStateManager.startGame();
-            
-            // 2. 初始化策略服务（加载阵容配置）
-            const success = strategyService.initialize();
-            
-            if (!success) {
-                logger.error("[GameStageState] 策略服务初始化失败，请先选择阵容");
-                // 即使初始化失败，也标记为已尝试，避免重复尝试
-            }
-            
-            GameStageState.isStrategyInitialized = true;
-        }
+        this.initializeOnFirstEntry();
 
         const stageResult = await tftOperator.getGameStage();
 
@@ -75,6 +60,32 @@ export class GameStageState implements IState {
 
         // 状态循环
         return this;
+    }
+    
+    /**
+     * 首次进入游戏阶段时的初始化逻辑
+     * @description 标记游戏开始 + 初始化策略服务（加载阵容配置）
+     *              使用静态变量确保整局游戏只执行一次
+     */
+    private initializeOnFirstEntry(): void {
+        if (GameStageState.isStrategyInitialized) {
+            return;
+        }
+        
+        logger.info("[GameStageState] 首次进入游戏阶段，标记游戏开始...");
+        
+        // 1. 标记游戏开始（在 GameStateManager 中记录）
+        gameStateManager.startGame();
+        
+        // 2. 初始化策略服务（加载阵容配置）
+        const success = strategyService.initialize();
+        
+        if (!success) {
+            logger.error("[GameStageState] 策略服务初始化失败，请先选择阵容");
+            // 即使初始化失败，也标记为已尝试，避免重复尝试
+        }
+        
+        GameStageState.isStrategyInitialized = true;
     }
     
     /**

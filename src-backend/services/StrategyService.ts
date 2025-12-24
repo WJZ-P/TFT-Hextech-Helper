@@ -2,7 +2,12 @@
  * 策略服务
  * @module StrategyService
  * @description 负责游戏内的决策逻辑，如选牌、站位、装备合成等 "大脑" 工作
- *              状态数据统一由 GameStateManager 管理，本服务专注于决策逻辑
+ *              同时负责协调数据采集：调用 TftOperator 获取数据，更新到 GameStateManager
+ * 
+ * 职责分离：
+ * - TftOperator：纯粹的"眼睛和手"，负责识别和操作
+ * - GameStateManager：纯粹的"记忆"，负责存储状态
+ * - StrategyService：纯粹的"大脑"，负责决策和协调
  */
 import { tftOperator } from "../TftOperator";
 import { logger } from "../utils/Logger";
@@ -342,7 +347,7 @@ export class StrategyService {
         }
         
         // 1. 刷新快照并获取所有可见棋子名称（备战席 + 棋盘 + 商店）
-        await gameStateManager.refreshSnapshot();
+        await this.refreshGameState();
         const currentChampions = gameStateManager.getAllVisibleChampionNames();
         
         if (currentChampions.size === 0) {
@@ -446,23 +451,75 @@ export class StrategyService {
 
     /**
      * 刷新当前人口等级
-     * @description 从 GameStateManager 获取最新等级，并更新目标棋子列表
+     * @description 调用 TftOperator 获取等级信息，更新到 GameStateManager
      */
     private async refreshCurrentLevel(): Promise<void> {
-        // 确保快照已刷新（会自动更新 GameStateManager 中的等级）
-        await gameStateManager.getSnapshot();
+        const levelInfo = await tftOperator.getLevelInfo();
         
-        const currentLevel = gameStateManager.getLevel();
-        const stageConfig = this.getStageConfigForLevel(currentLevel);
-        
-        // 检查是否需要更新目标棋子
-        if (stageConfig) {
-            const newTargets = new Set(stageConfig.champions.map(c => c.name));
-            // 简单比较：如果目标棋子数量不同，说明需要更新
-            if (newTargets.size !== this.targetChampionNames.size) {
-                this.updateTargetChampions(currentLevel);
+        if (levelInfo) {
+            // 检查等级是否变化，需要更新目标棋子
+            const currentLevel = gameStateManager.getLevel();
+            if (levelInfo.level !== currentLevel) {
+                // 通过更新快照来同步等级（只更新等级相关字段）
+                const currentSnapshot = gameStateManager.getSnapshotSync();
+                if (currentSnapshot) {
+                    gameStateManager.updateSnapshot({
+                        ...currentSnapshot,
+                        level: levelInfo.level,
+                        currentXp: levelInfo.currentXp,
+                        totalXp: levelInfo.totalXp,
+                    });
+                }
+                
+                // 更新目标棋子列表
+                this.updateTargetChampions(levelInfo.level);
             }
         }
+    }
+    
+    /**
+     * 刷新游戏状态快照
+     * @description 调用 TftOperator 采集所有游戏数据，更新到 GameStateManager
+     *              这是 StrategyService 作为"大脑"协调数据采集的核心方法
+     * 
+     * 注意：getBenchInfo 和 getFightBoardInfo 需要操作鼠标（右键点击棋子），
+     *       所以这两个必须串行执行，不能并行！
+     */
+    public async refreshGameState(): Promise<void> {
+        logger.info("[StrategyService] 开始采集游戏状态...");
+        
+        // 1. 先并行执行不需要鼠标操作的识别任务
+        //    - getShopInfo: 只需要截图 + OCR，不操作鼠标
+        //    - getEquipInfo: 只需要截图 + 模板匹配，不操作鼠标
+        //    - getLevelInfo: 只需要截图 + OCR，不操作鼠标
+        //    - getCoinCount: 只需要截图 + OCR，不操作鼠标
+        const [shopUnits, equipments, levelInfo, gold] = await Promise.all([
+            tftOperator.getShopInfo(),
+            tftOperator.getEquipInfo(),
+            tftOperator.getLevelInfo(),
+            tftOperator.getCoinCount(),
+        ]);
+        
+        // 2. 串行执行需要鼠标操作的识别任务
+        //    - getBenchInfo: 需要右键点击每个槽位
+        //    - getFightBoardInfo: 需要右键点击每个槽位
+        //    这两个不能并行，否则鼠标会乱跑！
+        const benchUnits = await tftOperator.getBenchInfo();
+        const boardUnits = await tftOperator.getFightBoardInfo();
+        
+        // 3. 更新到 GameStateManager
+        gameStateManager.updateSnapshot({
+            benchUnits,
+            boardUnits,
+            shopUnits,
+            equipments,
+            level: levelInfo?.level ?? gameStateManager.getLevel(),
+            currentXp: levelInfo?.currentXp ?? 0,
+            totalXp: levelInfo?.totalXp ?? 0,
+            gold: gold ?? 0,
+        });
+        
+        logger.info("[StrategyService] 游戏状态采集完成");
     }
 
     /**
@@ -488,7 +545,7 @@ export class StrategyService {
         logger.info("[StrategyService] 前期阶段：随机拿牌，优先升星...");
         
         // 1. 刷新快照并获取当前已有的棋子名称（用于判断是否能升星）
-        await gameStateManager.refreshSnapshot();
+        await this.refreshGameState();
         const ownedChampionNames = gameStateManager.getOwnedChampionNames();
         
         // 2. 获取所有候选阵容的 level4 目标棋子（合并去重）

@@ -5,12 +5,13 @@
  *              包括备战席、棋盘、商店、装备、等级、金币等信息
  * 
  * 设计理念：
- * - 统一管理游戏状态，避免多处重复扫描
- * - 提供快照机制，每阶段开始时刷新一次
+ * - 纯粹的"记忆"角色：只负责存储和查询，不负责数据采集
+ * - 数据采集由 StrategyService 调用 TftOperator 完成，然后通过 updateSnapshot() 更新
+ * - 这样实现了职责分离：Operator(眼睛) -> Service(大脑) -> Manager(记忆)
  * - 支持游戏结束后重置，准备下一局
  */
 
-import { tftOperator, BenchUnit, BoardUnit, IdentifiedEquip } from "../TftOperator";
+import { BenchUnit, BoardUnit, IdentifiedEquip } from "../TftOperator";
 import { logger } from "../utils/Logger";
 import { TFTUnit, GameStageType } from "../TFTProtocol";
 
@@ -66,17 +67,26 @@ export interface GameProgress {
 
 /**
  * 游戏状态管理器 (单例)
- * @description 集中管理本局游戏的所有状态数据
+ * @description 集中管理本局游戏的所有状态数据，纯存储角色
  * 
  * 使用方式：
  * ```typescript
  * const manager = GameStateManager.getInstance();
  * 
- * // 刷新快照（每阶段开始时调用）
- * await manager.refreshSnapshot();
+ * // 由 StrategyService 采集数据后更新快照
+ * manager.updateSnapshot({
+ *     benchUnits,
+ *     boardUnits,
+ *     shopUnits,
+ *     equipments,
+ *     level: 4,
+ *     currentXp: 2,
+ *     totalXp: 6,
+ *     gold: 50,
+ * });
  * 
  * // 获取状态数据
- * const snapshot = manager.getSnapshot();
+ * const snapshot = manager.getSnapshotSync();
  * const level = manager.getLevel();
  * const benchUnits = manager.getBenchUnits();
  * 
@@ -125,87 +135,83 @@ export class GameStateManager {
     // ============================================================================
 
     /**
-     * 刷新游戏状态快照
-     * @description 扫描备战席、棋盘、商店、装备栏等，缓存到快照
-     *              每个阶段开始时调用一次，后续决策直接读取缓存
-     * 
-     * 注意：getBenchInfo 和 getFightBoardInfo 需要操作鼠标（右键点击棋子），
-     *       所以这两个必须串行执行，不能并行！
-     * 
-     * @returns 刷新后的快照
+     * 更新游戏状态快照
+     * @description 由 StrategyService 调用 TftOperator 采集数据后，通过此方法更新快照
+     *              GameStateManager 本身不负责数据采集，只负责存储
+     * @param data 快照数据（不含 timestamp，会自动添加）
      */
-    public async refreshSnapshot(): Promise<GameStateSnapshot> {
-        logger.info("[GameStateManager] 开始刷新游戏状态快照...");
-        
-        // 1. 先并行执行不需要鼠标操作的识别任务
-        //    - getShopInfo: 只需要截图 + OCR，不操作鼠标
-        //    - getEquipInfo: 只需要截图 + 模板匹配，不操作鼠标
-        //    - getLevelInfo: 只需要截图 + OCR，不操作鼠标
-        //    - getCoinCount: 只需要截图 + OCR，不操作鼠标
-        const [shopUnits, equipments, levelInfo, gold] = await Promise.all([
-            tftOperator.getShopInfo(),
-            tftOperator.getEquipInfo(),
-            tftOperator.getLevelInfo(),
-            tftOperator.getCoinCount(),
-        ]);
-        
-        // 2. 串行执行需要鼠标操作的识别任务
-        //    - getBenchInfo: 需要右键点击每个槽位
-        //    - getFightBoardInfo: 需要右键点击每个槽位
-        //    这两个不能并行，否则鼠标会乱跑！
-        const benchUnits = await tftOperator.getBenchInfo();
-        const boardUnits = await tftOperator.getFightBoardInfo();
-        
-        // 3. 更新人口等级（独立追踪）
-        if (levelInfo && levelInfo.level !== this.currentLevel) {
-            logger.info(`[GameStateManager] 人口变化: ${this.currentLevel} -> ${levelInfo.level}`);
-            this.currentLevel = levelInfo.level;
+    public updateSnapshot(data: Omit<GameStateSnapshot, 'timestamp'>): void {
+        // 更新人口等级（独立追踪）
+        if (data.level !== this.currentLevel) {
+            logger.info(`[GameStateManager] 人口变化: ${this.currentLevel} -> ${data.level}`);
+            this.currentLevel = data.level;
         }
         
-        // 4. 构建快照对象
+        // 构建完整快照（添加时间戳）
         this.snapshot = {
-            benchUnits,
-            boardUnits,
-            shopUnits,
-            equipments,
-            level: levelInfo?.level ?? this.currentLevel,
-            currentXp: levelInfo?.currentXp ?? 0,
-            totalXp: levelInfo?.totalXp ?? 0,
-            gold: gold ?? 0,
+            ...data,
             timestamp: Date.now(),
         };
         
-        // 5. 统计日志
-        const benchCount = benchUnits.filter(u => u !== null).length;
-        const boardCount = boardUnits.filter(u => u !== null).length;
-        const shopCount = shopUnits.filter(u => u !== null).length;
+        // 统计日志
+        const benchCount = data.benchUnits.filter(u => u !== null).length;
+        const boardCount = data.boardUnits.filter(u => u !== null).length;
+        const shopCount = data.shopUnits.filter(u => u !== null).length;
         
         logger.info(
-            `[GameStateManager] 快照刷新完成: ` +
+            `[GameStateManager] 快照更新完成: ` +
             `备战席 ${benchCount}/9, 棋盘 ${boardCount}/28, 商店 ${shopCount}/5, ` +
-            `装备 ${equipments.length} 件, 等级 Lv.${this.snapshot.level}, 金币 ${this.snapshot.gold}`
+            `装备 ${data.equipments.length} 件, 等级 Lv.${data.level}, 金币 ${data.gold}`
         );
+    }
+
+    /**
+     * 刷新游戏状态快照 (已废弃，保留向后兼容)
+     * @deprecated 请使用 StrategyService.refreshGameState() 代替
+     *             GameStateManager 不再直接调用 TftOperator
+     * @returns 当前快照，如果不存在则返回空快照
+     */
+    public async refreshSnapshot(): Promise<GameStateSnapshot> {
+        logger.warn("[GameStateManager] refreshSnapshot() 已废弃，请使用 StrategyService.refreshGameState()");
         
+        // 如果已有快照，直接返回
+        if (this.snapshot) {
+            return this.snapshot;
+        }
+        
+        // 返回空快照（向后兼容）
+        return {
+            benchUnits: [],
+            boardUnits: [],
+            shopUnits: [],
+            equipments: [],
+            level: this.currentLevel,
+            currentXp: 0,
+            totalXp: 0,
+            gold: 0,
+            timestamp: Date.now(),
+        };
+    }
+
+    /**
+     * 获取当前快照（同步版本）
+     * @returns 快照或 null（如果尚未更新）
+     */
+    public getSnapshotSync(): GameStateSnapshot | null {
         return this.snapshot;
     }
 
     /**
-     * 获取当前快照
-     * @description 如果快照不存在，会自动刷新
+     * 获取当前快照 (已废弃，保留向后兼容)
+     * @deprecated 请使用 getSnapshotSync() 代替
+     *             异步版本不再自动刷新，直接返回当前快照
      * @returns 游戏状态快照
      */
     public async getSnapshot(): Promise<GameStateSnapshot> {
+        logger.warn("[GameStateManager] getSnapshot() 已废弃，请使用 getSnapshotSync()");
         if (!this.snapshot) {
             return this.refreshSnapshot();
         }
-        return this.snapshot;
-    }
-
-    /**
-     * 获取当前快照（同步版本，不自动刷新）
-     * @returns 快照或 null（如果尚未刷新）
-     */
-    public getSnapshotSync(): GameStateSnapshot | null {
         return this.snapshot;
     }
 
