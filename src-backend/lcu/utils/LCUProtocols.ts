@@ -7,6 +7,35 @@ export interface LCUIpcChannels {
     'lcu-disconnect': null;         //  LOL客户端断开连接
 }
 
+//  游戏flow阶段字符串枚举，接口是LcuEventUri.GAMEFLOW_PHASE
+/**
+ * 游戏流程阶段枚举
+ * @description LOL 客户端的游戏流程状态，通过 GAMEFLOW_PHASE 事件获取
+ * 
+ * | Phase           | 说明                           
+ * |-----------------|-------------------------------
+ * | None            | 游戏结束后返回主界面            
+ * | Lobby           | 进入房间                       
+ * | Matchmaking     | 排队中                         
+ * | ReadyCheck      | 已找到对局，等待点击确认        
+ * | ChampSelect     | 英雄选择阶段                   
+ * | GameStart       | 游戏开始         
+ * | InProgress      | 游戏加载中 and 游戏进行中，具体区分是否开局，要ping本地端口                  
+ * | WaitingForStats | 游戏已结束，等待加载对局统计    
+ * | PreEndOfGame    | 游戏统计已就绪                               
+ */
+export type GameFlowPhase = 
+    | 'None' 
+    | 'Lobby' 
+    | 'Matchmaking' 
+    | 'ReadyCheck' 
+    | 'ChampSelect' 
+    | 'GameStart' 
+    | 'InProgress' 
+    | 'WaitingForStats' 
+    | 'PreEndOfGame'
+    | 'EndOfGame';
+
 //  创建超级参数提取器
 export type ArgsFromIpcChannel<V> = V extends (...args: unknown[]) => unknown ? Parameters<V> : [V];
 

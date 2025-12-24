@@ -5,8 +5,8 @@
  * 这里的分类决定了我们的 AI 应该采取什么策略
  */
 export enum GameStageType {
-    EARLY_PVE = 'EARLY_PVE', // 早期 PVE (1-1, 1-2)，什么都不用做
-    PVE = 'PVE',             // 打野怪/小兵 (1-3, 1-4, 以及 x-7)
+    EARLY_PVE = 'EARLY_PVE', // 第一阶段 (1-1 ~ 1-4)，内部根据回合号判断具体策略
+    PVE = 'PVE',             // 打野怪/小兵 (x-7 野怪回合)
     CAROUSEL = 'CAROUSEL',   // 选秀环节 (x-4)
     AUGMENT = 'AUGMENT',     // 海克斯强化选择环节 (2-1, 3-2, 4-2)
     PVP = 'PVP',             // 正常的玩家对战 (其他回合)
@@ -422,8 +422,8 @@ export const gameStageDisplayTheClockworkTrails = {
 //  "战斗环节"四字region（用来判断是否停止操作）
 //  TODO: 数据还没填充，需要实际测量确认坐标
 export const combatPhaseTextRegion = {
-    leftTop: { x: 0, y: 0 },
-    rightBottom: { x: 0, y: 0 }
+    leftTop: { x: 465, y: 110 },
+    rightBottom: { x: 560, y: 135 }
 }
 
 //  棋子类型接口

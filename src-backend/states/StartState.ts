@@ -15,7 +15,7 @@ import GameConfigHelper from "../utils/GameConfigHelper.ts";
  * 启动状态类
  * @description 负责初始化检查和配置备份，决定进入哪个后续状态
  * 
- * 注意：策略服务的初始化已移至 GameStageState，
+ * 注意：策略服务的初始化已移至 GameRunningState，
  * 因为需要在游戏实际开始后才能正确读取棋子信息进行阵容匹配
  */
 export class StartState implements IState {

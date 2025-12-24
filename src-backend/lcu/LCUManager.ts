@@ -26,7 +26,6 @@ export enum LcuEventUri {
     GAMEFLOW_PHASE = '/lol-gameflow/v1/session',
     /** 英雄选择阶段 */
     CHAMP_SELECT = '/lol-champ-select/v1/session',
-
 }
 
 // 定义 LCU WebSocket 消息的基本结构

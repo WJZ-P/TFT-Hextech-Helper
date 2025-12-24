@@ -11,8 +11,9 @@ import { GameStageType } from "../../TFTProtocol";
  * @description 根据云顶之弈的游戏规则，不同阶段有不同的行为
  * 
  * 规则说明：
- * - 1-1, 1-2: 早期 PVE，什么都不用做
- * - 1-3, 1-4: PVE 野怪回合（可以开始操作）
+ * - 第一阶段 (1-1 ~ 1-4): EARLY_PVE，内部根据回合号判断具体策略
+ *   - 1-1, 1-2: 商店未开放，只需防挂机
+ *   - 1-3, 1-4: 商店已开放，执行前期运营策略
  * - Round 2 (x-2): 海克斯强化选择回合
  * - Round 4 (x-4): 选秀回合
  * - Round 7 (x-7): PVE 野怪回合
@@ -24,10 +25,12 @@ import { GameStageType } from "../../TFTProtocol";
  * @example
  * parseStageStringToEnum("1-1") // -> GameStageType.EARLY_PVE
  * parseStageStringToEnum("1-2") // -> GameStageType.EARLY_PVE
- * parseStageStringToEnum("1-3") // -> GameStageType.PVE
+ * parseStageStringToEnum("1-3") // -> GameStageType.EARLY_PVE
+ * parseStageStringToEnum("1-4") // -> GameStageType.EARLY_PVE
  * parseStageStringToEnum("2-2") // -> GameStageType.AUGMENT
  * parseStageStringToEnum("3-4") // -> GameStageType.CAROUSEL
  * parseStageStringToEnum("4-3") // -> GameStageType.PVP
+ * parseStageStringToEnum("4-7") // -> GameStageType.PVE
  */
 export function parseStageStringToEnum(stageText: string): GameStageType {
     try {
@@ -45,12 +48,11 @@ export function parseStageStringToEnum(stageText: string): GameStageType {
 
         // 根据 stage 和 round 判断当前阶段
         if (stage === 1) {
-            // 1-1 和 1-2 是早期 PVE，什么都不用做（选装备、等待）
-            if (round <= 2) {
-                return GameStageType.EARLY_PVE;
-            }
-            // 1-3, 1-4 是正常 PVE，可以开始操作
-            return GameStageType.PVE;
+            // 第一阶段全部归为 EARLY_PVE
+            // handleEarlyPVE() 内部会根据 round 判断：
+            // - 1-1, 1-2: 商店未开放，只需防挂机
+            // - 1-3, 1-4: 商店已开放，执行前期运营策略
+            return GameStageType.EARLY_PVE;
         }
 
         if (round === 2) {

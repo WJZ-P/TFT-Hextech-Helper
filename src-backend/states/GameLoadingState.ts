@@ -7,7 +7,7 @@
 import { IState } from "./IState";
 import { logger } from "../utils/Logger.ts";
 import { EndState } from "./EndState.ts";
-import { GameStageState } from "./GameStageState.ts";
+import { GameRunningState } from "./GameRunningState.ts";
 import { inGameApi, InGameApiEndpoints } from "../lcu/InGameApi.ts";
 
 /** 轮询间隔 (ms) */
@@ -24,7 +24,7 @@ export class GameLoadingState implements IState {
     /**
      * 执行游戏加载状态逻辑
      * @param signal AbortSignal 用于取消等待
-     * @returns 下一个状态 (GameStageState 或 EndState)
+     * @returns 下一个状态 (GameRunningState 或 EndState)
      */
     async action(signal: AbortSignal): Promise<IState> {
         signal.throwIfAborted();
@@ -34,7 +34,7 @@ export class GameLoadingState implements IState {
 
         if (isGameLoaded) {
             logger.info("[GameLoadingState] 对局已开始！");
-            return new GameStageState();
+            return new GameRunningState();
         } else {
             logger.info("[GameLoadingState] 加载被中断");
             return new EndState();

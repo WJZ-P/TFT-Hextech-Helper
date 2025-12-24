@@ -1,6 +1,6 @@
 import {app, BrowserWindow, globalShortcut, ipcMain} from 'electron'
 import LCUConnector from "../src-backend/lcu/utils/LcuConnector.ts";
-import LCUManager from "../src-backend/lcu/LCUManager.ts";
+import LCUManager, { LcuEventUri, LCUWebSocketMessage } from "../src-backend/lcu/LCUManager.ts";
 import 'source-map-support/register';
 import GameConfigHelper from "../src-backend/utils/GameConfigHelper.ts";
 import path from "path";
@@ -154,12 +154,12 @@ function init() {
         lcuManager.on('connect', async () => {
             // 使用 IpcChannel 枚举发送连接事件给前端
             win?.webContents.send(IpcChannel.LCU_CONNECT);
-            try {
-                const summoner = await lcuManager.request('GET', '/lol-summoner/v1/current-summoner');
-                console.log('召唤师信息:', summoner);
-            } catch (e) {
-                console.error('请求召唤师信息失败:', e);
-            }
+            // try {
+            //     const summoner = await lcuManager.request('GET', '/lol-summoner/v1/current-summoner');
+            //     console.log('召唤师信息:', summoner);
+            // } catch (e) {
+            //     console.error('请求召唤师信息失败:', e);
+            // }
         });
 
         lcuManager.on('disconnect', () => {

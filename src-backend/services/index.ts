@@ -7,6 +7,10 @@
 export { GameStateManager, gameStateManager } from "./GameStateManager";
 export type { GameStateSnapshot, GameProgress } from "./GameStateManager";
 
+// 游戏阶段监视器
+export { GameStageMonitor, gameStageMonitor } from "./GameStageMonitor";
+export type { GameStageEvent, GameStageEvents } from "./GameStageMonitor";
+
 // 策略服务
 export { StrategyService, strategyService } from "./StrategyService";
 

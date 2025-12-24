@@ -6,7 +6,7 @@
 
 import { IState } from "./IState";
 import LCUManager, { LcuEventUri, LCUWebSocketMessage } from "../lcu/LCUManager.ts";
-import { Queue } from "../lcu/utils/LCUProtocols.ts";
+import { Queue, GameFlowPhase } from "../lcu/utils/LCUProtocols.ts";
 import { sleep } from "../utils/HelperTools.ts";
 import { logger } from "../utils/Logger.ts";
 import { GameLoadingState } from "./GameLoadingState.ts";
@@ -125,7 +125,7 @@ export class LobbyState implements IState {
              * 监听"游戏阶段变化"事件
              */
             const onGameflowPhase = (eventData: LCUWebSocketMessage) => {
-                const phase = eventData.data?.phase;
+                const phase = eventData.data?.phase as GameFlowPhase | undefined;
                 //  这个EventData.data 内容太多了。主要是跟对局相关的信息。
                 //logger.debug(`[LobbyState] 游戏阶段: ${JSON.stringify(eventData, null, 2)}`);
                 logger.info(`[LobbyState] 监听到游戏阶段: ${phase}`);

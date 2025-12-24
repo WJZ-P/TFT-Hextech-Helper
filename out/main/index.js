@@ -10513,10 +10513,7 @@ function parseStageStringToEnum(stageText) {
     const stage = parseInt(match[1]);
     const round = parseInt(match[2]);
     if (stage === 1) {
-      if (round <= 2) {
-        return GameStageType.EARLY_PVE;
-      }
-      return GameStageType.PVE;
+      return GameStageType.EARLY_PVE;
     }
     if (round === 2) {
       return GameStageType.AUGMENT;
@@ -11316,64 +11313,68 @@ class GameStateManager {
   // 快照管理
   // ============================================================================
   /**
-   * 刷新游戏状态快照
-   * @description 扫描备战席、棋盘、商店、装备栏等，缓存到快照
-   *              每个阶段开始时调用一次，后续决策直接读取缓存
-   * 
-   * 注意：getBenchInfo 和 getFightBoardInfo 需要操作鼠标（右键点击棋子），
-   *       所以这两个必须串行执行，不能并行！
-   * 
-   * @returns 刷新后的快照
+   * 更新游戏状态快照
+   * @description 由 StrategyService 调用 TftOperator 采集数据后，通过此方法更新快照
+   *              GameStateManager 本身不负责数据采集，只负责存储
+   * @param data 快照数据（不含 timestamp，会自动添加）
    */
-  async refreshSnapshot() {
-    logger.info("[GameStateManager] 开始刷新游戏状态快照...");
-    const [shopUnits, equipments, levelInfo, gold] = await Promise.all([
-      tftOperator.getShopInfo(),
-      tftOperator.getEquipInfo(),
-      tftOperator.getLevelInfo(),
-      tftOperator.getCoinCount()
-    ]);
-    const benchUnits = await tftOperator.getBenchInfo();
-    const boardUnits = await tftOperator.getFightBoardInfo();
-    if (levelInfo && levelInfo.level !== this.currentLevel) {
-      logger.info(`[GameStateManager] 人口变化: ${this.currentLevel} -> ${levelInfo.level}`);
-      this.currentLevel = levelInfo.level;
+  updateSnapshot(data) {
+    if (data.level !== this.currentLevel) {
+      logger.info(`[GameStateManager] 人口变化: ${this.currentLevel} -> ${data.level}`);
+      this.currentLevel = data.level;
     }
     this.snapshot = {
-      benchUnits,
-      boardUnits,
-      shopUnits,
-      equipments,
-      level: levelInfo?.level ?? this.currentLevel,
-      currentXp: levelInfo?.currentXp ?? 0,
-      totalXp: levelInfo?.totalXp ?? 0,
-      gold: gold ?? 0,
+      ...data,
       timestamp: Date.now()
     };
-    const benchCount = benchUnits.filter((u) => u !== null).length;
-    const boardCount = boardUnits.filter((u) => u !== null).length;
-    const shopCount = shopUnits.filter((u) => u !== null).length;
+    const benchCount = data.benchUnits.filter((u) => u !== null).length;
+    const boardCount = data.boardUnits.filter((u) => u !== null).length;
+    const shopCount = data.shopUnits.filter((u) => u !== null).length;
     logger.info(
-      `[GameStateManager] 快照刷新完成: 备战席 ${benchCount}/9, 棋盘 ${boardCount}/28, 商店 ${shopCount}/5, 装备 ${equipments.length} 件, 等级 Lv.${this.snapshot.level}, 金币 ${this.snapshot.gold}`
+      `[GameStateManager] 快照更新完成: 备战席 ${benchCount}/9, 棋盘 ${boardCount}/28, 商店 ${shopCount}/5, 装备 ${data.equipments.length} 件, 等级 Lv.${data.level}, 金币 ${data.gold}`
     );
+  }
+  /**
+   * 刷新游戏状态快照 (已废弃，保留向后兼容)
+   * @deprecated 请使用 StrategyService.refreshGameState() 代替
+   *             GameStateManager 不再直接调用 TftOperator
+   * @returns 当前快照，如果不存在则返回空快照
+   */
+  async refreshSnapshot() {
+    logger.warn("[GameStateManager] refreshSnapshot() 已废弃，请使用 StrategyService.refreshGameState()");
+    if (this.snapshot) {
+      return this.snapshot;
+    }
+    return {
+      benchUnits: [],
+      boardUnits: [],
+      shopUnits: [],
+      equipments: [],
+      level: this.currentLevel,
+      currentXp: 0,
+      totalXp: 0,
+      gold: 0,
+      timestamp: Date.now()
+    };
+  }
+  /**
+   * 获取当前快照（同步版本）
+   * @returns 快照或 null（如果尚未更新）
+   */
+  getSnapshotSync() {
     return this.snapshot;
   }
   /**
-   * 获取当前快照
-   * @description 如果快照不存在，会自动刷新
+   * 获取当前快照 (已废弃，保留向后兼容)
+   * @deprecated 请使用 getSnapshotSync() 代替
+   *             异步版本不再自动刷新，直接返回当前快照
    * @returns 游戏状态快照
    */
   async getSnapshot() {
+    logger.warn("[GameStateManager] getSnapshot() 已废弃，请使用 getSnapshotSync()");
     if (!this.snapshot) {
       return this.refreshSnapshot();
     }
-    return this.snapshot;
-  }
-  /**
-   * 获取当前快照（同步版本，不自动刷新）
-   * @returns 快照或 null（如果尚未刷新）
-   */
-  getSnapshotSync() {
     return this.snapshot;
   }
   /**
@@ -11546,6 +11547,170 @@ class GameStateManager {
   }
 }
 const gameStateManager = GameStateManager.getInstance();
+class GameStageMonitor extends EventEmitter {
+  static instance;
+  /** 轮询间隔（毫秒） */
+  pollInterval = 1e3;
+  /** 轮询定时器 ID */
+  pollTimer = null;
+  /** 是否正在运行 */
+  isRunning = false;
+  /** 当前阶段文本（如 "2-1"） */
+  stageText = "";
+  /** 当前大阶段号（如 "2-1" 中的 2） */
+  stage = 0;
+  /** 当前回合号（如 "2-1" 中的 1） */
+  round = 0;
+  /** 当前是否处于战斗阶段 */
+  isFighting = false;
+  constructor() {
+    super();
+    this.setMaxListeners(20);
+  }
+  /**
+   * 获取单例实例
+   */
+  static getInstance() {
+    if (!GameStageMonitor.instance) {
+      GameStageMonitor.instance = new GameStageMonitor();
+    }
+    return GameStageMonitor.instance;
+  }
+  // ============================================================================
+  // 公共接口
+  // ============================================================================
+  /**
+   * 启动阶段轮询
+   * @param interval 轮询间隔（毫秒），默认 1000ms
+   * @description 开始后台轮询，检测阶段变化并发出事件
+   */
+  start(interval = 1e3) {
+    if (this.isRunning) {
+      logger.warn("[GameStageMonitor] 已经在运行中，忽略重复启动");
+      return;
+    }
+    this.pollInterval = interval;
+    this.isRunning = true;
+    logger.info(`[GameStageMonitor] 启动阶段轮询，间隔: ${interval}ms`);
+    this.checkStage();
+    this.pollTimer = setInterval(() => {
+      this.checkStage();
+    }, this.pollInterval);
+  }
+  /**
+   * 停止阶段轮询
+   * @description 停止后台轮询，清理定时器
+   */
+  stop() {
+    if (!this.isRunning) {
+      logger.debug("[GameStageMonitor] 未在运行，忽略停止请求");
+      return;
+    }
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
+    }
+    this.isRunning = false;
+    logger.info("[GameStageMonitor] 阶段轮询已停止");
+  }
+  /**
+   * 重置状态
+   * @description 清除所有缓存的阶段信息，通常在游戏结束时调用
+   */
+  reset() {
+    this.stageText = "";
+    this.stage = 0;
+    this.round = 0;
+    this.isFighting = false;
+    logger.info("[GameStageMonitor] 状态已重置");
+  }
+  // ============================================================================
+  // 私有方法
+  // ============================================================================
+  /**
+   * 检测阶段变化
+   * @description 轮询的核心方法，检测两个区域：
+   *              1. 阶段文本区域 → 检测是否进入新回合
+   *              2. "战斗环节"文字区域 → 检测是否进入战斗状态
+   */
+  async checkStage() {
+    try {
+      const stageResult = await tftOperator.getGameStage();
+      const { type, stageText } = stageResult;
+      if (type === GameStageType.UNKNOWN || !stageText) {
+        return;
+      }
+      if (stageText !== this.stageText) {
+        const parsed = this.parseStageText(stageText);
+        if (parsed) {
+          const { stage, round } = parsed;
+          const isNewStage = stage !== this.stage;
+          const event = {
+            stageText,
+            type,
+            stage,
+            round,
+            isNewStage
+          };
+          this.stageText = stageText;
+          this.stage = stage;
+          this.round = round;
+          this.isFighting = false;
+          logger.info(
+            `[GameStageMonitor] 阶段变化: ${stageText} (${isNewStage ? "新阶段" : "新回合"}, 类型: ${type})`
+          );
+          this.emit("stageChange", event);
+        }
+      }
+      await this.checkFightingPhase();
+    } catch (error) {
+      logger.error(`[GameStageMonitor] 阶段检测异常: ${error}`);
+    }
+  }
+  /**
+   * 解析阶段文本
+   * @param stageText 阶段文本（如 "2-1"）
+   * @returns 解析结果，包含 stage 和 round，解析失败返回 null
+   */
+  parseStageText(stageText) {
+    const match = stageText.match(/^(\d+)-(\d+)$/);
+    if (!match) {
+      logger.debug(`[GameStageMonitor] 无法解析阶段文本: "${stageText}"`);
+      return null;
+    }
+    return {
+      stage: parseInt(match[1], 10),
+      round: parseInt(match[2], 10)
+    };
+  }
+  /**
+   * 检测战斗阶段
+   * @description 检测"战斗环节"文字区域，如果检测到文字则进入战斗状态
+   *              只检测"进入战斗"，不检测"战斗结束"（新回合开始时自动重置）
+   * 
+   * TODO: 实现战斗阶段检测逻辑
+   * - 使用 combatPhaseTextRegion 区域进行 OCR 识别
+   * - 检测到"战斗环节"文字 → 设置 _isFighting = true，发出 fightingStart 事件
+   */
+  async checkFightingPhase() {
+    if (this.isFighting) {
+      return;
+    }
+  }
+  /**
+   * 检测"战斗环节"文字
+   * @description 通过 OCR 识别 combatPhaseTextRegion 区域的文字
+   * 
+   * TODO: 实现具体的检测逻辑
+   * @returns 是否检测到"战斗环节"文字
+   */
+  // private async detectCombatPhaseText(): Promise<boolean> {
+  //     // TODO: 使用 TftOperator 截取 combatPhaseTextRegion 区域
+  //     // 进行 OCR 识别，判断是否包含"战斗环节"或"战斗"文字
+  //     return false;
+  // }
+}
+const gameStageMonitor = GameStageMonitor.getInstance();
 class SettingsStore {
   static instance;
   store;
@@ -11773,8 +11938,18 @@ class StrategyService {
   selectionState = "NOT_INITIALIZED";
   /** 当前阶段的目标棋子名称列表（缓存，避免重复计算） */
   targetChampionNames = /* @__PURE__ */ new Set();
-  /** 当前阶段文本（如 "2-1"），用于判断是否进入新阶段 */
-  currentStageText = "";
+  /** 
+   * 当前阶段号（如 "2-1" 中的 2）
+   * @description 阶段变化意味着进入新的大阶段（如从 1 阶段进入 2 阶段）
+   */
+  currentStage = 0;
+  /**
+   * 当前回合号（如 "2-1" 中的 1）
+   * @description 回合变化意味着同一阶段内的小回合切换
+   */
+  currentRound = 0;
+  /** 是否已订阅 GameStageMonitor 事件 */
+  isSubscribed = false;
   constructor() {
   }
   /**
@@ -11785,6 +11960,107 @@ class StrategyService {
       StrategyService.instance = new StrategyService();
     }
     return StrategyService.instance;
+  }
+  // ============================================================
+  // 🔔 事件订阅管理
+  // ============================================================
+  /**
+   * 订阅 GameStageMonitor 事件
+   * @description 开始监听阶段变化事件，执行相应策略
+   *              调用此方法后，StrategyService 会自动响应游戏阶段变化
+   */
+  subscribe() {
+    if (this.isSubscribed) {
+      logger.debug("[StrategyService] 已订阅事件，跳过重复订阅");
+      return;
+    }
+    gameStageMonitor.on("stageChange", this.onStageChange.bind(this));
+    gameStageMonitor.on("fightingStart", this.onFightingStart.bind(this));
+    this.isSubscribed = true;
+    logger.info("[StrategyService] 已订阅 GameStageMonitor 事件");
+  }
+  /**
+   * 取消订阅 GameStageMonitor 事件
+   * @description 停止监听阶段变化事件
+   */
+  unsubscribe() {
+    if (!this.isSubscribed) {
+      logger.debug("[StrategyService] 未订阅事件，跳过取消订阅");
+      return;
+    }
+    gameStageMonitor.off("stageChange", this.onStageChange.bind(this));
+    gameStageMonitor.off("fightingStart", this.onFightingStart.bind(this));
+    this.isSubscribed = false;
+    logger.info("[StrategyService] 已取消订阅 GameStageMonitor 事件");
+  }
+  // ============================================================
+  // 🎯 事件处理器
+  // ============================================================
+  /**
+   * 阶段变化事件处理器
+   * @param event 阶段变化事件数据
+   * @description 当 GameStageMonitor 检测到阶段/回合变化时触发
+   *              这是整个策略服务的核心入口！
+   */
+  async onStageChange(event) {
+    const { type, stageText, stage, round, isNewStage } = event;
+    this.currentStage = stage;
+    this.currentRound = round;
+    if (isNewStage) {
+      logger.info(
+        `[StrategyService] ====== 进入新阶段: ${stageText} (第${stage}阶段第${round}回合) ======`
+      );
+    } else {
+      logger.info(
+        `[StrategyService] 进入新回合: ${stageText} (第${stage}阶段第${round}回合)`
+      );
+    }
+    if (this.selectionState === "NOT_INITIALIZED") {
+      const success = this.initialize();
+      if (!success) {
+        logger.error("[StrategyService] 策略服务未初始化，跳过执行");
+        return;
+      }
+    }
+    await this.refreshGameState();
+    switch (type) {
+      case GameStageType.EARLY_PVE:
+        await this.handleEarlyPVE();
+        break;
+      case GameStageType.PVE:
+        await this.handlePVE();
+        break;
+      case GameStageType.PVP:
+        await this.handlePVP();
+        break;
+      case GameStageType.CAROUSEL:
+        await this.handleCarousel();
+        break;
+      case GameStageType.AUGMENT:
+        await this.handleAugment();
+        break;
+      case GameStageType.UNKNOWN:
+      default:
+        logger.debug(`[StrategyService] 未处理的阶段: ${type}`);
+        break;
+    }
+  }
+  /**
+   * 战斗开始事件处理器
+   * @description 当检测到"战斗环节"文字时触发，此时应暂停涉及棋盘的操作
+   *              注意：不需要单独处理战斗结束，因为进入新回合时会自动重置战斗状态
+   */
+  onFightingStart() {
+    logger.info("[StrategyService] 战斗阶段开始，暂停棋盘操作");
+  }
+  /**
+   * 检查当前是否处于战斗阶段
+   * @description 战斗阶段时，涉及棋盘的操作应暂停
+   *              进入新回合时会自动重置为非战斗状态
+   * @returns 是否处于战斗阶段
+   */
+  isFighting() {
+    return gameStageMonitor.isFighting;
   }
   /**
    * 初始化策略服务
@@ -11830,6 +12106,9 @@ class StrategyService {
     }
     return true;
   }
+  // ============================================================
+  // 📊 状态查询方法
+  // ============================================================
   /**
    * 获取当前选中的阵容
    */
@@ -11855,6 +12134,33 @@ class StrategyService {
   getCurrentLevel() {
     return gameStateManager.getLevel();
   }
+  /**
+   * 获取当前阶段文本
+   * @returns 格式化的阶段文本（如 "2-1"）
+   */
+  getCurrentStageText() {
+    if (this.currentStage === 0) return "";
+    return `${this.currentStage}-${this.currentRound}`;
+  }
+  /**
+   * 获取当前阶段的目标棋子配置列表
+   * @returns 棋子配置数组
+   */
+  getTargetChampions() {
+    if (!this.currentLineup) return [];
+    const stageConfig = this.getStageConfigForLevel(gameStateManager.getLevel());
+    return stageConfig?.champions ?? [];
+  }
+  /**
+   * 获取当前阶段的核心棋子配置列表
+   * @returns 核心棋子配置数组
+   */
+  getCoreChampions() {
+    return this.getTargetChampions().filter((c) => c.isCore);
+  }
+  // ============================================================
+  // 🔧 内部辅助方法
+  // ============================================================
   /**
    * 更新目标棋子列表
    * @param level 当前人口等级
@@ -11917,70 +12223,6 @@ class StrategyService {
     return void 0;
   }
   /**
-   * 执行当前阶段的策略逻辑
-   * @param stageResult 当前游戏阶段结果（包含类型和原始文本）
-   */
-  async executeStrategy(stageResult) {
-    const { type: stage, stageText } = stageResult;
-    const isNewStage = this.isNewStage(stageText);
-    if (isNewStage) {
-      logger.info(`[StrategyService] 进入新阶段: ${stageText}`);
-      this.currentStageText = stageText;
-    }
-    if (this.selectionState === "NOT_INITIALIZED") {
-      const success = this.initialize();
-      if (!success) {
-        logger.error("[StrategyService] 策略服务未初始化，跳过执行");
-        return;
-      }
-    }
-    if (stage === GameStageType.PVP && this.selectionState === "PENDING") {
-      if (!gameStateManager.hasFirstPvpOccurred()) {
-        logger.info("[StrategyService] 检测到第一个 PVP 阶段，开始阵容匹配...");
-        await this.matchAndLockLineup();
-      }
-    }
-    if (stage === GameStageType.PVE && this.selectionState === "PENDING") {
-      logger.info("[StrategyService] 前期 PVE 阶段：执行前期购买策略...");
-      await this.handleEarlyGame();
-      return;
-    }
-    if (!this.isLineupLocked()) {
-      logger.debug("[StrategyService] 阵容尚未锁定，跳过策略执行");
-      return;
-    }
-    await this.refreshCurrentLevel();
-    switch (stage) {
-      case GameStageType.EARLY_PVE:
-        logger.debug("[StrategyService] 早期阶段 (1-1/1-2)，先休息一下喵~");
-        break;
-      case GameStageType.PVE:
-        await this.handlePve();
-        break;
-      case GameStageType.PVP:
-        await this.handlePvp();
-        break;
-      case GameStageType.CAROUSEL:
-        await this.handleCarousel();
-        break;
-      case GameStageType.AUGMENT:
-        await this.handleAugment();
-        break;
-      case GameStageType.UNKNOWN:
-      default:
-        logger.debug(`[StrategyService] 未处理的阶段: ${stage}`);
-        break;
-    }
-  }
-  /**
-   * 判断是否进入了新阶段
-   * @param stageText 当前阶段文本（如 "2-1"）
-   * @returns true 表示是新阶段，false 表示是重复进入的同一阶段
-   */
-  isNewStage(stageText) {
-    return stageText !== this.currentStageText;
-  }
-  /**
    * 根据当前棋子匹配并锁定最合适的阵容
    * @description 使用 GameStateManager 获取备战席、棋盘和商店的棋子，
    *              计算与各候选阵容 level4 的匹配度，选择匹配度最高的阵容并锁定
@@ -11994,7 +12236,7 @@ class StrategyService {
       logger.error("[StrategyService] 没有候选阵容可供匹配");
       return;
     }
-    await gameStateManager.refreshSnapshot();
+    await this.refreshGameState();
     const currentChampions = gameStateManager.getAllVisibleChampionNames();
     if (currentChampions.size === 0) {
       logger.warn("[StrategyService] 未检测到任何棋子，使用第一个候选阵容");
@@ -12061,81 +12303,132 @@ class StrategyService {
     logger.info(`[StrategyService] 阵容已锁定: ${lineup.name} (${lineup.id})`);
   }
   /**
-   * 刷新当前人口等级
-   * @description 从 GameStateManager 获取最新等级，并更新目标棋子列表
+   * 刷新游戏状态快照
+   * @description 调用 TftOperator 采集所有游戏数据，更新到 GameStateManager
+   *              这是 StrategyService 作为"大脑"协调数据采集的核心方法
+   * 
+   * 注意：getBenchInfo 和 getFightBoardInfo 需要操作鼠标（右键点击棋子），
+   *       所以这两个必须串行执行，不能并行！
    */
-  async refreshCurrentLevel() {
-    await gameStateManager.getSnapshot();
-    const currentLevel = gameStateManager.getLevel();
-    const stageConfig = this.getStageConfigForLevel(currentLevel);
-    if (stageConfig) {
-      const newTargets = new Set(stageConfig.champions.map((c) => c.name));
-      if (newTargets.size !== this.targetChampionNames.size) {
-        this.updateTargetChampions(currentLevel);
-      }
+  async refreshGameState() {
+    logger.info("[StrategyService] 开始采集游戏状态...");
+    const previousLevel = gameStateManager.getLevel();
+    const [shopUnits, equipments, levelInfo, gold] = await Promise.all([
+      tftOperator.getShopInfo(),
+      tftOperator.getEquipInfo(),
+      tftOperator.getLevelInfo(),
+      tftOperator.getCoinCount()
+    ]);
+    const benchUnits = await tftOperator.getBenchInfo();
+    const boardUnits = await tftOperator.getFightBoardInfo();
+    const newLevel = levelInfo?.level ?? previousLevel;
+    gameStateManager.updateSnapshot({
+      benchUnits,
+      boardUnits,
+      shopUnits,
+      equipments,
+      level: newLevel,
+      currentXp: levelInfo?.currentXp ?? 0,
+      totalXp: levelInfo?.totalXp ?? 0,
+      gold: gold ?? 0
+    });
+    if (newLevel !== previousLevel) {
+      logger.info(`[StrategyService] 等级变化: ${previousLevel} → ${newLevel}`);
+      this.updateTargetChampions(newLevel);
     }
+    logger.info("[StrategyService] 游戏状态采集完成");
   }
   /**
    * 处理 PVE 阶段 (打野怪)
+   * @description 
+   * - 1-3、1-4 回合：商店已开启，执行购买策略
+   * - 后续 PVE（野怪回合）：继续购买 + 捡战利品球
+   * 
+   * 注意：1-3、1-4 时阵容可能尚未锁定，此时执行随机购买策略
    */
-  async handlePve() {
-    logger.info("[StrategyService] PVE阶段：除了捡球，我们也要盯着商店...");
-    await this.analyzeAndBuy();
+  async handlePVE() {
+    logger.info("[StrategyService] PVE阶段：商店运营中...");
+    await this.executeCommonStrategy();
   }
   /**
-   * 处理游戏前期阶段 (1-1 ~ 1-3)
-   * @description 阵容尚未锁定时的购买策略：
-   *              1. 优先购买备战席/场上已有的棋子（方便升星）
-   *              2. 优先购买所有候选阵容中出现的棋子
-   *              3. 其他棋子随机购买（增加后续匹配的可能性）
+   * 处理游戏前期阶段（第一阶段 1-1 ~ 1-4）
+   * @description 整个第一阶段的处理逻辑：
+   *              - 1-1、1-2：商店未开放，只执行防挂机
+   *              - 1-3、1-4：商店已开放，执行前期运营策略（组建阵容）
    */
-  async handleEarlyGame() {
-    logger.info("[StrategyService] 前期阶段：随机拿牌，优先升星...");
-    await gameStateManager.refreshSnapshot();
-    const ownedChampionNames = gameStateManager.getOwnedChampionNames();
-    const candidateTargetNames = /* @__PURE__ */ new Set();
-    for (const lineup of this.candidateLineups) {
-      const level4Config = lineup.stages.level4;
-      if (level4Config) {
-        for (const champion of level4Config.champions) {
-          candidateTargetNames.add(champion.name);
-        }
-      }
+  async handleEarlyPVE() {
+    if (this.currentRound <= 2) {
+      logger.info(`[StrategyService] 前期阶段 1-${this.currentRound}：商店未开放，执行防挂机...`);
+      await this.antiAfk();
+      return;
     }
-    logger.debug(
-      `[StrategyService] 前期策略: 已有棋子 [${Array.from(ownedChampionNames).join(", ")}], 候选目标 [${Array.from(candidateTargetNames).join(", ")}]`
-    );
-    const shopUnits = gameStateManager.getShopUnits();
-    for (let i = 0; i < shopUnits.length; i++) {
-      const unit = shopUnits[i];
-      if (!unit) continue;
-      const championName = unit.displayName;
-      let shouldBuy = false;
-      let reason = "";
-      if (ownedChampionNames.has(championName)) {
-        shouldBuy = true;
-        reason = "升星";
-      } else if (candidateTargetNames.has(championName)) {
-        shouldBuy = true;
-        reason = "候选目标";
-      } else if (unit.price <= 2 && Math.random() < 0.3) {
-        shouldBuy = true;
-        reason = "随机低费";
-      }
-      if (shouldBuy) {
-        logger.info(
-          `[StrategyService] 前期购买: ${championName} (${unit.price}费) [${reason}]`
-        );
-        await tftOperator.buyAtSlot(i + 1);
-      }
-    }
+    logger.info(`[StrategyService] 前期阶段 1-${this.currentRound}：商店已开放，执行前期运营...`);
+    await this.executeCommonStrategy();
   }
   /**
    * 处理 PVP 阶段 (玩家对战)
+   * @description 
+   * - 首次 PVP（2-1）：如果阵容未锁定，进行阵容匹配
+   * - 后续 PVP：正常运营（拿牌、升级、调整站位）
    */
-  async handlePvp() {
+  async handlePVP() {
+    if (this.selectionState === "PENDING") {
+      if (!gameStateManager.hasFirstPvpOccurred()) {
+        logger.info("[StrategyService] 检测到第一个 PVP 阶段，开始阵容匹配...");
+        await this.matchAndLockLineup();
+      }
+    }
     logger.info("[StrategyService] PVP阶段：全力运营...");
-    await this.analyzeAndBuy();
+    await this.executeCommonStrategy();
+  }
+  /**
+   * 防挂机：随机移动小小英雄
+   * @description 在战斗阶段（如前期 PVE、野怪回合）时调用，
+   *              让小小英雄随机走动，避免被系统判定为挂机
+   * 
+   * TODO: 实现随机移动逻辑
+   * - 生成随机目标坐标（在安全区域内）
+   * - 调用 tftOperator 移动小小英雄
+   * - 可以考虑添加移动间隔，避免频繁移动
+   */
+  async antiAfk() {
+    logger.debug("[StrategyService] 防挂机移动（待实现）");
+  }
+  /**
+   * 通用运营策略入口
+   * @description 每个回合的核心运营逻辑入口，包含：
+   *              - 购买棋子（目标棋子 / 前期随机购买）
+   *              - D 牌（刷新商店）
+   *              - 升级（买经验）
+   *              - 卖棋子（清理备战席）
+   *              - 上装备
+   *              - 调整站位
+   *              - 更换阵容（如果需要）
+   * 
+   * 根据阵容锁定状态和当前阶段，执行不同的子策略
+   * 
+   * TODO: 逐步实现各个子策略
+   */
+  async executeCommonStrategy() {
+    if (this.isLineupLocked()) {
+      logger.debug("[StrategyService] 阵容已锁定，执行正常运营策略");
+      await this.analyzeAndBuy();
+    } else {
+      logger.debug("[StrategyService] 阵容未锁定，执行前期运营策略");
+      await this.executeEarlyGameStrategy();
+    }
+  }
+  /**
+   * 前期运营策略（阵容未锁定时使用）
+   * @description 阵容尚未锁定时的运营策略：
+   *              1. 优先购买备战席/场上已有的棋子（方便升星）
+   *              2. 优先购买所有候选阵容中出现的棋子
+   *              3. 其他低费棋子随机购买（增加后续匹配的可能性）
+   * 
+   * TODO: 实现前期运营逻辑
+   */
+  async executeEarlyGameStrategy() {
+    logger.debug("[StrategyService] 前期运营策略（待实现）");
   }
   /**
    * 处理 选秀阶段
@@ -12175,76 +12468,23 @@ class StrategyService {
     return this.targetChampionNames.has(unit.displayName);
   }
   /**
-   * 获取当前阶段的目标棋子配置列表
-   * @returns 棋子配置数组
-   */
-  getTargetChampions() {
-    if (!this.currentLineup) return [];
-    const stageConfig = this.getStageConfigForLevel(gameStateManager.getLevel());
-    return stageConfig?.champions ?? [];
-  }
-  /**
-   * 获取当前阶段的核心棋子配置列表
-   * @returns 核心棋子配置数组
-   */
-  getCoreChampions() {
-    return this.getTargetChampions().filter((c) => c.isCore);
-  }
-  /**
    * 重置策略服务状态
    * @description 在游戏结束或停止时调用，清理所有状态
-   *              会同时重置 GameStateManager
+   *              会同时取消订阅事件并重置 GameStateManager
    */
   reset() {
+    this.unsubscribe();
     this.currentLineup = null;
     this.candidateLineups = [];
     this.selectionState = "NOT_INITIALIZED";
     this.targetChampionNames.clear();
-    this.currentStageText = "";
+    this.currentStage = 0;
+    this.currentRound = 0;
     gameStateManager.reset();
     logger.info("[StrategyService] 策略服务已重置");
   }
 }
 const strategyService = StrategyService.getInstance();
-const STAGE_CHECK_INTERVAL_MS = 1e3;
-class GameStageState {
-  /** 状态名称 */
-  name = "GameStageState";
-  /** 是否已初始化策略服务（静态变量，跨实例共享） */
-  static isStrategyInitialized = false;
-  /**
-   * 执行游戏阶段状态逻辑
-   * @param signal AbortSignal 用于取消操作
-   * @returns 下一个状态 (目前保持自身循环)
-   */
-  async action(signal) {
-    signal.throwIfAborted();
-    if (!GameStageState.isStrategyInitialized) {
-      logger.info("[GameStageState] 首次进入游戏阶段，标记游戏开始...");
-      gameStateManager.startGame();
-      const success = strategyService.initialize();
-      if (!success) {
-        logger.error("[GameStageState] 策略服务初始化失败，请先选择阵容");
-      }
-      GameStageState.isStrategyInitialized = true;
-    }
-    const stageResult = await tftOperator.getGameStage();
-    if (stageResult.type !== GameStageType.UNKNOWN) {
-      await strategyService.executeStrategy(stageResult);
-    } else {
-      logger.debug("[GameStageState] 未知阶段，稍后重试...");
-    }
-    await sleep(STAGE_CHECK_INTERVAL_MS);
-    return this;
-  }
-  /**
-   * 重置策略初始化状态
-   * @description 在游戏结束时调用，确保下一局游戏可以重新初始化
-   */
-  static resetStrategyInitialized() {
-    GameStageState.isStrategyInitialized = false;
-  }
-}
 class EndState {
   /** 状态名称 */
   name = "EndState";
@@ -12256,7 +12496,6 @@ class EndState {
   async action(_signal) {
     logger.info("[EndState] 正在恢复客户端设置...");
     strategyService.reset();
-    GameStageState.resetStrategyInitialized();
     try {
       await GameConfigHelper.restore();
       logger.info("[EndState] 客户端设置恢复完成");
@@ -12289,6 +12528,103 @@ var Queue = /* @__PURE__ */ ((Queue2) => {
   Queue2[Queue2["MORIRENJI_VERY_HARD"] = 4260] = "MORIRENJI_VERY_HARD";
   return Queue2;
 })(Queue || {});
+const ABORT_CHECK_INTERVAL_MS$1 = 2e3;
+class GameRunningState {
+  /** 状态名称 */
+  name = "GameRunningState";
+  /** LCU 管理器实例 */
+  lcuManager = LCUManager.getInstance();
+  /**
+   * 执行游戏运行状态逻辑
+   * @param signal AbortSignal 用于取消操作
+   * @returns 下一个状态
+   * 
+   * @description 执行流程：
+   * 1. 初始化游戏状态（标记游戏开始）
+   * 2. 初始化策略服务（加载阵容配置）
+   * 3. 订阅策略服务到 Monitor 事件
+   * 4. 启动 GameStageMonitor（开始轮询阶段）
+   * 5. 监听 GAMEFLOW_PHASE 事件，等待游戏结束
+   * 6. 游戏结束后清理资源，返回下一个状态
+   */
+  async action(signal) {
+    signal.throwIfAborted();
+    logger.info("[GameRunningState] 进入游戏运行状态");
+    const isGameEnded = await this.waitForGameToEnd(signal);
+    this.cleanup();
+    if (signal.aborted) {
+      logger.info("[GameRunningState] 用户手动停止，流转到 EndState");
+      return new EndState();
+    } else if (isGameEnded) {
+      logger.info("[GameRunningState] 游戏结束，流转到 LobbyState 开始下一局");
+      return new LobbyState();
+    } else {
+      logger.warn("[GameRunningState] 异常退出，流转到 LobbyState");
+      return new LobbyState();
+    }
+  }
+  /**
+   * 等待游戏结束
+   * @param signal AbortSignal 用于取消等待
+   * @returns true 表示游戏正常结束，false 表示被中断
+   * 
+   * @description 监听 GAMEFLOW_PHASE 事件：
+   * - phase === "InProgress"：游戏进行中，继续等待
+   * - phase !== "InProgress"：游戏结束（可能是 "EndOfGame"、"Lobby" 等）
+   */
+  waitForGameToEnd(signal) {
+    return new Promise((resolve) => {
+      let stopCheckInterval = null;
+      let isResolved = false;
+      const safeResolve = (value) => {
+        if (isResolved) return;
+        isResolved = true;
+        cleanup();
+        resolve(value);
+      };
+      const cleanup = () => {
+        this.lcuManager?.off(LcuEventUri.GAMEFLOW_PHASE, onGameflowPhase);
+        signal.removeEventListener("abort", onAbort);
+        if (stopCheckInterval) {
+          clearInterval(stopCheckInterval);
+          stopCheckInterval = null;
+        }
+      };
+      const onAbort = () => {
+        logger.info("[GameRunningState] 收到取消信号，停止等待");
+        safeResolve(false);
+      };
+      const onGameflowPhase = (eventData) => {
+        const phase = eventData.data?.phase;
+        logger.info(`[GameRunningState] 监听到游戏阶段: ${phase}`);
+        if (phase && phase !== "InProgress") {
+          logger.info(`[GameRunningState] 游戏结束，phase: ${phase}`);
+          safeResolve(true);
+        }
+      };
+      signal.addEventListener("abort", onAbort, { once: true });
+      this.lcuManager?.on(LcuEventUri.GAMEFLOW_PHASE, onGameflowPhase);
+      stopCheckInterval = setInterval(() => {
+        if (signal.aborted) {
+          safeResolve(false);
+        }
+      }, ABORT_CHECK_INTERVAL_MS$1);
+    });
+  }
+  /**
+   * 清理资源
+   * @description 游戏结束时调用，停止 Monitor 并重置相关服务
+   */
+  cleanup() {
+    gameStageMonitor.stop();
+    gameStageMonitor.reset();
+    logger.info("[GameRunningState] GameStageMonitor 已停止并重置");
+    strategyService.reset();
+    logger.info("[GameRunningState] StrategyService 已重置");
+    gameStateManager.reset();
+    logger.info("[GameRunningState] GameStateManager 已重置");
+  }
+}
 const IN_GAME_API_PORT = 2999;
 const REQUEST_TIMEOUT_MS = 1e3;
 const inGameApi = axios.create({
@@ -12320,7 +12656,7 @@ class GameLoadingState {
   /**
    * 执行游戏加载状态逻辑
    * @param signal AbortSignal 用于取消等待
-   * @returns 下一个状态 (GameStageState 或 EndState)
+   * @returns 下一个状态 (GameRunningState 或 EndState)
    */
   async action(signal) {
     signal.throwIfAborted();
@@ -12328,7 +12664,7 @@ class GameLoadingState {
     const isGameLoaded = await this.waitForGameToLoad(signal);
     if (isGameLoaded) {
       logger.info("[GameLoadingState] 对局已开始！");
-      return new GameStageState();
+      return new GameRunningState();
     } else {
       logger.info("[GameLoadingState] 加载被中断");
       return new EndState();
@@ -12715,12 +13051,6 @@ function init() {
     lcuManager.start();
     lcuManager.on("connect", async () => {
       win?.webContents.send(IpcChannel.LCU_CONNECT);
-      try {
-        const summoner = await lcuManager.request("GET", "/lol-summoner/v1/current-summoner");
-        console.log("召唤师信息:", summoner);
-      } catch (e) {
-        console.error("请求召唤师信息失败:", e);
-      }
     });
     lcuManager.on("disconnect", () => {
       console.log("LCUManager 已断开");
@@ -12730,6 +13060,10 @@ function init() {
     });
     lcuManager.on("lcu-event", (event) => {
       console.log("收到LCU事件:", event.uri, event.eventType);
+    });
+    lcuManager.on(LcuEventUri.GAMEFLOW_PHASE, (eventData) => {
+      const phase = eventData.data?.phase;
+      logger.info(`🎮 [DEBUG-GAMEFLOW] 游戏阶段变化: phase = "${phase}"`);
     });
   });
   connector.on("disconnect", () => {
