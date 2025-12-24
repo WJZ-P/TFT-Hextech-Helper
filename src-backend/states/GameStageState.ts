@@ -21,6 +21,10 @@ const STAGE_CHECK_INTERVAL_MS = 1000;
  * 策略服务初始化时机：
  * - 在 GameStageState 首次执行时初始化策略服务
  * - 这样可以确保游戏已经开始，棋子信息可以被正确读取
+ * 
+ * 设计原则：
+ * - State 保持无状态（stateless），只负责传递信息
+ * - 阶段去重等决策逻辑由 StrategyService 处理
  */
 export class GameStageState implements IState {
     /** 状态名称 */
@@ -50,20 +54,20 @@ export class GameStageState implements IState {
             GameStageState.isStrategyInitialized = true;
         }
 
-        const currentGameStage = await tftOperator.getGameStage();
+        const stageResult = await tftOperator.getGameStage();
 
-        // 将具体逻辑委托给 StrategyService
-        if (currentGameStage !== GameStageType.UNKNOWN) {
-            await strategyService.executeStrategy(currentGameStage);
+        // 将具体逻辑委托给 StrategyService（阶段去重由 StrategyService 内部处理）
+        if (stageResult.type !== GameStageType.UNKNOWN) {
+            await strategyService.executeStrategy(stageResult);
         } else {
             // 识别不到，可能是在加载中或被遮挡，保持当前状态重试
-            logger.debug("[GameStageState] 未知阶段，等待中...");
+            logger.debug("[GameStageState] 未知阶段，稍后重试...");
         }
 
         // 降低频率，避免高频 OCR 占用 CPU
         await sleep(STAGE_CHECK_INTERVAL_MS);
 
-        // 暂时保持在这个状态循环，直到实现子状态
+        // 状态循环
         return this;
     }
     

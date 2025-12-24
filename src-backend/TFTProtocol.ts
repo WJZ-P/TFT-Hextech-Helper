@@ -5,13 +5,24 @@
  * 这里的分类决定了我们的 AI 应该采取什么策略
  */
 export enum GameStageType {
-    PVE = 'PVE',             // 打野怪/小兵 (Stage 1 全阶段, 以及 x-7)
+    EARLY_PVE = 'EARLY_PVE', // 早期 PVE (1-1, 1-2)，什么都不用做
+    PVE = 'PVE',             // 打野怪/小兵 (1-3, 1-4, 以及 x-7)
     CAROUSEL = 'CAROUSEL',   // 选秀环节 (x-4)
     AUGMENT = 'AUGMENT',     // 海克斯强化选择环节 (2-1, 3-2, 4-2)
     PVP = 'PVP',             // 正常的玩家对战 (其他回合)
     UNKNOWN = 'UNKNOWN'      // 无法识别或不在游戏内
 }
 
+/**
+ * 游戏阶段识别结果
+ * @description getGameStage() 的返回类型，包含阶段类型和原始文本
+ */
+export interface GameStageResult {
+    /** 阶段类型枚举 */
+    type: GameStageType;
+    /** 原始阶段文本 (如 "2-1", "3-5")，识别失败时为空字符串 */
+    stageText: string;
+}
 
 export enum TFTMode {
     CLASSIC = 'CLASSIC',    //  经典模式，包括匹配和排位。
@@ -408,6 +419,12 @@ export const gameStageDisplayTheClockworkTrails = {
     rightBottom: { x: 366, y: 22 }
 }
 
+//  "战斗环节"四字region（用来判断是否停止操作）
+//  TODO: 数据还没填充，需要实际测量确认坐标
+export const combatPhaseTextRegion = {
+    leftTop: { x: 0, y: 0 },
+    rightBottom: { x: 0, y: 0 }
+}
 
 //  棋子类型接口
 export interface TFTUnit {

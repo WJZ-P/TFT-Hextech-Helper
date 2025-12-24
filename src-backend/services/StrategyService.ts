@@ -2,34 +2,12 @@
  * 策略服务
  * @module StrategyService
  * @description 负责游戏内的决策逻辑，如选牌、站位、装备合成等 "大脑" 工作
+ *              状态数据统一由 GameStateManager 管理，本服务专注于决策逻辑
  */
-import { tftOperator, BenchUnit, BoardUnit, IdentifiedEquip } from "../TftOperator";
+import { tftOperator } from "../TftOperator";
 import { logger } from "../utils/Logger";
-import { TFTUnit, GameStageType } from "../TFTProtocol";
-
-/**
- * 游戏状态快照
- * @description 缓存当前阶段扫描到的游戏数据，避免重复扫描
- */
-interface GameStateSnapshot {
-    /** 备战席棋子 (9 个槽位) */
-    benchUnits: (BenchUnit | null)[];
-    /** 棋盘棋子 (28 个槽位: 4行 x 7列) */
-    boardUnits: (BoardUnit | null)[];
-    /** 商店棋子 (5 个槽位) */
-    shopUnits: (TFTUnit | null)[];
-    /** 装备栏装备 */
-    equipments: IdentifiedEquip[];
-    /** 当前等级 */
-    level: number;
-    /** 当前经验值 */
-    currentXp: number;
-    /** 升级所需经验值 */
-    totalXp: number;
-    /** 快照时间戳 */
-    timestamp: number;
-    // TODO: 金币识别接口实现后添加 gold 字段
-}
+import { TFTUnit, GameStageType, GameStageResult } from "../TFTProtocol";
+import { gameStateManager } from "./GameStateManager";
 import { settingsStore } from "../utils/SettingsStore";
 import { lineupLoader } from "../lineup";
 import { LineupConfig, StageConfig, ChampionConfig } from "../lineup/LineupTypes";
@@ -81,17 +59,11 @@ export class StrategyService {
     /** 阵容选择状态 */
     private selectionState: LineupSelectionState = LineupSelectionState.NOT_INITIALIZED;
     
-    /** 当前人口等级，默认是从一级开始 */
-    private currentLevel: number = 1;
-    
     /** 当前阶段的目标棋子名称列表（缓存，避免重复计算） */
     private targetChampionNames: Set<string> = new Set();
     
-    /** 是否已经经历过第一个 PVP 阶段（用于触发阵容匹配） */
-    private hasFirstPvpOccurred: boolean = false;
-    
-    /** 当前阶段的游戏状态快照（每个阶段开始时刷新一次） */
-    private stageSnapshot: GameStateSnapshot | null = null;
+    /** 当前阶段文本（如 "2-1"），用于判断是否进入新阶段 */
+    private currentStageText: string = "";
 
     private constructor() {}
 
@@ -143,7 +115,10 @@ export class StrategyService {
             return false;
         }
         
-        // 3. 根据阵容数量决定状态
+        // 3. 标记游戏开始（在 GameStateManager 中记录）
+        gameStateManager.startGame();
+        
+        // 4. 根据阵容数量决定状态
         if (lineups.length === 1) {
             // 单阵容：直接锁定
             this.currentLineup = lineups[0];
@@ -188,9 +163,10 @@ export class StrategyService {
 
     /**
      * 获取当前人口等级
+     * @description 从 GameStateManager 获取
      */
     public getCurrentLevel(): number {
-        return this.currentLevel;
+        return gameStateManager.getLevel();
     }
 
     /**
@@ -203,8 +179,6 @@ export class StrategyService {
             this.targetChampionNames.clear();
             return;
         }
-        
-        this.currentLevel = level;
         
         // 获取对应等级的阶段配置
         const stageConfig = this.getStageConfigForLevel(level);
@@ -276,9 +250,18 @@ export class StrategyService {
 
     /**
      * 执行当前阶段的策略逻辑
-     * @param stage 当前游戏阶段
+     * @param stageResult 当前游戏阶段结果（包含类型和原始文本）
      */
-    public async executeStrategy(stage: GameStageType) {
+    public async executeStrategy(stageResult: GameStageResult) {
+        const { type: stage, stageText } = stageResult;
+        
+        // 判断是否为新阶段（阶段文本变化）
+        const isNewStage = this.isNewStage(stageText);
+        if (isNewStage) {
+            logger.info(`[StrategyService] 进入新阶段: ${stageText}`);
+            this.currentStageText = stageText;
+        }
+        
         // 确保已初始化
         if (this.selectionState === LineupSelectionState.NOT_INITIALIZED) {
             const success = this.initialize();
@@ -290,10 +273,9 @@ export class StrategyService {
         
         // 如果是 PVP 阶段且阵容尚未锁定，尝试进行阵容匹配
         if (stage === GameStageType.PVP && this.selectionState === LineupSelectionState.PENDING) {
-            if (!this.hasFirstPvpOccurred) {
+            if (!gameStateManager.hasFirstPvpOccurred()) {
                 logger.info("[StrategyService] 检测到第一个 PVP 阶段，开始阵容匹配...");
                 await this.matchAndLockLineup();
-                this.hasFirstPvpOccurred = true;
             }
         }
         
@@ -315,6 +297,10 @@ export class StrategyService {
         await this.refreshCurrentLevel();
         
         switch (stage) {
+            case GameStageType.EARLY_PVE:
+                // 1-1, 1-2 阶段：喝杯奶茶等开局就好啦~
+                logger.debug("[StrategyService] 早期阶段 (1-1/1-2)，先休息一下喵~");
+                break;
             case GameStageType.PVE:
                 await this.handlePve();
                 break;
@@ -333,11 +319,20 @@ export class StrategyService {
                 break;
         }
     }
+    
+    /**
+     * 判断是否进入了新阶段
+     * @param stageText 当前阶段文本（如 "2-1"）
+     * @returns true 表示是新阶段，false 表示是重复进入的同一阶段
+     */
+    public isNewStage(stageText: string): boolean {
+        return stageText !== this.currentStageText;
+    }
 
     /**
      * 根据当前棋子匹配并锁定最合适的阵容
-     * @description 获取备战席、棋盘和商店的棋子，计算与各候选阵容 level4 的匹配度，
-     *              选择匹配度最高的阵容并锁定
+     * @description 使用 GameStateManager 获取备战席、棋盘和商店的棋子，
+     *              计算与各候选阵容 level4 的匹配度，选择匹配度最高的阵容并锁定
      * 
      * 匹配优先级：
      * 1. 匹配分数（匹配到的棋子数量）最高
@@ -349,32 +344,9 @@ export class StrategyService {
             return;
         }
         
-        // 1. 获取当前拥有的所有棋子名称（备战席 + 棋盘 + 商店）
-        const currentChampions = new Set<string>();
-        
-        // 1.1 获取备战席棋子
-        const benchUnits = await tftOperator.getBenchInfo();
-        for (const unit of benchUnits) {
-            if (unit && unit.tftUnit) {
-                currentChampions.add(unit.tftUnit.displayName);
-            }
-        }
-        
-        // 1.2 获取棋盘上的棋子（之前漏掉了这部分！）
-        const boardUnits = await tftOperator.getFightBoardInfo();
-        for (const unit of boardUnits) {
-            if (unit && unit.tftUnit) {
-                currentChampions.add(unit.tftUnit.displayName);
-            }
-        }
-        
-        // 1.3 获取商店棋子
-        const shopUnits = await tftOperator.getShopInfo();
-        for (const unit of shopUnits) {
-            if (unit) {
-                currentChampions.add(unit.displayName);
-            }
-        }
+        // 1. 刷新快照并获取所有可见棋子名称（备战席 + 棋盘 + 商店）
+        await gameStateManager.refreshSnapshot();
+        const currentChampions = gameStateManager.getAllVisibleChampionNames();
         
         if (currentChampions.size === 0) {
             logger.warn("[StrategyService] 未检测到任何棋子，使用第一个候选阵容");
@@ -469,95 +441,31 @@ export class StrategyService {
         this.selectionState = LineupSelectionState.LOCKED;
         this.candidateLineups = []; // 清空候选列表
         
-        // 初始化目标棋子列表
-        this.updateTargetChampions(this.currentLevel);
+        // 初始化目标棋子列表（使用 GameStateManager 的等级）
+        this.updateTargetChampions(gameStateManager.getLevel());
         
         logger.info(`[StrategyService] 阵容已锁定: ${lineup.name} (${lineup.id})`);
     }
 
     /**
      * 刷新当前人口等级
-     * @description 通过 OCR 识别当前人口，并更新目标棋子列表
+     * @description 从 GameStateManager 获取最新等级，并更新目标棋子列表
      */
     private async refreshCurrentLevel(): Promise<void> {
-        const levelInfo = await tftOperator.getLevelInfo();
+        // 确保快照已刷新（会自动更新 GameStateManager 中的等级）
+        await gameStateManager.getSnapshot();
         
-        if (levelInfo && levelInfo.level !== this.currentLevel) {
-            logger.info(`[StrategyService] 人口变化: ${this.currentLevel} -> ${levelInfo.level}`);
-            this.updateTargetChampions(levelInfo.level);
+        const currentLevel = gameStateManager.getLevel();
+        const stageConfig = this.getStageConfigForLevel(currentLevel);
+        
+        // 检查是否需要更新目标棋子
+        if (stageConfig) {
+            const newTargets = new Set(stageConfig.champions.map(c => c.name));
+            // 简单比较：如果目标棋子数量不同，说明需要更新
+            if (newTargets.size !== this.targetChampionNames.size) {
+                this.updateTargetChampions(currentLevel);
+            }
         }
-    }
-
-    /**
-     * 刷新当前阶段的游戏状态快照
-     * @description 扫描备战席、棋盘、商店、装备栏等，缓存到 stageSnapshot
-     *              每个阶段开始时调用一次，后续决策直接读取缓存
-     * 
-     * 注意：getBenchInfo 和 getFightBoardInfo 需要操作鼠标（右键点击棋子），
-     *       所以这两个必须串行执行，不能并行！
-     */
-    public async refreshStageSnapshot(): Promise<GameStateSnapshot> {
-        logger.info("[StrategyService] 开始刷新游戏状态快照...");
-        
-        // 1. 先并行执行不需要鼠标操作的识别任务
-        //    - getShopInfo: 只需要截图 + OCR，不操作鼠标
-        //    - getEquipInfo: 只需要截图 + 模板匹配，不操作鼠标
-        //    - getLevelInfo: 只需要截图 + OCR，不操作鼠标
-        const [shopUnits, equipments, levelInfo] = await Promise.all([
-            tftOperator.getShopInfo(),
-            tftOperator.getEquipInfo(),
-            tftOperator.getLevelInfo(),
-        ]);
-        
-        // 2. 串行执行需要鼠标操作的识别任务
-        //    - getBenchInfo: 需要右键点击每个槽位
-        //    - getFightBoardInfo: 需要右键点击每个槽位
-        //    这两个不能并行，否则鼠标会乱跑！
-        const benchUnits = await tftOperator.getBenchInfo();
-        const boardUnits = await tftOperator.getFightBoardInfo();
-        
-        // 构建快照对象
-        this.stageSnapshot = {
-            benchUnits,
-            boardUnits,
-            shopUnits,
-            equipments,
-            level: levelInfo?.level ?? this.currentLevel,
-            currentXp: levelInfo?.currentXp ?? 0,
-            totalXp: levelInfo?.totalXp ?? 0,
-            timestamp: Date.now(),
-        };
-        
-        // 同步更新人口等级
-        if (levelInfo && levelInfo.level !== this.currentLevel) {
-            logger.info(`[StrategyService] 人口变化: ${this.currentLevel} -> ${levelInfo.level}`);
-            this.updateTargetChampions(levelInfo.level);
-        }
-        
-        // 统计日志
-        const benchCount = benchUnits.filter(u => u !== null).length;
-        const boardCount = boardUnits.filter(u => u !== null).length;
-        const shopCount = shopUnits.filter(u => u !== null).length;
-        
-        logger.info(
-            `[StrategyService] 快照刷新完成: ` +
-            `备战席 ${benchCount}/9, 棋盘 ${boardCount}/28, 商店 ${shopCount}/5, ` +
-            `装备 ${equipments.length} 件, 等级 Lv.${this.stageSnapshot.level}`
-        );
-        
-        return this.stageSnapshot;
-    }
-    
-    /**
-     * 获取当前阶段的游戏状态快照
-     * @description 如果快照不存在，会自动刷新
-     * @returns 游戏状态快照
-     */
-    public async getStageSnapshot(): Promise<GameStateSnapshot> {
-        if (!this.stageSnapshot) {
-            return this.refreshStageSnapshot();
-        }
-        return this.stageSnapshot;
     }
 
     /**
@@ -582,15 +490,9 @@ export class StrategyService {
     private async handleEarlyGame(): Promise<void> {
         logger.info("[StrategyService] 前期阶段：随机拿牌，优先升星...");
         
-        // 1. 获取当前备战席的棋子名称（用于判断是否能升星）
-        const benchUnits = await tftOperator.getBenchInfo();
-        const ownedChampionNames = new Set<string>();
-        
-        for (const unit of benchUnits) {
-            if (unit && unit.tftUnit) {
-                ownedChampionNames.add(unit.tftUnit.displayName);
-            }
-        }
+        // 1. 刷新快照并获取当前已有的棋子名称（用于判断是否能升星）
+        await gameStateManager.refreshSnapshot();
+        const ownedChampionNames = gameStateManager.getOwnedChampionNames();
         
         // 2. 获取所有候选阵容的 level4 目标棋子（合并去重）
         const candidateTargetNames = new Set<string>();
@@ -608,8 +510,8 @@ export class StrategyService {
             `候选目标 [${Array.from(candidateTargetNames).join(', ')}]`
         );
         
-        // 3. 获取商店信息并决策购买
-        const shopUnits = await tftOperator.getShopInfo();
+        // 3. 从快照获取商店信息并决策购买
+        const shopUnits = gameStateManager.getShopUnits();
         
         for (let i = 0; i < shopUnits.length; i++) {
             const unit = shopUnits[i];
@@ -725,7 +627,7 @@ export class StrategyService {
     public getTargetChampions(): ChampionConfig[] {
         if (!this.currentLineup) return [];
         
-        const stageConfig = this.getStageConfigForLevel(this.currentLevel);
+        const stageConfig = this.getStageConfigForLevel(gameStateManager.getLevel());
         return stageConfig?.champions ?? [];
     }
 
@@ -739,16 +641,19 @@ export class StrategyService {
 
     /**
      * 重置策略服务状态
-     * @description 在游戏结束或停止时调用，清理状态
+     * @description 在游戏结束或停止时调用，清理所有状态
+     *              会同时重置 GameStateManager
      */
     public reset(): void {
         this.currentLineup = null;
         this.candidateLineups = [];
         this.selectionState = LineupSelectionState.NOT_INITIALIZED;
-        this.currentLevel = 1; // 重置为 1 级（游戏开始时的初始等级）
         this.targetChampionNames.clear();
-        this.hasFirstPvpOccurred = false;
-        this.stageSnapshot = null; // 清理快照
+        this.currentStageText = ""; // 重置阶段文本
+        
+        // 同时重置 GameStateManager
+        gameStateManager.reset();
+        
         logger.info("[StrategyService] 策略服务已重置");
     }
 }

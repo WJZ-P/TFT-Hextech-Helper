@@ -33,6 +33,7 @@ import {
     gameStageDisplayNormal,
     gameStageDisplayStageOne,
     gameStageDisplayTheClockworkTrails,
+    GameStageResult,
     GameStageType,
     ItemForgeType,
     itemForgeTooltipRegion,
@@ -224,9 +225,9 @@ class TftOperator {
     /**
      * 获取当前游戏阶段
      * @description 通过 OCR 识别游戏阶段 (如 "2-1", "3-5")
-     * @returns 游戏阶段枚举
+     * @returns 游戏阶段结果，包含阶段类型和原始文本
      */
-    public async getGameStage(): Promise<GameStageType> {
+    public async getGameStage(): Promise<GameStageResult> {
         try {
             let stageText = "";
 
@@ -252,7 +253,8 @@ class TftOperator {
                 if (clockText && clockText.length > 2) {
                     this.tftMode = TFTMode.CLOCKWORK_TRAILS;
                     logger.info("[TftOperator] 识别为发条鸟试炼模式");
-                    return GameStageType.PVP;
+                    // 发条鸟模式没有标准阶段文本，用特殊标记
+                    return { type: GameStageType.PVP, stageText: "clockwork" };
                 }
             }
 
@@ -266,10 +268,10 @@ class TftOperator {
                 logger.warn(`[TftOperator] 无法识别当前阶段: "${stageText ?? "null"}"`);
             }
 
-            return stageType;
+            return { type: stageType, stageText: stageText || "" };
         } catch (e: any) {
             logger.error(`[TftOperator] 阶段识别异常: ${e.message}`);
-            return GameStageType.UNKNOWN;
+            return { type: GameStageType.UNKNOWN, stageText: "" };
         }
     }
 
