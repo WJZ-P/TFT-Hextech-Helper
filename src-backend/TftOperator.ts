@@ -809,7 +809,7 @@ class TftOperator {
      * 检测当前是否显示锻造器的浮窗，并识别锻造器类型
      * @description 锻造器右键后不会在固定位置显示详情，
      *              而是在鼠标点击位置附近弹出浮窗，需要用相对偏移量计算实际区域
-     *              支持识别：基础装备锻造器、成装锻造器
+     *              支持识别：基础装备锻造器、成装锻造器、神器装备锻造器、辅助装锻造器
      * @param clickPoint 右键点击的位置 (游戏内相对坐标)
      * @param slotIndex 备战席槽位索引 (1-9)，用于判断是否为边缘情况
      * @returns 锻造器类型 (NONE 表示不是锻造器)
@@ -855,10 +855,10 @@ class TftOperator {
         logger.debug(`[TftOperator] 锻造器浮窗 OCR 结果: "${cleanText}"`);
 
         // 判断锻造器类型
-        // 注意：成装锻造器的判断要放在基础装备锻造器之前，因为"成装"更具体
+        // 注意：判断顺序很重要，更具体的关键词要放在前面
         // 使用模糊匹配，因为 OCR 可能有误差
         
-        // 成装锻造器判断
+        // 1. 成装锻造器判断（"成装"是独特关键词）
         const isCompletedForge = cleanText.includes("成装锻造器") ||
                                  cleanText.includes("成装锻造") ||
                                  cleanText.includes("成装");
@@ -867,8 +867,28 @@ class TftOperator {
             logger.debug(`[TftOperator] 识别为成装锻造器`);
             return ItemForgeType.COMPLETED;
         }
+
+        // 2. 神器装备锻造器判断（"神器"是独特关键词）
+        const isArtifactForge = cleanText.includes("神器装备锻造器") ||
+                                cleanText.includes("神器装备") ||
+                                cleanText.includes("神器");
         
-        // 基础装备锻造器判断
+        if (isArtifactForge) {
+            logger.debug(`[TftOperator] 识别为神器装备锻造器`);
+            return ItemForgeType.ARTIFACT;
+        }
+
+        // 3. 辅助装锻造器判断（"辅助装"是独特关键词）
+        const isSupportForge = cleanText.includes("辅助装锻造器") ||
+                               cleanText.includes("辅助装锻造") ||
+                               cleanText.includes("辅助装");
+        
+        if (isSupportForge) {
+            logger.debug(`[TftOperator] 识别为辅助装锻造器`);
+            return ItemForgeType.SUPPORT;
+        }
+        
+        // 4. 基础装备锻造器判断（放最后，因为"锻造器"是通用关键词）
         const isBasicForge = cleanText.includes("基础装备锻造器") ||
                             cleanText.includes("基础装备") ||
                             cleanText.includes("锻造器");
@@ -889,6 +909,69 @@ class TftOperator {
         return ItemForgeType.NONE;
     }
 
+    /**
+     * 识别锻造器选择界面中的装备类型
+     * @description 当玩家点击锻造器后，会弹出装备选择界面。
+     *              此方法用于识别选择界面中各个槽位的装备。
+     * 
+     * 界面布局说明：
+     * - 成装锻造器：5 选 1（5 个装备槽位）
+     * - 其他锻造器（基础/神器/辅助）：4 选 1（4 个装备槽位）
+     * 
+     * @param slotNum 装备槽位数量，默认为 4（只有成装锻造器是 5）
+     * @returns 识别到的装备数组（TFTEquip 类型）
+     * 
+     * @example
+     * // 基础装备锻造器（4选1）
+     * const equips = await operator.identifyForgeEquipments(4);
+     * 
+     * // 成装锻造器（5选1）
+     * const equips = await operator.identifyForgeEquipments(5);
+     * 
+     * TODO: 实现装备识别逻辑
+     * 1. 根据 slotNum 计算各个装备槽位的 region
+     *    - 4 槽位和 5 槽位的布局不同，需要分别定义坐标
+     * 2. 截取每个槽位的图像
+     * 3. 使用 templateMatcher.matchEquip() 进行模板匹配
+     * 4. 返回识别结果数组
+     */
+    public async identifyForgeEquipments(slotNum: number = 4): Promise<TFTEquip[]> {
+        this.ensureInitialized();
+
+        logger.info(`[TftOperator] 识别锻造器装备选择界面 (${slotNum} 槽位)...`);
+
+        // TODO: 定义锻造器选择界面的装备槽位 region
+        // 需要在 TFTProtocol.ts 中添加对应的坐标定义：
+        // - forgeEquipSlotRegion4: 4 槽位布局的各个装备位置
+        // - forgeEquipSlotRegion5: 5 槽位布局的各个装备位置
+
+        // TODO: 根据 slotNum 选择对应的 region 配置
+        // const slotRegions = slotNum === 5 
+        //     ? forgeEquipSlotRegion5 
+        //     : forgeEquipSlotRegion4;
+
+        // TODO: 遍历各个槽位，截图并识别装备
+        // const equips: TFTEquip[] = [];
+        // for (const [slotKey, regionDef] of Object.entries(slotRegions)) {
+        //     const targetRegion = screenCapture.toAbsoluteRegion(regionDef);
+        //     const targetMat = await screenCapture.captureRegionAsMat(targetRegion);
+        //     const matchResult = templateMatcher.matchEquip(targetMat);
+        //     
+        //     if (matchResult && matchResult.name !== "空槽位") {
+        //         equips.push({
+        //             name: matchResult.name,
+        //             englishName: matchResult.englishName,
+        //             equipId: matchResult.equipId,
+        //             formula: matchResult.formula,
+        //         });
+        //     }
+        //     targetMat.delete();
+        // }
+        // return equips;
+
+        logger.warn(`[TftOperator] identifyForgeEquipments() 尚未实现`);
+        return [];
+    }
 
     /**
      * 获取游戏阶段显示区域

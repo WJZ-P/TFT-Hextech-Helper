@@ -33,14 +33,14 @@ export enum TFTMode {
 
 //  左下角等级region
 export const levelRegion = {
-    leftTop: { x: 25, y: 625 },
-    rightBottom: { x: 145, y: 645 }
+    leftTop: {x: 25, y: 625},
+    rightBottom: {x: 145, y: 645}
 }
 
 //  战利品掉落region，可能的掉落区域
 export const lootRegion = {
-    leftTop: { x: 200, y: 125 },
-    rightBottom: { x: 855, y: 585 }
+    leftTop: {x: 200, y: 125},
+    rightBottom: {x: 855, y: 585}
 }
 
 //  英雄购买槽坐标
@@ -51,57 +51,57 @@ export interface SimplePoint {
 
 //  持有金币region
 export const coinRegion = {
-    leftTop: { x: 505, y: 626 },
-    rightBottom: { x: 545, y: 642 }
+    leftTop: {x: 505, y: 626},
+    rightBottom: {x: 545, y: 642}
 }
 
 export const shopSlot = {
-    SHOP_SLOT_1: { x: 240, y: 700 },
-    SHOP_SLOT_2: { x: 380, y: 700 },
-    SHOP_SLOT_3: { x: 520, y: 700 },
-    SHOP_SLOT_4: { x: 660, y: 700 },
-    SHOP_SLOT_5: { x: 800, y: 700 },
+    SHOP_SLOT_1: {x: 240, y: 700},
+    SHOP_SLOT_2: {x: 380, y: 700},
+    SHOP_SLOT_3: {x: 520, y: 700},
+    SHOP_SLOT_4: {x: 660, y: 700},
+    SHOP_SLOT_5: {x: 800, y: 700},
 }
 //  英雄购买槽英雄名字Region
 export const shopSlotNameRegions = {
     SLOT_1: {   // width: 108 height:18
-        leftTop: { x: 173, y: 740 },
-        rightBottom: { x: 281, y: 758 }
+        leftTop: {x: 173, y: 740},
+        rightBottom: {x: 281, y: 758}
     },
     SLOT_2: {
-        leftTop: { x: 315, y: 740 },
-        rightBottom: { x: 423, y: 758 }
+        leftTop: {x: 315, y: 740},
+        rightBottom: {x: 423, y: 758}
     },
     SLOT_3: {
-        leftTop: { x: 459, y: 740 },
-        rightBottom: { x: 567, y: 758 }
+        leftTop: {x: 459, y: 740},
+        rightBottom: {x: 567, y: 758}
     },
     SLOT_4: {
-        leftTop: { x: 602, y: 740 },
-        rightBottom: { x: 710, y: 758 }
+        leftTop: {x: 602, y: 740},
+        rightBottom: {x: 710, y: 758}
     },
     SLOT_5: {
-        leftTop: { x: 746, y: 740 },
-        rightBottom: { x: 854, y: 758 }
+        leftTop: {x: 746, y: 740},
+        rightBottom: {x: 854, y: 758}
     },
 }
 //  选中英雄时，右侧英雄详情的英雄idregion，必须分毫不差以复用商店英雄名称模板！
 export const detailChampionNameRegion = {
-    leftTop: { x: 870, y: 226 },
-    rightBottom: { x: 978, y: 244 },
+    leftTop: {x: 870, y: 226},
+    rightBottom: {x: 978, y: 244},
 }
 export const detailEquipRegion = {
     SLOT_1: {
-        leftTop: { x: 881, y: 347 },
-        rightBottom: { x: 919, y: 385 },
+        leftTop: {x: 881, y: 347},
+        rightBottom: {x: 919, y: 385},
     },
     SLOT_2: {
-        leftTop: { x: 927, y: 347 },
-        rightBottom: { x: 965, y: 385 },
+        leftTop: {x: 927, y: 347},
+        rightBottom: {x: 965, y: 385},
     },
     SLOT_3: {
-        leftTop: { x: 973, y: 347 },
-        rightBottom: { x: 1011, y: 385 },
+        leftTop: {x: 973, y: 347},
+        rightBottom: {x: 1011, y: 385},
     },
 }
 
@@ -109,114 +109,114 @@ export const detailEquipRegion = {
 //  注意：X 和 Y 都是相对于鼠标右键点击位置的偏移量，不是屏幕绝对坐标！
 //  右键基础装备锻造器时，会以点击位置为左上角起点，在右下方弹出浮窗
 export const itemForgeTooltipRegion = {
-    leftTop: { x: 56, y: 7 },
-    rightBottom: { x: 176, y: 27 },
+    leftTop: {x: 56, y: 7},
+    rightBottom: {x: 176, y: 27},
 }
 //  基础装备锻造器浮窗名称区域（槽位 6-9 边缘情况使用）
 //  当槽位靠近屏幕右边缘时，浮窗会向左弹出，位置计算规则不同：
 //  - X 坐标：基于游戏窗口的绝对坐标（不依赖鼠标点击位置）
 //  - Y 坐标：基于鼠标点击位置的偏移量（仍需加上 clickPoint.y）
 export const itemForgeTooltipRegionEdge = {
-    leftTop: { x: 585, y: 7 },
-    rightBottom: { x: 695, y: 27 },
+    leftTop: {x: 585, y: 7},
+    rightBottom: {x: 695, y: 27},
 }
 //  选中英雄时，右侧查看英雄星级的
 export const detailChampionStarRegion = {
-    leftTop: { x: 919, y: 122 },
-    rightBottom: { x: 974, y: 132 }
+    leftTop: {x: 919, y: 122},
+    rightBottom: {x: 974, y: 132}
 }
 
 //  装备槽位坐标
 export const equipmentSlot = {
-    EQ_SLOT_1: { x: 20, y: 210 },//+35
-    EQ_SLOT_2: { x: 20, y: 245 },
-    EQ_SLOT_3: { x: 20, y: 280 },
-    EQ_SLOT_4: { x: 20, y: 315 },
-    EQ_SLOT_5: { x: 20, y: 350 },
-    EQ_SLOT_6: { x: 20, y: 385 },
-    EQ_SLOT_7: { x: 20, y: 430 },//   这里重置下准确位置
-    EQ_SLOT_8: { x: 20, y: 465 },
-    EQ_SLOT_9: { x: 20, y: 500 },
-    EQ_SLOT_10: { x: 20, y: 535 },
+    EQ_SLOT_1: {x: 20, y: 210},//+35
+    EQ_SLOT_2: {x: 20, y: 245},
+    EQ_SLOT_3: {x: 20, y: 280},
+    EQ_SLOT_4: {x: 20, y: 315},
+    EQ_SLOT_5: {x: 20, y: 350},
+    EQ_SLOT_6: {x: 20, y: 385},
+    EQ_SLOT_7: {x: 20, y: 430},//   这里重置下准确位置
+    EQ_SLOT_8: {x: 20, y: 465},
+    EQ_SLOT_9: {x: 20, y: 500},
+    EQ_SLOT_10: {x: 20, y: 535},
 }
 //  装备槽位具体区域
 export const equipmentRegion = {   //  宽24，高25
     SLOT_1: {                   //  y+=36
-        leftTop: { x: 9, y: 198 },
-        rightBottom: { x: 32, y: 222 }
+        leftTop: {x: 9, y: 198},
+        rightBottom: {x: 32, y: 222}
     },
     SLOT_2: {
-        leftTop: { x: 9, y: 234 },
-        rightBottom: { x: 32, y: 258 }
+        leftTop: {x: 9, y: 234},
+        rightBottom: {x: 32, y: 258}
     },
     SLOT_3: {
-        leftTop: { x: 9, y: 271 },
-        rightBottom: { x: 32, y: 295 }
+        leftTop: {x: 9, y: 271},
+        rightBottom: {x: 32, y: 295}
     },
     SLOT_4: {
-        leftTop: { x: 9, y: 307 },
-        rightBottom: { x: 32, y: 331 }
+        leftTop: {x: 9, y: 307},
+        rightBottom: {x: 32, y: 331}
     },
     SLOT_5: {
-        leftTop: { x: 9, y: 344 },
-        rightBottom: { x: 32, y: 368 }
+        leftTop: {x: 9, y: 344},
+        rightBottom: {x: 32, y: 368}
     },
     SLOT_6: {
-        leftTop: { x: 9, y: 380 },
-        rightBottom: { x: 32, y: 404 }
+        leftTop: {x: 9, y: 380},
+        rightBottom: {x: 32, y: 404}
     },
     SLOT_7: {
-        leftTop: { x: 9, y: 417 },
-        rightBottom: { x: 32, y: 441 }
+        leftTop: {x: 9, y: 417},
+        rightBottom: {x: 32, y: 441}
     },
     SLOT_8: {
-        leftTop: { x: 9, y: 453 },
-        rightBottom: { x: 32, y: 477 }
+        leftTop: {x: 9, y: 453},
+        rightBottom: {x: 32, y: 477}
     },
     SLOT_9: {
-        leftTop: { x: 9, y: 490 },
-        rightBottom: { x: 32, y: 514 }
+        leftTop: {x: 9, y: 490},
+        rightBottom: {x: 32, y: 514}
     },
     SLOT_10: {
-        leftTop: { x: 9, y: 526 },
-        rightBottom: { x: 32, y: 550 }
+        leftTop: {x: 9, y: 526},
+        rightBottom: {x: 32, y: 550}
     },
 }
 //  棋子在战场上的点位，用于鼠标点击选择英雄
 export const fightBoardSlotPoint = {
     // x+=80
     //  第一行的棋子位置
-    R1_C1: { x: 230, y: 315 },
-    R1_C2: { x: 310, y: 315 },
-    R1_C3: { x: 390, y: 315 },
-    R1_C4: { x: 470, y: 315 },
-    R1_C5: { x: 550, y: 315 },
-    R1_C6: { x: 630, y: 315 },
-    R1_C7: { x: 710, y: 315 },
+    R1_C1: {x: 230, y: 315},
+    R1_C2: {x: 310, y: 315},
+    R1_C3: {x: 390, y: 315},
+    R1_C4: {x: 470, y: 315},
+    R1_C5: {x: 550, y: 315},
+    R1_C6: {x: 630, y: 315},
+    R1_C7: {x: 710, y: 315},
     //  第二行的棋子位置        //  x+=85
-    R2_C1: { x: 260, y: 370 },
-    R2_C2: { x: 345, y: 370 },
-    R2_C3: { x: 430, y: 370 },
-    R2_C4: { x: 515, y: 370 },
-    R2_C5: { x: 600, y: 370 },
-    R2_C6: { x: 685, y: 370 },
-    R2_C7: { x: 770, y: 370 },
+    R2_C1: {x: 260, y: 370},
+    R2_C2: {x: 345, y: 370},
+    R2_C3: {x: 430, y: 370},
+    R2_C4: {x: 515, y: 370},
+    R2_C5: {x: 600, y: 370},
+    R2_C6: {x: 685, y: 370},
+    R2_C7: {x: 770, y: 370},
     //  第三行棋子的位置        //  x+=90
-    R3_C1: { x: 200, y: 420 },
-    R3_C2: { x: 290, y: 420 },
-    R3_C3: { x: 380, y: 420 },
-    R3_C4: { x: 470, y: 420 },
-    R3_C5: { x: 560, y: 420 },
-    R3_C6: { x: 650, y: 420 },
-    R3_C7: { x: 740, y: 420 },
+    R3_C1: {x: 200, y: 420},
+    R3_C2: {x: 290, y: 420},
+    R3_C3: {x: 380, y: 420},
+    R3_C4: {x: 470, y: 420},
+    R3_C5: {x: 560, y: 420},
+    R3_C6: {x: 650, y: 420},
+    R3_C7: {x: 740, y: 420},
     //  第四行棋子的位置        //  x+=90
-    R4_C1: { x: 240, y: 475 },
-    R4_C2: { x: 330, y: 475 },
-    R4_C3: { x: 420, y: 475 },
-    R4_C4: { x: 510, y: 475 },
-    R4_C5: { x: 600, y: 475 },
-    R4_C6: { x: 690, y: 475 },
-    R4_C7: { x: 780, y: 475 },
+    R4_C1: {x: 240, y: 475},
+    R4_C2: {x: 330, y: 475},
+    R4_C3: {x: 420, y: 475},
+    R4_C4: {x: 510, y: 475},
+    R4_C5: {x: 600, y: 475},
+    R4_C6: {x: 690, y: 475},
+    R4_C7: {x: 780, y: 475},
 }
 //  棋子在战场上的region，用来判断是否有棋子
 //  leftTop.y 使用 -10 偏移，兼容 3D 飞行棋子的高度
@@ -225,119 +225,119 @@ export const fightBoardSlotRegion = {
     // x+=80
     //  第一行的棋子位置
     R1_C1: {
-        leftTop: { x: 210 + 5, y: 300 - 10 },
-        rightBottom: { x: 255 - 5, y: 330 }
+        leftTop: {x: 210 + 5, y: 300 - 10},
+        rightBottom: {x: 255 - 5, y: 330}
     },
     R1_C2: {
-        leftTop: { x: 290 + 5, y: 300 - 10 },
-        rightBottom: { x: 340 - 5, y: 330 }
+        leftTop: {x: 290 + 5, y: 300 - 10},
+        rightBottom: {x: 340 - 5, y: 330}
     },
     R1_C3: {
-        leftTop: { x: 370 + 5, y: 300 - 10 },
-        rightBottom: { x: 420 - 5, y: 330 }
+        leftTop: {x: 370 + 5, y: 300 - 10},
+        rightBottom: {x: 420 - 5, y: 330}
     },
     R1_C4: {
-        leftTop: { x: 450 + 5, y: 300 - 10 },
-        rightBottom: { x: 500 - 5, y: 330 }
+        leftTop: {x: 450 + 5, y: 300 - 10},
+        rightBottom: {x: 500 - 5, y: 330}
     },
     R1_C5: {
-        leftTop: { x: 530 + 5, y: 300 - 10 },
-        rightBottom: { x: 585 - 5, y: 330 }
+        leftTop: {x: 530 + 5, y: 300 - 10},
+        rightBottom: {x: 585 - 5, y: 330}
     },
     R1_C6: {
-        leftTop: { x: 615 + 5, y: 300 - 10 },
-        rightBottom: { x: 665 - 5, y: 330 }
+        leftTop: {x: 615 + 5, y: 300 - 10},
+        rightBottom: {x: 665 - 5, y: 330}
     },
     R1_C7: {
-        leftTop: { x: 695 + 5, y: 300 - 10 },
-        rightBottom: { x: 750 - 5, y: 330 }
+        leftTop: {x: 695 + 5, y: 300 - 10},
+        rightBottom: {x: 750 - 5, y: 330}
     },
     //  第二行的棋子位置        //  x+=85
     R2_C1: {
-        leftTop: { x: 240 + 5, y: 350 - 10 },
-        rightBottom: { x: 285 - 5, y: 385 }
+        leftTop: {x: 240 + 5, y: 350 - 10},
+        rightBottom: {x: 285 - 5, y: 385}
     },
     R2_C2: {
-        leftTop: { x: 325 + 5, y: 350 - 10 },
-        rightBottom: { x: 370 - 5, y: 385 }
+        leftTop: {x: 325 + 5, y: 350 - 10},
+        rightBottom: {x: 370 - 5, y: 385}
     },
     R2_C3: {
-        leftTop: { x: 410 + 5, y: 350 - 10 },
-        rightBottom: { x: 455 - 5, y: 385 }
+        leftTop: {x: 410 + 5, y: 350 - 10},
+        rightBottom: {x: 455 - 5, y: 385}
     },
     R2_C4: {
-        leftTop: { x: 495 + 5, y: 350 - 10 },
-        rightBottom: { x: 540 - 5, y: 385 }
+        leftTop: {x: 495 + 5, y: 350 - 10},
+        rightBottom: {x: 540 - 5, y: 385}
     },
     R2_C5: {
-        leftTop: { x: 575 + 5, y: 350 - 10 },
-        rightBottom: { x: 625 - 5, y: 385 }
+        leftTop: {x: 575 + 5, y: 350 - 10},
+        rightBottom: {x: 625 - 5, y: 385}
     },
     R2_C6: {
-        leftTop: { x: 660 + 5, y: 350 - 10 },
-        rightBottom: { x: 710 - 5, y: 385 }
+        leftTop: {x: 660 + 5, y: 350 - 10},
+        rightBottom: {x: 710 - 5, y: 385}
     },
     R2_C7: {
-        leftTop: { x: 745 + 5, y: 350 - 10 },
-        rightBottom: { x: 795 - 5, y: 385 }
+        leftTop: {x: 745 + 5, y: 350 - 10},
+        rightBottom: {x: 795 - 5, y: 385}
     },
     //  第三行棋子的位置        //  x+=90
     R3_C1: {
-        leftTop: { x: 185 + 5, y: 405 - 10 },
-        rightBottom: { x: 230 - 5, y: 440 }
+        leftTop: {x: 185 + 5, y: 405 - 10},
+        rightBottom: {x: 230 - 5, y: 440}
     },
     R3_C2: {
-        leftTop: { x: 275 + 5, y: 405 - 10 },
-        rightBottom: { x: 320 - 5, y: 440 }
+        leftTop: {x: 275 + 5, y: 405 - 10},
+        rightBottom: {x: 320 - 5, y: 440}
     },
     R3_C3: {
-        leftTop: { x: 360 + 5, y: 405 - 10 },
-        rightBottom: { x: 410 - 5, y: 440 }
+        leftTop: {x: 360 + 5, y: 405 - 10},
+        rightBottom: {x: 410 - 5, y: 440}
     },
     R3_C4: {
-        leftTop: { x: 445 + 5, y: 405 - 10 },
-        rightBottom: { x: 495 - 5, y: 440 }
+        leftTop: {x: 445 + 5, y: 405 - 10},
+        rightBottom: {x: 495 - 5, y: 440}
     },
     R3_C5: {
-        leftTop: { x: 535 + 5, y: 405 - 10 },
-        rightBottom: { x: 585 - 5, y: 440 }
+        leftTop: {x: 535 + 5, y: 405 - 10},
+        rightBottom: {x: 585 - 5, y: 440}
     },
     R3_C6: {
-        leftTop: { x: 620 + 5, y: 405 - 10 },
-        rightBottom: { x: 675 - 5, y: 440 }
+        leftTop: {x: 620 + 5, y: 405 - 10},
+        rightBottom: {x: 675 - 5, y: 440}
     },
     R3_C7: {
-        leftTop: { x: 705 + 5, y: 405 - 10 },
-        rightBottom: { x: 760 - 5, y: 440 }
+        leftTop: {x: 705 + 5, y: 405 - 10},
+        rightBottom: {x: 760 - 5, y: 440}
     },
     //  第四行棋子的位置        //  x+=90
     R4_C1: {
-        leftTop: { x: 215 + 5, y: 465 - 10 },
-        rightBottom: { x: 265 - 5, y: 500 }
+        leftTop: {x: 215 + 5, y: 465 - 10},
+        rightBottom: {x: 265 - 5, y: 500}
     },
     R4_C2: {
-        leftTop: { x: 310 + 5, y: 465 - 10 },
-        rightBottom: { x: 355 - 5, y: 500 }
+        leftTop: {x: 310 + 5, y: 465 - 10},
+        rightBottom: {x: 355 - 5, y: 500}
     },
     R4_C3: {
-        leftTop: { x: 395 + 5, y: 465 - 10 },
-        rightBottom: { x: 450 - 5, y: 500 }
+        leftTop: {x: 395 + 5, y: 465 - 10},
+        rightBottom: {x: 450 - 5, y: 500}
     },
     R4_C4: {
-        leftTop: { x: 490 + 5, y: 465 - 10 },
-        rightBottom: { x: 540 - 5, y: 500 }
+        leftTop: {x: 490 + 5, y: 465 - 10},
+        rightBottom: {x: 540 - 5, y: 500}
     },
     R4_C5: {
-        leftTop: { x: 580 + 5, y: 465 - 10 },
-        rightBottom: { x: 635 - 5, y: 500 }
+        leftTop: {x: 580 + 5, y: 465 - 10},
+        rightBottom: {x: 635 - 5, y: 500}
     },
     R4_C6: {
-        leftTop: { x: 670 + 5, y: 465 - 10 },
-        rightBottom: { x: 725 - 5, y: 500 }
+        leftTop: {x: 670 + 5, y: 465 - 10},
+        rightBottom: {x: 725 - 5, y: 500}
     },
     R4_C7: {
-        leftTop: { x: 760 + 5, y: 465 - 10 },
-        rightBottom: { x: 815 - 5, y: 500 }
+        leftTop: {x: 760 + 5, y: 465 - 10},
+        rightBottom: {x: 815 - 5, y: 500}
     },
 }
 
@@ -346,84 +346,84 @@ export const fightBoardSlotRegion = {
 //  leftTop.x +5, rightBottom.x -5，避免宽体棋子占据邻居位置导致误判
 export const benchSlotRegion = {
     SLOT_1: {
-        leftTop: { x: 105 + 5, y: 530 - 15 },
-        rightBottom: { x: 155 - 5, y: 585 }
+        leftTop: {x: 105 + 5, y: 530 - 15},
+        rightBottom: {x: 155 - 5, y: 585}
     },
     SLOT_2: {
-        leftTop: { x: 190 + 5, y: 530 - 15 },
-        rightBottom: { x: 245 - 5, y: 585 }
+        leftTop: {x: 190 + 5, y: 530 - 15},
+        rightBottom: {x: 245 - 5, y: 585}
     },
     SLOT_3: {
-        leftTop: { x: 270 + 5, y: 530 - 15 },
-        rightBottom: { x: 325 - 5, y: 585 }
+        leftTop: {x: 270 + 5, y: 530 - 15},
+        rightBottom: {x: 325 - 5, y: 585}
     },
     SLOT_4: {
-        leftTop: { x: 355 + 5, y: 530 - 15 },
-        rightBottom: { x: 410 - 5, y: 585 }
+        leftTop: {x: 355 + 5, y: 530 - 15},
+        rightBottom: {x: 410 - 5, y: 585}
     },
     SLOT_5: {
-        leftTop: { x: 435 + 5, y: 530 - 15 },
-        rightBottom: { x: 495 - 5, y: 585 }
+        leftTop: {x: 435 + 5, y: 530 - 15},
+        rightBottom: {x: 495 - 5, y: 585}
     },
     SLOT_6: {
-        leftTop: { x: 520 + 5, y: 530 - 15 },
-        rightBottom: { x: 580 - 5, y: 585 }
+        leftTop: {x: 520 + 5, y: 530 - 15},
+        rightBottom: {x: 580 - 5, y: 585}
     },
     SLOT_7: {
-        leftTop: { x: 600 + 5, y: 530 - 15 },
-        rightBottom: { x: 665 - 5, y: 585 }
+        leftTop: {x: 600 + 5, y: 530 - 15},
+        rightBottom: {x: 665 - 5, y: 585}
     },
     SLOT_8: {
-        leftTop: { x: 680 + 5, y: 530 - 15 },
-        rightBottom: { x: 750 - 5, y: 585 }
+        leftTop: {x: 680 + 5, y: 530 - 15},
+        rightBottom: {x: 750 - 5, y: 585}
     },
     SLOT_9: {
-        leftTop: { x: 765 + 5, y: 530 - 15 },
-        rightBottom: { x: 830 - 5, y: 585 }
+        leftTop: {x: 765 + 5, y: 530 - 15},
+        rightBottom: {x: 830 - 5, y: 585}
     },
 }
 
 //  备战席点位
 export const benchSlotPoints = {
-    SLOT_1: { x: 135, y: 555 },
-    SLOT_2: { x: 210, y: 555 },
-    SLOT_3: { x: 295, y: 555 },
-    SLOT_4: { x: 385, y: 555 },
-    SLOT_5: { x: 465, y: 555 },
-    SLOT_6: { x: 550, y: 555 },
-    SLOT_7: { x: 630, y: 555 },
-    SLOT_8: { x: 720, y: 555 },
-    SLOT_9: { x: 800, y: 555 },
+    SLOT_1: {x: 135, y: 555},
+    SLOT_2: {x: 210, y: 555},
+    SLOT_3: {x: 295, y: 555},
+    SLOT_4: {x: 385, y: 555},
+    SLOT_5: {x: 465, y: 555},
+    SLOT_6: {x: 550, y: 555},
+    SLOT_7: {x: 630, y: 555},
+    SLOT_8: {x: 720, y: 555},
+    SLOT_9: {x: 800, y: 555},
 }
 //  海克斯选择槽位
 export const hexSlot = {   //  x+=295
-    SLOT_1: { x: 215, y: 410 },
-    SLOT_2: { x: 510, y: 410 },
-    SLOT_3: { x: 805, y: 410 },
+    SLOT_1: {x: 215, y: 410},
+    SLOT_2: {x: 510, y: 410},
+    SLOT_3: {x: 805, y: 410},
 }
 //  选秀站位，为离自己最近的棋子位置。
-export const sharedDraftPoint = { x: 530, y: 400 }
+export const sharedDraftPoint = {x: 530, y: 400}
 //  游戏战斗阶段展示坐标，第一阶段。因为第一阶段只有四个回合，跟其他阶段的不一样。
 export const gameStageDisplayStageOne = {
-    leftTop: { x: 411, y: 6 },
-    rightBottom: { x: 442, y: 22 }
+    leftTop: {x: 411, y: 6},
+    rightBottom: {x: 442, y: 22}
 }
 //  游戏战斗阶段展示坐标，从2-1开始。
 export const gameStageDisplayNormal = {
-    leftTop: { x: 374, y: 6 },
-    rightBottom: { x: 403, y: 22 }
+    leftTop: {x: 374, y: 6},
+    rightBottom: {x: 403, y: 22}
 }
 //  发条鸟的战斗阶段，布局跟其他的都不一样，因为发条鸟一个大阶段有10场
 export const gameStageDisplayTheClockworkTrails = {
-    leftTop: { x: 337, y: 6 },
-    rightBottom: { x: 366, y: 22 }
+    leftTop: {x: 337, y: 6},
+    rightBottom: {x: 366, y: 22}
 }
 
 //  "战斗环节"四字region（用来判断是否停止操作）
 //  TODO: 数据还没填充，需要实际测量确认坐标
 export const combatPhaseTextRegion = {
-    leftTop: { x: 465, y: 110 },
-    rightBottom: { x: 560, y: 135 }
+    leftTop: {x: 465, y: 110},
+    rightBottom: {x: 560, y: 135}
 }
 
 //  棋子类型接口
@@ -521,64 +521,72 @@ export interface TraitData {
 // S16 羁绊详细数据 Map (key 为中文名)
 export const TFT_16_TRAIT_DATA: Record<string, TraitData> = {
     // === Origins (Race) ===
-    "铸星龙王": { id: "10216", name: "铸星龙王", type: "origins", levels: [1] },
-    "纳什男爵": { id: "10217", name: "纳什男爵", type: "origins", levels: [1] },
-    "比尔吉沃特": { id: "10218", name: "比尔吉沃特", type: "origins", levels: [3, 5, 7, 10] },
-    "山隐之焰": { id: "10219", name: "山隐之焰", type: "origins", levels: [1] },
-    "星界游神": { id: "10221", name: "星界游神", type: "origins", levels: [1] },
-    "时光守护者": { id: "10222", name: "时光守护者", type: "origins", levels: [1] },
-    "黑暗之女": { id: "10223", name: "黑暗之女", type: "origins", levels: [1] },
-    "暗裔": { id: "10224", name: "暗裔", type: "origins", levels: [1, 2, 3] },
-    "德玛西亚": { id: "10226", name: "德玛西亚", type: "origins", levels: [3, 5, 7, 11] },
-    "沙漠皇帝": { id: "10227", name: "沙漠皇帝", type: "origins", levels: [1] },
-    "以绪塔尔": { id: "10228", name: "以绪塔尔", type: "origins", levels: [3, 5, 7] },
-    "弗雷尔卓德": { id: "10229", name: "弗雷尔卓德", type: "origins", levels: [3, 5, 7] },
-    "河流之王": { id: "10230", name: "河流之王", type: "origins", levels: [1] },
-    "远古恐惧": { id: "10232", name: "远古恐惧", type: "origins", levels: [1] },
-    "正义巨像": { id: "10233", name: "正义巨像", type: "origins", levels: [1] },
-    "海克斯机甲": { id: "10234", name: "海克斯机甲", type: "origins", levels: [1] },
-    "狂野女猎手": { id: "10235", name: "狂野女猎手", type: "origins", levels: [1] },
-    "艾欧尼亚": { id: "10237", name: "艾欧尼亚", type: "origins", levels: [3, 5, 7] },
-    "虚空之女": { id: "10239", name: "虚空之女", type: "origins", levels: [1] },
-    "永猎双子": { id: "10240", name: "永猎双子", type: "origins", levels: [1] },
-    "诺克萨斯": { id: "10243", name: "诺克萨斯", type: "origins", levels: [3, 5, 7, 10] },
-    "皮尔特沃夫": { id: "10244", name: "皮尔特沃夫", type: "origins", levels: [2, 4, 6] },
-    "符文法师": { id: "10246", name: "符文法师", type: "origins", levels: [1] },
-    "暗影岛": { id: "10247", name: "暗影岛", type: "origins", levels: [2, 3, 4, 5] },
-    "恕瑞玛": { id: "10248", name: "恕瑞玛", type: "origins", levels: [2, 3, 4] },
-    "龙血武姬": { id: "10249", name: "龙血武姬", type: "origins", levels: [1] },
-    "系魂圣枪": { id: "10252", name: "系魂圣枪", type: "origins", levels: [1] },
-    "解脱者": { id: "10253", name: "解脱者", type: "origins", levels: [1] },
-    "巨神峰": { id: "10254", name: "巨神峰", type: "origins", levels: [1, 2, 3, 4, 5, 6] },
-    "巨龙卫士": { id: "10255", name: "巨龙卫士", type: "origins", levels: [2] },
-    "光明哨兵": { id: "10256", name: "光明哨兵", type: "origins", levels: [2] },
-    "绝命毒师": { id: "10257", name: "绝命毒师", type: "origins", levels: [2] },
-    "腕豪": { id: "10258", name: "腕豪", type: "origins", levels: [1] },
-    "虚空": { id: "10260", name: "虚空", type: "origins", levels: [2, 4, 6, 9] },
-    "远古巫灵": { id: "10262", name: "远古巫灵", type: "origins", levels: [1] },
-    "约德尔人": { id: "10263", name: "约德尔人", type: "origins", levels: [2, 4, 6, 8] },
-    "不落魔锋": { id: "10264", name: "不落魔锋", type: "origins", levels: [1] },
-    "祖安": { id: "10265", name: "祖安", type: "origins", levels: [3, 5, 7] },
-    "与狼共舞": { id: "10266", name: "与狼共舞", type: "origins", levels: [2] },
+    "铸星龙王": {id: "10216", name: "铸星龙王", type: "origins", levels: [1]},
+    "纳什男爵": {id: "10217", name: "纳什男爵", type: "origins", levels: [1]},
+    "比尔吉沃特": {id: "10218", name: "比尔吉沃特", type: "origins", levels: [3, 5, 7, 10]},
+    "山隐之焰": {id: "10219", name: "山隐之焰", type: "origins", levels: [1]},
+    "星界游神": {id: "10221", name: "星界游神", type: "origins", levels: [1]},
+    "时光守护者": {id: "10222", name: "时光守护者", type: "origins", levels: [1]},
+    "黑暗之女": {id: "10223", name: "黑暗之女", type: "origins", levels: [1]},
+    "暗裔": {id: "10224", name: "暗裔", type: "origins", levels: [1, 2, 3]},
+    "德玛西亚": {id: "10226", name: "德玛西亚", type: "origins", levels: [3, 5, 7, 11]},
+    "沙漠皇帝": {id: "10227", name: "沙漠皇帝", type: "origins", levels: [1]},
+    "以绪塔尔": {id: "10228", name: "以绪塔尔", type: "origins", levels: [3, 5, 7]},
+    "弗雷尔卓德": {id: "10229", name: "弗雷尔卓德", type: "origins", levels: [3, 5, 7]},
+    "河流之王": {id: "10230", name: "河流之王", type: "origins", levels: [1]},
+    "远古恐惧": {id: "10232", name: "远古恐惧", type: "origins", levels: [1]},
+    "正义巨像": {id: "10233", name: "正义巨像", type: "origins", levels: [1]},
+    "海克斯机甲": {id: "10234", name: "海克斯机甲", type: "origins", levels: [1]},
+    "狂野女猎手": {id: "10235", name: "狂野女猎手", type: "origins", levels: [1]},
+    "艾欧尼亚": {id: "10237", name: "艾欧尼亚", type: "origins", levels: [3, 5, 7]},
+    "虚空之女": {id: "10239", name: "虚空之女", type: "origins", levels: [1]},
+    "永猎双子": {id: "10240", name: "永猎双子", type: "origins", levels: [1]},
+    "诺克萨斯": {id: "10243", name: "诺克萨斯", type: "origins", levels: [3, 5, 7, 10]},
+    "皮尔特沃夫": {id: "10244", name: "皮尔特沃夫", type: "origins", levels: [2, 4, 6]},
+    "符文法师": {id: "10246", name: "符文法师", type: "origins", levels: [1]},
+    "暗影岛": {id: "10247", name: "暗影岛", type: "origins", levels: [2, 3, 4, 5]},
+    "恕瑞玛": {id: "10248", name: "恕瑞玛", type: "origins", levels: [2, 3, 4]},
+    "龙血武姬": {id: "10249", name: "龙血武姬", type: "origins", levels: [1]},
+    "系魂圣枪": {id: "10252", name: "系魂圣枪", type: "origins", levels: [1]},
+    "解脱者": {id: "10253", name: "解脱者", type: "origins", levels: [1]},
+    "巨神峰": {id: "10254", name: "巨神峰", type: "origins", levels: [1, 2, 3, 4, 5, 6]},
+    "巨龙卫士": {id: "10255", name: "巨龙卫士", type: "origins", levels: [2]},
+    "光明哨兵": {id: "10256", name: "光明哨兵", type: "origins", levels: [2]},
+    "绝命毒师": {id: "10257", name: "绝命毒师", type: "origins", levels: [2]},
+    "腕豪": {id: "10258", name: "腕豪", type: "origins", levels: [1]},
+    "虚空": {id: "10260", name: "虚空", type: "origins", levels: [2, 4, 6, 9]},
+    "远古巫灵": {id: "10262", name: "远古巫灵", type: "origins", levels: [1]},
+    "约德尔人": {id: "10263", name: "约德尔人", type: "origins", levels: [2, 4, 6, 8]},
+    "不落魔锋": {id: "10264", name: "不落魔锋", type: "origins", levels: [1]},
+    "祖安": {id: "10265", name: "祖安", type: "origins", levels: [3, 5, 7]},
+    "与狼共舞": {id: "10266", name: "与狼共舞", type: "origins", levels: [2]},
 
     // === Classes (Job) ===
-    "斗士": { id: "10220", name: "斗士", type: "classes", levels: [2, 4, 6] },
-    "护卫": { id: "10225", name: "护卫", type: "classes", levels: [2, 4, 6] },
-    "枪手": { id: "10231", name: "枪手", type: "classes", levels: [2, 4] },
-    "神谕者": { id: "10236", name: "神谕者", type: "classes", levels: [2, 4] },
-    "主宰": { id: "10238", name: "主宰", type: "classes", levels: [2, 4, 6] },
-    "狙神": { id: "10241", name: "狙神", type: "classes", levels: [2, 3, 4, 5] },
-    "耀光使": { id: "10242", name: "耀光使", type: "classes", levels: [2, 4] },
-    "迅击战士": { id: "10245", name: "迅击战士", type: "classes", levels: [2, 3, 4, 5] },
-    "裁决战士": { id: "10250", name: "裁决战士", type: "classes", levels: [2, 4, 6] },
-    "法师": { id: "10251", name: "法师", type: "classes", levels: [2, 4, 6] },
-    "征服者": { id: "10259", name: "征服者", type: "classes", levels: [2, 3, 4, 5] },
-    "神盾使": { id: "10261", name: "神盾使", type: "classes", levels: [2, 3, 4, 5] },
+    "斗士": {id: "10220", name: "斗士", type: "classes", levels: [2, 4, 6]},
+    "护卫": {id: "10225", name: "护卫", type: "classes", levels: [2, 4, 6]},
+    "枪手": {id: "10231", name: "枪手", type: "classes", levels: [2, 4]},
+    "神谕者": {id: "10236", name: "神谕者", type: "classes", levels: [2, 4]},
+    "主宰": {id: "10238", name: "主宰", type: "classes", levels: [2, 4, 6]},
+    "狙神": {id: "10241", name: "狙神", type: "classes", levels: [2, 3, 4, 5]},
+    "耀光使": {id: "10242", name: "耀光使", type: "classes", levels: [2, 4]},
+    "迅击战士": {id: "10245", name: "迅击战士", type: "classes", levels: [2, 3, 4, 5]},
+    "裁决战士": {id: "10250", name: "裁决战士", type: "classes", levels: [2, 4, 6]},
+    "法师": {id: "10251", name: "法师", type: "classes", levels: [2, 4, 6]},
+    "征服者": {id: "10259", name: "征服者", type: "classes", levels: [2, 3, 4, 5]},
+    "神盾使": {id: "10261", name: "神盾使", type: "classes", levels: [2, 3, 4, 5]},
 };
 
 /**
  * 锻造器类型枚举
  * @description 用于区分不同类型的锻造器
+ * 
+ * | 类型      | 中文名           | 说明                     |
+ * |-----------|-----------------|--------------------------|
+ * | NONE      | -               | 不是锻造器               |
+ * | BASIC     | 基础装备锻造器   | 可以选择基础散件         |
+ * | COMPLETED | 成装锻造器       | 可以选择完整装备         |
+ * | ARTIFACT  | 神器装备锻造器   | 可以选择神器装备（奥恩） |
+ * | SUPPORT   | 辅助装锻造器     | 可以选择辅助装备         |
  */
 export enum ItemForgeType {
     /** 不是锻造器 */
@@ -587,6 +595,10 @@ export enum ItemForgeType {
     BASIC = 'BASIC',
     /** 成装锻造器 - 可以选择完整装备 */
     COMPLETED = 'COMPLETED',
+    /** 神器装备锻造器 - 可以选择神器装备（奥恩锻造） */
+    ARTIFACT = 'ARTIFACT',
+    /** 辅助装锻造器 - 可以选择辅助装备 */
+    SUPPORT = 'SUPPORT',
 }
 
 const TFT_SPECIAL_CHESS = {
@@ -603,6 +615,22 @@ const TFT_SPECIAL_CHESS = {
         displayName: "成装锻造器",
         englishId: "TFT_ArmoryKeyCompleted",
         price: 0,   // what the fuck? 但数据是这么写的
+        traits: [],
+        origins: [],
+        classes: []
+    },
+    "神器装备锻造器": {
+        displayName: "神器装备锻造器",
+        englishId: "TFT_ArmoryKeyOrnn",
+        price: 8,   // what the fuck? 但数据是这么写的
+        traits: [],
+        origins: [],
+        classes: []
+    },
+    "辅助装锻造器": {
+        displayName: "辅助装锻造器",
+        englishId: "TFT_ArmoryKeySupport",
+        price: 8,   // what the fuck? 但数据是这么写的
         traits: [],
         origins: [],
         classes: []
