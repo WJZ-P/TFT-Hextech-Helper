@@ -23,6 +23,8 @@ import { gameStageMonitor, GameStageEvent } from "./GameStageMonitor";
 import { settingsStore } from "../utils/SettingsStore";
 import { lineupLoader } from "../lineup";
 import { LineupConfig, StageConfig, ChampionConfig } from "../lineup/LineupTypes";
+import { mouseController } from "../tft";
+import { sleep } from "../utils/HelperTools";
 
 /**
  * 阵容选择状态枚举
@@ -685,7 +687,7 @@ export class StrategyService {
      *              
      * 拾取策略：
      * 1. 检测场上所有战利品球的位置
-     * 2. 按优先级排序（金色 > 蓝色 > 普通）
+     * 2. 按 X 坐标从左到右排序（小小英雄默认在左下角，从左往右是最短路径）
      * 3. 依次移动小小英雄到战利品球位置拾取
      * 
      * TODO: 实现完整的拾取逻辑
@@ -703,11 +705,8 @@ export class StrategyService {
         
         logger.info(`[StrategyService] 检测到 ${lootOrbs.length} 个战利品球`);
         
-        // 2. 按优先级排序：金色 > 蓝色 > 普通
-        const priorityOrder = { gold: 0, blue: 1, normal: 2 };
-        const sortedOrbs = [...lootOrbs].sort((a, b) => {
-            return priorityOrder[a.type] - priorityOrder[b.type];
-        });
+        // 2. 按 X 坐标从左到右排序（最短路径：小小英雄默认在左下角）
+        const sortedOrbs = [...lootOrbs].sort((a, b) => a.x - b.x);
         
         // 3. 依次拾取战利品球
         for (const orb of sortedOrbs) {
@@ -716,14 +715,15 @@ export class StrategyService {
                 logger.info("[StrategyService] 战斗已结束，停止拾取");
                 break;
             }
+            const sleepTime = 2000;
+            logger.info(`[StrategyService] 正在拾取 ${orb.type} 战利品球，位置: (${orb.x}, ${orb.y}), 等待 ${sleepTime}ms`);
             
-            logger.info(`[StrategyService] 正在拾取 ${orb.type} 战利品球，位置: (${orb.x}, ${orb.y})`);
+            // 右键点击战利品球位置，小小英雄会自动移动过去拾取
+            // mouseController.clickAt 接受的是游戏内相对坐标，orb.x/orb.y 正好是相对坐标
+            await mouseController.clickAt({ x: orb.x, y: orb.y });
             
-            // TODO: 移动小小英雄到战利品球位置
-            // await this.moveLittleLegendTo(orb.x, orb.y);
-            
-            // TODO: 等待拾取动画完成
-            // await sleep(200);
+            // 等待小小英雄移动到目标位置并拾取
+            await sleep(sleepTime);
         }
         
         logger.info("[StrategyService] 战利品拾取完成");

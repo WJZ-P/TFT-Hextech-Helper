@@ -43,6 +43,10 @@ export const lootRegion = {
     rightBottom: {x: 855, y: 585}
 }
 
+//  小小英雄默认站位（棋盘左下角）
+//  用于战斗结束后让小小英雄回到初始位置，或作为路径规划的起点
+export const littleLegendDefaultPoint = {x: 120, y: 430};
+
 //  英雄购买槽坐标
 export interface SimplePoint {
     x: number;
