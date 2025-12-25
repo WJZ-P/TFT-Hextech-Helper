@@ -4,26 +4,55 @@ import {TFTMode} from "../TFTProtocol";
 
 type WindowBounds = Pick<Rectangle, 'x' | 'y' | 'width' | 'height'>;
 
-export type DotNotationKeyOf<T> =
-    keyof T // 联合类型的第一部分
-    | {       // 联合类型的第二部分 (通过 Mapped Type + Lookup 方式)
-    [K in keyof T]: T[K] extends Record<string, any>
-        ? `${K & string}.${DotNotationKeyOf<T[K]>}`
-        : never;
-}[keyof T]; // 扁平化为联合类型
+// ============================================================================
+// 点号路径类型工具 (Dot Notation Type Utilities)
+// ============================================================================
 
-export type DotNotationValueFor<
-    T,
-    K extends DotNotationKeyOf<T>
-> = K extends keyof T
-    ? T[K]
-    : K extends `${infer F}.${infer R}`
-        ? F extends keyof T
-            ? R extends DotNotationKeyOf<T[F]>
-                ? DotNotationValueFor<T[F], R>
+/**
+ * 判断一个类型是否为"可继续展开的对象"
+ * - 排除 null、undefined、数组、Date 等特殊类型
+ * - 只有纯对象 { key: value } 才返回 true
+ */
+type IsPlainObject<T> = T extends object
+    ? T extends any[] | Date | null | undefined
+        ? false
+        : true
+    : false;
+
+/**
+ * 生成对象的所有点号路径 key
+ * @example
+ * type Keys = DotNotationKeyOf<{ a: { b: number }, c: string }>
+ * // 结果: "a" | "c" | "a.b"
+ */
+export type DotNotationKeyOf<T> = T extends object
+    ? {
+        // 遍历 T 的每个 key
+        [K in keyof T & string]:
+            // 如果值是可展开的对象，递归生成子路径
+            IsPlainObject<T[K]> extends true
+                ? K | `${K}.${DotNotationKeyOf<T[K]>}`
+                // 否则只返回当前 key
+                : K;
+    }[keyof T & string]
+    : never;
+
+/**
+ * 根据点号路径获取对应的值类型
+ * @example
+ * type Value = DotNotationValueFor<{ a: { b: number } }, "a.b">
+ * // 结果: number
+ */
+export type DotNotationValueFor<T, K extends string> =
+    // 情况 1: K 是 T 的直接 key
+    K extends keyof T
+        ? T[K]
+        // 情况 2: K 是点号路径 "first.rest"
+        : K extends `${infer First}.${infer Rest}`
+            ? First extends keyof T
+                ? DotNotationValueFor<T[First], Rest>
                 : never
-            : never
-        : never;
+            : never;
 
 //  配置类
 interface AppSettings {
@@ -59,12 +88,38 @@ class SettingsStore {
         this.store = new Store<AppSettings>({defaults})
     }
 
-    public get<K extends keyof AppSettings>(key: K): AppSettings[K] {
-        return this.store.get(key)
+    /**
+     * 获取配置项（支持点号路径访问嵌套属性）
+     * @param key 配置 key，支持 "window.bounds" 这样的点号路径
+     * @returns 对应的配置值
+     * 
+     * @example
+     * settingsStore.get('tftMode')           // 返回 TFTMode
+     * settingsStore.get('window')            // 返回整个 window 对象
+     * settingsStore.get('window.bounds')     // 返回 WindowBounds | null
+     * settingsStore.get('window.isMaximized') // 返回 boolean
+     */
+    public get<K extends DotNotationKeyOf<AppSettings>>(
+        key: K
+    ): DotNotationValueFor<AppSettings, K> {
+        return this.store.get(key as any);
     }
 
-    public set<K extends keyof AppSettings>(key: K, value: AppSettings[K]) {
-        this.store.set(key, value)
+    /**
+     * 设置配置项（支持点号路径访问嵌套属性）
+     * @param key 配置 key，支持 "window.bounds" 这样的点号路径
+     * @param value 要设置的值
+     * 
+     * @example
+     * settingsStore.set('tftMode', TFTMode.CLASSIC)
+     * settingsStore.set('window.isMaximized', true)
+     * settingsStore.set('window.bounds', { x: 0, y: 0, width: 800, height: 600 })
+     */
+    public set<K extends DotNotationKeyOf<AppSettings>>(
+        key: K,
+        value: DotNotationValueFor<AppSettings, K>
+    ): void {
+        this.store.set(key as any, value);
     }
 
     public getRawStore(): Store<AppSettings> {
