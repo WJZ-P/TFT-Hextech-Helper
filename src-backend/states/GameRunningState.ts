@@ -58,23 +58,23 @@ export class GameRunningState implements IState {
 
         logger.info("[GameRunningState] 进入游戏运行状态");
 
-        // // 1. 标记游戏开始
-        // gameStateManager.startGame();
-        // logger.info("[GameRunningState] 游戏已开始");
+        // 1. 标记游戏开始
+        gameStateManager.startGame();
+        logger.info("[GameRunningState] 游戏已开始");
 
-        // // 2. 初始化策略服务（加载阵容配置）
-        // const initSuccess = strategyService.initialize();
-        // if (!initSuccess) {
-        //     logger.error("[GameRunningState] 策略服务初始化失败，请先选择阵容");
-        //     // 即使初始化失败，也继续运行（避免卡死）
-        // }
+        // 2. 初始化策略服务（加载阵容配置）
+        const initSuccess = strategyService.initialize();
+        if (!initSuccess) {
+            logger.error("[GameRunningState] 策略服务初始化失败，请先选择阵容");
+            // 即使初始化失败，也继续运行（避免卡死）
+        }
 
-        // // 3. 订阅策略服务到 Monitor 事件
-        // strategyService.subscribe();
+        // 3. 订阅策略服务到 Monitor 事件
+        strategyService.subscribe();
 
-        // // 4. 启动 GameStageMonitor
-        // gameStageMonitor.start(1000);
-        // logger.info("[GameRunningState] GameStageMonitor 已启动");
+        // 4. 启动 GameStageMonitor
+        gameStageMonitor.start(1000);
+        logger.info("[GameRunningState] GameStageMonitor 已启动");
 
         // 5. 等待游戏结束
         const isGameEnded = await this.waitForGameToEnd(signal);

@@ -210,12 +210,36 @@ export class StrategyService {
 
     /**
      * 战斗开始事件处理器
-     * @description 当检测到"战斗环节"文字时触发，此时应暂停涉及棋盘的操作
-     *              注意：不需要单独处理战斗结束，因为进入新回合时会自动重置战斗状态
+     * @description 当检测到"战斗环节"文字时触发
+     *              根据当前阶段类型分发到不同的战斗阶段处理器
+     * 
+     * 战斗阶段的操作：
+     * - EARLY_PVE / PVE 阶段：打野怪，拾取战利品球
+     * - PVP / AUGMENT 阶段：观战（海克斯选完后就是普通 PVP 战斗）
+     * - CAROUSEL 阶段 (选秀)：不会触发战斗
      */
-    private onFightingStart(): void {
-        logger.info("[StrategyService] 战斗阶段开始，暂停棋盘操作");
-        // TODO: 可以在这里设置一个标志位，让其他方法知道当前是战斗阶段
+    private async onFightingStart(): Promise<void> {
+        logger.info("[StrategyService] 战斗阶段开始");
+
+        // 获取当前阶段类型（从 GameStageMonitor 获取最新的阶段信息）
+        const currentStageType = gameStageMonitor.currentStageType;
+
+        // 根据阶段类型分发到对应的战斗阶段处理器
+        switch (currentStageType) {
+            case GameStageType.EARLY_PVE:
+            case GameStageType.PVE:
+                // 所有 PVE 战斗阶段共用同一个处理器（打野怪、捡战利品）
+                await this.handlePVEFighting();
+                break;
+            case GameStageType.PVP:
+            case GameStageType.AUGMENT:
+                // 海克斯阶段选完强化后就是普通 PVP 战斗，共用同一个处理器
+                await this.handlePVPFighting();
+                break;
+            default:
+                logger.debug(`[StrategyService] 战斗阶段：当前阶段类型 ${currentStageType} 无需特殊处理`);
+                break;
+        }
     }
 
     /**
@@ -619,9 +643,90 @@ export class StrategyService {
         
         // 通用运营策略
         await this.executeCommonStrategy();
+    }
+
+    // ============================================================
+    // ⚔️ 战斗阶段处理器 (Fighting Phase Handlers)
+    // ============================================================
+
+    /**
+     * 处理 PVE 战斗阶段 (所有打野怪的回合)
+     * @description 包括前期 PVE (1-1, 1-2) 和后期野怪回合：
+     *              - 战斗中会持续掉落战利品球
+     *              - 需要边打边捡（小小英雄可以移动拾取）
+     *              - 同时执行防挂机操作
+     */
+    private async handlePVEFighting(): Promise<void> {
+        logger.info("[StrategyService] PVE 战斗阶段：准备拾取战利品...");
         
-        // TODO: 添加捡战利品球的逻辑
-        // await this.pickUpOrbs();
+        // 执行战利品拾取逻辑（拾取过程中会移动小小英雄，同时起到防挂机作用）
+        await this.pickUpLootOrbs();
+    }
+
+    /**
+     * 处理 PVP 战斗阶段 (玩家对战)
+     * @description PVP 回合的战斗阶段：
+     *              - 玩家对战不会掉落战利品球
+     *              - 可以观察对手阵容、调整下回合策略
+     *              - 主要是等待战斗结束
+     */
+    private async handlePVPFighting(): Promise<void> {
+        logger.info("[StrategyService] PVP 战斗阶段：观战中...");
+        
+        // PVP 战斗阶段暂无特殊操作
+        // TODO: 可以在这里添加观察对手阵容的逻辑
+        // await this.analyzeOpponentBoard();
+    }
+
+    /**
+     * 拾取战利品球
+     * @description 检测并拾取场上的战利品球
+     *              战利品球有三种类型：普通(银色)、蓝色、金色
+     *              
+     * 拾取策略：
+     * 1. 检测场上所有战利品球的位置
+     * 2. 按优先级排序（金色 > 蓝色 > 普通）
+     * 3. 依次移动小小英雄到战利品球位置拾取
+     * 
+     * TODO: 实现完整的拾取逻辑
+     */
+    private async pickUpLootOrbs(): Promise<void> {
+        logger.info("[StrategyService] 开始检测战利品球...");
+        
+        // 1. 检测场上的战利品球
+        const lootOrbs = await tftOperator.getLootOrbs();
+        
+        if (lootOrbs.length === 0) {
+            logger.info("[StrategyService] 未检测到战利品球");
+            return;
+        }
+        
+        logger.info(`[StrategyService] 检测到 ${lootOrbs.length} 个战利品球`);
+        
+        // 2. 按优先级排序：金色 > 蓝色 > 普通
+        const priorityOrder = { gold: 0, blue: 1, normal: 2 };
+        const sortedOrbs = [...lootOrbs].sort((a, b) => {
+            return priorityOrder[a.type] - priorityOrder[b.type];
+        });
+        
+        // 3. 依次拾取战利品球
+        for (const orb of sortedOrbs) {
+            // 检查是否仍在战斗阶段（战斗结束后停止拾取）
+            if (!this.isFighting()) {
+                logger.info("[StrategyService] 战斗已结束，停止拾取");
+                break;
+            }
+            
+            logger.info(`[StrategyService] 正在拾取 ${orb.type} 战利品球，位置: (${orb.x}, ${orb.y})`);
+            
+            // TODO: 移动小小英雄到战利品球位置
+            // await this.moveLittleLegendTo(orb.x, orb.y);
+            
+            // TODO: 等待拾取动画完成
+            // await sleep(200);
+        }
+        
+        logger.info("[StrategyService] 战利品拾取完成");
     }
 
     /**

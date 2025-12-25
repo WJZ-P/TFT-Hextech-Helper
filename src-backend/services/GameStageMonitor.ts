@@ -93,6 +93,9 @@ export class GameStageMonitor extends EventEmitter {
     /** 当前是否处于战斗阶段 */
     public isFighting: boolean = false;
 
+    /** 当前阶段类型（如 PVE、PVP、CAROUSEL 等） */
+    public currentStageType: GameStageType = GameStageType.UNKNOWN;
+
     private constructor() {
         super();
         // 设置最大监听器数量，避免内存泄漏警告
@@ -166,6 +169,7 @@ export class GameStageMonitor extends EventEmitter {
         this.stage = 0;
         this.round = 0;
         this.isFighting = false;
+        this.currentStageType = GameStageType.UNKNOWN;
         logger.info('[GameStageMonitor] 状态已重置');
     }
 
@@ -214,6 +218,7 @@ export class GameStageMonitor extends EventEmitter {
                     this.stageText = stageText;
                     this.stage = stage;
                     this.round = round;
+                    this.currentStageType = type;  // 更新当前阶段类型
 
                     // 新回合开始时，重置战斗状态（默认是准备阶段）
                     this.isFighting = false;
