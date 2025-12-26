@@ -39,6 +39,7 @@ import {
     itemForgeTooltipRegion,
     itemForgeTooltipRegionEdge,
     levelRegion,
+    littleLegendDefaultPoint,
     lootRegion,
     shopSlot,
     shopSlotNameRegions,
@@ -1226,6 +1227,33 @@ class TftOperator {
             logger.error(`[TftOperator] 战利品球检测异常: ${error}`);
             return [];
         }
+    }
+
+    /**
+     * 让小小英雄归位到默认站位
+     * @description 通过右键点击两次默认站位坐标，让小小英雄移动回棋盘左下角
+     *              用于：
+     *              - 战斗结束后归位，避免遮挡棋盘
+     *              - 拾取战利品前归位，确保路径规划的起点一致
+     *              - 防挂机时的随机移动起点
+     * 
+     * 为什么点击两次？
+     * - 第一次点击：发出移动指令
+     * - 第二次点击：确保小小英雄确实开始移动（有时候单次点击可能被忽略）
+     * 
+     * @example
+     * // 战斗结束后归位
+     * await tftOperator.selfResetPosition();
+     */
+    public async selfResetPosition(): Promise<void> {
+        this.ensureInitialized();
+
+        logger.info(`[TftOperator] 小小英雄归位中... 目标坐标: (${littleLegendDefaultPoint.x}, ${littleLegendDefaultPoint.y})`);
+
+        // 右键点击两次默认站位，确保小小英雄移动到目标位置
+        await mouseController.clickAt(littleLegendDefaultPoint, Button.RIGHT);
+        await sleep(100); // 短暂等待，避免两次点击太快被合并
+        await mouseController.clickAt(littleLegendDefaultPoint, Button.RIGHT);
     }
 }
 

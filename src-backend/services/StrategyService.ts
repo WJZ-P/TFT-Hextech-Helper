@@ -657,12 +657,40 @@ export class StrategyService {
      *              - 战斗中会持续掉落战利品球
      *              - 需要边打边捡（小小英雄可以移动拾取）
      *              - 同时执行防挂机操作
+     * 
+     * 循环逻辑：
+     * - 使用 while 循环持续扫描和拾取战利品球
+     * - 每次拾取完成后等待一小段时间再扫描（避免频繁截图）
+     * - 战斗结束（isFighting = false）时自动退出循环
      */
     private async handlePVEFighting(): Promise<void> {
-        logger.info("[StrategyService] PVE 战斗阶段：准备拾取战利品...");
+        logger.info("[StrategyService] PVE 战斗阶段：开始循环拾取战利品...");
         
-        // 执行战利品拾取逻辑（拾取过程中会移动小小英雄，同时起到防挂机作用）
-        await this.pickUpLootOrbs();
+        // 扫描间隔（毫秒）：每次拾取完成后等待一段时间再重新扫描
+        // 设置较短的间隔，确保及时发现新掉落的战利品球
+        const scanInterval = 1000;
+        
+        // 使用 while 循环持续扫描，直到战斗结束
+        // 这样可以确保：
+        // 1. 上一次 pickUpLootOrbs() 完成后才开始下一次
+        // 2. 战斗结束时自动退出，不会残留定时器
+        while (this.isFighting()) {
+            // 执行一轮战利品拾取
+            await this.pickUpLootOrbs();
+            
+            // 如果战斗已结束，直接退出（避免多余的等待）
+            if (!this.isFighting()) {
+                break;
+            }
+            
+            // 等待一段时间后再次扫描
+            // 这个间隔可以根据实际情况调整：
+            // - 太短：频繁截图，CPU 占用高
+            // - 太长：响应太慢
+            await sleep(scanInterval);
+        }
+        
+        logger.info("[StrategyService] PVE 战斗阶段结束，停止拾取循环");
     }
 
     /**
@@ -693,6 +721,7 @@ export class StrategyService {
      * TODO: 实现完整的拾取逻辑
      */
     private async pickUpLootOrbs(): Promise<void> {
+        const sleepTime = 2000; //  每次点击之间的间隔时间
         logger.info("[StrategyService] 开始检测战利品球...");
         
         // 1. 检测场上的战利品球
@@ -715,7 +744,6 @@ export class StrategyService {
                 logger.info("[StrategyService] 战斗已结束，停止拾取");
                 break;
             }
-            const sleepTime = 2000;
             logger.info(`[StrategyService] 正在拾取 ${orb.type} 战利品球，位置: (${orb.x}, ${orb.y}), 等待 ${sleepTime}ms`);
             
             // 右键点击战利品球位置，小小英雄会自动移动过去拾取
@@ -725,8 +753,8 @@ export class StrategyService {
             // 等待小小英雄移动到目标位置并拾取
             await sleep(sleepTime);
         }
-        
         logger.info("[StrategyService] 战利品拾取完成");
+        await tftOperator.selfResetPosition();
     }
 
     /**
