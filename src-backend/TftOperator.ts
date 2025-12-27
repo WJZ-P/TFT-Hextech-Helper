@@ -41,6 +41,7 @@ import {
     levelRegion,
     littleLegendDefaultPoint,
     lootRegion,
+    selfWalkAroundPoints,
     shopSlot,
     shopSlotNameRegions,
     TFT_16_CHAMPION_DATA,
@@ -122,6 +123,14 @@ class TftOperator {
 
     /** OpenCV 是否已初始化 */
     private isOpenCVReady = false;
+
+    /** 
+     * 上一次随机走位的方向
+     * @description 用于实现左右交替走动，让行为更像真人
+     *              'left' 表示上次走的是左边，下次应该走右边
+     *              'right' 表示上次走的是右边，下次应该走左边
+     */
+    private lastWalkSide: 'left' | 'right' = 'left';
 
     // ========== 路径 Getter ==========
 
@@ -1254,6 +1263,47 @@ class TftOperator {
         await mouseController.clickAt(littleLegendDefaultPoint, Button.RIGHT);
         await sleep(100); // 短暂等待，避免两次点击太快被合并
         await mouseController.clickAt(littleLegendDefaultPoint, Button.RIGHT);
+    }
+
+    /**
+     * 让小小英雄随机走动（防挂机）
+     * @description 在战斗阶段让小小英雄随机移动，避免被系统判定为挂机
+     *              用于：
+     *              - PVP 战斗阶段的防挂机
+     *              - 等待时的随机移动
+     * 
+     * 走位逻辑：
+     * - 每次调用时，走向与上一次相反的方向（左右交替）
+     * - 从对应方向的点位数组中随机选择一个点
+     * - 这样小小英雄会在棋盘两侧来回走动，更像真人操作
+     * 
+     * @example
+     * // PVP 战斗阶段防挂机
+     * await tftOperator.selfWalkAround();
+     */
+    public async selfWalkAround(): Promise<void> {
+        this.ensureInitialized();
+
+        // 决定这次走哪边（与上次相反）
+        const targetSide: 'left' | 'right' = this.lastWalkSide === 'left' ? 'right' : 'left';
+        
+        // 获取目标方向的点位数组
+        const targetPoints = selfWalkAroundPoints[targetSide];
+        
+        // 从数组中随机选择一个点位
+        const randomIndex = Math.floor(Math.random() * targetPoints.length);
+        const targetPoint = targetPoints[randomIndex];
+
+        logger.info(
+            `[TftOperator] 小小英雄随机走动: ${this.lastWalkSide} → ${targetSide}，` +
+            `目标坐标: (${targetPoint.x}, ${targetPoint.y})`
+        );
+
+        // 右键点击目标位置，小小英雄会自动走过去
+        await mouseController.clickAt(targetPoint, Button.RIGHT);
+
+        // 更新上次走位方向
+        this.lastWalkSide = targetSide;
     }
 }
 

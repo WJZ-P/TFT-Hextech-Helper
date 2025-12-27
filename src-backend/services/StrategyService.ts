@@ -696,16 +696,19 @@ export class StrategyService {
     /**
      * 处理 PVP 战斗阶段 (玩家对战)
      * @description PVP 回合的战斗阶段：
-     *              - 玩家对战不会掉落战利品球
-     *              - 可以观察对手阵容、调整下回合策略
-     *              - 主要是等待战斗结束
+     *              - 玩家对战通常不会掉落战利品球，但某些海克斯可能会
+     *              - 执行一次战利品球搜索（以防万一）
+     *              - 让小小英雄随机走动（防挂机）
      */
     private async handlePVPFighting(): Promise<void> {
         logger.info("[StrategyService] PVP 战斗阶段：观战中...");
         
-        // PVP 战斗阶段暂无特殊操作
-        // TODO: 可以在这里添加观察对手阵容的逻辑
-        // await this.analyzeOpponentBoard();
+        // 1. 执行一次战利品球搜索（某些海克斯可能会在 PVP 阶段掉落战利品）
+        await this.pickUpLootOrbs();
+        
+        // 2. 让小小英雄随机走动（防挂机）
+        // TODO: 实现随机走动逻辑
+        await tftOperator.selfWalkAround();
     }
 
     /**
