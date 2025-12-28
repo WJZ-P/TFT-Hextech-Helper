@@ -13,7 +13,7 @@
 
 import { BenchUnit, BoardUnit, IdentifiedEquip } from "../TftOperator";
 import { logger } from "../utils/Logger";
-import { TFTUnit, GameStageType } from "../TFTProtocol";
+import { TFTUnit, GameStageType, fightBoardSlotPoint } from "../TFTProtocol";
 
 // ============================================================================
 // 类型定义
@@ -98,12 +98,12 @@ export class GameStateManager {
     private static instance: GameStateManager;
 
     // ========== 游戏状态快照 ==========
-    
+
     /** 当前阶段的游戏状态快照 */
     private snapshot: GameStateSnapshot | null = null;
 
     // ========== 游戏进程状态 ==========
-    
+
     /** 游戏进程信息 */
     private progress: GameProgress = {
         currentStage: "",
@@ -114,11 +114,11 @@ export class GameStateManager {
     };
 
     // ========== 等级相关（独立追踪，因为可能频繁变化）==========
-    
+
     /** 当前人口等级 */
     private currentLevel: number = 1;
 
-    private constructor() {}
+    private constructor() { }
 
     /**
      * 获取单例实例
@@ -146,18 +146,18 @@ export class GameStateManager {
             logger.info(`[GameStateManager] 人口变化: ${this.currentLevel} -> ${data.level}`);
             this.currentLevel = data.level;
         }
-        
+
         // 构建完整快照（添加时间戳）
         this.snapshot = {
             ...data,
             timestamp: Date.now(),
         };
-        
+
         // 统计日志
         const benchCount = data.benchUnits.filter(u => u !== null).length;
         const boardCount = data.boardUnits.filter(u => u !== null).length;
         const shopCount = data.shopUnits.filter(u => u !== null).length;
-        
+
         logger.info(
             `[GameStateManager] 快照更新完成: ` +
             `备战席 ${benchCount}/9, 棋盘 ${boardCount}/28, 商店 ${shopCount}/5, ` +
@@ -173,12 +173,12 @@ export class GameStateManager {
      */
     public async refreshSnapshot(): Promise<GameStateSnapshot> {
         logger.warn("[GameStateManager] refreshSnapshot() 已废弃，请使用 StrategyService.refreshGameState()");
-        
+
         // 如果已有快照，直接返回
         if (this.snapshot) {
             return this.snapshot;
         }
-        
+
         // 返回空快照（向后兼容）
         return {
             benchUnits: [],
@@ -312,21 +312,21 @@ export class GameStateManager {
      */
     public getOwnedChampionNames(): Set<string> {
         const names = new Set<string>();
-        
+
         // 备战席
         for (const unit of this.getBenchUnits()) {
             if (unit?.tftUnit) {
                 names.add(unit.tftUnit.displayName);
             }
         }
-        
+
         // 棋盘
         for (const unit of this.getBoardUnits()) {
             if (unit?.tftUnit) {
                 names.add(unit.tftUnit.displayName);
             }
         }
-        
+
         return names;
     }
 
@@ -336,15 +336,252 @@ export class GameStateManager {
      */
     public getAllVisibleChampionNames(): Set<string> {
         const names = this.getOwnedChampionNames();
-        
+
         // 商店
         for (const unit of this.getShopUnits()) {
             if (unit) {
                 names.add(unit.displayName);
             }
         }
-        
+
         return names;
+    }
+
+    /**
+     * 获取指定棋子的 1 星数量（备战席 + 棋盘）
+     * @param championName 棋子名称
+     * @returns 1 星棋子的数量
+     * @description 用于判断购买后是否能升星
+     *              TFT 合成规则：3 个 1 星 → 1 个 2 星，3 个 2 星 → 1 个 3 星
+     *              所以如果已有 2 个 1 星，再买 1 个就能升 2 星
+     */
+    public getOneStarChampionCount(championName: string): number {
+        let count = 0;
+
+        // 统计备战席
+        for (const unit of this.getBenchUnits()) {
+            if (unit?.tftUnit?.displayName === championName && unit.starLevel === 1) {
+                count++;
+            }
+        }
+
+        // 统计棋盘
+        for (const unit of this.getBoardUnits()) {
+            if (unit?.tftUnit?.displayName === championName && unit.starLevel === 1) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    /**
+     * 判断购买指定棋子后是否能升星
+     * @param championName 棋子名称
+     * @returns 是否能升星（true = 买了能升星，不占额外格子）
+     * @description 如果已有 2 个 1 星同名棋子，买第 3 个会自动合成 2 星
+     *              这种情况下即使备战席满了也可以购买
+     */
+    public canUpgradeAfterBuy(championName: string): boolean {
+        const oneStarCount = this.getOneStarChampionCount(championName);
+        // 已有 2 个 1 星，买第 3 个会升 2 星
+        return oneStarCount >= 2;
+    }
+
+    /**
+     * 查找指定棋子的 1 星位置信息
+     * @param championName 棋子名称
+     * @returns 所有 1 星棋子的位置数组，包含位置类型（bench/board）和索引
+     * @description 用于购买后更新状态时，确定哪些棋子会参与合成
+     *              TFT 合成规则：优先合成场上的棋子，备战席按从左到右顺序
+     */
+    public findOneStarChampionPositions(championName: string): Array<{
+        location: 'bench' | 'board';
+        index: number;
+    }> {
+        const positions: Array<{ location: 'bench' | 'board'; index: number }> = [];
+
+        // 先找棋盘上的（场上棋子优先参与合成）
+        const boardUnits = this.getBoardUnits();
+        for (let i = 0; i < boardUnits.length; i++) {
+            const unit = boardUnits[i];
+            if (unit?.tftUnit?.displayName === championName && unit.starLevel === 1) {
+                positions.push({ location: 'board', index: i });
+            }
+        }
+
+        // 再找备战席的（从左到右，索引小的先参与合成）
+        const benchUnits = this.getBenchUnits();
+        for (let i = 0; i < benchUnits.length; i++) {
+            const unit = benchUnits[i];
+            if (unit?.tftUnit?.displayName === championName && unit.starLevel === 1) {
+                positions.push({ location: 'bench', index: i });
+            }
+        }
+
+        return positions;
+    }
+
+    /**
+     * 获取备战席第一个空位的索引
+     * @returns 空位索引 (0-8)，如果没有空位返回 -1
+     * @description 购买棋子后，新棋子会放到备战席最左边的空位
+     */
+    public getFirstEmptyBenchSlotIndex(): number {
+        const benchUnits = this.getBenchUnits();
+        for (let i = 0; i < benchUnits.length; i++) {
+            if (benchUnits[i] === null) {
+                return i;
+            }
+        }
+        return -1; // 没有空位
+    }
+
+    /**
+     * 更新备战席指定槽位为空
+     * @param index 槽位索引 (0-8)
+     * @description 当棋子被合成消耗时，需要将对应槽位标记为空
+     *              直接修改快照中的 benchUnits 数组
+     */
+    public setBenchSlotEmpty(index: number): void {
+        if (!this.snapshot) {
+            logger.warn("[GameStateManager] 快照不存在，无法更新备战席");
+            return;
+        }
+
+        if (index < 0 || index >= this.snapshot.benchUnits.length) {
+            logger.warn(`[GameStateManager] 无效的备战席索引: ${index}`);
+            return;
+        }
+
+        const oldUnit = this.snapshot.benchUnits[index];
+        this.snapshot.benchUnits[index] = null;
+
+        logger.debug(
+            `[GameStateManager] 备战席槽位 ${index} 已清空` +
+            (oldUnit?.tftUnit ? ` (原: ${oldUnit.tftUnit.displayName})` : '')
+        );
+    }
+
+    /**
+     * 设置备战席指定槽位的棋子
+     * @param index 槽位索引 (0-8)
+     * @param unit 要放置的棋子
+     * @description 购买棋子后，将新棋子放入备战席指定槽位
+     */
+    public setBenchSlotUnit(index: number, unit: BenchUnit): void {
+        if (!this.snapshot) {
+            logger.warn("[GameStateManager] 快照不存在，无法设置棋子");
+            return;
+        }
+
+        if (index < 0 || index >= this.snapshot.benchUnits.length) {
+            logger.warn(`[GameStateManager] 无效的备战席索引: ${index}`);
+            return;
+        }
+
+        this.snapshot.benchUnits[index] = unit;
+
+        logger.debug(
+            `[GameStateManager] 备战席槽位 ${index} 已放置: ` +
+            `${unit.tftUnit.displayName} ${unit.starLevel}★`
+        );
+    }
+
+    /**
+     * 更新备战席指定槽位的棋子星级
+     * @param index 槽位索引 (0-8)
+     * @param newStarLevel 新的星级
+     * @description 当棋子升星时，更新对应槽位的星级
+     */
+    public updateBenchSlotStarLevel(index: number, newStarLevel: -1 | 1 | 2 | 3 | 4): void {
+        if (!this.snapshot) {
+            logger.warn("[GameStateManager] 快照不存在，无法更新星级");
+            return;
+        }
+
+        const unit = this.snapshot.benchUnits[index];
+        if (!unit) {
+            logger.warn(`[GameStateManager] 备战席槽位 ${index} 为空，无法更新星级`);
+            return;
+        }
+
+        const oldStarLevel = unit.starLevel;
+        unit.starLevel = newStarLevel;
+
+        logger.debug(
+            `[GameStateManager] 备战席槽位 ${index} 星级更新: ` +
+            `${unit.tftUnit?.displayName} ${oldStarLevel}★ → ${newStarLevel}★`
+        );
+    }
+
+    /**
+     * 更新棋盘指定槽位的棋子星级
+     * @param index 槽位索引 (0-27)
+     * @param newStarLevel 新的星级
+     * @description 当场上棋子升星时，更新对应槽位的星级
+     */
+    public updateBoardSlotStarLevel(index: number, newStarLevel: -1 | 1 | 2 | 3 | 4): void {
+        if (!this.snapshot) {
+            logger.warn("[GameStateManager] 快照不存在，无法更新星级");
+            return;
+        }
+
+        const unit = this.snapshot.boardUnits[index];
+        if (!unit) {
+            logger.warn(`[GameStateManager] 棋盘槽位 ${index} 为空，无法更新星级`);
+            return;
+        }
+
+        const oldStarLevel = unit.starLevel;
+        unit.starLevel = newStarLevel;
+
+        logger.debug(
+            `[GameStateManager] 棋盘槽位 ${index} 星级更新: ` +
+            `${unit.tftUnit?.displayName} ${oldStarLevel}★ → ${newStarLevel}★`
+        );
+    }
+
+    /**
+     * 更新商店指定槽位为空（已购买）
+     * @param index 槽位索引 (0-4)
+     * @description 购买棋子后，将商店对应槽位标记为空
+     */
+    public setShopSlotEmpty(index: number): void {
+        if (!this.snapshot) {
+            logger.warn("[GameStateManager] 快照不存在，无法更新商店");
+            return;
+        }
+
+        if (index < 0 || index >= this.snapshot.shopUnits.length) {
+            logger.warn(`[GameStateManager] 无效的商店索引: ${index}`);
+            return;
+        }
+
+        const oldUnit = this.snapshot.shopUnits[index];
+        this.snapshot.shopUnits[index] = null;
+
+        logger.debug(
+            `[GameStateManager] 商店槽位 ${index} 已清空` +
+            (oldUnit ? ` (原: ${oldUnit.displayName})` : '')
+        );
+    }
+
+    /**
+     * 扣减金币
+     * @param amount 扣减数量
+     * @description 购买棋子后更新金币数量
+     */
+    public deductGold(amount: number): void {
+        if (!this.snapshot) {
+            logger.warn("[GameStateManager] 快照不存在，无法扣减金币");
+            return;
+        }
+
+        const oldGold = this.snapshot.gold;
+        this.snapshot.gold = Math.max(0, this.snapshot.gold - amount);
+
+        logger.debug(`[GameStateManager] 金币扣减: ${oldGold} - ${amount} = ${this.snapshot.gold}`);
     }
 
     // ============================================================================
@@ -366,7 +603,7 @@ export class GameStateManager {
     public updateStage(stage: string, stageType: GameStageType): void {
         this.progress.currentStage = stage;
         this.progress.currentStageType = stageType;
-        
+
         // 检测第一个 PVP 阶段
         if (stageType === GameStageType.PVP && !this.progress.hasFirstPvpOccurred) {
             this.progress.hasFirstPvpOccurred = true;
@@ -406,6 +643,118 @@ export class GameStateManager {
     }
 
     // ============================================================================
+    // 棋盘状态查询
+    // ============================================================================
+
+    /**
+     * 获取当前棋盘上的棋子数量
+     * @returns 棋盘上非空槽位的数量
+     * @description 用于判断是否需要上更多棋子
+     *              棋盘最大容量 = 玩家等级
+     */
+    public getBoardUnitCount(): number {
+        const boardUnits = this.getBoardUnits();
+        return boardUnits.filter(unit => unit !== null).length;
+    }
+
+    /**
+     * 获取棋盘空位数量
+     * @returns 棋盘上空槽位的数量
+     * @description 棋盘共 28 个槽位 (4行 x 7列)
+     *              但实际可用数量受等级限制
+     */
+    public getEmptyBoardSlotCount(): number {
+        const boardUnits = this.getBoardUnits();
+        return boardUnits.filter(unit => unit === null).length;
+    }
+
+    /**
+     * 获取可以再上场的棋子数量
+     * @returns 当前等级下还能上场多少棋子
+     * @description 计算公式: 等级 - 当前棋盘棋子数
+     *              如果返回 0 或负数，说明已满员或超员
+     */
+    public getAvailableBoardSlots(): number {
+        const level = this.getLevel();
+        const currentCount = this.getBoardUnitCount();
+        return Math.max(0, level - currentCount);
+    }
+
+    /**
+     * 获取备战席上的非空棋子列表（带索引）
+     * @returns 包含棋子信息和索引的数组
+     * @description 用于遍历备战席上的棋子，决定哪些应该上场
+     */
+    public getBenchUnitsWithIndex(): Array<{ unit: BenchUnit; index: number }> {
+        const result: Array<{ unit: BenchUnit; index: number }> = [];
+        const benchUnits = this.getBenchUnits();
+        
+        for (let i = 0; i < benchUnits.length; i++) {
+            const unit = benchUnits[i];
+            if (unit !== null) {
+                result.push({ unit, index: i });
+            }
+        }
+        
+        return result;
+    }
+
+    /**
+     * 获取棋盘上的非空棋子列表（带位置）
+     * @returns 包含棋子信息的数组
+     * @description 用于遍历棋盘上的棋子，分析当前站位
+     */
+    public getBoardUnitsWithLocation(): BoardUnit[] {
+        const boardUnits = this.getBoardUnits();
+        return boardUnits.filter((unit): unit is BoardUnit => unit !== null);
+    }
+
+    /**
+     * 获取棋盘上的空位列表
+     * @returns 空位的 BoardLocation 数组
+     * @description 返回所有空槽位的位置标识（如 "R1_C1"）
+     *              复用 TFTProtocol 中 fightBoardSlotPoint 的 key，保持一致性
+     */
+    public getEmptyBoardLocations(): string[] {
+        const boardUnits = this.getBoardUnits();
+        const emptyLocations: string[] = [];
+        
+        // 直接使用 fightBoardSlotPoint 的 key，避免重复定义
+        // Object.keys() 返回的顺序与对象定义顺序一致（ES2015+保证）
+        const boardLocationKeys = Object.keys(fightBoardSlotPoint);
+        
+        for (let i = 0; i < boardUnits.length && i < boardLocationKeys.length; i++) {
+            if (boardUnits[i] === null) {
+                emptyLocations.push(boardLocationKeys[i]);
+            }
+        }
+        
+        return emptyLocations;
+    }
+
+    /**
+     * 获取前排空位列表
+     * @returns 前排（R1, R2）的空位 BoardLocation 数组
+     * @description 前排适合放置近战棋子（射程 1-2）
+     */
+    public getFrontRowEmptyLocations(): string[] {
+        return this.getEmptyBoardLocations().filter(loc => 
+            loc.startsWith('R1_') || loc.startsWith('R2_')
+        );
+    }
+
+    /**
+     * 获取后排空位列表
+     * @returns 后排（R3, R4）的空位 BoardLocation 数组
+     * @description 后排适合放置远程棋子（射程 3+）
+     */
+    public getBackRowEmptyLocations(): string[] {
+        return this.getEmptyBoardLocations().filter(loc => 
+            loc.startsWith('R3_') || loc.startsWith('R4_')
+        );
+    }
+
+    // ============================================================================
     // 重置
     // ============================================================================
 
@@ -416,10 +765,10 @@ export class GameStateManager {
     public reset(): void {
         // 清除快照
         this.snapshot = null;
-        
+
         // 重置等级
         this.currentLevel = 1;
-        
+
         // 重置游戏进程
         this.progress = {
             currentStage: "",
@@ -428,7 +777,7 @@ export class GameStateManager {
             isGameRunning: false,
             gameStartTime: 0,
         };
-        
+
         logger.info("[GameStateManager] 游戏状态已重置，准备下一局");
     }
 }

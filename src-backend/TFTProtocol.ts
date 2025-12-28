@@ -444,6 +444,18 @@ export interface TFTUnit {
     traits: (UnitOrigin | UnitClass)[]; //  棋子所属羁绊，含种族和职业
     origins: UnitOrigin[];              //  棋子种族
     classes: UnitClass[];               //  棋子职业
+    /**
+     * 棋子攻击射程
+     * @description 从 chess.ts 中提取的 attackRange 数据
+     * | 射程值 | 类型说明 |
+     * |--------|----------|
+     * | 0      | 特殊单位（锻造器等，无射程概念） |
+     * | 1      | 近战单位 |
+     * | 2      | 短程单位 (如格雷福斯、费德提克) |
+     * | 4      | 标准远程单位 |
+     * | 6      | 超远程单位 (如凯特琳、提莫、克格莫) |
+     */
+    attackRange: number;
 }
 
 //  装备类型接口
@@ -619,7 +631,8 @@ const TFT_SPECIAL_CHESS = {
         price: 8,   // what the fuck? 但数据是这么写的
         traits: [],
         origins: [],
-        classes: []
+        classes: [],
+        attackRange: 0
     },
     "成装锻造器": {
         displayName: "成装锻造器",
@@ -627,7 +640,8 @@ const TFT_SPECIAL_CHESS = {
         price: 0,   // what the fuck? 但数据是这么写的
         traits: [],
         origins: [],
-        classes: []
+        classes: [],
+        attackRange: 0
     },
     "神器装备锻造器": {
         displayName: "神器装备锻造器",
@@ -635,7 +649,8 @@ const TFT_SPECIAL_CHESS = {
         price: 8,   // what the fuck? 但数据是这么写的
         traits: [],
         origins: [],
-        classes: []
+        classes: [],
+        attackRange: 0
     },
     "辅助装锻造器": {
         displayName: "辅助装锻造器",
@@ -643,7 +658,8 @@ const TFT_SPECIAL_CHESS = {
         price: 8,   // what the fuck? 但数据是这么写的
         traits: [],
         origins: [],
-        classes: []
+        classes: [],
+        attackRange: 0
     },
     "训练假人": {
         displayName: "训练假人",
@@ -651,7 +667,8 @@ const TFT_SPECIAL_CHESS = {
         price: 1,   // what the fuck? 但数据是这么写的
         traits: [],
         origins: [],
-        classes: []
+        classes: [],
+        attackRange: 0
     },
 } satisfies Record<string, TFTUnit>;
 
@@ -666,7 +683,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 1,
         traits: [UnitOrigin.Bilgewater, UnitClass.Bruiser],
         origins: [UnitOrigin.Bilgewater],
-        classes: [UnitClass.Bruiser]
+        classes: [UnitClass.Bruiser],
+        attackRange: 1
     },
     "贝蕾亚": {
         displayName: "贝蕾亚",
@@ -674,7 +692,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 1,
         traits: [UnitOrigin.Noxus, UnitClass.Slayer, UnitClass.Juggernaut],
         origins: [UnitOrigin.Noxus],
-        classes: [UnitClass.Slayer, UnitClass.Juggernaut]
+        classes: [UnitClass.Slayer, UnitClass.Juggernaut],
+        attackRange: 1
     },
     "艾尼维亚": {
         displayName: "艾尼维亚",
@@ -682,7 +701,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 1,
         traits: [UnitOrigin.Freljord, UnitClass.Invoker],
         origins: [UnitOrigin.Freljord],
-        classes: [UnitClass.Invoker]
+        classes: [UnitClass.Invoker],
+        attackRange: 4
     },
     "嘉文四世": {
         displayName: "嘉文四世",
@@ -690,7 +710,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 1,
         traits: [UnitOrigin.Demacia, UnitClass.Defender],
         origins: [UnitOrigin.Demacia],
-        classes: [UnitClass.Defender]
+        classes: [UnitClass.Defender],
+        attackRange: 1
     },
     "烬": {
         displayName: "烬",
@@ -698,7 +719,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 1,
         traits: [UnitOrigin.Ionia, UnitClass.Gunslinger],
         origins: [UnitOrigin.Ionia],
-        classes: [UnitClass.Gunslinger]
+        classes: [UnitClass.Gunslinger],
+        attackRange: 4
     },
     "凯特琳": {
         displayName: "凯特琳",
@@ -706,7 +728,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 1,
         traits: [UnitOrigin.Piltover, UnitClass.Longshot],
         origins: [UnitOrigin.Piltover],
-        classes: [UnitClass.Longshot]
+        classes: [UnitClass.Longshot],
+        attackRange: 6
     },
     "克格莫": {
         displayName: "克格莫",
@@ -714,7 +737,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 1,
         traits: [UnitOrigin.Void, UnitClass.Sorcerer, UnitClass.Longshot],
         origins: [UnitOrigin.Void],
-        classes: [UnitClass.Sorcerer, UnitClass.Longshot]
+        classes: [UnitClass.Sorcerer, UnitClass.Longshot],
+        attackRange: 6
     },
     "璐璐": {
         displayName: "璐璐",
@@ -722,7 +746,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 1,
         traits: [UnitOrigin.Yordle, UnitClass.Sorcerer],
         origins: [UnitOrigin.Yordle],
-        classes: [UnitClass.Sorcerer]
+        classes: [UnitClass.Sorcerer],
+        attackRange: 4
     },
     "奇亚娜": {
         displayName: "奇亚娜",
@@ -730,7 +755,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 1,
         traits: [UnitOrigin.Ixtal, UnitClass.Slayer],
         origins: [UnitOrigin.Ixtal],
-        classes: [UnitClass.Slayer]
+        classes: [UnitClass.Slayer],
+        attackRange: 1
     },
     "兰博": {
         displayName: "兰博",
@@ -738,7 +764,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 1,
         traits: [UnitOrigin.Yordle, UnitClass.Defender],
         origins: [UnitOrigin.Yordle],
-        classes: [UnitClass.Defender]
+        classes: [UnitClass.Defender],
+        attackRange: 1
     },
     "慎": {
         displayName: "慎",
@@ -746,7 +773,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 1,
         traits: [UnitOrigin.Ionia, UnitClass.Bruiser],
         origins: [UnitOrigin.Ionia],
-        classes: [UnitClass.Bruiser]
+        classes: [UnitClass.Bruiser],
+        attackRange: 1
     },
     "娑娜": {
         displayName: "娑娜",
@@ -754,7 +782,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 1,
         traits: [UnitOrigin.Demacia, UnitClass.Invoker],
         origins: [UnitOrigin.Demacia],
-        classes: [UnitClass.Invoker]
+        classes: [UnitClass.Invoker],
+        attackRange: 4
     },
     "佛耶戈": {
         displayName: "佛耶戈",
@@ -762,7 +791,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 1,
         traits: [UnitOrigin.ShadowIsles, UnitClass.Rapidfire],
         origins: [UnitOrigin.ShadowIsles],
-        classes: [UnitClass.Rapidfire]
+        classes: [UnitClass.Rapidfire],
+        attackRange: 1
     },
     "布里茨": {
         displayName: "布里茨",
@@ -770,7 +800,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 1,
         traits: [UnitOrigin.Zaun, UnitClass.Juggernaut],
         origins: [UnitOrigin.Zaun],
-        classes: [UnitClass.Juggernaut]
+        classes: [UnitClass.Juggernaut],
+        attackRange: 1
     },
 
     // 2 费棋子
@@ -780,7 +811,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 2,
         traits: [UnitOrigin.Targon],
         origins: [UnitOrigin.Targon],
-        classes: []
+        classes: [],
+        attackRange: 4
     },
     "艾希": {
         displayName: "艾希",
@@ -788,7 +820,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 2,
         traits: [UnitOrigin.Freljord, UnitClass.Rapidfire],
         origins: [UnitOrigin.Freljord],
-        classes: [UnitClass.Rapidfire]
+        classes: [UnitClass.Rapidfire],
+        attackRange: 4
     },
     "科加斯": {
         displayName: "科加斯",
@@ -796,7 +829,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 2,
         traits: [UnitOrigin.Void, UnitClass.Juggernaut],
         origins: [UnitOrigin.Void],
-        classes: [UnitClass.Juggernaut]
+        classes: [UnitClass.Juggernaut],
+        attackRange: 1
     },
     "崔斯特": {
         displayName: "崔斯特",
@@ -804,7 +838,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 2,
         traits: [UnitOrigin.Bilgewater, UnitClass.Rapidfire],
         origins: [UnitOrigin.Bilgewater],
-        classes: [UnitClass.Rapidfire]
+        classes: [UnitClass.Rapidfire],
+        attackRange: 4
     },
     "艾克": {
         displayName: "艾克",
@@ -812,7 +847,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 2,
         traits: [UnitOrigin.Zaun, UnitClass.Magus],
         origins: [UnitOrigin.Zaun],
-        classes: [UnitClass.Magus]
+        classes: [UnitClass.Magus],
+        attackRange: 1
     },
     "格雷福斯": {
         displayName: "格雷福斯",
@@ -820,7 +856,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 2,
         traits: [UnitOrigin.Bilgewater, UnitClass.Gunslinger],
         origins: [UnitOrigin.Bilgewater],
-        classes: [UnitClass.Gunslinger]
+        classes: [UnitClass.Gunslinger],
+        attackRange: 2
     },
     "妮蔻": {
         displayName: "妮蔻",
@@ -828,7 +865,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 2,
         traits: [UnitOrigin.Ixtal, UnitClass.Sorcerer, UnitClass.Defender],
         origins: [UnitOrigin.Ixtal],
-        classes: [UnitClass.Sorcerer, UnitClass.Defender]
+        classes: [UnitClass.Sorcerer, UnitClass.Defender],
+        attackRange: 1
     },
     "奥莉安娜": {
         displayName: "奥莉安娜",
@@ -836,7 +874,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 2,
         traits: [UnitOrigin.Piltover, UnitClass.Invoker],
         origins: [UnitOrigin.Piltover],
-        classes: [UnitClass.Invoker]
+        classes: [UnitClass.Invoker],
+        attackRange: 4
     },
     "波比": {
         displayName: "波比",
@@ -844,7 +883,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 2,
         traits: [UnitOrigin.Demacia, UnitOrigin.Yordle, UnitClass.Juggernaut],
         origins: [UnitOrigin.Demacia, UnitOrigin.Yordle],
-        classes: [UnitClass.Juggernaut]
+        classes: [UnitClass.Juggernaut],
+        attackRange: 1
     },
     "雷克塞": {
         displayName: "雷克塞",
@@ -852,7 +892,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 2,
         traits: [UnitOrigin.Void, UnitClass.Vanquisher],
         origins: [UnitOrigin.Void],
-        classes: [UnitClass.Vanquisher]
+        classes: [UnitClass.Vanquisher],
+        attackRange: 1
     },
     "赛恩": {
         displayName: "赛恩",
@@ -860,7 +901,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 2,
         traits: [UnitOrigin.Noxus, UnitClass.Bruiser],
         origins: [UnitOrigin.Noxus],
-        classes: [UnitClass.Bruiser]
+        classes: [UnitClass.Bruiser],
+        attackRange: 1
     },
     "提莫": {
         displayName: "提莫",
@@ -868,7 +910,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 2,
         traits: [UnitOrigin.Yordle, UnitClass.Longshot],
         origins: [UnitOrigin.Yordle],
-        classes: [UnitClass.Longshot]
+        classes: [UnitClass.Longshot],
+        attackRange: 6
     },
     "崔丝塔娜": {
         displayName: "崔丝塔娜",
@@ -876,7 +919,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 2,
         traits: [UnitOrigin.Yordle, UnitClass.Gunslinger],
         origins: [UnitOrigin.Yordle],
-        classes: [UnitClass.Gunslinger]
+        classes: [UnitClass.Gunslinger],
+        attackRange: 4
     },
     "蔚": {
         displayName: "蔚",
@@ -884,7 +928,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 2,
         traits: [UnitOrigin.Piltover, UnitOrigin.Zaun, UnitClass.Defender],
         origins: [UnitOrigin.Piltover, UnitOrigin.Zaun],
-        classes: [UnitClass.Defender]
+        classes: [UnitClass.Defender],
+        attackRange: 1
     },
     "亚索": {
         displayName: "亚索",
@@ -892,7 +937,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 2,
         traits: [UnitOrigin.Ionia, UnitClass.Slayer],
         origins: [UnitOrigin.Ionia],
-        classes: [UnitClass.Slayer]
+        classes: [UnitClass.Slayer],
+        attackRange: 1
     },
     "约里克": {
         displayName: "约里克",
@@ -900,7 +946,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 2,
         traits: [UnitOrigin.ShadowIsles, UnitClass.Warden],
         origins: [UnitOrigin.ShadowIsles],
-        classes: [UnitClass.Warden]
+        classes: [UnitClass.Warden],
+        attackRange: 1
     },
     "赵信": {
         displayName: "赵信",
@@ -908,7 +955,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 2,
         traits: [UnitOrigin.Demacia, UnitOrigin.Ionia, UnitClass.Warden],
         origins: [UnitOrigin.Demacia, UnitOrigin.Ionia],
-        classes: [UnitClass.Warden]
+        classes: [UnitClass.Warden],
+        attackRange: 1
     },
 
     // 3 费棋子
@@ -918,7 +966,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 3,
         traits: [UnitOrigin.Ionia, UnitClass.Sorcerer],
         origins: [UnitOrigin.Ionia],
-        classes: [UnitClass.Sorcerer]
+        classes: [UnitClass.Sorcerer],
+        attackRange: 4
     },
     "巴德": {
         displayName: "巴德",
@@ -926,7 +975,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 3,
         traits: [UnitOrigin.Caretaker],
         origins: [UnitOrigin.Caretaker],
-        classes: []
+        classes: [],
+        attackRange: 4
     },
     "德莱文": {
         displayName: "德莱文",
@@ -934,7 +984,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 3,
         traits: [UnitOrigin.Noxus, UnitClass.Rapidfire],
         origins: [UnitOrigin.Noxus],
-        classes: [UnitClass.Rapidfire]
+        classes: [UnitClass.Rapidfire],
+        attackRange: 4
     },
     "德莱厄斯": {
         displayName: "德莱厄斯",
@@ -942,7 +993,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 3,
         traits: [UnitOrigin.Noxus, UnitClass.Defender],
         origins: [UnitOrigin.Noxus],
-        classes: [UnitClass.Defender]
+        classes: [UnitClass.Defender],
+        attackRange: 1
     },
     "格温": {
         displayName: "格温",
@@ -950,7 +1002,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 3,
         traits: [UnitOrigin.ShadowIsles, UnitClass.Magus],
         origins: [UnitOrigin.ShadowIsles],
-        classes: [UnitClass.Magus]
+        classes: [UnitClass.Magus],
+        attackRange: 1
     },
     "金克丝": {
         displayName: "金克丝",
@@ -958,7 +1011,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 3,
         traits: [UnitOrigin.Zaun, UnitClass.Gunslinger],
         origins: [UnitOrigin.Zaun],
-        classes: [UnitClass.Gunslinger]
+        classes: [UnitClass.Gunslinger],
+        attackRange: 4
     },
     "凯南": {
         displayName: "凯南",
@@ -966,7 +1020,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 3,
         traits: [UnitOrigin.Ionia, UnitOrigin.Yordle, UnitClass.Defender],
         origins: [UnitOrigin.Ionia, UnitOrigin.Yordle],
-        classes: [UnitClass.Defender]
+        classes: [UnitClass.Defender],
+        attackRange: 1
     },
     "可酷伯与悠米": {
         displayName: "可酷伯与悠米",
@@ -974,7 +1029,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 3,
         traits: [UnitOrigin.Yordle, UnitClass.Bruiser, UnitClass.Invoker],
         origins: [UnitOrigin.Yordle],
-        classes: [UnitClass.Bruiser, UnitClass.Invoker]
+        classes: [UnitClass.Bruiser, UnitClass.Invoker],
+        attackRange: 1
     },
     "乐芙兰": {
         displayName: "乐芙兰",
@@ -982,7 +1038,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 3,
         traits: [UnitOrigin.Noxus, UnitClass.Invoker],
         origins: [UnitOrigin.Noxus],
-        classes: [UnitClass.Invoker]
+        classes: [UnitClass.Invoker],
+        attackRange: 4
     },
     "洛里斯": {
         displayName: "洛里斯",
@@ -990,7 +1047,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 3,
         traits: [UnitOrigin.Piltover, UnitClass.Warden],
         origins: [UnitOrigin.Piltover],
-        classes: [UnitClass.Warden]
+        classes: [UnitClass.Warden],
+        attackRange: 1
     },
     "玛尔扎哈": {
         displayName: "玛尔扎哈",
@@ -998,7 +1056,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 3,
         traits: [UnitOrigin.Void, UnitClass.Magus],
         origins: [UnitOrigin.Void],
-        classes: [UnitClass.Magus]
+        classes: [UnitClass.Magus],
+        attackRange: 4
     },
     "米利欧": {
         displayName: "米利欧",
@@ -1006,7 +1065,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 3,
         traits: [UnitOrigin.Ixtal, UnitClass.Invoker],
         origins: [UnitOrigin.Ixtal],
-        classes: [UnitClass.Invoker]
+        classes: [UnitClass.Invoker],
+        attackRange: 4
     },
     "诺提勒斯": {
         displayName: "诺提勒斯",
@@ -1014,7 +1074,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 3,
         traits: [UnitOrigin.Bilgewater, UnitClass.Juggernaut, UnitClass.Warden],
         origins: [UnitOrigin.Bilgewater],
-        classes: [UnitClass.Juggernaut, UnitClass.Warden]
+        classes: [UnitClass.Juggernaut, UnitClass.Warden],
+        attackRange: 1
     },
     "普朗克": {
         displayName: "普朗克",
@@ -1022,7 +1083,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 3,
         traits: [UnitOrigin.Bilgewater, UnitClass.Slayer, UnitClass.Vanquisher],
         origins: [UnitOrigin.Bilgewater],
-        classes: [UnitClass.Slayer, UnitClass.Vanquisher]
+        classes: [UnitClass.Slayer, UnitClass.Vanquisher],
+        attackRange: 1
     },
     "瑟庄妮": {
         displayName: "瑟庄妮",
@@ -1030,7 +1092,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 3,
         traits: [UnitOrigin.Freljord, UnitClass.Defender],
         origins: [UnitOrigin.Freljord],
-        classes: [UnitClass.Defender]
+        classes: [UnitClass.Defender],
+        attackRange: 1
     },
     "薇恩": {
         displayName: "薇恩",
@@ -1038,7 +1101,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 3,
         traits: [UnitOrigin.Demacia, UnitClass.Longshot],
         origins: [UnitOrigin.Demacia],
-        classes: [UnitClass.Longshot]
+        classes: [UnitClass.Longshot],
+        attackRange: 4
     },
     "蒙多医生": {
         displayName: "蒙多医生",
@@ -1046,7 +1110,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 3,
         traits: [UnitOrigin.Zaun, UnitClass.Bruiser],
         origins: [UnitOrigin.Zaun],
-        classes: [UnitClass.Bruiser]
+        classes: [UnitClass.Bruiser],
+        attackRange: 1
     },
 
     // 4 费棋子
@@ -1056,7 +1121,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Noxus, UnitClass.Vanquisher],
         origins: [UnitOrigin.Noxus],
-        classes: [UnitClass.Vanquisher]
+        classes: [UnitClass.Vanquisher],
+        attackRange: 1
     },
     "卑尔维斯": {
         displayName: "卑尔维斯",
@@ -1064,7 +1130,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Void, UnitClass.Slayer],
         origins: [UnitOrigin.Void],
-        classes: [UnitClass.Slayer]
+        classes: [UnitClass.Slayer],
+        attackRange: 2
     },
     "布隆": {
         displayName: "布隆",
@@ -1072,7 +1139,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Freljord, UnitClass.Warden],
         origins: [UnitOrigin.Freljord],
-        classes: [UnitClass.Warden]
+        classes: [UnitClass.Warden],
+        attackRange: 1
     },
     "黛安娜": {
         displayName: "黛安娜",
@@ -1080,7 +1148,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Targon],
         origins: [UnitOrigin.Targon],
-        classes: []
+        classes: [],
+        attackRange: 1
     },
     "盖伦": {
         displayName: "盖伦",
@@ -1088,7 +1157,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Demacia, UnitClass.Defender],
         origins: [UnitOrigin.Demacia],
-        classes: [UnitClass.Defender]
+        classes: [UnitClass.Defender],
+        attackRange: 1
     },
     "卡莉丝塔": {
         displayName: "卡莉丝塔",
@@ -1096,7 +1166,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.ShadowIsles, UnitClass.Vanquisher],
         origins: [UnitOrigin.ShadowIsles],
-        classes: [UnitClass.Vanquisher]
+        classes: [UnitClass.Vanquisher],
+        attackRange: 4
     },
     "卡莎": {
         displayName: "卡莎",
@@ -1104,7 +1175,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Assimilator, UnitOrigin.Void, UnitClass.Longshot],
         origins: [UnitOrigin.Assimilator, UnitOrigin.Void],
-        classes: [UnitClass.Longshot]
+        classes: [UnitClass.Longshot],
+        attackRange: 6
     },
     "蕾欧娜": {
         displayName: "蕾欧娜",
@@ -1112,7 +1184,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Targon],
         origins: [UnitOrigin.Targon],
-        classes: []
+        classes: [],
+        attackRange: 1
     },
     "丽桑卓": {
         displayName: "丽桑卓",
@@ -1120,7 +1193,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Freljord, UnitClass.Invoker],
         origins: [UnitOrigin.Freljord],
-        classes: [UnitClass.Invoker]
+        classes: [UnitClass.Invoker],
+        attackRange: 4
     },
     "拉克丝": {
         displayName: "拉克丝",
@@ -1128,7 +1202,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Demacia, UnitClass.Sorcerer],
         origins: [UnitOrigin.Demacia],
-        classes: [UnitClass.Sorcerer]
+        classes: [UnitClass.Sorcerer],
+        attackRange: 4
     },
     "厄运小姐": {
         displayName: "厄运小姐",
@@ -1136,7 +1211,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Bilgewater, UnitClass.Gunslinger],
         origins: [UnitOrigin.Bilgewater],
-        classes: [UnitClass.Gunslinger]
+        classes: [UnitClass.Gunslinger],
+        attackRange: 4
     },
     "内瑟斯": {
         displayName: "内瑟斯",
@@ -1144,7 +1220,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Shurima],
         origins: [UnitOrigin.Shurima],
-        classes: []
+        classes: [],
+        attackRange: 1
     },
     "奈德丽": {
         displayName: "奈德丽",
@@ -1152,7 +1229,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Ixtal, UnitOrigin.Huntress],
         origins: [UnitOrigin.Ixtal, UnitOrigin.Huntress],
-        classes: []
+        classes: [],
+        attackRange: 1
     },
     "雷克顿": {
         displayName: "雷克顿",
@@ -1160,7 +1238,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Shurima],
         origins: [UnitOrigin.Shurima],
-        classes: []
+        classes: [],
+        attackRange: 1
     },
     "萨勒芬妮": {
         displayName: "萨勒芬妮",
@@ -1168,7 +1247,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Piltover, UnitClass.Magus],
         origins: [UnitOrigin.Piltover],
-        classes: [UnitClass.Magus]
+        classes: [UnitClass.Magus],
+        attackRange: 4
     },
     "辛吉德": {
         displayName: "辛吉德",
@@ -1176,7 +1256,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Zaun, UnitClass.Juggernaut],
         origins: [UnitOrigin.Zaun],
-        classes: [UnitClass.Juggernaut]
+        classes: [UnitClass.Juggernaut],
+        attackRange: 1
     },
     "斯卡纳": {
         displayName: "斯卡纳",
@@ -1184,7 +1265,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Ixtal],
         origins: [UnitOrigin.Ixtal],
-        classes: []
+        classes: [],
+        attackRange: 1
     },
     "斯维因": {
         displayName: "斯维因",
@@ -1192,7 +1274,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Noxus, UnitClass.Sorcerer, UnitClass.Juggernaut],
         origins: [UnitOrigin.Noxus],
-        classes: [UnitClass.Sorcerer, UnitClass.Juggernaut]
+        classes: [UnitClass.Sorcerer, UnitClass.Juggernaut],
+        attackRange: 4
     },
     "孙悟空": {
         displayName: "孙悟空",
@@ -1200,7 +1283,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Ionia, UnitClass.Bruiser],
         origins: [UnitOrigin.Ionia],
-        classes: [UnitClass.Bruiser]
+        classes: [UnitClass.Bruiser],
+        attackRange: 1
     },
     "塔里克": {
         displayName: "塔里克",
@@ -1208,7 +1292,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Targon],
         origins: [UnitOrigin.Targon],
-        classes: []
+        classes: [],
+        attackRange: 1
     },
     "维迦": {
         displayName: "维迦",
@@ -1216,7 +1301,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Yordle, UnitClass.Sorcerer],
         origins: [UnitOrigin.Yordle],
-        classes: [UnitClass.Sorcerer]
+        classes: [UnitClass.Sorcerer],
+        attackRange: 4
     },
     "沃里克": {
         displayName: "沃里克",
@@ -1224,7 +1310,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Zaun, UnitClass.Rapidfire],
         origins: [UnitOrigin.Zaun],
-        classes: [UnitClass.Rapidfire]
+        classes: [UnitClass.Rapidfire],
+        attackRange: 1
     },
     "永恩": {
         displayName: "永恩",
@@ -1232,7 +1319,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Ionia, UnitClass.Slayer],
         origins: [UnitOrigin.Ionia],
-        classes: [UnitClass.Slayer]
+        classes: [UnitClass.Slayer],
+        attackRange: 1
     },
     "芸阿娜": {
         displayName: "芸阿娜",
@@ -1240,7 +1328,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4,
         traits: [UnitOrigin.Ionia, UnitClass.Rapidfire],
         origins: [UnitOrigin.Ionia],
-        classes: [UnitClass.Rapidfire]
+        classes: [UnitClass.Rapidfire],
+        attackRange: 4
     },
 
     // 5 费棋子
@@ -1250,7 +1339,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 5,
         traits: [UnitOrigin.Darkin, UnitClass.Slayer],
         origins: [UnitOrigin.Darkin],
-        classes: [UnitClass.Slayer]
+        classes: [UnitClass.Slayer],
+        attackRange: 1
     },
     "安妮": {
         displayName: "安妮",
@@ -1258,7 +1348,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 5,
         traits: [UnitOrigin.DarkChild, UnitClass.Sorcerer],
         origins: [UnitOrigin.DarkChild],
-        classes: [UnitClass.Sorcerer]
+        classes: [UnitClass.Sorcerer],
+        attackRange: 4
     },
     "阿兹尔": {
         displayName: "阿兹尔",
@@ -1266,7 +1357,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 5,
         traits: [UnitOrigin.Shurima, UnitOrigin.Emperor, UnitClass.Magus],
         origins: [UnitOrigin.Shurima, UnitOrigin.Emperor],
-        classes: [UnitClass.Magus]
+        classes: [UnitClass.Magus],
+        attackRange: 4
     },
     "费德提克": {
         displayName: "费德提克",
@@ -1274,7 +1366,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 5,
         traits: [UnitOrigin.Harvester, UnitClass.Vanquisher],
         origins: [UnitOrigin.Harvester],
-        classes: [UnitClass.Vanquisher]
+        classes: [UnitClass.Vanquisher],
+        attackRange: 2
     },
     "吉格斯": {
         displayName: "吉格斯",
@@ -1282,7 +1375,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 5,
         traits: [UnitOrigin.Zaun, UnitOrigin.Yordle, UnitClass.Longshot],
         origins: [UnitOrigin.Zaun, UnitOrigin.Yordle],
-        classes: [UnitClass.Longshot]
+        classes: [UnitClass.Longshot],
+        attackRange: 6
     },
     "加里奥": {
         displayName: "加里奥",
@@ -1290,7 +1384,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 5,
         traits: [UnitOrigin.Demacia, UnitOrigin.Heroic],
         origins: [UnitOrigin.Demacia, UnitOrigin.Heroic],
-        classes: []
+        classes: [],
+        attackRange: 1
     },
     "基兰": {
         displayName: "基兰",
@@ -1298,7 +1393,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 5,
         traits: [UnitOrigin.Chronokeeper, UnitClass.Invoker],
         origins: [UnitOrigin.Chronokeeper],
-        classes: [UnitClass.Invoker]
+        classes: [UnitClass.Invoker],
+        attackRange: 4
     },
     "千珏": {
         displayName: "千珏",
@@ -1306,7 +1402,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 5,
         traits: [UnitOrigin.Kindred, UnitClass.Rapidfire],
         origins: [UnitOrigin.Kindred],
-        classes: [UnitClass.Rapidfire]
+        classes: [UnitClass.Rapidfire],
+        attackRange: 4
     },
     "卢锡安与赛娜": {
         displayName: "卢锡安与赛娜",
@@ -1314,7 +1411,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 5,
         traits: [UnitOrigin.Soulbound, UnitClass.Gunslinger],
         origins: [UnitOrigin.Soulbound],
-        classes: [UnitClass.Gunslinger]
+        classes: [UnitClass.Gunslinger],
+        attackRange: 4
     },
     "梅尔": {
         displayName: "梅尔",
@@ -1322,7 +1420,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 5,
         traits: [UnitOrigin.Noxus, UnitClass.Magus],
         origins: [UnitOrigin.Noxus],
-        classes: [UnitClass.Magus]
+        classes: [UnitClass.Magus],
+        attackRange: 4
     },
     "奥恩": {
         displayName: "奥恩",
@@ -1330,7 +1429,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 5,
         traits: [UnitOrigin.Blacksmith, UnitClass.Warden],
         origins: [UnitOrigin.Blacksmith],
-        classes: [UnitClass.Warden]
+        classes: [UnitClass.Warden],
+        attackRange: 1
     },
     "瑟提": {
         displayName: "瑟提",
@@ -1338,7 +1438,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 5,
         traits: [UnitOrigin.Ionia, UnitOrigin.TheBoss],
         origins: [UnitOrigin.Ionia, UnitOrigin.TheBoss],
-        classes: []
+        classes: [],
+        attackRange: 1
     },
     "希瓦娜": {
         displayName: "希瓦娜",
@@ -1346,7 +1447,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 5,
         traits: [UnitOrigin.Dragonborn, UnitClass.Juggernaut],
         origins: [UnitOrigin.Dragonborn],
-        classes: [UnitClass.Juggernaut]
+        classes: [UnitClass.Juggernaut],
+        attackRange: 1
     },
     "塔姆": {
         displayName: "塔姆",
@@ -1354,7 +1456,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 5,
         traits: [UnitOrigin.Bilgewater, UnitOrigin.Glutton, UnitClass.Bruiser],
         origins: [UnitOrigin.Bilgewater, UnitOrigin.Glutton],
-        classes: [UnitClass.Bruiser]
+        classes: [UnitClass.Bruiser],
+        attackRange: 1
     },
     "锤石": {
         displayName: "锤石",
@@ -1362,7 +1465,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 5,
         traits: [UnitOrigin.ShadowIsles, UnitClass.Warden],
         origins: [UnitOrigin.ShadowIsles],
-        classes: [UnitClass.Warden]
+        classes: [UnitClass.Warden],
+        attackRange: 1
     },
     "沃利贝尔": {
         displayName: "沃利贝尔",
@@ -1370,7 +1474,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 5,
         traits: [UnitOrigin.Freljord, UnitClass.Bruiser],
         origins: [UnitOrigin.Freljord],
-        classes: [UnitClass.Bruiser]
+        classes: [UnitClass.Bruiser],
+        attackRange: 1
     },
 
     // 特殊/高费羁绊单位（价格 7）
@@ -1380,7 +1485,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 7,
         traits: [UnitOrigin.Starforger, UnitOrigin.Targon],
         origins: [UnitOrigin.Starforger, UnitOrigin.Targon],
-        classes: []
+        classes: [],
+        attackRange: 4
     },
     "纳什男爵": {
         displayName: "纳什男爵",
@@ -1388,7 +1494,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 7,
         traits: [UnitOrigin.Void, UnitOrigin.Baron],
         origins: [UnitOrigin.Void, UnitOrigin.Baron],
-        classes: []
+        classes: [],
+        attackRange: 2
     },
     "瑞兹": {
         displayName: "瑞兹",
@@ -1396,7 +1503,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 7,
         traits: [UnitOrigin.RuneMage],
         origins: [UnitOrigin.RuneMage],
-        classes: []
+        classes: [],
+        attackRange: 4
     },
     "亚恒": {
         displayName: "亚恒",
@@ -1404,7 +1512,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 7,
         traits: [UnitOrigin.Darkin, UnitOrigin.Immortal],
         origins: [UnitOrigin.Darkin, UnitOrigin.Immortal],
-        classes: []
+        classes: [],
+        attackRange: 2
     },
 
     // 特殊召唤物/机甲/其他
@@ -1414,7 +1523,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 5, // 官方数据是5费
         traits: [UnitOrigin.HexMech, UnitOrigin.Piltover, UnitClass.Gunslinger],
         origins: [UnitOrigin.HexMech, UnitOrigin.Piltover],
-        classes: [UnitClass.Gunslinger]
+        classes: [UnitClass.Gunslinger],
+        attackRange: 2
     },
     "佐伊": {
         displayName: "佐伊",
@@ -1422,7 +1532,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 3, // 官方数据是3费
         traits: [UnitOrigin.Targon],
         origins: [UnitOrigin.Targon],
-        classes: []
+        classes: [],
+        attackRange: 4
     },
     "菲兹": {
         displayName: "菲兹",
@@ -1430,7 +1541,8 @@ const _TFT_16_CHAMPION_DATA = {
         price: 4, // 官方数据是4费
         traits: [UnitOrigin.Bilgewater, UnitOrigin.Yordle],
         origins: [UnitOrigin.Bilgewater, UnitOrigin.Yordle],
-        classes: [] // 官方数据 jobs 为空
+        classes: [], // 官方数据 jobs 为空
+        attackRange: 1
     },
 } satisfies Record<string, TFTUnit>;
 
@@ -2961,6 +3073,37 @@ export interface LineupUnit {
     isCore: boolean;
     items?: EquipKey[];
     starTarget?: 1 | 2 | 3;
+}
+
+/**
+ * 判断棋子是否为近战单位
+ * @param championName 棋子中文名
+ * @returns true 表示近战，false 表示远程
+ */
+export function isMeleeChampion(championName: ChampionKey): boolean {
+    const champion = TFT_16_CHAMPION_DATA[championName];
+    // 射程 <= 2 视为近战（包括格雷福斯这种短程枪手）
+    return champion !== undefined && champion.attackRange <= 2;
+}
+
+/**
+ * 判断棋子是否为远程单位
+ * @param championName 棋子中文名
+ * @returns true 表示远程，false 表示近战
+ */
+export function isRangedChampion(championName: ChampionKey): boolean {
+    const champion = TFT_16_CHAMPION_DATA[championName];
+    // 射程 >= 4 视为远程
+    return champion !== undefined && champion.attackRange >= 4;
+}
+
+/**
+ * 获取棋子的射程值
+ * @param championName 棋子中文名
+ * @returns 射程值，未知棋子返回 undefined
+ */
+export function getChampionRange(championName: ChampionKey): number | undefined {
+    return TFT_16_CHAMPION_DATA[championName]?.attackRange;
 }
 
 export interface TeamComposition {

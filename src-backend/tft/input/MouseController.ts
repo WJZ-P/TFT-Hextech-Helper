@@ -162,6 +162,74 @@ export class MouseController {
             throw e;
         }
     }
+
+    /**
+     * 拖拽操作：从起点拖动到终点
+     * @description 用于移动棋子（从备战席到棋盘、棋盘内调整位置等）
+     *              TFT 中拖拽棋子的操作流程：
+     *              1. 移动鼠标到起点
+     *              2. 按下左键
+     *              3. 移动鼠标到终点
+     *              4. 释放左键
+     * 
+     * @param from 起点坐标（相对于游戏窗口）
+     * @param to 终点坐标（相对于游戏窗口）
+     * @param holdDelay 按下鼠标后等待的时间（ms），确保游戏识别到拖拽开始
+     * @param moveDelay 移动过程中的延迟（ms），模拟人类拖拽速度
+     */
+    public async drag(
+        from: SimplePoint,
+        to: SimplePoint,
+        holdDelay: number = 100,
+        moveDelay: number = 150
+    ): Promise<void> {
+        if (!this.gameWindowOrigin) {
+            throw new Error("[MouseController] 尚未设置游戏窗口基准点，请先调用 setGameWindowOrigin()");
+        }
+
+        // 计算屏幕绝对坐标
+        const fromAbs = new Point(
+            this.gameWindowOrigin.x + from.x,
+            this.gameWindowOrigin.y + from.y
+        );
+        const toAbs = new Point(
+            this.gameWindowOrigin.x + to.x,
+            this.gameWindowOrigin.y + to.y
+        );
+
+        logger.info(
+            `[MouseController] 拖拽: (${from.x},${from.y}) -> (${to.x},${to.y})`
+        );
+
+        try {
+            // 1. 移动到起点
+            await mouse.move([fromAbs]);
+            await sleep(MOUSE_CONFIG.MOVE_DELAY);
+
+            // 2. 按下左键（不释放）
+            await mouse.pressButton(Button.LEFT);
+            await sleep(holdDelay);
+
+            // 3. 移动到终点
+            await mouse.move([toAbs]);
+            await sleep(moveDelay);
+
+            // 4. 释放左键
+            await mouse.releaseButton(Button.LEFT);
+            await sleep(MOUSE_CONFIG.CLICK_DELAY);
+
+            logger.debug("[MouseController] 拖拽完成");
+        } catch (e: any) {
+            // 确保异常时释放鼠标按键，避免鼠标卡住
+            try {
+                await mouse.releaseButton(Button.LEFT);
+            } catch {
+                // 忽略释放失败
+            }
+            logger.error(`[MouseController] 拖拽失败: ${e.message}`);
+            throw e;
+        }
+    }
 }
 
 /** MouseController 单例导出 */

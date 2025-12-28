@@ -17,13 +17,13 @@
  */
 import { tftOperator } from "../TftOperator";
 import { logger } from "../utils/Logger";
-import { TFTUnit, GameStageType } from "../TFTProtocol";
+import { TFTUnit, GameStageType, fightBoardSlotPoint, getChampionRange } from "../TFTProtocol";
 import { gameStateManager } from "./GameStateManager";
 import { gameStageMonitor, GameStageEvent } from "./GameStageMonitor";
 import { settingsStore } from "../utils/SettingsStore";
 import { lineupLoader } from "../lineup";
 import { LineupConfig, StageConfig, ChampionConfig } from "../lineup/LineupTypes";
-import { mouseController } from "../tft";
+import { mouseController, BenchUnit, BenchLocation } from "../tft";
 import { sleep } from "../utils/HelperTools";
 
 /**
@@ -804,55 +804,41 @@ export class StrategyService {
         // 2. 获取所有候选阵容的 level4 目标棋子（合并去重）
         const candidateTargets = this.getCandidateTargetChampions();
         
-        // 3. 获取当前金币和备战席空位数
-        let currentGold = gameStateManager.getGold();
-        let emptyBenchSlots = gameStateManager.getEmptyBenchSlotCount();
-        
         logger.info(
-            `[StrategyService] 前期策略 - 金币: ${currentGold}，备战席空位: ${emptyBenchSlots}，` +
+            `[StrategyService] 前期策略 - 金币: ${gameStateManager.getGold()}，` +
+            `备战席空位: ${gameStateManager.getEmptyBenchSlotCount()}，` +
             `已有棋子: ${Array.from(ownedChampions).join(', ') || '无'}，` +
             `候选目标: ${Array.from(candidateTargets).join(', ') || '无'}`
         );
         
-        // 4. 获取商店信息
+        // 3. 获取商店信息
         const shopUnits = gameStateManager.getShopUnits();
         
-        // 5. 遍历商店，按优先级决策购买
+        // 4. 遍历商店，按优先级决策购买
         for (let i = 0; i < shopUnits.length; i++) {
             const unit = shopUnits[i];
             if (!unit) continue;
-            
-            // 前置检查：备战席是否已满
-            if (emptyBenchSlots <= 0) {
-                logger.info("[StrategyService] 备战席已满，停止购买");
-                break;
-            }
-            
-            // 前置检查：金币是否足够
-            if (currentGold < unit.price) {
-                logger.debug(
-                    `[StrategyService] 金币不足，跳过 ${unit.displayName} ` +
-                    `(需要 ${unit.price}，当前 ${currentGold})`
-                );
-                continue;
-            }
             
             // 判断是否应该购买（前期特殊逻辑）
             const shouldBuy = this.shouldBuyInEarlyGame(unit, ownedChampions, candidateTargets);
             
             if (shouldBuy) {
                 logger.info(
-                    `[StrategyService] 前期购买: ${unit.displayName} (￥${unit.price})，` +
+                    `[StrategyService] 前期决策购买: ${unit.displayName} (￥${unit.price})，` +
                     `原因: ${this.getEarlyBuyReason(unit, ownedChampions, candidateTargets)}`
                 );
-                await tftOperator.buyAtSlot(i + 1);
                 
-                // 更新金币和空位计数（购买成功后）
-                currentGold -= unit.price;
-                emptyBenchSlots -= 1;
+                // 使用统一的购买方法，内部会处理：
+                // - 金币检查
+                // - 备战席空位检查
+                // - 升星逻辑
+                // - 状态更新
+                const success = await this.buyAndUpdateState(i);
                 
-                // 将刚买的棋子加入已有棋子集合（方便后续判断升星）
-                ownedChampions.add(unit.displayName);
+                if (success) {
+                    // 将刚买的棋子加入已有棋子集合（方便后续判断升星）
+                    ownedChampions.add(unit.displayName);
+                }
             } else {
                 logger.debug(`[StrategyService] 前期跳过: ${unit.displayName}`);
             }
@@ -1004,6 +990,9 @@ export class StrategyService {
             // 购买目标棋子
             await this.analyzeAndBuy();
             
+            // 摆放棋子（将备战席棋子上场）
+            await this.placeUnitsOnBoard();
+            
             // TODO: 上装备
             // await this.equipItems();
             
@@ -1093,6 +1082,372 @@ export class StrategyService {
         // 2. 检查星级：如果场上 + 备战席已经有 9 张了 (能合 3 星)，是否还需要买？
         // 3. 检查备战席空间：如果备战席满了，买了也没地放，是不是要先卖别的？
         // 4. 优先级：核心棋子优先购买
+    }
+
+    /**
+     * 购买棋子并更新游戏状态
+     * @param shopSlotIndex 商店槽位索引 (0-4)
+     * @returns 是否购买成功
+     * 
+     * @description 这是一个核心方法，负责：
+     *              1. 检查购买条件（金币、备战席空位、是否能升星）
+     *              2. 执行购买操作
+     *              3. 更新 GameStateManager 中的状态（金币、备战席、商店）
+     * 
+     * TFT 合成规则：
+     * - 3 个 1★ 同名棋子 → 自动合成 1 个 2★
+     * - 合成时，场上的棋子优先变为高星，备战席的棋子被消耗
+     * - 如果都在备战席，靠左（索引小）的棋子变为高星，其他被消耗
+     * 
+     * 购买后状态变化：
+     * - 情况 A：备战席有空位，不能升星
+     *   → 新棋子放入最左边的空位
+     * - 情况 B：能升星（已有 2 个 1★）
+     *   - B1：场上 1 个 + 备战席 1 个 → 场上棋子升 2★，备战席棋子消失
+     *   - B2：备战席 2 个 → 靠左的升 2★，另一个消失
+     * - 情况 C：备战席满且不能升星
+     *   → 无法购买，返回 false
+     */
+    private async buyAndUpdateState(shopSlotIndex: number): Promise<boolean> {
+        // 1. 获取商店棋子信息
+        const shopUnits = gameStateManager.getShopUnits();
+        const unit = shopUnits[shopSlotIndex];
+        
+        if (!unit) {
+            logger.error(`[StrategyService] 商店槽位 ${shopSlotIndex} 为空，无法购买`);
+            return false;
+        }
+        
+        const championName = unit.displayName;
+        const price = unit.price;
+        
+        // 2. 检查金币是否足够
+        const currentGold = gameStateManager.getGold();
+        if (currentGold < price) {
+            logger.error(
+                `[StrategyService] 金币不足，无法购买 ${championName}` +
+                `（需要 ${price}，当前 ${currentGold}）`
+            );
+            return false;
+        }
+        
+        // 3. 检查备战席空位和升星情况
+        const emptyBenchSlots = gameStateManager.getEmptyBenchSlotCount();
+        const canUpgrade = gameStateManager.canUpgradeAfterBuy(championName);
+        
+        // 4. 判断是否可以购买
+        if (emptyBenchSlots <= 0 && !canUpgrade) {
+            logger.error(
+                `[StrategyService] 备战席已满且买了不能升星，无法购买 ${championName}`
+            );
+            return false;
+        }
+        
+        // 5. 执行购买操作（调用 TftOperator）
+        //    商店槽位是 1-5，所以要 +1
+        logger.info(
+            `[StrategyService] 购买 ${championName} (￥${price})` +
+            (canUpgrade ? ' [可升星]' : '')
+        );
+        await tftOperator.buyAtSlot(shopSlotIndex + 1);
+        
+        // 6. 更新 GameStateManager 状态
+        // 6.1 扣减金币
+        gameStateManager.deductGold(price);
+        
+        // 6.2 清空商店槽位
+        gameStateManager.setShopSlotEmpty(shopSlotIndex);
+        
+        // 6.3 更新备战席/棋盘状态
+        if (canUpgrade) {
+            // 能升星：找到参与合成的 2 个 1★ 棋子
+            this.handleUpgradeAfterBuy(championName);
+        } else {
+            // 不能升星：新棋子放入备战席最左边的空位
+            const emptySlotIndex = gameStateManager.getFirstEmptyBenchSlotIndex();
+            
+            if (emptySlotIndex === -1) {
+                // 理论上不应该发生，因为前面已经检查过
+                logger.error(`[StrategyService] 备战席没有空位，但购买已执行`);
+            } else {
+                // 构造新的 BenchUnit 对象
+                // 商店买的棋子都是 1 星，且没有装备
+                const newBenchUnit: BenchUnit = {
+                    location: `SLOT_${emptySlotIndex + 1}` as BenchLocation,  // 索引 0 对应 SLOT_1
+                    tftUnit: unit,  // 商店棋子信息
+                    starLevel: 1,   // 商店买的都是 1 星
+                    equips: [],     // 刚买的棋子没有装备
+                };
+                
+                gameStateManager.setBenchSlotUnit(emptySlotIndex, newBenchUnit);
+                
+                logger.debug(
+                    `[StrategyService] ${championName} 放入备战席槽位 ${emptySlotIndex} (SLOT_${emptySlotIndex + 1})`
+                );
+            }
+        }
+        
+        return true;
+    }
+    
+    /**
+     * 处理购买后的升星逻辑
+     * @param championName 购买的棋子名称
+     * @description 当购买的棋子能触发升星时，更新 GameStateManager 中的状态：
+     *              - 找到参与合成的 2 个 1★ 棋子位置
+     *              - 决定哪个棋子升级、哪个棋子消失
+     *              - 更新对应槽位的状态
+     * 
+     * TFT 合成优先级：
+     * 1. 如果场上有 1★，场上的棋子升级，备战席的消失
+     * 2. 如果都在备战席，索引小（靠左）的升级，另一个消失
+     */
+    private handleUpgradeAfterBuy(championName: string): void {
+        // 获取所有 1★ 棋子的位置
+        const positions = gameStateManager.findOneStarChampionPositions(championName);
+        
+        if (positions.length < 2) {
+            // 理论上不应该发生，因为 canUpgradeAfterBuy 已经检查过
+            logger.warn(
+                `[StrategyService] 升星异常：${championName} 只找到 ${positions.length} 个 1★`
+            );
+            return;
+        }
+        
+        // 取前 2 个位置（已按优先级排序：场上优先，然后按索引从小到大）
+        const [first, second] = positions;
+        
+        logger.info(
+            `[StrategyService] ${championName} 升星：` +
+            `${first.location}[${first.index}] 升为 2★，` +
+            `${second.location}[${second.index}] 消失`
+        );
+        
+        // 第一个位置的棋子升级为 2★
+        if (first.location === 'board') {
+            gameStateManager.updateBoardSlotStarLevel(first.index, 2);
+        } else {
+            gameStateManager.updateBenchSlotStarLevel(first.index, 2);
+        }
+        
+        // 第二个位置的棋子消失
+        if (second.location === 'bench') {
+            gameStateManager.setBenchSlotEmpty(second.index);
+        }
+        // 注意：如果第二个在棋盘上，理论上不会发生（因为场上棋子优先升级）
+        // 但如果真的发生了，我们不处理棋盘槽位清空（棋盘上的棋子不会因合成消失）
+    }
+
+    // ============================================================
+    // 🎯 棋子摆放策略 (Unit Placement Strategy)
+    // ============================================================
+
+    /**
+     * 摆放棋子到棋盘上
+     * @description 将备战席上的目标棋子摆放到棋盘上合适的位置
+     *              摆放逻辑：
+     *              1. 检查当前棋盘棋子数量是否已达到等级上限
+     *              2. 遍历备战席，找到目标阵容中的棋子
+     *              3. 根据棋子射程决定放前排还是后排
+     *              4. 执行拖拽操作将棋子上场
+     * 
+     * 前后排划分：
+     * - 前排 (R1, R2)：适合近战棋子（射程 1-2）
+     * - 后排 (R3, R4)：适合远程棋子（射程 3+）
+     */
+    private async placeUnitsOnBoard(): Promise<void> {
+        // 1. 检查是否有空位可以上棋子
+        const availableSlots = gameStateManager.getAvailableBoardSlots();
+        
+        if (availableSlots <= 0) {
+            logger.debug("[StrategyService] 棋盘已满员，无需摆放棋子");
+            return;
+        }
+        
+        logger.info(
+            `[StrategyService] 开始摆放棋子，当前等级: ${gameStateManager.getLevel()}，` +
+            `可上场数量: ${availableSlots}`
+        );
+        
+        // 2. 获取备战席上的棋子
+        const benchUnits = gameStateManager.getBenchUnitsWithIndex();
+        
+        if (benchUnits.length === 0) {
+            logger.debug("[StrategyService] 备战席没有棋子，跳过摆放");
+            return;
+        }
+        
+        // 3. 筛选出目标阵容中的棋子，并按优先级排序
+        const unitsToPlace = this.selectUnitsToPlace(benchUnits, availableSlots);
+        
+        if (unitsToPlace.length === 0) {
+            logger.debug("[StrategyService] 备战席没有需要上场的目标棋子");
+            return;
+        }
+        
+        // 4. 依次摆放棋子
+        for (const { unit, index } of unitsToPlace) {
+            const championName = unit.tftUnit.displayName;
+            
+            // 根据射程决定放前排还是后排
+            const targetLocation = this.findBestPositionForUnit(unit);
+            
+            if (!targetLocation) {
+                logger.warn(`[StrategyService] 找不到合适的位置放置 ${championName}`);
+                continue;
+            }
+            
+            logger.info(
+                `[StrategyService] 摆放棋子: ${championName} (射程: ${getChampionRange(championName as any) ?? '未知'}) ` +
+                `-> ${targetLocation}`
+            );
+            
+            // 执行拖拽操作
+            await tftOperator.moveBenchToBoard(
+                index,
+                targetLocation as keyof typeof fightBoardSlotPoint
+            );
+            
+            // 等待一小段时间，确保游戏响应
+            await sleep(300);
+            
+            // 刷新游戏状态（因为棋盘和备战席都变化了）
+            // 注意：这里不需要完整刷新，只需要更新本地状态
+            // 但为了简单起见，我们先跳过这一步，依赖下一回合的完整刷新
+        }
+        
+        logger.info(`[StrategyService] 棋子摆放完成，共摆放 ${unitsToPlace.length} 个棋子`);
+    }
+
+    /**
+     * 选择需要上场的棋子
+     * @param benchUnits 备战席上的棋子列表
+     * @param maxCount 最多可以上场的数量
+     * @returns 需要上场的棋子列表（已排序）
+     * 
+     * @description 选择逻辑：
+     *              1. 只选择目标阵容中的棋子
+     *              2. 优先选择核心棋子
+     *              3. 优先选择高星级棋子
+     *              4. 优先选择高费棋子
+     */
+    private selectUnitsToPlace(
+        benchUnits: Array<{ unit: BenchUnit; index: number }>,
+        maxCount: number
+    ): Array<{ unit: BenchUnit; index: number }> {
+        // 1. 筛选目标阵容中的棋子
+        const targetUnits = benchUnits.filter(({ unit }) => 
+            this.targetChampionNames.has(unit.tftUnit.displayName)
+        );
+        
+        if (targetUnits.length === 0) {
+            return [];
+        }
+        
+        // 2. 获取核心棋子名称集合（用于优先级判断）
+        // 显式声明为 Set<string>，因为 displayName 是 string 类型
+        const coreChampionNames = new Set<string>(
+            this.getCoreChampions().map(c => c.name)
+        );
+        
+        // 3. 排序：核心 > 星级 > 费用
+        targetUnits.sort((a, b) => {
+            const aName = a.unit.tftUnit.displayName;
+            const bName = b.unit.tftUnit.displayName;
+            
+            // 核心棋子优先
+            const aIsCore = coreChampionNames.has(aName) ? 1 : 0;
+            const bIsCore = coreChampionNames.has(bName) ? 1 : 0;
+            if (aIsCore !== bIsCore) return bIsCore - aIsCore;
+            
+            // 星级高的优先
+            const aStarLevel = a.unit.starLevel > 0 ? a.unit.starLevel : 1;
+            const bStarLevel = b.unit.starLevel > 0 ? b.unit.starLevel : 1;
+            if (aStarLevel !== bStarLevel) return bStarLevel - aStarLevel;
+            
+            // 费用高的优先
+            return b.unit.tftUnit.price - a.unit.tftUnit.price;
+        });
+        
+        // 4. 取前 maxCount 个
+        return targetUnits.slice(0, maxCount);
+    }
+
+    /**
+     * 为棋子找到最佳摆放位置
+     * @param unit 要摆放的棋子
+     * @returns 最佳位置的 BoardLocation，如果找不到返回 undefined
+     * 
+     * @description 摆放逻辑：
+     *              - 射程 1-2（近战）：优先放前排 (R1, R2)
+     *              - 射程 3+（远程）：优先放后排 (R3, R4)
+     *              - 如果优先区域没有空位，则放到任意空位
+     */
+    private findBestPositionForUnit(unit: BenchUnit): string | undefined {
+        const championName = unit.tftUnit.displayName;
+        const range = getChampionRange(championName as any) ?? 1;
+        
+        // 判断是近战还是远程
+        // 射程 1-2 视为近战，放前排
+        // 射程 3+ 视为远程，放后排
+        const isMelee = range <= 2;
+        
+        // 获取前后排空位
+        const frontRowEmpty = gameStateManager.getFrontRowEmptyLocations();
+        const backRowEmpty = gameStateManager.getBackRowEmptyLocations();
+        
+        logger.debug(
+            `[StrategyService] ${championName} 射程: ${range}，` +
+            `${isMelee ? '近战' : '远程'}，` +
+            `前排空位: ${frontRowEmpty.length}，后排空位: ${backRowEmpty.length}`
+        );
+        
+        if (isMelee) {
+            // 近战棋子：优先前排，其次后排
+            if (frontRowEmpty.length > 0) {
+                // 前排从中间开始放（C4 -> C3 -> C5 -> C2 -> C6 -> C1 -> C7）
+                return this.selectPositionFromCenter(frontRowEmpty);
+            }
+            if (backRowEmpty.length > 0) {
+                return this.selectPositionFromCenter(backRowEmpty);
+            }
+        } else {
+            // 远程棋子：优先后排，其次前排
+            if (backRowEmpty.length > 0) {
+                // 后排从中间开始放
+                return this.selectPositionFromCenter(backRowEmpty);
+            }
+            if (frontRowEmpty.length > 0) {
+                return this.selectPositionFromCenter(frontRowEmpty);
+            }
+        }
+        
+        // 如果前后排都没有空位，返回 undefined
+        return undefined;
+    }
+
+    /**
+     * 从空位列表中选择最靠近中间的位置
+     * @param emptyLocations 空位列表（如 ["R1_C1", "R1_C3", "R1_C5"]）
+     * @returns 最靠近中间的位置
+     * 
+     * @description 中间优先的顺序：C4 > C3 > C5 > C2 > C6 > C1 > C7
+     *              这样可以让阵型更加集中，便于羁绊触发和保护后排
+     */
+    private selectPositionFromCenter(emptyLocations: string[]): string | undefined {
+        if (emptyLocations.length === 0) return undefined;
+        
+        // 列的优先级（从中间到两边）
+        const columnPriority = ['C4', 'C3', 'C5', 'C2', 'C6', 'C1', 'C7'];
+        
+        // 按优先级查找
+        for (const col of columnPriority) {
+            const found = emptyLocations.find(loc => loc.includes(col));
+            if (found) return found;
+        }
+        
+        // 如果都没找到（理论上不会发生），返回第一个
+        return emptyLocations[0];
     }
 
     /**
