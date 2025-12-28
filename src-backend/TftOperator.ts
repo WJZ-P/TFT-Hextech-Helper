@@ -1311,6 +1311,43 @@ class TftOperator {
     // ========================================================================
 
     /**
+     * 出售指定位置的棋子
+     * @param location 棋子当前位置 (备战席 "SLOT_x" 或 棋盘 "Rx_Cx")
+     * @description 操作流程：
+     *              1. 鼠标移动到棋子位置
+     *              2. 左键拖拽（拿起）
+     *              3. 移动到商店区域 (使用 SHOP_SLOT_3 作为卖出点，因为它在中间)
+     *              4. 释放左键（卖出）
+     */
+    public async sellUnit(location: string): Promise<void> {
+        this.ensureInitialized();
+
+        let fromPoint: SimplePoint | undefined;
+
+        // 判断是备战席还是棋盘
+        if (location.startsWith('SLOT_')) {
+            fromPoint = benchSlotPoints[location as keyof typeof benchSlotPoints];
+        } else if (location.startsWith('R')) {
+            fromPoint = fightBoardSlotPoint[location as keyof typeof fightBoardSlotPoint];
+        }
+
+        if (!fromPoint) {
+            logger.error(`[TftOperator] 卖出失败，无效的位置: ${location}`);
+            return;
+        }
+
+        // 卖出点：商店中间位置 (SLOT_3)
+        // 也可以是屏幕左右下角的卖出区域，但拖到商店最通用
+        const sellPoint = shopSlot.SHOP_SLOT_3;
+
+        logger.info(`[TftOperator] 卖出棋子: ${location}`);
+
+        // 执行拖拽操作卖出
+        // 这里的拖拽逻辑 (move -> press -> move -> release) 符合 "拿起 -> 移动 -> 放下" 的过程
+        await mouseController.drag(fromPoint, sellPoint);
+    }
+
+    /**
      * 将备战席的棋子移动到棋盘指定位置
      * @param benchSlotIndex 备战席槽位索引 (0-8)
      * @param boardLocation 棋盘目标位置 (如 "R1_C1")

@@ -828,21 +828,118 @@ export class StrategyService {
                     `原因: ${this.getEarlyBuyReason(unit, ownedChampions, candidateTargets)}`
                 );
                 
-                // 使用统一的购买方法，内部会处理：
-                // - 金币检查
-                // - 备战席空位检查
-                // - 升星逻辑
-                // - 状态更新
+                // 使用统一的购买方法
                 const success = await this.buyAndUpdateState(i);
                 
                 if (success) {
-                    // 将刚买的棋子加入已有棋子集合（方便后续判断升星）
+                    // 将刚买的棋子加入已有棋子集合
                     ownedChampions.add(unit.displayName);
                 }
             } else {
                 logger.debug(`[StrategyService] 前期跳过: ${unit.displayName}`);
             }
         }
+        
+        // 5. 购买完成后，优化棋盘阵容（上棋子、替换）
+        await this.optimizeEarlyBoard(candidateTargets);
+    }
+    
+    /**
+     * 优化前期棋盘阵容
+     * @param candidateTargets 候选阵容目标棋子集合
+     * @description 
+     * 1. 有空位时直接上场备战席棋子
+     * 2. 满员时用备战席的强力棋子替换场上的打工棋子
+     */
+    private async optimizeEarlyBoard(candidateTargets: Set<string>): Promise<void> {
+        // 有空位就上英雄
+        if (gameStateManager.getAvailableBoardSlots() > 0) {
+            await this.placeUnitsOnBoard();
+            return;
+        }
+        
+        // 满员时执行替换逻辑
+        const benchUnits = gameStateManager.getBenchUnitsWithIndex();
+        if (benchUnits.length === 0) return;
+        
+        // 找备战席最好的棋子
+        const bestBench = this.findBestBenchUnit(benchUnits, candidateTargets);
+        if (!bestBench) return;
+        
+        // 找棋盘最差的棋子
+        const worstBoard = this.findWorstBoardUnit(candidateTargets);
+        if (!worstBoard) return;
+        
+        // 备战席棋子价值更高才替换
+        if (bestBench.score > worstBoard.score) {
+            logger.info(
+                `[StrategyService] 替换: ${worstBoard.unit.tftUnit.displayName}(${worstBoard.score}分) ` +
+                `-> ${bestBench.unit.tftUnit.displayName}(${bestBench.score}分)`
+            );
+            
+            // 卖掉场上最差的
+            await tftOperator.sellUnit(worstBoard.location);
+            await sleep(300);
+            
+            // 把备战席最好的移到卖掉的位置
+            await tftOperator.moveBenchToBoard(bestBench.index, worstBoard.location as keyof typeof fightBoardSlotPoint);
+            await sleep(200);
+        }
+    }
+
+    /**
+     * 找备战席中价值最高的棋子
+     */
+    private findBestBenchUnit(
+        benchUnits: Array<{ unit: BenchUnit; index: number }>,
+        targetChampions: Set<string>
+    ): { unit: BenchUnit; index: number; score: number } | null {
+        let best: { unit: BenchUnit; index: number; score: number } | null = null;
+        
+        for (const { unit, index } of benchUnits) {
+            const score = this.calculateUnitScore(unit.tftUnit, unit.starLevel, targetChampions);
+            if (!best || score > best.score) {
+                best = { unit, index, score };
+            }
+        }
+        
+        return best;
+    }
+
+    /**
+     * 找棋盘上价值最低的棋子
+     */
+    private findWorstBoardUnit(
+        targetChampions: Set<string>
+    ): { unit: BoardUnit; location: string; score: number } | null {
+        const boardUnits = gameStateManager.getBoardUnits();
+        const boardLocationKeys = Object.keys(fightBoardSlotPoint);
+        
+        let worst: { unit: BoardUnit; location: string; score: number } | null = null;
+        
+        for (let i = 0; i < boardUnits.length; i++) {
+            const unit = boardUnits[i];
+            if (!unit) continue;
+            
+            const score = this.calculateUnitScore(unit.tftUnit, unit.starLevel, targetChampions);
+            if (!worst || score < worst.score) {
+                worst = { unit, location: boardLocationKeys[i], score };
+            }
+        }
+        
+        return worst;
+    }
+
+    /**
+     * 计算棋子价值分数
+     * @description 评分规则：目标棋子 +1000，每星 +100，每费 +10
+     */
+    private calculateUnitScore(unit: TFTUnit, starLevel: number, targetChampions: Set<string>): number {
+        let score = 0;
+        if (targetChampions.has(unit.displayName)) score += 1000;
+        score += starLevel * 100;
+        score += unit.price * 10;
+        return score;
     }
     
     /**
