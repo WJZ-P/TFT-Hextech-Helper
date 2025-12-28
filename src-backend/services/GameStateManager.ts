@@ -284,6 +284,18 @@ export class GameStateManager {
     }
 
     /**
+     * 获取备战席空位数量
+     * @returns 空位数量 (0-9)
+     * @description 备战席共 9 个槽位，遍历统计 null（空槽）的数量
+     *              TftOperator 扫描备战席时，空槽位会返回 null
+     */
+    public getEmptyBenchSlotCount(): number {
+        const benchUnits = this.getBenchUnits();
+        // 使用 filter 统计 null 的数量，更简洁
+        return benchUnits.filter(unit => unit === null).length;
+    }
+
+    /**
      * 获取当前经验值信息
      * @returns 经验值对象 { current, total }
      */

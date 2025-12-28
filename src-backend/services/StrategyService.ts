@@ -764,7 +764,7 @@ export class StrategyService {
      * 处理游戏前期阶段（第一阶段 1-1 ~ 1-4）
      * @description 整个第一阶段的处理逻辑：
      *              - 1-1、1-2：商店未开放，只执行防挂机
-     *              - 1-3、1-4：商店已开放，执行前期运营策略（组建阵容）
+     *              - 1-3、1-4：商店已开放，执行前期特殊运营策略
      */
     private async handleEarlyPVE(): Promise<void> {
         // 前两个回合：商店未开放，只需防挂机
@@ -774,9 +774,165 @@ export class StrategyService {
             return;
         }
         
-        // 1-3、1-4 回合：商店已开放，执行运营策略
+        // 1-3、1-4 回合：商店已开放，执行前期特殊策略
         logger.info(`[StrategyService] 前期阶段 1-${this.currentRound}：商店已开放，执行前期运营...`);
-        await this.executeCommonStrategy();
+        await this.executeEarlyPVEStrategy();
+    }
+    
+    /**
+     * 前期 PVE 阶段专用策略 (1-3、1-4 回合)
+     * @description 这个阶段的特殊性：
+     *              - 阵容尚未锁定（要等到 2-1 第一个 PVP 阶段才匹配）
+     *              - 金币有限（通常只有 4-6 金币）
+     *              - 目标：尽可能买到候选阵容中的棋子，为后续匹配做准备
+     * 
+     * 购买优先级：
+     * 1. 优先购买备战席/场上已有的棋子（方便升星）
+     * 2. 优先购买所有候选阵容 level4 中出现的棋子
+     * 3. 低费棋子（1-2 费）可以考虑购买（增加后续匹配可能性）
+     */
+    private async executeEarlyPVEStrategy(): Promise<void> {
+        //  小小英雄归位
+        await tftOperator.selfResetPosition();
+
+        // 0. 先刷新游戏状态，确保拿到最新的备战席、棋盘、商店数据
+        await this.refreshGameState();
+        
+        // 1. 获取当前已有的棋子名称（备战席 + 棋盘）
+        const ownedChampions = gameStateManager.getOwnedChampionNames();
+        
+        // 2. 获取所有候选阵容的 level4 目标棋子（合并去重）
+        const candidateTargets = this.getCandidateTargetChampions();
+        
+        // 3. 获取当前金币和备战席空位数
+        let currentGold = gameStateManager.getGold();
+        let emptyBenchSlots = gameStateManager.getEmptyBenchSlotCount();
+        
+        logger.info(
+            `[StrategyService] 前期策略 - 金币: ${currentGold}，备战席空位: ${emptyBenchSlots}，` +
+            `已有棋子: ${Array.from(ownedChampions).join(', ') || '无'}，` +
+            `候选目标: ${Array.from(candidateTargets).join(', ') || '无'}`
+        );
+        
+        // 4. 获取商店信息
+        const shopUnits = gameStateManager.getShopUnits();
+        
+        // 5. 遍历商店，按优先级决策购买
+        for (let i = 0; i < shopUnits.length; i++) {
+            const unit = shopUnits[i];
+            if (!unit) continue;
+            
+            // 前置检查：备战席是否已满
+            if (emptyBenchSlots <= 0) {
+                logger.info("[StrategyService] 备战席已满，停止购买");
+                break;
+            }
+            
+            // 前置检查：金币是否足够
+            if (currentGold < unit.price) {
+                logger.debug(
+                    `[StrategyService] 金币不足，跳过 ${unit.displayName} ` +
+                    `(需要 ${unit.price}，当前 ${currentGold})`
+                );
+                continue;
+            }
+            
+            // 判断是否应该购买（前期特殊逻辑）
+            const shouldBuy = this.shouldBuyInEarlyGame(unit, ownedChampions, candidateTargets);
+            
+            if (shouldBuy) {
+                logger.info(
+                    `[StrategyService] 前期购买: ${unit.displayName} (￥${unit.price})，` +
+                    `原因: ${this.getEarlyBuyReason(unit, ownedChampions, candidateTargets)}`
+                );
+                await tftOperator.buyAtSlot(i + 1);
+                
+                // 更新金币和空位计数（购买成功后）
+                currentGold -= unit.price;
+                emptyBenchSlots -= 1;
+                
+                // 将刚买的棋子加入已有棋子集合（方便后续判断升星）
+                ownedChampions.add(unit.displayName);
+            } else {
+                logger.debug(`[StrategyService] 前期跳过: ${unit.displayName}`);
+            }
+        }
+    }
+    
+    /**
+     * 获取所有候选阵容的 level4 目标棋子（合并去重）
+     * @returns 所有候选阵容 level4 棋子名称的集合
+     * @description 用于前期策略，在阵容未锁定时，
+     *              购买任何一个候选阵容中的棋子都是有价值的
+     */
+    private getCandidateTargetChampions(): Set<string> {
+        const targets = new Set<string>();
+        
+        // 如果阵容已锁定，直接返回当前目标棋子
+        if (this.isLineupLocked() && this.currentLineup) {
+            return this.targetChampionNames;
+        }
+        
+        // 遍历所有候选阵容，收集 level4 的棋子
+        for (const lineup of this.candidateLineups) {
+            const level4Config = lineup.stages.level4;
+            if (level4Config) {
+                for (const champion of level4Config.champions) {
+                    targets.add(champion.name);
+                }
+            }
+        }
+        
+        return targets;
+    }
+    
+    /**
+     * 前期购买决策逻辑
+     * @param unit 商店中的棋子
+     * @param ownedChampions 已拥有的棋子名称集合
+     * @param candidateTargets 候选阵容的目标棋子集合
+     * @returns 是否应该购买
+     * 
+     * 优先级（从高到低）：
+     * 1. 已有的棋子（可以升星） → 必买
+     * 2. 候选阵容中的棋子 → 必买
+     * 3. 低费棋子（1-2 费）→ 可选（暂不实现，避免乱买）
+     */
+    private shouldBuyInEarlyGame(
+        unit: TFTUnit,
+        ownedChampions: Set<string>,
+        candidateTargets: Set<string>
+    ): boolean {
+        // 优先级 1：已有的棋子（可以升星）
+        if (ownedChampions.has(unit.displayName)) {
+            return true;
+        }
+        
+        // 优先级 2：候选阵容中的棋子
+        if (candidateTargets.has(unit.displayName)) {
+            return true;
+        }
+        
+        // 暂不购买其他棋子，避免浪费金币
+        return false;
+    }
+    
+    /**
+     * 获取前期购买原因（用于日志输出）
+     * @description 帮助调试，了解为什么购买某个棋子
+     */
+    private getEarlyBuyReason(
+        unit: TFTUnit,
+        ownedChampions: Set<string>,
+        candidateTargets: Set<string>
+    ): string {
+        if (ownedChampions.has(unit.displayName)) {
+            return '已有棋子，可升星';
+        }
+        if (candidateTargets.has(unit.displayName)) {
+            return '候选阵容目标棋子';
+        }
+        return '未知原因';
     }
 
     /**
