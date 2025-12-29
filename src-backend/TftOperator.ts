@@ -1349,27 +1349,26 @@ class TftOperator {
 
     /**
      * 将备战席的棋子移动到棋盘指定位置
-     * @param benchSlotIndex 备战席槽位索引 (0-8)
+     * @param benchLocation 备战席位置 (如 "SLOT_1")
      * @param boardLocation 棋盘目标位置 (如 "R1_C1")
      * @description 通过拖拽操作将棋子从备战席移动到棋盘上
      *              这是上场棋子的核心操作
      * 
      * @example
-     * // 将备战席第一个槽位的棋子移动到棋盘 R1_C1 位置
-     * await tftOperator.moveBenchToBoard(0, "R1_C1");
+     * // 将备战席 SLOT_1 的棋子移动到棋盘 R1_C1 位置
+     * await tftOperator.moveBenchToBoard("SLOT_1", "R1_C1");
      */
     public async moveBenchToBoard(
-        benchSlotIndex: number,
-        boardLocation: keyof typeof fightBoardSlotPoint
+        benchLocation: BenchLocation,
+        boardLocation: BoardLocation
     ): Promise<void> {
         this.ensureInitialized();
 
         // 获取备战席槽位坐标
-        const benchSlotKey = `SLOT_${benchSlotIndex + 1}` as keyof typeof benchSlotPoints;
-        const fromPoint = benchSlotPoints[benchSlotKey];
+        const fromPoint = benchSlotPoints[benchLocation];
         
         if (!fromPoint) {
-            logger.error(`[TftOperator] 无效的备战席槽位索引: ${benchSlotIndex}`);
+            logger.error(`[TftOperator] 无效的备战席位置: ${benchLocation}`);
             return;
         }
 
@@ -1381,9 +1380,7 @@ class TftOperator {
             return;
         }
 
-        logger.info(
-            `[TftOperator] 移动棋子: 备战席 SLOT_${benchSlotIndex + 1} -> 棋盘 ${boardLocation}`
-        );
+        logger.info(`[TftOperator] 移动棋子: ${benchLocation} -> ${boardLocation}`);
 
         // 执行拖拽操作
         await mouseController.drag(fromPoint, toPoint);

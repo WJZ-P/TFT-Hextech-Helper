@@ -438,7 +438,7 @@ export const combatPhaseTextRegion = {
 
 //  棋子类型接口
 export interface TFTUnit {
-    displayName: string;                //  棋子的英雄名称，用于ocr
+    displayName: ChampionKey;            //  棋子的英雄名称，用于ocr
     englishId: string;                  //  英文ID，如 "TFT16_Graves"，用于解析外部数据（如 OP.GG）
     price: number;                       //  棋子的购买花费
     traits: (UnitOrigin | UnitClass)[]; //  棋子所属羁绊，含种族和职业

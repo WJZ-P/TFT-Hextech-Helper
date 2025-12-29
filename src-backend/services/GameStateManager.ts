@@ -11,9 +11,9 @@
  * - 支持游戏结束后重置，准备下一局
  */
 
-import { BenchUnit, BoardUnit, IdentifiedEquip } from "../TftOperator";
+import { BenchUnit, BoardUnit, IdentifiedEquip, BoardLocation } from "../TftOperator";
 import { logger } from "../utils/Logger";
-import { TFTUnit, GameStageType, fightBoardSlotPoint } from "../TFTProtocol";
+import { TFTUnit, GameStageType, fightBoardSlotPoint, ChampionKey } from "../TFTProtocol";
 
 // ============================================================================
 // 类型定义
@@ -310,20 +310,20 @@ export class GameStateManager {
      * 获取所有已拥有的棋子名称（备战席 + 棋盘）
      * @returns 棋子名称集合
      */
-    public getOwnedChampionNames(): Set<string> {
-        const names = new Set<string>();
+    public getOwnedChampionNames(): Set<ChampionKey> {
+        const names = new Set<ChampionKey>();
 
         // 备战席
         for (const unit of this.getBenchUnits()) {
             if (unit?.tftUnit) {
-                names.add(unit.tftUnit.displayName);
+                names.add(unit.tftUnit.displayName as ChampionKey);
             }
         }
 
         // 棋盘
         for (const unit of this.getBoardUnits()) {
             if (unit?.tftUnit) {
-                names.add(unit.tftUnit.displayName);
+                names.add(unit.tftUnit.displayName as ChampionKey);
             }
         }
 
@@ -334,13 +334,13 @@ export class GameStateManager {
      * 获取所有可见棋子名称（备战席 + 棋盘 + 商店）
      * @returns 棋子名称集合
      */
-    public getAllVisibleChampionNames(): Set<string> {
+    public getAllVisibleChampionNames(): Set<ChampionKey> {
         const names = this.getOwnedChampionNames();
 
         // 商店
         for (const unit of this.getShopUnits()) {
             if (unit) {
-                names.add(unit.displayName);
+                names.add(unit.displayName as ChampionKey);
             }
         }
 
@@ -713,15 +713,11 @@ export class GameStateManager {
      * 获取棋盘上的空位列表
      * @returns 空位的 BoardLocation 数组
      * @description 返回所有空槽位的位置标识（如 "R1_C1"）
-     *              复用 TFTProtocol 中 fightBoardSlotPoint 的 key，保持一致性
      */
-    public getEmptyBoardLocations(): string[] {
+    public getEmptyBoardLocations(): BoardLocation[] {
         const boardUnits = this.getBoardUnits();
-        const emptyLocations: string[] = [];
-        
-        // 直接使用 fightBoardSlotPoint 的 key，避免重复定义
-        // Object.keys() 返回的顺序与对象定义顺序一致（ES2015+保证）
-        const boardLocationKeys = Object.keys(fightBoardSlotPoint);
+        const emptyLocations: BoardLocation[] = [];
+        const boardLocationKeys = Object.keys(fightBoardSlotPoint) as BoardLocation[];
         
         for (let i = 0; i < boardUnits.length && i < boardLocationKeys.length; i++) {
             if (boardUnits[i] === null) {
@@ -737,7 +733,7 @@ export class GameStateManager {
      * @returns 前排（R1, R2）的空位 BoardLocation 数组
      * @description 前排适合放置近战棋子（射程 1-2）
      */
-    public getFrontRowEmptyLocations(): string[] {
+    public getFrontRowEmptyLocations(): BoardLocation[] {
         return this.getEmptyBoardLocations().filter(loc => 
             loc.startsWith('R1_') || loc.startsWith('R2_')
         );
@@ -748,7 +744,7 @@ export class GameStateManager {
      * @returns 后排（R3, R4）的空位 BoardLocation 数组
      * @description 后排适合放置远程棋子（射程 3+）
      */
-    public getBackRowEmptyLocations(): string[] {
+    public getBackRowEmptyLocations(): BoardLocation[] {
         return this.getEmptyBoardLocations().filter(loc => 
             loc.startsWith('R3_') || loc.startsWith('R4_')
         );
