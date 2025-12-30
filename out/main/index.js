@@ -5635,6 +5635,11 @@ const lootRegion = {
   leftTop: { x: 200, y: 125 },
   rightBottom: { x: 855, y: 585 }
 };
+const littleLegendDefaultPoint = { x: 120, y: 430 };
+const selfWalkAroundPoints = {
+  left: [{ x: 156, y: 400 }, { x: 165, y: 355 }, { x: 175, y: 310 }, { x: 185, y: 250 }, { x: 195, y: 150 }],
+  right: [{ x: 840, y: 500 }, { x: 830, y: 450 }, { x: 820, y: 385 }, { x: 810, y: 325 }, { x: 805, y: 295 }, { x: 800, y: 260 }, { x: 790, y: 215 }, { x: 780, y: 170 }, { x: 780, y: 130 }]
+};
 const coinRegion = {
   leftTop: { x: 505, y: 626 },
   rightBottom: { x: 545, y: 642 }
@@ -5962,6 +5967,8 @@ var ItemForgeType = /* @__PURE__ */ ((ItemForgeType2) => {
   ItemForgeType2["NONE"] = "NONE";
   ItemForgeType2["BASIC"] = "BASIC";
   ItemForgeType2["COMPLETED"] = "COMPLETED";
+  ItemForgeType2["ARTIFACT"] = "ARTIFACT";
+  ItemForgeType2["SUPPORT"] = "SUPPORT";
   return ItemForgeType2;
 })(ItemForgeType || {});
 const TFT_SPECIAL_CHESS = {
@@ -5973,7 +5980,8 @@ const TFT_SPECIAL_CHESS = {
     // what the fuck? 但数据是这么写的
     traits: [],
     origins: [],
-    classes: []
+    classes: [],
+    attackRange: 0
   },
   "成装锻造器": {
     displayName: "成装锻造器",
@@ -5982,7 +5990,28 @@ const TFT_SPECIAL_CHESS = {
     // what the fuck? 但数据是这么写的
     traits: [],
     origins: [],
-    classes: []
+    classes: [],
+    attackRange: 0
+  },
+  "神器装备锻造器": {
+    displayName: "神器装备锻造器",
+    englishId: "TFT_ArmoryKeyOrnn",
+    price: 8,
+    // what the fuck? 但数据是这么写的
+    traits: [],
+    origins: [],
+    classes: [],
+    attackRange: 0
+  },
+  "辅助装锻造器": {
+    displayName: "辅助装锻造器",
+    englishId: "TFT_ArmoryKeySupport",
+    price: 8,
+    // what the fuck? 但数据是这么写的
+    traits: [],
+    origins: [],
+    classes: [],
+    attackRange: 0
   },
   "训练假人": {
     displayName: "训练假人",
@@ -5991,7 +6020,8 @@ const TFT_SPECIAL_CHESS = {
     // what the fuck? 但数据是这么写的
     traits: [],
     origins: [],
-    classes: []
+    classes: [],
+    attackRange: 0
   }
 };
 const _TFT_16_CHAMPION_DATA = {
@@ -6014,7 +6044,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "斗士"
       /* Bruiser */
-    ]
+    ],
+    attackRange: 1
   },
   "贝蕾亚": {
     displayName: "贝蕾亚",
@@ -6034,7 +6065,8 @@ const _TFT_16_CHAMPION_DATA = {
       "裁决战士",
       "主宰"
       /* Juggernaut */
-    ]
+    ],
+    attackRange: 1
   },
   "艾尼维亚": {
     displayName: "艾尼维亚",
@@ -6052,7 +6084,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "神谕者"
       /* Invoker */
-    ]
+    ],
+    attackRange: 4
   },
   "嘉文四世": {
     displayName: "嘉文四世",
@@ -6070,7 +6103,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "护卫"
       /* Defender */
-    ]
+    ],
+    attackRange: 1
   },
   "烬": {
     displayName: "烬",
@@ -6088,7 +6122,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "枪手"
       /* Gunslinger */
-    ]
+    ],
+    attackRange: 4
   },
   "凯特琳": {
     displayName: "凯特琳",
@@ -6106,7 +6141,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "狙神"
       /* Longshot */
-    ]
+    ],
+    attackRange: 6
   },
   "克格莫": {
     displayName: "克格莫",
@@ -6126,7 +6162,8 @@ const _TFT_16_CHAMPION_DATA = {
       "法师",
       "狙神"
       /* Longshot */
-    ]
+    ],
+    attackRange: 6
   },
   "璐璐": {
     displayName: "璐璐",
@@ -6144,7 +6181,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "法师"
       /* Sorcerer */
-    ]
+    ],
+    attackRange: 4
   },
   "奇亚娜": {
     displayName: "奇亚娜",
@@ -6162,7 +6200,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "裁决战士"
       /* Slayer */
-    ]
+    ],
+    attackRange: 1
   },
   "兰博": {
     displayName: "兰博",
@@ -6180,7 +6219,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "护卫"
       /* Defender */
-    ]
+    ],
+    attackRange: 1
   },
   "慎": {
     displayName: "慎",
@@ -6198,7 +6238,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "斗士"
       /* Bruiser */
-    ]
+    ],
+    attackRange: 1
   },
   "娑娜": {
     displayName: "娑娜",
@@ -6216,7 +6257,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "神谕者"
       /* Invoker */
-    ]
+    ],
+    attackRange: 4
   },
   "佛耶戈": {
     displayName: "佛耶戈",
@@ -6234,7 +6276,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "迅击战士"
       /* Rapidfire */
-    ]
+    ],
+    attackRange: 1
   },
   "布里茨": {
     displayName: "布里茨",
@@ -6252,7 +6295,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "主宰"
       /* Juggernaut */
-    ]
+    ],
+    attackRange: 1
   },
   // 2 费棋子
   "厄斐琉斯": {
@@ -6267,7 +6311,8 @@ const _TFT_16_CHAMPION_DATA = {
       "巨神峰"
       /* Targon */
     ],
-    classes: []
+    classes: [],
+    attackRange: 4
   },
   "艾希": {
     displayName: "艾希",
@@ -6285,7 +6330,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "迅击战士"
       /* Rapidfire */
-    ]
+    ],
+    attackRange: 4
   },
   "科加斯": {
     displayName: "科加斯",
@@ -6303,7 +6349,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "主宰"
       /* Juggernaut */
-    ]
+    ],
+    attackRange: 1
   },
   "崔斯特": {
     displayName: "崔斯特",
@@ -6321,7 +6368,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "迅击战士"
       /* Rapidfire */
-    ]
+    ],
+    attackRange: 4
   },
   "艾克": {
     displayName: "艾克",
@@ -6339,7 +6387,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "耀光使"
       /* Magus */
-    ]
+    ],
+    attackRange: 1
   },
   "格雷福斯": {
     displayName: "格雷福斯",
@@ -6357,7 +6406,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "枪手"
       /* Gunslinger */
-    ]
+    ],
+    attackRange: 2
   },
   "妮蔻": {
     displayName: "妮蔻",
@@ -6377,7 +6427,8 @@ const _TFT_16_CHAMPION_DATA = {
       "法师",
       "护卫"
       /* Defender */
-    ]
+    ],
+    attackRange: 1
   },
   "奥莉安娜": {
     displayName: "奥莉安娜",
@@ -6395,7 +6446,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "神谕者"
       /* Invoker */
-    ]
+    ],
+    attackRange: 4
   },
   "波比": {
     displayName: "波比",
@@ -6415,7 +6467,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "主宰"
       /* Juggernaut */
-    ]
+    ],
+    attackRange: 1
   },
   "雷克塞": {
     displayName: "雷克塞",
@@ -6433,7 +6486,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "征服者"
       /* Vanquisher */
-    ]
+    ],
+    attackRange: 1
   },
   "赛恩": {
     displayName: "赛恩",
@@ -6451,7 +6505,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "斗士"
       /* Bruiser */
-    ]
+    ],
+    attackRange: 1
   },
   "提莫": {
     displayName: "提莫",
@@ -6469,7 +6524,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "狙神"
       /* Longshot */
-    ]
+    ],
+    attackRange: 6
   },
   "崔丝塔娜": {
     displayName: "崔丝塔娜",
@@ -6487,7 +6543,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "枪手"
       /* Gunslinger */
-    ]
+    ],
+    attackRange: 4
   },
   "蔚": {
     displayName: "蔚",
@@ -6507,7 +6564,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "护卫"
       /* Defender */
-    ]
+    ],
+    attackRange: 1
   },
   "亚索": {
     displayName: "亚索",
@@ -6525,7 +6583,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "裁决战士"
       /* Slayer */
-    ]
+    ],
+    attackRange: 1
   },
   "约里克": {
     displayName: "约里克",
@@ -6543,7 +6602,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "神盾使"
       /* Warden */
-    ]
+    ],
+    attackRange: 1
   },
   "赵信": {
     displayName: "赵信",
@@ -6563,7 +6623,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "神盾使"
       /* Warden */
-    ]
+    ],
+    attackRange: 1
   },
   // 3 费棋子
   "阿狸": {
@@ -6582,7 +6643,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "法师"
       /* Sorcerer */
-    ]
+    ],
+    attackRange: 4
   },
   "巴德": {
     displayName: "巴德",
@@ -6596,7 +6658,8 @@ const _TFT_16_CHAMPION_DATA = {
       "星界游神"
       /* Caretaker */
     ],
-    classes: []
+    classes: [],
+    attackRange: 4
   },
   "德莱文": {
     displayName: "德莱文",
@@ -6614,7 +6677,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "迅击战士"
       /* Rapidfire */
-    ]
+    ],
+    attackRange: 4
   },
   "德莱厄斯": {
     displayName: "德莱厄斯",
@@ -6632,7 +6696,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "护卫"
       /* Defender */
-    ]
+    ],
+    attackRange: 1
   },
   "格温": {
     displayName: "格温",
@@ -6650,7 +6715,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "耀光使"
       /* Magus */
-    ]
+    ],
+    attackRange: 1
   },
   "金克丝": {
     displayName: "金克丝",
@@ -6668,7 +6734,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "枪手"
       /* Gunslinger */
-    ]
+    ],
+    attackRange: 4
   },
   "凯南": {
     displayName: "凯南",
@@ -6688,7 +6755,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "护卫"
       /* Defender */
-    ]
+    ],
+    attackRange: 1
   },
   "可酷伯与悠米": {
     displayName: "可酷伯与悠米",
@@ -6708,7 +6776,8 @@ const _TFT_16_CHAMPION_DATA = {
       "斗士",
       "神谕者"
       /* Invoker */
-    ]
+    ],
+    attackRange: 1
   },
   "乐芙兰": {
     displayName: "乐芙兰",
@@ -6726,7 +6795,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "神谕者"
       /* Invoker */
-    ]
+    ],
+    attackRange: 4
   },
   "洛里斯": {
     displayName: "洛里斯",
@@ -6744,7 +6814,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "神盾使"
       /* Warden */
-    ]
+    ],
+    attackRange: 1
   },
   "玛尔扎哈": {
     displayName: "玛尔扎哈",
@@ -6762,7 +6833,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "耀光使"
       /* Magus */
-    ]
+    ],
+    attackRange: 4
   },
   "米利欧": {
     displayName: "米利欧",
@@ -6780,7 +6852,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "神谕者"
       /* Invoker */
-    ]
+    ],
+    attackRange: 4
   },
   "诺提勒斯": {
     displayName: "诺提勒斯",
@@ -6800,7 +6873,8 @@ const _TFT_16_CHAMPION_DATA = {
       "主宰",
       "神盾使"
       /* Warden */
-    ]
+    ],
+    attackRange: 1
   },
   "普朗克": {
     displayName: "普朗克",
@@ -6820,7 +6894,8 @@ const _TFT_16_CHAMPION_DATA = {
       "裁决战士",
       "征服者"
       /* Vanquisher */
-    ]
+    ],
+    attackRange: 1
   },
   "瑟庄妮": {
     displayName: "瑟庄妮",
@@ -6838,7 +6913,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "护卫"
       /* Defender */
-    ]
+    ],
+    attackRange: 1
   },
   "薇恩": {
     displayName: "薇恩",
@@ -6856,7 +6932,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "狙神"
       /* Longshot */
-    ]
+    ],
+    attackRange: 4
   },
   "蒙多医生": {
     displayName: "蒙多医生",
@@ -6874,7 +6951,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "斗士"
       /* Bruiser */
-    ]
+    ],
+    attackRange: 1
   },
   // 4 费棋子
   "安蓓萨": {
@@ -6893,7 +6971,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "征服者"
       /* Vanquisher */
-    ]
+    ],
+    attackRange: 1
   },
   "卑尔维斯": {
     displayName: "卑尔维斯",
@@ -6911,7 +6990,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "裁决战士"
       /* Slayer */
-    ]
+    ],
+    attackRange: 2
   },
   "布隆": {
     displayName: "布隆",
@@ -6929,7 +7009,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "神盾使"
       /* Warden */
-    ]
+    ],
+    attackRange: 1
   },
   "黛安娜": {
     displayName: "黛安娜",
@@ -6943,7 +7024,8 @@ const _TFT_16_CHAMPION_DATA = {
       "巨神峰"
       /* Targon */
     ],
-    classes: []
+    classes: [],
+    attackRange: 1
   },
   "盖伦": {
     displayName: "盖伦",
@@ -6961,7 +7043,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "护卫"
       /* Defender */
-    ]
+    ],
+    attackRange: 1
   },
   "卡莉丝塔": {
     displayName: "卡莉丝塔",
@@ -6979,7 +7062,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "征服者"
       /* Vanquisher */
-    ]
+    ],
+    attackRange: 4
   },
   "卡莎": {
     displayName: "卡莎",
@@ -6999,7 +7083,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "狙神"
       /* Longshot */
-    ]
+    ],
+    attackRange: 6
   },
   "蕾欧娜": {
     displayName: "蕾欧娜",
@@ -7013,7 +7098,8 @@ const _TFT_16_CHAMPION_DATA = {
       "巨神峰"
       /* Targon */
     ],
-    classes: []
+    classes: [],
+    attackRange: 1
   },
   "丽桑卓": {
     displayName: "丽桑卓",
@@ -7031,7 +7117,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "神谕者"
       /* Invoker */
-    ]
+    ],
+    attackRange: 4
   },
   "拉克丝": {
     displayName: "拉克丝",
@@ -7049,7 +7136,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "法师"
       /* Sorcerer */
-    ]
+    ],
+    attackRange: 4
   },
   "厄运小姐": {
     displayName: "厄运小姐",
@@ -7067,7 +7155,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "枪手"
       /* Gunslinger */
-    ]
+    ],
+    attackRange: 4
   },
   "内瑟斯": {
     displayName: "内瑟斯",
@@ -7081,7 +7170,8 @@ const _TFT_16_CHAMPION_DATA = {
       "恕瑞玛"
       /* Shurima */
     ],
-    classes: []
+    classes: [],
+    attackRange: 1
   },
   "奈德丽": {
     displayName: "奈德丽",
@@ -7097,7 +7187,8 @@ const _TFT_16_CHAMPION_DATA = {
       "狂野女猎手"
       /* Huntress */
     ],
-    classes: []
+    classes: [],
+    attackRange: 1
   },
   "雷克顿": {
     displayName: "雷克顿",
@@ -7111,7 +7202,8 @@ const _TFT_16_CHAMPION_DATA = {
       "恕瑞玛"
       /* Shurima */
     ],
-    classes: []
+    classes: [],
+    attackRange: 1
   },
   "萨勒芬妮": {
     displayName: "萨勒芬妮",
@@ -7129,7 +7221,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "耀光使"
       /* Magus */
-    ]
+    ],
+    attackRange: 4
   },
   "辛吉德": {
     displayName: "辛吉德",
@@ -7147,7 +7240,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "主宰"
       /* Juggernaut */
-    ]
+    ],
+    attackRange: 1
   },
   "斯卡纳": {
     displayName: "斯卡纳",
@@ -7161,7 +7255,8 @@ const _TFT_16_CHAMPION_DATA = {
       "以绪塔尔"
       /* Ixtal */
     ],
-    classes: []
+    classes: [],
+    attackRange: 1
   },
   "斯维因": {
     displayName: "斯维因",
@@ -7181,7 +7276,8 @@ const _TFT_16_CHAMPION_DATA = {
       "法师",
       "主宰"
       /* Juggernaut */
-    ]
+    ],
+    attackRange: 4
   },
   "孙悟空": {
     displayName: "孙悟空",
@@ -7199,7 +7295,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "斗士"
       /* Bruiser */
-    ]
+    ],
+    attackRange: 1
   },
   "塔里克": {
     displayName: "塔里克",
@@ -7213,7 +7310,8 @@ const _TFT_16_CHAMPION_DATA = {
       "巨神峰"
       /* Targon */
     ],
-    classes: []
+    classes: [],
+    attackRange: 1
   },
   "维迦": {
     displayName: "维迦",
@@ -7231,7 +7329,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "法师"
       /* Sorcerer */
-    ]
+    ],
+    attackRange: 4
   },
   "沃里克": {
     displayName: "沃里克",
@@ -7249,7 +7348,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "迅击战士"
       /* Rapidfire */
-    ]
+    ],
+    attackRange: 1
   },
   "永恩": {
     displayName: "永恩",
@@ -7267,7 +7367,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "裁决战士"
       /* Slayer */
-    ]
+    ],
+    attackRange: 1
   },
   "芸阿娜": {
     displayName: "芸阿娜",
@@ -7285,7 +7386,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "迅击战士"
       /* Rapidfire */
-    ]
+    ],
+    attackRange: 4
   },
   // 5 费棋子
   "亚托克斯": {
@@ -7304,7 +7406,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "裁决战士"
       /* Slayer */
-    ]
+    ],
+    attackRange: 1
   },
   "安妮": {
     displayName: "安妮",
@@ -7322,7 +7425,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "法师"
       /* Sorcerer */
-    ]
+    ],
+    attackRange: 4
   },
   "阿兹尔": {
     displayName: "阿兹尔",
@@ -7342,7 +7446,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "耀光使"
       /* Magus */
-    ]
+    ],
+    attackRange: 4
   },
   "费德提克": {
     displayName: "费德提克",
@@ -7360,7 +7465,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "征服者"
       /* Vanquisher */
-    ]
+    ],
+    attackRange: 2
   },
   "吉格斯": {
     displayName: "吉格斯",
@@ -7380,7 +7486,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "狙神"
       /* Longshot */
-    ]
+    ],
+    attackRange: 6
   },
   "加里奥": {
     displayName: "加里奥",
@@ -7396,7 +7503,8 @@ const _TFT_16_CHAMPION_DATA = {
       "正义巨像"
       /* Heroic */
     ],
-    classes: []
+    classes: [],
+    attackRange: 1
   },
   "基兰": {
     displayName: "基兰",
@@ -7414,7 +7522,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "神谕者"
       /* Invoker */
-    ]
+    ],
+    attackRange: 4
   },
   "千珏": {
     displayName: "千珏",
@@ -7432,7 +7541,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "迅击战士"
       /* Rapidfire */
-    ]
+    ],
+    attackRange: 4
   },
   "卢锡安与赛娜": {
     displayName: "卢锡安与赛娜",
@@ -7450,7 +7560,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "枪手"
       /* Gunslinger */
-    ]
+    ],
+    attackRange: 4
   },
   "梅尔": {
     displayName: "梅尔",
@@ -7468,7 +7579,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "耀光使"
       /* Magus */
-    ]
+    ],
+    attackRange: 4
   },
   "奥恩": {
     displayName: "奥恩",
@@ -7486,7 +7598,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "神盾使"
       /* Warden */
-    ]
+    ],
+    attackRange: 1
   },
   "瑟提": {
     displayName: "瑟提",
@@ -7502,7 +7615,8 @@ const _TFT_16_CHAMPION_DATA = {
       "腕豪"
       /* TheBoss */
     ],
-    classes: []
+    classes: [],
+    attackRange: 1
   },
   "希瓦娜": {
     displayName: "希瓦娜",
@@ -7520,7 +7634,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "主宰"
       /* Juggernaut */
-    ]
+    ],
+    attackRange: 1
   },
   "塔姆": {
     displayName: "塔姆",
@@ -7540,7 +7655,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "斗士"
       /* Bruiser */
-    ]
+    ],
+    attackRange: 1
   },
   "锤石": {
     displayName: "锤石",
@@ -7558,7 +7674,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "神盾使"
       /* Warden */
-    ]
+    ],
+    attackRange: 1
   },
   "沃利贝尔": {
     displayName: "沃利贝尔",
@@ -7576,7 +7693,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "斗士"
       /* Bruiser */
-    ]
+    ],
+    attackRange: 1
   },
   // 特殊/高费羁绊单位（价格 7）
   "奥瑞利安·索尔": {
@@ -7593,7 +7711,8 @@ const _TFT_16_CHAMPION_DATA = {
       "巨神峰"
       /* Targon */
     ],
-    classes: []
+    classes: [],
+    attackRange: 4
   },
   "纳什男爵": {
     displayName: "纳什男爵",
@@ -7609,7 +7728,8 @@ const _TFT_16_CHAMPION_DATA = {
       "纳什男爵"
       /* Baron */
     ],
-    classes: []
+    classes: [],
+    attackRange: 2
   },
   "瑞兹": {
     displayName: "瑞兹",
@@ -7623,7 +7743,8 @@ const _TFT_16_CHAMPION_DATA = {
       "符文法师"
       /* RuneMage */
     ],
-    classes: []
+    classes: [],
+    attackRange: 4
   },
   "亚恒": {
     displayName: "亚恒",
@@ -7639,7 +7760,8 @@ const _TFT_16_CHAMPION_DATA = {
       "不落魔锋"
       /* Immortal */
     ],
-    classes: []
+    classes: [],
+    attackRange: 2
   },
   // 特殊召唤物/机甲/其他
   "海克斯霸龙": {
@@ -7661,7 +7783,8 @@ const _TFT_16_CHAMPION_DATA = {
     classes: [
       "枪手"
       /* Gunslinger */
-    ]
+    ],
+    attackRange: 2
   },
   "佐伊": {
     displayName: "佐伊",
@@ -7676,7 +7799,8 @@ const _TFT_16_CHAMPION_DATA = {
       "巨神峰"
       /* Targon */
     ],
-    classes: []
+    classes: [],
+    attackRange: 4
   },
   "菲兹": {
     displayName: "菲兹",
@@ -7693,8 +7817,9 @@ const _TFT_16_CHAMPION_DATA = {
       "约德尔人"
       /* Yordle */
     ],
-    classes: []
+    classes: [],
     // 官方数据 jobs 为空
+    attackRange: 1
   }
 };
 const TFT_16_CHAMPION_DATA = _TFT_16_CHAMPION_DATA;
@@ -9204,6 +9329,9 @@ const EQUIP_ALIASES = {
   "TFT16_Item_Bilgewater_PileOCitrus": "成堆柑橘"
 };
 Object.assign(EQUIP_EN_TO_CN, EQUIP_ALIASES);
+function getChampionRange(championName) {
+  return TFT_16_CHAMPION_DATA[championName]?.attackRange;
+}
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
 const EQUIP_CATEGORY_PRIORITY = [
@@ -10501,6 +10629,54 @@ class MouseController {
       throw e;
     }
   }
+  /**
+   * 拖拽操作：从起点拖动到终点
+   * @description 用于移动棋子（从备战席到棋盘、棋盘内调整位置等）
+   *              TFT 中拖拽棋子的操作流程：
+   *              1. 移动鼠标到起点
+   *              2. 按下左键
+   *              3. 移动鼠标到终点
+   *              4. 释放左键
+   * 
+   * @param from 起点坐标（相对于游戏窗口）
+   * @param to 终点坐标（相对于游戏窗口）
+   * @param holdDelay 按下鼠标后等待的时间（ms），确保游戏识别到拖拽开始
+   * @param moveDelay 移动过程中的延迟（ms），模拟人类拖拽速度
+   */
+  async drag(from, to, holdDelay = 100, moveDelay = 150) {
+    if (!this.gameWindowOrigin) {
+      throw new Error("[MouseController] 尚未设置游戏窗口基准点，请先调用 setGameWindowOrigin()");
+    }
+    const fromAbs = new Point(
+      this.gameWindowOrigin.x + from.x,
+      this.gameWindowOrigin.y + from.y
+    );
+    const toAbs = new Point(
+      this.gameWindowOrigin.x + to.x,
+      this.gameWindowOrigin.y + to.y
+    );
+    logger.info(
+      `[MouseController] 拖拽: (${from.x},${from.y}) -> (${to.x},${to.y})`
+    );
+    try {
+      await mouse.move([fromAbs]);
+      await sleep(MOUSE_CONFIG.MOVE_DELAY);
+      await mouse.pressButton(Button.LEFT);
+      await sleep(holdDelay);
+      await mouse.move([toAbs]);
+      await sleep(moveDelay);
+      await mouse.releaseButton(Button.LEFT);
+      await sleep(MOUSE_CONFIG.CLICK_DELAY);
+      logger.debug("[MouseController] 拖拽完成");
+    } catch (e) {
+      try {
+        await mouse.releaseButton(Button.LEFT);
+      } catch {
+      }
+      logger.error(`[MouseController] 拖拽失败: ${e.message}`);
+      throw e;
+    }
+  }
 }
 const mouseController = MouseController.getInstance();
 function parseStageStringToEnum(stageText) {
@@ -10543,6 +10719,13 @@ class TftOperator {
   benchEmptyDiffThreshold = 6;
   /** OpenCV 是否已初始化 */
   isOpenCVReady = false;
+  /** 
+   * 上一次随机走位的方向
+   * @description 用于实现左右交替走动，让行为更像真人
+   *              'left' 表示上次走的是左边，下次应该走右边
+   *              'right' 表示上次走的是右边，下次应该走左边
+   */
+  lastWalkSide = "left";
   // ========== 路径 Getter ==========
   get failChampionTemplatePath() {
     return path__default.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/英雄备份");
@@ -11040,7 +11223,7 @@ class TftOperator {
    * 检测当前是否显示锻造器的浮窗，并识别锻造器类型
    * @description 锻造器右键后不会在固定位置显示详情，
    *              而是在鼠标点击位置附近弹出浮窗，需要用相对偏移量计算实际区域
-   *              支持识别：基础装备锻造器、成装锻造器
+   *              支持识别：基础装备锻造器、成装锻造器、神器装备锻造器、辅助装锻造器
    * @param clickPoint 右键点击的位置 (游戏内相对坐标)
    * @param slotIndex 备战席槽位索引 (1-9)，用于判断是否为边缘情况
    * @returns 锻造器类型 (NONE 表示不是锻造器)
@@ -11075,6 +11258,16 @@ class TftOperator {
       logger.debug(`[TftOperator] 识别为成装锻造器`);
       return ItemForgeType.COMPLETED;
     }
+    const isArtifactForge = cleanText.includes("神器装备锻造器") || cleanText.includes("神器装备") || cleanText.includes("神器");
+    if (isArtifactForge) {
+      logger.debug(`[TftOperator] 识别为神器装备锻造器`);
+      return ItemForgeType.ARTIFACT;
+    }
+    const isSupportForge = cleanText.includes("辅助装锻造器") || cleanText.includes("辅助装锻造") || cleanText.includes("辅助装");
+    if (isSupportForge) {
+      logger.debug(`[TftOperator] 识别为辅助装锻造器`);
+      return ItemForgeType.SUPPORT;
+    }
     const isBasicForge = cleanText.includes("基础装备锻造器") || cleanText.includes("基础装备") || cleanText.includes("锻造器");
     if (isBasicForge) {
       logger.debug(`[TftOperator] 识别为基础装备锻造器`);
@@ -11087,6 +11280,38 @@ class TftOperator {
     fs.writeFileSync(savePath, rawPngBuffer);
     logger.warn(`[TftOperator] 锻造器识别失败(槽位${slotIndex})，已保存截图: ${filename}`);
     return ItemForgeType.NONE;
+  }
+  /**
+   * 识别锻造器选择界面中的装备类型
+   * @description 当玩家点击锻造器后，会弹出装备选择界面。
+   *              此方法用于识别选择界面中各个槽位的装备。
+   * 
+   * 界面布局说明：
+   * - 成装锻造器：5 选 1（5 个装备槽位）
+   * - 其他锻造器（基础/神器/辅助）：4 选 1（4 个装备槽位）
+   * 
+   * @param slotNum 装备槽位数量，默认为 4（只有成装锻造器是 5）
+   * @returns 识别到的装备数组（TFTEquip 类型）
+   * 
+   * @example
+   * // 基础装备锻造器（4选1）
+   * const equips = await operator.identifyForgeEquipments(4);
+   * 
+   * // 成装锻造器（5选1）
+   * const equips = await operator.identifyForgeEquipments(5);
+   * 
+   * TODO: 实现装备识别逻辑
+   * 1. 根据 slotNum 计算各个装备槽位的 region
+   *    - 4 槽位和 5 槽位的布局不同，需要分别定义坐标
+   * 2. 截取每个槽位的图像
+   * 3. 使用 templateMatcher.matchEquip() 进行模板匹配
+   * 4. 返回识别结果数组
+   */
+  async identifyForgeEquipments(slotNum = 4) {
+    this.ensureInitialized();
+    logger.info(`[TftOperator] 识别锻造器装备选择界面 (${slotNum} 槽位)...`);
+    logger.warn(`[TftOperator] identifyForgeEquipments() 尚未实现`);
+    return [];
   }
   /**
    * 获取游戏阶段显示区域
@@ -11279,6 +11504,158 @@ class TftOperator {
       return [];
     }
   }
+  /**
+   * 让小小英雄归位到默认站位
+   * @description 通过右键点击两次默认站位坐标，让小小英雄移动回棋盘左下角
+   *              用于：
+   *              - 战斗结束后归位，避免遮挡棋盘
+   *              - 拾取战利品前归位，确保路径规划的起点一致
+   *              - 防挂机时的随机移动起点
+   * 
+   * 为什么点击两次？
+   * - 第一次点击：发出移动指令
+   * - 第二次点击：确保小小英雄确实开始移动（有时候单次点击可能被忽略）
+   * 
+   * @example
+   * // 战斗结束后归位
+   * await tftOperator.selfResetPosition();
+   */
+  async selfResetPosition() {
+    this.ensureInitialized();
+    logger.info(`[TftOperator] 小小英雄归位中... 目标坐标: (${littleLegendDefaultPoint.x}, ${littleLegendDefaultPoint.y})`);
+    await mouseController.clickAt(littleLegendDefaultPoint, Button.RIGHT);
+    await sleep(50);
+    await mouseController.clickAt(littleLegendDefaultPoint, Button.RIGHT);
+  }
+  /**
+   * 让小小英雄随机走动（防挂机）
+   * @description 在战斗阶段让小小英雄随机移动，避免被系统判定为挂机
+   *              用于：
+   *              - PVP 战斗阶段的防挂机
+   *              - 等待时的随机移动
+   * 
+   * 走位逻辑：
+   * - 每次调用时，走向与上一次相反的方向（左右交替）
+   * - 从对应方向的点位数组中随机选择一个点
+   * - 这样小小英雄会在棋盘两侧来回走动，更像真人操作
+   * 
+   * @example
+   * // PVP 战斗阶段防挂机
+   * await tftOperator.selfWalkAround();
+   */
+  async selfWalkAround() {
+    this.ensureInitialized();
+    const targetSide = this.lastWalkSide === "left" ? "right" : "left";
+    const targetPoints = selfWalkAroundPoints[targetSide];
+    const randomIndex = Math.floor(Math.random() * targetPoints.length);
+    const targetPoint = targetPoints[randomIndex];
+    logger.info(
+      `[TftOperator] 小小英雄随机走动: ${this.lastWalkSide} → ${targetSide}，目标坐标: (${targetPoint.x}, ${targetPoint.y})`
+    );
+    await mouseController.clickAt(targetPoint, Button.RIGHT);
+    this.lastWalkSide = targetSide;
+  }
+  // ========================================================================
+  // 棋子移动操作
+  // ========================================================================
+  /**
+   * 出售指定位置的棋子
+   * @param location 棋子当前位置 (备战席 "SLOT_x" 或 棋盘 "Rx_Cx")
+   * @description 操作流程：
+   *              1. 鼠标移动到棋子位置
+   *              2. 左键拖拽（拿起）
+   *              3. 移动到商店区域 (使用 SHOP_SLOT_3 作为卖出点，因为它在中间)
+   *              4. 释放左键（卖出）
+   */
+  async sellUnit(location) {
+    this.ensureInitialized();
+    let fromPoint;
+    if (location.startsWith("SLOT_")) {
+      fromPoint = benchSlotPoints[location];
+    } else if (location.startsWith("R")) {
+      fromPoint = fightBoardSlotPoint[location];
+    }
+    if (!fromPoint) {
+      logger.error(`[TftOperator] 卖出失败，无效的位置: ${location}`);
+      return;
+    }
+    const sellPoint = shopSlot.SHOP_SLOT_3;
+    logger.info(`[TftOperator] 卖出棋子: ${location}`);
+    await mouseController.drag(fromPoint, sellPoint);
+  }
+  /**
+   * 将备战席的棋子移动到棋盘指定位置
+   * @param benchLocation 备战席位置 (如 "SLOT_1")
+   * @param boardLocation 棋盘目标位置 (如 "R1_C1")
+   * @description 通过拖拽操作将棋子从备战席移动到棋盘上
+   *              这是上场棋子的核心操作
+   * 
+   * @example
+   * // 将备战席 SLOT_1 的棋子移动到棋盘 R1_C1 位置
+   * await tftOperator.moveBenchToBoard("SLOT_1", "R1_C1");
+   */
+  async moveBenchToBoard(benchLocation, boardLocation) {
+    this.ensureInitialized();
+    const fromPoint = benchSlotPoints[benchLocation];
+    if (!fromPoint) {
+      logger.error(`[TftOperator] 无效的备战席位置: ${benchLocation}`);
+      return;
+    }
+    const toPoint = fightBoardSlotPoint[boardLocation];
+    if (!toPoint) {
+      logger.error(`[TftOperator] 无效的棋盘位置: ${boardLocation}`);
+      return;
+    }
+    logger.info(`[TftOperator] 移动棋子: ${benchLocation} -> ${boardLocation}`);
+    await mouseController.drag(fromPoint, toPoint);
+  }
+  /**
+   * 将棋盘上的棋子移动到另一个棋盘位置
+   * @param fromLocation 起始位置 (如 "R1_C1")
+   * @param toLocation 目标位置 (如 "R4_C4")
+   * @description 用于调整棋子站位，前后排调整等
+   * 
+   * @example
+   * // 将 R1_C1 的棋子移动到 R4_C4
+   * await tftOperator.moveBoardToBoard("R1_C1", "R4_C4");
+   */
+  async moveBoardToBoard(fromLocation, toLocation) {
+    this.ensureInitialized();
+    const fromPoint = fightBoardSlotPoint[fromLocation];
+    const toPoint = fightBoardSlotPoint[toLocation];
+    if (!fromPoint || !toPoint) {
+      logger.error(`[TftOperator] 无效的棋盘位置: ${fromLocation} -> ${toLocation}`);
+      return;
+    }
+    logger.info(`[TftOperator] 调整站位: ${fromLocation} -> ${toLocation}`);
+    await mouseController.drag(fromPoint, toPoint);
+  }
+  /**
+   * 将棋盘上的棋子移回备战席
+   * @param boardLocation 棋盘位置 (如 "R1_C1")
+   * @param benchSlotIndex 备战席目标槽位索引 (0-8)，如果不指定则移到第一个空位
+   * @description 用于下场棋子，腾出人口等
+   * 
+   * @example
+   * // 将 R1_C1 的棋子移回备战席第一个槽位
+   * await tftOperator.moveBoardToBench("R1_C1", 0);
+   */
+  async moveBoardToBench(boardLocation, benchSlotIndex = 0) {
+    this.ensureInitialized();
+    const fromPoint = fightBoardSlotPoint[boardLocation];
+    const benchSlotKey = `SLOT_${benchSlotIndex + 1}`;
+    const toPoint = benchSlotPoints[benchSlotKey];
+    if (!fromPoint || !toPoint) {
+      logger.error(
+        `[TftOperator] 无效的位置: 棋盘 ${boardLocation} -> 备战席 SLOT_${benchSlotIndex + 1}`
+      );
+      return;
+    }
+    logger.info(
+      `[TftOperator] 下场棋子: 棋盘 ${boardLocation} -> 备战席 SLOT_${benchSlotIndex + 1}`
+    );
+    await mouseController.drag(fromPoint, toPoint);
+  }
 }
 const tftOperator = TftOperator.getInstance();
 class GameStateManager {
@@ -11437,6 +11814,16 @@ class GameStateManager {
     return this.snapshot?.gold ?? 0;
   }
   /**
+   * 获取备战席空位数量
+   * @returns 空位数量 (0-9)
+   * @description 备战席共 9 个槽位，遍历统计 null（空槽）的数量
+   *              TftOperator 扫描备战席时，空槽位会返回 null
+   */
+  getEmptyBenchSlotCount() {
+    const benchUnits = this.getBenchUnits();
+    return benchUnits.filter((unit) => unit === null).length;
+  }
+  /**
    * 获取当前经验值信息
    * @returns 经验值对象 { current, total }
    */
@@ -11476,6 +11863,197 @@ class GameStateManager {
       }
     }
     return names;
+  }
+  /**
+   * 获取指定棋子的 1 星数量（备战席 + 棋盘）
+   * @param championName 棋子名称
+   * @returns 1 星棋子的数量
+   * @description 用于判断购买后是否能升星
+   *              TFT 合成规则：3 个 1 星 → 1 个 2 星，3 个 2 星 → 1 个 3 星
+   *              所以如果已有 2 个 1 星，再买 1 个就能升 2 星
+   */
+  getOneStarChampionCount(championName) {
+    let count = 0;
+    for (const unit of this.getBenchUnits()) {
+      if (unit?.tftUnit?.displayName === championName && unit.starLevel === 1) {
+        count++;
+      }
+    }
+    for (const unit of this.getBoardUnits()) {
+      if (unit?.tftUnit?.displayName === championName && unit.starLevel === 1) {
+        count++;
+      }
+    }
+    return count;
+  }
+  /**
+   * 判断购买指定棋子后是否能升星
+   * @param championName 棋子名称
+   * @returns 是否能升星（true = 买了能升星，不占额外格子）
+   * @description 如果已有 2 个 1 星同名棋子，买第 3 个会自动合成 2 星
+   *              这种情况下即使备战席满了也可以购买
+   */
+  canUpgradeAfterBuy(championName) {
+    const oneStarCount = this.getOneStarChampionCount(championName);
+    return oneStarCount >= 2;
+  }
+  /**
+   * 查找指定棋子的 1 星位置信息
+   * @param championName 棋子名称
+   * @returns 所有 1 星棋子的位置数组，包含位置类型（bench/board）和索引
+   * @description 用于购买后更新状态时，确定哪些棋子会参与合成
+   *              TFT 合成规则：优先合成场上的棋子，备战席按从左到右顺序
+   */
+  findOneStarChampionPositions(championName) {
+    const positions = [];
+    const boardUnits = this.getBoardUnits();
+    for (let i = 0; i < boardUnits.length; i++) {
+      const unit = boardUnits[i];
+      if (unit?.tftUnit?.displayName === championName && unit.starLevel === 1) {
+        positions.push({ location: "board", index: i });
+      }
+    }
+    const benchUnits = this.getBenchUnits();
+    for (let i = 0; i < benchUnits.length; i++) {
+      const unit = benchUnits[i];
+      if (unit?.tftUnit?.displayName === championName && unit.starLevel === 1) {
+        positions.push({ location: "bench", index: i });
+      }
+    }
+    return positions;
+  }
+  /**
+   * 获取备战席第一个空位的索引
+   * @returns 空位索引 (0-8)，如果没有空位返回 -1
+   * @description 购买棋子后，新棋子会放到备战席最左边的空位
+   */
+  getFirstEmptyBenchSlotIndex() {
+    const benchUnits = this.getBenchUnits();
+    for (let i = 0; i < benchUnits.length; i++) {
+      if (benchUnits[i] === null) {
+        return i;
+      }
+    }
+    return -1;
+  }
+  /**
+   * 更新备战席指定槽位为空
+   * @param index 槽位索引 (0-8)
+   * @description 当棋子被合成消耗时，需要将对应槽位标记为空
+   *              直接修改快照中的 benchUnits 数组
+   */
+  setBenchSlotEmpty(index) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法更新备战席");
+      return;
+    }
+    if (index < 0 || index >= this.snapshot.benchUnits.length) {
+      logger.warn(`[GameStateManager] 无效的备战席索引: ${index}`);
+      return;
+    }
+    const oldUnit = this.snapshot.benchUnits[index];
+    this.snapshot.benchUnits[index] = null;
+    logger.debug(
+      `[GameStateManager] 备战席槽位 ${index} 已清空` + (oldUnit?.tftUnit ? ` (原: ${oldUnit.tftUnit.displayName})` : "")
+    );
+  }
+  /**
+   * 设置备战席指定槽位的棋子
+   * @param index 槽位索引 (0-8)
+   * @param unit 要放置的棋子
+   * @description 购买棋子后，将新棋子放入备战席指定槽位
+   */
+  setBenchSlotUnit(index, unit) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法设置棋子");
+      return;
+    }
+    if (index < 0 || index >= this.snapshot.benchUnits.length) {
+      logger.warn(`[GameStateManager] 无效的备战席索引: ${index}`);
+      return;
+    }
+    this.snapshot.benchUnits[index] = unit;
+    logger.debug(
+      `[GameStateManager] 备战席槽位 ${index} 已放置: ${unit.tftUnit.displayName} ${unit.starLevel}★`
+    );
+  }
+  /**
+   * 更新备战席指定槽位的棋子星级
+   * @param index 槽位索引 (0-8)
+   * @param newStarLevel 新的星级
+   * @description 当棋子升星时，更新对应槽位的星级
+   */
+  updateBenchSlotStarLevel(index, newStarLevel) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法更新星级");
+      return;
+    }
+    const unit = this.snapshot.benchUnits[index];
+    if (!unit) {
+      logger.warn(`[GameStateManager] 备战席槽位 ${index} 为空，无法更新星级`);
+      return;
+    }
+    const oldStarLevel = unit.starLevel;
+    unit.starLevel = newStarLevel;
+    logger.debug(
+      `[GameStateManager] 备战席槽位 ${index} 星级更新: ${unit.tftUnit?.displayName} ${oldStarLevel}★ → ${newStarLevel}★`
+    );
+  }
+  /**
+   * 更新棋盘指定槽位的棋子星级
+   * @param index 槽位索引 (0-27)
+   * @param newStarLevel 新的星级
+   * @description 当场上棋子升星时，更新对应槽位的星级
+   */
+  updateBoardSlotStarLevel(index, newStarLevel) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法更新星级");
+      return;
+    }
+    const unit = this.snapshot.boardUnits[index];
+    if (!unit) {
+      logger.warn(`[GameStateManager] 棋盘槽位 ${index} 为空，无法更新星级`);
+      return;
+    }
+    const oldStarLevel = unit.starLevel;
+    unit.starLevel = newStarLevel;
+    logger.debug(
+      `[GameStateManager] 棋盘槽位 ${index} 星级更新: ${unit.tftUnit?.displayName} ${oldStarLevel}★ → ${newStarLevel}★`
+    );
+  }
+  /**
+   * 更新商店指定槽位为空（已购买）
+   * @param index 槽位索引 (0-4)
+   * @description 购买棋子后，将商店对应槽位标记为空
+   */
+  setShopSlotEmpty(index) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法更新商店");
+      return;
+    }
+    if (index < 0 || index >= this.snapshot.shopUnits.length) {
+      logger.warn(`[GameStateManager] 无效的商店索引: ${index}`);
+      return;
+    }
+    const oldUnit = this.snapshot.shopUnits[index];
+    this.snapshot.shopUnits[index] = null;
+    logger.debug(
+      `[GameStateManager] 商店槽位 ${index} 已清空` + (oldUnit ? ` (原: ${oldUnit.displayName})` : "")
+    );
+  }
+  /**
+   * 扣减金币
+   * @param amount 扣减数量
+   * @description 购买棋子后更新金币数量
+   */
+  deductGold(amount) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法扣减金币");
+      return;
+    }
+    const oldGold = this.snapshot.gold;
+    this.snapshot.gold = Math.max(0, this.snapshot.gold - amount);
+    logger.debug(`[GameStateManager] 金币扣减: ${oldGold} - ${amount} = ${this.snapshot.gold}`);
   }
   // ============================================================================
   // 游戏进程管理
@@ -11527,6 +12105,101 @@ class GameStateManager {
     return this.progress.hasFirstPvpOccurred;
   }
   // ============================================================================
+  // 棋盘状态查询
+  // ============================================================================
+  /**
+   * 获取当前棋盘上的棋子数量
+   * @returns 棋盘上非空槽位的数量
+   * @description 用于判断是否需要上更多棋子
+   *              棋盘最大容量 = 玩家等级
+   */
+  getBoardUnitCount() {
+    const boardUnits = this.getBoardUnits();
+    return boardUnits.filter((unit) => unit !== null).length;
+  }
+  /**
+   * 获取棋盘空位数量
+   * @returns 棋盘上空槽位的数量
+   * @description 棋盘共 28 个槽位 (4行 x 7列)
+   *              但实际可用数量受等级限制
+   */
+  getEmptyBoardSlotCount() {
+    const boardUnits = this.getBoardUnits();
+    return boardUnits.filter((unit) => unit === null).length;
+  }
+  /**
+   * 获取可以再上场的棋子数量
+   * @returns 当前等级下还能上场多少棋子
+   * @description 计算公式: 等级 - 当前棋盘棋子数
+   *              如果返回 0 或负数，说明已满员或超员
+   */
+  getAvailableBoardSlots() {
+    const level = this.getLevel();
+    const currentCount = this.getBoardUnitCount();
+    return Math.max(0, level - currentCount);
+  }
+  /**
+   * 获取备战席上的非空棋子列表（带索引）
+   * @returns 包含棋子信息和索引的数组
+   * @description 用于遍历备战席上的棋子，决定哪些应该上场
+   */
+  getBenchUnitsWithIndex() {
+    const result = [];
+    const benchUnits = this.getBenchUnits();
+    for (let i = 0; i < benchUnits.length; i++) {
+      const unit = benchUnits[i];
+      if (unit !== null) {
+        result.push({ unit, index: i });
+      }
+    }
+    return result;
+  }
+  /**
+   * 获取棋盘上的非空棋子列表（带位置）
+   * @returns 包含棋子信息的数组
+   * @description 用于遍历棋盘上的棋子，分析当前站位
+   */
+  getBoardUnitsWithLocation() {
+    const boardUnits = this.getBoardUnits();
+    return boardUnits.filter((unit) => unit !== null);
+  }
+  /**
+   * 获取棋盘上的空位列表
+   * @returns 空位的 BoardLocation 数组
+   * @description 返回所有空槽位的位置标识（如 "R1_C1"）
+   */
+  getEmptyBoardLocations() {
+    const boardUnits = this.getBoardUnits();
+    const emptyLocations = [];
+    const boardLocationKeys = Object.keys(fightBoardSlotPoint);
+    for (let i = 0; i < boardUnits.length && i < boardLocationKeys.length; i++) {
+      if (boardUnits[i] === null) {
+        emptyLocations.push(boardLocationKeys[i]);
+      }
+    }
+    return emptyLocations;
+  }
+  /**
+   * 获取前排空位列表
+   * @returns 前排（R1, R2）的空位 BoardLocation 数组
+   * @description 前排适合放置近战棋子（射程 1-2）
+   */
+  getFrontRowEmptyLocations() {
+    return this.getEmptyBoardLocations().filter(
+      (loc) => loc.startsWith("R1_") || loc.startsWith("R2_")
+    );
+  }
+  /**
+   * 获取后排空位列表
+   * @returns 后排（R3, R4）的空位 BoardLocation 数组
+   * @description 后排适合放置远程棋子（射程 3+）
+   */
+  getBackRowEmptyLocations() {
+    return this.getEmptyBoardLocations().filter(
+      (loc) => loc.startsWith("R3_") || loc.startsWith("R4_")
+    );
+  }
+  // ============================================================================
   // 重置
   // ============================================================================
   /**
@@ -11563,6 +12236,8 @@ class GameStageMonitor extends EventEmitter {
   round = 0;
   /** 当前是否处于战斗阶段 */
   isFighting = false;
+  /** 当前阶段类型（如 PVE、PVP、CAROUSEL 等） */
+  currentStageType = GameStageType.UNKNOWN;
   constructor() {
     super();
     this.setMaxListeners(20);
@@ -11622,6 +12297,7 @@ class GameStageMonitor extends EventEmitter {
     this.stage = 0;
     this.round = 0;
     this.isFighting = false;
+    this.currentStageType = GameStageType.UNKNOWN;
     logger.info("[GameStageMonitor] 状态已重置");
   }
   // ============================================================================
@@ -11655,6 +12331,7 @@ class GameStageMonitor extends EventEmitter {
           this.stageText = stageText;
           this.stage = stage;
           this.round = round;
+          this.currentStageType = type;
           this.isFighting = false;
           logger.info(
             `[GameStageMonitor] 阶段变化: ${stageText} (${isNewStage ? "新阶段" : "新回合"}, 类型: ${type})`
@@ -11735,9 +12412,30 @@ class SettingsStore {
     };
     this.store = new Store({ defaults });
   }
+  /**
+   * 获取配置项（支持点号路径访问嵌套属性）
+   * @param key 配置 key，支持 "window.bounds" 这样的点号路径
+   * @returns 对应的配置值
+   * 
+   * @example
+   * settingsStore.get('tftMode')           // 返回 TFTMode
+   * settingsStore.get('window')            // 返回整个 window 对象
+   * settingsStore.get('window.bounds')     // 返回 WindowBounds | null
+   * settingsStore.get('window.isMaximized') // 返回 boolean
+   */
   get(key) {
     return this.store.get(key);
   }
+  /**
+   * 设置配置项（支持点号路径访问嵌套属性）
+   * @param key 配置 key，支持 "window.bounds" 这样的点号路径
+   * @param value 要设置的值
+   * 
+   * @example
+   * settingsStore.set('tftMode', TFTMode.CLASSIC)
+   * settingsStore.set('window.isMaximized', true)
+   * settingsStore.set('window.bounds', { x: 0, y: 0, width: 800, height: 600 })
+   */
   set(key, value) {
     this.store.set(key, value);
   }
@@ -11938,7 +12636,7 @@ class StrategyService {
   selectionState = "NOT_INITIALIZED";
   /** 当前阶段的目标棋子名称列表（缓存，避免重复计算） */
   targetChampionNames = /* @__PURE__ */ new Set();
-  /** 
+  /**
    * 当前阶段号（如 "2-1" 中的 2）
    * @description 阶段变化意味着进入新的大阶段（如从 1 阶段进入 2 阶段）
    */
@@ -12047,11 +12745,30 @@ class StrategyService {
   }
   /**
    * 战斗开始事件处理器
-   * @description 当检测到"战斗环节"文字时触发，此时应暂停涉及棋盘的操作
-   *              注意：不需要单独处理战斗结束，因为进入新回合时会自动重置战斗状态
+   * @description 当检测到"战斗环节"文字时触发
+   *              根据当前阶段类型分发到不同的战斗阶段处理器
+   *
+   * 战斗阶段的操作：
+   * - EARLY_PVE / PVE 阶段：打野怪，拾取战利品球
+   * - PVP / AUGMENT 阶段：观战（海克斯选完后就是普通 PVP 战斗）
+   * - CAROUSEL 阶段 (选秀)：不会触发战斗
    */
-  onFightingStart() {
-    logger.info("[StrategyService] 战斗阶段开始，暂停棋盘操作");
+  async onFightingStart() {
+    logger.info("[StrategyService] 战斗阶段开始");
+    const currentStageType = gameStageMonitor.currentStageType;
+    switch (currentStageType) {
+      case GameStageType.EARLY_PVE:
+      case GameStageType.PVE:
+        await this.handlePVEFighting();
+        break;
+      case GameStageType.PVP:
+      case GameStageType.AUGMENT:
+        await this.handlePVPFighting();
+        break;
+      default:
+        logger.debug(`[StrategyService] 战斗阶段：当前阶段类型 ${currentStageType} 无需特殊处理`);
+        break;
+    }
   }
   /**
    * 检查当前是否处于战斗阶段
@@ -12189,12 +12906,12 @@ class StrategyService {
    * 获取指定等级的阶段配置（支持双向查找）
    * @param level 目标人口等级
    * @returns 阶段配置，如果找不到返回 undefined
-   * 
+   *
    * @description 查找逻辑：
    * 1. 先尝试精确匹配当前等级
    * 2. 如果没有，向下查找（比如 7 级找不到就找 6 级）
    * 3. 如果向下也找不到，向上查找（比如 3 级找不到就找 4 级）
-   * 
+   *
    * 这样可以处理游戏初期（1-3 级）没有配置的情况，自动使用 level4 配置
    */
   getStageConfigForLevel(level) {
@@ -12226,7 +12943,7 @@ class StrategyService {
    * 根据当前棋子匹配并锁定最合适的阵容
    * @description 使用 GameStateManager 获取备战席、棋盘和商店的棋子，
    *              计算与各候选阵容 level4 的匹配度，选择匹配度最高的阵容并锁定
-   * 
+   *
    * 匹配优先级：
    * 1. 匹配分数（匹配到的棋子数量）最高
    * 2. 分数相同时，随机选择
@@ -12306,7 +13023,7 @@ class StrategyService {
    * 刷新游戏状态快照
    * @description 调用 TftOperator 采集所有游戏数据，更新到 GameStateManager
    *              这是 StrategyService 作为"大脑"协调数据采集的核心方法
-   * 
+   *
    * 注意：getBenchInfo 和 getFightBoardInfo 需要操作鼠标（右键点击棋子），
    *       所以这两个必须串行执行，不能并行！
    */
@@ -12340,21 +13057,94 @@ class StrategyService {
   }
   /**
    * 处理 PVE 阶段 (打野怪)
-   * @description 
+   * @description
    * - 1-3、1-4 回合：商店已开启，执行购买策略
    * - 后续 PVE（野怪回合）：继续购买 + 捡战利品球
-   * 
+   *
    * 注意：1-3、1-4 时阵容可能尚未锁定，此时执行随机购买策略
    */
   async handlePVE() {
     logger.info("[StrategyService] PVE阶段：商店运营中...");
     await this.executeCommonStrategy();
   }
+  // ============================================================
+  // ⚔️ 战斗阶段处理器 (Fighting Phase Handlers)
+  // ============================================================
+  /**
+   * 处理 PVE 战斗阶段 (所有打野怪的回合)
+   * @description 包括前期 PVE (1-1, 1-2) 和后期野怪回合：
+   *              - 战斗中会持续掉落战利品球
+   *              - 需要边打边捡（小小英雄可以移动拾取）
+   *              - 同时执行防挂机操作
+   *
+   * 循环逻辑：
+   * - 使用 while 循环持续扫描和拾取战利品球
+   * - 每次拾取完成后等待一小段时间再扫描（避免频繁截图）
+   * - 战斗结束（isFighting = false）时自动退出循环
+   */
+  async handlePVEFighting() {
+    logger.info("[StrategyService] PVE 战斗阶段：开始循环拾取战利品...");
+    const scanInterval = 1e3;
+    while (this.isFighting()) {
+      await this.pickUpLootOrbs();
+      if (!this.isFighting()) {
+        break;
+      }
+      await sleep(scanInterval);
+    }
+    logger.info("[StrategyService] PVE 战斗阶段结束，停止拾取循环");
+  }
+  /**
+   * 处理 PVP 战斗阶段 (玩家对战)
+   * @description PVP 回合的战斗阶段：
+   *              - 玩家对战通常不会掉落战利品球，但某些海克斯可能会
+   *              - 执行一次战利品球搜索（以防万一）
+   *              - 让小小英雄随机走动（防挂机）
+   */
+  async handlePVPFighting() {
+    logger.info("[StrategyService] PVP 战斗阶段：观战中...");
+    await this.pickUpLootOrbs();
+    await tftOperator.selfWalkAround();
+  }
+  /**
+   * 拾取战利品球
+   * @description 检测并拾取场上的战利品球
+   *              战利品球有三种类型：普通(银色)、蓝色、金色
+   *
+   * 拾取策略：
+   * 1. 检测场上所有战利品球的位置
+   * 2. 按 X 坐标从左到右排序（小小英雄默认在左下角，从左往右是最短路径）
+   * 3. 依次移动小小英雄到战利品球位置拾取
+   *
+   * TODO: 实现完整的拾取逻辑
+   */
+  async pickUpLootOrbs() {
+    const sleepTime = 2e3;
+    logger.info("[StrategyService] 开始检测战利品球...");
+    const lootOrbs = await tftOperator.getLootOrbs();
+    if (lootOrbs.length === 0) {
+      logger.info("[StrategyService] 未检测到战利品球");
+      return;
+    }
+    logger.info(`[StrategyService] 检测到 ${lootOrbs.length} 个战利品球`);
+    const sortedOrbs = [...lootOrbs].sort((a, b) => a.x - b.x);
+    for (const orb of sortedOrbs) {
+      if (!this.isFighting()) {
+        logger.info("[StrategyService] 战斗已结束，停止拾取");
+        break;
+      }
+      logger.info(`[StrategyService] 正在拾取 ${orb.type} 战利品球，位置: (${orb.x}, ${orb.y}), 等待 ${sleepTime}ms`);
+      await mouseController.clickAt({ x: orb.x, y: orb.y });
+      await sleep(sleepTime);
+    }
+    logger.info("[StrategyService] 战利品拾取完成");
+    await tftOperator.selfResetPosition();
+  }
   /**
    * 处理游戏前期阶段（第一阶段 1-1 ~ 1-4）
    * @description 整个第一阶段的处理逻辑：
    *              - 1-1、1-2：商店未开放，只执行防挂机
-   *              - 1-3、1-4：商店已开放，执行前期运营策略（组建阵容）
+   *              - 1-3、1-4：商店已开放，执行前期特殊运营策略
    */
   async handleEarlyPVE() {
     if (this.currentRound <= 2) {
@@ -12363,11 +13153,219 @@ class StrategyService {
       return;
     }
     logger.info(`[StrategyService] 前期阶段 1-${this.currentRound}：商店已开放，执行前期运营...`);
-    await this.executeCommonStrategy();
+    await this.executeEarlyPVEStrategy();
+  }
+  /**
+   * 前期 PVE 阶段专用策略 (1-3、1-4 回合)
+   * @description 这个阶段的特殊性：
+   *              - 阵容尚未锁定（要等到 2-1 第一个 PVP 阶段才匹配）
+   *              - 金币有限（通常只有 4-6 金币）
+   *              - 目标：尽可能买到候选阵容中的棋子，为后续匹配做准备
+   *
+   * 购买优先级：
+   * 1. 优先购买备战席/场上已有的棋子（方便升星）
+   * 2. 优先购买所有候选阵容 level4 中出现的棋子
+   * 3. 低费棋子（1-2 费）可以考虑购买（增加后续匹配可能性）
+   */
+  async executeEarlyPVEStrategy() {
+    await tftOperator.selfResetPosition();
+    await this.refreshGameState();
+    const ownedChampions = gameStateManager.getOwnedChampionNames();
+    const candidateTargets = this.getCandidateTargetChampions();
+    logger.info(
+      `[StrategyService] 前期策略 - 金币: ${gameStateManager.getGold()}，备战席空位: ${gameStateManager.getEmptyBenchSlotCount()}，已有棋子: ${Array.from(ownedChampions).join(", ") || "无"}，候选目标: ${Array.from(candidateTargets).join(", ") || "无"}`
+    );
+    const shopUnits = gameStateManager.getShopUnits();
+    for (let i = 0; i < shopUnits.length; i++) {
+      const unit = shopUnits[i];
+      if (!unit) continue;
+      const shouldBuy = this.shouldBuyInEarlyGame(unit, ownedChampions, candidateTargets);
+      if (shouldBuy) {
+        logger.info(
+          `[StrategyService] 前期决策购买: ${unit.displayName} (￥${unit.price})，原因: ${this.getEarlyBuyReason(unit, ownedChampions, candidateTargets)}`
+        );
+        const success = await this.buyAndUpdateState(i);
+        if (success) {
+          ownedChampions.add(unit.displayName);
+        }
+      } else {
+        logger.debug(`[StrategyService] 前期跳过: ${unit.displayName}`);
+      }
+    }
+    await this.optimizeBoard(candidateTargets);
+  }
+  /**
+   * 优化棋盘阵容（通用方法，适用于所有阶段）
+   * @param targetChampions 目标棋子集合（用于评估棋子价值）
+   * @description 
+   * - 有空位：自动上场备战席的目标棋子
+   * - 满员：用备战席的强力棋子替换场上的弱棋子
+   */
+  async optimizeBoard(targetChampions) {
+    const availableSlots = gameStateManager.getAvailableBoardSlots();
+    if (availableSlots > 0) {
+      await this.autoPlaceUnitsToEmptySlots(targetChampions, availableSlots);
+    } else {
+      await this.aotoReplaceWeakestUnit(targetChampions);
+    }
+  }
+  /**
+   * 自动根据算法将备战席棋子上场到空位
+   * @param targetChampions 目标棋子集合
+   * @param availableSlots 可用空位数量
+   */
+  async autoPlaceUnitsToEmptySlots(targetChampions, availableSlots) {
+    const benchUnits = gameStateManager.getBenchUnits().filter((u) => u !== null);
+    if (benchUnits.length === 0) {
+      logger.debug("[StrategyService] 备战席没有棋子，跳过摆放");
+      return;
+    }
+    const unitsToPlace = this.selectUnitsToPlace(benchUnits, targetChampions, availableSlots);
+    if (unitsToPlace.length === 0) {
+      logger.debug("[StrategyService] 备战席没有需要上场的目标棋子");
+      return;
+    }
+    logger.info(
+      `[StrategyService] 开始摆放棋子，当前等级: ${gameStateManager.getLevel()}，可上场数量: ${availableSlots}，待上场: ${unitsToPlace.length}`
+    );
+    for (const unit of unitsToPlace) {
+      const championName = unit.tftUnit.displayName;
+      const targetLocation = this.findBestPositionForUnit(unit);
+      if (!targetLocation) {
+        logger.warn(`[StrategyService] 找不到合适的位置放置 ${championName}`);
+        continue;
+      }
+      logger.info(
+        `[StrategyService] 摆放棋子: ${championName} (射程: ${getChampionRange(championName) ?? "未知"}) -> ${targetLocation}`
+      );
+      await tftOperator.moveBenchToBoard(unit.location, targetLocation);
+      await sleep(200);
+    }
+    logger.info(`[StrategyService] 棋子摆放完成，共摆放 ${unitsToPlace.length} 个棋子`);
+  }
+  /**
+   * 替换场上最弱的棋子
+   * @param targetChampions 目标棋子集合
+   * @description 用备战席价值更高的棋子替换场上价值最低的棋子
+   */
+  async aotoReplaceWeakestUnit(targetChampions) {
+    const benchUnits = gameStateManager.getBenchUnits().filter((u) => u !== null);
+    if (benchUnits.length === 0) return;
+    const bestBench = this.findBestBenchUnit(benchUnits, targetChampions);
+    if (!bestBench) return;
+    const worstBoard = this.findWorstBoardUnit(targetChampions);
+    if (!worstBoard) return;
+    if (bestBench.score > worstBoard.score) {
+      logger.info(
+        `[StrategyService] 替换: ${worstBoard.unit.tftUnit.displayName}(${worstBoard.score}分) -> ${bestBench.unit.tftUnit.displayName}(${bestBench.score}分)`
+      );
+      await tftOperator.sellUnit(worstBoard.location);
+      await sleep(300);
+      await tftOperator.moveBenchToBoard(bestBench.unit.location, worstBoard.location);
+      await sleep(200);
+    }
+  }
+  /**
+   * 找备战席中价值最高的棋子
+   */
+  findBestBenchUnit(benchUnits, targetChampions) {
+    let best = null;
+    for (const unit of benchUnits) {
+      const score = this.calculateUnitScore(unit.tftUnit, unit.starLevel, targetChampions);
+      if (!best || score > best.score) {
+        best = { unit, score };
+      }
+    }
+    return best;
+  }
+  /**
+   * 找棋盘上价值最低的棋子
+   */
+  findWorstBoardUnit(targetChampions) {
+    const boardUnits = gameStateManager.getBoardUnits();
+    const boardLocationKeys = Object.keys(fightBoardSlotPoint);
+    let worst = null;
+    for (let i = 0; i < boardUnits.length; i++) {
+      const unit = boardUnits[i];
+      if (!unit) continue;
+      const score = this.calculateUnitScore(unit.tftUnit, unit.starLevel, targetChampions);
+      if (!worst || score < worst.score) {
+        worst = { unit, location: boardLocationKeys[i], score };
+      }
+    }
+    return worst;
+  }
+  /**
+   * 计算棋子价值分数
+   * @description 评分规则：目标棋子 +1000，每星 +100，每费 +10
+   */
+  calculateUnitScore(unit, starLevel, targetChampions) {
+    let score = 0;
+    if (targetChampions.has(unit.displayName)) score += 1e3;
+    score += starLevel * 100;
+    score += unit.price * 10;
+    return score;
+  }
+  /**
+   * 获取所有候选阵容的 level4 目标棋子（合并去重）
+   * @returns 所有候选阵容 level4 棋子名称的集合
+   * @description 用于前期策略，在阵容未锁定时，
+   *              购买任何一个候选阵容中的棋子都是有价值的
+   */
+  getCandidateTargetChampions() {
+    const targets = /* @__PURE__ */ new Set();
+    if (this.isLineupLocked() && this.currentLineup) {
+      return this.targetChampionNames;
+    }
+    for (const lineup of this.candidateLineups) {
+      const level4Config = lineup.stages.level4;
+      if (level4Config) {
+        for (const champion of level4Config.champions) {
+          targets.add(champion.name);
+        }
+      }
+    }
+    return targets;
+  }
+  /**
+   * 前期购买决策逻辑
+   * @param unit 商店中的棋子
+   * @param ownedChampions 已拥有的棋子名称集合
+   * @param candidateTargets 候选阵容的目标棋子集合
+   * @returns 是否应该购买
+   *
+   * 优先级（从高到低）：
+   * 1. 已有的棋子（可以升星） → 必买
+   * 2. 候选阵容中的棋子 → 必买
+   * 3. 低费棋子（1-2 费）→ 可选（暂不实现，避免乱买）
+   */
+  shouldBuyInEarlyGame(unit, ownedChampions, candidateTargets) {
+    const name = unit.displayName;
+    if (ownedChampions.has(name)) {
+      return true;
+    }
+    if (candidateTargets.has(name)) {
+      return true;
+    }
+    return false;
+  }
+  /**
+   * 获取前期购买原因（用于日志输出）
+   * @description 帮助调试，了解为什么购买某个棋子
+   */
+  getEarlyBuyReason(unit, ownedChampions, candidateTargets) {
+    const name = unit.displayName;
+    if (ownedChampions.has(name)) {
+      return "已有棋子，可升星";
+    }
+    if (candidateTargets.has(name)) {
+      return "候选阵容目标棋子";
+    }
+    return "未知原因";
   }
   /**
    * 处理 PVP 阶段 (玩家对战)
-   * @description 
+   * @description
    * - 首次 PVP（2-1）：如果阵容未锁定，进行阵容匹配
    * - 后续 PVP：正常运营（拿牌、升级、调整站位）
    */
@@ -12385,7 +13383,7 @@ class StrategyService {
    * 防挂机：随机移动小小英雄
    * @description 在战斗阶段（如前期 PVE、野怪回合）时调用，
    *              让小小英雄随机走动，避免被系统判定为挂机
-   * 
+   *
    * TODO: 实现随机移动逻辑
    * - 生成随机目标坐标（在安全区域内）
    * - 调用 tftOperator 移动小小英雄
@@ -12404,15 +13402,16 @@ class StrategyService {
    *              - 上装备
    *              - 调整站位
    *              - 更换阵容（如果需要）
-   * 
+   *
    * 根据阵容锁定状态和当前阶段，执行不同的子策略
-   * 
+   *
    * TODO: 逐步实现各个子策略
    */
   async executeCommonStrategy() {
     if (this.isLineupLocked()) {
       logger.debug("[StrategyService] 阵容已锁定，执行正常运营策略");
       await this.analyzeAndBuy();
+      await this.optimizeBoard(this.targetChampionNames);
     } else {
       logger.debug("[StrategyService] 阵容未锁定，执行前期运营策略");
       await this.executeEarlyGameStrategy();
@@ -12424,7 +13423,7 @@ class StrategyService {
    *              1. 优先购买备战席/场上已有的棋子（方便升星）
    *              2. 优先购买所有候选阵容中出现的棋子
    *              3. 其他低费棋子随机购买（增加后续匹配的可能性）
-   * 
+   *
    * TODO: 实现前期运营逻辑
    */
   async executeEarlyGameStrategy() {
@@ -12466,6 +13465,205 @@ class StrategyService {
    */
   shouldIBuy(unit) {
     return this.targetChampionNames.has(unit.displayName);
+  }
+  /**
+   * 购买棋子并更新游戏状态
+   * @param shopSlotIndex 商店槽位索引 (0-4)
+   * @returns 是否购买成功
+   *
+   * @description 这是一个核心方法，负责：
+   *              1. 检查购买条件（金币、备战席空位、是否能升星）
+   *              2. 执行购买操作
+   *              3. 更新 GameStateManager 中的状态（金币、备战席、商店）
+   *
+   * TFT 合成规则：
+   * - 3 个 1★ 同名棋子 → 自动合成 1 个 2★
+   * - 合成时，场上的棋子优先变为高星，备战席的棋子被消耗
+   * - 如果都在备战席，靠左（索引小）的棋子变为高星，其他被消耗
+   *
+   * 购买后状态变化：
+   * - 情况 A：备战席有空位，不能升星
+   *   → 新棋子放入最左边的空位
+   * - 情况 B：能升星（已有 2 个 1★）
+   *   - B1：场上 1 个 + 备战席 1 个 → 场上棋子升 2★，备战席棋子消失
+   *   - B2：备战席 2 个 → 靠左的升 2★，另一个消失
+   * - 情况 C：备战席满且不能升星
+   *   → 无法购买，返回 false
+   */
+  async buyAndUpdateState(shopSlotIndex) {
+    const shopUnits = gameStateManager.getShopUnits();
+    const unit = shopUnits[shopSlotIndex];
+    if (!unit) {
+      logger.error(`[StrategyService] 商店槽位 ${shopSlotIndex} 为空，无法购买`);
+      return false;
+    }
+    const championName = unit.displayName;
+    const price = unit.price;
+    const currentGold = gameStateManager.getGold();
+    if (currentGold < price) {
+      logger.error(
+        `[StrategyService] 金币不足，无法购买 ${championName}（需要 ${price}，当前 ${currentGold}）`
+      );
+      return false;
+    }
+    const emptyBenchSlots = gameStateManager.getEmptyBenchSlotCount();
+    const canUpgrade = gameStateManager.canUpgradeAfterBuy(championName);
+    if (emptyBenchSlots <= 0 && !canUpgrade) {
+      logger.error(
+        `[StrategyService] 备战席已满且买了不能升星，无法购买 ${championName}`
+      );
+      return false;
+    }
+    logger.info(
+      `[StrategyService] 购买 ${championName} (￥${price})` + (canUpgrade ? " [可升星]" : "")
+    );
+    await tftOperator.buyAtSlot(shopSlotIndex + 1);
+    gameStateManager.deductGold(price);
+    gameStateManager.setShopSlotEmpty(shopSlotIndex);
+    if (canUpgrade) {
+      this.handleUpgradeAfterBuy(championName);
+    } else {
+      const emptySlotIndex = gameStateManager.getFirstEmptyBenchSlotIndex();
+      if (emptySlotIndex === -1) {
+        logger.error(`[StrategyService] 备战席没有空位，但购买已执行`);
+      } else {
+        const newBenchUnit = {
+          location: `SLOT_${emptySlotIndex + 1}`,
+          // 索引 0 对应 SLOT_1
+          tftUnit: unit,
+          // 商店棋子信息
+          starLevel: 1,
+          // 商店买的都是 1 星
+          equips: []
+          // 刚买的棋子没有装备
+        };
+        gameStateManager.setBenchSlotUnit(emptySlotIndex, newBenchUnit);
+        logger.debug(
+          `[StrategyService] ${championName} 放入备战席槽位 ${emptySlotIndex} (SLOT_${emptySlotIndex + 1})`
+        );
+      }
+    }
+    return true;
+  }
+  /**
+   * 处理购买后的升星逻辑
+   * @param championName 购买的棋子名称
+   * @description 当购买的棋子能触发升星时，更新 GameStateManager 中的状态：
+   *              - 找到参与合成的 2 个 1★ 棋子位置
+   *              - 决定哪个棋子升级、哪个棋子消失
+   *              - 更新对应槽位的状态
+   *
+   * TFT 合成优先级：
+   * 1. 如果场上有 1★，场上的棋子升级，备战席的消失
+   * 2. 如果都在备战席，索引小（靠左）的升级，另一个消失
+   */
+  handleUpgradeAfterBuy(championName) {
+    const positions = gameStateManager.findOneStarChampionPositions(championName);
+    if (positions.length < 2) {
+      logger.warn(
+        `[StrategyService] 升星异常：${championName} 只找到 ${positions.length} 个 1★`
+      );
+      return;
+    }
+    const [first, second] = positions;
+    logger.info(
+      `[StrategyService] ${championName} 升星：${first.location}[${first.index}] 升为 2★，${second.location}[${second.index}] 消失`
+    );
+    if (first.location === "board") {
+      gameStateManager.updateBoardSlotStarLevel(first.index, 2);
+    } else {
+      gameStateManager.updateBenchSlotStarLevel(first.index, 2);
+    }
+    if (second.location === "bench") {
+      gameStateManager.setBenchSlotEmpty(second.index);
+    }
+  }
+  // ============================================================
+  // 🎯 棋子摆放策略 (Unit Placement Strategy)
+  // ============================================================
+  /**
+   * 选择需要上场的棋子
+   * @param benchUnits 备战席上的棋子列表
+   * @param targetChampions 目标棋子集合
+   * @param maxCount 最多可以上场的数量
+   * @returns 需要上场的棋子列表（已排序）
+   *
+   * @description 选择逻辑：
+   *              1. 只选择目标阵容中的棋子
+   *              2. 优先选择核心棋子
+   *              3. 优先选择高星级棋子
+   *              4. 优先选择高费棋子
+   */
+  selectUnitsToPlace(benchUnits, targetChampions, maxCount) {
+    const targetUnits = benchUnits.filter(
+      (unit) => targetChampions.has(unit.tftUnit.displayName)
+    );
+    if (targetUnits.length === 0) {
+      return [];
+    }
+    const coreChampionNames = new Set(
+      this.getCoreChampions().map((c) => c.name)
+    );
+    targetUnits.sort((a, b) => {
+      const aName = a.tftUnit.displayName;
+      const bName = b.tftUnit.displayName;
+      const aIsCore = coreChampionNames.has(aName) ? 1 : 0;
+      const bIsCore = coreChampionNames.has(bName) ? 1 : 0;
+      if (aIsCore !== bIsCore) return bIsCore - aIsCore;
+      if (b.tftUnit.price != a.tftUnit.price) return b.tftUnit.price - a.tftUnit.price;
+      const aStarLevel = a.starLevel > 0 ? a.starLevel : 1;
+      const bStarLevel = b.starLevel > 0 ? b.starLevel : 1;
+      if (aStarLevel !== bStarLevel) return bStarLevel - aStarLevel;
+      return 0;
+    });
+    return targetUnits.slice(0, maxCount);
+  }
+  /**
+   * 为棋子找到最佳摆放位置
+   * @param unit 要摆放的棋子
+   * @returns 最佳位置的 BoardLocation，如果找不到返回 undefined
+   *
+   * @description 摆放逻辑：
+   *              - 射程 1-2（近战）：优先放前排 (R1, R2)
+   *              - 射程 3+（远程）：优先放后排 (R3, R4)
+   *              - 如果优先区域没有空位，则放到任意空位
+   */
+  findBestPositionForUnit(unit) {
+    const championName = unit.tftUnit.displayName;
+    const range = getChampionRange(championName) ?? 1;
+    const isMelee = range <= 2;
+    const frontRowEmpty = gameStateManager.getFrontRowEmptyLocations();
+    const backRowEmpty = gameStateManager.getBackRowEmptyLocations();
+    logger.debug(
+      `[StrategyService] ${championName} 射程: ${range}，${isMelee ? "近战" : "远程"}，前排空位: ${frontRowEmpty.length}，后排空位: ${backRowEmpty.length}`
+    );
+    const [primary, secondary] = isMelee ? [frontRowEmpty, backRowEmpty] : [backRowEmpty, frontRowEmpty];
+    const candidates = primary.length > 0 ? primary : secondary;
+    return candidates.length > 0 ? this.selectPositionFromCenter(candidates) : void 0;
+  }
+  /**
+   * 从空位列表中选择最佳位置。这里传入的时候就已经区分了前排和后排。
+   * @param emptyLocations 空位列表（如 ["R1_C1", "R1_C3", "R2_C4"]）
+   * @returns 最佳位置
+   *
+   * @description 行优先 + 列居中的选择策略：
+   *              1. 行优先级：R1 > R2 > R3 > R4（前排棋子先站前面）
+   *              2. 同行内列优先级：C4 > C3 > C5 > C2 > C6 > C1 > C7（从中间向两边）
+   *              这样可以让阵型紧凑，近战棋子不用绕路
+   */
+  selectPositionFromCenter(emptyLocations) {
+    if (emptyLocations.length === 0) return void 0;
+    const rowPriority = ["R1", "R2", "R3", "R4"];
+    const columnPriority = ["C4", "C3", "C5", "C2", "C6", "C1", "C7"];
+    for (const row of rowPriority) {
+      const rowLocations = emptyLocations.filter((loc) => loc.startsWith(row));
+      if (rowLocations.length === 0) continue;
+      for (const col of columnPriority) {
+        const found = rowLocations.find((loc) => loc.endsWith(col));
+        if (found) return found;
+      }
+    }
+    return emptyLocations[0];
   }
   /**
    * 重置策略服务状态
@@ -12550,6 +13748,15 @@ class GameRunningState {
   async action(signal) {
     signal.throwIfAborted();
     logger.info("[GameRunningState] 进入游戏运行状态");
+    gameStateManager.startGame();
+    logger.info("[GameRunningState] 游戏已开始");
+    const initSuccess = strategyService.initialize();
+    if (!initSuccess) {
+      logger.error("[GameRunningState] 策略服务初始化失败，请先选择阵容");
+    }
+    strategyService.subscribe();
+    gameStageMonitor.start(1e3);
+    logger.info("[GameRunningState] GameStageMonitor 已启动");
     const isGameEnded = await this.waitForGameToEnd(signal);
     this.cleanup();
     if (signal.aborted) {
@@ -12597,8 +13804,8 @@ class GameRunningState {
       const onGameflowPhase = (eventData) => {
         const phase = eventData.data?.phase;
         logger.info(`[GameRunningState] 监听到游戏阶段: ${phase}`);
-        if (phase && phase !== "InProgress") {
-          logger.info(`[GameRunningState] 游戏结束，phase: ${phase}`);
+        if (phase && phase === "WaitingForStats") {
+          logger.info(`[GameRunningState] 检测到游戏结束。`);
           safeResolve(true);
         }
       };
@@ -13060,10 +14267,6 @@ function init() {
     });
     lcuManager.on("lcu-event", (event) => {
       console.log("收到LCU事件:", event.uri, event.eventType);
-    });
-    lcuManager.on(LcuEventUri.GAMEFLOW_PHASE, (eventData) => {
-      const phase = eventData.data?.phase;
-      logger.info(`🎮 [DEBUG-GAMEFLOW] 游戏阶段变化: phase = "${phase}"`);
     });
   });
   connector.on("disconnect", () => {

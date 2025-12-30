@@ -887,7 +887,7 @@ export class StrategyService {
         const unitsToPlace = this.selectUnitsToPlace(benchUnits, targetChampions, availableSlots);
         
         if (unitsToPlace.length === 0) {
-            logger.debug("[StrategyService] 备战席没有需要上场的目标棋子");
+            logger.debug("[StrategyService] 备战席没有可以上场的棋子");
             return;
         }
 
@@ -922,6 +922,7 @@ export class StrategyService {
      * 替换场上最弱的棋子
      * @param targetChampions 目标棋子集合
      * @description 用备战席价值更高的棋子替换场上价值最低的棋子
+     *              卖掉场上棋子后，会产生空位，走正常的上场逻辑（根据射程决定位置）
      */
     private async aotoReplaceWeakestUnit(targetChampions: Set<ChampionKey>): Promise<void> {
         const benchUnits = gameStateManager.getBenchUnits().filter((u): u is BenchUnit => u !== null);
@@ -942,13 +943,19 @@ export class StrategyService {
                 `-> ${bestBench.unit.tftUnit.displayName}(${bestBench.score}分)`
             );
 
-            // 卖掉场上最差的
+            // 卖掉场上最差的（会产生空位）
             await tftOperator.sellUnit(worstBoard.location);
-            await sleep(300);
+            await sleep(100);
 
-            // 把备战席最好的移到卖掉的位置
-            await tftOperator.moveBenchToBoard(bestBench.unit.location, worstBoard.location);
-            await sleep(200);
+            // 根据新棋子的射程，找到最佳位置上场（而不是直接放到卖掉的位置）
+            const targetLocation = this.findBestPositionForUnit(bestBench.unit);
+            
+            if (targetLocation) {
+                await tftOperator.moveBenchToBoard(bestBench.unit.location, targetLocation);
+                await sleep(10);
+            } else {
+                logger.warn(`[StrategyService] 找不到合适位置放置 ${bestBench.unit.tftUnit.displayName}`);
+            }
         }
     }
 
@@ -997,13 +1004,40 @@ export class StrategyService {
 
     /**
      * 计算棋子价值分数
-     * @description 评分规则：目标棋子 +1000，每星 +100，每费 +10
+     * @description 评分规则（优先级从高到低）：
+     *              1. 目标阵容中的核心棋子 → +10000
+     *              2. 目标阵容中的普通棋子 → +1000
+     *              3. 棋子费用 → 每费 +100（高费棋子战斗力更强）
+     *              4. 棋子星级 → 每星 +10（最低优先级）
+     * 
+     * 分数设计说明：
+     * - 使用不同数量级确保优先级不会被低优先级的高数值覆盖
+     * - 例如：1费核心棋子 (10000+100+10=10110) > 5费非目标棋子 (500+10=510)
      */
     private calculateUnitScore(unit: TFTUnit, starLevel: number, targetChampions: Set<ChampionKey>): number {
         let score = 0;
-        if (targetChampions.has(unit.displayName as ChampionKey)) score += 1000;
-        score += starLevel * 100;
-        score += unit.price * 10;
+        const championName = unit.displayName as ChampionKey;
+        
+        // 获取核心棋子名称集合
+        const coreChampionNames = new Set<ChampionKey>(
+            this.getCoreChampions().map(c => c.name as ChampionKey)
+        );
+
+        // 优先级 1: 目标阵容中的核心棋子
+        if (targetChampions.has(championName) && coreChampionNames.has(championName)) {
+            score += 10000;
+        }
+        // 优先级 2: 目标阵容中的普通棋子（非核心）
+        else if (targetChampions.has(championName)) {
+            score += 1000;
+        }
+
+        // 优先级 3: 棋子费用（高费棋子战斗力更强）
+        score += unit.price * 100;
+
+        // 优先级 4: 棋子星级（最低优先级）
+        score += starLevel * 10;
+
         return score;
     }
 
@@ -1414,49 +1448,24 @@ export class StrategyService {
      * @returns 需要上场的棋子列表（已排序）
      *
      * @description 选择逻辑：
-     *              1. 只选择目标阵容中的棋子
-     *              2. 优先选择核心棋子
-     *              3. 优先选择高星级棋子
-     *              4. 优先选择高费棋子
+     *              场上有空位必须填满！不能因为不是目标棋子就空着不放。
+     *              复用 calculateUnitScore 计算分数，按分数从高到低排序。
+     *              
+     *              非目标棋子作为"打工仔"，虽然没有羁绊加成，但也能提供战斗力。
      */
     private selectUnitsToPlace(benchUnits: BenchUnit[], targetChampions: Set<ChampionKey>, maxCount: number): BenchUnit[] {
-        // 1. 筛选目标阵容中的棋子
-        const targetUnits = benchUnits.filter(unit =>
-            targetChampions.has(unit.tftUnit.displayName as ChampionKey)
-        );
-
-        if (targetUnits.length === 0) {
+        if (benchUnits.length === 0) {
             return [];
         }
 
-        // 2. 获取核心棋子名称集合（用于优先级判断）
-        const coreChampionNames = new Set<ChampionKey>(
-            this.getCoreChampions().map(c => c.name as ChampionKey)
-        );
-
-        // 3. 排序：核心 > 费用 > 星级
-        targetUnits.sort((a, b) => {
-            const aName = a.tftUnit.displayName as ChampionKey;
-            const bName = b.tftUnit.displayName as ChampionKey;
-
-            // 核心棋子优先
-            const aIsCore = coreChampionNames.has(aName) ? 1 : 0;
-            const bIsCore = coreChampionNames.has(bName) ? 1 : 0;
-            if (aIsCore !== bIsCore) return bIsCore - aIsCore;
-
-            // 费用高的优先
-            if (b.tftUnit.price != a.tftUnit.price) return b.tftUnit.price - a.tftUnit.price;
-
-            // 星级高的优先
-            const aStarLevel = a.starLevel > 0 ? a.starLevel : 1;
-            const bStarLevel = b.starLevel > 0 ? b.starLevel : 1;
-            if (aStarLevel !== bStarLevel) return bStarLevel - aStarLevel;
-
-            return 0;  // 相等时返回 0
+        // 复用 calculateUnitScore 计算分数，按分数从高到低排序
+        const sortedUnits = [...benchUnits].sort((a, b) => {
+            const aScore = this.calculateUnitScore(a.tftUnit, a.starLevel, targetChampions);
+            const bScore = this.calculateUnitScore(b.tftUnit, b.starLevel, targetChampions);
+            return bScore - aScore;  // 分数高的排前面
         });
 
-        // 4. 取前 maxCount 个
-        return targetUnits.slice(0, maxCount);
+        return sortedUnits.slice(0, maxCount);
     }
 
     /**
@@ -1509,8 +1518,8 @@ export class StrategyService {
     private selectPositionFromCenter(emptyLocations: BoardLocation[]): BoardLocation | undefined {
         if (emptyLocations.length === 0) return undefined;
 
-        // 行优先级（前排到后排）
-        const rowPriority = ['R1', 'R2', 'R3', 'R4'];
+        // 行优先级（前排到后排，注意这里后排是第四排优先于第三排，因为后排手长）
+        const rowPriority = ['R1', 'R2', 'R4', 'R3'];
         // 列优先级（从中间到两边）
         const columnPriority = ['C4', 'C3', 'C5', 'C2', 'C6', 'C1', 'C7'];
 
