@@ -72,6 +72,13 @@ export const shopSlot = {
     SHOP_SLOT_4: { x: 660, y: 700 },
     SHOP_SLOT_5: { x: 800, y: 700 },
 }
+
+/**
+ * 商店槽位索引类型
+ * @description 商店只有 5 个槽位（0-4），使用字面量类型限制取值范围
+ *              比 number 更严谨，避免传入无效索引
+ */
+export type ShopSlotIndex = 0 | 1 | 2 | 3 | 4;
 //  英雄购买槽英雄名字Region
 export const shopSlotNameRegions = {
     SLOT_1: {   // width: 108 height:18

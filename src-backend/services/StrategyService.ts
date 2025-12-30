@@ -17,7 +17,7 @@
  */
 import {IdentifiedEquip, tftOperator} from "../TftOperator";
 import {logger} from "../utils/Logger";
-import {TFTUnit, GameStageType, fightBoardSlotPoint, getChampionRange, ChampionKey} from "../TFTProtocol";
+import {TFTUnit, GameStageType, fightBoardSlotPoint, getChampionRange, ChampionKey, ShopSlotIndex} from "../TFTProtocol";
 import {gameStateManager} from "./GameStateManager";
 import {gameStageMonitor, GameStageEvent} from "./GameStageMonitor";
 import {settingsStore} from "../utils/SettingsStore";
@@ -817,37 +817,91 @@ export class StrategyService {
             `候选目标: ${Array.from(candidateTargets).join(', ') || '无'}`
         );
 
-        // 3. 获取商店信息
+        // 3. 获取商店信息并批量分析购买决策
         const shopUnits = gameStateManager.getShopUnits();
+        const buyIndices = this.analyzePurchaseDecision(shopUnits, ownedChampions, candidateTargets);
 
-        // 4. 遍历商店，按优先级决策购买
-        for (let i = 0; i < shopUnits.length; i++) {
-            const unit = shopUnits[i];
+        // 4. 按顺序执行购买
+        for (const index of buyIndices) {
+            const unit = shopUnits[index];
             if (!unit) continue;
 
-            // 判断是否应该购买（前期特殊逻辑）
-            const shouldBuy = this.shouldBuyInEarlyGame(unit, ownedChampions, candidateTargets);
+            logger.info(
+                `[StrategyService] 前期决策购买: ${unit.displayName} (￥${unit.price})，` +
+                `原因: ${this.getEarlyBuyReason(unit, ownedChampions, candidateTargets)}`
+            );
 
-            if (shouldBuy) {
-                logger.info(
-                    `[StrategyService] 前期决策购买: ${unit.displayName} (￥${unit.price})，` +
-                    `原因: ${this.getEarlyBuyReason(unit, ownedChampions, candidateTargets)}`
-                );
+            const success = await this.buyAndUpdateState(index);
 
-                // 使用统一的购买方法
-                const success = await this.buyAndUpdateState(i);
-
-                if (success) {
-                    // 将刚买的棋子加入已有棋子集合
-                    ownedChampions.add(unit.displayName as ChampionKey);
-                }
-            } else {
-                logger.debug(`[StrategyService] 前期跳过: ${unit.displayName}`);
+            if (success) {
+                // 将刚买的棋子加入已有棋子集合（影响后续"已有棋子可升星"的判断）
+                ownedChampions.add(unit.displayName as ChampionKey);
             }
         }
 
         // 5. 购买完成后，优化棋盘阵容（上棋子、替换）
         await this.optimizeBoard(candidateTargets);
+    }
+
+    /**
+     * 批量分析商店购买决策
+     * @param shopUnits 商店棋子列表
+     * @param ownedChampions 已拥有的棋子名称集合
+     * @param targetChampions 目标阵容棋子集合
+     * @returns 建议购买的商店槽位索引数组（已按优先级排序）
+     * 
+     * @description 购买优先级：
+     *              1. 目标阵容内的棋子 → 无条件购买（不管有没有空位）
+     *              2. 已拥有的棋子 → 无条件购买（可以升星）
+     *              3. 非目标棋子 → 只有场上有空位时才买，优先买高费的（当打工仔）
+     */
+    private analyzePurchaseDecision(
+        shopUnits: (TFTUnit | null)[],
+        ownedChampions: Set<ChampionKey>,
+        targetChampions: Set<ChampionKey>
+    ): ShopSlotIndex[] {
+        // 分类：目标棋子、已有棋子、打工棋子
+        const targetIndices: ShopSlotIndex[] = [];      // 目标阵容棋子（必买）
+        const ownedIndices: ShopSlotIndex[] = [];       // 已有棋子（必买，可升星）
+        const workerCandidates: { index: ShopSlotIndex; price: number }[] = [];  // 打工候选
+
+        for (let i = 0; i < shopUnits.length; i++) {
+            const unit = shopUnits[i];
+            if (!unit) continue;
+
+            const name = unit.displayName as ChampionKey;
+            const slotIndex = i as ShopSlotIndex;  // 安全断言：i 的范围是 0-4
+
+            if (targetChampions.has(name)) {
+                // 目标阵容棋子：必买
+                targetIndices.push(slotIndex);
+            } else if (ownedChampions.has(name)) {
+                // 已有棋子：必买（可升星）
+                ownedIndices.push(slotIndex);
+            } else {
+                // 非目标棋子：候选打工仔
+                workerCandidates.push({ index: slotIndex, price: unit.price });
+            }
+        }
+
+        // 打工棋子按费用从高到低排序（高费战斗力强）
+        workerCandidates.sort((a, b) => b.price - a.price);
+
+        // 计算可以买多少个打工仔（只有场上有空位才买）
+        const availableSlots = gameStateManager.getAvailableBoardSlots();
+        const workersToBuy = workerCandidates
+            .slice(0, Math.max(0, availableSlots))  // 最多买到填满空位
+            .map(w => w.index);
+
+        // 合并结果：目标棋子 > 已有棋子 > 打工棋子
+        const result = [...targetIndices, ...ownedIndices, ...workersToBuy];
+
+        logger.debug(
+            `[StrategyService] 购买分析 - 目标棋子: ${targetIndices.length}个，` +
+            `已有棋子: ${ownedIndices.length}个，打工棋子: ${workersToBuy.length}个`
+        );
+
+        return result;
     }
 
     /**
@@ -1074,32 +1128,6 @@ export class StrategyService {
      * @param ownedChampions 已拥有的棋子名称集合
      * @param candidateTargets 候选阵容的目标棋子集合
      * @returns 是否应该购买
-     *
-     * 优先级（从高到低）：
-     * 1. 已有的棋子（可以升星） → 必买
-     * 2. 候选阵容中的棋子 → 必买
-     * 3. 低费棋子（1-2 费）→ 可选（暂不实现，避免乱买）
-     */
-    private shouldBuyInEarlyGame(
-        unit: TFTUnit,
-        ownedChampions: Set<ChampionKey>,
-        candidateTargets: Set<ChampionKey>
-    ): boolean {
-        const name = unit.displayName as ChampionKey;
-        // 优先级 1：已有的棋子（可以升星）
-        if (ownedChampions.has(name)) {
-            return true;
-        }
-
-        // 优先级 2：候选阵容中的棋子
-        if (candidateTargets.has(name)) {
-            return true;
-        }
-
-        // 暂不购买其他棋子，避免浪费金币
-        return false;
-    }
-
     /**
      * 获取前期购买原因（用于日志输出）
      * @description 帮助调试，了解为什么购买某个棋子
@@ -1110,13 +1138,13 @@ export class StrategyService {
         candidateTargets: Set<ChampionKey>
     ): string {
         const name = unit.displayName as ChampionKey;
+        if (candidateTargets.has(name)) {
+            return '目标阵容棋子';
+        }
         if (ownedChampions.has(name)) {
             return '已有棋子，可升星';
         }
-        if (candidateTargets.has(name)) {
-            return '候选阵容目标棋子';
-        }
-        return '未知原因';
+        return `打工仔 (${unit.price}费)`;
     }
 
     /**
@@ -1306,7 +1334,7 @@ export class StrategyService {
      * - 情况 C：备战席满且不能升星
      *   → 无法购买，返回 false
      */
-    private async buyAndUpdateState(shopSlotIndex: number): Promise<boolean> {
+    private async buyAndUpdateState(shopSlotIndex: ShopSlotIndex): Promise<boolean> {
         // 1. 获取商店棋子信息
         const shopUnits = gameStateManager.getShopUnits();
         const unit = shopUnits[shopSlotIndex];
