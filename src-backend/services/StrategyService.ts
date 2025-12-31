@@ -647,7 +647,7 @@ export class StrategyService {
      * 注意：1-3、1-4 时阵容可能尚未锁定，此时执行随机购买策略
      */
     private async handlePVE(): Promise<void> {
-        logger.info("[StrategyService] PVE阶段：商店运营中...");
+        logger.info("[StrategyService] PVE阶段：执行通用逻辑...");
 
         // 通用运营策略
         await this.executeCommonStrategy();
@@ -798,11 +798,8 @@ export class StrategyService {
      * 3. 低费棋子（1-2 费）可以考虑购买（增加后续匹配可能性）
      */
     private async executeEarlyPVEStrategy(): Promise<void> {
-        //  小小英雄归位
+        // 小小英雄归位
         await tftOperator.selfResetPosition();
-
-        // 0. 先刷新游戏状态，确保拿到最新的备战席、棋盘、商店数据
-        await this.refreshGameState();
 
         // 1. 获取当前已有的棋子名称（备战席 + 棋盘）
         const ownedChampions = gameStateManager.getOwnedChampionNames();
@@ -1211,66 +1208,39 @@ export class StrategyService {
 
     /**
      * 通用运营策略入口
-     * @description 每个回合的核心运营逻辑入口，包含：
-     *              - 购买棋子（目标棋子 / 前期随机购买）
+     * @description 阵容锁定后的核心运营逻辑，包含：
+     *              - 购买棋子（目标棋子）
      *              - D 牌（刷新商店）
      *              - 升级（买经验）
      *              - 卖棋子（清理备战席）
      *              - 上装备
      *              - 调整站位
-     *              - 更换阵容（如果需要）
      *
-     * 根据阵容锁定状态和当前阶段，执行不同的子策略
-     *
-     * TODO: 逐步实现各个子策略
+     * 调用时机：2-1 首次 PVP 锁定阵容后，以及后续所有 PVE/PVP 回合
      */
     private async executeCommonStrategy(): Promise<void> {
-        if (this.isLineupLocked()) {
-            // 阵容已锁定：执行正常运营
-            logger.debug("[StrategyService] 阵容已锁定，执行正常运营策略");
+        logger.debug("[StrategyService] 执行通用运营策略");
 
-            // TODO: D 牌策略
-            // await this.executeRollStrategy();
+        // TODO: D 牌策略
+        // await this.executeRollStrategy();
 
-            // TODO: 升级策略
-            // await this.executeLevelUpStrategy();
+        // TODO: 升级策略
+        // await this.executeLevelUpStrategy();
 
-            // 购买目标棋子
-            await this.analyzeAndBuy();
+        // 购买目标棋子
+        await this.analyzeAndBuy();
 
-            // 优化棋盘（上棋子 + 替换弱棋子）
-            await this.optimizeBoard(this.targetChampionNames);
+        // 优化棋盘（上棋子 + 替换弱棋子）
+        await this.optimizeBoard(this.targetChampionNames);
 
-            // TODO: 上装备
-            // await this.equipItems();
+        // TODO: 上装备
+        // await this.equipItems();
 
-            // TODO: 调整站位
-            // await this.adjustPositions();
+        // TODO: 调整站位
+        // await this.adjustPositions();
 
-            // TODO: 卖多余棋子
-            // await this.sellExcessUnits();
-        } else {
-            // 阵容未锁定：执行前期策略
-            logger.debug("[StrategyService] 阵容未锁定，执行前期运营策略");
-            await this.executeEarlyGameStrategy();
-        }
-    }
-
-    /**
-     * 前期运营策略（阵容未锁定时使用）
-     * @description 阵容尚未锁定时的运营策略：
-     *              1. 优先购买备战席/场上已有的棋子（方便升星）
-     *              2. 优先购买所有候选阵容中出现的棋子
-     *              3. 其他低费棋子随机购买（增加后续匹配的可能性）
-     *
-     * TODO: 实现前期运营逻辑
-     */
-    private async executeEarlyGameStrategy(): Promise<void> {
-        // TODO: 实现前期运营策略
-        // 1. 获取当前已有的棋子名称（用于判断是否能升星）
-        // 2. 获取所有候选阵容的 level4 目标棋子（合并去重）
-        // 3. 遍历商店，按优先级决策购买
-        logger.debug("[StrategyService] 前期运营策略（待实现）");
+        // TODO: 卖多余棋子
+        // await this.sellExcessUnits();
     }
 
     /**
