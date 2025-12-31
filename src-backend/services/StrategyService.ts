@@ -919,7 +919,7 @@ export class StrategyService {
             await this.autoPlaceUnitsToEmptySlots(targetChampions, availableSlots);
         } else {
             // 满员，执行替换逻辑
-            await this.aotoReplaceWeakestUnit(targetChampions);
+            await this.autoReplaceWeakestUnit(targetChampions);
         }
     }
 
@@ -976,9 +976,12 @@ export class StrategyService {
      * 替换场上最弱的棋子
      * @param targetChampions 目标棋子集合
      * @description 用备战席价值更高的棋子替换场上价值最低的棋子
-     *              卖掉场上棋子后，会产生空位，走正常的上场逻辑（根据射程决定位置）
+     *              
+     *              替换策略（保护目标阵容棋子）：
+     *              1. 备战席有空位 → 把场上棋子移回备战席 → 新棋子上场
+     *              2. 备战席没空位 → 卖掉场上棋子 → 新棋子上场
      */
-    private async aotoReplaceWeakestUnit(targetChampions: Set<ChampionKey>): Promise<void> {
+    private async autoReplaceWeakestUnit(targetChampions: Set<ChampionKey>): Promise<void> {
         const benchUnits = gameStateManager.getBenchUnits().filter((u): u is BenchUnit => u !== null);
         if (benchUnits.length === 0) return;
 
@@ -992,23 +995,42 @@ export class StrategyService {
 
         // 备战席棋子价值更高才替换
         if (bestBench.score > worstBoard.score) {
-            logger.info(
-                `[StrategyService] 替换: ${worstBoard.unit.tftUnit.displayName}(${worstBoard.score}分) ` +
-                `-> ${bestBench.unit.tftUnit.displayName}(${bestBench.score}分)`
-            );
+            const worstName = worstBoard.unit.tftUnit.displayName;
+            const bestName = bestBench.unit.tftUnit.displayName;
 
-            // 卖掉场上最差的（会产生空位）
-            await tftOperator.sellUnit(worstBoard.location);
-            await sleep(100);
+            // 检查备战席是否有空位
+            const emptyBenchSlot = gameStateManager.getFirstEmptyBenchSlotIndex();
+            const hasEmptyBenchSlot = emptyBenchSlot !== -1;
 
-            // 根据新棋子的射程，找到最佳位置上场（而不是直接放到卖掉的位置）
+            if (hasEmptyBenchSlot) {
+                // 方案 A：备战席有空位，把场上棋子移回备战席（保护目标阵容棋子）
+                logger.info(
+                    `[StrategyService] 替换(保留): ${worstName}(${worstBoard.score}分) 移回备战席，` +
+                    `${bestName}(${bestBench.score}分) 上场`
+                );
+
+                // 先把场上棋子移回备战席（参数是数字索引 0-8）
+                await tftOperator.moveBoardToBench(worstBoard.location, emptyBenchSlot);
+                await sleep(100);
+            } else {
+                // 方案 B：备战席没空位，只能卖掉
+                logger.info(
+                    `[StrategyService] 替换(卖出): ${worstName}(${worstBoard.score}分) ` +
+                    `-> ${bestName}(${bestBench.score}分)`
+                );
+
+                await tftOperator.sellUnit(worstBoard.location);
+                await sleep(100);
+            }
+
+            // 根据新棋子的射程，找到最佳位置上场
             const targetLocation = this.findBestPositionForUnit(bestBench.unit);
             
             if (targetLocation) {
                 await tftOperator.moveBenchToBoard(bestBench.unit.location, targetLocation);
                 await sleep(10);
             } else {
-                logger.warn(`[StrategyService] 找不到合适位置放置 ${bestBench.unit.tftUnit.displayName}`);
+                logger.warn(`[StrategyService] 找不到合适位置放置 ${bestName}`);
             }
         }
     }
