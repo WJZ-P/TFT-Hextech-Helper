@@ -44,6 +44,8 @@ import {
     selfWalkAroundPoints,
     shopSlot,
     shopSlotNameRegions,
+    refreshShopPoint,
+    buyExpPoint,
     TFT_16_CHAMPION_DATA,
     TFTEquip,
     TFTMode,
@@ -463,6 +465,27 @@ class TftOperator {
 
         // 双击确保购买成功
         await mouseController.doubleClickAt(targetPoint, Button.LEFT, 50);
+    }
+
+    /**
+     * 刷新商店 (D牌)
+     */
+    public async refreshShop(): Promise<void> {
+        this.ensureInitialized();
+        logger.info("[TftOperator] 刷新商店");
+        await mouseController.clickAt(refreshShopPoint, Button.LEFT);
+        // 刷新后需要一点时间让新棋子出现
+        await sleep(10);
+    }
+
+    /**
+     * 购买经验值 (F键)
+     */
+    public async buyExperience(): Promise<void> {
+        this.ensureInitialized();
+        logger.info("[TftOperator] 购买经验值");
+        await mouseController.clickAt(buyExpPoint, Button.LEFT);
+        await sleep(10);
     }
 
     /**
@@ -1169,7 +1192,25 @@ class TftOperator {
                 return coinCount;
             }
 
-            logger.warn(`[TftOperator] 金币解析失败，OCR 结果: "${text}"`);
+            // 4. 识别失败：可能有弹窗/事件遮挡，点击商店槽位 3 尝试关闭遮挡
+            logger.warn(`[TftOperator] 金币解析失败，OCR 结果: "${text}"，尝试点击商店槽位关闭遮挡...`);
+            
+            // 点击商店槽位 3 关闭可能的遮挡弹窗/事件 (原本 dismissOverlay 的逻辑)
+            await this.buyAtSlot(3);
+            await sleep(100);  // 等待弹窗关闭动画
+
+            // 5. 重新尝试识别一次
+            const retryBuffer = await screenCapture.captureRegionAsPng(absoluteRegion);
+            const retryText = await ocrService.recognize(retryBuffer, OcrWorkerType.GAME_STAGE);
+            const retryClean = retryText.replace(/\D/g, "");
+
+            if (retryClean.length > 0) {
+                const coinCount = parseInt(retryClean, 10);
+                logger.info(`[TftOperator] 金币重试识别成功: ${coinCount}`);
+                return coinCount;
+            }
+
+            logger.warn(`[TftOperator] 金币重试仍失败，OCR 结果: "${retryText}"`);
             return null;
         } catch (error) {
             logger.error(`[TftOperator] 获取金币数量异常: ${error}`);

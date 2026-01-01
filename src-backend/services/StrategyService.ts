@@ -801,11 +801,9 @@ export class StrategyService {
         // 小小英雄归位
         await tftOperator.selfResetPosition();
 
-        // 1. 获取当前已有的棋子名称（备战席 + 棋盘）
-        const ownedChampions = gameStateManager.getOwnedChampionNames();
-
-        // 2. 获取所有候选阵容的 level4 目标棋子（合并去重）
+        // 1. 获取所有候选阵容的 level4 目标棋子（合并去重）
         const candidateTargets = this.getCandidateTargetChampions();
+        const ownedChampions = gameStateManager.getOwnedChampionNames();
 
         logger.info(
             `[StrategyService] 前期策略 - 金币: ${gameStateManager.getGold()}，` +
@@ -814,29 +812,10 @@ export class StrategyService {
             `候选目标: ${Array.from(candidateTargets).join(', ') || '无'}`
         );
 
-        // 3. 获取商店信息并批量分析购买决策
-        const shopUnits = gameStateManager.getShopUnits();
-        const buyIndices = this.analyzePurchaseDecision(shopUnits, ownedChampions, candidateTargets);
+        // 2. 执行自动购买
+        await this.autoBuyFromShop(candidateTargets, "前期决策购买");
 
-        // 4. 按顺序执行购买
-        for (const index of buyIndices) {
-            const unit = shopUnits[index];
-            if (!unit) continue;
-
-            logger.info(
-                `[StrategyService] 前期决策购买: ${unit.displayName} (￥${unit.price})，` +
-                `原因: ${this.getEarlyBuyReason(unit, ownedChampions, candidateTargets)}`
-            );
-
-            const success = await this.buyAndUpdateState(index);
-
-            if (success) {
-                // 将刚买的棋子加入已有棋子集合（影响后续"已有棋子可升星"的判断）
-                ownedChampions.add(unit.displayName as ChampionKey);
-            }
-        }
-
-        // 5. 购买完成后，优化棋盘阵容（上棋子、替换）
+        // 3. 购买完成后，优化棋盘阵容（上棋子、替换）
         await this.optimizeBoard(candidateTargets);
     }
 
@@ -1141,30 +1120,6 @@ export class StrategyService {
         return targets;
     }
 
-    /**
-     * 前期购买决策逻辑
-     * @param unit 商店中的棋子
-     * @param ownedChampions 已拥有的棋子名称集合
-     * @param candidateTargets 候选阵容的目标棋子集合
-     * @returns 是否应该购买
-    /**
-     * 获取前期购买原因（用于日志输出）
-     * @description 帮助调试，了解为什么购买某个棋子
-     */
-    private getEarlyBuyReason(
-        unit: TFTUnit,
-        ownedChampions: Set<ChampionKey>,
-        candidateTargets: Set<ChampionKey>
-    ): string {
-        const name = unit.displayName as ChampionKey;
-        if (candidateTargets.has(name)) {
-            return '目标阵容棋子';
-        }
-        if (ownedChampions.has(name)) {
-            return '已有棋子，可升星';
-        }
-        return `打工仔 (${unit.price}费)`;
-    }
 
     /**
      * 处理 PVP 阶段 (玩家对战)
@@ -1208,30 +1163,63 @@ export class StrategyService {
 
     /**
      * 通用运营策略入口
-     * @description 阵容锁定后的核心运营逻辑，包含：
-     *              - 购买棋子（目标棋子）
-     *              - D 牌（刷新商店）
-     *              - 升级（买经验）
-     *              - 卖棋子（清理备战席）
-     *              - 上装备
-     *              - 调整站位
+     * @description 阵容锁定后的核心运营逻辑
+     *
+     * 执行顺序：
+     * 1. 先购买当前商店的目标棋子（每回合商店会自动刷新，不要浪费）
+     * 2. 优化棋盘（上棋子 + 替换弱棋子）
+     * 3. TODO: 根据策略决定是否 D 牌、升级等
      *
      * 调用时机：2-1 首次 PVP 锁定阵容后，以及后续所有 PVE/PVP 回合
      */
     private async executeCommonStrategy(): Promise<void> {
         logger.debug("[StrategyService] 执行通用运营策略");
 
-        // TODO: D 牌策略
-        // await this.executeRollStrategy();
+        // 小小英雄归位（避免挡住商店）
+        await tftOperator.selfResetPosition();
+
+        // 1. 获取已有棋子和目标棋子
+        const ownedChampions = gameStateManager.getOwnedChampionNames();
+        const targetChampions = this.targetChampionNames;
+
+        logger.info(
+            `[StrategyService] 通用策略 - 金币: ${gameStateManager.getGold()}，` +
+            `备战席空位: ${gameStateManager.getEmptyBenchSlotCount()}，` +
+            `已有棋子: ${Array.from(ownedChampions).join(', ') || '无'}`
+        );
+
+        // 2. 分析商店并购买
+        await this.autoBuyFromShop(targetChampions, "购买决策");
+
+        // 3. 优化棋盘（上棋子 + 替换弱棋子）
+        await this.optimizeBoard(targetChampions);
+
+        // 4. D 牌策略（只负责刷新商店；不做买卖逻辑）
+        //    这里用 while 循环把“D牌 → 买牌 → 上棋/优化”的节奏串起来：
+        //    - D 牌方法只返回是否成功刷新
+        //    - 刷新后的商店如何处理（买/不买/怎么上）由外层统一控制
+        let rollCount = 0;
+        const maxRolls = 50; // 安全上限：避免极端情况下无限循环
+        while (rollCount < maxRolls) {
+            const rolled = await this.executeRollStrategy();
+            if (!rolled) break;
+
+            rollCount++;
+
+            // 刷新后，沿用统一的买牌逻辑
+            const hasBought = await this.autoBuyFromShop(targetChampions, "D牌后购买");
+            if (hasBought) {
+                // 买到牌后再优化一次（可能升星/有新上场机会）
+                await this.optimizeBoard(targetChampions);
+            }
+        }
+
+        if (rollCount > 0) {
+            logger.info(`[StrategyService] D牌结束：共刷新 ${rollCount} 次`);
+        }
 
         // TODO: 升级策略
         // await this.executeLevelUpStrategy();
-
-        // 购买目标棋子
-        await this.analyzeAndBuy();
-
-        // 优化棋盘（上棋子 + 替换弱棋子）
-        await this.optimizeBoard(this.targetChampionNames);
 
         // TODO: 上装备
         // await this.equipItems();
@@ -1241,6 +1229,74 @@ export class StrategyService {
 
         // TODO: 卖多余棋子
         // await this.sellExcessUnits();
+    }
+
+    /**
+     * D 牌 (刷新商店) 策略
+     * @description **只负责 D 牌本身**：判断是否该刷新、执行刷新、并更新商店快照。
+     *              本方法不做任何买牌/卖牌/上棋逻辑。
+     *
+     * @returns 本次是否执行了 D 牌（刷新商店）。
+     */
+    private async executeRollStrategy(): Promise<boolean> {
+        // 1. 计算存钱底线
+        let threshold = 50;
+
+        if (this.currentStage >= 5) {
+            threshold = 10;
+        } else if (this.currentStage === 4) {
+            threshold = 30;
+        }
+
+        // 检查是否有大量对子 (如果有，可以更激进一点)
+        const ownedChampions = gameStateManager.getOwnedChampionNames();
+        let pairCount = 0;
+        for (const name of ownedChampions) {
+            if (gameStateManager.getOneStarChampionCount(name) >= 2) {
+                pairCount++;
+            }
+        }
+
+        if (pairCount >= 3) {
+            threshold = Math.max(0, threshold - 10);
+            logger.info(`[StrategyService] 检测到 ${pairCount} 组对子，D牌底线降低至 ${threshold}`);
+        }
+
+        const currentGold = gameStateManager.getGold();
+
+        // 保证 D 完还 >= threshold；即 currentGold >= threshold + 2 才能执行一次刷新
+        if (currentGold < 2 || currentGold < threshold + 2) {
+            return false;
+        }
+
+        logger.info(`[StrategyService] D牌: 当前金币 ${currentGold}，底线 ${threshold}，执行刷新...`);
+
+        // 执行刷新
+        await tftOperator.refreshShop();
+        gameStateManager.deductGold(2);
+
+        // 刷新后重新识别商店并更新快照（只更新商店相关，不引入买卖逻辑）
+        await this.updateShopStateFromScreen();
+
+        return true;
+    }
+
+    /**
+     * 获取购买原因（用于日志输出）
+     */
+    private getBuyReason(
+        unit: TFTUnit,
+        ownedChampions: Set<ChampionKey>,
+        targetChampions: Set<ChampionKey>
+    ): string {
+        const name = unit.displayName as ChampionKey;
+        if (targetChampions.has(name)) {
+            return '目标阵容棋子';
+        }
+        if (ownedChampions.has(name)) {
+            return '已有棋子，可升星';
+        }
+        return `打工仔 (${unit.price}费)`;
     }
 
     /**
@@ -1257,49 +1313,6 @@ export class StrategyService {
     private async handleAugment() {
         logger.info("[StrategyService] 海克斯阶段：分析最优强化...");
         // TODO: 识别三个海克斯，选择胜率最高的
-    }
-
-    /**
-     * 分析商店并执行购买
-     * @description 获取当前商店棋子信息，对比目标阵容，自动购买需要的棋子
-     */
-    private async analyzeAndBuy() {
-        // 1. 获取商店信息
-        const shopUnits = await tftOperator.getShopInfo();
-
-        // 2. 遍历商店里的 5 个位置
-        for (let i = 0; i < shopUnits.length; i++) {
-            const unit = shopUnits[i];
-
-            // 如果是空槽位 (null) 或者识别失败，直接跳过
-            if (!unit) continue;
-
-            // 3. 决策逻辑：是我想玩的英雄吗？
-            if (this.shouldIBuy(unit)) {
-                logger.info(`[StrategyService] 发现目标棋子: ${unit.displayName} (￥${unit.price})，正在购买...`);
-
-                // 4. 执行购买
-                await tftOperator.buyAtSlot(i + 1);
-            } else {
-                logger.debug(`[StrategyService] 路人棋子: ${unit.displayName}，跳过`);
-            }
-        }
-    }
-
-    /**
-     * 判断某个棋子是否应该购买
-     * @param unit 商店里的棋子信息
-     * @returns true 表示建议购买，false 表示不买
-     */
-    private shouldIBuy(unit: TFTUnit): boolean {
-        // 基础逻辑：只要在我们的目标阵容名单里，就买！
-        return this.targetChampionNames.has(unit.displayName as ChampionKey);
-
-        // --- 进阶逻辑思路 (留给未来的作业) ---
-        // 1. 检查金币：如果买了会卡利息 (比如剩 51 块，买个 2 块的变 49)，是否值得？
-        // 2. 检查星级：如果场上 + 备战席已经有 9 张了 (能合 3 星)，是否还需要买？
-        // 3. 检查备战席空间：如果备战席满了，买了也没地放，是不是要先卖别的？
-        // 4. 优先级：核心棋子优先购买
     }
 
     /**
@@ -1557,6 +1570,60 @@ export class StrategyService {
         }
 
         return emptyLocations[0];
+    }
+
+    /**
+     * 自动购买商店中的目标棋子
+     * @param targetChampions 目标棋子集合
+     * @param logPrefix 日志前缀
+     * @returns 是否有购买行为
+     */
+    private async autoBuyFromShop(
+        targetChampions: Set<ChampionKey>,
+        logPrefix: string = "自动购买"
+    ): Promise<boolean> {
+        const shopUnits = gameStateManager.getShopUnits();
+        const ownedChampions = gameStateManager.getOwnedChampionNames();
+        
+        const buyIndices = this.analyzePurchaseDecision(shopUnits, ownedChampions, targetChampions);
+        
+        if (buyIndices.length === 0) {
+            return false;
+        }
+        
+        let hasBought = false;
+        for (const index of buyIndices) {
+            const unit = shopUnits[index];
+            if (!unit) continue;
+            
+            logger.info(
+                `[StrategyService] ${logPrefix}: ${unit.displayName} (￥${unit.price})，` +
+                `原因: ${this.getBuyReason(unit, ownedChampions, targetChampions)}`
+            );
+            
+            const success = await this.buyAndUpdateState(index);
+            if (success) {
+                hasBought = true;
+                ownedChampions.add(unit.displayName as ChampionKey);
+            }
+        }
+        
+        return hasBought;
+    }
+
+    /**
+     * 从屏幕重新识别并更新商店状态
+     */
+    private async updateShopStateFromScreen(): Promise<void> {
+        const newShopUnits = await tftOperator.getShopInfo();
+        const currentSnapshot = gameStateManager.getSnapshotSync();
+        if (currentSnapshot) {
+            gameStateManager.updateSnapshot({
+                ...currentSnapshot,
+                shopUnits: newShopUnits,
+                gold: gameStateManager.getGold() // 确保金币也是最新的
+            });
+        }
     }
 
     /**

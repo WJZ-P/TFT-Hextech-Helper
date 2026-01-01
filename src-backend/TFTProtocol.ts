@@ -143,6 +143,10 @@ export const detailChampionStarRegion = {
     rightBottom: { x: 974, y: 132 }
 }
 
+//  刷新商店Point
+export const refreshShopPoint = {x:135,y:680}
+export const buyExpPoint = {x:135,y:730}
+
 //  装备槽位坐标
 export const equipmentSlot = {
     EQ_SLOT_1: { x: 20, y: 210 },//+35
@@ -608,7 +612,7 @@ export const TFT_16_TRAIT_DATA: Record<string, TraitData> = {
 /**
  * 锻造器类型枚举
  * @description 用于区分不同类型的锻造器
- * 
+ *
  * | 类型      | 中文名           | 说明                     |
  * |-----------|-----------------|--------------------------|
  * | NONE      | -               | 不是锻造器               |
