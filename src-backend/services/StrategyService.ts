@@ -1263,36 +1263,18 @@ export class StrategyService {
         // 4. 升级策略 (先决定是否升级，因为升级会消耗大量金币，影响后续 D 牌)
         await this.executeLevelUpStrategy();
 
-        // 5. D 牌策略（只负责刷新商店；不做买卖逻辑）
-        //    这里用 while 循环把“D牌 → 买牌 → 上棋/优化”的节奏串起来：
-        //    - D 牌方法只返回是否成功刷新
-        //    - 刷新后的商店如何处理（买/不买/怎么上）由外层统一控制
-        let rollCount = 0;
-        const maxRolls = 30; // 安全上限：避免极端情况下无限循环
-        while (rollCount < maxRolls) {
-            const rolled = await this.executeRollStrategy();
-            if (!rolled) break;
-            rollCount++;
-            // 刷新后，沿用统一的买牌逻辑
-            const hasBought = await this.autoBuyFromShop(targetChampions, "D牌后购买");
-            if (hasBought) {
-                // 买到牌后再优化一次（可能升星/有新上场机会）
-                await this.optimizeBoard(targetChampions);
-            }
-        }
-
-        if (rollCount > 0) {
-            logger.info(`[StrategyService] D牌结束：共刷新 ${rollCount} 次`);
-        }
+        // 5. D 牌策略，包含D牌，买牌和上牌
+        await this.executeRollingLoop(targetChampions);
 
         // 6. 卖多余棋子 (凑利息/腾位置)
         await this.sellExcessUnits();
 
-        // 7. 上装备 (给核心棋子)
+        // 7. 调整站位 (近战前排/远程后排)
+        await this.adjustPositions();
+
+        // 8. 上装备 (给核心棋子)
         await this.equipItems();
 
-        // 8. 调整站位 (近战前排/远程后排)
-        await this.adjustPositions();
     }
 
     /**
@@ -1392,6 +1374,35 @@ export class StrategyService {
             // 更新状态
             gameStateManager.deductGold(cost);
             await this.updateLevelStateFromScreen();
+        }
+    }
+
+    /**
+     * D 牌循环流程
+     * @description 负责协调 "判断 -> 刷新 -> 购买 -> 整理" 的完整 D 牌节奏
+     */
+    private async executeRollingLoop(targetChampions: Set<ChampionKey>): Promise<void> {
+        let rollCount = 0;
+        const maxRolls = 30; // 安全上限
+
+        while (rollCount < maxRolls) {
+            // 1. 判断是否需要/可以 D 牌
+            const rolled = await this.executeRollStrategy();
+            if (!rolled) break;
+
+            rollCount++;
+
+            // 2. 刷新后，尝试购买
+            const hasBought = await this.autoBuyFromShop(targetChampions, "D牌后购买");
+
+            // 3. 如果买到了，尝试优化棋盘（升星/上场）
+            if (hasBought) {
+                await this.optimizeBoard(targetChampions);
+            }
+        }
+
+        if (rollCount > 0) {
+            logger.info(`[StrategyService] D牌结束：共刷新 ${rollCount} 次`);
         }
     }
 
@@ -1592,15 +1603,8 @@ export class StrategyService {
 
             if (needsMove) {
                 // 寻找最佳位置
-                // 构造一个临时 BenchUnit 用于复用 findBestPositionForUnit
-                const tempBenchUnit: BenchUnit = {
-                    location: 'SLOT_1',
-                    tftUnit: unit.tftUnit,
-                    starLevel: unit.starLevel,
-                    equips: unit.equips
-                };
-
-                const targetLoc = this.findBestPositionForUnit(tempBenchUnit);
+                // 直接传入 unit (BoardUnit)，因为它包含 tftUnit 属性，满足 findBestPositionForUnit 的要求
+                const targetLoc = this.findBestPositionForUnit(unit);
 
                 if (targetLoc) {
                     logger.info(`[StrategyService] 调整站位: ${name} (${unit.location} -> ${targetLoc})`);
@@ -1830,7 +1834,7 @@ export class StrategyService {
 
     /**
      * 为棋子找到最佳摆放位置
-     * @param unit 要摆放的棋子
+     * @param unit 棋子对象 (需要包含 tftUnit 信息)
      * @returns 最佳位置的 BoardLocation，如果找不到返回 undefined
      *
      * @description 摆放逻辑：
@@ -1838,7 +1842,7 @@ export class StrategyService {
      *              - 射程 3+（远程）：优先放后排 (R3, R4)
      *              - 如果优先区域没有空位，则放到任意空位
      */
-    private findBestPositionForUnit(unit: BenchUnit): BoardLocation | undefined {
+    private findBestPositionForUnit(unit: { tftUnit: TFTUnit }): BoardLocation | undefined {
         const championName = unit.tftUnit.displayName;
         const range = getChampionRange(championName) ?? 1;
 
@@ -1939,13 +1943,15 @@ export class StrategyService {
                 // 且不是因为金币不足（buyAndUpdateState 里金币不足也会返回 false，但我们这里假设主要是卡格子）
                 // 再次检查金币是否足够（如果金币都不够，那就没办法了）
                 if (gameStateManager.getGold() >= unit.price) {
-                    logger.warn(`[StrategyService] 备战席已满，尝试卖出一个杂鱼以购买目标棋子: ${championName}`);
+                    logger.warn(`[StrategyService] 备战席已满，尝试卖出一个打工棋子以购买目标棋子: ${championName}`);
                     
                     // 尝试腾出一个位置
                     const sold = await this.sellSingleTrashUnit(targetChampions);
                     if (sold) {
                         // 再次尝试购买
                         success = await this.buyAndUpdateState(index);
+                    } else {
+                        logger.warn(`[StrategyService] 腾位置失败，没有可卖出的打工棋子`);
                     }
                 }
             }
