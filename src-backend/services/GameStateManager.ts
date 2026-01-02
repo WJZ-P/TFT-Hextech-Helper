@@ -543,6 +543,24 @@ export class GameStateManager {
     }
 
     /**
+     * 更新商店棋子列表
+     * @param shopUnits 新的商店棋子数组
+     * @description 刷新商店后，用新识别的商店数据更新快照
+     *              只更新 shopUnits 字段，不影响其他数据
+     */
+    public updateShopUnits(shopUnits: (TFTUnit | null)[]): void {
+        if (!this.snapshot) {
+            logger.warn("[GameStateManager] 快照不存在，无法更新商店");
+            return;
+        }
+
+        this.snapshot.shopUnits = shopUnits;
+
+        const shopCount = shopUnits.filter(u => u !== null).length;
+        logger.debug(`[GameStateManager] 商店已更新: ${shopCount}/5 个棋子`);
+    }
+
+    /**
      * 更新商店指定槽位为空（已购买）
      * @param index 槽位索引 (0-4)
      * @description 购买棋子后，将商店对应槽位标记为空
@@ -568,6 +586,33 @@ export class GameStateManager {
     }
 
     /**
+     * 更新等级信息
+     * @param levelInfo 等级信息对象 { level, currentXp, totalXp }
+     * @description 单独更新等级和经验，无需传入完整快照
+     */
+    public updateLevelInfo(levelInfo: { level: number; currentXp: number; totalXp: number }): void {
+        if (!this.snapshot) {
+            logger.warn("[GameStateManager] 快照不存在，无法更新等级信息");
+            return;
+        }
+
+        // 更新人口等级（独立追踪）
+        if (levelInfo.level !== this.currentLevel) {
+            logger.info(`[GameStateManager] 人口变化: ${this.currentLevel} -> ${levelInfo.level}`);
+            this.currentLevel = levelInfo.level;
+        }
+        
+        // 更新快照中的数据
+        this.snapshot.level = levelInfo.level;
+        this.snapshot.currentXp = levelInfo.currentXp;
+        this.snapshot.totalXp = levelInfo.totalXp;
+
+        logger.debug(
+            `[GameStateManager] 等级信息更新: Lv.${levelInfo.level} (${levelInfo.currentXp}/${levelInfo.totalXp})`
+        );
+    }
+
+    /**
      * 扣减金币
      * @param amount 扣减数量
      * @description 购买棋子后更新金币数量
@@ -582,6 +627,26 @@ export class GameStateManager {
         this.snapshot.gold = Math.max(0, this.snapshot.gold - amount);
 
         logger.debug(`[GameStateManager] 金币扣减: ${oldGold} - ${amount} = ${this.snapshot.gold}`);
+    }
+
+    /**
+     * 更新金币数量
+     * @param gold 新的金币数量
+     * @description 从屏幕识别金币后更新，比 deductGold 更准确
+     *              因为某些海克斯强化会让刷新免费或打折
+     */
+    public updateGold(gold: number): void {
+        if (!this.snapshot) {
+            logger.warn("[GameStateManager] 快照不存在，无法更新金币");
+            return;
+        }
+
+        const oldGold = this.snapshot.gold;
+        this.snapshot.gold = gold;
+
+        if (oldGold !== gold) {
+            logger.debug(`[GameStateManager] 金币更新: ${oldGold} → ${gold}`);
+        }
     }
 
     // ============================================================================

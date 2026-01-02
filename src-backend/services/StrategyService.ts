@@ -17,7 +17,14 @@
  */
 import {IdentifiedEquip, tftOperator} from "../TftOperator";
 import {logger} from "../utils/Logger";
-import {TFTUnit, GameStageType, fightBoardSlotPoint, getChampionRange, ChampionKey, ShopSlotIndex} from "../TFTProtocol";
+import {
+    TFTUnit,
+    GameStageType,
+    fightBoardSlotPoint,
+    getChampionRange,
+    ChampionKey,
+    ShopSlotIndex
+} from "../TFTProtocol";
 import {gameStateManager} from "./GameStateManager";
 import {gameStageMonitor, GameStageEvent} from "./GameStageMonitor";
 import {settingsStore} from "../utils/SettingsStore";
@@ -604,8 +611,8 @@ export class StrategyService {
         ]) as [
             (TFTUnit | null)[],
             IdentifiedEquip[],
-            { level: number; currentXp: number; totalXp: number } | null,
-            number | null
+                { level: number; currentXp: number; totalXp: number } | null,
+                number | null
         ];
 
         // 2. 串行执行需要鼠标操作的识别任务
@@ -820,12 +827,65 @@ export class StrategyService {
     }
 
     /**
+     * 检查是否已拥有指定棋子的 3 星版本
+     */
+    private hasThreeStarCopy(championName: string): boolean {
+        // 检查棋盘
+        for (const unit of gameStateManager.getBoardUnits()) {
+            if (unit && unit.tftUnit.displayName === championName && unit.starLevel >= 3) {
+                return true;
+            }
+        }
+        // 检查备战席
+        for (const unit of gameStateManager.getBenchUnits()) {
+            if (unit && unit.tftUnit.displayName === championName && unit.starLevel >= 3) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 尝试卖出一个无用棋子单位（用于腾位置）
+     * @param targetChampions 目标棋子集合
+     * @returns 是否成功卖出
+     */
+    private async sellSingleTrashUnit(targetChampions: Set<ChampionKey>): Promise<boolean> {
+        const benchUnits = gameStateManager.getBenchUnitsWithIndex();
+        
+        // 筛选可卖棋子：非目标、非对子、非核心
+        const candidates = benchUnits.filter(({unit}) => {
+            const name = unit.tftUnit.displayName as ChampionKey;
+            // 目标棋子不卖
+            if (targetChampions.has(name)) return false;
+            // 对子不卖（除非迫不得已，这里先保守一点）
+            if (gameStateManager.getOneStarChampionCount(name) >= 2) return false;
+            return true;
+        });
+
+        if (candidates.length === 0) return false;
+
+        // 按价格从低到高排序，优先卖便宜的
+        candidates.sort((a, b) => a.unit.tftUnit.price - b.unit.tftUnit.price);
+
+        const target = candidates[0];
+        logger.info(`[StrategyService] 腾位置卖出: ${target.unit.tftUnit.displayName}`);
+        
+        await tftOperator.sellUnit(`SLOT_${target.index + 1}`);
+        gameStateManager.setBenchSlotEmpty(target.index);
+        gameStateManager.updateGold(gameStateManager.getGold() + target.unit.tftUnit.price);
+        await sleep(100);
+
+        return true;
+    }
+
+    /**
      * 批量分析商店购买决策
      * @param shopUnits 商店棋子列表
      * @param ownedChampions 已拥有的棋子名称集合
      * @param targetChampions 目标阵容棋子集合
      * @returns 建议购买的商店槽位索引数组（已按优先级排序）
-     * 
+     *
      * @description 购买优先级：
      *              1. 目标阵容内的棋子 → 无条件购买（不管有没有空位）
      *              2. 已拥有的棋子 → 无条件购买（可以升星）
@@ -848,6 +908,11 @@ export class StrategyService {
             const name = unit.displayName as ChampionKey;
             const slotIndex = i as ShopSlotIndex;  // 安全断言：i 的范围是 0-4
 
+            // 如果已经有 3 星了，就不买了
+            if (this.hasThreeStarCopy(name)) {
+                continue;
+            }
+
             if (targetChampions.has(name)) {
                 // 目标阵容棋子：必买
                 targetIndices.push(slotIndex);
@@ -856,7 +921,7 @@ export class StrategyService {
                 ownedIndices.push(slotIndex);
             } else {
                 // 非目标棋子：候选打工仔
-                workerCandidates.push({ index: slotIndex, price: unit.price });
+                workerCandidates.push({index: slotIndex, price: unit.price});
             }
         }
 
@@ -864,6 +929,7 @@ export class StrategyService {
         workerCandidates.sort((a, b) => b.price - a.price);
 
         // 计算可以买多少个打工仔（只有场上有空位才买）
+        // 注意：这里用 BoardSlots 来限制打工仔数量是合理的，因为打工仔最终是要上场的
         const availableSlots = gameStateManager.getAvailableBoardSlots();
         const workersToBuy = workerCandidates
             .slice(0, Math.max(0, availableSlots))  // 最多买到填满空位
@@ -883,13 +949,13 @@ export class StrategyService {
     /**
      * 优化棋盘阵容（通用方法，适用于所有阶段）
      * @param targetChampions 目标棋子集合（用于评估棋子价值）
-     * @description 
+     * @description
      * - 有空位：自动上场备战席的目标棋子
      * - 满员：用备战席的强力棋子替换场上的弱棋子
      */
     private async optimizeBoard(targetChampions: Set<ChampionKey>): Promise<void> {
         const availableSlots = gameStateManager.getAvailableBoardSlots();
-        
+
         if (availableSlots > 0) {
             // 有空位，上场备战席棋子
             await this.autoPlaceUnitsToEmptySlots(targetChampions, availableSlots);
@@ -907,7 +973,7 @@ export class StrategyService {
     private async autoPlaceUnitsToEmptySlots(targetChampions: Set<ChampionKey>, availableSlots: number): Promise<void> {
         // 获取备战席上的棋子
         const benchUnits = gameStateManager.getBenchUnits().filter((u): u is BenchUnit => u !== null);
-        
+
         if (benchUnits.length === 0) {
             logger.debug("[StrategyService] 备战席没有棋子，跳过摆放");
             return;
@@ -915,7 +981,7 @@ export class StrategyService {
 
         // 筛选并排序需要上场的棋子
         const unitsToPlace = this.selectUnitsToPlace(benchUnits, targetChampions, availableSlots);
-        
+
         if (unitsToPlace.length === 0) {
             logger.debug("[StrategyService] 备战席没有可以上场的棋子");
             return;
@@ -952,7 +1018,7 @@ export class StrategyService {
      * 替换场上最弱的棋子
      * @param targetChampions 目标棋子集合
      * @description 用备战席价值更高的棋子替换场上价值最低的棋子
-     *              
+     *
      *              替换策略（保护目标阵容棋子）：
      *              1. 备战席有空位 → 把场上棋子移回备战席 → 新棋子上场
      *              2. 备战席没空位 → 卖掉场上棋子 → 新棋子上场
@@ -1001,7 +1067,7 @@ export class StrategyService {
 
             // 根据新棋子的射程，找到最佳位置上场
             const targetLocation = this.findBestPositionForUnit(bestBench.unit);
-            
+
             if (targetLocation) {
                 await tftOperator.moveBenchToBoard(bestBench.unit.location, targetLocation);
                 await sleep(10);
@@ -1061,7 +1127,7 @@ export class StrategyService {
      *              2. 目标阵容中的普通棋子 → +1000
      *              3. 棋子费用 → 每费 +100（高费棋子战斗力更强）
      *              4. 棋子星级 → 每星 +10（最低优先级）
-     * 
+     *
      * 分数设计说明：
      * - 使用不同数量级确保优先级不会被低优先级的高数值覆盖
      * - 例如：1费核心棋子 (10000+100+10=10110) > 5费非目标棋子 (500+10=510)
@@ -1069,7 +1135,7 @@ export class StrategyService {
     private calculateUnitScore(unit: TFTUnit, starLevel: number, targetChampions: Set<ChampionKey>): number {
         let score = 0;
         const championName = unit.displayName as ChampionKey;
-        
+
         // 获取核心棋子名称集合
         const coreChampionNames = new Set<ChampionKey>(
             this.getCoreChampions().map(c => c.name as ChampionKey)
@@ -1194,18 +1260,19 @@ export class StrategyService {
         // 3. 优化棋盘（上棋子 + 替换弱棋子）
         await this.optimizeBoard(targetChampions);
 
-        // 4. D 牌策略（只负责刷新商店；不做买卖逻辑）
+        // 4. 升级策略 (先决定是否升级，因为升级会消耗大量金币，影响后续 D 牌)
+        await this.executeLevelUpStrategy();
+
+        // 5. D 牌策略（只负责刷新商店；不做买卖逻辑）
         //    这里用 while 循环把“D牌 → 买牌 → 上棋/优化”的节奏串起来：
         //    - D 牌方法只返回是否成功刷新
         //    - 刷新后的商店如何处理（买/不买/怎么上）由外层统一控制
         let rollCount = 0;
-        const maxRolls = 50; // 安全上限：避免极端情况下无限循环
+        const maxRolls = 30; // 安全上限：避免极端情况下无限循环
         while (rollCount < maxRolls) {
             const rolled = await this.executeRollStrategy();
             if (!rolled) break;
-
             rollCount++;
-
             // 刷新后，沿用统一的买牌逻辑
             const hasBought = await this.autoBuyFromShop(targetChampions, "D牌后购买");
             if (hasBought) {
@@ -1218,17 +1285,114 @@ export class StrategyService {
             logger.info(`[StrategyService] D牌结束：共刷新 ${rollCount} 次`);
         }
 
-        // TODO: 升级策略
-        // await this.executeLevelUpStrategy();
+        // 6. 卖多余棋子 (凑利息/腾位置)
+        await this.sellExcessUnits();
 
-        // TODO: 上装备
-        // await this.equipItems();
+        // 7. 上装备 (给核心棋子)
+        await this.equipItems();
 
-        // TODO: 调整站位
-        // await this.adjustPositions();
+        // 8. 调整站位 (近战前排/远程后排)
+        await this.adjustPositions();
+    }
 
-        // TODO: 卖多余棋子
-        // await this.sellExcessUnits();
+    /**
+     * 从屏幕重新识别并更新等级和经验状态
+     */
+    private async updateLevelStateFromScreen(): Promise<void> {
+        const levelInfo = await tftOperator.getLevelInfo();
+        if (levelInfo) {
+            gameStateManager.updateLevelInfo(levelInfo);
+        }
+    }
+
+    /**
+     * 升级策略 (F键)
+     * @description 决定是否购买经验值
+     *              策略优先级：
+     *              1. 关键回合抢人口 (2-1升4, 2-5升5, 3-2升6, 4-1升7, 5-1升8)
+     *              2. 卡利息升级 (升完还有50块) - 慢升
+     *              3. 仅差一次升级 (XP差 <= 4) - 钱够就升
+     *              4. 卡50块利息修经验 (有多余钱就F一下)
+     */
+    private async executeLevelUpStrategy(): Promise<void> {
+
+        const snapshot = gameStateManager.getSnapshotSync();
+        if (!snapshot) return;
+
+        const {level, currentXp, totalXp, gold} = snapshot;
+
+        // 已达最大等级 (10 为上限)
+        if (level >= 10 || totalXp <= 0) return;
+
+        const xpNeeded = totalXp - currentXp;
+        if (xpNeeded <= 0) return;
+
+        const buyCount = Math.ceil(xpNeeded / 4);
+        const cost = buyCount * 4;
+
+        // 如果钱不够直接升级，检查是否可以"卡利息升经验"
+        if (gold < cost) {
+            // 策略 4: 如果 gold > 50，且 gold - 4 >= 50，就一直按 F 直到剩余金币 < 54 (即保留 50+)
+            const maxBuys = Math.floor((gold - 50) / 4);
+
+            if (maxBuys > 0) {
+                logger.info(`[StrategyService] 升级策略: 卡利息(50+)修经验，将购买 ${maxBuys} 次`);
+                for (let i = 0; i < maxBuys; i++) {
+                    await tftOperator.buyExperience();
+                    await sleep(100);
+                }
+                // 更新一下 XP 状态
+                await this.updateLevelStateFromScreen();
+            }
+            return;
+        }
+
+        let shouldLevel = false;
+        let reason = "";
+
+        // 1. 关键回合判定 (Standard Curve)
+        if (this.currentStage === 2 && this.currentRound === 1 && level < 4) {
+            shouldLevel = true;
+            reason = "2-1 拉 4";
+        } else if (this.currentStage === 2 && this.currentRound === 5 && level < 5) {
+            shouldLevel = true;
+            reason = "2-5 拉 5";
+        } else if (this.currentStage === 3 && this.currentRound === 2 && level < 6) {
+            shouldLevel = true;
+            reason = "3-2 拉 6";
+        } else if (this.currentStage === 4 && this.currentRound === 1 && level < 7) {
+            shouldLevel = true;
+            reason = "4-1 拉 7";
+        } else if (this.currentStage === 5 && this.currentRound === 1 && level < 8) {
+            shouldLevel = true;
+            reason = "5-1 拉 8";
+        }
+
+        // 2. 卡利息升级 (升完还在 50 块以上)
+        if (!shouldLevel && (gold - cost >= 50)) {
+            shouldLevel = true;
+            reason = `卡利息升级 (剩 ${gold - cost})`;
+        }
+
+        // 3. 仅差一次 (Pre-level)
+        if (!shouldLevel && buyCount === 1 && gold >= 4) {
+            shouldLevel = true;
+            reason = "仅差一次购买升级";
+        }
+
+        if (shouldLevel) {
+            logger.info(`[StrategyService] 执行升级: ${reason} (Lv.${level} -> Lv.${level + 1}, 花费 ${cost})`);
+
+            // 执行购买
+            for (let i = 0; i < buyCount; i++) {
+                await tftOperator.buyExperience();
+                await sleep(100);
+            }
+
+            // 更新状态
+            gameStateManager.deductGold(cost);
+            await this.updateLevelStateFromScreen();
+        }
     }
 
     /**
@@ -1240,7 +1404,7 @@ export class StrategyService {
      */
     private async executeRollStrategy(): Promise<boolean> {
         // 1. 计算存钱底线
-        let threshold = 50;
+        let threshold = 40;
 
         if (this.currentStage >= 5) {
             threshold = 10;
@@ -1257,7 +1421,7 @@ export class StrategyService {
             }
         }
 
-        if (pairCount >= 3) {
+        if (pairCount >= 2) {
             threshold = Math.max(0, threshold - 10);
             logger.info(`[StrategyService] 检测到 ${pairCount} 组对子，D牌底线降低至 ${threshold}`);
         }
@@ -1273,9 +1437,8 @@ export class StrategyService {
 
         // 执行刷新
         await tftOperator.refreshShop();
-        gameStateManager.deductGold(2);
 
-        // 刷新后重新识别商店并更新快照（只更新商店相关，不引入买卖逻辑）
+        // 刷新后重新识别商店和金币（不假设扣多少钱，因为某些海克斯会让刷新免费）
         await this.updateShopStateFromScreen();
 
         return true;
@@ -1300,19 +1463,183 @@ export class StrategyService {
     }
 
     /**
+     * 卖多余棋子策略
+     * @description
+     * 1. 凑利息：如果当前金币接近 10/20/30/40/50，尝试卖怪凑单
+     * 2. 清理打工仔：卖掉非目标且非对子的棋子
+     */
+    private async sellExcessUnits(): Promise<void> {
+        const currentGold = gameStateManager.getGold();
+        const benchUnits = gameStateManager.getBenchUnitsWithIndex();
+
+        // 1. 计算离下一个利息点还差多少钱
+        // 利息点：10, 20, 30, 40, 50 (50以上不需要凑)
+        if (currentGold >= 50) return;
+
+        const nextInterest = Math.floor(currentGold / 10 + 1) * 10;
+        const diff = nextInterest - currentGold;
+
+        // 如果差额在 2 金币以内 (比如 18, 19, 28, 29...)，尝试凑利息
+        if (diff > 0 && diff <= 2) {
+            logger.info(`[StrategyService] 尝试凑利息: 当前 ${currentGold}, 目标 ${nextInterest}, 需 ${diff} 金币`);
+            await this.trySellForGold(diff);
+        }
+
+        // 2. 如果备战席快满了 (>6个)，清理一波杂鱼
+        if (benchUnits.length > 6) {
+            logger.info(`[StrategyService] 备战席拥挤 (${benchUnits.length}/9), 清理杂鱼...`);
+            await this.trySellTrashUnits();
+        }
+    }
+
+    /**
+     * 尝试卖出棋子以获取指定金币
+     * @param amountNeeded 需要的金币数量
+     */
+    private async trySellForGold(amountNeeded: number): Promise<void> {
+        let currentAmount = 0;
+        const unitsToSell: { index: number; unit: BenchUnit }[] = [];
+
+        // 获取所有备战席棋子
+        const benchUnits = gameStateManager.getBenchUnitsWithIndex();
+
+        // 筛选可卖棋子：非目标阵容、非核心、非对子
+        const candidates = benchUnits.filter(({unit}) => {
+            const name = unit.tftUnit.displayName as ChampionKey;
+            // 如果是目标棋子，绝对不卖
+            if (this.targetChampionNames.has(name)) return false;
+            // 如果是对子（已有2个1星），尽量不卖（可能合2星打工）
+            if (gameStateManager.getOneStarChampionCount(name) >= 2) return false;
+            return true;
+        });
+
+        // 排序优先级：
+        // 1. 星级低优先 (先卖 1 星，再卖 2 星)
+        // 2. 价格低优先 (同星级先卖便宜的)
+        candidates.sort((a, b) => {
+            if (a.unit.starLevel !== b.unit.starLevel) {
+                return a.unit.starLevel - b.unit.starLevel;
+            }
+            return a.unit.tftUnit.price - b.unit.tftUnit.price;
+        });
+
+        for (const candidate of candidates) {
+            if (currentAmount >= amountNeeded) break;
+
+            unitsToSell.push(candidate);
+            currentAmount += candidate.unit.tftUnit.price;
+        }
+
+        if (currentAmount >= amountNeeded) {
+            for (const {index, unit} of unitsToSell) {
+                logger.info(`[StrategyService] 卖出凑利息: ${unit.tftUnit.displayName} (${unit.starLevel}星, +${unit.tftUnit.price})`);
+                await tftOperator.sellUnit(`SLOT_${index + 1}`);
+                gameStateManager.setBenchSlotEmpty(index);
+                gameStateManager.updateGold(gameStateManager.getGold() + unit.tftUnit.price);
+                await sleep(200);
+            }
+        }
+    }
+
+    /**
+     * 清理备战席的杂鱼
+     */
+    private async trySellTrashUnits(): Promise<void> {
+        const benchUnits = gameStateManager.getBenchUnitsWithIndex();
+
+        for (const {index, unit} of benchUnits) {
+            const name = unit.tftUnit.displayName as ChampionKey;
+            // 目标棋子不卖
+            if (this.targetChampionNames.has(name)) continue;
+
+            // 对子保留 (可能三连)
+            if (gameStateManager.getOneStarChampionCount(name) >= 2) continue;
+
+            // 高费卡 (4,5费) 保留一下? 暂时全卖
+            if (unit.tftUnit.price >= 4) continue;
+
+            logger.info(`[StrategyService] 清理杂鱼: ${name}`);
+            await tftOperator.sellUnit(`SLOT_${index + 1}`);
+            gameStateManager.setBenchSlotEmpty(index);
+            gameStateManager.updateGold(gameStateManager.getGold() + unit.tftUnit.price);
+            await sleep(200);
+        }
+    }
+
+    /**
+     * 调整站位
+     * @description 遍历场上棋子，检查是否在最佳区域（前排/后排）
+     *              如果不在，尝试移动到最佳区域
+     */
+    private async adjustPositions(): Promise<void> {
+        const boardUnits = gameStateManager.getBoardUnitsWithLocation();
+        if (boardUnits.length === 0) return;
+
+        logger.debug("[StrategyService] 检查站位...");
+
+        for (const unit of boardUnits) {
+            const name = unit.tftUnit.displayName;
+            const range = getChampionRange(name) ?? 1;
+            const isMelee = range <= 2;
+            const currentRow = parseInt(unit.location.split('_')[0].replace('R', ''));
+
+            // 判断是否位置不佳
+            // 近战(1-2) 应该在 R1, R2
+            // 远程(3+) 应该在 R3, R4
+            let needsMove = false;
+            if (isMelee && currentRow > 2) needsMove = true;
+            if (!isMelee && currentRow <= 2) needsMove = true;
+
+            if (needsMove) {
+                // 寻找最佳位置
+                // 构造一个临时 BenchUnit 用于复用 findBestPositionForUnit
+                const tempBenchUnit: BenchUnit = {
+                    location: 'SLOT_1',
+                    tftUnit: unit.tftUnit,
+                    starLevel: unit.starLevel,
+                    equips: unit.equips
+                };
+
+                const targetLoc = this.findBestPositionForUnit(tempBenchUnit);
+
+                if (targetLoc) {
+                    logger.info(`[StrategyService] 调整站位: ${name} (${unit.location} -> ${targetLoc})`);
+                    await tftOperator.moveBoardToBoard(unit.location, targetLoc);
+                    await sleep(500);
+                    return; // 一次只调整一个
+                }
+            }
+        }
+    }
+
+    /**
+     * 装备合成与穿戴
+     * @description
+     * 暂时只打印日志，后续实现
+     */
+    private async equipItems(): Promise<void> {
+        const equipments = gameStateManager.getEquipments();
+        if (equipments.length > 0) {
+            logger.debug(`[StrategyService] 待处理装备: ${equipments.map(e => e.name).join(', ')}`);
+        }
+    }
+
+    /**
      * 处理 选秀阶段
      */
     private async handleCarousel() {
-        logger.info("[StrategyService] 选秀阶段：寻找最优装备/英雄...");
-        // TODO: 识别场上单位，控制鼠标移动抢夺
+        logger.info("[StrategyService] 选秀阶段：防挂机移动...");
+        await tftOperator.selfWalkAround();
     }
 
     /**
      * 处理 海克斯选择阶段
+     * @description 暂时执行防挂机随机走位，或者尝试点击第一个海克斯(如果坐标已知)
      */
     private async handleAugment() {
-        logger.info("[StrategyService] 海克斯阶段：分析最优强化...");
-        // TODO: 识别三个海克斯，选择胜率最高的
+        logger.info("[StrategyService] 海克斯阶段：执行防挂机...");
+        // TODO: 识别海克斯并选择
+        await this.antiAfk();
     }
 
     /**
@@ -1483,7 +1810,7 @@ export class StrategyService {
      * @description 选择逻辑：
      *              场上有空位必须填满！不能因为不是目标棋子就空着不放。
      *              复用 calculateUnitScore 计算分数，按分数从高到低排序。
-     *              
+     *
      *              非目标棋子作为"打工仔"，虽然没有羁绊加成，但也能提供战斗力。
      */
     private selectUnitsToPlace(benchUnits: BenchUnit[], targetChampions: Set<ChampionKey>, maxCount: number): BenchUnit[] {
@@ -1529,7 +1856,7 @@ export class StrategyService {
         );
 
         // 根据近战/远程决定优先和备选区域
-        const [primary, secondary] = isMelee 
+        const [primary, secondary] = isMelee
             ? [frontRowEmpty, backRowEmpty]   // 近战：优先前排
             : [backRowEmpty, frontRowEmpty];  // 远程：优先后排
 
@@ -1584,45 +1911,72 @@ export class StrategyService {
     ): Promise<boolean> {
         const shopUnits = gameStateManager.getShopUnits();
         const ownedChampions = gameStateManager.getOwnedChampionNames();
-        
+
         const buyIndices = this.analyzePurchaseDecision(shopUnits, ownedChampions, targetChampions);
-        
+
         if (buyIndices.length === 0) {
             return false;
         }
-        
+
         let hasBought = false;
         for (const index of buyIndices) {
             const unit = shopUnits[index];
             if (!unit) continue;
             
+            const championName = unit.displayName as ChampionKey;
+            const isTarget = targetChampions.has(championName);
+
             logger.info(
-                `[StrategyService] ${logPrefix}: ${unit.displayName} (￥${unit.price})，` +
+                `[StrategyService] ${logPrefix}: ${championName} (￥${unit.price})，` +
                 `原因: ${this.getBuyReason(unit, ownedChampions, targetChampions)}`
             );
-            
-            const success = await this.buyAndUpdateState(index);
+
+            // 尝试购买
+            let success = await this.buyAndUpdateState(index);
+
+            // 特殊情况处理：如果是目标棋子，但因为备战席满了买不下来
+            if (!success && isTarget && gameStateManager.getEmptyBenchSlotCount() === 0) {
+                // 且不是因为金币不足（buyAndUpdateState 里金币不足也会返回 false，但我们这里假设主要是卡格子）
+                // 再次检查金币是否足够（如果金币都不够，那就没办法了）
+                if (gameStateManager.getGold() >= unit.price) {
+                    logger.warn(`[StrategyService] 备战席已满，尝试卖出一个杂鱼以购买目标棋子: ${championName}`);
+                    
+                    // 尝试腾出一个位置
+                    const sold = await this.sellSingleTrashUnit(targetChampions);
+                    if (sold) {
+                        // 再次尝试购买
+                        success = await this.buyAndUpdateState(index);
+                    }
+                }
+            }
+
             if (success) {
                 hasBought = true;
-                ownedChampions.add(unit.displayName as ChampionKey);
+                ownedChampions.add(championName);
             }
         }
-        
+
         return hasBought;
     }
 
     /**
-     * 从屏幕重新识别并更新商店状态
+     * 从屏幕重新识别并更新商店和金币状态
+     * @description D 牌后调用，重新识别商店棋子和金币并更新到 GameStateManager
+     *              不假设刷新扣多少钱，因为某些海克斯强化会让刷新免费或打折
      */
     private async updateShopStateFromScreen(): Promise<void> {
-        const newShopUnits = await tftOperator.getShopInfo();
-        const currentSnapshot = gameStateManager.getSnapshotSync();
-        if (currentSnapshot) {
-            gameStateManager.updateSnapshot({
-                ...currentSnapshot,
-                shopUnits: newShopUnits,
-                gold: gameStateManager.getGold() // 确保金币也是最新的
-            });
+        // 并行识别商店和金币（两者都只需要截图+OCR，不冲突）
+        const [newShopUnits, newGold]: [(TFTUnit | null)[], number | null] = await Promise.all([
+            tftOperator.getShopInfo(),
+            tftOperator.getCoinCount()
+        ]);
+
+        // 更新商店
+        gameStateManager.updateShopUnits(newShopUnits);
+
+        // 更新金币（如果识别成功）
+        if (newGold !== null) {
+            gameStateManager.updateGold(newGold);
         }
     }
 
