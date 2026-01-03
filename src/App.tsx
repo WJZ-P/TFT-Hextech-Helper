@@ -2,7 +2,8 @@ import './App.css'
 import {router} from "./Router.tsx";
 import {RouterProvider} from "react-router-dom";
 import {ThemeProvider} from "styled-components";
-import {darkTheme, lightTheme,} from "./styles/theme.ts";
+import {lightTheme} from "./styles/theme.ts";
+
 import {GlobalStyle} from "./styles/GlobalStyle.ts";
 import {Toaster} from "./components/toast/Toast.tsx";
 

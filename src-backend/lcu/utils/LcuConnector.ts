@@ -38,7 +38,9 @@ interface LCUConnectorEvents {
  * 用于连接LOL客户端，通过监听进程和lockfile自动管理连接状态。
  */
 class LCUConnector extends EventEmitter {
-    private processWatcher : NodeJS.Timeout
+    /** 进程监听定时器句柄（未启动时为 null） */
+    private processWatcher: NodeJS.Timeout | null = null;
+
 
     /**
      * 声明 on 方法的类型，使其能够识别我们定义的事件和数据类型
@@ -74,9 +76,10 @@ class LCUConnector extends EventEmitter {
             cp.exec(command, (err, stdout, stderr) => {
                 // 如果执行出错或没有输出，则解决 Promise 并返回空
                 if (err || !stdout || stderr) {
-                    resolve();
+                    resolve(null);
                     return;
                 }
+
                 console.log(`process命令执行结果：${stdout}`)
 
                 // 匹配命令行输出，提取安装路径
@@ -111,7 +114,8 @@ class LCUConnector extends EventEmitter {
      * @param {string} dirPath - 目录路径
      * @returns {boolean}
      */
-    static isValidLCUPath(dirPath) {
+    static isValidLCUPath(dirPath: string) {
+
         if (!dirPath) {
             return false;
         }
@@ -164,9 +168,12 @@ class LCUConnector extends EventEmitter {
      * @description 清除进程监听器
      */
     private clearProcessWatcher(){
-        clearInterval(this.processWatcher)
-        this.processWatcher = null as any;  // 重置为 null，允许下次重新创建定时器
+        if (this.processWatcher) {
+            clearInterval(this.processWatcher);
+            this.processWatcher = null;
+        }
     }
+
 
 }
 

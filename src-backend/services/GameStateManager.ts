@@ -586,6 +586,47 @@ export class GameStateManager {
     }
 
     /**
+     * 移除指定索引的装备（模拟消耗）
+     * @param index 装备栏索引 (0-9)
+     * @description 当使用装备后，后续装备会自动前移
+     *              此方法用于在不重新截图的情况下更新内存状态，确保连续操作的索引正确
+     */
+    public removeEquipment(index: number): void {
+        if (!this.snapshot) return;
+
+        if (index < 0 || index >= this.snapshot.equipments.length) {
+            logger.warn(`[GameStateManager] 尝试移除无效的装备索引: ${index}`);
+            return;
+        }
+
+        const removed = this.snapshot.equipments.splice(index, 1);
+        logger.debug(
+            `[GameStateManager] 移除装备: ${removed[0]?.name} (索引 ${index})，` +
+            `剩余 ${this.snapshot.equipments.length} 件 (后续装备已自动前移)`
+        );
+        
+        // 更新后续装备的 slot 字段（虽然主要逻辑依靠数组索引，但保持数据一致性更好）
+        for (let i = index; i < this.snapshot.equipments.length; i++) {
+            this.snapshot.equipments[i].slot = `SLOT_${i + 1}`;
+        }
+    }
+
+    /**
+     * 更新装备列表
+     * @param equipments 新的装备数组
+     * @description 从屏幕识别装备后更新，用于 D 牌/卖牌后刷新装备栏
+     */
+    public updateEquipments(equipments: IdentifiedEquip[]): void {
+        if (!this.snapshot) {
+            logger.warn("[GameStateManager] 快照不存在，无法更新装备");
+            return;
+        }
+
+        this.snapshot.equipments = equipments;
+        logger.debug(`[GameStateManager] 装备已更新: ${equipments.length} 件`);
+    }
+
+    /**
      * 更新等级信息
      * @param levelInfo 等级信息对象 { level, currentXp, totalXp }
      * @description 单独更新等级和经验，无需传入完整快照
@@ -814,6 +855,47 @@ export class GameStateManager {
             loc.startsWith('R3_') || loc.startsWith('R4_')
         );
     }
+
+    /**
+     * 查找装备栏中指定名称的第一个装备索引
+     * @param itemName 装备名称
+     * @returns 装备索引 (0..n-1)，如果未找到返回 -1
+     *
+     * @description
+     * - 这里返回的是 **equipments 数组索引**（也就是 UI 从左到右的槽位索引）。
+     * - `TftOperator.getEquipInfo()` 会过滤掉“空槽位”，并把 slot 重写为紧凑的 `SLOT_1..SLOT_n`。
+     *   因此数组索引与槽位索引保持一致，便于连续穿戴/合成时做“前移模拟”。
+     */
+    public findEquipmentIndex(itemName: string): number {
+        const equipments = this.getEquipments();
+        for (let i = 0; i < equipments.length; i++) {
+            const equip = equipments[i];
+            if (equip.name === itemName) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+
+    /**
+     * 查找装备栏中指定名称的所有装备索引
+     * @param itemName 装备名称
+     * @returns 装备索引数组 (0..n-1)
+     */
+    public findAllEquipmentIndices(itemName: string): number[] {
+        const equipments = this.getEquipments();
+        const indices: number[] = [];
+
+        for (let i = 0; i < equipments.length; i++) {
+            if (equipments[i].name === itemName) {
+                indices.push(i);
+            }
+        }
+
+        return indices;
+    }
+
 
     // ============================================================================
     // 重置

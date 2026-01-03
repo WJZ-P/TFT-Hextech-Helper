@@ -24,9 +24,10 @@
 
 import { EventEmitter } from 'events';
 import { tftOperator } from '../TftOperator';
-import { GameStageType, GameStageResult } from '../TFTProtocol';
+import { GameStageType, GameStageResult, combatPhaseTextRegion } from '../TFTProtocol';
 import { logger } from '../utils/Logger';
-import { parseStageStringToEnum } from '../tft';
+import { ocrService, OcrWorkerType, screenCapture } from '../tft';
+
 
 // ============================================================================
 // 类型定义
@@ -275,28 +276,48 @@ export class GameStageMonitor extends EventEmitter {
             return;
         }
 
-        // TODO: 实现战斗阶段检测
-        // const isFightingNow = await this.detectCombatPhaseText();
-        // 
-        // if (isFightingNow) {
-        //     this.isFighting = true;
-        //     logger.info('[GameStageMonitor] 检测到"战斗环节"，进入战斗状态');
-        //     this.emit('fightingStart');
-        // }
+        // 如果截图模块还没初始化（尚未定位到游戏窗口），先不检测
+        if (!screenCapture.isInitialized()) {
+            return;
+        }
+
+        try {
+            const isFightingNow = await this.detectCombatPhaseText();
+
+            if (isFightingNow) {
+                this.isFighting = true;
+                logger.info('[GameStageMonitor] 检测到"战斗环节"，进入战斗状态');
+                this.emit('fightingStart');
+            }
+        } catch (e: any) {
+            // 这里用 debug，避免 OCR 失败时刷屏；需要排查时再开 debug
+            logger.debug(`[GameStageMonitor] 战斗阶段检测失败: ${e?.message ?? e}`);
+        }
     }
+
 
     /**
      * 检测"战斗环节"文字
-     * @description 通过 OCR 识别 combatPhaseTextRegion 区域的文字
+     * @description 通过 OCR 识别 `combatPhaseTextRegion` 区域的文字。
      * 
-     * TODO: 实现具体的检测逻辑
-     * @returns 是否检测到"战斗环节"文字
+     * 实现要点：
+     * - 该区域是固定 UI 文本（短语），因此 OCR 白名单可以收紧，提升准确率
+     * - 只要识别结果包含“战斗”就判定为进入战斗（允许 OCR 少字/漏字）
      */
-    // private async detectCombatPhaseText(): Promise<boolean> {
-    //     // TODO: 使用 TftOperator 截取 combatPhaseTextRegion 区域
-    //     // 进行 OCR 识别，判断是否包含"战斗环节"或"战斗"文字
-    //     return false;
-    // }
+    private async detectCombatPhaseText(): Promise<boolean> {
+        // 截取“战斗环节”文字区域（游戏相对坐标 -> 屏幕绝对坐标）
+        const pngBuffer = await screenCapture.captureGameRegionAsPng(combatPhaseTextRegion, true);
+
+        // 使用专用 Worker，避免 CHESS/LEVEL 的白名单限制导致识别不了“战斗环节”
+        const text = await ocrService.recognize(pngBuffer, OcrWorkerType.COMBAT_PHASE);
+        const cleanText = text.replace(/\s/g, "");
+
+        // logger.debug(`[GameStageMonitor] 战斗文字 OCR: "${cleanText}"`);
+
+        // 只要包含“战斗”就算命中（更鲁棒）
+        return cleanText.includes("战斗");
+    }
+
 }
 
 // ============================================================================

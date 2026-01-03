@@ -28,7 +28,9 @@ import {
     detailChampionStarRegion,
     detailEquipRegion,
     equipmentRegion,
+    equipmentSlot,
     fightBoardSlotPoint,
+
     fightBoardSlotRegion,
     gameStageDisplayNormal,
     gameStageDisplayStageOne,
@@ -372,17 +374,28 @@ class TftOperator {
                 targetMat = await screenCapture.captureRegionAsMat(targetRegion);
                 const matchResult = templateMatcher.matchEquip(targetMat);
 
-                if (matchResult) {
-                    logger.info(
-                        `[TftOperator] ${slotName} 识别成功: ${matchResult.name} ` +
-                        `(相似度: ${(matchResult.confidence * 100).toFixed(1)}%)`
-                    );
-                    matchResult.slot = slotName;
-                    resultEquips.push(matchResult);
-                } else {
+                if (!matchResult) {
                     logger.error(`[TftOperator] ${slotName} 槽位识别失败`);
                     await this.saveFailedImage("equip", slotName, targetMat, 3);
+                    continue;
                 }
+
+                // 空槽位不写入结果列表：让上层拿到的是“紧凑装备数组”，避免把 10 个空格当成 10 件装备。
+                if (matchResult.name === "空槽位") {
+                    logger.debug(`[TftOperator] ${slotName} 为空槽位`);
+                    continue;
+                }
+
+                // 注意：这里把 slot 统一写成紧凑后的槽位（SLOT_1..SLOT_n）。
+                // 这样 StrategyService/GameStateManager 的“索引=槽位”假设始终成立。
+                matchResult.slot = `SLOT_${resultEquips.length + 1}`;
+
+                logger.debug(
+                    `[TftOperator] ${slotName} 识别成功: ${matchResult.name} ` +
+                    `(相似度: ${(matchResult.confidence * 100).toFixed(1)}%)`
+                );
+
+                resultEquips.push(matchResult);
             } catch (e: any) {
                 logger.error(`[TftOperator] ${slotName} 扫描异常: ${e.message}`);
             } finally {
@@ -391,6 +404,7 @@ class TftOperator {
                 }
             }
         }
+
 
         return resultEquips;
     }
@@ -1489,6 +1503,48 @@ class TftOperator {
         );
 
         // 执行拖拽操作
+        await mouseController.drag(fromPoint, toPoint);
+    }
+
+    /**
+     * 将装备穿戴给棋盘上的单位
+     * @param equipSlotIndex 装备栏索引 (0-9)
+     * @param boardLocation 棋盘目标位置 (如 "R1_C1")
+     * @description 将指定装备槽位的装备拖拽到棋盘上的指定位置
+     */
+    public async equipToBoardUnit(
+        equipSlotIndex: number,
+        boardLocation: BoardLocation
+    ): Promise<void> {
+        this.ensureInitialized();
+
+        // 1. 获取装备槽位坐标
+        // 装备索引 0-9 -> EQ_SLOT_1 ~ EQ_SLOT_10
+        if (equipSlotIndex < 0 || equipSlotIndex > 9) {
+            logger.error(`[TftOperator] 无效的装备槽位索引: ${equipSlotIndex} (只接受 0-9)`);
+            return;
+        }
+
+        const equipSlotKey = `EQ_SLOT_${equipSlotIndex + 1}` as keyof typeof equipmentSlot;
+        const fromPoint = equipmentSlot[equipSlotKey];
+
+
+        if (!fromPoint) {
+            logger.error(`[TftOperator] 无效的装备槽位索引: ${equipSlotIndex}`);
+            return;
+        }
+
+        // 2. 获取棋盘目标位置坐标
+        const toPoint = fightBoardSlotPoint[boardLocation];
+
+        if (!toPoint) {
+            logger.error(`[TftOperator] 无效的棋盘位置: ${boardLocation}`);
+            return;
+        }
+
+        logger.info(`[TftOperator] 穿装备: 槽位${equipSlotIndex}(${equipSlotKey}) -> ${boardLocation}`);
+
+        // 3. 执行拖拽操作
         await mouseController.drag(fromPoint, toPoint);
     }
 }

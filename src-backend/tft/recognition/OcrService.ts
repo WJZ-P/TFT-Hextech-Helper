@@ -19,8 +19,11 @@ export enum OcrWorkerType {
     /** 棋子名称识别 (中文) */
     CHESS = "CHESS",
     /** 等级识别 (中文"级"字 + 数字 + 斜杠) */
-    LEVEL = "LEVEL"
+    LEVEL = "LEVEL",
+    /** 战斗阶段文字识别 (中文，如 "战斗环节") */
+    COMBAT_PHASE = "COMBAT_PHASE",
 }
+
 
 /**
  * OCR 识别服务
@@ -42,6 +45,10 @@ export class OcrService {
 
     /** 等级识别 Worker (中文"级"字 + 数字) */
     private levelWorker: Tesseract.Worker | null = null;
+
+    /** 战斗阶段文字识别 Worker (中文"战斗环节") */
+    private combatPhaseWorker: Tesseract.Worker | null = null;
+
 
     /** Tesseract 语言包路径 */
     private get langPath(): string {
@@ -73,9 +80,12 @@ export class OcrService {
                 return this.getChessWorker();
             case OcrWorkerType.LEVEL:
                 return this.getLevelWorker();
+            case OcrWorkerType.COMBAT_PHASE:
+                return this.getCombatPhaseWorker();
             default:
                 throw new Error(`未知的 OCR Worker 类型: ${type}`);
         }
+
     }
 
     /**
@@ -178,6 +188,36 @@ export class OcrService {
     }
 
     /**
+     * 获取战斗阶段文字识别 Worker
+     * @description 只需要识别“战斗环节”这类固定短语，白名单尽量收紧，提升准确率。
+     */
+    private async getCombatPhaseWorker(): Promise<Tesseract.Worker> {
+        if (this.combatPhaseWorker) {
+            return this.combatPhaseWorker;
+        }
+
+        logger.info("[OcrService] 正在创建战斗阶段识别 Worker...");
+
+        const worker = await createWorker("chi_sim", 1, {
+            langPath: this.langPath,
+            cachePath: this.langPath,
+        });
+
+        // 配置：只识别战斗/准备相关的汉字（避免模型输出无关字符导致误判）
+        await worker.setParameters({
+            tessedit_char_whitelist: "战斗环节",
+            tessedit_pageseg_mode: PSM.SINGLE_LINE,
+            preserve_interword_spaces: "1",
+        });
+
+        this.combatPhaseWorker = worker;
+        logger.info("[OcrService] 战斗阶段识别 Worker 准备就绪");
+
+        return this.combatPhaseWorker;
+    }
+
+
+    /**
      * 销毁所有 Worker，释放资源
      * @description 在应用退出时调用
      */
@@ -199,8 +239,15 @@ export class OcrService {
             this.levelWorker = null;
             logger.info("[OcrService] 等级识别 Worker 已销毁");
         }
+
+        if (this.combatPhaseWorker) {
+            await this.combatPhaseWorker.terminate();
+            this.combatPhaseWorker = null;
+            logger.info("[OcrService] 战斗阶段识别 Worker 已销毁");
+        }
     }
 }
+
 
 /** OcrService 单例导出 */
 export const ocrService = OcrService.getInstance();
