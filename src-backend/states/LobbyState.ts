@@ -45,7 +45,7 @@ export class LobbyState implements IState {
 
         // 创建房间
         logger.info("[LobbyState] 正在创建房间...");
-        await this.lcuManager.createLobbyByQueueId(Queue.TFT_FATIAO);
+        await this.lcuManager.createLobbyByQueueId(Queue.TFT_NORMAL);
         await sleep(LOBBY_CREATE_DELAY_MS);
 
         // 开始排队

@@ -171,10 +171,31 @@ function init() {
             connector.start();
         });
 
-        lcuManager.on('lcu-event', (event) => {
+        // 喵~ 这里是 LCU WebSocket 的“总事件”入口：所有 OnJsonApiEvent 都会从这里过。
+        // 你要看的两个接口不在 `LcuEventUri` 枚举里，所以我们在这里用 uri 过滤即可。
+        const tftPassWatchUris = new Set<string>([
+            '/lol-tft-pass/v1/battle-pass',
+            '/lol-tft-pass/v1/active-passes',
+        ]);
+
+        lcuManager.on('lcu-event', (event: LCUWebSocketMessage) => {
             // 在这里处理实时收到的游戏事件
             console.log('收到LCU事件:', event.uri, event.eventType);
+
+            // 专门监听 TFT Pass 相关事件，并把 payload 打印出来，方便你观察数据结构
+            if (tftPassWatchUris.has(event.uri)) {
+                console.log(`\n===== [LCU][TFT-PASS] ${event.uri} ${event.eventType} =====`);
+                try {
+                    // 绝大多数 LCU payload 都是纯 JSON，这样打印可读性最好
+                    console.log(JSON.stringify(event.data, null, 2));
+                } catch (e) {
+                    // 兜底：如果出现不可序列化对象，至少保证能看到原始内容
+                    console.log(event.data);
+                }
+                console.log('===== [LCU][TFT-PASS] END =====\n');
+            }
         });
+
     });
 
     connector.on('disconnect', () => {
