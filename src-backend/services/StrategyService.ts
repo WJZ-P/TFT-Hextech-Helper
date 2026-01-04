@@ -104,7 +104,7 @@ export class StrategyService {
     /**
      * 事件处理器引用（⚠️ 必须缓存同一个函数引用，才能在 unsubscribe 时成功 off）
      * @description
-     * - EventEmitter 的 on/off 是按“函数引用”匹配的
+     * - EventEmitter 的 on/off 是按"函数引用"匹配的
      * - 如果每次都写 this.onStageChange.bind(this)，会生成新函数 → off 失败
      */
     private readonly onStageChangeHandler: (event: GameStageEvent) => void;
@@ -189,16 +189,16 @@ export class StrategyService {
         this.currentStage = stage;
         this.currentRound = round;
 
-        // 日志输出
-        if (isNewStage) {
-            logger.info(
-                `[StrategyService] ====== 进入新阶段: ${stageText} (第${stage}阶段第${round}回合) ======`
-            );
-        } else {
-            logger.info(
-                `[StrategyService] 进入新回合: ${stageText} (第${stage}阶段第${round}回合)`
-            );
-        }
+        // 日志输出 这里和monitor里面的日志重复了，所以注释掉了
+        // if (isNewStage) {
+        //     logger.info(
+        //         `[StrategyService] ====== 进入新阶段: ${stageText} (第${stage}阶段第${round}回合) ======`
+        //     );
+        // } else {
+        //     logger.info(
+        //         `[StrategyService] 进入新回合: ${stageText} (第${stage}阶段第${round}回合)`
+        //     );
+        // }
 
         // 确保已初始化
         if (this.selectionState === LineupSelectionState.NOT_INITIALIZED) {
@@ -283,21 +283,21 @@ export class StrategyService {
     /**
      * 获取当前阶段类型
      * @description
-     * 这里直接读 `GameStageMonitor` 的缓存值，因为它是全局轮询的“最新真值”。
+     * 这里直接读 `GameStageMonitor` 的缓存值，因为它是全局轮询的"最新真值"。
      */
     private getCurrentStageType(): GameStageType {
         return gameStageMonitor.currentStageType;
     }
 
     /**
-     * 判断：当前场上是否存在任意一个“核心棋子”
+     * 判断：当前场上是否存在任意一个"核心棋子"
      * @returns 是否存在核心棋子
      *
      * @description
-     * - “核心棋子”来自阵容配置（`ChampionConfig.items.core` 的那批）。
+     * - "核心棋子"来自阵容配置（`ChampionConfig.items.core` 的那批）。
      * - 这个判断用于装备策略的触发门槛：
      *   - 有核心在场 → 可以更积极给核心做神装
-     *   - 核心不在场 → 默认选择“捏装备”等核心，除非装备快满
+     *   - 核心不在场 → 默认选择"捏装备"等核心，除非装备快满
      */
     private hasAnyCoreChampionOnBoard(): boolean {
         const coreChampions = this.getCoreChampions();
@@ -311,27 +311,27 @@ export class StrategyService {
     }
 
     /**
-     * 判断：当前是否存在“可执行的上装备动作”
+     * 判断：当前是否存在"可执行的上装备动作"
      * @param equipments 当前装备栏（紧凑数组，只包含真实装备）
      *
      * @description
-     * 这是为了做“聪明闸门”：
+     * 这是为了做"聪明闸门"：
      * - 你说得对：前期的打工仔（item holder）最后会卖掉，装备会回到装备栏。
      *   因此 **核心没到场时，也可以先把核心推荐装挂在打工仔身上**（保血/提速）。
-     * - 但我们又不想每回合都“空跑”一遍装备策略，所以这里先做一次轻量判断：
+     * - 但我们又不想每回合都"空跑"一遍装备策略，所以这里先做一次轻量判断：
      *   只要发现「能穿」或「能合成并穿」的动作，就允许进入 `executeEquipStrategy()`。
      */
     private canPerformAnyEquipOperation(equipments: IdentifiedEquip[]): { can: boolean; reason: string } {
         // =========================
         // 保前四的装备思路：
-        // - 优先：如果能合出“核心推荐装/替代装”，就合成并立刻给（稳定提升战力）
+        // - 优先：如果能合出"核心推荐装/替代装"，就合成并立刻给（稳定提升战力）
         // - 其次：有散件就先挂到场上（打工仔也行），用即时战力换血量
         // =========================
 
-        // 1) 先检查是否存在“可上装备的单位”（⚠️ 目前只支持给棋盘单位穿装备）
+        // 1) 先检查是否存在"可上装备的单位"（⚠️ 目前只支持给棋盘单位穿装备）
         const boardUnits = gameStateManager.getBoardUnitsWithLocation();
 
-        // 使用与“上棋/替换弱子”一致的价值评分（calculateUnitScore），挑选最值得挂装备的单位。
+        // 使用与"上棋/替换弱子"一致的价值评分（calculateUnitScore），挑选最值得挂装备的单位。
         // 这样后期即使 4/5 费棋子还没 2★，也不会被低费 2★长期压制而拿不到装备。
         const targetChampions = this.targetChampionNames;
 
@@ -351,8 +351,8 @@ export class StrategyService {
             return { can: false, reason: "棋盘上没有可穿戴装备的单位（可能全员满装备/无单位）" };
         }
 
-        // 2) 如果背包里有“散件”，就允许执行装备策略（散件先上，拉即时战力）
-        //    这里用 formula 是否为空来粗略判断“基础散件”（暴风大剑/反曲弓/女神泪等）
+        // 2) 如果背包里有"散件"，就允许执行装备策略（散件先上，拉即时战力）
+        //    这里用 formula 是否为空来粗略判断"基础散件"（暴风大剑/反曲弓/女神泪等）
         const component = equipments.find(e => {
             const data = TFT_16_EQUIP_DATA[e.name as EquipKey];
             return data && (data.formula ?? "") === "";
@@ -361,7 +361,7 @@ export class StrategyService {
             return { can: true, reason: `存在散件可穿戴：${component.name} -> ${equipableUnit.tftUnit.displayName}` };
         }
 
-        // 3) 再判断“能否合成/穿戴核心装”（没有核心配置时，直接跳过这一段）
+        // 3) 再判断"能否合成/穿戴核心装"（没有核心配置时，直接跳过这一段）
         const coreChampions = this.getCoreChampions();
         if (coreChampions.length === 0) {
             return { can: false, reason: "阵容配置中没有核心棋子/核心装备配置" };
@@ -393,7 +393,7 @@ export class StrategyService {
             }
             if (desiredItems.length === 0) continue;
 
-            // 只要存在一个“能执行”的动作就放行
+            // 只要存在一个"能执行"的动作就放行
             for (const itemName of desiredItems) {
                 const alreadyHas = targetWrapper.unit.equips.some(e => e.name === itemName);
                 if (alreadyHas) continue;
@@ -425,8 +425,8 @@ export class StrategyService {
      * @description
      * 触发原则：
      * - 只在 PVP 且非战斗中考虑（避免战斗中拖拽导致事故）
-     * - 只要“确实存在可执行动作”，就允许执行（核心不在场时也允许把核心装先挂打工仔）
-     * - 额外约定：装备数 > 5 视为“快满”（用于日志/后续扩展兜底策略）
+     * - 只要"确实存在可执行动作"，就允许执行（核心不在场时也允许把核心装先挂打工仔）
+     * - 额外约定：装备数 > 5 视为"快满"（用于日志/后续扩展兜底策略）
      */
     private getEquipStrategyGateDecision(): { should: boolean; reason: string } {
         const stageType = this.getCurrentStageType();
@@ -444,7 +444,7 @@ export class StrategyService {
             return { should: false, reason: "装备栏为空" };
         }
 
-        // 约定：装备数 > 5 视为“快满”（此处不单独作为放行条件，避免策略空跑）
+        // 约定：装备数 > 5 视为"快满"（此处不单独作为放行条件，避免策略空跑）
         const nearFullThreshold = 5;
         const nearFullHint = equipments.length > nearFullThreshold
             ? `（装备快满：${equipments.length} > ${nearFullThreshold}）`
@@ -985,8 +985,7 @@ export class StrategyService {
         // 前两个回合：商店未开放，只需防挂机
         if (this.currentRound <= 2) {
             logger.info(`[StrategyService] 前期阶段 1-${this.currentRound}：商店未开放，执行防挂机...`);
-            await this.antiAfk();
-            return;
+            return await this.antiAfk();
         }
 
         // 1-3、1-4 回合：商店已开放，执行前期特殊策略
@@ -1417,21 +1416,48 @@ export class StrategyService {
     /**
      * 防挂机：随机移动小小英雄
      * @description 在战斗阶段（如前期 PVE、野怪回合）时调用，
-     *              让小小英雄随机走动，避免被系统判定为挂机
+     *              让小小英雄持续随机走动，避免被系统判定为挂机
      *
-     * TODO: 实现随机移动逻辑
-     * - 生成随机目标坐标（在安全区域内）
-     * - 调用 tftOperator 移动小小英雄
-     * - 可以考虑添加移动间隔，避免频繁移动
+     * 循环逻辑：
+     * - 使用 while 循环持续调用 selfWalkAround()（左右交替走位，更像真人）
+     * - 每次走动后等待 3 秒再进行下一次
+     * - 退出条件：战斗状态变化（非战斗→战斗 或 战斗→非战斗）或回合变化
      */
     private async antiAfk(): Promise<void> {
-        // 这里先走一个“简单但实用”的版本：
-        // - 直接复用 tftOperator.selfWalkAround()（左右交替走位，更像真人）
-        // - 不依赖复杂坐标生成，也不会让小小英雄跑出屏幕
-        try {
-            await tftOperator.selfWalkAround();
-        } catch (e: any) {
-            logger.warn(`[StrategyService] 防挂机移动失败: ${e?.message ?? e}`);
+        logger.info("[StrategyService] 开始防挂机循环走动...");
+
+        // 记录进入时的阶段/回合，用于检测回合变化
+        const entryStage = this.currentStage;
+        const entryRound = this.currentRound;
+
+        // 记录进入时的战斗状态，用于检测战斗状态变化
+        const entryFightingState = this.isFighting();
+
+        // 走动间隔（毫秒）
+        const walkInterval = 3000;
+
+        while (true) {
+            // 退出条件 1：战斗状态发生变化（非战斗→战斗 或 战斗→非战斗）
+            if (this.isFighting() !== entryFightingState) {
+                logger.info("[StrategyService] 检测到战斗状态变化，退出防挂机循环");
+                break;
+            }
+
+            // 退出条件 2：回合发生变化（说明进入了新回合）
+            if (this.currentStage !== entryStage || this.currentRound !== entryRound) {
+                logger.info("[StrategyService] 检测到回合变化，退出防挂机循环");
+                break;
+            }
+
+            // 执行一次随机走动
+            try {
+                await tftOperator.selfWalkAround();
+            } catch (e: any) {
+                logger.warn(`[StrategyService] 防挂机移动失败: ${e?.message ?? e}`);
+            }
+
+            // 等待 3 秒后再次走动
+            await sleep(walkInterval);
         }
     }
 
@@ -1495,7 +1521,7 @@ export class StrategyService {
         await this.adjustPositions();
 
         // 9. 装备策略 (合成与穿戴)
-        // 注意：装备拖拽属于“高风险操作”，并且实战里经常需要“捏装备等核心”。
+        // 注意：装备拖拽属于"高风险操作"，并且实战里经常需要"捏装备等核心"。
         // 因此这里加了触发门槛：只在 PVP 且满足条件时才执行。
         const equipGate = this.getEquipStrategyGateDecision();
         if (equipGate.should) {
@@ -1616,8 +1642,8 @@ export class StrategyService {
         let rollCount = 0;
         const maxRolls = 30; // 安全上限：防止极端情况下死循环
 
-        // 连续多少次刷新都没有买到任何棋子，就认为“继续 D 的收益很低”，主动停手。
-        // 这个阈值的意义：避免在“目标牌不在概率池/牌库被卡/我们根本买不下(爆仓)”时，把金币和时间无意义地烧掉。
+        // 连续多少次刷新都没有买到任何棋子，就认为"继续 D 的收益很低"，主动停手。
+        // 这个阈值的意义：避免在"目标牌不在概率池/牌库被卡/我们根本买不下(爆仓)"时，把金币和时间无意义地烧掉。
         const maxConsecutiveNoBuyRolls = 5;
         let consecutiveNoBuyRolls = 0;
 
@@ -1631,7 +1657,7 @@ export class StrategyService {
             // 2. 刷新后，尝试购买
             const hasBought = await this.autoBuyFromShop(targetChampions, "D牌后购买");
 
-            // 3. 如果买到了，尝试优化棋盘（升星/上场），并重置“空转计数”
+            // 3. 如果买到了，尝试优化棋盘（升星/上场），并重置"空转计数"
             if (hasBought) {
                 consecutiveNoBuyRolls = 0;
                 await this.optimizeBoard(targetChampions);
@@ -1662,13 +1688,13 @@ export class StrategyService {
      */
     private async executeRollStrategy(): Promise<boolean> {
         // =========================
-        // “节点搜”策略（面向保前四）
+        // "节点搜"策略（面向保前四）
         // =========================
         // 核心思想：
         // - 非关键节点：尽量不 D，靠自然商店+上人口吃经济
-        // - 关键节点：集中花钱把“质量”抬上去（更稳定保血、保前四）
+        // - 关键节点：集中花钱把"质量"抬上去（更稳定保血、保前四）
         //
-        // 注意：这里的 threshold 表示“本回合最多 D 到剩多少金币为止”。
+        // 注意：这里的 threshold 表示"本回合最多 D 到剩多少金币为止"。
         // 例如 threshold=30 表示：金币 >= 32 才会继续 D 一次，保证 D 完还能剩 >=30。
 
         const stage = this.currentStage;
@@ -1693,7 +1719,7 @@ export class StrategyService {
             reason = "5-1 节点搜（上 8 后补强阵容）";
         } else if (stage >= 6) {
             // 决赛圈（通常只剩 4 人左右）：
-            // 这时“利息”的边际收益很低，而“强度”决定你能不能苟到更高名次。
+            // 这时"利息"的边际收益很低，而"强度"决定你能不能苟到更高名次。
             // 所以允许把钱打干（仍然受 executeRollingLoop 的 maxRolls / 空转阈值保护）。
             shouldRollThisRound = true;
             threshold = 0;
@@ -1704,7 +1730,7 @@ export class StrategyService {
             return false;
         }
 
-        // 检查是否有大量对子：对子多时，D 一次“命中升星”的收益更高，可以更激进一点
+        // 检查是否有大量对子：对子多时，D 一次"命中升星"的收益更高，可以更激进一点
         const ownedChampions = gameStateManager.getOwnedChampionNames();
         let pairCount = 0;
         for (const name of ownedChampions) {
@@ -1915,7 +1941,7 @@ export class StrategyService {
 
             let actionTaken = false;
 
-            // 1) 先尝试“核心装合成/成装直上”（优先级最高）
+            // 1) 先尝试"核心装合成/成装直上"（优先级最高）
             const coreChampions = this.getCoreChampions();
 
             // 建立装备背包的快照（用于模拟合成可行性；真实消耗由 GameStateManager.removeEquipment 维护）
@@ -1970,9 +1996,9 @@ export class StrategyService {
                 if (actionTaken) break;
             }
 
-            // 2) 如果没有核心装可做：散件先上，拉即时战力（更贴合“保前四”）
+            // 2) 如果没有核心装可做：散件先上，拉即时战力（更贴合"保前四"）
             if (!actionTaken) {
-                // 2.1 找一个穿装备目标：优先核心/打工仔逻辑，其次退化到“棋盘最强单位”
+                // 2.1 找一个穿装备目标：优先核心/打工仔逻辑，其次退化到"棋盘最强单位"
                 let targetLocation: BoardLocation | null = null;
 
                 for (const config of coreChampions) {
@@ -1987,7 +2013,7 @@ export class StrategyService {
                     const boardUnits = gameStateManager.getBoardUnitsWithLocation();
                     const targetChampions = this.targetChampionNames;
 
-                    // 复用 calculateUnitScore：让“散件挂载目标”的选择逻辑和“上棋/换弱子”保持一致。
+                    // 复用 calculateUnitScore：让"散件挂载目标"的选择逻辑和"上棋/换弱子"保持一致。
                     let best: { location: BoardLocation; score: number } | null = null;
 
                     for (const u of boardUnits) {
@@ -2003,7 +2029,7 @@ export class StrategyService {
                 }
 
                 if (targetLocation) {
-                    // 2.2 优先穿“基础散件”（formula 为空），避免随便把成装/特殊装乱挂
+                    // 2.2 优先穿"基础散件"（formula 为空），避免随便把成装/特殊装乱挂
                     const component = equipments.find(e => {
                         const data = TFT_16_EQUIP_DATA[e.name as EquipKey];
                         return data && (data.formula ?? "") === "";
