@@ -26,6 +26,8 @@ import {
     ShopSlotIndex,
     TFT_16_EQUIP_DATA,
     EquipKey,
+    sharedDraftPoint,
+    hexSlot,
 } from "../TFTProtocol";
 import {gameStateManager} from "./GameStateManager";
 import {gameStageMonitor, GameStageEvent} from "./GameStageMonitor";
@@ -210,7 +212,10 @@ export class StrategyService {
         }
 
         // 刷新游戏状态（采集所有数据，包括等级、商店、棋盘等）
-        await this.refreshGameState();
+        // 注意：部分阶段不需要在这里刷新，由各自的 handler 自行决定
+        if (this.shouldRefreshStateOnStageChange(type)) {
+            await this.refreshGameState();
+        }
 
         // 根据阶段类型分发到对应的 handler
         switch (type) {
@@ -278,6 +283,41 @@ export class StrategyService {
      */
     public isFighting(): boolean {
         return gameStageMonitor.isFighting;
+    }
+
+    /**
+     * 判断：进入新回合时是否应该刷新游戏状态
+     * @param stageType 阶段类型
+     * @returns 是否应该刷新
+     *
+     * @description
+     * 以下情况 **不需要** 在 onStageChange 里刷新状态：
+     * - EARLY_PVE 的 1-1、1-2：商店未开放，没有什么可识别的
+     * - CAROUSEL（选秀）：界面完全不同，刷新无意义
+     * - AUGMENT（海克斯）：界面被三个海克斯挡住，必须先选完再刷新
+     *   （handleAugment 内部会自行调用 refreshGameState）
+     */
+    private shouldRefreshStateOnStageChange(stageType: GameStageType): boolean {
+        // 1-1、1-2 回合：商店未开放，不需要刷新
+        if (stageType === GameStageType.EARLY_PVE && this.currentStage === 1 && this.currentRound <= 2) {
+            logger.debug(`[StrategyService] 跳过刷新：EARLY_PVE 1-${this.currentRound}（商店未开放）`);
+            return false;
+        }
+
+        // 选秀阶段：界面完全不同，不需要刷新
+        if (stageType === GameStageType.CAROUSEL) {
+            logger.debug("[StrategyService] 跳过刷新：CAROUSEL（选秀阶段）");
+            return false;
+        }
+
+        // 海克斯阶段：界面被海克斯选项挡住，由 handleAugment 自行刷新
+        if (stageType === GameStageType.AUGMENT) {
+            logger.debug("[StrategyService] 跳过刷新：AUGMENT（海克斯阶段，由 handler 自行刷新）");
+            return false;
+        }
+
+        // 其他阶段：正常刷新
+        return true;
     }
 
     /**
@@ -1402,15 +1442,8 @@ export class StrategyService {
                 await this.matchAndLockLineup();
             }
         }
-
-        logger.info("[StrategyService] PVP阶段：全力运营...");
-
         // 通用运营策略
         await this.executeCommonStrategy();
-
-        // TODO: 添加升级(F)、D牌(D)、调整站位逻辑
-        // await this.levelUpOrRoll();
-        // await this.adjustPosition();
     }
 
     /**
@@ -2196,20 +2229,71 @@ export class StrategyService {
 
     /**
      * 处理 选秀阶段
+     * @description
+     * 选秀阶段会循环右键点击选秀位置（sharedDraftPoint），每隔 3 秒点一次，
+     * 直到 GameStageMonitor 检测到进入下一个回合（stageText 变化）时自动退出。
+     *
      */
-    private async handleCarousel() {
-        logger.info("[StrategyService] 选秀阶段：防挂机移动...");
-        await tftOperator.selfWalkAround();
+    private async handleCarousel(): Promise<void> {
+        logger.info("[StrategyService] 选秀阶段：开始循环点击选秀位置...");
+
+        // 记录进入选秀时的阶段文本，用于判断是否进入下一回合
+        const entryStageText = gameStageMonitor.stageText;
+
+        // 点击间隔（毫秒）
+        const clickInterval = 3000;
+
+        while (true) {
+            // 检查是否已经进入下一个回合（stageText 变化说明选秀结束）
+            if (gameStageMonitor.stageText !== entryStageText) {
+                logger.info("[StrategyService] 选秀阶段结束，进入下一回合");
+                break;
+            }
+            // 右键点击选秀位置（小小英雄会自动走向最近的棋子）
+            await mouseController.clickAt(sharedDraftPoint, MouseButtonType.RIGHT);
+            logger.debug(`[StrategyService] 选秀点击: (${sharedDraftPoint.x}, ${sharedDraftPoint.y})`);
+            // 等待 3 秒后再次点击
+            await sleep(clickInterval);
+        }
     }
 
     /**
      * 处理 海克斯选择阶段
-     * @description 暂时执行防挂机随机走位，或者尝试点击第一个海克斯(如果坐标已知)
+     * @description 进入海克斯阶段后：
+     *              1. 等待 1.5 秒（让海克斯选项完全加载）
+     *              2. 随机点击一个海克斯槽位（SLOT_1 / SLOT_2 / SLOT_3）
+     *              3. 等待 0.5 秒（让选择动画完成）
+     *              4. 刷新游戏状态
+     *              5. 执行通用运营策略（因为海克斯选完后就是正常 PVP 准备阶段）
      */
-    private async handleAugment() {
-        logger.info("[StrategyService] 海克斯阶段：执行防挂机...");
-        // TODO: 识别海克斯并选择
-        await this.antiAfk();
+    private async handleAugment(): Promise<void> {
+        logger.info("[StrategyService] 海克斯阶段：等待海克斯选项加载...");
+
+        // 1. 等待 1.5 秒，让海克斯选项完全显示出来
+        await sleep(1500);
+
+        // 2. 随机选择一个海克斯槽位
+        //    hexSlot 有 SLOT_1, SLOT_2, SLOT_3 三个选项
+        const slotKeys = Object.keys(hexSlot) as (keyof typeof hexSlot)[];
+        const randomIndex = Math.floor(Math.random() * slotKeys.length);
+        const selectedSlotKey = slotKeys[randomIndex];
+        const selectedPoint = hexSlot[selectedSlotKey];
+
+        logger.info(
+            `[StrategyService] 海克斯阶段：随机选择一个海克斯槽位: ${selectedSlotKey}`
+        );
+
+        // 左键点击选择海克斯
+        await mouseController.clickAt(selectedPoint, MouseButtonType.LEFT);
+
+        // 3. 等待 0.5 秒，让选择动画完成
+        await sleep(500);
+
+        // 4. 刷新游戏状态（海克斯选完后，商店/备战席/棋盘可能有变化）
+        await this.refreshGameState();
+
+        // 5. 执行通用运营策略（海克斯选完后就是正常 PVP 准备阶段）
+        await this.executeCommonStrategy();
     }
 
     /**
