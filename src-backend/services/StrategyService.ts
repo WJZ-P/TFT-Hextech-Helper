@@ -723,8 +723,6 @@ export class StrategyService {
             return;
         }
 
-        // 1. 刷新快照并获取所有可见棋子名称（备战席 + 棋盘 + 商店）
-        await this.refreshGameState();
         const currentChampions = gameStateManager.getAllVisibleChampionNames();
 
         if (currentChampions.size === 0) {
@@ -1431,16 +1429,19 @@ export class StrategyService {
     /**
      * 处理 PVP 阶段 (玩家对战)
      * @description
-     * - 首次 PVP（2-1）：如果阵容未锁定，进行阵容匹配
+     * - 首次 PVP（2-1）：如果阵容未锁定（PENDING），进行阵容匹配
      * - 后续 PVP：正常运营（拿牌、升级、调整站位）
+     *
+     * @note 不需要额外检查 hasFirstPvpOccurred，因为：
+     *       - PENDING 状态说明还没锁定阵容
+     *       - matchAndLockLineup() 执行后会把状态设为 LOCKED
+     *       - 下次 PVP 时 selectionState 已经是 LOCKED，不会重复匹配
      */
     private async handlePVP(): Promise<void> {
-        // 首次 PVP 阶段：进行阵容匹配
+        // 首次 PVP 阶段：进行阵容匹配（PENDING 说明还没锁定）
         if (this.selectionState === LineupSelectionState.PENDING) {
-            if (!gameStateManager.hasFirstPvpOccurred()) {
-                logger.info("[StrategyService] 检测到第一个 PVP 阶段，开始阵容匹配...");
-                await this.matchAndLockLineup();
-            }
+            logger.info("[StrategyService] 检测到首次 PVP 阶段，开始阵容匹配...");
+            await this.matchAndLockLineup();
         }
         // 通用运营策略
         await this.executeCommonStrategy();

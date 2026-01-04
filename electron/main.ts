@@ -4,6 +4,7 @@ import LCUManager, { LcuEventUri, LCUWebSocketMessage } from "../src-backend/lcu
 import 'source-map-support/register';
 import GameConfigHelper from "../src-backend/utils/GameConfigHelper.ts";
 import path from "path";
+import fs from "fs";
 import {IpcChannel} from "./protocol.ts";
 import {logger} from "../src-backend/utils/Logger.ts";
 import {hexService} from "../src-backend/services/HexService.ts";
@@ -171,28 +172,38 @@ function init() {
             connector.start();
         });
 
-        // 喵~ 这里是 LCU WebSocket 的“总事件”入口：所有 OnJsonApiEvent 都会从这里过。
-        // 你要看的两个接口不在 `LcuEventUri` 枚举里，所以我们在这里用 uri 过滤即可。
-        const tftPassWatchUris = new Set<string>([
+        // 喵~ 这里是 LCU WebSocket 的"总事件"入口：所有 OnJsonApiEvent 都会从这里过。
+        // 需要监听并记录到文件的 LCU 事件路径
+        const watchUris = new Set<string>([
             '/lol-tft-pass/v1/battle-pass',
             '/lol-tft-pass/v1/active-passes',
+            '/lol-objectives/v1/objectives/tft',
+            '/lol-objectives/v1/objectives/lol',
         ]);
+
+        // 日志文件路径（追加写入）
+        const lcuEventLogPath = path.join(process.env.APP_ROOT!, '../test/lcu_events.txt');
 
         lcuManager.on('lcu-event', (event: LCUWebSocketMessage) => {
             // 在这里处理实时收到的游戏事件
             console.log('收到LCU事件:', event.uri, event.eventType);
 
-            // 专门监听 TFT Pass 相关事件，并把 payload 打印出来，方便你观察数据结构
-            if (tftPassWatchUris.has(event.uri)) {
-                console.log(`\n===== [LCU][TFT-PASS] ${event.uri} ${event.eventType} =====`);
-                try {
-                    // 绝大多数 LCU payload 都是纯 JSON，这样打印可读性最好
-                    console.log(JSON.stringify(event.data, null, 2));
-                } catch (e) {
-                    // 兜底：如果出现不可序列化对象，至少保证能看到原始内容
-                    console.log(event.data);
-                }
-                console.log('===== [LCU][TFT-PASS] END =====\n');
+            // 监听指定事件，打印并追加写入文件
+            if (watchUris.has(event.uri)) {
+                const timestamp = new Date().toISOString();
+                const logContent = `\n===== [${timestamp}] ${event.uri} ${event.eventType} =====\n` +
+                    JSON.stringify(event.data, null, 2) +
+                    '\n===== END =====\n';
+
+                // 控制台打印
+                console.log(logContent);
+
+                // 追加写入文件（异步，不阻塞主流程）
+                fs.appendFile(lcuEventLogPath, logContent, (err) => {
+                    if (err) {
+                        console.error('[Main] 写入 LCU 事件日志失败:', err.message);
+                    }
+                });
             }
         });
 

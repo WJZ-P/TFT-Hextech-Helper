@@ -14,7 +14,7 @@ import path__default from "path";
 import WebSocket from "ws";
 import https from "https";
 import axios from "axios";
-import { Region, screen, Button, Point, mouse } from "@nut-tree-fork/nut-js";
+import { Region, screen, Point, mouse, Button } from "@nut-tree-fork/nut-js";
 import sharp from "sharp";
 import cv from "@techstark/opencv-js";
 import { createWorker, PSM } from "tesseract.js";
@@ -5970,6 +5970,13 @@ const benchSlotPoints = {
   SLOT_8: { x: 720, y: 555 },
   SLOT_9: { x: 800, y: 555 }
 };
+const hexSlot = {
+  //  x+=295
+  SLOT_1: { x: 215, y: 410 },
+  SLOT_2: { x: 510, y: 410 },
+  SLOT_3: { x: 805, y: 410 }
+};
+const sharedDraftPoint = { x: 530, y: 400 };
 const gameStageDisplayStageOne = {
   leftTop: { x: 411, y: 6 },
   rightBottom: { x: 442, y: 22 }
@@ -10565,6 +10572,14 @@ function debounce(func, delay) {
     }, delay);
   };
 }
+var MouseButtonType = /* @__PURE__ */ ((MouseButtonType2) => {
+  MouseButtonType2["LEFT"] = "left";
+  MouseButtonType2["RIGHT"] = "right";
+  return MouseButtonType2;
+})(MouseButtonType || {});
+function toNutButton(button) {
+  return button === "right" ? Button.RIGHT : Button.LEFT;
+}
 const MOUSE_CONFIG = {
   /** 移动后等待时间 (ms) */
   MOVE_DELAY: 10,
@@ -10610,10 +10625,10 @@ class MouseController {
    * 在游戏窗口内点击指定位置
    * @description 自动将游戏内相对坐标转换为屏幕绝对坐标
    * @param offset 相对于游戏窗口左上角的偏移坐标
-   * @param button 鼠标按键 (默认左键)
+   * @param button 鼠标按键类型 (默认 MouseButtonType.LEFT)
    * @throws 如果未初始化游戏窗口基准点
    */
-  async clickAt(offset, button = Button.LEFT) {
+  async clickAt(offset, button = "left") {
     if (!this.gameWindowOrigin) {
       throw new Error("[MouseController] 尚未设置游戏窗口基准点，请先调用 setGameWindowOrigin()");
     }
@@ -10621,13 +10636,13 @@ class MouseController {
       this.gameWindowOrigin.x + offset.x,
       this.gameWindowOrigin.y + offset.y
     );
-    logger.info(
+    logger.debug(
       `[MouseController] 点击: (Origin: ${this.gameWindowOrigin.x},${this.gameWindowOrigin.y}) + (Offset: ${offset.x},${offset.y}) -> (Target: ${target.x},${target.y})`
     );
     try {
       await mouse.move([target]);
       await sleep(MOUSE_CONFIG.MOVE_DELAY);
-      await mouse.click(button);
+      await mouse.click(toNutButton(button));
       await sleep(MOUSE_CONFIG.CLICK_DELAY);
     } catch (e) {
       logger.error(`[MouseController] 鼠标点击失败: ${e.message}`);
@@ -10638,10 +10653,10 @@ class MouseController {
    * 在游戏窗口内双击指定位置
    * @description 用于需要双击的操作 (如购买棋子时为了确保成功)
    * @param offset 相对于游戏窗口左上角的偏移坐标
-   * @param button 鼠标按键 (默认左键)
+   * @param button 鼠标按键类型 (默认 MouseButtonType.LEFT)
    * @param interval 两次点击之间的间隔 (ms)
    */
-  async doubleClickAt(offset, button = Button.LEFT, interval = 50) {
+  async doubleClickAt(offset, button = "left", interval = 50) {
     await this.clickAt(offset, button);
     await sleep(interval);
     await this.clickAt(offset, button);
@@ -10670,14 +10685,14 @@ class MouseController {
    * 在屏幕绝对坐标点击
    * @description 用于不需要游戏窗口偏移的场景
    * @param position 屏幕绝对坐标
-   * @param button 鼠标按键 (默认左键)
+   * @param button 鼠标按键类型 (默认 MouseButtonType.LEFT)
    */
-  async clickAtAbsolute(position, button = Button.LEFT) {
+  async clickAtAbsolute(position, button = "left") {
     try {
       const target = new Point(position.x, position.y);
       await mouse.move([target]);
       await sleep(MOUSE_CONFIG.MOVE_DELAY);
-      await mouse.click(button);
+      await mouse.click(toNutButton(button));
       await sleep(MOUSE_CONFIG.CLICK_DELAY);
     } catch (e) {
       logger.error(`[MouseController] 鼠标点击失败: ${e.message}`);
@@ -10864,7 +10879,6 @@ class TftOperator {
       const normalPng = await screenCapture.captureRegionAsPng(normalRegion);
       stageText = await ocrService.recognize(normalPng, OcrWorkerType.GAME_STAGE);
       if (!isValidStageFormat(stageText)) {
-        logger.info(`[TftOperator] 标准区域识别未命中: "${stageText}"，尝试 Stage-1 区域...`);
         const stageOneRegion = this.getStageAbsoluteRegion(true);
         const stageOnePng = await screenCapture.captureRegionAsPng(stageOneRegion);
         stageText = await ocrService.recognize(stageOnePng, OcrWorkerType.GAME_STAGE);
@@ -10881,7 +10895,6 @@ class TftOperator {
       }
       const stageType = parseStageStringToEnum(stageText);
       if (stageType !== GameStageType.UNKNOWN) {
-        logger.info(`[TftOperator] 识别阶段: [${stageText}] -> ${stageType}`);
         this.tftMode = TFTMode.CLASSIC;
       } else {
         logger.warn(`[TftOperator] 无法识别当前阶段: "${stageText ?? "null"}"`);
@@ -11026,7 +11039,7 @@ class TftOperator {
       return;
     }
     logger.info(`[TftOperator] 正在购买棋子，槽位: ${slot}...`);
-    await mouseController.doubleClickAt(targetPoint, Button.LEFT, 50);
+    await mouseController.doubleClickAt(targetPoint, MouseButtonType.LEFT, 50);
   }
   /**
    * 刷新商店 (D牌)
@@ -11034,8 +11047,8 @@ class TftOperator {
   async refreshShop() {
     this.ensureInitialized();
     logger.info("[TftOperator] 刷新商店");
-    await mouseController.clickAt(refreshShopPoint, Button.LEFT);
-    await sleep(10);
+    await mouseController.clickAt(refreshShopPoint, MouseButtonType.LEFT);
+    await sleep(20);
   }
   /**
    * 购买经验值 (F键)
@@ -11043,7 +11056,7 @@ class TftOperator {
   async buyExperience() {
     this.ensureInitialized();
     logger.info("[TftOperator] 购买经验值");
-    await mouseController.clickAt(buyExpPoint, Button.LEFT);
+    await mouseController.clickAt(buyExpPoint, MouseButtonType.LEFT);
     await sleep(10);
   }
   /**
@@ -11061,7 +11074,7 @@ class TftOperator {
         benchUnits.push(null);
         continue;
       }
-      await mouseController.clickAt(benchSlotPoints[benchSlot], Button.RIGHT);
+      await mouseController.clickAt(benchSlotPoints[benchSlot], MouseButtonType.RIGHT);
       await sleep(10);
       const nameRegion = screenCapture.toAbsoluteRegion(detailChampionNameRegion);
       const namePng = await screenCapture.captureRegionAsPng(nameRegion);
@@ -11098,7 +11111,7 @@ class TftOperator {
         const clickPoint = benchSlotPoints[benchSlot];
         const slotIndex = parseInt(benchSlot.slice(-1));
         const forgeType = await this.checkItemForgeTooltip(clickPoint, slotIndex);
-        await mouseController.clickAt(benchSlotPoints[benchSlot], Button.RIGHT);
+        await mouseController.clickAt(benchSlotPoints[benchSlot], MouseButtonType.RIGHT);
         await sleep(10);
         if (forgeType !== ItemForgeType.NONE) {
           const forgeUnit = forgeType === ItemForgeType.COMPLETED ? TFT_16_CHAMPION_DATA.成装锻造器 : TFT_16_CHAMPION_DATA.基础装备锻造器;
@@ -11139,7 +11152,7 @@ class TftOperator {
         continue;
       }
       const clickPoint = fightBoardSlotPoint[boardSlot];
-      await mouseController.clickAt(clickPoint, Button.RIGHT);
+      await mouseController.clickAt(clickPoint, MouseButtonType.RIGHT);
       await sleep(10);
       const nameRegion = screenCapture.toAbsoluteRegion(detailChampionNameRegion);
       const namePng = await screenCapture.captureRegionAsPng(nameRegion);
@@ -11611,9 +11624,9 @@ class TftOperator {
   async selfResetPosition() {
     this.ensureInitialized();
     logger.info(`[TftOperator] 小小英雄归位中... 目标坐标: (${littleLegendDefaultPoint.x}, ${littleLegendDefaultPoint.y})`);
-    await mouseController.clickAt(littleLegendDefaultPoint, Button.RIGHT);
+    await mouseController.clickAt(littleLegendDefaultPoint, MouseButtonType.RIGHT);
     await sleep(50);
-    await mouseController.clickAt(littleLegendDefaultPoint, Button.RIGHT);
+    await mouseController.clickAt(littleLegendDefaultPoint, MouseButtonType.RIGHT);
   }
   /**
    * 让小小英雄随机走动（防挂机）
@@ -11640,7 +11653,7 @@ class TftOperator {
     logger.info(
       `[TftOperator] 小小英雄随机走动: ${this.lastWalkSide} → ${targetSide}，目标坐标: (${targetPoint.x}, ${targetPoint.y})`
     );
-    await mouseController.clickAt(targetPoint, Button.RIGHT);
+    await mouseController.clickAt(targetPoint, MouseButtonType.RIGHT);
     this.lastWalkSide = targetSide;
   }
   // ========================================================================
@@ -12457,8 +12470,8 @@ class GameStateManager {
 const gameStateManager = GameStateManager.getInstance();
 class GameStageMonitor extends EventEmitter {
   static instance;
-  /** 轮询间隔（毫秒） */
-  pollInterval = 1e3;
+  /** 轮询间隔（毫秒）：2 秒一次，避免高频检测 */
+  pollInterval = 2e3;
   /** 轮询定时器 ID */
   pollTimer = null;
   /** 是否正在运行 */
@@ -12491,10 +12504,10 @@ class GameStageMonitor extends EventEmitter {
   // ============================================================================
   /**
    * 启动阶段轮询
-   * @param interval 轮询间隔（毫秒），默认 1000ms
+   * @param interval 轮询间隔（毫秒），默认 2000ms（2 秒）
    * @description 开始后台轮询，检测阶段变化并发出事件
    */
-  start(interval = 1e3) {
+  start(interval = 2e3) {
     if (this.isRunning) {
       logger.warn("[GameStageMonitor] 已经在运行中，忽略重复启动");
       return;
@@ -12901,7 +12914,7 @@ class StrategyService {
   /**
    * 事件处理器引用（⚠️ 必须缓存同一个函数引用，才能在 unsubscribe 时成功 off）
    * @description
-   * - EventEmitter 的 on/off 是按“函数引用”匹配的
+   * - EventEmitter 的 on/off 是按"函数引用"匹配的
    * - 如果每次都写 this.onStageChange.bind(this)，会生成新函数 → off 失败
    */
   onStageChangeHandler;
@@ -12964,15 +12977,6 @@ class StrategyService {
     const { type, stageText, stage, round, isNewStage } = event;
     this.currentStage = stage;
     this.currentRound = round;
-    if (isNewStage) {
-      logger.info(
-        `[StrategyService] ====== 进入新阶段: ${stageText} (第${stage}阶段第${round}回合) ======`
-      );
-    } else {
-      logger.info(
-        `[StrategyService] 进入新回合: ${stageText} (第${stage}阶段第${round}回合)`
-      );
-    }
     if (this.selectionState === "NOT_INITIALIZED") {
       const success = this.initialize();
       if (!success) {
@@ -12980,7 +12984,9 @@ class StrategyService {
         return;
       }
     }
-    await this.refreshGameState();
+    if (this.shouldRefreshStateOnStageChange(type)) {
+      await this.refreshGameState();
+    }
     switch (type) {
       case GameStageType.EARLY_PVE:
         await this.handleEarlyPVE();
@@ -13040,22 +13046,49 @@ class StrategyService {
     return gameStageMonitor.isFighting;
   }
   /**
+   * 判断：进入新回合时是否应该刷新游戏状态
+   * @param stageType 阶段类型
+   * @returns 是否应该刷新
+   *
+   * @description
+   * 以下情况 **不需要** 在 onStageChange 里刷新状态：
+   * - EARLY_PVE 的 1-1、1-2：商店未开放，没有什么可识别的
+   * - CAROUSEL（选秀）：界面完全不同，刷新无意义
+   * - AUGMENT（海克斯）：界面被三个海克斯挡住，必须先选完再刷新
+   *   （handleAugment 内部会自行调用 refreshGameState）
+   */
+  shouldRefreshStateOnStageChange(stageType) {
+    if (stageType === GameStageType.EARLY_PVE && this.currentStage === 1 && this.currentRound <= 2) {
+      logger.debug(`[StrategyService] 跳过刷新：EARLY_PVE 1-${this.currentRound}（商店未开放）`);
+      return false;
+    }
+    if (stageType === GameStageType.CAROUSEL) {
+      logger.debug("[StrategyService] 跳过刷新：CAROUSEL（选秀阶段）");
+      return false;
+    }
+    if (stageType === GameStageType.AUGMENT) {
+      logger.debug("[StrategyService] 跳过刷新：AUGMENT（海克斯阶段，由 handler 自行刷新）");
+      return false;
+    }
+    return true;
+  }
+  /**
    * 获取当前阶段类型
    * @description
-   * 这里直接读 `GameStageMonitor` 的缓存值，因为它是全局轮询的“最新真值”。
+   * 这里直接读 `GameStageMonitor` 的缓存值，因为它是全局轮询的"最新真值"。
    */
   getCurrentStageType() {
     return gameStageMonitor.currentStageType;
   }
   /**
-   * 判断：当前场上是否存在任意一个“核心棋子”
+   * 判断：当前场上是否存在任意一个"核心棋子"
    * @returns 是否存在核心棋子
    *
    * @description
-   * - “核心棋子”来自阵容配置（`ChampionConfig.items.core` 的那批）。
+   * - "核心棋子"来自阵容配置（`ChampionConfig.items.core` 的那批）。
    * - 这个判断用于装备策略的触发门槛：
    *   - 有核心在场 → 可以更积极给核心做神装
-   *   - 核心不在场 → 默认选择“捏装备”等核心，除非装备快满
+   *   - 核心不在场 → 默认选择"捏装备"等核心，除非装备快满
    */
   hasAnyCoreChampionOnBoard() {
     const coreChampions = this.getCoreChampions();
@@ -13066,17 +13099,39 @@ class StrategyService {
     return coreChampions.some((c) => boardNames.has(c.name));
   }
   /**
-   * 判断：当前是否存在“可执行的上装备动作”
+   * 判断：当前是否存在"可执行的上装备动作"
    * @param equipments 当前装备栏（紧凑数组，只包含真实装备）
    *
    * @description
-   * 这是为了做“聪明闸门”：
+   * 这是为了做"聪明闸门"：
    * - 你说得对：前期的打工仔（item holder）最后会卖掉，装备会回到装备栏。
    *   因此 **核心没到场时，也可以先把核心推荐装挂在打工仔身上**（保血/提速）。
-   * - 但我们又不想每回合都“空跑”一遍装备策略，所以这里先做一次轻量判断：
+   * - 但我们又不想每回合都"空跑"一遍装备策略，所以这里先做一次轻量判断：
    *   只要发现「能穿」或「能合成并穿」的动作，就允许进入 `executeEquipStrategy()`。
    */
   canPerformAnyEquipOperation(equipments) {
+    const boardUnits = gameStateManager.getBoardUnitsWithLocation();
+    const targetChampions = this.targetChampionNames;
+    let equipableUnit = null;
+    let bestScore = -Infinity;
+    for (const u of boardUnits) {
+      if (u.equips.length >= 3) continue;
+      const score = this.calculateUnitScore(u.tftUnit, u.starLevel, targetChampions);
+      if (!equipableUnit || score > bestScore) {
+        equipableUnit = u;
+        bestScore = score;
+      }
+    }
+    if (!equipableUnit) {
+      return { can: false, reason: "棋盘上没有可穿戴装备的单位（可能全员满装备/无单位）" };
+    }
+    const component = equipments.find((e) => {
+      const data = TFT_16_EQUIP_DATA[e.name];
+      return data && (data.formula ?? "") === "";
+    });
+    if (component) {
+      return { can: true, reason: `存在散件可穿戴：${component.name} -> ${equipableUnit.tftUnit.displayName}` };
+    }
     const coreChampions = this.getCoreChampions();
     if (coreChampions.length === 0) {
       return { can: false, reason: "阵容配置中没有核心棋子/核心装备配置" };
@@ -13124,8 +13179,8 @@ class StrategyService {
    * @description
    * 触发原则：
    * - 只在 PVP 且非战斗中考虑（避免战斗中拖拽导致事故）
-   * - 只要“确实存在可执行动作”，就允许执行（核心不在场时也允许把核心装先挂打工仔）
-   * - 额外约定：装备数 > 5 视为“快满”（用于日志/后续扩展兜底策略）
+   * - 只要"确实存在可执行动作"，就允许执行（核心不在场时也允许把核心装先挂打工仔）
+   * - 额外约定：装备数 > 5 视为"快满"（用于日志/后续扩展兜底策略）
    */
   getEquipStrategyGateDecision() {
     const stageType = this.getCurrentStageType();
@@ -13324,7 +13379,6 @@ class StrategyService {
       logger.error("[StrategyService] 没有候选阵容可供匹配");
       return;
     }
-    await this.refreshGameState();
     const currentChampions = gameStateManager.getAllVisibleChampionNames();
     if (currentChampions.size === 0) {
       logger.warn("[StrategyService] 未检测到任何棋子，使用第一个候选阵容");
@@ -13455,7 +13509,7 @@ class StrategyService {
    */
   async handlePVEFighting() {
     logger.info("[StrategyService] PVE 战斗阶段：开始循环拾取战利品...");
-    const scanInterval = 1e3;
+    const scanInterval = 2e3;
     while (this.isFighting()) {
       await this.pickUpLootOrbs();
       if (!this.isFighting()) {
@@ -13490,7 +13544,7 @@ class StrategyService {
    * TODO: 实现完整的拾取逻辑
    */
   async pickUpLootOrbs() {
-    const sleepTime = 2e3;
+    const sleepTime = 2500;
     logger.info("[StrategyService] 开始检测战利品球...");
     const lootOrbs = await tftOperator.getLootOrbs();
     if (lootOrbs.length === 0) {
@@ -13505,7 +13559,7 @@ class StrategyService {
         break;
       }
       logger.info(`[StrategyService] 正在拾取 ${orb.type} 战利品球，位置: (${orb.x}, ${orb.y}), 等待 ${sleepTime}ms`);
-      await mouseController.clickAt({ x: orb.x, y: orb.y });
+      await mouseController.clickAt({ x: orb.x, y: orb.y }, MouseButtonType.RIGHT);
       await sleep(sleepTime);
     }
     logger.info("[StrategyService] 战利品拾取完成");
@@ -13520,8 +13574,7 @@ class StrategyService {
   async handleEarlyPVE() {
     if (this.currentRound <= 2) {
       logger.info(`[StrategyService] 前期阶段 1-${this.currentRound}：商店未开放，执行防挂机...`);
-      await this.antiAfk();
-      return;
+      return await this.antiAfk();
     }
     logger.info(`[StrategyService] 前期阶段 1-${this.currentRound}：商店已开放，执行前期运营...`);
     await this.executeEarlyPVEStrategy();
@@ -13801,34 +13854,52 @@ class StrategyService {
   /**
    * 处理 PVP 阶段 (玩家对战)
    * @description
-   * - 首次 PVP（2-1）：如果阵容未锁定，进行阵容匹配
+   * - 首次 PVP（2-1）：如果阵容未锁定（PENDING），进行阵容匹配
    * - 后续 PVP：正常运营（拿牌、升级、调整站位）
+   *
+   * @note 不需要额外检查 hasFirstPvpOccurred，因为：
+   *       - PENDING 状态说明还没锁定阵容
+   *       - matchAndLockLineup() 执行后会把状态设为 LOCKED
+   *       - 下次 PVP 时 selectionState 已经是 LOCKED，不会重复匹配
    */
   async handlePVP() {
     if (this.selectionState === "PENDING") {
-      if (!gameStateManager.hasFirstPvpOccurred()) {
-        logger.info("[StrategyService] 检测到第一个 PVP 阶段，开始阵容匹配...");
-        await this.matchAndLockLineup();
-      }
+      logger.info("[StrategyService] 检测到首次 PVP 阶段，开始阵容匹配...");
+      await this.matchAndLockLineup();
     }
-    logger.info("[StrategyService] PVP阶段：全力运营...");
     await this.executeCommonStrategy();
   }
   /**
    * 防挂机：随机移动小小英雄
    * @description 在战斗阶段（如前期 PVE、野怪回合）时调用，
-   *              让小小英雄随机走动，避免被系统判定为挂机
+   *              让小小英雄持续随机走动，避免被系统判定为挂机
    *
-   * TODO: 实现随机移动逻辑
-   * - 生成随机目标坐标（在安全区域内）
-   * - 调用 tftOperator 移动小小英雄
-   * - 可以考虑添加移动间隔，避免频繁移动
+   * 循环逻辑：
+   * - 使用 while 循环持续调用 selfWalkAround()（左右交替走位，更像真人）
+   * - 每次走动后等待 3 秒再进行下一次
+   * - 退出条件：战斗状态变化（非战斗→战斗 或 战斗→非战斗）或回合变化
    */
   async antiAfk() {
-    try {
-      await tftOperator.selfWalkAround();
-    } catch (e) {
-      logger.warn(`[StrategyService] 防挂机移动失败: ${e?.message ?? e}`);
+    logger.info("[StrategyService] 开始防挂机循环走动...");
+    const entryStage = this.currentStage;
+    const entryRound = this.currentRound;
+    const entryFightingState = this.isFighting();
+    const walkInterval = 3e3;
+    while (true) {
+      if (this.isFighting() !== entryFightingState) {
+        logger.info("[StrategyService] 检测到战斗状态变化，退出防挂机循环");
+        break;
+      }
+      if (this.currentStage !== entryStage || this.currentRound !== entryRound) {
+        logger.info("[StrategyService] 检测到回合变化，退出防挂机循环");
+        break;
+      }
+      try {
+        await tftOperator.selfWalkAround();
+      } catch (e) {
+        logger.warn(`[StrategyService] 防挂机移动失败: ${e?.message ?? e}`);
+      }
+      await sleep(walkInterval);
     }
   }
   /**
@@ -13840,7 +13911,7 @@ class StrategyService {
    * 2. 优化棋盘（上棋子 + 替换弱棋子）
    * 3. TODO: 根据策略决定是否 D 牌、升级等
    *
-   * 调用时机：2-1 首次 PVP 锁定阵容后，以及后续所有 PVE/PVP 回合
+   * 调用时机：2-1 首次 PVP 锁定阵容后，以及后续所有回合
    */
   async executeCommonStrategy() {
     logger.debug("[StrategyService] 执行通用运营策略");
@@ -13948,13 +14019,24 @@ class StrategyService {
   async executeRollingLoop(targetChampions) {
     let rollCount = 0;
     const maxRolls = 30;
+    const maxConsecutiveNoBuyRolls = 5;
+    let consecutiveNoBuyRolls = 0;
     while (rollCount < maxRolls) {
       const rolled = await this.executeRollStrategy();
       if (!rolled) break;
       rollCount++;
       const hasBought = await this.autoBuyFromShop(targetChampions, "D牌后购买");
       if (hasBought) {
+        consecutiveNoBuyRolls = 0;
         await this.optimizeBoard(targetChampions);
+        continue;
+      }
+      consecutiveNoBuyRolls++;
+      if (consecutiveNoBuyRolls >= maxConsecutiveNoBuyRolls) {
+        logger.info(
+          `[StrategyService] D牌提前停止：连续 ${consecutiveNoBuyRolls} 次刷新未购买任何棋子`
+        );
+        break;
       }
     }
     if (rollCount > 0) {
@@ -13969,11 +14051,30 @@ class StrategyService {
    * @returns 本次是否执行了 D 牌（刷新商店）。
    */
   async executeRollStrategy() {
-    let threshold = 40;
-    if (this.currentStage >= 5) {
-      threshold = 10;
-    } else if (this.currentStage === 4) {
+    const stage = this.currentStage;
+    const round = this.currentRound;
+    let shouldRollThisRound = false;
+    let threshold = 50;
+    let reason = "";
+    if (stage === 3 && round === 2) {
+      shouldRollThisRound = true;
       threshold = 30;
+      reason = "3-2 节点搜（上 6 后补 2★稳血）";
+    } else if (stage === 4 && round === 1) {
+      shouldRollThisRound = true;
+      threshold = 20;
+      reason = "4-1 节点搜（上 7 后提升质量）";
+    } else if (stage === 5 && round === 1) {
+      shouldRollThisRound = true;
+      threshold = 10;
+      reason = "5-1 节点搜（上 8 后补强阵容）";
+    } else if (stage >= 6) {
+      shouldRollThisRound = true;
+      threshold = 0;
+      reason = "决赛圈（强度优先，允许打干）";
+    }
+    if (!shouldRollThisRound) {
+      return false;
     }
     const ownedChampions = gameStateManager.getOwnedChampionNames();
     let pairCount = 0;
@@ -13984,13 +14085,13 @@ class StrategyService {
     }
     if (pairCount >= 2) {
       threshold = Math.max(0, threshold - 10);
-      logger.info(`[StrategyService] 检测到 ${pairCount} 组对子，D牌底线降低至 ${threshold}`);
+      reason += ` + 对子(${pairCount})`;
     }
     const currentGold = gameStateManager.getGold();
     if (currentGold < 2 || currentGold < threshold + 2) {
       return false;
     }
-    logger.info(`[StrategyService] D牌: 当前金币 ${currentGold}，底线 ${threshold}，执行刷新...`);
+    logger.info(`[StrategyService] D牌: 当前金币 ${currentGold}，底线 ${threshold}，原因: ${reason}，执行刷新...`);
     await tftOperator.refreshShop();
     await this.updateShopStateFromScreen();
     return true;
@@ -14143,20 +14244,58 @@ class StrategyService {
           const alreadyHas = targetWrapper.unit.equips.some((e) => e.name === itemName);
           if (alreadyHas) continue;
           if ((bagSnapshot.get(itemName) || 0) > 0) {
-            logger.info(`[StrategyService] 发现成装 ${itemName}，给 ${targetWrapper.isCore ? "核心" : "打工"}: ${targetWrapper.unit.tftUnit.displayName}`);
+            logger.info(
+              `[StrategyService] 发现成装 ${itemName}，给 ${targetWrapper.isCore ? "核心" : "打工"}: ${targetWrapper.unit.tftUnit.displayName}`
+            );
             await this.equipItemToUnit(itemName, targetWrapper.unit.location);
             actionTaken = true;
             break;
           }
           const synthesis = this.checkSynthesis(itemName, bagSnapshot);
           if (synthesis) {
-            logger.info(`[StrategyService] 合成 ${itemName} (${synthesis.component1} + ${synthesis.component2}) 给 ${targetWrapper.isCore ? "核心" : "打工"}: ${targetWrapper.unit.tftUnit.displayName}`);
+            logger.info(
+              `[StrategyService] 合成 ${itemName} (${synthesis.component1} + ${synthesis.component2}) 给 ${targetWrapper.isCore ? "核心" : "打工"}: ${targetWrapper.unit.tftUnit.displayName}`
+            );
             await this.synthesizeAndEquip(synthesis.component1, synthesis.component2, targetWrapper.unit.location);
             actionTaken = true;
             break;
           }
         }
         if (actionTaken) break;
+      }
+      if (!actionTaken) {
+        let targetLocation = null;
+        for (const config of coreChampions) {
+          const wrapper = this.findUnitForEquipment(config.name);
+          if (!wrapper) continue;
+          if (wrapper.unit.equips.length >= 3) continue;
+          targetLocation = wrapper.unit.location;
+          break;
+        }
+        if (!targetLocation) {
+          const boardUnits = gameStateManager.getBoardUnitsWithLocation();
+          const targetChampions = this.targetChampionNames;
+          let best = null;
+          for (const u of boardUnits) {
+            if (u.equips.length >= 3) continue;
+            const score = this.calculateUnitScore(u.tftUnit, u.starLevel, targetChampions);
+            if (!best || score > best.score) {
+              best = { location: u.location, score };
+            }
+          }
+          targetLocation = best?.location ?? null;
+        }
+        if (targetLocation) {
+          const component = equipments.find((e) => {
+            const data = TFT_16_EQUIP_DATA[e.name];
+            return data && (data.formula ?? "") === "";
+          });
+          if (component) {
+            logger.info(`[StrategyService] 散件先上：${component.name} -> ${targetLocation}`);
+            await this.equipItemToUnit(component.name, targetLocation);
+            actionTaken = true;
+          }
+        }
       }
       if (!actionTaken) {
         break;
@@ -14263,18 +14402,48 @@ class StrategyService {
   }
   /**
    * 处理 选秀阶段
+   * @description
+   * 选秀阶段会循环右键点击选秀位置（sharedDraftPoint），每隔 3 秒点一次，
+   * 直到 GameStageMonitor 检测到进入下一个回合（stageText 变化）时自动退出。
+   *
    */
   async handleCarousel() {
-    logger.info("[StrategyService] 选秀阶段：防挂机移动...");
-    await tftOperator.selfWalkAround();
+    logger.info("[StrategyService] 选秀阶段：开始循环点击选秀位置...");
+    const entryStageText = gameStageMonitor.stageText;
+    const clickInterval = 3e3;
+    while (true) {
+      if (gameStageMonitor.stageText !== entryStageText) {
+        logger.info("[StrategyService] 选秀阶段结束，进入下一回合");
+        break;
+      }
+      await mouseController.clickAt(sharedDraftPoint, MouseButtonType.RIGHT);
+      logger.debug(`[StrategyService] 选秀点击: (${sharedDraftPoint.x}, ${sharedDraftPoint.y})`);
+      await sleep(clickInterval);
+    }
   }
   /**
    * 处理 海克斯选择阶段
-   * @description 暂时执行防挂机随机走位，或者尝试点击第一个海克斯(如果坐标已知)
+   * @description 进入海克斯阶段后：
+   *              1. 等待 1.5 秒（让海克斯选项完全加载）
+   *              2. 随机点击一个海克斯槽位（SLOT_1 / SLOT_2 / SLOT_3）
+   *              3. 等待 0.5 秒（让选择动画完成）
+   *              4. 刷新游戏状态
+   *              5. 执行通用运营策略（因为海克斯选完后就是正常 PVP 准备阶段）
    */
   async handleAugment() {
-    logger.info("[StrategyService] 海克斯阶段：执行防挂机...");
-    await this.antiAfk();
+    logger.info("[StrategyService] 海克斯阶段：等待海克斯选项加载...");
+    await sleep(1500);
+    const slotKeys = Object.keys(hexSlot);
+    const randomIndex = Math.floor(Math.random() * slotKeys.length);
+    const selectedSlotKey = slotKeys[randomIndex];
+    const selectedPoint = hexSlot[selectedSlotKey];
+    logger.info(
+      `[StrategyService] 海克斯阶段：随机选择一个海克斯槽位: ${selectedSlotKey}`
+    );
+    await mouseController.clickAt(selectedPoint, MouseButtonType.LEFT);
+    await sleep(500);
+    await this.refreshGameState();
+    await this.executeCommonStrategy();
   }
   /**
    * 购买棋子并更新游戏状态
@@ -15125,8 +15294,22 @@ function init() {
       console.log("🔄 [Main] 重新启动 LCU 连接监听...");
       connector.start();
     });
+    const tftPassWatchUris = /* @__PURE__ */ new Set([
+      "/lol-tft-pass/v1/battle-pass",
+      "/lol-tft-pass/v1/active-passes"
+    ]);
     lcuManager.on("lcu-event", (event) => {
       console.log("收到LCU事件:", event.uri, event.eventType);
+      if (tftPassWatchUris.has(event.uri)) {
+        console.log(`
+===== [LCU][TFT-PASS] ${event.uri} ${event.eventType} =====`);
+        try {
+          console.log(JSON.stringify(event.data, null, 2));
+        } catch (e) {
+          console.log(event.data);
+        }
+        console.log("===== [LCU][TFT-PASS] END =====\n");
+      }
     });
   });
   connector.on("disconnect", () => {
