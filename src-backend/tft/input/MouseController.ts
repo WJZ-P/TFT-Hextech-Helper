@@ -10,6 +10,27 @@ import { sleep } from "../../utils/HelperTools";
 import { SimplePoint } from "../../TFTProtocol";
 
 /**
+ * 鼠标按键类型枚举
+ * @description 对外暴露的按键类型，避免上层模块直接依赖 nut-js 的 Button 枚举
+ *              使用枚举而非字符串字面量，提供更好的 IDE 智能提示和类型安全
+ */
+export enum MouseButtonType {
+    /** 鼠标左键 */
+    LEFT = 'left',
+    /** 鼠标右键 */
+    RIGHT = 'right',
+}
+
+/**
+ * 将 MouseButtonType 枚举映射为 nut-js 的 Button 枚举
+ * @param button 鼠标按键枚举值
+ * @returns nut-js Button 枚举值
+ */
+function toNutButton(button: MouseButtonType): Button {
+    return button === MouseButtonType.RIGHT ? Button.RIGHT : Button.LEFT;
+}
+
+/**
  * 鼠标操作配置
  */
 const MOUSE_CONFIG = {
@@ -73,10 +94,10 @@ export class MouseController {
      * 在游戏窗口内点击指定位置
      * @description 自动将游戏内相对坐标转换为屏幕绝对坐标
      * @param offset 相对于游戏窗口左上角的偏移坐标
-     * @param button 鼠标按键 (默认左键)
+     * @param button 鼠标按键类型 (默认 MouseButtonType.LEFT)
      * @throws 如果未初始化游戏窗口基准点
      */
-    public async clickAt(offset: SimplePoint, button: Button = Button.LEFT): Promise<void> {
+    public async clickAt(offset: SimplePoint, button: MouseButtonType = MouseButtonType.LEFT): Promise<void> {
         if (!this.gameWindowOrigin) {
             throw new Error("[MouseController] 尚未设置游戏窗口基准点，请先调用 setGameWindowOrigin()");
         }
@@ -87,7 +108,7 @@ export class MouseController {
             this.gameWindowOrigin.y + offset.y
         );
 
-        logger.info(
+        logger.debug(
             `[MouseController] 点击: (Origin: ${this.gameWindowOrigin.x},${this.gameWindowOrigin.y}) + ` +
             `(Offset: ${offset.x},${offset.y}) -> (Target: ${target.x},${target.y})`
         );
@@ -95,7 +116,7 @@ export class MouseController {
         try {
             await mouse.move([target]);
             await sleep(MOUSE_CONFIG.MOVE_DELAY);
-            await mouse.click(button);
+            await mouse.click(toNutButton(button));
             await sleep(MOUSE_CONFIG.CLICK_DELAY);
         } catch (e: any) {
             logger.error(`[MouseController] 鼠标点击失败: ${e.message}`);
@@ -107,12 +128,12 @@ export class MouseController {
      * 在游戏窗口内双击指定位置
      * @description 用于需要双击的操作 (如购买棋子时为了确保成功)
      * @param offset 相对于游戏窗口左上角的偏移坐标
-     * @param button 鼠标按键 (默认左键)
+     * @param button 鼠标按键类型 (默认 MouseButtonType.LEFT)
      * @param interval 两次点击之间的间隔 (ms)
      */
     public async doubleClickAt(
         offset: SimplePoint,
-        button: Button = Button.LEFT,
+        button: MouseButtonType = MouseButtonType.LEFT,
         interval: number = 50
     ): Promise<void> {
         await this.clickAt(offset, button);
@@ -147,15 +168,15 @@ export class MouseController {
      * 在屏幕绝对坐标点击
      * @description 用于不需要游戏窗口偏移的场景
      * @param position 屏幕绝对坐标
-     * @param button 鼠标按键 (默认左键)
+     * @param button 鼠标按键类型 (默认 MouseButtonType.LEFT)
      */
-    public async clickAtAbsolute(position: SimplePoint, button: Button = Button.LEFT): Promise<void> {
+    public async clickAtAbsolute(position: SimplePoint, button: MouseButtonType = MouseButtonType.LEFT): Promise<void> {
         try {
             // nut-js mouse.move expects Point[]
             const target = new Point(position.x, position.y);
             await mouse.move([target]);
             await sleep(MOUSE_CONFIG.MOVE_DELAY);
-            await mouse.click(button);
+            await mouse.click(toNutButton(button));
             await sleep(MOUSE_CONFIG.CLICK_DELAY);
         } catch (e: any) {
             logger.error(`[MouseController] 鼠标点击失败: ${e.message}`);

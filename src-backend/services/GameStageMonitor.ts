@@ -73,8 +73,8 @@ export interface GameStageEvents {
 export class GameStageMonitor extends EventEmitter {
     private static instance: GameStageMonitor;
 
-    /** 轮询间隔（毫秒） */
-    private pollInterval: number = 1000;
+    /** 轮询间隔（毫秒）：2 秒一次，避免高频检测 */
+    private pollInterval: number = 2000;
 
     /** 轮询定时器 ID */
     private pollTimer: NodeJS.Timeout | null = null;
@@ -119,10 +119,10 @@ export class GameStageMonitor extends EventEmitter {
 
     /**
      * 启动阶段轮询
-     * @param interval 轮询间隔（毫秒），默认 1000ms
+     * @param interval 轮询间隔（毫秒），默认 2000ms（2 秒）
      * @description 开始后台轮询，检测阶段变化并发出事件
      */
-    public start(interval: number = 1000): void {
+    public start(interval: number = 2000): void {
         if (this.isRunning) {
             logger.warn('[GameStageMonitor] 已经在运行中，忽略重复启动');
             return;

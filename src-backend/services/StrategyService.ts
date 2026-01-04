@@ -26,14 +26,13 @@ import {
     ShopSlotIndex,
     TFT_16_EQUIP_DATA,
     EquipKey,
-    TFTEquip
 } from "../TFTProtocol";
 import {gameStateManager} from "./GameStateManager";
 import {gameStageMonitor, GameStageEvent} from "./GameStageMonitor";
 import {settingsStore} from "../utils/SettingsStore";
 import {lineupLoader} from "../lineup";
 import {LineupConfig, StageConfig, ChampionConfig} from "../lineup/LineupTypes";
-import {mouseController, BenchUnit, BenchLocation, BoardUnit, BoardLocation} from "../tft";
+import {mouseController, MouseButtonType, BenchUnit, BenchLocation, BoardUnit, BoardLocation} from "../tft";
 import {sleep} from "../utils/HelperTools";
 
 /**
@@ -323,6 +322,46 @@ export class StrategyService {
      *   只要发现「能穿」或「能合成并穿」的动作，就允许进入 `executeEquipStrategy()`。
      */
     private canPerformAnyEquipOperation(equipments: IdentifiedEquip[]): { can: boolean; reason: string } {
+        // =========================
+        // 保前四的装备思路：
+        // - 优先：如果能合出“核心推荐装/替代装”，就合成并立刻给（稳定提升战力）
+        // - 其次：有散件就先挂到场上（打工仔也行），用即时战力换血量
+        // =========================
+
+        // 1) 先检查是否存在“可上装备的单位”（⚠️ 目前只支持给棋盘单位穿装备）
+        const boardUnits = gameStateManager.getBoardUnitsWithLocation();
+
+        // 使用与“上棋/替换弱子”一致的价值评分（calculateUnitScore），挑选最值得挂装备的单位。
+        // 这样后期即使 4/5 费棋子还没 2★，也不会被低费 2★长期压制而拿不到装备。
+        const targetChampions = this.targetChampionNames;
+
+        let equipableUnit: (typeof boardUnits)[number] | null = null;
+        let bestScore = -Infinity;
+
+        for (const u of boardUnits) {
+            if (u.equips.length >= 3) continue;
+            const score = this.calculateUnitScore(u.tftUnit, u.starLevel, targetChampions);
+            if (!equipableUnit || score > bestScore) {
+                equipableUnit = u;
+                bestScore = score;
+            }
+        }
+
+        if (!equipableUnit) {
+            return { can: false, reason: "棋盘上没有可穿戴装备的单位（可能全员满装备/无单位）" };
+        }
+
+        // 2) 如果背包里有“散件”，就允许执行装备策略（散件先上，拉即时战力）
+        //    这里用 formula 是否为空来粗略判断“基础散件”（暴风大剑/反曲弓/女神泪等）
+        const component = equipments.find(e => {
+            const data = TFT_16_EQUIP_DATA[e.name as EquipKey];
+            return data && (data.formula ?? "") === "";
+        });
+        if (component) {
+            return { can: true, reason: `存在散件可穿戴：${component.name} -> ${equipableUnit.tftUnit.displayName}` };
+        }
+
+        // 3) 再判断“能否合成/穿戴核心装”（没有核心配置时，直接跳过这一段）
         const coreChampions = this.getCoreChampions();
         if (coreChampions.length === 0) {
             return { can: false, reason: "阵容配置中没有核心棋子/核心装备配置" };
@@ -844,7 +883,7 @@ export class StrategyService {
 
         // 扫描间隔（毫秒）：每次拾取完成后等待一段时间再重新扫描
         // 设置较短的间隔，确保及时发现新掉落的战利品球
-        const scanInterval = 1000;
+        const scanInterval = 2000;
 
         // 使用 while 循环持续扫描，直到战斗结束
         // 这样可以确保：
@@ -900,7 +939,7 @@ export class StrategyService {
      * TODO: 实现完整的拾取逻辑
      */
     private async pickUpLootOrbs(): Promise<void> {
-        const sleepTime = 2000; //  每次点击之间的间隔时间
+        const sleepTime = 2500; //  每次点击之间的间隔时间
         logger.info("[StrategyService] 开始检测战利品球...");
 
         // 1. 检测场上的战利品球
@@ -927,7 +966,7 @@ export class StrategyService {
 
             // 右键点击战利品球位置，小小英雄会自动移动过去拾取
             // mouseController.clickAt 接受的是游戏内相对坐标，orb.x/orb.y 正好是相对坐标
-            await mouseController.clickAt({x: orb.x, y: orb.y});
+            await mouseController.clickAt({x: orb.x, y: orb.y}, MouseButtonType.RIGHT);
 
             // 等待小小英雄移动到目标位置并拾取
             await sleep(sleepTime);
@@ -1406,7 +1445,7 @@ export class StrategyService {
      * 2. 优化棋盘（上棋子 + 替换弱棋子）
      * 3. TODO: 根据策略决定是否 D 牌、升级等
      *
-     * 调用时机：2-1 首次 PVP 锁定阵容后，以及后续所有 PVE/PVP 回合
+     * 调用时机：2-1 首次 PVP 锁定阵容后，以及后续所有回合
      */
     private async executeCommonStrategy(): Promise<void> {
         logger.debug("[StrategyService] 执行通用运营策略");
@@ -1575,7 +1614,12 @@ export class StrategyService {
      */
     private async executeRollingLoop(targetChampions: Set<ChampionKey>): Promise<void> {
         let rollCount = 0;
-        const maxRolls = 30; // 安全上限
+        const maxRolls = 30; // 安全上限：防止极端情况下死循环
+
+        // 连续多少次刷新都没有买到任何棋子，就认为“继续 D 的收益很低”，主动停手。
+        // 这个阈值的意义：避免在“目标牌不在概率池/牌库被卡/我们根本买不下(爆仓)”时，把金币和时间无意义地烧掉。
+        const maxConsecutiveNoBuyRolls = 5;
+        let consecutiveNoBuyRolls = 0;
 
         while (rollCount < maxRolls) {
             // 1. 判断是否需要/可以 D 牌
@@ -1587,9 +1631,20 @@ export class StrategyService {
             // 2. 刷新后，尝试购买
             const hasBought = await this.autoBuyFromShop(targetChampions, "D牌后购买");
 
-            // 3. 如果买到了，尝试优化棋盘（升星/上场）
+            // 3. 如果买到了，尝试优化棋盘（升星/上场），并重置“空转计数”
             if (hasBought) {
+                consecutiveNoBuyRolls = 0;
                 await this.optimizeBoard(targetChampions);
+                continue;
+            }
+
+            // 4. 本次刷新没有任何购买：累积空转次数，到达阈值就停手
+            consecutiveNoBuyRolls++;
+            if (consecutiveNoBuyRolls >= maxConsecutiveNoBuyRolls) {
+                logger.info(
+                    `[StrategyService] D牌提前停止：连续 ${consecutiveNoBuyRolls} 次刷新未购买任何棋子`
+                );
+                break;
             }
         }
 
@@ -1606,16 +1661,50 @@ export class StrategyService {
      * @returns 本次是否执行了 D 牌（刷新商店）。
      */
     private async executeRollStrategy(): Promise<boolean> {
-        // 1. 计算存钱底线
-        let threshold = 40;
+        // =========================
+        // “节点搜”策略（面向保前四）
+        // =========================
+        // 核心思想：
+        // - 非关键节点：尽量不 D，靠自然商店+上人口吃经济
+        // - 关键节点：集中花钱把“质量”抬上去（更稳定保血、保前四）
+        //
+        // 注意：这里的 threshold 表示“本回合最多 D 到剩多少金币为止”。
+        // 例如 threshold=30 表示：金币 >= 32 才会继续 D 一次，保证 D 完还能剩 >=30。
 
-        if (this.currentStage >= 5) {
-            threshold = 10;
-        } else if (this.currentStage === 4) {
+        const stage = this.currentStage;
+        const round = this.currentRound;
+
+        let shouldRollThisRound = false;
+        let threshold = 50;
+        let reason = "";
+
+        // 关键节点（可按需要继续加）：3-2 / 4-1 / 5-1
+        if (stage === 3 && round === 2) {
+            shouldRollThisRound = true;
             threshold = 30;
+            reason = "3-2 节点搜（上 6 后补 2★稳血）";
+        } else if (stage === 4 && round === 1) {
+            shouldRollThisRound = true;
+            threshold = 20;
+            reason = "4-1 节点搜（上 7 后提升质量）";
+        } else if (stage === 5 && round === 1) {
+            shouldRollThisRound = true;
+            threshold = 10;
+            reason = "5-1 节点搜（上 8 后补强阵容）";
+        } else if (stage >= 6) {
+            // 决赛圈（通常只剩 4 人左右）：
+            // 这时“利息”的边际收益很低，而“强度”决定你能不能苟到更高名次。
+            // 所以允许把钱打干（仍然受 executeRollingLoop 的 maxRolls / 空转阈值保护）。
+            shouldRollThisRound = true;
+            threshold = 0;
+            reason = "决赛圈（强度优先，允许打干）";
         }
 
-        // 检查是否有大量对子 (如果有，可以更激进一点)
+        if (!shouldRollThisRound) {
+            return false;
+        }
+
+        // 检查是否有大量对子：对子多时，D 一次“命中升星”的收益更高，可以更激进一点
         const ownedChampions = gameStateManager.getOwnedChampionNames();
         let pairCount = 0;
         for (const name of ownedChampions) {
@@ -1626,7 +1715,7 @@ export class StrategyService {
 
         if (pairCount >= 2) {
             threshold = Math.max(0, threshold - 10);
-            logger.info(`[StrategyService] 检测到 ${pairCount} 组对子，D牌底线降低至 ${threshold}`);
+            reason += ` + 对子(${pairCount})`;
         }
 
         const currentGold = gameStateManager.getGold();
@@ -1636,7 +1725,7 @@ export class StrategyService {
             return false;
         }
 
-        logger.info(`[StrategyService] D牌: 当前金币 ${currentGold}，底线 ${threshold}，执行刷新...`);
+        logger.info(`[StrategyService] D牌: 当前金币 ${currentGold}，底线 ${threshold}，原因: ${reason}，执行刷新...`);
 
         // 执行刷新
         await tftOperator.refreshShop();
@@ -1826,30 +1915,22 @@ export class StrategyService {
 
             let actionTaken = false;
 
-            // 1. 获取核心棋子配置
+            // 1) 先尝试“核心装合成/成装直上”（优先级最高）
             const coreChampions = this.getCoreChampions();
-            
-            // 2. 建立装备背包的快照（用于模拟消耗）
+
+            // 建立装备背包的快照（用于模拟合成可行性；真实消耗由 GameStateManager.removeEquipment 维护）
             const bagSnapshot = new Map<string, number>();
             for (const equip of equipments) {
                 bagSnapshot.set(equip.name, (bagSnapshot.get(equip.name) || 0) + 1);
             }
 
-            // 3. 遍历核心棋子，尝试分配装备
-            // 策略优先级：
-            // A. 核心棋子在场 -> 给核心棋子
-            // B. 核心棋子不在场 -> 给打工仔（非目标棋子）
-            
             for (const config of coreChampions) {
-                // 寻找合适的穿戴目标
                 const targetWrapper = this.findUnitForEquipment(config.name);
-                
                 if (!targetWrapper) continue;
 
-                // 如果装备已满 (3件)，跳过
+                // 装备已满 (3件) 跳过
                 if (targetWrapper.unit.equips.length >= 3) continue;
 
-                // 获取推荐装备列表
                 const desiredItems: string[] = [];
                 if (config.items) {
                     desiredItems.push(...config.items.core);
@@ -1857,41 +1938,90 @@ export class StrategyService {
                         desiredItems.push(...config.items.alternatives);
                     }
                 }
-
                 if (desiredItems.length === 0) continue;
 
-                // 尝试为该棋子合成/穿戴装备
                 for (const itemName of desiredItems) {
-                    // 检查该装备是否已在身上
                     const alreadyHas = targetWrapper.unit.equips.some(e => e.name === itemName);
                     if (alreadyHas) continue;
 
-                    // 检查背包是否有直接的成装
+                    // A) 背包有成装 → 直接给
                     if ((bagSnapshot.get(itemName) || 0) > 0) {
-                        logger.info(`[StrategyService] 发现成装 ${itemName}，给 ${targetWrapper.isCore ? '核心' : '打工'}: ${targetWrapper.unit.tftUnit.displayName}`);
+                        logger.info(
+                            `[StrategyService] 发现成装 ${itemName}，给 ${targetWrapper.isCore ? '核心' : '打工'}: ${targetWrapper.unit.tftUnit.displayName}`
+                        );
                         await this.equipItemToUnit(itemName, targetWrapper.unit.location);
                         actionTaken = true;
-                        break; 
+                        break;
                     }
 
-                    // 检查是否可以合成
+                    // B) 能合成核心装 → 合成并给
                     const synthesis = this.checkSynthesis(itemName, bagSnapshot);
                     if (synthesis) {
-                        logger.info(`[StrategyService] 合成 ${itemName} (${synthesis.component1} + ${synthesis.component2}) 给 ${targetWrapper.isCore ? '核心' : '打工'}: ${targetWrapper.unit.tftUnit.displayName}`);
+                        logger.info(
+                            `[StrategyService] 合成 ${itemName} (${synthesis.component1} + ${synthesis.component2}) ` +
+                            `给 ${targetWrapper.isCore ? '核心' : '打工'}: ${targetWrapper.unit.tftUnit.displayName}`
+                        );
                         await this.synthesizeAndEquip(synthesis.component1, synthesis.component2, targetWrapper.unit.location);
                         actionTaken = true;
-                        break; 
+                        break;
                     }
                 }
 
-                if (actionTaken) break; // 如果执行了操作，跳出内层循环，重新开始外层循环
+                if (actionTaken) break;
+            }
+
+            // 2) 如果没有核心装可做：散件先上，拉即时战力（更贴合“保前四”）
+            if (!actionTaken) {
+                // 2.1 找一个穿装备目标：优先核心/打工仔逻辑，其次退化到“棋盘最强单位”
+                let targetLocation: BoardLocation | null = null;
+
+                for (const config of coreChampions) {
+                    const wrapper = this.findUnitForEquipment(config.name);
+                    if (!wrapper) continue;
+                    if (wrapper.unit.equips.length >= 3) continue;
+                    targetLocation = wrapper.unit.location;
+                    break;
+                }
+
+                if (!targetLocation) {
+                    const boardUnits = gameStateManager.getBoardUnitsWithLocation();
+                    const targetChampions = this.targetChampionNames;
+
+                    // 复用 calculateUnitScore：让“散件挂载目标”的选择逻辑和“上棋/换弱子”保持一致。
+                    let best: { location: BoardLocation; score: number } | null = null;
+
+                    for (const u of boardUnits) {
+                        if (u.equips.length >= 3) continue;
+
+                        const score = this.calculateUnitScore(u.tftUnit, u.starLevel, targetChampions);
+                        if (!best || score > best.score) {
+                            best = { location: u.location, score };
+                        }
+                    }
+
+                    targetLocation = best?.location ?? null;
+                }
+
+                if (targetLocation) {
+                    // 2.2 优先穿“基础散件”（formula 为空），避免随便把成装/特殊装乱挂
+                    const component = equipments.find(e => {
+                        const data = TFT_16_EQUIP_DATA[e.name as EquipKey];
+                        return data && (data.formula ?? "") === "";
+                    });
+
+                    if (component) {
+                        logger.info(`[StrategyService] 散件先上：${component.name} -> ${targetLocation}`);
+                        await this.equipItemToUnit(component.name, targetLocation);
+                        actionTaken = true;
+                    }
+                }
             }
 
             if (!actionTaken) {
-                break; // 如果这一轮没有做任何操作，说明没法给了，结束策略
+                break;
             }
+
             operationCount++;
-            // 操作后稍微等待，虽然我们在内部已经 await 并且 simulate shift 了，但给 UI 一点反应时间
             await sleep(100);
         }
     }

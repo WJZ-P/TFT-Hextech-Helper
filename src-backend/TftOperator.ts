@@ -12,7 +12,7 @@
  */
 
 import { logger } from "./utils/Logger";
-import { Button, Region } from "@nut-tree-fork/nut-js";
+import { Region } from "@nut-tree-fork/nut-js";
 import { screen } from "electron";
 import path from "path";
 import fs from "fs-extra";
@@ -67,6 +67,7 @@ import {
     templateMatcher,
     screenCapture,
     mouseController,
+    MouseButtonType,
     parseStageStringToEnum,
     isValidStageFormat,
 } from "./tft";
@@ -252,7 +253,7 @@ class TftOperator {
 
             // 2. 如果标准区域识别失败，尝试 Stage 1 区域
             if (!isValidStageFormat(stageText)) {
-                logger.info(`[TftOperator] 标准区域识别未命中: "${stageText}"，尝试 Stage-1 区域...`);
+                //logger.info(`[TftOperator] 标准区域识别未命中: "${stageText}"，尝试 Stage-1 区域...`);
                 const stageOneRegion = this.getStageAbsoluteRegion(true);
                 const stageOnePng = await screenCapture.captureRegionAsPng(stageOneRegion);
                 stageText = await ocrService.recognize(stageOnePng, OcrWorkerType.GAME_STAGE);
@@ -276,7 +277,7 @@ class TftOperator {
             const stageType = parseStageStringToEnum(stageText);
 
             if (stageType !== GameStageType.UNKNOWN) {
-                logger.info(`[TftOperator] 识别阶段: [${stageText}] -> ${stageType}`);
+                //logger.info(`[TftOperator] 识别阶段: [${stageText}] -> ${stageType}`);
                 this.tftMode = TFTMode.CLASSIC;
             } else {
                 logger.warn(`[TftOperator] 无法识别当前阶段: "${stageText ?? "null"}"`);
@@ -478,7 +479,7 @@ class TftOperator {
         logger.info(`[TftOperator] 正在购买棋子，槽位: ${slot}...`);
 
         // 双击确保购买成功
-        await mouseController.doubleClickAt(targetPoint, Button.LEFT, 50);
+        await mouseController.doubleClickAt(targetPoint, MouseButtonType.LEFT, 50);
     }
 
     /**
@@ -487,9 +488,9 @@ class TftOperator {
     public async refreshShop(): Promise<void> {
         this.ensureInitialized();
         logger.info("[TftOperator] 刷新商店");
-        await mouseController.clickAt(refreshShopPoint, Button.LEFT);
+        await mouseController.clickAt(refreshShopPoint, MouseButtonType.LEFT);
         // 刷新后需要一点时间让新棋子出现
-        await sleep(10);
+        await sleep(20);
     }
 
     /**
@@ -498,7 +499,7 @@ class TftOperator {
     public async buyExperience(): Promise<void> {
         this.ensureInitialized();
         logger.info("[TftOperator] 购买经验值");
-        await mouseController.clickAt(buyExpPoint, Button.LEFT);
+        await mouseController.clickAt(buyExpPoint, MouseButtonType.LEFT);
         await sleep(10);
     }
 
@@ -523,7 +524,7 @@ class TftOperator {
             }
 
             // 右键点击槽位显示详细信息
-            await mouseController.clickAt(benchSlotPoints[benchSlot], Button.RIGHT);
+            await mouseController.clickAt(benchSlotPoints[benchSlot], MouseButtonType.RIGHT);
 
             await sleep(10); // 等待 UI 渲染完成（右键后游戏会立即刷新 UI，10ms 足够）
 
@@ -584,7 +585,7 @@ class TftOperator {
                 const forgeType = await this.checkItemForgeTooltip(clickPoint, slotIndex);
 
                 // 关闭浮窗：再次右键点击同一位置，避免浮窗遮挡后续槽位的检测
-                await mouseController.clickAt(benchSlotPoints[benchSlot], Button.RIGHT);
+                await mouseController.clickAt(benchSlotPoints[benchSlot], MouseButtonType.RIGHT);
                 await sleep(10) // 等待 UI 渲染完成（右键后游戏会立即刷新 UI，10ms 足够）
                 
                 if (forgeType !== ItemForgeType.NONE) {
@@ -638,7 +639,7 @@ class TftOperator {
 
             // 右键点击槽位显示详细信息
             const clickPoint = fightBoardSlotPoint[boardSlot as keyof typeof fightBoardSlotPoint];
-            await mouseController.clickAt(clickPoint, Button.RIGHT);
+            await mouseController.clickAt(clickPoint, MouseButtonType.RIGHT);
 
             await sleep(10); // 等待 UI 渲染完成（右键后游戏会立即刷新 UI，10ms 足够）
 
@@ -1315,9 +1316,9 @@ class TftOperator {
         logger.info(`[TftOperator] 小小英雄归位中... 目标坐标: (${littleLegendDefaultPoint.x}, ${littleLegendDefaultPoint.y})`);
 
         // 右键点击两次默认站位，确保小小英雄移动到目标位置
-        await mouseController.clickAt(littleLegendDefaultPoint, Button.RIGHT);
+        await mouseController.clickAt(littleLegendDefaultPoint, MouseButtonType.RIGHT);
         await sleep(50); // 短暂等待，避免两次点击太快被合并
-        await mouseController.clickAt(littleLegendDefaultPoint, Button.RIGHT);
+        await mouseController.clickAt(littleLegendDefaultPoint, MouseButtonType.RIGHT);
     }
 
     /**
@@ -1355,7 +1356,7 @@ class TftOperator {
         );
 
         // 右键点击目标位置，小小英雄会自动走过去
-        await mouseController.clickAt(targetPoint, Button.RIGHT);
+        await mouseController.clickAt(targetPoint, MouseButtonType.RIGHT);
 
         // 更新上次走位方向
         this.lastWalkSide = targetSide;
