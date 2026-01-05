@@ -7,6 +7,15 @@
 import { GameStageType } from "../../TFTProtocol";
 
 /**
+ * 海克斯强化选择回合列表
+ * @description 云顶之弈中只有 3 次海克斯选择机会：
+ *              - 2-1: 第一个海克斯（2阶段第1回合，比较特殊）
+ *              - 3-2: 第二个海克斯
+ *              - 4-2: 第三个海克斯
+ */
+const AUGMENT_ROUNDS: ReadonlySet<string> = new Set(["2-1", "3-2", "4-2"]);
+
+/**
  * 将游戏阶段字符串解析为游戏行为枚举
  * @description 根据云顶之弈的游戏规则，不同阶段有不同的行为
  * 
@@ -14,7 +23,7 @@ import { GameStageType } from "../../TFTProtocol";
  * - 第一阶段 (1-1 ~ 1-4): EARLY_PVE，内部根据回合号判断具体策略
  *   - 1-1, 1-2: 商店未开放，只需防挂机
  *   - 1-3, 1-4: 商店已开放，执行前期运营策略
- * - Round 2 (x-2): 海克斯强化选择回合
+ * - 海克斯强化回合 (2-1, 3-2, 4-2): 选择海克斯强化
  * - Round 4 (x-4): 选秀回合
  * - Round 7 (x-7): PVE 野怪回合
  * - 其他回合: PVP 玩家对战
@@ -27,7 +36,9 @@ import { GameStageType } from "../../TFTProtocol";
  * parseStageStringToEnum("1-2") // -> GameStageType.EARLY_PVE
  * parseStageStringToEnum("1-3") // -> GameStageType.EARLY_PVE
  * parseStageStringToEnum("1-4") // -> GameStageType.EARLY_PVE
- * parseStageStringToEnum("2-2") // -> GameStageType.AUGMENT
+ * parseStageStringToEnum("2-1") // -> GameStageType.AUGMENT (第一个海克斯)
+ * parseStageStringToEnum("3-2") // -> GameStageType.AUGMENT (第二个海克斯)
+ * parseStageStringToEnum("4-2") // -> GameStageType.AUGMENT (第三个海克斯)
  * parseStageStringToEnum("3-4") // -> GameStageType.CAROUSEL
  * parseStageStringToEnum("4-3") // -> GameStageType.PVP
  * parseStageStringToEnum("4-7") // -> GameStageType.PVE
@@ -55,8 +66,8 @@ export function parseStageStringToEnum(stageText: string): GameStageType {
             return GameStageType.EARLY_PVE;
         }
 
-        if (round === 2) {
-            // 第二回合选择海克斯
+        // 海克斯强化回合：只有 2-1, 3-2, 4-2 这三个特定回合
+        if (AUGMENT_ROUNDS.has(cleanText)) {
             return GameStageType.AUGMENT;
         }
 

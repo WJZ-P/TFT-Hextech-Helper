@@ -1513,6 +1513,9 @@ export class StrategyService {
         // 小小英雄归位（避免挡住商店）
         await tftOperator.selfResetPosition();
 
+        // 0. 处理锻造器（优先处理，腾出备战席空间）
+        await this.handleItemForges();
+
         // 1. 获取已有棋子和目标棋子
         const ownedChampions = gameStateManager.getOwnedChampionNames();
         const targetChampions = this.targetChampionNames;
@@ -1566,6 +1569,44 @@ export class StrategyService {
         }
 
 
+    }
+
+    /**
+     * 处理备战席中的锻造器
+     * @description 检查备战席是否有锻造器，如果有则打开并选择中间的装备
+     *              锻造器是特殊单位，占用备战席位置但不能上场
+     *              及时处理可以：
+     *              1. 腾出备战席空间，方便购买棋子
+     *              2. 获得装备，可以立即用于后续的装备策略
+     * 
+     *              策略：固定选择中间的装备，免去复杂的装备识别和评估
+     */
+    private async handleItemForges(): Promise<void> {
+        // 查找备战席中的所有锻造器
+        const forges = gameStateManager.findItemForges();
+
+        if (forges.length === 0) {
+            // logger.debug("[StrategyService] 备战席没有锻造器");
+            return;
+        }
+
+        logger.info(`[StrategyService] 发现 ${forges.length} 个锻造器: ${forges.map(f => f.tftUnit.displayName).join(', ')}`);
+
+        // 依次处理每个锻造器
+        for (const forge of forges) {
+            logger.info(`[StrategyService] 处理锻造器: ${forge.tftUnit.displayName} (${forge.location})`);
+
+            // 打开锻造器并选择装备
+            await tftOperator.openItemForge(forge);
+
+            // 等待一下，确保选择完成
+            await sleep(200);
+        }
+
+        // 处理完锻造器后，刷新装备栏状态（因为获得了新装备）
+        await this.updateEquipStateFromScreen();
+
+        logger.info(`[StrategyService] 锻造器处理完成，已获得 ${forges.length} 件装备`);
     }
 
     /**

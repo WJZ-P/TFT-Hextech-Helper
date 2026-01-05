@@ -806,6 +806,22 @@ export class GameStateManager {
     }
 
     /**
+     * 查找备战席中的锻造器
+     * @returns 锻造器的 BenchUnit 数组
+     * @description 锻造器是特殊单位，displayName 包含"锻造器"即可识别
+     *              直接返回 BenchUnit，因为它已包含所有需要的信息：
+     *              - location: 槽位位置 (如 "SLOT_1")
+     *              - tftUnit: 棋子信息 (包含 displayName)
+     *              - starLevel: 星级 (锻造器为 -1)
+     *              - equips: 装备列表 (锻造器为空数组)
+     */
+    public findItemForges(): BenchUnit[] {
+        return this.getBenchUnits().filter(
+            (unit): unit is BenchUnit => unit !== null && unit.tftUnit.displayName.includes('锻造器')
+        );
+    }
+
+    /**
      * 获取棋盘上的非空棋子列表（带位置）
      * @returns 包含棋子信息的数组
      * @description 用于遍历棋盘上的棋子，分析当前站位

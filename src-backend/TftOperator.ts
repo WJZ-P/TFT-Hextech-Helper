@@ -1508,6 +1508,62 @@ class TftOperator {
     }
 
     /**
+     * 打开锻造器并选择装备
+     * @param benchUnit 备战席上的锻造器单位
+     * @description 锻造器打开后会弹出装备选择界面（4选1 或 5选1）
+     *              当前实现：固定选择中间的装备
+     *              - 4选1 时选择第2个（索引1，从左数第二个）
+     *              - 5选1 时选择第3个（索引2，正中间）
+     * 
+     *              操作流程：
+     *              1. 校验传入的单位是否为锻造器
+     *              2. 将锻造器从备战席拖拽到商店位置（SHOP_SLOT_3）
+     *              3. 松开鼠标后，再左键点击商店位置打开选择界面
+     *              4. 等待界面出现（约 300ms）
+     *              5. 点击中间位置的装备完成选择
+     * 
+     * @example
+     * // 打开备战席上的锻造器
+     * const forges = gameStateManager.findItemForges();
+     * if (forges.length > 0) {
+     *     await tftOperator.openItemForge(forges[0]);
+     * }
+     * 
+     * TODO: 识别装备并精准选择（根据阵容需求选择最优装备）
+     */
+    public async openItemForge(benchUnit: BenchUnit): Promise<void> {
+        this.ensureInitialized();
+
+        // 1. 校验是否为锻造器
+        const unitName = benchUnit.tftUnit.displayName;
+        if (!unitName.includes('锻造器')) {
+            logger.error(`[TftOperator] openItemForge 传入的不是锻造器: ${unitName}`);
+            return;
+        }
+
+        // 2. 获取备战席槽位坐标
+        const forgePoint = benchSlotPoints[benchUnit.location];
+
+        if (!forgePoint) {
+            logger.error(`[TftOperator] 无效的备战席位置: ${benchUnit.location}`);
+            return;
+        }
+
+        logger.info(`[TftOperator] 打开锻造器: ${unitName} (${benchUnit.location})`);
+
+        // 3. 将锻造器拖拽到商店位置（SHOP_SLOT_3，商店中间位置）
+        //    锻造器不能像普通棋子那样双击打开，需要先拖到商店再点击
+        const shopPoint = shopSlot.SHOP_SLOT_3;
+        await mouseController.drag(forgePoint, shopPoint);
+
+        // 4. 等待锻造器选择页面刷新
+        await sleep(500);
+        //  选择装备,先固定选中中间的装备
+        await mouseController.clickAt(shopPoint, MouseButtonType.LEFT);
+        // TODO: 识别装备并精准选择（根据阵容需求选择最优装备）
+    }
+
+    /**
      * 将装备穿戴给棋盘上的单位
      * @param equipSlotIndex 装备栏索引 (0-9)
      * @param boardLocation 棋盘目标位置 (如 "R1_C1")
