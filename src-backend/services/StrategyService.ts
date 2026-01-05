@@ -330,6 +330,168 @@ export class StrategyService {
     }
 
     /**
+     * 判断：某个“装备栏物品”是否是真正可穿戴的装备
+     * @description
+     * TFT 的装备栏里可能出现一些“特殊道具”，它们并不是给棋子穿的：
+     * - 装备拆卸器：对目标棋子使用后，会把身上装备全部拆下来回到装备栏
+     * - 金质装备拆卸器：同上，但可无限次使用
+     * - 装备重铸器：对目标棋子使用后，会把身上装备全部重铸并回到装备栏
+     *
+     * 这类道具当前版本暂不支持自动使用（风险较高，容易误操作），因此先在装备策略里跳过。
+     *
+     * TODO: 实现特殊道具的使用策略（拆卸器/金拆/重铸器等），并加入更严格的目标选择与安全保护。
+     */
+    private isWearableEquipmentName(itemName: string): boolean {
+        const data = TFT_16_EQUIP_DATA[itemName as EquipKey];
+
+        // 未知物品：为了安全，默认按“不可穿戴”处理，避免误把道具当装备拖到棋子身上。
+        if (!data) {
+            return false;
+        }
+
+        // 当前协议里 specialEquip 统一用 equipId = "-1" 标记（例如：装备拆卸器/重铸器/强化果实/复制器等）
+        // 这些都不是“穿上去就生效”的传统装备。
+        if (data.equipId === "-1") {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * 推断：装备更适合“前排”还是“后排”
+     * @description
+     * 我们没有直接的“装备类型标签”（坦装/输出装），但可以利用 `TFT_16_EQUIP_DATA.formula`：
+     * - 基础散件：formula 为空
+     * - 成装：formula 是 "散件ID1,散件ID2"
+     *
+     * 基于散件做一个非常粗粒度的启发式（足够让“随便上装备”变得更像人）：
+     * - 反曲之弓/暴风之剑/无用大棒/女神之泪 → 倾向后排（输出/攻速/法强/回蓝）
+     * - 锁子甲/负极斗篷/巨人腰带 → 倾向前排（抗性/血量）
+     * - 拳套/金铲铲/金锅锅 → 偏中性（很多装备/转职比较灵活）
+     *
+     * TODO: 后续可以结合“阵容配置的前排/后排位”或“英雄定位(主C/主T)”做更准确的分配。
+     */
+    private getEquipmentRolePreference(itemName: string): 'frontline' | 'backline' | 'any' {
+        const data = TFT_16_EQUIP_DATA[itemName as EquipKey];
+        if (!data) return 'any';
+
+        // 取组成它的散件名（成装取 2 个散件；散件本身返回自己）
+        const componentNames = this.getComponentNamesOfItem(itemName);
+        if (componentNames.length === 0) return 'any';
+
+        const isFrontlineComponent = (name: string): boolean => {
+            return name === '锁子甲' || name === '负极斗篷' || name === '巨人腰带';
+        };
+
+        const isBacklineComponent = (name: string): boolean => {
+            return name === '反曲之弓' || name === '暴风之剑' || name === '无用大棒' || name === '女神之泪';
+        };
+
+        const isNeutralComponent = (name: string): boolean => {
+            return name === '拳套' || name === '金铲铲' || name === '金锅锅';
+        };
+
+        // 只有一个散件（基础散件）时：直接按散件决定倾向
+        if (componentNames.length === 1) {
+            const c = componentNames[0];
+            if (isFrontlineComponent(c)) return 'frontline';
+            if (isBacklineComponent(c)) return 'backline';
+            if (isNeutralComponent(c)) return 'any';
+            return 'any';
+        }
+
+        // 两个散件（成装）时：
+        // - 双防御散件 → 更像前排装
+        // - 双输出散件 → 更像后排装
+        // - 混搭 → 暂时按通用装处理（避免误导）
+        const frontlineCount = componentNames.filter(isFrontlineComponent).length;
+        const backlineCount = componentNames.filter(isBacklineComponent).length;
+
+        if (frontlineCount === 2) return 'frontline';
+        if (backlineCount === 2) return 'backline';
+
+        // 混搭/含拳套/转职等，先按通用
+        return 'any';
+    }
+
+    /**
+     * 获取某件装备由哪些“基础散件”组成
+     * @returns 散件名称数组：
+     * - 基础散件：返回 [自身]
+     * - 成装：返回 [散件1, 散件2]
+     */
+    private getComponentNamesOfItem(itemName: string): string[] {
+        const equip = TFT_16_EQUIP_DATA[itemName as EquipKey];
+        if (!equip) return [];
+
+        const formula = (equip.formula ?? '').trim();
+        if (!formula) {
+            return [itemName];
+        }
+
+        const [id1, id2] = formula.split(',');
+        const name1 = id1 ? this.findEquipNameById(id1) : undefined;
+        const name2 = id2 ? this.findEquipNameById(id2) : undefined;
+
+        return [name1, name2].filter((n): n is string => Boolean(n));
+    }
+
+    /**
+     * 判断某个棋子是否符合装备倾向（这里用“射程”近似判断前排/后排）
+     * - 近战(1-2) → 前排
+     * - 远程(3+) → 后排
+     */
+    private doesUnitMatchEquipRole(unit: BoardUnit, role: 'frontline' | 'backline' | 'any'): boolean {
+        if (role === 'any') return true;
+
+        const name = unit.tftUnit.displayName;
+        const range = getChampionRange(name) ?? 1;
+        const isMelee = range <= 2;
+
+        return role === 'frontline' ? isMelee : !isMelee;
+    }
+
+    /**
+     * 为某件装备找一个“更合适”的穿戴目标（优先不影响核心装分配，其次按前排/后排倾向选人）
+     */
+    private findBestEquipmentTargetLocation(itemName: string, coreChampions: ChampionConfig[]): BoardLocation | null {
+        const role = this.getEquipmentRolePreference(itemName);
+
+        // 1) 优先走“核心/打工仔”逻辑（但会额外做一层前排/后排匹配）
+        for (const config of coreChampions) {
+            const wrapper = this.findUnitForEquipment(config.name, itemName);
+            if (!wrapper) continue;
+            if (wrapper.unit.equips.length >= 3) continue;
+
+            if (this.doesUnitMatchEquipRole(wrapper.unit, role)) {
+                return wrapper.unit.location;
+            }
+        }
+
+        // 2) 退化：在全棋盘上按“装备倾向”挑一个最值钱（最强）的单位
+        const boardUnits = gameStateManager.getBoardUnitsWithLocation().filter(u => u.equips.length < 3);
+        if (boardUnits.length === 0) return null;
+
+        const candidates = role === 'any'
+            ? boardUnits
+            : boardUnits.filter(u => this.doesUnitMatchEquipRole(u, role));
+
+        const finalCandidates = candidates.length > 0 ? candidates : boardUnits;
+        const targetChampions = this.targetChampionNames;
+
+        let best: { location: BoardLocation; score: number } | null = null;
+        for (const u of finalCandidates) {
+            const score = this.calculateUnitScore(u.tftUnit, u.starLevel, targetChampions);
+            if (!best || score > best.score) {
+                best = { location: u.location, score };
+            }
+        }
+
+        return best?.location ?? null;
+    }
+
+    /**
      * 判断：当前场上是否存在任意一个"核心棋子"
      * @returns 是否存在核心棋子
      *
@@ -368,6 +530,12 @@ export class StrategyService {
         // - 其次：有散件就先挂到场上（打工仔也行），用即时战力换血量
         // =========================
 
+        // 0) 过滤掉“特殊道具”（拆卸器/重铸器等），这些不属于可穿戴装备。
+        const wearableEquipments = equipments.filter(e => this.isWearableEquipmentName(e.name));
+        if (wearableEquipments.length === 0) {
+            return { can: false, reason: "装备栏里没有可穿戴装备（可能全是拆卸器/重铸器等特殊道具）" };
+        }
+
         // 1) 先检查是否存在"可上装备的单位"（⚠️ 目前只支持给棋盘单位穿装备）
         const boardUnits = gameStateManager.getBoardUnitsWithLocation();
 
@@ -393,7 +561,7 @@ export class StrategyService {
 
         // 2) 如果背包里有"散件"，就允许执行装备策略（散件先上，拉即时战力）
         //    这里用 formula 是否为空来粗略判断"基础散件"（暴风大剑/反曲弓/女神泪等）
-        const component = equipments.find(e => {
+        const component = wearableEquipments.find(e => {
             const data = TFT_16_EQUIP_DATA[e.name as EquipKey];
             return data && (data.formula ?? "") === "";
         });
@@ -463,44 +631,39 @@ export class StrategyService {
      * @returns should: 是否执行；reason: 便于日志排查的原因
      *
      * @description
-     * 触发原则：
-     * - 只在 PVP 且非战斗中考虑（避免战斗中拖拽导致事故）
-     * - 只要"确实存在可执行动作"，就允许执行（核心不在场时也允许把核心装先挂打工仔）
-     * - 额外约定：装备数 > 5 视为"快满"（用于日志/后续扩展兜底策略）
+     * 触发原则（更激进 / 保前四向）：
+     * - 只要"不在战斗中"且"装备栏非空" → 就执行装备策略
+     * - 原因：前期即使把散件/成装先挂到打工仔，也能显著提升即时战力，提高前四率
+     *
+     * 注意：装备拖拽是高风险操作，所以仍然严格禁止在战斗中执行。
      */
     private getEquipStrategyGateDecision(): { should: boolean; reason: string } {
         const stageType = this.getCurrentStageType();
-
-        if (stageType !== GameStageType.PVP) {
-            return { should: false, reason: `当前阶段为 ${stageType}（非PVP）` };
-        }
 
         if (this.isFighting()) {
             return { should: false, reason: "战斗中" };
         }
 
-        const equipments = gameStateManager.getEquipments();
-        if (equipments.length === 0) {
+        const rawEquipments = gameStateManager.getEquipments();
+        if (rawEquipments.length === 0) {
             return { should: false, reason: "装备栏为空" };
         }
 
-        // 约定：装备数 > 5 视为"快满"（此处不单独作为放行条件，避免策略空跑）
-        const nearFullThreshold = 5;
-        const nearFullHint = equipments.length > nearFullThreshold
-            ? `（装备快满：${equipments.length} > ${nearFullThreshold}）`
-            : "";
+        // 过滤掉“特殊道具”（拆卸器/重铸器等），只对可穿戴装备执行策略。
+        const equipments = rawEquipments.filter(e => this.isWearableEquipmentName(e.name));
+        const skipped = rawEquipments.filter(e => !this.isWearableEquipmentName(e.name));
 
-        // 核心在场：优先给核心；核心不在场：也允许给打工仔先挂核心装
-        if (this.hasAnyCoreChampionOnBoard()) {
-            return { should: true, reason: `场上存在核心棋子${nearFullHint}` };
+        if (equipments.length === 0) {
+            const skippedHint = skipped.length > 0
+                ? `（已跳过特殊道具: ${skipped.map(s => s.name).join(', ')}）`
+                : "";
+            return { should: false, reason: `装备栏无可穿戴装备${skippedHint}` };
         }
 
-        const op = this.canPerformAnyEquipOperation(equipments);
-        if (op.can) {
-            return { should: true, reason: `${op.reason}${nearFullHint}` };
-        }
-
-        return { should: false, reason: `${op.reason}${nearFullHint}` };
+        return {
+            should: true,
+            reason: `可穿戴装备非空(${equipments.length})，激进策略：有装备就上（当前阶段=${stageType}）`,
+        };
     }
 
 
@@ -1558,8 +1721,8 @@ export class StrategyService {
         await this.adjustPositions();
 
         // 9. 装备策略 (合成与穿戴)
-        // 注意：装备拖拽属于"高风险操作"，并且实战里经常需要"捏装备等核心"。
-        // 因此这里加了触发门槛：只在 PVP 且满足条件时才执行。
+        // 注意：装备拖拽属于"高风险操作"。
+        // 激进策略（保前四向）：只要"不在战斗中"且"装备栏非空"，就执行（哪怕先给打工仔挂装备也行）。
         const equipGate = this.getEquipStrategyGateDecision();
         if (equipGate.should) {
             logger.info(`[StrategyService] 执行装备策略：${equipGate.reason}`);
@@ -2011,8 +2174,14 @@ export class StrategyService {
         let operationCount = 0;
 
         while (operationCount < maxOperations) {
-            const equipments = gameStateManager.getEquipments();
-            if (equipments.length === 0) break;
+            const rawEquipments = gameStateManager.getEquipments();
+            if (rawEquipments.length === 0) break;
+
+            // 跳过“特殊道具”（拆卸器/重铸器等），这些不是给棋子“穿戴”的装备。
+            const equipments = rawEquipments.filter(e => this.isWearableEquipmentName(e.name));
+            if (equipments.length === 0) {
+                break;
+            }
 
             let actionTaken = false;
 
@@ -2026,12 +2195,6 @@ export class StrategyService {
             }
 
             for (const config of coreChampions) {
-                const targetWrapper = this.findUnitForEquipment(config.name);
-                if (!targetWrapper) continue;
-
-                // 装备已满 (3件) 跳过
-                if (targetWrapper.unit.equips.length >= 3) continue;
-
                 const desiredItems: string[] = [];
                 if (config.items) {
                     desiredItems.push(...config.items.core);
@@ -2042,6 +2205,15 @@ export class StrategyService {
                 if (desiredItems.length === 0) continue;
 
                 for (const itemName of desiredItems) {
+                    // 目标单位的选择需要“按装备动态决定”：
+                    // - 核心在场：一定返回核心
+                    // - 核心不在场：返回更合适的打工仔（会参考装备的前排/后排倾向）
+                    const targetWrapper = this.findUnitForEquipment(config.name, itemName);
+                    if (!targetWrapper) continue;
+
+                    // 装备已满 (3件) 跳过
+                    if (targetWrapper.unit.equips.length >= 3) continue;
+
                     const alreadyHas = targetWrapper.unit.equips.some(e => e.name === itemName);
                     if (alreadyHas) continue;
 
@@ -2071,50 +2243,24 @@ export class StrategyService {
                 if (actionTaken) break;
             }
 
-            // 2) 如果没有核心装可做：散件先上，拉即时战力（更贴合"保前四"）
+            // 2) 如果没有核心装可做：把背包里的装备尽快“合理地”挂出去（保前四：即时战力）
             if (!actionTaken) {
-                // 2.1 找一个穿装备目标：优先核心/打工仔逻辑，其次退化到"棋盘最强单位"
-                let targetLocation: BoardLocation | null = null;
+                // 2.1 优先选择一个“基础散件”（formula 为空）；没有散件就随便取一个可穿戴装备
+                const component = equipments.find(e => {
+                    const data = TFT_16_EQUIP_DATA[e.name as EquipKey];
+                    return data && (data.formula ?? "") === "";
+                });
 
-                for (const config of coreChampions) {
-                    const wrapper = this.findUnitForEquipment(config.name);
-                    if (!wrapper) continue;
-                    if (wrapper.unit.equips.length >= 3) continue;
-                    targetLocation = wrapper.unit.location;
-                    break;
-                }
+                const itemToEquip = component?.name ?? equipments[0].name;
 
-                if (!targetLocation) {
-                    const boardUnits = gameStateManager.getBoardUnitsWithLocation();
-                    const targetChampions = this.targetChampionNames;
-
-                    // 复用 calculateUnitScore：让"散件挂载目标"的选择逻辑和"上棋/换弱子"保持一致。
-                    let best: { location: BoardLocation; score: number } | null = null;
-
-                    for (const u of boardUnits) {
-                        if (u.equips.length >= 3) continue;
-
-                        const score = this.calculateUnitScore(u.tftUnit, u.starLevel, targetChampions);
-                        if (!best || score > best.score) {
-                            best = { location: u.location, score };
-                        }
-                    }
-
-                    targetLocation = best?.location ?? null;
-                }
+                // 2.2 根据“散件构成”推断它更适合前排/后排，并按倾向找一个更合适的穿戴目标
+                const targetLocation = this.findBestEquipmentTargetLocation(itemToEquip, coreChampions);
 
                 if (targetLocation) {
-                    // 2.2 优先穿"基础散件"（formula 为空），避免随便把成装/特殊装乱挂
-                    const component = equipments.find(e => {
-                        const data = TFT_16_EQUIP_DATA[e.name as EquipKey];
-                        return data && (data.formula ?? "") === "";
-                    });
-
-                    if (component) {
-                        logger.info(`[StrategyService] 散件先上：${component.name} -> ${targetLocation}`);
-                        await this.equipItemToUnit(component.name, targetLocation);
-                        actionTaken = true;
-                    }
+                    const role = this.getEquipmentRolePreference(itemToEquip);
+                    logger.info(`[StrategyService] 装备上场(${role}): ${itemToEquip} -> ${targetLocation}`);
+                    await this.equipItemToUnit(itemToEquip, targetLocation);
+                    actionTaken = true;
                 }
             }
 
@@ -2136,22 +2282,34 @@ export class StrategyService {
      * 2. 如果没找到，找场上的 "打工仔" (非 Target Champion)
      * 3. 打工仔选择标准：2星优先 > 费用高优先
      */
-    private findUnitForEquipment(coreChampionName: string): { unit: BoardUnit, isCore: boolean } | null {
+    private findUnitForEquipment(coreChampionName: string, itemName?: string): { unit: BoardUnit, isCore: boolean } | null {
         const boardUnits = gameStateManager.getBoardUnitsWithLocation();
-        
-        // 1. 找 Core
+
+        // 1. 找 Core（核心在场时，优先给核心；不做“前排/后排”限制，避免与阵容配置冲突）
         const coreUnits = boardUnits
             .filter(u => u.tftUnit.displayName === coreChampionName)
             .sort((a, b) => b.starLevel - a.starLevel); // 优先高星
-        
+
         if (coreUnits.length > 0) {
             return { unit: coreUnits[0], isCore: true };
         }
 
         // 2. 找打工仔 (Item Holder)
-        // 定义：不在 targetChampionNames 里的棋子，或者是低费的目标棋子(暂时不需要过度优化)
-        // 这里简单点：只要不是 targetChampionNames 里的，就是纯粹的打工仔
-        const holderUnits = boardUnits.filter(u => !this.targetChampionNames.has(u.tftUnit.displayName as ChampionKey));
+        // 定义：只要不是 targetChampionNames 里的，就是纯粹的打工仔
+        let holderUnits = boardUnits.filter(u => !this.targetChampionNames.has(u.tftUnit.displayName as ChampionKey));
+
+        if (holderUnits.length > 0 && itemName) {
+            // 根据装备倾向做一次过滤：
+            // - 坦装/抗性散件 → 更偏向给近战前排
+            // - 输出/回蓝散件 → 更偏向给远程后排
+            const role = this.getEquipmentRolePreference(itemName);
+            if (role !== 'any') {
+                const matched = holderUnits.filter(u => this.doesUnitMatchEquipRole(u, role));
+                if (matched.length > 0) {
+                    holderUnits = matched;
+                }
+            }
+        }
 
         if (holderUnits.length > 0) {
             // 排序：优先给强的打工仔 (星级高 > 价格高)
