@@ -1122,9 +1122,10 @@ export class StrategyService {
         // 1. 执行一次战利品球搜索（某些海克斯可能会在 PVP 阶段掉落战利品）
         await this.pickUpLootOrbs();
 
-        // 2. 让小小英雄随机走动（防挂机）
-        // TODO: 实现随机走动逻辑
-        await tftOperator.selfWalkAround();
+        // 2. 防挂机：持续随机走动
+        // 说明：我们复用 antiAfk()，它内部会循环调用 `tftOperator.selfWalkAround()`，
+        //      并在“战斗状态变化/回合变化”时自动退出循环，避免一直阻塞。
+        await this.antiAfk();
     }
 
     /**
@@ -1429,13 +1430,20 @@ export class StrategyService {
         const benchUnits = gameStateManager.getBenchUnits().filter((u): u is BenchUnit => u !== null);
         if (benchUnits.length === 0) return;
 
-        // 找备战席最好的棋子
-        const bestBench = this.findBestBenchUnit(benchUnits, targetChampions);
-        if (!bestBench) return;
-
         // 找棋盘最差的棋子
         const worstBoard = this.findWorstBoardUnit(targetChampions);
         if (!worstBoard) return;
+
+        // 多样性优化：优先用“场上没有的棋子”去替换（避免重复上同名棋子）
+        // 注意：如果把 `worstBoard` 位置的棋子换下去，那么它的名字可以从“禁止名单”里移除。
+        const avoidChampionNames = new Set<ChampionKey>(
+            gameStateManager.getBoardUnitsWithLocation().map(u => u.tftUnit.displayName as ChampionKey)
+        );
+        avoidChampionNames.delete(worstBoard.unit.tftUnit.displayName as ChampionKey);
+
+        // 找备战席最好的棋子（优先避开场上已有的同名棋子；如果避开后一个都没有，再退化到原逻辑）
+        const bestBench = this.findBestBenchUnit(benchUnits, targetChampions, avoidChampionNames);
+        if (!bestBench) return;
 
         // 备战席棋子价值更高才替换
         if (bestBench.score > worstBoard.score) {
@@ -1481,14 +1489,33 @@ export class StrategyService {
 
     /**
      * 找备战席中价值最高的棋子
+     * @param avoidChampionNames 可选：避免选择“同名棋子”（例如场上已经有的棋子名）
      */
     private findBestBenchUnit(
         benchUnits: BenchUnit[],
-        targetChampions: Set<ChampionKey>
+        targetChampions: Set<ChampionKey>,
+        avoidChampionNames?: Set<ChampionKey>
     ): { unit: BenchUnit; score: number } | null {
+        const isNormalUnit = (u: BenchUnit): boolean => {
+            // 锻造器/特殊单位：不参与上场选择
+            if (u.starLevel === -1) return false;
+            return !u.tftUnit.displayName.includes('锻造器');
+        };
+
+        const filtered = benchUnits.filter(isNormalUnit);
+        if (filtered.length === 0) return null;
+
+        // 1) 优先挑选“避开同名”的候选集
+        const candidates = avoidChampionNames
+            ? filtered.filter(u => !avoidChampionNames.has(u.tftUnit.displayName as ChampionKey))
+            : filtered;
+
+        // 2) 如果避开后没有候选，则退化回“不过滤同名”的候选集（避免无子可换）
+        const finalCandidates = candidates.length > 0 ? candidates : filtered;
+
         let best: { unit: BenchUnit; score: number } | null = null;
 
-        for (const unit of benchUnits) {
+        for (const unit of finalCandidates) {
             const score = this.calculateUnitScore(unit.tftUnit, unit.starLevel, targetChampions);
             if (!best || score > best.score) {
                 best = {unit, score};
@@ -2668,18 +2695,61 @@ export class StrategyService {
      *              非目标棋子作为"打工仔"，虽然没有羁绊加成，但也能提供战斗力。
      */
     private selectUnitsToPlace(benchUnits: BenchUnit[], targetChampions: Set<ChampionKey>, maxCount: number): BenchUnit[] {
-        if (benchUnits.length === 0) {
+        if (benchUnits.length === 0 || maxCount <= 0) {
             return [];
         }
 
-        // 复用 calculateUnitScore 计算分数，按分数从高到低排序
-        const sortedUnits = [...benchUnits].sort((a, b) => {
-            const aScore = this.calculateUnitScore(a.tftUnit, a.starLevel, targetChampions);
-            const bScore = this.calculateUnitScore(b.tftUnit, b.starLevel, targetChampions);
-            return bScore - aScore;  // 分数高的排前面
+        // 多样性优化：优先不上场“场上已经存在”的同名棋子
+        // 说明：同名棋子重复上场往往带来较低的收益，但会占用人口。
+        //      因此这里优先让场面更“多样”，把人口用在不同棋子上；如果备战席全是重复棋子，会自动兜底。
+        const boardChampionNames = new Set<ChampionKey>(
+            gameStateManager.getBoardUnitsWithLocation().map(u => u.tftUnit.displayName as ChampionKey)
+        );
+
+        // 先过滤掉特殊单位（例如锻造器）
+        const filtered = benchUnits.filter(u => {
+            if (u.starLevel === -1) return false;
+            return !u.tftUnit.displayName.includes('锻造器');
         });
 
-        return sortedUnits.slice(0, maxCount);
+        if (filtered.length === 0) {
+            return [];
+        }
+
+        // 多样性候选：优先选择“场上没有的同名棋子”
+        // 兜底：如果备战席全是重复棋子，仍然允许上场（否则会亏人口）
+        const candidates = filtered.filter(u => !boardChampionNames.has(u.tftUnit.displayName as ChampionKey));
+        const finalCandidates = candidates.length > 0 ? candidates : filtered;
+
+        // 复用 calculateUnitScore 计算分数，按分数从高到低排序
+        const sortedUnits = [...finalCandidates].sort((a, b) => {
+            const aScore = this.calculateUnitScore(a.tftUnit, a.starLevel, targetChampions);
+            const bScore = this.calculateUnitScore(b.tftUnit, b.starLevel, targetChampions);
+            return bScore - aScore; // 分数高的排前面
+        });
+
+        // 第一轮：尽量保证“上场棋子也不重复”（同一回合优先上不同英雄）
+        const result: BenchUnit[] = [];
+        const pickedChampionNames = new Set<ChampionKey>();
+
+        for (const u of sortedUnits) {
+            const name = u.tftUnit.displayName as ChampionKey;
+            if (pickedChampionNames.has(name)) continue;
+            pickedChampionNames.add(name);
+            result.push(u);
+            if (result.length >= maxCount) break;
+        }
+
+        // 第二轮兜底：如果仍然没凑满人口（备战席大多是重复棋子），用剩余高分棋子补齐
+        if (result.length < maxCount) {
+            for (const u of sortedUnits) {
+                if (result.includes(u)) continue;
+                result.push(u);
+                if (result.length >= maxCount) break;
+            }
+        }
+
+        return result;
     }
 
     /**
