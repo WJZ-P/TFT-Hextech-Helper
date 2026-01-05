@@ -5599,6 +5599,10 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["LINEUP_GET_SELECTED_IDS"] = "lineup-get-selected-ids";
   IpcChannel2["LINEUP_SET_SELECTED_IDS"] = "lineup-set-selected-ids";
   IpcChannel2["TFT_GET_CHAMPION_CN_TO_EN_MAP"] = "tft-get-champion-cn-to-en-map";
+  IpcChannel2["TFT_GET_MODE"] = "tft-get-mode";
+  IpcChannel2["TFT_SET_MODE"] = "tft-set-mode";
+  IpcChannel2["LOG_GET_MODE"] = "log-get-mode";
+  IpcChannel2["LOG_SET_MODE"] = "log-set-mode";
   return IpcChannel2;
 })(IpcChannel || {});
 class IdleState {
@@ -10064,7 +10068,7 @@ class TemplateLoader {
 const templateLoader = TemplateLoader.getInstance();
 const MATCH_THRESHOLDS = {
   /** 装备匹配阈值 */
-  EQUIP: 0.75,
+  EQUIP: 0.6,
   /** 英雄匹配阈值 */
   CHAMPION: 0.4,
   /** 星级匹配阈值 (星级图标特征明显，阈值设高) */
@@ -10749,6 +10753,7 @@ class MouseController {
   }
 }
 const mouseController = MouseController.getInstance();
+const AUGMENT_ROUNDS = /* @__PURE__ */ new Set(["2-1", "3-2", "4-2"]);
 function parseStageStringToEnum(stageText) {
   try {
     const cleanText = stageText.replace(/\s/g, "");
@@ -10761,7 +10766,7 @@ function parseStageStringToEnum(stageText) {
     if (stage === 1) {
       return GameStageType.EARLY_PVE;
     }
-    if (round === 2) {
+    if (AUGMENT_ROUNDS.has(cleanText)) {
       return GameStageType.AUGMENT;
     }
     if (round === 4) {
@@ -11758,6 +11763,48 @@ class TftOperator {
     await mouseController.drag(fromPoint, toPoint);
   }
   /**
+   * 打开锻造器并选择装备
+   * @param benchUnit 备战席上的锻造器单位
+   * @description 锻造器打开后会弹出装备选择界面（4选1 或 5选1）
+   *              当前实现：固定选择中间的装备
+   *              - 4选1 时选择第2个（索引1，从左数第二个）
+   *              - 5选1 时选择第3个（索引2，正中间）
+   * 
+   *              操作流程：
+   *              1. 校验传入的单位是否为锻造器
+   *              2. 将锻造器从备战席拖拽到商店位置（SHOP_SLOT_3）
+   *              3. 松开鼠标后，再左键点击商店位置打开选择界面
+   *              4. 等待界面出现（约 300ms）
+   *              5. 点击中间位置的装备完成选择
+   * 
+   * @example
+   * // 打开备战席上的锻造器
+   * const forges = gameStateManager.findItemForges();
+   * if (forges.length > 0) {
+   *     await tftOperator.openItemForge(forges[0]);
+   * }
+   * 
+   * TODO: 识别装备并精准选择（根据阵容需求选择最优装备）
+   */
+  async openItemForge(benchUnit) {
+    this.ensureInitialized();
+    const unitName = benchUnit.tftUnit.displayName;
+    if (!unitName.includes("锻造器")) {
+      logger.error(`[TftOperator] openItemForge 传入的不是锻造器: ${unitName}`);
+      return;
+    }
+    const forgePoint = benchSlotPoints[benchUnit.location];
+    if (!forgePoint) {
+      logger.error(`[TftOperator] 无效的备战席位置: ${benchUnit.location}`);
+      return;
+    }
+    logger.info(`[TftOperator] 打开锻造器: ${unitName} (${benchUnit.location})`);
+    const shopPoint = shopSlot.SHOP_SLOT_3;
+    await mouseController.drag(forgePoint, shopPoint);
+    await sleep(500);
+    await mouseController.clickAt(shopPoint, MouseButtonType.LEFT);
+  }
+  /**
    * 将装备穿戴给棋盘上的单位
    * @param equipSlotIndex 装备栏索引 (0-9)
    * @param boardLocation 棋盘目标位置 (如 "R1_C1")
@@ -12368,6 +12415,21 @@ class GameStateManager {
     return result;
   }
   /**
+   * 查找备战席中的锻造器
+   * @returns 锻造器的 BenchUnit 数组
+   * @description 锻造器是特殊单位，displayName 包含"锻造器"即可识别
+   *              直接返回 BenchUnit，因为它已包含所有需要的信息：
+   *              - location: 槽位位置 (如 "SLOT_1")
+   *              - tftUnit: 棋子信息 (包含 displayName)
+   *              - starLevel: 星级 (锻造器为 -1)
+   *              - equips: 装备列表 (锻造器为空数组)
+   */
+  findItemForges() {
+    return this.getBenchUnits().filter(
+      (unit) => unit !== null && unit.tftUnit.displayName.includes("锻造器")
+    );
+  }
+  /**
    * 获取棋盘上的非空棋子列表（带位置）
    * @returns 包含棋子信息的数组
    * @description 用于遍历棋盘上的棋子，分析当前站位
@@ -12651,6 +12713,11 @@ class GameStageMonitor extends EventEmitter {
   }
 }
 const gameStageMonitor = GameStageMonitor.getInstance();
+var LogMode = /* @__PURE__ */ ((LogMode2) => {
+  LogMode2["SIMPLE"] = "SIMPLE";
+  LogMode2["DETAILED"] = "DETAILED";
+  return LogMode2;
+})(LogMode || {});
 class SettingsStore {
   static instance;
   store;
@@ -12664,6 +12731,8 @@ class SettingsStore {
     const defaults = {
       tftMode: TFTMode.NORMAL,
       //  默认是匹配模式
+      logMode: LogMode.SIMPLE,
+      //  默认是简略日志模式
       window: {
         bounds: null,
         //  第一次启动，默认为null
@@ -12984,6 +13053,10 @@ class StrategyService {
         return;
       }
     }
+    if (stage === 2 && round === 1 && this.selectionState === "PENDING") {
+      logger.info("[StrategyService] 检测到 2-1 回合，开始阵容匹配...");
+      await this.matchAndLockLineup();
+    }
     if (this.shouldRefreshStateOnStageChange(type)) {
       await this.refreshGameState();
     }
@@ -13081,6 +13154,126 @@ class StrategyService {
     return gameStageMonitor.currentStageType;
   }
   /**
+   * 判断：某个“装备栏物品”是否是真正可穿戴的装备
+   * @description
+   * TFT 的装备栏里可能出现一些“特殊道具”，它们并不是给棋子穿的：
+   * - 装备拆卸器：对目标棋子使用后，会把身上装备全部拆下来回到装备栏
+   * - 金质装备拆卸器：同上，但可无限次使用
+   * - 装备重铸器：对目标棋子使用后，会把身上装备全部重铸并回到装备栏
+   *
+   * 这类道具当前版本暂不支持自动使用（风险较高，容易误操作），因此先在装备策略里跳过。
+   *
+   * TODO: 实现特殊道具的使用策略（拆卸器/金拆/重铸器等），并加入更严格的目标选择与安全保护。
+   */
+  isWearableEquipmentName(itemName) {
+    const data = TFT_16_EQUIP_DATA[itemName];
+    if (!data) {
+      return false;
+    }
+    if (data.equipId === "-1") {
+      return false;
+    }
+    return true;
+  }
+  /**
+   * 推断：装备更适合“前排”还是“后排”
+   * @description
+   * 我们没有直接的“装备类型标签”（坦装/输出装），但可以利用 `TFT_16_EQUIP_DATA.formula`：
+   * - 基础散件：formula 为空
+   * - 成装：formula 是 "散件ID1,散件ID2"
+   *
+   * 基于散件做一个非常粗粒度的启发式（足够让“随便上装备”变得更像人）：
+   * - 反曲之弓/暴风之剑/无用大棒/女神之泪 → 倾向后排（输出/攻速/法强/回蓝）
+   * - 锁子甲/负极斗篷/巨人腰带 → 倾向前排（抗性/血量）
+   * - 拳套/金铲铲/金锅锅 → 偏中性（很多装备/转职比较灵活）
+   *
+   * TODO: 后续可以结合“阵容配置的前排/后排位”或“英雄定位(主C/主T)”做更准确的分配。
+   */
+  getEquipmentRolePreference(itemName) {
+    const data = TFT_16_EQUIP_DATA[itemName];
+    if (!data) return "any";
+    const componentNames = this.getComponentNamesOfItem(itemName);
+    if (componentNames.length === 0) return "any";
+    const isFrontlineComponent = (name) => {
+      return name === "锁子甲" || name === "负极斗篷" || name === "巨人腰带";
+    };
+    const isBacklineComponent = (name) => {
+      return name === "反曲之弓" || name === "暴风之剑" || name === "无用大棒" || name === "女神之泪";
+    };
+    const isNeutralComponent = (name) => {
+      return name === "拳套" || name === "金铲铲" || name === "金锅锅";
+    };
+    if (componentNames.length === 1) {
+      const c = componentNames[0];
+      if (isFrontlineComponent(c)) return "frontline";
+      if (isBacklineComponent(c)) return "backline";
+      if (isNeutralComponent(c)) return "any";
+      return "any";
+    }
+    const frontlineCount = componentNames.filter(isFrontlineComponent).length;
+    const backlineCount = componentNames.filter(isBacklineComponent).length;
+    if (frontlineCount === 2) return "frontline";
+    if (backlineCount === 2) return "backline";
+    return "any";
+  }
+  /**
+   * 获取某件装备由哪些“基础散件”组成
+   * @returns 散件名称数组：
+   * - 基础散件：返回 [自身]
+   * - 成装：返回 [散件1, 散件2]
+   */
+  getComponentNamesOfItem(itemName) {
+    const equip = TFT_16_EQUIP_DATA[itemName];
+    if (!equip) return [];
+    const formula = (equip.formula ?? "").trim();
+    if (!formula) {
+      return [itemName];
+    }
+    const [id1, id2] = formula.split(",");
+    const name1 = id1 ? this.findEquipNameById(id1) : void 0;
+    const name2 = id2 ? this.findEquipNameById(id2) : void 0;
+    return [name1, name2].filter((n) => Boolean(n));
+  }
+  /**
+   * 判断某个棋子是否符合装备倾向（这里用“射程”近似判断前排/后排）
+   * - 近战(1-2) → 前排
+   * - 远程(3+) → 后排
+   */
+  doesUnitMatchEquipRole(unit, role) {
+    if (role === "any") return true;
+    const name = unit.tftUnit.displayName;
+    const range = getChampionRange(name) ?? 1;
+    const isMelee = range <= 2;
+    return role === "frontline" ? isMelee : !isMelee;
+  }
+  /**
+   * 为某件装备找一个“更合适”的穿戴目标（优先不影响核心装分配，其次按前排/后排倾向选人）
+   */
+  findBestEquipmentTargetLocation(itemName, coreChampions) {
+    const role = this.getEquipmentRolePreference(itemName);
+    for (const config of coreChampions) {
+      const wrapper = this.findUnitForEquipment(config.name, itemName);
+      if (!wrapper) continue;
+      if (wrapper.unit.equips.length >= 3) continue;
+      if (this.doesUnitMatchEquipRole(wrapper.unit, role)) {
+        return wrapper.unit.location;
+      }
+    }
+    const boardUnits = gameStateManager.getBoardUnitsWithLocation().filter((u) => u.equips.length < 3);
+    if (boardUnits.length === 0) return null;
+    const candidates = role === "any" ? boardUnits : boardUnits.filter((u) => this.doesUnitMatchEquipRole(u, role));
+    const finalCandidates = candidates.length > 0 ? candidates : boardUnits;
+    const targetChampions = this.targetChampionNames;
+    let best = null;
+    for (const u of finalCandidates) {
+      const score = this.calculateUnitScore(u.tftUnit, u.starLevel, targetChampions);
+      if (!best || score > best.score) {
+        best = { location: u.location, score };
+      }
+    }
+    return best?.location ?? null;
+  }
+  /**
    * 判断：当前场上是否存在任意一个"核心棋子"
    * @returns 是否存在核心棋子
    *
@@ -13110,6 +13303,10 @@ class StrategyService {
    *   只要发现「能穿」或「能合成并穿」的动作，就允许进入 `executeEquipStrategy()`。
    */
   canPerformAnyEquipOperation(equipments) {
+    const wearableEquipments = equipments.filter((e) => this.isWearableEquipmentName(e.name));
+    if (wearableEquipments.length === 0) {
+      return { can: false, reason: "装备栏里没有可穿戴装备（可能全是拆卸器/重铸器等特殊道具）" };
+    }
     const boardUnits = gameStateManager.getBoardUnitsWithLocation();
     const targetChampions = this.targetChampionNames;
     let equipableUnit = null;
@@ -13125,7 +13322,7 @@ class StrategyService {
     if (!equipableUnit) {
       return { can: false, reason: "棋盘上没有可穿戴装备的单位（可能全员满装备/无单位）" };
     }
-    const component = equipments.find((e) => {
+    const component = wearableEquipments.find((e) => {
       const data = TFT_16_EQUIP_DATA[e.name];
       return data && (data.formula ?? "") === "";
     });
@@ -13177,33 +13374,31 @@ class StrategyService {
    * @returns should: 是否执行；reason: 便于日志排查的原因
    *
    * @description
-   * 触发原则：
-   * - 只在 PVP 且非战斗中考虑（避免战斗中拖拽导致事故）
-   * - 只要"确实存在可执行动作"，就允许执行（核心不在场时也允许把核心装先挂打工仔）
-   * - 额外约定：装备数 > 5 视为"快满"（用于日志/后续扩展兜底策略）
+   * 触发原则（更激进 / 保前四向）：
+   * - 只要"不在战斗中"且"装备栏非空" → 就执行装备策略
+   * - 原因：前期即使把散件/成装先挂到打工仔，也能显著提升即时战力，提高前四率
+   *
+   * 注意：装备拖拽是高风险操作，所以仍然严格禁止在战斗中执行。
    */
   getEquipStrategyGateDecision() {
     const stageType = this.getCurrentStageType();
-    if (stageType !== GameStageType.PVP) {
-      return { should: false, reason: `当前阶段为 ${stageType}（非PVP）` };
-    }
     if (this.isFighting()) {
       return { should: false, reason: "战斗中" };
     }
-    const equipments = gameStateManager.getEquipments();
-    if (equipments.length === 0) {
+    const rawEquipments = gameStateManager.getEquipments();
+    if (rawEquipments.length === 0) {
       return { should: false, reason: "装备栏为空" };
     }
-    const nearFullThreshold = 5;
-    const nearFullHint = equipments.length > nearFullThreshold ? `（装备快满：${equipments.length} > ${nearFullThreshold}）` : "";
-    if (this.hasAnyCoreChampionOnBoard()) {
-      return { should: true, reason: `场上存在核心棋子${nearFullHint}` };
+    const equipments = rawEquipments.filter((e) => this.isWearableEquipmentName(e.name));
+    const skipped = rawEquipments.filter((e) => !this.isWearableEquipmentName(e.name));
+    if (equipments.length === 0) {
+      const skippedHint = skipped.length > 0 ? `（已跳过特殊道具: ${skipped.map((s) => s.name).join(", ")}）` : "";
+      return { should: false, reason: `装备栏无可穿戴装备${skippedHint}` };
     }
-    const op = this.canPerformAnyEquipOperation(equipments);
-    if (op.can) {
-      return { should: true, reason: `${op.reason}${nearFullHint}` };
-    }
-    return { should: false, reason: `${op.reason}${nearFullHint}` };
+    return {
+      should: true,
+      reason: `可穿戴装备非空(${equipments.length})，激进策略：有装备就上（当前阶段=${stageType}）`
+    };
   }
   /**
    * 初始化策略服务
@@ -13307,26 +13502,33 @@ class StrategyService {
   /**
    * 更新目标棋子列表
    * @param level 当前人口等级
-   * @description 根据人口等级获取对应阶段的目标棋子
+   * @description 根据人口等级获取目标棋子
+   *
+   * 策略说明：
+   * - 目标棋子 = 当前等级及以上所有等级配置中的棋子（合并去重）
+   * - 例如：4 级时，目标 = level4 + level5 + ... + level10 的所有棋子
+   * - 升到 5 级时，目标 = level5 + level6 + ... + level10（剔除 level4 的低费打工仔）
+   *
+   * 这样随着等级提升，低费打工仔会被逐渐剔除，只保留当前等级及以上的目标棋子
    */
   updateTargetChampions(level) {
     if (!this.currentLineup) {
       this.targetChampionNames.clear();
       return;
     }
-    const stageConfig = this.getStageConfigForLevel(level);
-    if (!stageConfig) {
-      logger.warn(`[StrategyService] 阵容 ${this.currentLineup.name} 没有 level${level} 及以下的配置`);
-      this.targetChampionNames.clear();
-      return;
-    }
     this.targetChampionNames.clear();
-    for (const champion of stageConfig.champions) {
-      this.targetChampionNames.add(champion.name);
+    const validLevels = [4, 5, 6, 7, 8, 9, 10];
+    const startLevel = Math.max(level, 4);
+    for (const checkLevel of validLevels) {
+      if (checkLevel < startLevel) continue;
+      const stageKey = `level${checkLevel}`;
+      const stageConfig = this.currentLineup.stages[stageKey];
+      if (stageConfig) {
+        for (const champion of stageConfig.champions) {
+          this.targetChampionNames.add(champion.name);
+        }
+      }
     }
-    logger.info(
-      `[StrategyService] 人口 ${level} 目标棋子: ${Array.from(this.targetChampionNames).join(", ")}`
-    );
   }
   /**
    * 获取指定等级的阶段配置（支持双向查找）
@@ -13529,7 +13731,7 @@ class StrategyService {
   async handlePVPFighting() {
     logger.info("[StrategyService] PVP 战斗阶段：观战中...");
     await this.pickUpLootOrbs();
-    await tftOperator.selfWalkAround();
+    await this.antiAfk();
   }
   /**
    * 拾取战利品球
@@ -13742,10 +13944,14 @@ class StrategyService {
   async autoReplaceWeakestUnit(targetChampions) {
     const benchUnits = gameStateManager.getBenchUnits().filter((u) => u !== null);
     if (benchUnits.length === 0) return;
-    const bestBench = this.findBestBenchUnit(benchUnits, targetChampions);
-    if (!bestBench) return;
     const worstBoard = this.findWorstBoardUnit(targetChampions);
     if (!worstBoard) return;
+    const avoidChampionNames = new Set(
+      gameStateManager.getBoardUnitsWithLocation().map((u) => u.tftUnit.displayName)
+    );
+    avoidChampionNames.delete(worstBoard.unit.tftUnit.displayName);
+    const bestBench = this.findBestBenchUnit(benchUnits, targetChampions, avoidChampionNames);
+    if (!bestBench) return;
     if (bestBench.score > worstBoard.score) {
       const worstName = worstBoard.unit.tftUnit.displayName;
       const bestName = bestBench.unit.tftUnit.displayName;
@@ -13775,10 +13981,19 @@ class StrategyService {
   }
   /**
    * 找备战席中价值最高的棋子
+   * @param avoidChampionNames 可选：避免选择“同名棋子”（例如场上已经有的棋子名）
    */
-  findBestBenchUnit(benchUnits, targetChampions) {
+  findBestBenchUnit(benchUnits, targetChampions, avoidChampionNames) {
+    const isNormalUnit = (u) => {
+      if (u.starLevel === -1) return false;
+      return !u.tftUnit.displayName.includes("锻造器");
+    };
+    const filtered = benchUnits.filter(isNormalUnit);
+    if (filtered.length === 0) return null;
+    const candidates = avoidChampionNames ? filtered.filter((u) => !avoidChampionNames.has(u.tftUnit.displayName)) : filtered;
+    const finalCandidates = candidates.length > 0 ? candidates : filtered;
     let best = null;
-    for (const unit of benchUnits) {
+    for (const unit of finalCandidates) {
       const score = this.calculateUnitScore(unit.tftUnit, unit.starLevel, targetChampions);
       if (!best || score > best.score) {
         best = { unit, score };
@@ -13853,20 +14068,12 @@ class StrategyService {
   }
   /**
    * 处理 PVP 阶段 (玩家对战)
-   * @description
-   * - 首次 PVP（2-1）：如果阵容未锁定（PENDING），进行阵容匹配
-   * - 后续 PVP：正常运营（拿牌、升级、调整站位）
+   * @description 正常运营阶段：拿牌、升级、调整站位
    *
-   * @note 不需要额外检查 hasFirstPvpOccurred，因为：
-   *       - PENDING 状态说明还没锁定阵容
-   *       - matchAndLockLineup() 执行后会把状态设为 LOCKED
-   *       - 下次 PVP 时 selectionState 已经是 LOCKED，不会重复匹配
+   * @note 阵容匹配已移至 handleAugment()，在 2-1 首次海克斯选择时执行
+   *       因为 2-1 是海克斯阶段（AUGMENT），不是 PVP 阶段
    */
   async handlePVP() {
-    if (this.selectionState === "PENDING") {
-      logger.info("[StrategyService] 检测到首次 PVP 阶段，开始阵容匹配...");
-      await this.matchAndLockLineup();
-    }
     await this.executeCommonStrategy();
   }
   /**
@@ -13916,6 +14123,7 @@ class StrategyService {
   async executeCommonStrategy() {
     logger.debug("[StrategyService] 执行通用运营策略");
     await tftOperator.selfResetPosition();
+    await this.handleItemForges();
     const ownedChampions = gameStateManager.getOwnedChampionNames();
     const targetChampions = this.targetChampionNames;
     logger.info(
@@ -13936,6 +14144,30 @@ class StrategyService {
     } else {
       logger.debug(`[StrategyService] 跳过装备策略：${equipGate.reason}`);
     }
+  }
+  /**
+   * 处理备战席中的锻造器
+   * @description 检查备战席是否有锻造器，如果有则打开并选择中间的装备
+   *              锻造器是特殊单位，占用备战席位置但不能上场
+   *              及时处理可以：
+   *              1. 腾出备战席空间，方便购买棋子
+   *              2. 获得装备，可以立即用于后续的装备策略
+   * 
+   *              策略：固定选择中间的装备，免去复杂的装备识别和评估
+   */
+  async handleItemForges() {
+    const forges = gameStateManager.findItemForges();
+    if (forges.length === 0) {
+      return;
+    }
+    logger.info(`[StrategyService] 发现 ${forges.length} 个锻造器: ${forges.map((f) => f.tftUnit.displayName).join(", ")}`);
+    for (const forge of forges) {
+      logger.info(`[StrategyService] 处理锻造器: ${forge.tftUnit.displayName} (${forge.location})`);
+      await tftOperator.openItemForge(forge);
+      await sleep(200);
+    }
+    await this.updateEquipStateFromScreen();
+    logger.info(`[StrategyService] 锻造器处理完成，已获得 ${forges.length} 件装备`);
   }
   /**
    * 从屏幕重新识别并更新等级和经验状态
@@ -14220,8 +14452,12 @@ class StrategyService {
     const maxOperations = 10;
     let operationCount = 0;
     while (operationCount < maxOperations) {
-      const equipments = gameStateManager.getEquipments();
-      if (equipments.length === 0) break;
+      const rawEquipments = gameStateManager.getEquipments();
+      if (rawEquipments.length === 0) break;
+      const equipments = rawEquipments.filter((e) => this.isWearableEquipmentName(e.name));
+      if (equipments.length === 0) {
+        break;
+      }
       let actionTaken = false;
       const coreChampions = this.getCoreChampions();
       const bagSnapshot = /* @__PURE__ */ new Map();
@@ -14229,9 +14465,6 @@ class StrategyService {
         bagSnapshot.set(equip.name, (bagSnapshot.get(equip.name) || 0) + 1);
       }
       for (const config of coreChampions) {
-        const targetWrapper = this.findUnitForEquipment(config.name);
-        if (!targetWrapper) continue;
-        if (targetWrapper.unit.equips.length >= 3) continue;
         const desiredItems = [];
         if (config.items) {
           desiredItems.push(...config.items.core);
@@ -14241,6 +14474,9 @@ class StrategyService {
         }
         if (desiredItems.length === 0) continue;
         for (const itemName of desiredItems) {
+          const targetWrapper = this.findUnitForEquipment(config.name, itemName);
+          if (!targetWrapper) continue;
+          if (targetWrapper.unit.equips.length >= 3) continue;
           const alreadyHas = targetWrapper.unit.equips.some((e) => e.name === itemName);
           if (alreadyHas) continue;
           if ((bagSnapshot.get(itemName) || 0) > 0) {
@@ -14264,37 +14500,17 @@ class StrategyService {
         if (actionTaken) break;
       }
       if (!actionTaken) {
-        let targetLocation = null;
-        for (const config of coreChampions) {
-          const wrapper = this.findUnitForEquipment(config.name);
-          if (!wrapper) continue;
-          if (wrapper.unit.equips.length >= 3) continue;
-          targetLocation = wrapper.unit.location;
-          break;
-        }
-        if (!targetLocation) {
-          const boardUnits = gameStateManager.getBoardUnitsWithLocation();
-          const targetChampions = this.targetChampionNames;
-          let best = null;
-          for (const u of boardUnits) {
-            if (u.equips.length >= 3) continue;
-            const score = this.calculateUnitScore(u.tftUnit, u.starLevel, targetChampions);
-            if (!best || score > best.score) {
-              best = { location: u.location, score };
-            }
-          }
-          targetLocation = best?.location ?? null;
-        }
+        const component = equipments.find((e) => {
+          const data = TFT_16_EQUIP_DATA[e.name];
+          return data && (data.formula ?? "") === "";
+        });
+        const itemToEquip = component?.name ?? equipments[0].name;
+        const targetLocation = this.findBestEquipmentTargetLocation(itemToEquip, coreChampions);
         if (targetLocation) {
-          const component = equipments.find((e) => {
-            const data = TFT_16_EQUIP_DATA[e.name];
-            return data && (data.formula ?? "") === "";
-          });
-          if (component) {
-            logger.info(`[StrategyService] 散件先上：${component.name} -> ${targetLocation}`);
-            await this.equipItemToUnit(component.name, targetLocation);
-            actionTaken = true;
-          }
+          const role = this.getEquipmentRolePreference(itemToEquip);
+          logger.info(`[StrategyService] 装备上场(${role}): ${itemToEquip} -> ${targetLocation}`);
+          await this.equipItemToUnit(itemToEquip, targetLocation);
+          actionTaken = true;
         }
       }
       if (!actionTaken) {
@@ -14313,13 +14529,22 @@ class StrategyService {
    * 2. 如果没找到，找场上的 "打工仔" (非 Target Champion)
    * 3. 打工仔选择标准：2星优先 > 费用高优先
    */
-  findUnitForEquipment(coreChampionName) {
+  findUnitForEquipment(coreChampionName, itemName) {
     const boardUnits = gameStateManager.getBoardUnitsWithLocation();
     const coreUnits = boardUnits.filter((u) => u.tftUnit.displayName === coreChampionName).sort((a, b) => b.starLevel - a.starLevel);
     if (coreUnits.length > 0) {
       return { unit: coreUnits[0], isCore: true };
     }
-    const holderUnits = boardUnits.filter((u) => !this.targetChampionNames.has(u.tftUnit.displayName));
+    let holderUnits = boardUnits.filter((u) => !this.targetChampionNames.has(u.tftUnit.displayName));
+    if (holderUnits.length > 0 && itemName) {
+      const role = this.getEquipmentRolePreference(itemName);
+      if (role !== "any") {
+        const matched = holderUnits.filter((u) => this.doesUnitMatchEquipRole(u, role));
+        if (matched.length > 0) {
+          holderUnits = matched;
+        }
+      }
+    }
     if (holderUnits.length > 0) {
       holderUnits.sort((a, b) => {
         if (a.starLevel !== b.starLevel) return b.starLevel - a.starLevel;
@@ -14422,7 +14647,7 @@ class StrategyService {
     }
   }
   /**
-   * 处理 海克斯选择阶段
+   * 处理 海克斯选择阶段 (2-1, 3-2, 4-2)
    * @description 进入海克斯阶段后：
    *              1. 等待 1.5 秒（让海克斯选项完全加载）
    *              2. 随机点击一个海克斯槽位（SLOT_1 / SLOT_2 / SLOT_3）
@@ -14574,15 +14799,43 @@ class StrategyService {
    *              非目标棋子作为"打工仔"，虽然没有羁绊加成，但也能提供战斗力。
    */
   selectUnitsToPlace(benchUnits, targetChampions, maxCount) {
-    if (benchUnits.length === 0) {
+    if (benchUnits.length === 0 || maxCount <= 0) {
       return [];
     }
-    const sortedUnits = [...benchUnits].sort((a, b) => {
+    const boardChampionNames = new Set(
+      gameStateManager.getBoardUnitsWithLocation().map((u) => u.tftUnit.displayName)
+    );
+    const filtered = benchUnits.filter((u) => {
+      if (u.starLevel === -1) return false;
+      return !u.tftUnit.displayName.includes("锻造器");
+    });
+    if (filtered.length === 0) {
+      return [];
+    }
+    const candidates = filtered.filter((u) => !boardChampionNames.has(u.tftUnit.displayName));
+    const finalCandidates = candidates.length > 0 ? candidates : filtered;
+    const sortedUnits = [...finalCandidates].sort((a, b) => {
       const aScore = this.calculateUnitScore(a.tftUnit, a.starLevel, targetChampions);
       const bScore = this.calculateUnitScore(b.tftUnit, b.starLevel, targetChampions);
       return bScore - aScore;
     });
-    return sortedUnits.slice(0, maxCount);
+    const result = [];
+    const pickedChampionNames = /* @__PURE__ */ new Set();
+    for (const u of sortedUnits) {
+      const name = u.tftUnit.displayName;
+      if (pickedChampionNames.has(name)) continue;
+      pickedChampionNames.add(name);
+      result.push(u);
+      if (result.length >= maxCount) break;
+    }
+    if (result.length < maxCount) {
+      for (const u of sortedUnits) {
+        if (result.includes(u)) continue;
+        result.push(u);
+        if (result.length >= maxCount) break;
+      }
+    }
+    return result;
   }
   /**
    * 为棋子找到最佳摆放位置
@@ -14953,6 +15206,22 @@ class LobbyState {
   name = "LobbyState";
   lcuManager = LCUManager.getInstance();
   /**
+   * 根据用户设置获取对应的队列 ID
+   * @returns TFT 队列 ID（匹配或排位）
+   */
+  getQueueId() {
+    const tftMode = settingsStore.get("tftMode");
+    switch (tftMode) {
+      case TFTMode.RANK:
+        logger.info("[LobbyState] 当前模式: 排位赛");
+        return Queue.TFT_RANKED;
+      case TFTMode.NORMAL:
+      default:
+        logger.info("[LobbyState] 当前模式: 匹配模式");
+        return Queue.TFT_NORMAL;
+    }
+  }
+  /**
    * 执行大厅状态逻辑
    * @param signal AbortSignal 用于取消操作
    * @returns 下一个状态
@@ -14962,8 +15231,9 @@ class LobbyState {
     if (!this.lcuManager) {
       throw Error("[LobbyState] 检测到客户端未启动！");
     }
+    const queueId = this.getQueueId();
     logger.info("[LobbyState] 正在创建房间...");
-    await this.lcuManager.createLobbyByQueueId(Queue.TFT_NORMAL);
+    await this.lcuManager.createLobbyByQueueId(queueId);
     await sleep(LOBBY_CREATE_DELAY_MS);
     logger.info("[LobbyState] 正在开始排队...");
     await this.lcuManager.startMatch();
@@ -15278,6 +15548,8 @@ app.whenReady().then(async () => {
 });
 function init() {
   logger.init(win);
+  const logMode = settingsStore.get("logMode");
+  logger.setMinLevel(logMode === "DETAILED" ? "debug" : "info");
   const connector = new LCUConnector();
   tftOperator.init();
   connector.on("connect", (data) => {
@@ -15294,21 +15566,26 @@ function init() {
       console.log("🔄 [Main] 重新启动 LCU 连接监听...");
       connector.start();
     });
-    const tftPassWatchUris = /* @__PURE__ */ new Set([
+    const watchUris = /* @__PURE__ */ new Set([
       "/lol-tft-pass/v1/battle-pass",
-      "/lol-tft-pass/v1/active-passes"
+      "/lol-tft-pass/v1/active-passes",
+      "/lol-objectives/v1/objectives/tft",
+      "/lol-objectives/v1/objectives/lol"
     ]);
+    const lcuEventLogPath = path__default.join(process.env.APP_ROOT, "../test/lcu_events.txt");
     lcuManager.on("lcu-event", (event) => {
       console.log("收到LCU事件:", event.uri, event.eventType);
-      if (tftPassWatchUris.has(event.uri)) {
-        console.log(`
-===== [LCU][TFT-PASS] ${event.uri} ${event.eventType} =====`);
-        try {
-          console.log(JSON.stringify(event.data, null, 2));
-        } catch (e) {
-          console.log(event.data);
-        }
-        console.log("===== [LCU][TFT-PASS] END =====\n");
+      if (watchUris.has(event.uri)) {
+        const timestamp = (/* @__PURE__ */ new Date()).toISOString();
+        const logContent = `
+===== [${timestamp}] ${event.uri} ${event.eventType} =====
+` + JSON.stringify(event.data, null, 2) + "\n===== END =====\n";
+        console.log(logContent);
+        fs__default.appendFile(lcuEventLogPath, logContent, (err) => {
+          if (err) {
+            console.error("[Main] 写入 LCU 事件日志失败:", err.message);
+          }
+        });
       }
     });
   });
@@ -15365,6 +15642,15 @@ function registerHandler() {
       cnToEnMap[cnName] = unitData.englishId;
     }
     return cnToEnMap;
+  });
+  ipcMain.handle(IpcChannel.TFT_GET_MODE, async () => settingsStore.get("tftMode"));
+  ipcMain.handle(IpcChannel.TFT_SET_MODE, async (_event, mode) => {
+    settingsStore.set("tftMode", mode);
+  });
+  ipcMain.handle(IpcChannel.LOG_GET_MODE, async () => settingsStore.get("logMode"));
+  ipcMain.handle(IpcChannel.LOG_SET_MODE, async (_event, mode) => {
+    settingsStore.set("logMode", mode);
+    logger.setMinLevel(mode === "DETAILED" ? "debug" : "info");
   });
 }
 export {

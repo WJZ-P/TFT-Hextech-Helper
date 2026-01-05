@@ -134,6 +134,9 @@ app.whenReady().then(async () => {
 function init() {
     //  初始化Logger
     logger.init(win)
+    // 根据保存的设置初始化日志级别
+    const logMode = settingsStore.get('logMode')
+    logger.setMinLevel(logMode === 'DETAILED' ? 'debug' : 'info')
 
     //  启动LCUConnector
     const connector = new LCUConnector()
@@ -288,5 +291,19 @@ function registerHandler() {
             cnToEnMap[cnName] = unitData.englishId;
         }
         return cnToEnMap;
+    })
+
+    // TFT 游戏模式相关
+    ipcMain.handle(IpcChannel.TFT_GET_MODE, async () => settingsStore.get('tftMode'))
+    ipcMain.handle(IpcChannel.TFT_SET_MODE, async (_event, mode: string) => {
+        settingsStore.set('tftMode', mode as any)
+    })
+
+    // 日志模式相关
+    ipcMain.handle(IpcChannel.LOG_GET_MODE, async () => settingsStore.get('logMode'))
+    ipcMain.handle(IpcChannel.LOG_SET_MODE, async (_event, mode: string) => {
+        settingsStore.set('logMode', mode as any)
+        // 同步更新 Logger 的最低日志级别
+        logger.setMinLevel(mode === 'DETAILED' ? 'debug' : 'info')
     })
 }

@@ -95,6 +95,14 @@ const lineupApi = {
     getSelectedIds: (): Promise<string[]> => ipcRenderer.invoke(IpcChannel.LINEUP_GET_SELECTED_IDS),
     /** 保存用户选中的阵容 ID 列表 */
     setSelectedIds: (ids: string[]): Promise<void> => ipcRenderer.invoke(IpcChannel.LINEUP_SET_SELECTED_IDS, ids),
+    /** 获取当前 TFT 游戏模式（匹配/排位） */
+    getTftMode: (): Promise<string> => ipcRenderer.invoke(IpcChannel.TFT_GET_MODE),
+    /** 设置 TFT 游戏模式 */
+    setTftMode: (mode: string): Promise<void> => ipcRenderer.invoke(IpcChannel.TFT_SET_MODE, mode),
+    /** 获取当前日志模式（简略/详细） */
+    getLogMode: (): Promise<string> => ipcRenderer.invoke(IpcChannel.LOG_GET_MODE),
+    /** 设置日志模式 */
+    setLogMode: (mode: string): Promise<void> => ipcRenderer.invoke(IpcChannel.LOG_SET_MODE, mode),
 }
 export type LineupApi = typeof lineupApi
 contextBridge.exposeInMainWorld('lineup', lineupApi)

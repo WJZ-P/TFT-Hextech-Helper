@@ -11,6 +11,8 @@ import { sleep } from "../utils/HelperTools.ts";
 import { logger } from "../utils/Logger.ts";
 import { GameLoadingState } from "./GameLoadingState.ts";
 import { EndState } from "./EndState.ts";
+import { settingsStore } from "../utils/SettingsStore.ts";
+import { TFTMode } from "../TFTProtocol.ts";
 
 /** 创建房间后的等待时间 (ms) */
 const LOBBY_CREATE_DELAY_MS = 500;
@@ -32,6 +34,24 @@ export class LobbyState implements IState {
     private lcuManager = LCUManager.getInstance();
 
     /**
+     * 根据用户设置获取对应的队列 ID
+     * @returns TFT 队列 ID（匹配或排位）
+     */
+    private getQueueId(): Queue {
+        const tftMode = settingsStore.get('tftMode');
+        
+        switch (tftMode) {
+            case TFTMode.RANK:
+                logger.info("[LobbyState] 当前模式: 排位赛");
+                return Queue.TFT_RANKED;
+            case TFTMode.NORMAL:
+            default:
+                logger.info("[LobbyState] 当前模式: 匹配模式");
+                return Queue.TFT_NORMAL;
+        }
+    }
+
+    /**
      * 执行大厅状态逻辑
      * @param signal AbortSignal 用于取消操作
      * @returns 下一个状态
@@ -43,9 +63,12 @@ export class LobbyState implements IState {
             throw Error("[LobbyState] 检测到客户端未启动！");
         }
 
+        // 获取用户选择的游戏模式
+        const queueId = this.getQueueId();
+
         // 创建房间
         logger.info("[LobbyState] 正在创建房间...");
-        await this.lcuManager.createLobbyByQueueId(Queue.TFT_NORMAL);
+        await this.lcuManager.createLobbyByQueueId(queueId);
         await sleep(LOBBY_CREATE_DELAY_MS);
 
         // 开始排队

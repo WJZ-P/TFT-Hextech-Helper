@@ -7,6 +7,8 @@ import {ThemeType} from "../../styles/theme.ts";
 import {LogPanel} from "../LogPanel.tsx";
 import {toast} from "../toast/toast-core.ts";
 import {SummonerInfo} from "../../../src-backend/lcu/utils/LCUProtocols.ts";
+import {TFTMode} from "../../../src-backend/TFTProtocol.ts";
+import {LogMode} from "../../../src-backend/types/AppTypes.ts";
 
 // 导入 APP 图标（让 Vite 正确处理资源路径）
 import appIconUrl from '../../../public/icon.png';
@@ -227,6 +229,192 @@ const LoadingPlaceholder = styled.div<{ theme: ThemeType }>`
   font-size: 0.9rem;
   padding: ${props => props.theme.spacing.small};
 `;
+
+// ============================================
+// 游戏模式切换样式
+// ============================================
+
+/** 模式切换容器 - 相对定位，让标题可以绝对定位在上方 */
+const ModeToggleContainer = styled.div<{ theme: ThemeType }>`
+  position: relative;
+`;
+
+/** 模式切换小标题 - 绝对定位浮在胶囊上方 */
+const ModeToggleTitle = styled.span<{ theme: ThemeType }>`
+  position: absolute;
+  bottom: calc(100% + 4px);  /* 浮在容器上方 */
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: ${props => props.theme.colors.textSecondary};
+  letter-spacing: 2.5px;
+  white-space: nowrap;
+`;
+
+/**
+ * 模式切换开关（整块可点击，点击任意位置切换）
+ *
+ * 设计目标：
+ * - 比“分段按钮”更像真实开关
+ * - 整块可点，交互简单
+ * - 圆角完全裁切，解决右侧“白边没包住”的问题（关键是 overflow: hidden）
+ */
+const ModeTogglePill = styled.button<{ theme: ThemeType; $isRanked: boolean }>`
+  appearance: none;
+  border: 1px solid ${props => props.theme.colors.border};
+  background: ${props => props.theme.colors.elementBg};
+  border-radius: 32px;
+  padding: 4px;
+  height: 36px;
+  width: 128px;
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden; /* 关键：让内部滑块与背景都被圆角裁切 */
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+
+  &:hover {
+    border-color: ${props => props.theme.colors.primary};
+    box-shadow: 0 5px 11px rgba(0, 0, 0, 0.22);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${props => props.theme.colors.primary}80;
+    outline-offset: 2px;
+  }
+`;
+
+/** 滑块指示器（内部移动的那一块） */
+const ModeToggleIndicator = styled.div<{ theme: ThemeType; $isRanked: boolean }>`
+  position: absolute;
+  top: 2px;
+  left: ${props => props.$isRanked ? 'calc(50% + 2px)' : '2px'};
+  width: calc(50% - 4px);
+  height: calc(100% - 4px);
+  border-radius: 999px;
+  background: ${props => props.$isRanked
+    ? `linear-gradient(135deg, ${props.theme.colors.warning} 0%, ${props.theme.colors.warning}cc 100%)`
+    : `linear-gradient(135deg, ${props.theme.colors.primary} 0%, ${props.theme.colors.primaryHover} 100%)`};
+  transition: left 0.22s ease, background 0.22s ease;
+`;
+
+/** 文本层（在滑块之上） */
+const ModeToggleTextRow = styled.div`
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+`;
+
+/** 单个文本 */
+const ModeToggleLabel = styled.span<{ theme: ThemeType; $active: boolean }>`
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 1px;
+  color: ${props => props.$active ? props.theme.colors.textOnPrimary : props.theme.colors.textSecondary};
+  transition: color 0.25s ease;
+`;
+
+// ============================================
+// 日志模式切换样式（左侧）
+// ============================================
+
+/** 日志模式切换容器 - 相对定位，让标题可以绝对定位在上方 */
+const LogModeToggleContainer = styled.div<{ theme: ThemeType }>`
+  position: relative;
+`;
+
+/** 日志模式切换小标题 - 绝对定位浮在胶囊上方 */
+const LogModeToggleTitle = styled.span<{ theme: ThemeType }>`
+  position: absolute;
+  bottom: calc(100% + 4px);  /* 浮在容器上方 */
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: ${props => props.theme.colors.textSecondary};
+  letter-spacing: 2.5px;
+  white-space: nowrap;
+`;
+
+/** 日志模式切换开关 */
+const LogModeTogglePill = styled.button<{ theme: ThemeType; $isDetailed: boolean }>`
+  appearance: none;
+  border: 1px solid ${props => props.theme.colors.border};
+  background: ${props => props.theme.colors.elementBg};
+  border-radius: 32px;
+  padding: 4px;
+  height: 36px;
+  width: 128px;
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+
+  &:hover {
+    border-color: ${props => props.theme.colors.primary};
+    box-shadow: 0 5px 11px rgba(0, 0, 0, 0.22);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${props => props.theme.colors.primary}80;
+    outline-offset: 2px;
+  }
+`;
+
+/** 日志模式滑块指示器 - 配色与模式选择统一 */
+const LogModeToggleIndicator = styled.div<{ theme: ThemeType; $isDetailed: boolean }>`
+  position: absolute;
+  top: 2px;
+  left: ${props => props.$isDetailed ? 'calc(50% + 2px)' : '2px'};
+  width: calc(50% - 4px);
+  height: calc(100% - 4px);
+  border-radius: 999px;
+  /* 简略用蓝色，详细用橙色（与模式选择的匹配/排位配色一致） */
+  background: ${props => props.$isDetailed
+    ? `linear-gradient(135deg, ${props.theme.colors.warning} 0%, ${props.theme.colors.warning}cc 100%)`
+    : `linear-gradient(135deg, ${props.theme.colors.primary} 0%, ${props.theme.colors.primaryHover} 100%)`};
+  transition: left 0.22s ease, background 0.22s ease;
+`;
+
+/** 日志模式文本层 */
+const LogModeToggleTextRow = styled.div`
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+`;
+
+/** 日志模式单个文本 */
+const LogModeToggleLabel = styled.span<{ theme: ThemeType; $active: boolean }>`
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 1px;
+  color: ${props => props.$active ? props.theme.colors.textOnPrimary : props.theme.colors.textSecondary};
+  transition: color 0.25s ease;
+`;
+
+
 
 // ============================================
 // 控制按钮样式
@@ -464,10 +652,21 @@ const ControlButton = styled.button<{ $isRunning: boolean; $disabled: boolean; t
   }
 `;
 
-/** 水纹外层容器 - 第二层波纹 */
+/** 
+ * 控制区域容器 - 使用 Flexbox 水平排列
+ * 左：日志模式 | 中：控制按钮 | 右：游戏模式
+ * 标题用绝对定位浮在胶囊上方，不参与对齐
+ */
+const ControlRow = styled.div`
+  display: flex;
+  align-items: center;  /* 垂直居中对齐 */
+  justify-content: center;
+  gap: 24px;  /* 元素之间的间距 */
+`;
+
+/** 按钮水纹外层容器 */
 const ButtonWrapper = styled.div`
   position: relative;
-  display: inline-block;
   
   /* 外围水纹 - 始终显示 */
   &::before {
@@ -591,6 +790,10 @@ export const HomePage = () => {
     const [isLoading, setIsLoading] = useState(true);
     // 新增：跟踪 LCU 连接状态
     const [isLcuConnected, setIsLcuConnected] = useState(false);
+    // 新增：TFT 游戏模式（匹配/排位）
+    const [tftMode, setTftMode] = useState<TFTMode>(TFTMode.NORMAL);
+    // 新增：日志模式（简略/详细）
+    const [logMode, setLogMode] = useState<LogMode>(LogMode.SIMPLE);
 
     /**
      * 获取召唤师信息的函数
@@ -640,6 +843,18 @@ export const HomePage = () => {
             // 获取 HexService 运行状态（页面切换回来时恢复正确状态）
             const running = await window.hex.getStatus();
             setIsRunning(running);
+
+            // 获取 TFT 游戏模式
+            const mode = await window.lineup.getTftMode();
+            if (mode === TFTMode.RANK || mode === TFTMode.NORMAL) {
+                setTftMode(mode as TFTMode);
+            }
+
+            // 获取日志模式
+            const savedLogMode = await window.lineup.getLogMode();
+            if (savedLogMode === LogMode.SIMPLE || savedLogMode === LogMode.DETAILED) {
+                setLogMode(savedLogMode as LogMode);
+            }
             
             if (connected) {
                 // 如果已经连接了，直接获取召唤师信息
@@ -695,6 +910,39 @@ export const HomePage = () => {
             }
         }
         setIsRunning(!isRunning);
+    };
+
+    /**
+     * 切换 TFT 游戏模式（匹配/排位）
+     *
+     * 交互说明：
+     * - 主页上的模式开关“整块可点”，点任意位置都会在“匹配 <-> 排位”之间切换。
+     * - 运行中禁止切换，避免队列创建与实际期望不一致。
+     */
+    const handleModeToggle = async () => {
+        if (isRunning) {
+            toast.error('运行中无法切换模式');
+            return;
+        }
+
+        const newMode = tftMode === TFTMode.RANK ? TFTMode.NORMAL : TFTMode.RANK;
+        setTftMode(newMode);
+        await window.lineup.setTftMode(newMode);
+        toast.success(newMode === TFTMode.RANK ? '已切换到排位模式' : '已切换到匹配模式');
+    };
+
+    /**
+     * 切换日志模式（简略/详细）
+     *
+     * 交互说明：
+     * - 简略模式：不打印 debug 级别日志，日志更简洁
+     * - 详细模式：打印所有日志（包括 debug），方便调试
+     */
+    const handleLogModeToggle = async () => {
+        const newMode = logMode === LogMode.SIMPLE ? LogMode.DETAILED : LogMode.SIMPLE;
+        setLogMode(newMode);
+        await window.lineup.setLogMode(newMode);
+        toast.success(newMode === LogMode.DETAILED ? '已切换到详细日志模式' : '已切换到简略日志模式');
     };
 
     /**
@@ -786,34 +1034,72 @@ export const HomePage = () => {
                 )}
             </SummonerSection>
 
-            {/* 控制按钮 - 带水纹效果 */}
-            <ButtonWrapper>
-                <ControlButton 
-                    onClick={handleToggle} 
-                    $isRunning={isRunning}
-                    $disabled={!isLcuConnected}
-                >
-                    {!isLcuConnected ? (
-                        <>
-                            <BlockIcon />
-                            未检测到客户端
-                        </>
-                    ) : isRunning ? (
-                        <>
-                            <StopCircleOutlinedIcon />
-                            关闭
-                        </>
-                    ) : (
-                        <>
-                            <PlayCircleOutlineIcon />
-                            开始
-                        </>
-                    )}
-                </ControlButton>
-            </ButtonWrapper>
+            {/* 控制区域 - Flexbox 水平排列 */}
+            <ControlRow>
+                {/* 日志模式切换 - 简略/详细（左侧） */}
+                <LogModeToggleContainer>
+                    <LogModeToggleTitle>日志模式</LogModeToggleTitle>
+                    <LogModeTogglePill
+                        type="button"
+                        $isDetailed={logMode === LogMode.DETAILED}
+                        onClick={handleLogModeToggle}
+                        title={logMode === LogMode.DETAILED ? '当前：详细（点击切换到简略）' : '当前：简略（点击切换到详细）'}
+                    >
+                        <LogModeToggleIndicator $isDetailed={logMode === LogMode.DETAILED} />
+                        <LogModeToggleTextRow>
+                            <LogModeToggleLabel $active={logMode === LogMode.SIMPLE}>简略</LogModeToggleLabel>
+                            <LogModeToggleLabel $active={logMode === LogMode.DETAILED}>详细</LogModeToggleLabel>
+                        </LogModeToggleTextRow>
+                    </LogModeTogglePill>
+                </LogModeToggleContainer>
+
+                {/* 控制按钮 - 带水纹效果 */}
+                <ButtonWrapper>
+                    <ControlButton 
+                        onClick={handleToggle} 
+                        $isRunning={isRunning}
+                        $disabled={!isLcuConnected}
+                    >
+                        {!isLcuConnected ? (
+                            <>
+                                <BlockIcon />
+                                未检测到客户端
+                            </>
+                        ) : isRunning ? (
+                            <>
+                                <StopCircleOutlinedIcon />
+                                关闭
+                            </>
+                        ) : (
+                            <>
+                                <PlayCircleOutlineIcon />
+                                开始
+                            </>
+                        )}
+                    </ControlButton>
+                </ButtonWrapper>
+
+                {/* 游戏模式切换 - 匹配/排位（右侧） */}
+                <ModeToggleContainer>
+                    <ModeToggleTitle>模式选择</ModeToggleTitle>
+                    <ModeTogglePill
+                        type="button"
+                        $isRanked={tftMode === TFTMode.RANK}
+                        onClick={handleModeToggle}
+                        title={tftMode === TFTMode.RANK ? '当前：排位（点击切换到匹配）' : '当前：匹配（点击切换到排位）'}
+                    >
+                        <ModeToggleIndicator $isRanked={tftMode === TFTMode.RANK} />
+                        <ModeToggleTextRow>
+                            <ModeToggleLabel $active={tftMode === TFTMode.NORMAL}>匹配</ModeToggleLabel>
+                            <ModeToggleLabel $active={tftMode === TFTMode.RANK}>排位</ModeToggleLabel>
+                        </ModeToggleTextRow>
+                    </ModeTogglePill>
+                </ModeToggleContainer>
+            </ControlRow>
 
             {/* 日志面板 */}
             <LogPanel isVisible={true} />
         </PageWrapper>
     );
 };
+

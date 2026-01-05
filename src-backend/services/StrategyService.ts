@@ -211,6 +211,15 @@ export class StrategyService {
             }
         }
 
+        // 【2-1 回合】阵容匹配：在进入 2-1 时锁定阵容
+        // 放在 onStageChange 而不是 handleAugment，原因：
+        // - 阵容匹配是"进入 2-1"时的决策，跟"海克斯选择"是两件独立的事
+        // - 这样 handleAugment 可以根据已锁定的阵容来选择合适的海克斯
+        if (stage === 2 && round === 1 && this.selectionState === LineupSelectionState.PENDING) {
+            logger.info("[StrategyService] 检测到 2-1 回合，开始阵容匹配...");
+            await this.matchAndLockLineup();
+        }
+
         // 刷新游戏状态（采集所有数据，包括等级、商店、棋盘等）
         // 注意：部分阶段不需要在这里刷新，由各自的 handler 自行决定
         if (this.shouldRefreshStateOnStageChange(type)) {
@@ -791,11 +800,17 @@ export class StrategyService {
     // ============================================================
     // 🔧 内部辅助方法
     // ============================================================
-
     /**
      * 更新目标棋子列表
      * @param level 当前人口等级
-     * @description 根据人口等级获取对应阶段的目标棋子
+     * @description 根据人口等级获取目标棋子
+     *
+     * 策略说明：
+     * - 目标棋子 = 当前等级及以上所有等级配置中的棋子（合并去重）
+     * - 例如：4 级时，目标 = level4 + level5 + ... + level10 的所有棋子
+     * - 升到 5 级时，目标 = level5 + level6 + ... + level10（剔除 level4 的低费打工仔）
+     *
+     * 这样随着等级提升，低费打工仔会被逐渐剔除，只保留当前等级及以上的目标棋子
      */
     private updateTargetChampions(level: number): void {
         if (!this.currentLineup) {
@@ -803,24 +818,29 @@ export class StrategyService {
             return;
         }
 
-        // 获取对应等级的阶段配置
-        const stageConfig = this.getStageConfigForLevel(level);
-
-        if (!stageConfig) {
-            logger.warn(`[StrategyService] 阵容 ${this.currentLineup.name} 没有 level${level} 及以下的配置`);
-            this.targetChampionNames.clear();
-            return;
-        }
-
-        // 更新目标棋子名称集合
+        // 清空旧的目标棋子
         this.targetChampionNames.clear();
-        for (const champion of stageConfig.champions) {
-            this.targetChampionNames.add(champion.name);
-        }
 
-        logger.info(
-            `[StrategyService] 人口 ${level} 目标棋子: ${Array.from(this.targetChampionNames).join(', ')}`
-        );
+        // 人口等级范围：4-10（配置文件中定义的等级）
+        const validLevels = [4, 5, 6, 7, 8, 9, 10] as const;
+
+        // 确定起始等级（最低 4 级，因为配置从 level4 开始）
+        const startLevel = Math.max(level, 4);
+
+        // 收集当前等级及以上所有等级的棋子
+        for (const checkLevel of validLevels) {
+            // 跳过低于当前等级的配置
+            if (checkLevel < startLevel) continue;
+
+            const stageKey = `level${checkLevel}` as keyof typeof this.currentLineup.stages;
+            const stageConfig = this.currentLineup.stages[stageKey];
+
+            if (stageConfig) {
+                for (const champion of stageConfig.champions) {
+                    this.targetChampionNames.add(champion.name);
+                }
+            }
+        }
     }
 
     /**
@@ -1618,21 +1638,12 @@ export class StrategyService {
 
     /**
      * 处理 PVP 阶段 (玩家对战)
-     * @description
-     * - 首次 PVP（2-1）：如果阵容未锁定（PENDING），进行阵容匹配
-     * - 后续 PVP：正常运营（拿牌、升级、调整站位）
+     * @description 正常运营阶段：拿牌、升级、调整站位
      *
-     * @note 不需要额外检查 hasFirstPvpOccurred，因为：
-     *       - PENDING 状态说明还没锁定阵容
-     *       - matchAndLockLineup() 执行后会把状态设为 LOCKED
-     *       - 下次 PVP 时 selectionState 已经是 LOCKED，不会重复匹配
+     * @note 阵容匹配已移至 handleAugment()，在 2-1 首次海克斯选择时执行
+     *       因为 2-1 是海克斯阶段（AUGMENT），不是 PVP 阶段
      */
     private async handlePVP(): Promise<void> {
-        // 首次 PVP 阶段：进行阵容匹配（PENDING 说明还没锁定）
-        if (this.selectionState === LineupSelectionState.PENDING) {
-            logger.info("[StrategyService] 检测到首次 PVP 阶段，开始阵容匹配...");
-            await this.matchAndLockLineup();
-        }
         // 通用运营策略
         await this.executeCommonStrategy();
     }
@@ -2485,7 +2496,7 @@ export class StrategyService {
     }
 
     /**
-     * 处理 海克斯选择阶段
+     * 处理 海克斯选择阶段 (2-1, 3-2, 4-2)
      * @description 进入海克斯阶段后：
      *              1. 等待 1.5 秒（让海克斯选项完全加载）
      *              2. 随机点击一个海克斯槽位（SLOT_1 / SLOT_2 / SLOT_3）

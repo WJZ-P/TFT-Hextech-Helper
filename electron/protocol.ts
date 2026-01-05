@@ -28,4 +28,10 @@ export enum IpcChannel {
     LINEUP_SET_SELECTED_IDS = 'lineup-set-selected-ids',    // 保存用户选中的阵容 ID 列表
     // 棋子数据相关
     TFT_GET_CHAMPION_CN_TO_EN_MAP = 'tft-get-champion-cn-to-en-map',  // 获取棋子中英文映射表
+    // 游戏模式相关
+    TFT_GET_MODE = 'tft-get-mode',              // 获取当前 TFT 模式（匹配/排位）
+    TFT_SET_MODE = 'tft-set-mode',              // 设置 TFT 模式
+    // 日志模式相关
+    LOG_GET_MODE = 'log-get-mode',              // 获取当前日志模式（简略/详细）
+    LOG_SET_MODE = 'log-set-mode',              // 设置日志模式
 }

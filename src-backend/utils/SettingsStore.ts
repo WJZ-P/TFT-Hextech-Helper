@@ -1,6 +1,7 @@
 import type {Rectangle} from 'electron';
 import Store from 'electron-store';
 import {TFTMode} from "../TFTProtocol";
+import {LogMode} from "../types/AppTypes";
 
 type WindowBounds = Pick<Rectangle, 'x' | 'y' | 'width' | 'height'>;
 
@@ -57,6 +58,7 @@ export type DotNotationValueFor<T, K extends string> =
 //  配置类
 interface AppSettings {
     tftMode: TFTMode,    //  下棋模式选择
+    logMode: LogMode,    //  日志模式：简略/详细
     window: {
         bounds: WindowBounds | null, // 上次关闭时的窗口信息
         isMaximized: boolean,   //  上次关闭是否最大化
@@ -79,6 +81,7 @@ class SettingsStore {
         //  创建默认配置
         const defaults: AppSettings = {
             tftMode: TFTMode.NORMAL,    //  默认是匹配模式
+            logMode: LogMode.SIMPLE,    //  默认是简略日志模式
             window: {
                 bounds: null,           //  第一次启动，默认为null
                 isMaximized: false     //  默认不最大化窗口
