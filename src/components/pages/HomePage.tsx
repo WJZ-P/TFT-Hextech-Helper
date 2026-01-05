@@ -41,13 +41,13 @@ const SummonerSection = styled.div<{ theme: ThemeType }>`
   margin-bottom: ${props => props.theme.spacing.large};
 `;
 
-/** 详情浮窗容器 - hover 时显示（必须在 AvatarContainer 之前定义） */
+/** 详情浮窗容器 - hover 时显示在右侧（必须在 AvatarContainer 之前定义） */
 const InfoTooltip = styled.div<{ theme: ThemeType }>`
   position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  margin-top: 12px;
+  top: 50%;
+  left: 100%;  /* 出现在头像右侧 */
+  transform: translateY(-50%);
+  margin-left: 12px;  /* 与头像的间距 */
   padding: ${props => props.theme.spacing.medium};
   background-color: ${props => props.theme.colors.elementBg};
   border: 1px solid ${props => props.theme.colors.border};
@@ -59,26 +59,26 @@ const InfoTooltip = styled.div<{ theme: ThemeType }>`
   z-index: 10;
   white-space: nowrap; /* 防止内容换行，让宽度自适应 */
   
-  /* 小三角箭头 */
+  /* 小三角箭头 - 指向左侧 */
   &::before {
     content: '';
     position: absolute;
-    top: -6px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-bottom: 6px solid ${props => props.theme.colors.border};
+    top: 50%;
+    left: -6px;
+    transform: translateY(-50%);
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-right: 6px solid ${props => props.theme.colors.border};
   }
   &::after {
     content: '';
     position: absolute;
-    top: -5px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-bottom: 5px solid ${props => props.theme.colors.elementBg};
+    top: 50%;
+    left: -5px;
+    transform: translateY(-50%);
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-right: 5px solid ${props => props.theme.colors.elementBg};
   }
 `;
 
