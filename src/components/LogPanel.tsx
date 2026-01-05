@@ -399,11 +399,32 @@ export const LogPanel: React.FC<LogPanelProps> = ({isVisible}) => {
         logStore.clearLogs();
     }
 
-    // 日志自动滚动逻辑：新日志来时自动滚到底部（除非用户手动上滚）
+    /**
+     * 日志自动滚动逻辑
+     * 
+     * 使用 requestAnimationFrame 延迟滚动，确保 DOM 已完成渲染。
+     * 这样即使大量日志瞬间涌入，也能正确滚动到底部。
+     * 
+     * 为什么不直接 scrollTop = scrollHeight？
+     * - React 批量更新时，useEffect 执行时 DOM 可能还没更新完
+     * - requestAnimationFrame 会在下一帧渲染前执行，此时 DOM 已更新
+     */
     useEffect(() => {
-        const logPanel = logPanelRef.current
+        const logPanel = logPanelRef.current;
         if (logPanel && !isUserScrollUp) {
-            logPanel.scrollTop = logPanel.scrollHeight
+            // 使用 requestAnimationFrame 确保 DOM 更新后再滚动
+            const scrollToBottom = () => {
+                if (logPanelRef.current) {
+                    logPanelRef.current.scrollTop = logPanelRef.current.scrollHeight;
+                }
+            };
+            
+            // 双重 rAF 确保在复杂渲染场景下也能正确滚动
+            const rafId = requestAnimationFrame(() => {
+                requestAnimationFrame(scrollToBottom);
+            });
+            
+            return () => cancelAnimationFrame(rafId);
         }
     }, [logs, isUserScrollUp]);
 
