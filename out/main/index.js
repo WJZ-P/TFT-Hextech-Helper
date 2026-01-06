@@ -5644,8 +5644,8 @@ const lootRegion = {
 };
 const littleLegendDefaultPoint = { x: 120, y: 430 };
 const selfWalkAroundPoints = {
-  left: [{ x: 156, y: 400 }, { x: 165, y: 355 }, { x: 175, y: 310 }, { x: 185, y: 250 }, { x: 195, y: 150 }],
-  right: [{ x: 840, y: 500 }, { x: 830, y: 450 }, { x: 820, y: 385 }, { x: 810, y: 325 }, { x: 805, y: 295 }, { x: 800, y: 260 }, { x: 790, y: 215 }, { x: 780, y: 170 }, { x: 780, y: 130 }]
+  left: [{ x: 156, y: 400 }, { x: 165, y: 355 }, { x: 175, y: 315 }, { x: 185, y: 185 }, { x: 195, y: 150 }],
+  right: [{ x: 840, y: 495 }, { x: 830, y: 450 }, { x: 830, y: 420 }, { x: 800, y: 280 }, { x: 805, y: 295 }, { x: 790, y: 215 }, { x: 790, y: 215 }, { x: 785, y: 180 }, { x: 785, y: 150 }]
 };
 const coinRegion = {
   leftTop: { x: 505, y: 626 },
@@ -5774,37 +5774,37 @@ const equipmentRegion = {
 const fightBoardSlotPoint = {
   // x+=80
   //  第一行的棋子位置
-  R1_C1: { x: 230, y: 315 },
-  R1_C2: { x: 310, y: 315 },
-  R1_C3: { x: 390, y: 315 },
-  R1_C4: { x: 470, y: 315 },
-  R1_C5: { x: 550, y: 315 },
-  R1_C6: { x: 630, y: 315 },
-  R1_C7: { x: 710, y: 315 },
+  R1_C1: { x: 230, y: 305 },
+  R1_C2: { x: 310, y: 305 },
+  R1_C3: { x: 390, y: 305 },
+  R1_C4: { x: 470, y: 305 },
+  R1_C5: { x: 550, y: 305 },
+  R1_C6: { x: 630, y: 305 },
+  R1_C7: { x: 710, y: 305 },
   //  第二行的棋子位置        //  x+=85
-  R2_C1: { x: 260, y: 370 },
-  R2_C2: { x: 345, y: 370 },
-  R2_C3: { x: 430, y: 370 },
-  R2_C4: { x: 515, y: 370 },
-  R2_C5: { x: 600, y: 370 },
-  R2_C6: { x: 685, y: 370 },
-  R2_C7: { x: 770, y: 370 },
+  R2_C1: { x: 260, y: 360 },
+  R2_C2: { x: 345, y: 360 },
+  R2_C3: { x: 430, y: 360 },
+  R2_C4: { x: 515, y: 360 },
+  R2_C5: { x: 600, y: 360 },
+  R2_C6: { x: 685, y: 360 },
+  R2_C7: { x: 770, y: 360 },
   //  第三行棋子的位置        //  x+=90
-  R3_C1: { x: 200, y: 420 },
-  R3_C2: { x: 290, y: 420 },
-  R3_C3: { x: 380, y: 420 },
-  R3_C4: { x: 470, y: 420 },
-  R3_C5: { x: 560, y: 420 },
-  R3_C6: { x: 650, y: 420 },
-  R3_C7: { x: 740, y: 420 },
+  R3_C1: { x: 200, y: 410 },
+  R3_C2: { x: 290, y: 410 },
+  R3_C3: { x: 380, y: 410 },
+  R3_C4: { x: 470, y: 410 },
+  R3_C5: { x: 560, y: 410 },
+  R3_C6: { x: 650, y: 410 },
+  R3_C7: { x: 740, y: 410 },
   //  第四行棋子的位置        //  x+=90
-  R4_C1: { x: 240, y: 475 },
-  R4_C2: { x: 330, y: 475 },
-  R4_C3: { x: 420, y: 475 },
-  R4_C4: { x: 510, y: 475 },
-  R4_C5: { x: 600, y: 475 },
-  R4_C6: { x: 690, y: 475 },
-  R4_C7: { x: 780, y: 475 }
+  R4_C1: { x: 240, y: 465 },
+  R4_C2: { x: 330, y: 465 },
+  R4_C3: { x: 420, y: 465 },
+  R4_C4: { x: 510, y: 465 },
+  R4_C5: { x: 600, y: 465 },
+  R4_C6: { x: 690, y: 465 },
+  R4_C7: { x: 780, y: 465 }
 };
 const fightBoardSlotRegion = {
   // x+=80
@@ -10879,19 +10879,20 @@ class TftOperator {
    */
   async getGameStage() {
     try {
+      const recognizeStageText = async (region) => {
+        const rawPng = await screenCapture.captureRegionAsPng(region, false);
+        return await ocrService.recognize(rawPng, OcrWorkerType.GAME_STAGE);
+      };
       let stageText = "";
       const normalRegion = this.getStageAbsoluteRegion(false);
-      const normalPng = await screenCapture.captureRegionAsPng(normalRegion);
-      stageText = await ocrService.recognize(normalPng, OcrWorkerType.GAME_STAGE);
+      stageText = await recognizeStageText(normalRegion);
       if (!isValidStageFormat(stageText)) {
         const stageOneRegion = this.getStageAbsoluteRegion(true);
-        const stageOnePng = await screenCapture.captureRegionAsPng(stageOneRegion);
-        stageText = await ocrService.recognize(stageOnePng, OcrWorkerType.GAME_STAGE);
+        stageText = await recognizeStageText(stageOneRegion);
       }
       if (!isValidStageFormat(stageText)) {
         const clockworkRegion = this.getClockworkTrialsRegion();
-        const clockPng = await screenCapture.captureRegionAsPng(clockworkRegion);
-        const clockText = await ocrService.recognize(clockPng, OcrWorkerType.GAME_STAGE);
+        const clockText = await recognizeStageText(clockworkRegion);
         if (clockText && clockText.length > 2) {
           this.tftMode = TFTMode.CLOCKWORK_TRAILS;
           logger.info("[TftOperator] 识别为发条鸟试炼模式");
@@ -14123,26 +14124,34 @@ class StrategyService {
   async executeCommonStrategy() {
     logger.debug("[StrategyService] 执行通用运营策略");
     await tftOperator.selfResetPosition();
-    await this.handleItemForges();
-    const ownedChampions = gameStateManager.getOwnedChampionNames();
-    const targetChampions = this.targetChampionNames;
-    logger.info(
-      `[StrategyService] 通用策略 - 金币: ${gameStateManager.getGold()}，备战席空位: ${gameStateManager.getEmptyBenchSlotCount()}，已有棋子: ${Array.from(ownedChampions).join(", ") || "无"}`
-    );
-    await this.autoBuyFromShop(targetChampions, "购买决策");
-    await this.optimizeBoard(targetChampions);
-    await this.executeLevelUpStrategy();
-    await this.trySellTrashUnits();
-    await this.executeRollingLoop(targetChampions);
-    await this.sellExcessUnits();
-    await this.updateEquipStateFromScreen();
-    await this.adjustPositions();
-    const equipGate = this.getEquipStrategyGateDecision();
-    if (equipGate.should) {
-      logger.info(`[StrategyService] 执行装备策略：${equipGate.reason}`);
-      await this.executeEquipStrategy();
-    } else {
-      logger.debug(`[StrategyService] 跳过装备策略：${equipGate.reason}`);
+    try {
+      await this.handleItemForges();
+      const ownedChampions = gameStateManager.getOwnedChampionNames();
+      const targetChampions = this.targetChampionNames;
+      logger.info(
+        `[StrategyService] 通用策略 - 金币: ${gameStateManager.getGold()}，备战席空位: ${gameStateManager.getEmptyBenchSlotCount()}，已有棋子: ${Array.from(ownedChampions).join(", ") || "无"}`
+      );
+      await this.autoBuyFromShop(targetChampions, "购买决策");
+      await this.optimizeBoard(targetChampions);
+      await this.executeLevelUpStrategy();
+      await this.trySellTrashUnits();
+      await this.executeRollingLoop(targetChampions);
+      await this.sellExcessUnits();
+      await this.updateEquipStateFromScreen();
+      await this.adjustPositions();
+      const equipGate = this.getEquipStrategyGateDecision();
+      if (equipGate.should) {
+        logger.info(`[StrategyService] 执行装备策略：${equipGate.reason}`);
+        await this.executeEquipStrategy();
+      } else {
+        logger.debug(`[StrategyService] 跳过装备策略：${equipGate.reason}`);
+      }
+    } finally {
+      try {
+        await tftOperator.selfResetPosition();
+      } catch (e) {
+        logger.warn(`[StrategyService] 通用策略结束兜底归位失败: ${e?.message ?? e}`);
+      }
     }
   }
   /**
@@ -14188,6 +14197,7 @@ class StrategyService {
    *              4. 卡50块利息修经验 (有多余钱就F一下)
    */
   async executeLevelUpStrategy() {
+    await this.updateLevelStateFromScreen();
     const snapshot = gameStateManager.getSnapshotSync();
     if (!snapshot) return;
     const { level, currentXp, totalXp, gold } = snapshot;
