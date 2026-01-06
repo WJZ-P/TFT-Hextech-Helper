@@ -400,33 +400,48 @@ export const LogPanel: React.FC<LogPanelProps> = ({isVisible}) => {
     }
 
     /**
-     * 日志自动滚动逻辑
+     * 日志自动滚动逻辑 - 使用 MutationObserver
      * 
-     * 使用 requestAnimationFrame 延迟滚动，确保 DOM 已完成渲染。
-     * 这样即使大量日志瞬间涌入，也能正确滚动到底部。
+     * 为什么用 MutationObserver 而不是 useEffect + rAF？
+     * - useEffect 依赖 logs 变化触发，但 cleanup 会取消 rAF
+     * - 当日志快速涌入时，每次新日志都会取消上一次的滚动操作
+     * - MutationObserver 直接监听 DOM 变化，在子节点真正添加后触发
+     * - 这样无论日志多快涌入，每次 DOM 变化都会触发滚动
      * 
-     * 为什么不直接 scrollTop = scrollHeight？
-     * - React 批量更新时，useEffect 执行时 DOM 可能还没更新完
-     * - requestAnimationFrame 会在下一帧渲染前执行，此时 DOM 已更新
+     * isUserScrollUpRef 的作用：
+     * - MutationObserver 的回调是闭包，直接读取 state 会拿到旧值
+     * - 用 ref 保持对最新值的引用
      */
+    const isUserScrollUpRef = useRef(isUserScrollUp);
+    
+    // 同步 state 到 ref
+    useEffect(() => {
+        isUserScrollUpRef.current = isUserScrollUp;
+    }, [isUserScrollUp]);
+    
+    // MutationObserver 监听 DOM 变化并自动滚动
     useEffect(() => {
         const logPanel = logPanelRef.current;
-        if (logPanel && !isUserScrollUp) {
-            // 使用 requestAnimationFrame 确保 DOM 更新后再滚动
-            const scrollToBottom = () => {
-                if (logPanelRef.current) {
-                    logPanelRef.current.scrollTop = logPanelRef.current.scrollHeight;
-                }
-            };
-            
-            // 双重 rAF 确保在复杂渲染场景下也能正确滚动
-            const rafId = requestAnimationFrame(() => {
-                requestAnimationFrame(scrollToBottom);
-            });
-            
-            return () => cancelAnimationFrame(rafId);
-        }
-    }, [logs, isUserScrollUp]);
+        if (!logPanel) return;
+        
+        // 创建 MutationObserver，监听子节点变化
+        const observer = new MutationObserver(() => {
+            // 检查用户是否手动上滚（通过 ref 获取最新值）
+            if (!isUserScrollUpRef.current) {
+                // 直接滚动到底部，此时 DOM 已经更新完成
+                logPanel.scrollTop = logPanel.scrollHeight;
+            }
+        });
+        
+        // 开始监听：只监听直接子节点的增删
+        observer.observe(logPanel, {
+            childList: true,  // 监听子节点增删
+            subtree: false,   // 不监听孙节点（性能优化）
+        });
+        
+        // 组件卸载时断开监听
+        return () => observer.disconnect();
+    }, []); // 空依赖，只在挂载时创建一次 observer
 
     // 检测用户是否手动上滚
     const handleScroll = () => {

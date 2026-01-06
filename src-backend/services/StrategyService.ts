@@ -1934,7 +1934,7 @@ export class StrategyService {
 
         // 连续多少次刷新都没有买到任何棋子，就认为"继续 D 的收益很低"，主动停手。
         // 这个阈值的意义：避免在"目标牌不在概率池/牌库被卡/我们根本买不下(爆仓)"时，把金币和时间无意义地烧掉。
-        const maxConsecutiveNoBuyRolls = 5;
+        const maxConsecutiveNoBuyRolls = 15;
         let consecutiveNoBuyRolls = 0;
 
         while (rollCount < maxRolls) {
