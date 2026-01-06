@@ -1712,64 +1712,74 @@ export class StrategyService {
         logger.debug("[StrategyService] 执行通用运营策略");
 
         // 小小英雄归位（避免挡住商店）
+        // 注意：通用策略过程中会发生很多鼠标操作（买牌/上场/卖棋/拖装备等），
+        //      小小英雄可能在过程中被“顺带”移动导致遮挡识别区域。
+        //      所以这里除了开头归位一次外，函数结束时也会兜底再归位一次。
         await tftOperator.selfResetPosition();
 
-        // 0. 处理锻造器（优先处理，腾出备战席空间）
-        await this.handleItemForges();
+        try {
+            // 0. 处理锻造器（优先处理，腾出备战席空间）
+            await this.handleItemForges();
 
-        // 1. 获取已有棋子和目标棋子
-        const ownedChampions = gameStateManager.getOwnedChampionNames();
-        const targetChampions = this.targetChampionNames;
+            // 1. 获取已有棋子和目标棋子
+            const ownedChampions = gameStateManager.getOwnedChampionNames();
+            const targetChampions = this.targetChampionNames;
 
-        logger.info(
-            `[StrategyService] 通用策略 - 金币: ${gameStateManager.getGold()}，` +
-            `备战席空位: ${gameStateManager.getEmptyBenchSlotCount()}，` +
-            `已有棋子: ${Array.from(ownedChampions).join(', ') || '无'}`
-        );
+            logger.info(
+                `[StrategyService] 通用策略 - 金币: ${gameStateManager.getGold()}，` +
+                `备战席空位: ${gameStateManager.getEmptyBenchSlotCount()}，` +
+                `已有棋子: ${Array.from(ownedChampions).join(', ') || '无'}`
+            );
 
-        // 2. 分析商店并购买
-        await this.autoBuyFromShop(targetChampions, "购买决策");
+            // 2. 分析商店并购买
+            await this.autoBuyFromShop(targetChampions, "购买决策");
 
-        // 3. 优化棋盘（上棋子 + 替换弱棋子）
-        await this.optimizeBoard(targetChampions);
+            // 3. 优化棋盘（上棋子 + 替换弱棋子）
+            await this.optimizeBoard(targetChampions);
 
-        // 4. 升级策略 (先决定是否升级，因为升级会消耗大量金币，影响后续 D 牌)
-        await this.executeLevelUpStrategy();
+            // 4. 升级策略 (先决定是否升级，因为升级会消耗大量金币，影响后续 D 牌)
+            await this.executeLevelUpStrategy();
 
-        // 5. D 牌前清理：为了防止 D 牌时爆仓，先清理掉无用的杂鱼
-        //    (腾出空间比凑利息更重要，否则 D 到了好牌买不下来)
-        await this.trySellTrashUnits();
+            // 5. D 牌前清理：为了防止 D 牌时爆仓，先清理掉无用的杂鱼
+            //    (腾出空间比凑利息更重要，否则 D 到了好牌买不下来)
+            await this.trySellTrashUnits();
 
-        // 6. D 牌策略，包含D牌，买牌和上牌
-        await this.executeRollingLoop(targetChampions);
+            // 6. D 牌策略，包含D牌，买牌和上牌
+            await this.executeRollingLoop(targetChampions);
 
-        // 7. 卖多余棋子 (凑利息/再次清理)
-        await this.sellExcessUnits();
+            // 7. 卖多余棋子 (凑利息/再次清理)
+            await this.sellExcessUnits();
 
-        // 刷新游戏状态，确保 D 牌后的棋盘和备战席状态是最新的
-        // (因为 D 牌过程中可能有买卖和上场操作，但 GameStateManager 只是部分模拟更新)
-        // 暂时先注释掉，看看会不会影响实际效果。
-        // await this.refreshGameState();
+            // 刷新游戏状态，确保 D 牌后的棋盘和备战席状态是最新的
+            // (因为 D 牌过程中可能有买卖和上场操作，但 GameStateManager 只是部分模拟更新)
+            // 暂时先注释掉，看看会不会影响实际效果。
+            // await this.refreshGameState();
 
-        // 但调用一下operator的刷新装备栏是有必要的。并把新的数据更新到manager中。
-        // 因为我们在卖棋子的过程中，可能棋子本身是带装备的。卖掉后，装备就变多了。
-        await this.updateEquipStateFromScreen();
+            // 但调用一下operator的刷新装备栏是有必要的。并把新的数据更新到manager中。
+            // 因为我们在卖棋子的过程中，可能棋子本身是带装备的。卖掉后，装备就变多了。
+            await this.updateEquipStateFromScreen();
 
-        // 8. 调整站位 (近战前排/远程后排)
-        await this.adjustPositions();
+            // 8. 调整站位 (近战前排/远程后排)
+            await this.adjustPositions();
 
-        // 9. 装备策略 (合成与穿戴)
-        // 注意：装备拖拽属于"高风险操作"。
-        // 激进策略（保前四向）：只要"不在战斗中"且"装备栏非空"，就执行（哪怕先给打工仔挂装备也行）。
-        const equipGate = this.getEquipStrategyGateDecision();
-        if (equipGate.should) {
-            logger.info(`[StrategyService] 执行装备策略：${equipGate.reason}`);
-            await this.executeEquipStrategy();
-        } else {
-            logger.debug(`[StrategyService] 跳过装备策略：${equipGate.reason}`);
+            // 9. 装备策略 (合成与穿戴)
+            // 注意：装备拖拽属于"高风险操作"。
+            // 激进策略（保前四向）：只要"不在战斗中"且"装备栏非空"，就执行（哪怕先给打工仔挂装备也行）。
+            const equipGate = this.getEquipStrategyGateDecision();
+            if (equipGate.should) {
+                logger.info(`[StrategyService] 执行装备策略：${equipGate.reason}`);
+                await this.executeEquipStrategy();
+            } else {
+                logger.debug(`[StrategyService] 跳过装备策略：${equipGate.reason}`);
+            }
+        } finally {
+            // 兜底：无论通用策略中间发生什么，都把小小英雄再归位一次，减少遮挡导致的识别失败。
+            try {
+                await tftOperator.selfResetPosition();
+            } catch (e: any) {
+                logger.warn(`[StrategyService] 通用策略结束兜底归位失败: ${e?.message ?? e}`);
+            }
         }
-
-
     }
 
     /**
@@ -1830,6 +1840,10 @@ export class StrategyService {
      *              4. 卡50块利息修经验 (有多余钱就F一下)
      */
     private async executeLevelUpStrategy(): Promise<void> {
+        // 安全保护：在真正开始按 F 买经验之前，先从屏幕刷新一次等级/经验。
+        // 原因：经验值可能在“回合开始自然 +2XP”等情况下变化，
+        //       如果只依赖 GameStateManager 的缓存，可能会出现买多/买少。
+        await this.updateLevelStateFromScreen();
 
         const snapshot = gameStateManager.getSnapshotSync();
         if (!snapshot) return;

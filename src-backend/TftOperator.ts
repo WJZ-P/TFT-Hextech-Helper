@@ -244,26 +244,34 @@ class TftOperator {
      */
     public async getGameStage(): Promise<GameStageResult> {
         try {
+            /**
+             * 阶段识别统一使用 `forOCR=false`（原图，不做二值化/灰度等预处理）。
+             *
+             * 原因：海克斯出现时背景会整体变暗，二值化(threshold)会丢失大量细节，
+             * 直接导致 "2-1" 这类阶段文字被“吃掉”。用原图 OCR 能保留色彩/对比信息。
+             */
+            const recognizeStageText = async (region: Region): Promise<string> => {
+                const rawPng = await screenCapture.captureRegionAsPng(region, false);
+                return await ocrService.recognize(rawPng, OcrWorkerType.GAME_STAGE);
+            };
+
             let stageText = "";
 
             // 1. 尝试识别标准区域 (2-1, 3-5, 4-2 等)
             const normalRegion = this.getStageAbsoluteRegion(false);
-            const normalPng = await screenCapture.captureRegionAsPng(normalRegion);
-            stageText = await ocrService.recognize(normalPng, OcrWorkerType.GAME_STAGE);
+            stageText = await recognizeStageText(normalRegion);
 
             // 2. 如果标准区域识别失败，尝试 Stage 1 区域
             if (!isValidStageFormat(stageText)) {
-                //logger.info(`[TftOperator] 标准区域识别未命中: "${stageText}"，尝试 Stage-1 区域...`);
+                // logger.info(`[TftOperator] 标准区域识别未命中: "${stageText}"，尝试 Stage-1 区域...`);
                 const stageOneRegion = this.getStageAbsoluteRegion(true);
-                const stageOnePng = await screenCapture.captureRegionAsPng(stageOneRegion);
-                stageText = await ocrService.recognize(stageOnePng, OcrWorkerType.GAME_STAGE);
+                stageText = await recognizeStageText(stageOneRegion);
             }
 
             // 3. 检查是否为"发条鸟试炼"模式
             if (!isValidStageFormat(stageText)) {
                 const clockworkRegion = this.getClockworkTrialsRegion();
-                const clockPng = await screenCapture.captureRegionAsPng(clockworkRegion);
-                const clockText = await ocrService.recognize(clockPng, OcrWorkerType.GAME_STAGE);
+                const clockText = await recognizeStageText(clockworkRegion);
 
                 if (clockText && clockText.length > 2) {
                     this.tftMode = TFTMode.CLOCKWORK_TRAILS;
@@ -277,7 +285,7 @@ class TftOperator {
             const stageType = parseStageStringToEnum(stageText);
 
             if (stageType !== GameStageType.UNKNOWN) {
-                //logger.info(`[TftOperator] 识别阶段: [${stageText}] -> ${stageType}`);
+                // logger.info(`[TftOperator] 识别阶段: [${stageText}] -> ${stageType}`);
                 this.tftMode = TFTMode.CLASSIC;
             } else {
                 logger.warn(`[TftOperator] 无法识别当前阶段: "${stageText ?? "null"}"`);
