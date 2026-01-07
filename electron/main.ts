@@ -4,7 +4,6 @@ import LCUManager, { LcuEventUri, LCUWebSocketMessage } from "../src-backend/lcu
 import 'source-map-support/register';
 import GameConfigHelper from "../src-backend/utils/GameConfigHelper.ts";
 import path from "path";
-import fs from "fs";
 import {IpcChannel} from "./protocol.ts";
 import {logger} from "../src-backend/utils/Logger.ts";
 import {hexService} from "../src-backend/services/HexService.ts";
@@ -176,38 +175,16 @@ function init() {
         });
 
         // 喵~ 这里是 LCU WebSocket 的"总事件"入口：所有 OnJsonApiEvent 都会从这里过。
-        // 需要监听并记录到文件的 LCU 事件路径
-        const watchUris = new Set<string>([
-            '/lol-tft-pass/v1/battle-pass',
-            '/lol-tft-pass/v1/active-passes',
-            '/lol-objectives/v1/objectives/tft',
-            '/lol-objectives/v1/objectives/lol',
-        ]);
-
-        // 日志文件路径（追加写入）
-        const lcuEventLogPath = path.join(process.env.APP_ROOT!, '../test/lcu_events.txt');
-
+        //
+        // 【备忘】游戏结束时会触发的 LCU 事件（可用于判断对局结束）：
+        //   - /lol-tft-pass/v1/battle-pass      → 战斗通行证更新（结算经验）
+        //   - /lol-tft-pass/v1/active-passes    → 活跃通行证列表更新
+        //   - /lol-objectives/v1/objectives/tft → TFT 任务进度更新
+        //   - /lol-objectives/v1/objectives/lol → LOL 任务进度更新
+        //
         lcuManager.on('lcu-event', (event: LCUWebSocketMessage) => {
-            // 在这里处理实时收到的游戏事件
+            // 在这里处理实时收到的游戏事件（仅打印到控制台，便于调试）
             console.log('收到LCU事件:', event.uri, event.eventType);
-
-            // 监听指定事件，打印并追加写入文件
-            if (watchUris.has(event.uri)) {
-                const timestamp = new Date().toISOString();
-                const logContent = `\n===== [${timestamp}] ${event.uri} ${event.eventType} =====\n` +
-                    JSON.stringify(event.data, null, 2) +
-                    '\n===== END =====\n';
-
-                // 控制台打印
-                console.log(logContent);
-
-                // 追加写入文件（异步，不阻塞主流程）
-                fs.appendFile(lcuEventLogPath, logContent, (err) => {
-                    if (err) {
-                        console.error('[Main] 写入 LCU 事件日志失败:', err.message);
-                    }
-                });
-            }
         });
 
     });

@@ -26,6 +26,13 @@ export enum LcuEventUri {
     GAMEFLOW_PHASE = '/lol-gameflow/v1/session',
     /** 英雄选择阶段 */
     CHAMP_SELECT = '/lol-champ-select/v1/session',
+    /** 
+     * TFT 战斗通行证更新事件
+     * @description 游戏结束时会触发此事件（结算经验/任务进度）
+     *              此时玩家已死亡，但游戏窗口还未关闭
+     *              可以用来判断对局结束，然后主动关闭游戏窗口
+     */
+    TFT_BATTLE_PASS = '/lol-tft-pass/v1/battle-pass',
 }
 
 // 定义 LCU WebSocket 消息的基本结构
@@ -342,6 +349,17 @@ class LCUManager extends EventEmitter {
     //  拒绝对局
     public declineMatch(): Promise<any> {
         return this.request("POST", '/lol-matchmaking/v1/ready-check/decline');
+    }
+
+    /**
+     * 退出当前游戏（关闭游戏窗口）
+     * @description 在 TFT 对局结束（玩家死亡）后调用，主动关闭游戏窗口
+     *              调用后会触发 GAMEFLOW_PHASE 变为 "WaitingForStats"
+     * @returns Promise<any>
+     */
+    public quitGame(): Promise<any> {
+        logger.info('🚪 [LCUManager] 正在退出游戏...');
+        return this.request("POST", '/lol-gameflow/v1/early-exit');
     }
 }
 

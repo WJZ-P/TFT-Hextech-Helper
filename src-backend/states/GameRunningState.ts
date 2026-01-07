@@ -104,14 +104,18 @@ export class GameRunningState implements IState {
      * @param signal AbortSignal 用于取消等待
      * @returns true 表示游戏正常结束，false 表示被中断
      * 
-     * @description 监听 GAMEFLOW_PHASE 事件：
-     * - phase === "InProgress"：游戏进行中，继续等待
-     * - phase !== "InProgress"：游戏结束（可能是 "EndOfGame"、"Lobby" 等）
+     * @description 游戏结束的完整链路：
+     * 1. 玩家死亡 → 触发 TFT_BATTLE_PASS 事件（此时游戏窗口还开着）
+     * 2. 收到 TFT_BATTLE_PASS 后 → 调用 quitGame() 关闭游戏窗口
+     * 3. 游戏窗口关闭后 → 触发 GAMEFLOW_PHASE = "WaitingForStats"
+     * 4. 收到 WaitingForStats → 流转到 LobbyState
      */
     private waitForGameToEnd(signal: AbortSignal): Promise<boolean> {
         return new Promise((resolve) => {
             let stopCheckInterval: NodeJS.Timeout | null = null;
             let isResolved = false;
+            /** 标记是否已经尝试过退出游戏，避免重复调用 */
+            let hasTriedQuit = false;
 
             /**
              * 安全的 resolve，防止重复调用
@@ -128,6 +132,7 @@ export class GameRunningState implements IState {
              */
             const cleanup = () => {
                 this.lcuManager?.off(LcuEventUri.GAMEFLOW_PHASE, onGameflowPhase);
+                this.lcuManager?.off(LcuEventUri.TFT_BATTLE_PASS, onBattlePass);
                 signal.removeEventListener("abort", onAbort);
                 if (stopCheckInterval) {
                     clearInterval(stopCheckInterval);
@@ -144,16 +149,36 @@ export class GameRunningState implements IState {
             };
 
             /**
+             * 监听 TFT_BATTLE_PASS 事件（玩家死亡/对局结束）
+             * @description 此时游戏窗口还开着，需要主动调用 quitGame() 关闭
+             */
+            const onBattlePass = async (_eventData: LCUWebSocketMessage) => {
+                if (hasTriedQuit) return; // 避免重复调用
+                hasTriedQuit = true;
+
+                logger.info("[GameRunningState] 收到 TFT_BATTLE_PASS 事件，玩家已死亡/对局结束");
+                logger.info("[GameRunningState] 正在尝试关闭游戏窗口...");
+
+                try {
+                    await this.lcuManager?.quitGame();
+                    logger.info("[GameRunningState] 退出游戏请求已发送，等待 GAMEFLOW_PHASE 变化...");
+                } catch (error) {
+                    logger.warn(`[GameRunningState] 退出游戏请求失败: ${error}`);
+                    // 即使失败也不阻塞，可能玩家已经手动关闭了
+                }
+            };
+
+            /**
              * 监听"游戏阶段变化"事件
-             * @description 当 phase 不再是 "InProgress" 时，表示游戏结束
+             * @description 当 phase 变为 "WaitingForStats" 时，表示游戏窗口已关闭
              */
             const onGameflowPhase = (eventData: LCUWebSocketMessage) => {
                 const phase = eventData.data?.phase as GameFlowPhase | undefined;
                 logger.info(`[GameRunningState] 监听到游戏阶段: ${phase}`);
 
-                // 这里状态到WaitingForStats就可以了，我们不用看数据，直接开新一局
+                // 游戏窗口关闭后会进入 WaitingForStats 状态
                 if (phase && phase === "WaitingForStats") {
-                    logger.info(`[GameRunningState] 检测到游戏结束。`);
+                    logger.info(`[GameRunningState] 检测到游戏结束，游戏窗口已关闭。`);
                     safeResolve(true);
                 }
             };
@@ -162,6 +187,7 @@ export class GameRunningState implements IState {
             signal.addEventListener("abort", onAbort, { once: true });
 
             // 注册 LCU 事件监听器
+            this.lcuManager?.on(LcuEventUri.TFT_BATTLE_PASS, onBattlePass);
             this.lcuManager?.on(LcuEventUri.GAMEFLOW_PHASE, onGameflowPhase);
 
             // 定期检查 signal 状态 (作为 abort 事件的兜底)

@@ -2916,6 +2916,7 @@ var LcuEventUri = /* @__PURE__ */ ((LcuEventUri2) => {
   LcuEventUri2["READY_CHECK"] = "/lol-matchmaking/v1/ready-check";
   LcuEventUri2["GAMEFLOW_PHASE"] = "/lol-gameflow/v1/session";
   LcuEventUri2["CHAMP_SELECT"] = "/lol-champ-select/v1/session";
+  LcuEventUri2["TFT_BATTLE_PASS"] = "/lol-tft-pass/v1/battle-pass";
   return LcuEventUri2;
 })(LcuEventUri || {});
 class LCUManager extends EventEmitter {
@@ -3162,6 +3163,16 @@ class LCUManager extends EventEmitter {
   //  拒绝对局
   declineMatch() {
     return this.request("POST", "/lol-matchmaking/v1/ready-check/decline");
+  }
+  /**
+   * 退出当前游戏（关闭游戏窗口）
+   * @description 在 TFT 对局结束（玩家死亡）后调用，主动关闭游戏窗口
+   *              调用后会触发 GAMEFLOW_PHASE 变为 "WaitingForStats"
+   * @returns Promise<any>
+   */
+  quitGame() {
+    logger.info("🚪 [LCUManager] 正在退出游戏...");
+    return this.request("POST", "/lol-gameflow/v1/early-exit");
   }
 }
 var register = {};
@@ -5774,37 +5785,37 @@ const equipmentRegion = {
 const fightBoardSlotPoint = {
   // x+=80
   //  第一行的棋子位置
-  R1_C1: { x: 230, y: 305 },
-  R1_C2: { x: 310, y: 305 },
-  R1_C3: { x: 390, y: 305 },
-  R1_C4: { x: 470, y: 305 },
-  R1_C5: { x: 550, y: 305 },
-  R1_C6: { x: 630, y: 305 },
-  R1_C7: { x: 710, y: 305 },
+  R1_C1: { x: 230, y: 300 },
+  R1_C2: { x: 310, y: 300 },
+  R1_C3: { x: 390, y: 300 },
+  R1_C4: { x: 470, y: 300 },
+  R1_C5: { x: 550, y: 300 },
+  R1_C6: { x: 630, y: 300 },
+  R1_C7: { x: 710, y: 300 },
   //  第二行的棋子位置        //  x+=85
-  R2_C1: { x: 260, y: 360 },
-  R2_C2: { x: 345, y: 360 },
-  R2_C3: { x: 430, y: 360 },
-  R2_C4: { x: 515, y: 360 },
-  R2_C5: { x: 600, y: 360 },
-  R2_C6: { x: 685, y: 360 },
-  R2_C7: { x: 770, y: 360 },
+  R2_C1: { x: 260, y: 355 },
+  R2_C2: { x: 345, y: 355 },
+  R2_C3: { x: 430, y: 355 },
+  R2_C4: { x: 515, y: 355 },
+  R2_C5: { x: 600, y: 355 },
+  R2_C6: { x: 685, y: 355 },
+  R2_C7: { x: 770, y: 355 },
   //  第三行棋子的位置        //  x+=90
-  R3_C1: { x: 200, y: 410 },
-  R3_C2: { x: 290, y: 410 },
-  R3_C3: { x: 380, y: 410 },
-  R3_C4: { x: 470, y: 410 },
-  R3_C5: { x: 560, y: 410 },
-  R3_C6: { x: 650, y: 410 },
-  R3_C7: { x: 740, y: 410 },
+  R3_C1: { x: 200, y: 405 },
+  R3_C2: { x: 290, y: 405 },
+  R3_C3: { x: 380, y: 405 },
+  R3_C4: { x: 470, y: 405 },
+  R3_C5: { x: 560, y: 405 },
+  R3_C6: { x: 650, y: 405 },
+  R3_C7: { x: 740, y: 405 },
   //  第四行棋子的位置        //  x+=90
-  R4_C1: { x: 240, y: 465 },
-  R4_C2: { x: 330, y: 465 },
-  R4_C3: { x: 420, y: 465 },
-  R4_C4: { x: 510, y: 465 },
-  R4_C5: { x: 600, y: 465 },
-  R4_C6: { x: 690, y: 465 },
-  R4_C7: { x: 780, y: 465 }
+  R4_C1: { x: 240, y: 460 },
+  R4_C2: { x: 330, y: 460 },
+  R4_C3: { x: 420, y: 460 },
+  R4_C4: { x: 510, y: 460 },
+  R4_C5: { x: 600, y: 460 },
+  R4_C6: { x: 690, y: 460 },
+  R4_C7: { x: 780, y: 460 }
 };
 const fightBoardSlotRegion = {
   // x+=80
@@ -11516,12 +11527,62 @@ class TftOperator {
         logger.info(`[TftOperator] 等级解析成功: Lv.${level}, 经验 ${currentXp}/${totalXp}`);
         return { level, currentXp, totalXp };
       }
+      const fallbackResult = this.tryFixMisrecognizedXp(text);
+      if (fallbackResult) {
+        logger.info(
+          `[TftOperator] 等级解析成功(兜底修复): Lv.${fallbackResult.level}, 经验 ${fallbackResult.currentXp}/${fallbackResult.totalXp}`
+        );
+        return fallbackResult;
+      }
       logger.warn(`[TftOperator] 等级解析失败，无法匹配格式: "${text}"`);
       return null;
     } catch (error) {
       logger.error(`[TftOperator] 获取等级信息异常: ${error}`);
       return null;
     }
+  }
+  /**
+   * 尝试修复 "/" 被误识别为 "1" 的经验值
+   * @param text OCR 识别的原始文本
+   * @returns 修复后的等级信息，无法修复返回 null
+   * 
+   * @description TFT 经验值规则：
+   * - currentXp 和 totalXp 都是偶数（每次 +2 经验）
+   * - currentXp 和 totalXp 最多都是两位数
+   * - totalXp 只有固定的几个值: 2, 6, 10, 20, 36, 48, 76, 84
+   * 
+   * 当 "/" 被误识别为 "1" 时：
+   * - "4/6" → "416"：可以拆分为 "4" 和 "6"（中间的1是误识别的/）
+   * - "12/16" → "12116"：可以拆分为 "12" 和 "16"
+   * 
+   * 修复策略：
+   * 1. 匹配 "X级 数字串" 格式
+   * 2. 遍历数字串的所有可能切分点
+   * 3. 检查切分后的 currentXp 和 totalXp 是否符合规则
+   */
+  tryFixMisrecognizedXp(text) {
+    const VALID_TOTAL_XP = /* @__PURE__ */ new Set([2, 6, 10, 20, 36, 48, 76, 84]);
+    const match = text.match(/(\d+)\s*级\s*(\d+)/);
+    if (!match) return null;
+    const level = parseInt(match[1], 10);
+    const xpDigits = match[2];
+    for (let i = 1; i < xpDigits.length; i++) {
+      if (xpDigits[i] !== "1") continue;
+      const currentXpStr = xpDigits.substring(0, i);
+      const totalXpStr = xpDigits.substring(i + 1);
+      if (!currentXpStr || !totalXpStr) continue;
+      if (currentXpStr.length > 1 && currentXpStr[0] === "0") continue;
+      if (totalXpStr.length > 1 && totalXpStr[0] === "0") continue;
+      const currentXp = parseInt(currentXpStr, 10);
+      const totalXp = parseInt(totalXpStr, 10);
+      if (currentXp % 2 === 0 && VALID_TOTAL_XP.has(totalXp) && currentXp < totalXp && currentXp <= 99 && totalXp <= 99) {
+        logger.debug(
+          `[TftOperator] 兜底修复: "${xpDigits}" → "${currentXp}/${totalXp}" (在位置 ${i} 处将 "1" 还原为 "/")`
+        );
+        return { level, currentXp, totalXp };
+      }
+    }
+    return null;
   }
   /**
    * 获取当前持有的金币数量
@@ -14261,7 +14322,7 @@ class StrategyService {
   async executeRollingLoop(targetChampions) {
     let rollCount = 0;
     const maxRolls = 30;
-    const maxConsecutiveNoBuyRolls = 5;
+    const maxConsecutiveNoBuyRolls = 15;
     let consecutiveNoBuyRolls = 0;
     while (rollCount < maxRolls) {
       const rolled = await this.executeRollStrategy();
@@ -15067,14 +15128,17 @@ class GameRunningState {
    * @param signal AbortSignal 用于取消等待
    * @returns true 表示游戏正常结束，false 表示被中断
    * 
-   * @description 监听 GAMEFLOW_PHASE 事件：
-   * - phase === "InProgress"：游戏进行中，继续等待
-   * - phase !== "InProgress"：游戏结束（可能是 "EndOfGame"、"Lobby" 等）
+   * @description 游戏结束的完整链路：
+   * 1. 玩家死亡 → 触发 TFT_BATTLE_PASS 事件（此时游戏窗口还开着）
+   * 2. 收到 TFT_BATTLE_PASS 后 → 调用 quitGame() 关闭游戏窗口
+   * 3. 游戏窗口关闭后 → 触发 GAMEFLOW_PHASE = "WaitingForStats"
+   * 4. 收到 WaitingForStats → 流转到 LobbyState
    */
   waitForGameToEnd(signal) {
     return new Promise((resolve) => {
       let stopCheckInterval = null;
       let isResolved = false;
+      let hasTriedQuit = false;
       const safeResolve = (value) => {
         if (isResolved) return;
         isResolved = true;
@@ -15083,6 +15147,7 @@ class GameRunningState {
       };
       const cleanup = () => {
         this.lcuManager?.off(LcuEventUri.GAMEFLOW_PHASE, onGameflowPhase);
+        this.lcuManager?.off(LcuEventUri.TFT_BATTLE_PASS, onBattlePass);
         signal.removeEventListener("abort", onAbort);
         if (stopCheckInterval) {
           clearInterval(stopCheckInterval);
@@ -15093,15 +15158,28 @@ class GameRunningState {
         logger.info("[GameRunningState] 收到取消信号，停止等待");
         safeResolve(false);
       };
+      const onBattlePass = async (_eventData) => {
+        if (hasTriedQuit) return;
+        hasTriedQuit = true;
+        logger.info("[GameRunningState] 收到 TFT_BATTLE_PASS 事件，玩家已死亡/对局结束");
+        logger.info("[GameRunningState] 正在尝试关闭游戏窗口...");
+        try {
+          await this.lcuManager?.quitGame();
+          logger.info("[GameRunningState] 退出游戏请求已发送，等待 GAMEFLOW_PHASE 变化...");
+        } catch (error) {
+          logger.warn(`[GameRunningState] 退出游戏请求失败: ${error}`);
+        }
+      };
       const onGameflowPhase = (eventData) => {
         const phase = eventData.data?.phase;
         logger.info(`[GameRunningState] 监听到游戏阶段: ${phase}`);
         if (phase && phase === "WaitingForStats") {
-          logger.info(`[GameRunningState] 检测到游戏结束。`);
+          logger.info(`[GameRunningState] 检测到游戏结束，游戏窗口已关闭。`);
           safeResolve(true);
         }
       };
       signal.addEventListener("abort", onAbort, { once: true });
+      this.lcuManager?.on(LcuEventUri.TFT_BATTLE_PASS, onBattlePass);
       this.lcuManager?.on(LcuEventUri.GAMEFLOW_PHASE, onGameflowPhase);
       stopCheckInterval = setInterval(() => {
         if (signal.aborted) {
@@ -15576,27 +15654,8 @@ function init() {
       console.log("🔄 [Main] 重新启动 LCU 连接监听...");
       connector.start();
     });
-    const watchUris = /* @__PURE__ */ new Set([
-      "/lol-tft-pass/v1/battle-pass",
-      "/lol-tft-pass/v1/active-passes",
-      "/lol-objectives/v1/objectives/tft",
-      "/lol-objectives/v1/objectives/lol"
-    ]);
-    const lcuEventLogPath = path__default.join(process.env.APP_ROOT, "../test/lcu_events.txt");
     lcuManager.on("lcu-event", (event) => {
       console.log("收到LCU事件:", event.uri, event.eventType);
-      if (watchUris.has(event.uri)) {
-        const timestamp = (/* @__PURE__ */ new Date()).toISOString();
-        const logContent = `
-===== [${timestamp}] ${event.uri} ${event.eventType} =====
-` + JSON.stringify(event.data, null, 2) + "\n===== END =====\n";
-        console.log(logContent);
-        fs__default.appendFile(lcuEventLogPath, logContent, (err) => {
-          if (err) {
-            console.error("[Main] 写入 LCU 事件日志失败:", err.message);
-          }
-        });
-      }
     });
   });
   connector.on("disconnect", () => {
