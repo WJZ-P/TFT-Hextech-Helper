@@ -46,7 +46,12 @@ const AUGMENT_ROUNDS: ReadonlySet<string> = new Set(["2-1", "3-2", "4-2"]);
 export function parseStageStringToEnum(stageText: string): GameStageType {
     try {
         // 清理空白字符
-        const cleanText = stageText.replace(/\s/g, "");
+        let cleanText = stageText.replace(/\s/g, "");
+
+        // 兜底修复：OCR 可能把 "1-1" 误识别为 "41-1"、"11-1" 等
+        // TFT 最多只有 7 个大阶段，所以 stage > 7 一定是误识别
+        // 常见误识别：41-1 → 1-1, 11-1 → 1-1
+        cleanText = fixMisrecognizedStage(cleanText);
 
         // 匹配 "数字-数字" 格式
         const match = cleanText.match(/^(\d+)-(\d+)$/);
@@ -96,4 +101,37 @@ export function parseStageStringToEnum(stageText: string): GameStageType {
  */
 export function isValidStageFormat(text: string): boolean {
     return /^\d+\s*[-]\s*\d+$/.test(text.trim());
+}
+
+/**
+ * 修复 OCR 误识别的阶段字符串
+ * @param text 原始阶段字符串
+ * @returns 修复后的阶段字符串
+ * 
+ * @description 常见误识别情况：
+ * - "41-1" → "1-1"：OCR 把干扰像素识别成了 "4"
+ * - "11-1" → "1-1"：OCR 重复识别了 "1"
+ * 
+ * 修复策略：
+ * - TFT 最多只有 7 个大阶段 (1-7)
+ * - 如果 stage > 7，尝试取最后一位数字作为真正的 stage
+ * - 例如 "41" → "1", "11" → "1"
+ */
+function fixMisrecognizedStage(text: string): string {
+    const match = text.match(/^(\d+)-(\d+)$/);
+    if (!match) return text;
+
+    const stageStr = match[1];
+    const roundStr = match[2];
+    const stage = parseInt(stageStr);
+
+    // TFT 大阶段最多到 7，超过说明是误识别
+    if (stage > 7 && stageStr.length > 1) {
+        // 取最后一位作为真正的 stage
+        const fixedStage = stageStr.slice(-1);
+        console.log(`[GameStageParser] 修复阶段误识别: "${text}" → "${fixedStage}-${roundStr}"`);
+        return `${fixedStage}-${roundStr}`;
+    }
+
+    return text;
 }

@@ -1191,40 +1191,42 @@ class TftOperator {
     }
 
     /**
-     * 尝试修复 "/" 被误识别为 "1" 的经验值
+     * 尝试修复 "/" 被误识别的经验值
      * @param text OCR 识别的原始文本
      * @returns 修复后的等级信息，无法修复返回 null
      * 
      * @description TFT 经验值规则：
-     * - currentXp 和 totalXp 都是偶数（每次 +2 经验）
-     * - currentXp 和 totalXp 最多都是两位数
      * - totalXp 只有固定的几个值: 2, 6, 10, 20, 36, 48, 76, 84
+     * - currentXp 范围是 0 ~ totalXp-1（可以是奇数，比如通过任务/战斗获得 1 点经验）
+     * - currentXp 和 totalXp 最多都是两位数
      * 
-     * 当 "/" 被误识别为 "1" 时：
-     * - "4/6" → "416"：可以拆分为 "4" 和 "6"（中间的1是误识别的/）
-     * - "12/16" → "12116"：可以拆分为 "12" 和 "16"
+     * "/" 可能被误识别为 "1" 或 "7"：
+     * - "4/6" → "416" 或 "476"
+     * - "5/6" → "516" 或 "576"
      * 
      * 修复策略：
      * 1. 匹配 "X级 数字串" 格式
-     * 2. 遍历数字串的所有可能切分点
+     * 2. 遍历数字串的所有可能切分点（"1" 或 "7" 的位置）
      * 3. 检查切分后的 currentXp 和 totalXp 是否符合规则
      */
     private tryFixMisrecognizedXp(text: string): { level: number; currentXp: number; totalXp: number } | null {
         // TFT 各等级升级所需经验（totalXp 的所有合法值）
         const VALID_TOTAL_XP = new Set([2, 6, 10, 20, 36, 48, 76, 84]);
+        
+        // "/" 可能被误识别的字符
+        const SLASH_MISRECOGNIZED_CHARS = ['1', '7'];
 
         // 匹配 "X级 纯数字" 格式（没有 / 的情况）
         const match = text.match(/(\d+)\s*级\s*(\d+)/);
         if (!match) return null;
 
         const level = parseInt(match[1], 10);
-        const xpDigits = match[2]; // 例如 "416" 或 "12116"
+        const xpDigits = match[2]; // 例如 "416" 或 "576"
 
         // 遍历所有可能的切分点
-        // 假设 "/" 被识别成 "1"，所以我们在每个 "1" 的位置尝试切分
         for (let i = 1; i < xpDigits.length; i++) {
-            // 检查切分点是否是 "1"（被误识别的 "/"）
-            if (xpDigits[i] !== '1') continue;
+            // 检查切分点是否是可能被误识别的字符（"1" 或 "7"）
+            if (!SLASH_MISRECOGNIZED_CHARS.includes(xpDigits[i])) continue;
 
             const currentXpStr = xpDigits.substring(0, i);
             const totalXpStr = xpDigits.substring(i + 1);
@@ -1238,20 +1240,20 @@ class TftOperator {
             const totalXp = parseInt(totalXpStr, 10);
 
             // 验证规则：
-            // 1. currentXp 必须是偶数
-            // 2. totalXp 必须是合法值
-            // 3. currentXp < totalXp（当前经验不能超过升级所需）
+            // 1. totalXp 必须是合法值（这是最严格的约束）
+            // 2. currentXp < totalXp（当前经验不能超过升级所需）
+            // 3. currentXp >= 0（当前经验不能为负）
             // 4. currentXp 和 totalXp 都最多两位数
             if (
-                currentXp % 2 === 0 &&
                 VALID_TOTAL_XP.has(totalXp) &&
+                currentXp >= 0 &&
                 currentXp < totalXp &&
                 currentXp <= 99 &&
                 totalXp <= 99
             ) {
                 logger.debug(
                     `[TftOperator] 兜底修复: "${xpDigits}" → "${currentXp}/${totalXp}" ` +
-                    `(在位置 ${i} 处将 "1" 还原为 "/")`
+                    `(在位置 ${i} 处将 "${xpDigits[i]}" 还原为 "/")`
                 );
                 return { level, currentXp, totalXp };
             }

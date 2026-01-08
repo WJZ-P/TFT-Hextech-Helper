@@ -339,9 +339,9 @@ export class StrategyService {
     }
 
     /**
-     * 判断：某个“装备栏物品”是否是真正可穿戴的装备
+     * 判断：某个"装备栏物品"是否是真正可穿戴的装备
      * @description
-     * TFT 的装备栏里可能出现一些“特殊道具”，它们并不是给棋子穿的：
+     * TFT 的装备栏里可能出现一些"特殊道具"，它们并不是给棋子穿的：
      * - 装备拆卸器：对目标棋子使用后，会把身上装备全部拆下来回到装备栏
      * - 金质装备拆卸器：同上，但可无限次使用
      * - 装备重铸器：对目标棋子使用后，会把身上装备全部重铸并回到装备栏
@@ -353,13 +353,13 @@ export class StrategyService {
     private isWearableEquipmentName(itemName: string): boolean {
         const data = TFT_16_EQUIP_DATA[itemName as EquipKey];
 
-        // 未知物品：为了安全，默认按“不可穿戴”处理，避免误把道具当装备拖到棋子身上。
+        // 未知物品：为了安全，默认按"不可穿戴"处理，避免误把道具当装备拖到棋子身上。
         if (!data) {
             return false;
         }
 
         // 当前协议里 specialEquip 统一用 equipId = "-1" 标记（例如：装备拆卸器/重铸器/强化果实/复制器等）
-        // 这些都不是“穿上去就生效”的传统装备。
+        // 这些都不是"穿上去就生效"的传统装备。
         if (data.equipId === "-1") {
             return false;
         }
@@ -368,18 +368,18 @@ export class StrategyService {
     }
 
     /**
-     * 推断：装备更适合“前排”还是“后排”
+     * 推断：装备更适合"前排"还是"后排"
      * @description
-     * 我们没有直接的“装备类型标签”（坦装/输出装），但可以利用 `TFT_16_EQUIP_DATA.formula`：
+     * 我们没有直接的"装备类型标签"（坦装/输出装），但可以利用 `TFT_16_EQUIP_DATA.formula`：
      * - 基础散件：formula 为空
      * - 成装：formula 是 "散件ID1,散件ID2"
      *
-     * 基于散件做一个非常粗粒度的启发式（足够让“随便上装备”变得更像人）：
+     * 基于散件做一个非常粗粒度的启发式（足够让"随便上装备"变得更像人）：
      * - 反曲之弓/暴风之剑/无用大棒/女神之泪 → 倾向后排（输出/攻速/法强/回蓝）
      * - 锁子甲/负极斗篷/巨人腰带 → 倾向前排（抗性/血量）
      * - 拳套/金铲铲/金锅锅 → 偏中性（很多装备/转职比较灵活）
      *
-     * TODO: 后续可以结合“阵容配置的前排/后排位”或“英雄定位(主C/主T)”做更准确的分配。
+     * TODO: 后续可以结合"阵容配置的前排/后排位"或"英雄定位(主C/主T)"做更准确的分配。
      */
     private getEquipmentRolePreference(itemName: string): 'frontline' | 'backline' | 'any' {
         const data = TFT_16_EQUIP_DATA[itemName as EquipKey];
@@ -425,7 +425,7 @@ export class StrategyService {
     }
 
     /**
-     * 获取某件装备由哪些“基础散件”组成
+     * 获取某件装备由哪些"基础散件"组成
      * @returns 散件名称数组：
      * - 基础散件：返回 [自身]
      * - 成装：返回 [散件1, 散件2]
@@ -447,7 +447,7 @@ export class StrategyService {
     }
 
     /**
-     * 判断某个棋子是否符合装备倾向（这里用“射程”近似判断前排/后排）
+     * 判断某个棋子是否符合装备倾向（这里用"射程"近似判断前排/后排）
      * - 近战(1-2) → 前排
      * - 远程(3+) → 后排
      */
@@ -462,12 +462,12 @@ export class StrategyService {
     }
 
     /**
-     * 为某件装备找一个“更合适”的穿戴目标（优先不影响核心装分配，其次按前排/后排倾向选人）
+     * 为某件装备找一个"更合适"的穿戴目标（优先不影响核心装分配，其次按前排/后排倾向选人）
      */
     private findBestEquipmentTargetLocation(itemName: string, coreChampions: ChampionConfig[]): BoardLocation | null {
         const role = this.getEquipmentRolePreference(itemName);
 
-        // 1) 优先走“核心/打工仔”逻辑（但会额外做一层前排/后排匹配）
+        // 1) 优先走"核心/打工仔"逻辑（但会额外做一层前排/后排匹配）
         for (const config of coreChampions) {
             const wrapper = this.findUnitForEquipment(config.name, itemName);
             if (!wrapper) continue;
@@ -478,7 +478,7 @@ export class StrategyService {
             }
         }
 
-        // 2) 退化：在全棋盘上按“装备倾向”挑一个最值钱（最强）的单位
+        // 2) 退化：在全棋盘上按"装备倾向"挑一个最值钱（最强）的单位
         const boardUnits = gameStateManager.getBoardUnitsWithLocation().filter(u => u.equips.length < 3);
         if (boardUnits.length === 0) return null;
 
@@ -539,7 +539,7 @@ export class StrategyService {
         // - 其次：有散件就先挂到场上（打工仔也行），用即时战力换血量
         // =========================
 
-        // 0) 过滤掉“特殊道具”（拆卸器/重铸器等），这些不属于可穿戴装备。
+        // 0) 过滤掉"特殊道具"（拆卸器/重铸器等），这些不属于可穿戴装备。
         const wearableEquipments = equipments.filter(e => this.isWearableEquipmentName(e.name));
         if (wearableEquipments.length === 0) {
             return { can: false, reason: "装备栏里没有可穿戴装备（可能全是拆卸器/重铸器等特殊道具）" };
@@ -658,7 +658,7 @@ export class StrategyService {
             return { should: false, reason: "装备栏为空" };
         }
 
-        // 过滤掉“特殊道具”（拆卸器/重铸器等），只对可穿戴装备执行策略。
+        // 过滤掉"特殊道具"（拆卸器/重铸器等），只对可穿戴装备执行策略。
         const equipments = rawEquipments.filter(e => this.isWearableEquipmentName(e.name));
         const skipped = rawEquipments.filter(e => !this.isWearableEquipmentName(e.name));
 
@@ -1144,7 +1144,7 @@ export class StrategyService {
 
         // 2. 防挂机：持续随机走动
         // 说明：我们复用 antiAfk()，它内部会循环调用 `tftOperator.selfWalkAround()`，
-        //      并在“战斗状态变化/回合变化”时自动退出循环，避免一直阻塞。
+        //      并在"战斗状态变化/回合变化"时自动退出循环，避免一直阻塞。
         await this.antiAfk();
     }
 
@@ -1157,19 +1157,28 @@ export class StrategyService {
      * 1. 检测场上所有战利品球的位置
      * 2. 按 X 坐标从左到右排序（小小英雄默认在左下角，从左往右是最短路径）
      * 3. 依次移动小小英雄到战利品球位置拾取
-     *
-     * TODO: 实现完整的拾取逻辑
+     * 
+     * 中断策略：
+     * - 记录调用时的战斗状态（isFighting）
+     * - 每次拾取前检查状态是否变化
+     * - 状态变化时立即停止（无论是战斗→非战斗，还是非战斗→战斗）
+     * 
+     * @returns 是否成功拾取了至少一个法球（用于判断是否需要重新执行装备策略）
      */
-    private async pickUpLootOrbs(): Promise<void> {
+    private async pickUpLootOrbs(): Promise<boolean> {
         const sleepTime = 2500; //  每次点击之间的间隔时间
-        logger.info("[StrategyService] 开始检测战利品球...");
+        
+        // 记录调用时的战斗状态，用于检测状态变化
+        const initialFightingState = this.isFighting();
+        
+        logger.info(`[StrategyService] 开始检测战利品球... (当前战斗状态: ${initialFightingState})`);
 
         // 1. 检测场上的战利品球
         const lootOrbs = await tftOperator.getLootOrbs();
 
         if (lootOrbs.length === 0) {
             logger.info("[StrategyService] 未检测到战利品球");
-            return;
+            return false;
         }
 
         logger.info(`[StrategyService] 检测到 ${lootOrbs.length} 个战利品球`);
@@ -1178,12 +1187,19 @@ export class StrategyService {
         const sortedOrbs = [...lootOrbs].sort((a, b) => a.x - b.x);
 
         // 3. 依次拾取战利品球
+        let pickedCount = 0;  // 记录成功拾取的数量
+        
         for (const orb of sortedOrbs) {
-            // 检查是否仍在战斗阶段（战斗结束后停止拾取）
-            if (!this.isFighting()) {
-                logger.info("[StrategyService] 战斗已结束，停止拾取");
+            // 检查战斗状态是否发生变化
+            // 无论是 战斗→非战斗 还是 非战斗→战斗，状态变了就停止拾取
+            const currentFightingState = this.isFighting();
+            if (currentFightingState !== initialFightingState) {
+                logger.info(
+                    `[StrategyService] 战斗状态变化 (${initialFightingState} → ${currentFightingState})，停止拾取`
+                );
                 break;
             }
+            
             logger.info(`[StrategyService] 正在拾取 ${orb.type} 战利品球，位置: (${orb.x}, ${orb.y}), 等待 ${sleepTime}ms`);
 
             // 右键点击战利品球位置，小小英雄会自动移动过去拾取
@@ -1192,9 +1208,13 @@ export class StrategyService {
 
             // 等待小小英雄移动到目标位置并拾取
             await sleep(sleepTime);
+            pickedCount++;
         }
-        logger.info("[StrategyService] 战利品拾取完成");
+        
+        logger.info(`[StrategyService] 战利品拾取完成，共拾取 ${pickedCount} 个`);
         await tftOperator.selfResetPosition();
+        
+        return pickedCount > 0;
     }
 
     /**
@@ -1454,8 +1474,8 @@ export class StrategyService {
         const worstBoard = this.findWorstBoardUnit(targetChampions);
         if (!worstBoard) return;
 
-        // 多样性优化：优先用“场上没有的棋子”去替换（避免重复上同名棋子）
-        // 注意：如果把 `worstBoard` 位置的棋子换下去，那么它的名字可以从“禁止名单”里移除。
+        // 多样性优化：优先用"场上没有的棋子"去替换（避免重复上同名棋子）
+        // 注意：如果把 `worstBoard` 位置的棋子换下去，那么它的名字可以从"禁止名单"里移除。
         const avoidChampionNames = new Set<ChampionKey>(
             gameStateManager.getBoardUnitsWithLocation().map(u => u.tftUnit.displayName as ChampionKey)
         );
@@ -1509,7 +1529,7 @@ export class StrategyService {
 
     /**
      * 找备战席中价值最高的棋子
-     * @param avoidChampionNames 可选：避免选择“同名棋子”（例如场上已经有的棋子名）
+     * @param avoidChampionNames 可选：避免选择"同名棋子"（例如场上已经有的棋子名）
      */
     private findBestBenchUnit(
         benchUnits: BenchUnit[],
@@ -1525,12 +1545,12 @@ export class StrategyService {
         const filtered = benchUnits.filter(isNormalUnit);
         if (filtered.length === 0) return null;
 
-        // 1) 优先挑选“避开同名”的候选集
+        // 1) 优先挑选"避开同名"的候选集
         const candidates = avoidChampionNames
             ? filtered.filter(u => !avoidChampionNames.has(u.tftUnit.displayName as ChampionKey))
             : filtered;
 
-        // 2) 如果避开后没有候选，则退化回“不过滤同名”的候选集（避免无子可换）
+        // 2) 如果避开后没有候选，则退化回"不过滤同名"的候选集（避免无子可换）
         const finalCandidates = candidates.length > 0 ? candidates : filtered;
 
         let best: { unit: BenchUnit; score: number } | null = null;
@@ -1713,7 +1733,7 @@ export class StrategyService {
 
         // 小小英雄归位（避免挡住商店）
         // 注意：通用策略过程中会发生很多鼠标操作（买牌/上场/卖棋/拖装备等），
-        //      小小英雄可能在过程中被“顺带”移动导致遮挡识别区域。
+        //      小小英雄可能在过程中被"顺带"移动导致遮挡识别区域。
         //      所以这里除了开头归位一次外，函数结束时也会兜底再归位一次。
         await tftOperator.selfResetPosition();
 
@@ -1765,14 +1785,30 @@ export class StrategyService {
             // 9. 装备策略 (合成与穿戴)
             // 注意：装备拖拽属于"高风险操作"。
             // 激进策略（保前四向）：只要"不在战斗中"且"装备栏非空"，就执行（哪怕先给打工仔挂装备也行）。
-            const equipGate = this.getEquipStrategyGateDecision();
-            if (equipGate.should) {
-                logger.info(`[StrategyService] 执行装备策略：${equipGate.reason}`);
-                await this.executeEquipStrategy();
-            } else {
-                logger.debug(`[StrategyService] 跳过装备策略：${equipGate.reason}`);
-            }
+            // executeEquipStrategy 内部会自动判断是否满足执行条件
+            await this.executeEquipStrategy();
         } finally {
+            // 兜底：通用策略结束后，再拾取一次法球，避免浪费剩余时间
+            // 如果捡到了法球，可能获得了新装备，需要重新执行装备策略
+            try {
+                logger.info("[StrategyService] 通用策略结束，兜底拾取法球...");
+                const pickedOrbs = await this.pickUpLootOrbs();
+                
+                // 如果捡到了法球，重新执行装备策略（法球可能掉落装备）
+                // executeEquipStrategy 内部会自动判断是否满足执行条件
+                if (pickedOrbs) {
+                    logger.info("[StrategyService] 捡到法球，重新检查装备策略...");
+                    // 先刷新装备栏状态
+                    const newEquipments = await tftOperator.getEquipInfo();
+                    gameStateManager.updateEquipments(newEquipments);
+                    
+                    // 直接调用，内部会判断是否需要执行
+                    await this.executeEquipStrategy();
+                }
+            } catch (e: any) {
+                logger.warn(`[StrategyService] 通用策略结束兜底拾取法球失败: ${e?.message ?? e}`);
+            }
+
             // 兜底：无论通用策略中间发生什么，都把小小英雄再归位一次，减少遮挡导致的识别失败。
             try {
                 await tftOperator.selfResetPosition();
@@ -1834,94 +1870,103 @@ export class StrategyService {
      * 升级策略 (F键)
      * @description 决定是否购买经验值
      *              策略优先级：
-     *              1. 关键回合抢人口 (2-1升4, 2-5升5, 3-2升6, 4-1升7, 5-1升8)
-     *              2. 卡利息升级 (升完还有50块) - 慢升
-     *              3. 仅差一次升级 (XP差 <= 4) - 钱够就升
-     *              4. 卡50块利息修经验 (有多余钱就F一下)
+     *              1. 关键回合抢人口 (2-1升4, 2-5升5, 3-2升6, 4-1升7, 5-1升8) - 无视利息强制升
+     *              2. 卡利息买经验 - 只要金币 > 50，就一直买经验直到剩余金币 < 50
      */
     private async executeLevelUpStrategy(): Promise<void> {
         // 安全保护：在真正开始按 F 买经验之前，先从屏幕刷新一次等级/经验。
-        // 原因：经验值可能在“回合开始自然 +2XP”等情况下变化，
+        // 原因：经验值可能在"回合开始自然 +2XP"等情况下变化，
         //       如果只依赖 GameStateManager 的缓存，可能会出现买多/买少。
         await this.updateLevelStateFromScreen();
 
         const snapshot = gameStateManager.getSnapshotSync();
         if (!snapshot) return;
 
-        const {level, currentXp, totalXp, gold} = snapshot;
+        let {level, currentXp, totalXp, gold} = snapshot;
 
         // 已达最大等级 (10 为上限)
         if (level >= 10 || totalXp <= 0) return;
 
-        const xpNeeded = totalXp - currentXp;
-        if (xpNeeded <= 0) return;
+        // 1. 关键回合判定 (Standard Curve) - 无视利息，强制升到目标等级
+        const criticalLevel = this.getCriticalLevelTarget();
+        if (criticalLevel !== null && level < criticalLevel) {
+            const xpNeeded = totalXp - currentXp;
+            const buyCount = Math.ceil(xpNeeded / 4);
+            const cost = buyCount * 4;
 
-        const buyCount = Math.ceil(xpNeeded / 4);
-        const cost = buyCount * 4;
+            if (gold >= cost) {
+                logger.info(
+                    `[StrategyService] 关键回合升级: ${this.currentStage}-${this.currentRound} ` +
+                    `拉 ${criticalLevel} (Lv.${level} -> Lv.${level + 1}, 花费 ${cost})`
+                );
 
-        // 如果钱不够直接升级，检查是否可以"卡利息升经验"
-        if (gold < cost) {
-            // 策略 4: 如果 gold > 50，且 gold - 4 >= 50，就一直按 F 直到剩余金币 < 54 (即保留 50+)
-            const maxBuys = Math.floor((gold - 50) / 4);
-
-            if (maxBuys > 0) {
-                logger.info(`[StrategyService] 升级策略: 卡利息(50+)修经验，将购买 ${maxBuys} 次`);
-                for (let i = 0; i < maxBuys; i++) {
+                for (let i = 0; i < buyCount; i++) {
                     await tftOperator.buyExperience();
                     await sleep(100);
                 }
-                // 更新一下 XP 状态
+
+                gameStateManager.deductGold(cost);
                 await this.updateLevelStateFromScreen();
+            } else {
+                logger.warn(
+                    `[StrategyService] 关键回合升级失败: 金币不足 (需要 ${cost}, 当前 ${gold})`
+                );
             }
             return;
         }
 
-        let shouldLevel = false;
-        let reason = "";
+        // 2. 卡利息买经验 - 只要金币 > 50，就一直买经验直到剩余金币 < 50
+        // 计算可以买多少次经验（保持 50 利息）
+        const maxBuys = Math.floor((gold - 50) / 4);
 
-        // 1. 关键回合判定 (Standard Curve)
-        if (this.currentStage === 2 && this.currentRound === 1 && level < 4) {
-            shouldLevel = true;
-            reason = "2-1 拉 4";
-        } else if (this.currentStage === 2 && this.currentRound === 5 && level < 5) {
-            shouldLevel = true;
-            reason = "2-5 拉 5";
-        } else if (this.currentStage === 3 && this.currentRound === 2 && level < 6) {
-            shouldLevel = true;
-            reason = "3-2 拉 6";
-        } else if (this.currentStage === 4 && this.currentRound === 1 && level < 7) {
-            shouldLevel = true;
-            reason = "4-1 拉 7";
-        } else if (this.currentStage === 5 && this.currentRound === 1 && level < 8) {
-            shouldLevel = true;
-            reason = "5-1 拉 8";
-        }
+        if (maxBuys > 0) {
+            // 但不能超过升级所需的次数（避免浪费）
+            const xpNeeded = totalXp - currentXp;
+            const buysToLevelUp = Math.ceil(xpNeeded / 4);
+            const actualBuys = Math.min(maxBuys, buysToLevelUp);
 
-        // 2. 卡利息升级 (升完还在 50 块以上)
-        if (!shouldLevel && (gold - cost >= 50)) {
-            shouldLevel = true;
-            reason = `卡利息升级 (剩 ${gold - cost})`;
-        }
+            if (actualBuys > 0) {
+                const willLevelUp = actualBuys >= buysToLevelUp;
+                const cost = actualBuys * 4;
 
-        // 3. 仅差一次 (Pre-level)
-        if (!shouldLevel && buyCount === 1 && gold >= 4) {
-            shouldLevel = true;
-            reason = "仅差一次购买升级";
-        }
+                logger.info(
+                    `[StrategyService] 卡利息买经验: 购买 ${actualBuys} 次 (花费 ${cost}, 剩余 ${gold - cost})` +
+                    (willLevelUp ? ` -> 升级到 Lv.${level + 1}` : ` -> 经验 +${actualBuys * 4}`)
+                );
 
-        if (shouldLevel) {
-            logger.info(`[StrategyService] 执行升级: ${reason} (Lv.${level} -> Lv.${level + 1}, 花费 ${cost})`);
+                for (let i = 0; i < actualBuys; i++) {
+                    await tftOperator.buyExperience();
+                    await sleep(100);
+                }
 
-            // 执行购买
-            for (let i = 0; i < buyCount; i++) {
-                await tftOperator.buyExperience();
-                await sleep(100);
+                gameStateManager.deductGold(cost);
+                await this.updateLevelStateFromScreen();
             }
-
-            // 更新状态
-            gameStateManager.deductGold(cost);
-            await this.updateLevelStateFromScreen();
         }
+    }
+
+    /**
+     * 获取当前回合的关键升级目标等级
+     * @returns 目标等级，如果不是关键回合返回 null
+     * 
+     * @description 标准运营节奏 (Standard Curve):
+     * - 2-1: 升 4 级
+     * - 2-5: 升 5 级
+     * - 3-2: 升 6 级
+     * - 4-1: 升 7 级
+     * - 5-1: 升 8 级
+     */
+    private getCriticalLevelTarget(): number | null {
+        const stage = this.currentStage;
+        const round = this.currentRound;
+
+        if (stage === 2 && round === 1) return 4;
+        if (stage === 2 && round === 5) return 5;
+        if (stage === 3 && round === 2) return 6;
+        if (stage === 4 && round === 1) return 7;
+        if (stage === 5 && round === 1) return 8;
+
+        return null;
     }
 
     /**
@@ -2216,12 +2261,24 @@ export class StrategyService {
     /**
      * 装备策略 (合成与穿戴)
      * @description
-     * 1. 循环执行，直到没有可执行的操作（防止因索引变化导致错误）
-     * 2. 优先给核心英雄分配最佳装备
-     * 3. 如果核心英雄不在场，给"打工仔"（非目标阵容棋子）分配装备，保住血量
-     * 4. 考虑装备合成逻辑
+     * 1. 内部自动判断是否满足执行条件（战斗中/装备栏空等情况会跳过）
+     * 2. 循环执行，直到没有可执行的操作（防止因索引变化导致错误）
+     * 3. 优先给核心英雄分配最佳装备
+     * 4. 如果核心英雄不在场，给"打工仔"（非目标阵容棋子）分配装备，保住血量
+     * 5. 考虑装备合成逻辑
+     * 
+     * @returns 是否执行了装备策略（用于日志/调试）
      */
-    private async executeEquipStrategy(): Promise<void> {
+    private async executeEquipStrategy(): Promise<boolean> {
+        // 先判断是否满足执行条件
+        const gate = this.getEquipStrategyGateDecision();
+        if (!gate.should) {
+            logger.debug(`[StrategyService] 跳过装备策略：${gate.reason}`);
+            return false;
+        }
+        
+        logger.info(`[StrategyService] 执行装备策略：${gate.reason}`);
+        
         const maxOperations = 10; // 防止死循环
         let operationCount = 0;
 
@@ -2229,7 +2286,7 @@ export class StrategyService {
             const rawEquipments = gameStateManager.getEquipments();
             if (rawEquipments.length === 0) break;
 
-            // 跳过“特殊道具”（拆卸器/重铸器等），这些不是给棋子“穿戴”的装备。
+            // 跳过"特殊道具"（拆卸器/重铸器等），这些不是给棋子"穿戴"的装备。
             const equipments = rawEquipments.filter(e => this.isWearableEquipmentName(e.name));
             if (equipments.length === 0) {
                 break;
@@ -2257,7 +2314,7 @@ export class StrategyService {
                 if (desiredItems.length === 0) continue;
 
                 for (const itemName of desiredItems) {
-                    // 目标单位的选择需要“按装备动态决定”：
+                    // 目标单位的选择需要"按装备动态决定"：
                     // - 核心在场：一定返回核心
                     // - 核心不在场：返回更合适的打工仔（会参考装备的前排/后排倾向）
                     const targetWrapper = this.findUnitForEquipment(config.name, itemName);
@@ -2295,9 +2352,9 @@ export class StrategyService {
                 if (actionTaken) break;
             }
 
-            // 2) 如果没有核心装可做：把背包里的装备尽快“合理地”挂出去（保前四：即时战力）
+            // 2) 如果没有核心装可做：把背包里的装备尽快"合理地"挂出去（保前四：即时战力）
             if (!actionTaken) {
-                // 2.1 优先选择一个“基础散件”（formula 为空）；没有散件就随便取一个可穿戴装备
+                // 2.1 优先选择一个"基础散件"（formula 为空）；没有散件就随便取一个可穿戴装备
                 const component = equipments.find(e => {
                     const data = TFT_16_EQUIP_DATA[e.name as EquipKey];
                     return data && (data.formula ?? "") === "";
@@ -2305,7 +2362,7 @@ export class StrategyService {
 
                 const itemToEquip = component?.name ?? equipments[0].name;
 
-                // 2.2 根据“散件构成”推断它更适合前排/后排，并按倾向找一个更合适的穿戴目标
+                // 2.2 根据"散件构成"推断它更适合前排/后排，并按倾向找一个更合适的穿戴目标
                 const targetLocation = this.findBestEquipmentTargetLocation(itemToEquip, coreChampions);
 
                 if (targetLocation) {
@@ -2323,6 +2380,8 @@ export class StrategyService {
             operationCount++;
             await sleep(100);
         }
+        
+        return true;  // 成功执行了装备策略
     }
 
     /**
@@ -2337,7 +2396,7 @@ export class StrategyService {
     private findUnitForEquipment(coreChampionName: string, itemName?: string): { unit: BoardUnit, isCore: boolean } | null {
         const boardUnits = gameStateManager.getBoardUnitsWithLocation();
 
-        // 1. 找 Core（核心在场时，优先给核心；不做“前排/后排”限制，避免与阵容配置冲突）
+        // 1. 找 Core（核心在场时，优先给核心；不做"前排/后排"限制，避免与阵容配置冲突）
         const coreUnits = boardUnits
             .filter(u => u.tftUnit.displayName === coreChampionName)
             .sort((a, b) => b.starLevel - a.starLevel); // 优先高星
@@ -2724,9 +2783,9 @@ export class StrategyService {
             return [];
         }
 
-        // 多样性优化：优先不上场“场上已经存在”的同名棋子
+        // 多样性优化：优先不上场"场上已经存在"的同名棋子
         // 说明：同名棋子重复上场往往带来较低的收益，但会占用人口。
-        //      因此这里优先让场面更“多样”，把人口用在不同棋子上；如果备战席全是重复棋子，会自动兜底。
+        //      因此这里优先让场面更"多样"，把人口用在不同棋子上；如果备战席全是重复棋子，会自动兜底。
         const boardChampionNames = new Set<ChampionKey>(
             gameStateManager.getBoardUnitsWithLocation().map(u => u.tftUnit.displayName as ChampionKey)
         );
@@ -2741,7 +2800,7 @@ export class StrategyService {
             return [];
         }
 
-        // 多样性候选：优先选择“场上没有的同名棋子”
+        // 多样性候选：优先选择"场上没有的同名棋子"
         // 兜底：如果备战席全是重复棋子，仍然允许上场（否则会亏人口）
         const candidates = filtered.filter(u => !boardChampionNames.has(u.tftUnit.displayName as ChampionKey));
         const finalCandidates = candidates.length > 0 ? candidates : filtered;
@@ -2753,7 +2812,7 @@ export class StrategyService {
             return bScore - aScore; // 分数高的排前面
         });
 
-        // 第一轮：尽量保证“上场棋子也不重复”（同一回合优先上不同英雄）
+        // 第一轮：尽量保证"上场棋子也不重复"（同一回合优先上不同英雄）
         const result: BenchUnit[] = [];
         const pickedChampionNames = new Set<ChampionKey>();
 
