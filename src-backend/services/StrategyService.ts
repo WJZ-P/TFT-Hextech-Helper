@@ -1462,9 +1462,10 @@ export class StrategyService {
      * @param targetChampions 目标棋子集合
      * @description 用备战席价值更高的棋子替换场上价值最低的棋子
      *
-     *              替换策略（保护目标阵容棋子）：
-     *              1. 备战席有空位 → 把场上棋子移回备战席 → 新棋子上场
-     *              2. 备战席没空位 → 卖掉场上棋子 → 新棋子上场
+     *              替换策略（保护目标阵容棋子，但优先回收装备）：
+     *              1. 如果被换下的棋子身上有装备 → 卖掉（让装备回到装备栏）
+     *              2. 备战席有空位且棋子无装备 → 把场上棋子移回备战席 → 新棋子上场
+     *              3. 备战席没空位 → 卖掉场上棋子 → 新棋子上场
      */
     private async autoReplaceWeakestUnit(targetChampions: Set<ChampionKey>): Promise<void> {
         const benchUnits = gameStateManager.getBenchUnits().filter((u): u is BenchUnit => u !== null);
@@ -1490,12 +1491,27 @@ export class StrategyService {
             const worstName = worstBoard.unit.tftUnit.displayName;
             const bestName = bestBench.unit.tftUnit.displayName;
 
+            // 检查被换下的棋子是否带有装备
+            const hasEquips = worstBoard.unit.equips && worstBoard.unit.equips.length > 0;
+            
             // 检查备战席是否有空位
             const emptyBenchSlot = gameStateManager.getFirstEmptyBenchSlotIndex();
             const hasEmptyBenchSlot = emptyBenchSlot !== -1;
 
-            if (hasEmptyBenchSlot) {
-                // 方案 A：备战席有空位，把场上棋子移回备战席（保护目标阵容棋子）
+            // 决策：如果棋子带装备，必须卖掉让装备回到装备栏
+            // 否则装备会卡在备战席棋子身上，不利于后续对战
+            if (hasEquips) {
+                // 棋子带装备，卖掉回收装备
+                const equipNames = worstBoard.unit.equips!.map(e => e.name).join(', ');
+                logger.info(
+                    `[StrategyService] 替换(卖出回收装备): ${worstName}(${worstBoard.score}分) ` +
+                    `[装备: ${equipNames}] -> ${bestName}(${bestBench.score}分) 上场`
+                );
+
+                await tftOperator.sellUnit(worstBoard.location);
+                await sleep(100);
+            } else if (hasEmptyBenchSlot) {
+                // 方案 A：棋子无装备且备战席有空位，把场上棋子移回备战席（保护目标阵容棋子）
                 logger.info(
                     `[StrategyService] 替换(保留): ${worstName}(${worstBoard.score}分) 移回备战席，` +
                     `${bestName}(${bestBench.score}分) 上场`

@@ -10767,7 +10767,8 @@ const mouseController = MouseController.getInstance();
 const AUGMENT_ROUNDS = /* @__PURE__ */ new Set(["2-1", "3-2", "4-2"]);
 function parseStageStringToEnum(stageText) {
   try {
-    const cleanText = stageText.replace(/\s/g, "");
+    let cleanText = stageText.replace(/\s/g, "");
+    cleanText = fixMisrecognizedStage(cleanText);
     const match = cleanText.match(/^(\d+)-(\d+)$/);
     if (!match) {
       return GameStageType.UNKNOWN;
@@ -10794,6 +10795,19 @@ function parseStageStringToEnum(stageText) {
 }
 function isValidStageFormat(text) {
   return /^\d+\s*[-]\s*\d+$/.test(text.trim());
+}
+function fixMisrecognizedStage(text) {
+  const match = text.match(/^(\d+)-(\d+)$/);
+  if (!match) return text;
+  const stageStr = match[1];
+  const roundStr = match[2];
+  const stage = parseInt(stageStr);
+  if (stage > 7 && stageStr.length > 1) {
+    const fixedStage = stageStr.slice(-1);
+    console.log(`[GameStageParser] 修复阶段误识别: "${text}" → "${fixedStage}-${roundStr}"`);
+    return `${fixedStage}-${roundStr}`;
+  }
+  return text;
 }
 class TftOperator {
   static instance;
@@ -11542,32 +11556,33 @@ class TftOperator {
     }
   }
   /**
-   * 尝试修复 "/" 被误识别为 "1" 的经验值
+   * 尝试修复 "/" 被误识别的经验值
    * @param text OCR 识别的原始文本
    * @returns 修复后的等级信息，无法修复返回 null
    * 
    * @description TFT 经验值规则：
-   * - currentXp 和 totalXp 都是偶数（每次 +2 经验）
-   * - currentXp 和 totalXp 最多都是两位数
    * - totalXp 只有固定的几个值: 2, 6, 10, 20, 36, 48, 76, 84
+   * - currentXp 范围是 0 ~ totalXp-1（可以是奇数，比如通过任务/战斗获得 1 点经验）
+   * - currentXp 和 totalXp 最多都是两位数
    * 
-   * 当 "/" 被误识别为 "1" 时：
-   * - "4/6" → "416"：可以拆分为 "4" 和 "6"（中间的1是误识别的/）
-   * - "12/16" → "12116"：可以拆分为 "12" 和 "16"
+   * "/" 可能被误识别为 "1" 或 "7"：
+   * - "4/6" → "416" 或 "476"
+   * - "5/6" → "516" 或 "576"
    * 
    * 修复策略：
    * 1. 匹配 "X级 数字串" 格式
-   * 2. 遍历数字串的所有可能切分点
+   * 2. 遍历数字串的所有可能切分点（"1" 或 "7" 的位置）
    * 3. 检查切分后的 currentXp 和 totalXp 是否符合规则
    */
   tryFixMisrecognizedXp(text) {
     const VALID_TOTAL_XP = /* @__PURE__ */ new Set([2, 6, 10, 20, 36, 48, 76, 84]);
+    const SLASH_MISRECOGNIZED_CHARS = ["1", "7"];
     const match = text.match(/(\d+)\s*级\s*(\d+)/);
     if (!match) return null;
     const level = parseInt(match[1], 10);
     const xpDigits = match[2];
     for (let i = 1; i < xpDigits.length; i++) {
-      if (xpDigits[i] !== "1") continue;
+      if (!SLASH_MISRECOGNIZED_CHARS.includes(xpDigits[i])) continue;
       const currentXpStr = xpDigits.substring(0, i);
       const totalXpStr = xpDigits.substring(i + 1);
       if (!currentXpStr || !totalXpStr) continue;
@@ -11575,9 +11590,9 @@ class TftOperator {
       if (totalXpStr.length > 1 && totalXpStr[0] === "0") continue;
       const currentXp = parseInt(currentXpStr, 10);
       const totalXp = parseInt(totalXpStr, 10);
-      if (currentXp % 2 === 0 && VALID_TOTAL_XP.has(totalXp) && currentXp < totalXp && currentXp <= 99 && totalXp <= 99) {
+      if (VALID_TOTAL_XP.has(totalXp) && currentXp >= 0 && currentXp < totalXp && currentXp <= 99 && totalXp <= 99) {
         logger.debug(
-          `[TftOperator] 兜底修复: "${xpDigits}" → "${currentXp}/${totalXp}" (在位置 ${i} 处将 "1" 还原为 "/")`
+          `[TftOperator] 兜底修复: "${xpDigits}" → "${currentXp}/${totalXp}" (在位置 ${i} 处将 "${xpDigits[i]}" 还原为 "/")`
         );
         return { level, currentXp, totalXp };
       }
@@ -13216,9 +13231,9 @@ class StrategyService {
     return gameStageMonitor.currentStageType;
   }
   /**
-   * 判断：某个“装备栏物品”是否是真正可穿戴的装备
+   * 判断：某个"装备栏物品"是否是真正可穿戴的装备
    * @description
-   * TFT 的装备栏里可能出现一些“特殊道具”，它们并不是给棋子穿的：
+   * TFT 的装备栏里可能出现一些"特殊道具"，它们并不是给棋子穿的：
    * - 装备拆卸器：对目标棋子使用后，会把身上装备全部拆下来回到装备栏
    * - 金质装备拆卸器：同上，但可无限次使用
    * - 装备重铸器：对目标棋子使用后，会把身上装备全部重铸并回到装备栏
@@ -13238,18 +13253,18 @@ class StrategyService {
     return true;
   }
   /**
-   * 推断：装备更适合“前排”还是“后排”
+   * 推断：装备更适合"前排"还是"后排"
    * @description
-   * 我们没有直接的“装备类型标签”（坦装/输出装），但可以利用 `TFT_16_EQUIP_DATA.formula`：
+   * 我们没有直接的"装备类型标签"（坦装/输出装），但可以利用 `TFT_16_EQUIP_DATA.formula`：
    * - 基础散件：formula 为空
    * - 成装：formula 是 "散件ID1,散件ID2"
    *
-   * 基于散件做一个非常粗粒度的启发式（足够让“随便上装备”变得更像人）：
+   * 基于散件做一个非常粗粒度的启发式（足够让"随便上装备"变得更像人）：
    * - 反曲之弓/暴风之剑/无用大棒/女神之泪 → 倾向后排（输出/攻速/法强/回蓝）
    * - 锁子甲/负极斗篷/巨人腰带 → 倾向前排（抗性/血量）
    * - 拳套/金铲铲/金锅锅 → 偏中性（很多装备/转职比较灵活）
    *
-   * TODO: 后续可以结合“阵容配置的前排/后排位”或“英雄定位(主C/主T)”做更准确的分配。
+   * TODO: 后续可以结合"阵容配置的前排/后排位"或"英雄定位(主C/主T)"做更准确的分配。
    */
   getEquipmentRolePreference(itemName) {
     const data = TFT_16_EQUIP_DATA[itemName];
@@ -13279,7 +13294,7 @@ class StrategyService {
     return "any";
   }
   /**
-   * 获取某件装备由哪些“基础散件”组成
+   * 获取某件装备由哪些"基础散件"组成
    * @returns 散件名称数组：
    * - 基础散件：返回 [自身]
    * - 成装：返回 [散件1, 散件2]
@@ -13297,7 +13312,7 @@ class StrategyService {
     return [name1, name2].filter((n) => Boolean(n));
   }
   /**
-   * 判断某个棋子是否符合装备倾向（这里用“射程”近似判断前排/后排）
+   * 判断某个棋子是否符合装备倾向（这里用"射程"近似判断前排/后排）
    * - 近战(1-2) → 前排
    * - 远程(3+) → 后排
    */
@@ -13309,7 +13324,7 @@ class StrategyService {
     return role === "frontline" ? isMelee : !isMelee;
   }
   /**
-   * 为某件装备找一个“更合适”的穿戴目标（优先不影响核心装分配，其次按前排/后排倾向选人）
+   * 为某件装备找一个"更合适"的穿戴目标（优先不影响核心装分配，其次按前排/后排倾向选人）
    */
   findBestEquipmentTargetLocation(itemName, coreChampions) {
     const role = this.getEquipmentRolePreference(itemName);
@@ -13804,30 +13819,42 @@ class StrategyService {
    * 1. 检测场上所有战利品球的位置
    * 2. 按 X 坐标从左到右排序（小小英雄默认在左下角，从左往右是最短路径）
    * 3. 依次移动小小英雄到战利品球位置拾取
-   *
-   * TODO: 实现完整的拾取逻辑
+   * 
+   * 中断策略：
+   * - 记录调用时的战斗状态（isFighting）
+   * - 每次拾取前检查状态是否变化
+   * - 状态变化时立即停止（无论是战斗→非战斗，还是非战斗→战斗）
+   * 
+   * @returns 是否成功拾取了至少一个法球（用于判断是否需要重新执行装备策略）
    */
   async pickUpLootOrbs() {
     const sleepTime = 2500;
-    logger.info("[StrategyService] 开始检测战利品球...");
+    const initialFightingState = this.isFighting();
+    logger.info(`[StrategyService] 开始检测战利品球... (当前战斗状态: ${initialFightingState})`);
     const lootOrbs = await tftOperator.getLootOrbs();
     if (lootOrbs.length === 0) {
       logger.info("[StrategyService] 未检测到战利品球");
-      return;
+      return false;
     }
     logger.info(`[StrategyService] 检测到 ${lootOrbs.length} 个战利品球`);
     const sortedOrbs = [...lootOrbs].sort((a, b) => a.x - b.x);
+    let pickedCount = 0;
     for (const orb of sortedOrbs) {
-      if (!this.isFighting()) {
-        logger.info("[StrategyService] 战斗已结束，停止拾取");
+      const currentFightingState = this.isFighting();
+      if (currentFightingState !== initialFightingState) {
+        logger.info(
+          `[StrategyService] 战斗状态变化 (${initialFightingState} → ${currentFightingState})，停止拾取`
+        );
         break;
       }
       logger.info(`[StrategyService] 正在拾取 ${orb.type} 战利品球，位置: (${orb.x}, ${orb.y}), 等待 ${sleepTime}ms`);
       await mouseController.clickAt({ x: orb.x, y: orb.y }, MouseButtonType.RIGHT);
       await sleep(sleepTime);
+      pickedCount++;
     }
-    logger.info("[StrategyService] 战利品拾取完成");
+    logger.info(`[StrategyService] 战利品拾取完成，共拾取 ${pickedCount} 个`);
     await tftOperator.selfResetPosition();
+    return pickedCount > 0;
   }
   /**
    * 处理游戏前期阶段（第一阶段 1-1 ~ 1-4）
@@ -14043,7 +14070,7 @@ class StrategyService {
   }
   /**
    * 找备战席中价值最高的棋子
-   * @param avoidChampionNames 可选：避免选择“同名棋子”（例如场上已经有的棋子名）
+   * @param avoidChampionNames 可选：避免选择"同名棋子"（例如场上已经有的棋子名）
    */
   findBestBenchUnit(benchUnits, targetChampions, avoidChampionNames) {
     const isNormalUnit = (u) => {
@@ -14200,14 +14227,20 @@ class StrategyService {
       await this.sellExcessUnits();
       await this.updateEquipStateFromScreen();
       await this.adjustPositions();
-      const equipGate = this.getEquipStrategyGateDecision();
-      if (equipGate.should) {
-        logger.info(`[StrategyService] 执行装备策略：${equipGate.reason}`);
-        await this.executeEquipStrategy();
-      } else {
-        logger.debug(`[StrategyService] 跳过装备策略：${equipGate.reason}`);
-      }
+      await this.executeEquipStrategy();
     } finally {
+      try {
+        logger.info("[StrategyService] 通用策略结束，兜底拾取法球...");
+        const pickedOrbs = await this.pickUpLootOrbs();
+        if (pickedOrbs) {
+          logger.info("[StrategyService] 捡到法球，重新检查装备策略...");
+          const newEquipments = await tftOperator.getEquipInfo();
+          gameStateManager.updateEquipments(newEquipments);
+          await this.executeEquipStrategy();
+        }
+      } catch (e) {
+        logger.warn(`[StrategyService] 通用策略结束兜底拾取法球失败: ${e?.message ?? e}`);
+      }
       try {
         await tftOperator.selfResetPosition();
       } catch (e) {
@@ -14252,68 +14285,77 @@ class StrategyService {
    * 升级策略 (F键)
    * @description 决定是否购买经验值
    *              策略优先级：
-   *              1. 关键回合抢人口 (2-1升4, 2-5升5, 3-2升6, 4-1升7, 5-1升8)
-   *              2. 卡利息升级 (升完还有50块) - 慢升
-   *              3. 仅差一次升级 (XP差 <= 4) - 钱够就升
-   *              4. 卡50块利息修经验 (有多余钱就F一下)
+   *              1. 关键回合抢人口 (2-1升4, 2-5升5, 3-2升6, 4-1升7, 5-1升8) - 无视利息强制升
+   *              2. 卡利息买经验 - 只要金币 > 50，就一直买经验直到剩余金币 < 50
    */
   async executeLevelUpStrategy() {
     await this.updateLevelStateFromScreen();
     const snapshot = gameStateManager.getSnapshotSync();
     if (!snapshot) return;
-    const { level, currentXp, totalXp, gold } = snapshot;
+    let { level, currentXp, totalXp, gold } = snapshot;
     if (level >= 10 || totalXp <= 0) return;
-    const xpNeeded = totalXp - currentXp;
-    if (xpNeeded <= 0) return;
-    const buyCount = Math.ceil(xpNeeded / 4);
-    const cost = buyCount * 4;
-    if (gold < cost) {
-      const maxBuys = Math.floor((gold - 50) / 4);
-      if (maxBuys > 0) {
-        logger.info(`[StrategyService] 升级策略: 卡利息(50+)修经验，将购买 ${maxBuys} 次`);
-        for (let i = 0; i < maxBuys; i++) {
+    const criticalLevel = this.getCriticalLevelTarget();
+    if (criticalLevel !== null && level < criticalLevel) {
+      const xpNeeded = totalXp - currentXp;
+      const buyCount = Math.ceil(xpNeeded / 4);
+      const cost = buyCount * 4;
+      if (gold >= cost) {
+        logger.info(
+          `[StrategyService] 关键回合升级: ${this.currentStage}-${this.currentRound} 拉 ${criticalLevel} (Lv.${level} -> Lv.${level + 1}, 花费 ${cost})`
+        );
+        for (let i = 0; i < buyCount; i++) {
           await tftOperator.buyExperience();
           await sleep(100);
         }
+        gameStateManager.deductGold(cost);
         await this.updateLevelStateFromScreen();
+      } else {
+        logger.warn(
+          `[StrategyService] 关键回合升级失败: 金币不足 (需要 ${cost}, 当前 ${gold})`
+        );
       }
       return;
     }
-    let shouldLevel = false;
-    let reason = "";
-    if (this.currentStage === 2 && this.currentRound === 1 && level < 4) {
-      shouldLevel = true;
-      reason = "2-1 拉 4";
-    } else if (this.currentStage === 2 && this.currentRound === 5 && level < 5) {
-      shouldLevel = true;
-      reason = "2-5 拉 5";
-    } else if (this.currentStage === 3 && this.currentRound === 2 && level < 6) {
-      shouldLevel = true;
-      reason = "3-2 拉 6";
-    } else if (this.currentStage === 4 && this.currentRound === 1 && level < 7) {
-      shouldLevel = true;
-      reason = "4-1 拉 7";
-    } else if (this.currentStage === 5 && this.currentRound === 1 && level < 8) {
-      shouldLevel = true;
-      reason = "5-1 拉 8";
-    }
-    if (!shouldLevel && gold - cost >= 50) {
-      shouldLevel = true;
-      reason = `卡利息升级 (剩 ${gold - cost})`;
-    }
-    if (!shouldLevel && buyCount === 1 && gold >= 4) {
-      shouldLevel = true;
-      reason = "仅差一次购买升级";
-    }
-    if (shouldLevel) {
-      logger.info(`[StrategyService] 执行升级: ${reason} (Lv.${level} -> Lv.${level + 1}, 花费 ${cost})`);
-      for (let i = 0; i < buyCount; i++) {
-        await tftOperator.buyExperience();
-        await sleep(100);
+    const maxBuys = Math.floor((gold - 50) / 4);
+    if (maxBuys > 0) {
+      const xpNeeded = totalXp - currentXp;
+      const buysToLevelUp = Math.ceil(xpNeeded / 4);
+      const actualBuys = Math.min(maxBuys, buysToLevelUp);
+      if (actualBuys > 0) {
+        const willLevelUp = actualBuys >= buysToLevelUp;
+        const cost = actualBuys * 4;
+        logger.info(
+          `[StrategyService] 卡利息买经验: 购买 ${actualBuys} 次 (花费 ${cost}, 剩余 ${gold - cost})` + (willLevelUp ? ` -> 升级到 Lv.${level + 1}` : ` -> 经验 +${actualBuys * 4}`)
+        );
+        for (let i = 0; i < actualBuys; i++) {
+          await tftOperator.buyExperience();
+          await sleep(100);
+        }
+        gameStateManager.deductGold(cost);
+        await this.updateLevelStateFromScreen();
       }
-      gameStateManager.deductGold(cost);
-      await this.updateLevelStateFromScreen();
     }
+  }
+  /**
+   * 获取当前回合的关键升级目标等级
+   * @returns 目标等级，如果不是关键回合返回 null
+   * 
+   * @description 标准运营节奏 (Standard Curve):
+   * - 2-1: 升 4 级
+   * - 2-5: 升 5 级
+   * - 3-2: 升 6 级
+   * - 4-1: 升 7 级
+   * - 5-1: 升 8 级
+   */
+  getCriticalLevelTarget() {
+    const stage = this.currentStage;
+    const round = this.currentRound;
+    if (stage === 2 && round === 1) return 4;
+    if (stage === 2 && round === 5) return 5;
+    if (stage === 3 && round === 2) return 6;
+    if (stage === 4 && round === 1) return 7;
+    if (stage === 5 && round === 1) return 8;
+    return null;
   }
   /**
    * D 牌循环流程
@@ -14514,12 +14556,21 @@ class StrategyService {
   /**
    * 装备策略 (合成与穿戴)
    * @description
-   * 1. 循环执行，直到没有可执行的操作（防止因索引变化导致错误）
-   * 2. 优先给核心英雄分配最佳装备
-   * 3. 如果核心英雄不在场，给"打工仔"（非目标阵容棋子）分配装备，保住血量
-   * 4. 考虑装备合成逻辑
+   * 1. 内部自动判断是否满足执行条件（战斗中/装备栏空等情况会跳过）
+   * 2. 循环执行，直到没有可执行的操作（防止因索引变化导致错误）
+   * 3. 优先给核心英雄分配最佳装备
+   * 4. 如果核心英雄不在场，给"打工仔"（非目标阵容棋子）分配装备，保住血量
+   * 5. 考虑装备合成逻辑
+   * 
+   * @returns 是否执行了装备策略（用于日志/调试）
    */
   async executeEquipStrategy() {
+    const gate = this.getEquipStrategyGateDecision();
+    if (!gate.should) {
+      logger.debug(`[StrategyService] 跳过装备策略：${gate.reason}`);
+      return false;
+    }
+    logger.info(`[StrategyService] 执行装备策略：${gate.reason}`);
     const maxOperations = 10;
     let operationCount = 0;
     while (operationCount < maxOperations) {
@@ -14590,6 +14641,7 @@ class StrategyService {
       operationCount++;
       await sleep(100);
     }
+    return true;
   }
   /**
    * 寻找适合穿戴装备的单位
