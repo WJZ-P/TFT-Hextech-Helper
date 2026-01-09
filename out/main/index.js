@@ -5992,6 +5992,7 @@ const hexSlot = {
   SLOT_3: { x: 805, y: 410 }
 };
 const sharedDraftPoint = { x: 530, y: 400 };
+const exitGameButtonPoint = { x: 515, y: 405 };
 const gameStageDisplayStageOne = {
   leftTop: { x: 411, y: 6 },
   rightBottom: { x: 442, y: 22 }
@@ -12273,6 +12274,76 @@ class GameStateManager {
     );
   }
   /**
+   * 设置棋盘指定槽位的棋子
+   * @param index 槽位索引 (0-27)
+   * @param unit 要放置的棋子
+   * @description 当棋子从备战席移动到棋盘时，更新棋盘状态
+   */
+  setBoardSlotUnit(index, unit) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法设置棋盘棋子");
+      return;
+    }
+    if (index < 0 || index >= this.snapshot.boardUnits.length) {
+      logger.warn(`[GameStateManager] 无效的棋盘索引: ${index}`);
+      return;
+    }
+    this.snapshot.boardUnits[index] = unit;
+    logger.debug(
+      `[GameStateManager] 棋盘槽位 ${index} 已放置: ${unit.tftUnit.displayName} ${unit.starLevel}★`
+    );
+  }
+  /**
+   * 清空棋盘指定槽位
+   * @param index 槽位索引 (0-27)
+   * @description 当棋子被卖出或移回备战席时，清空对应棋盘槽位
+   */
+  setBoardSlotEmpty(index) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法清空棋盘槽位");
+      return;
+    }
+    if (index < 0 || index >= this.snapshot.boardUnits.length) {
+      logger.warn(`[GameStateManager] 无效的棋盘索引: ${index}`);
+      return;
+    }
+    const oldUnit = this.snapshot.boardUnits[index];
+    this.snapshot.boardUnits[index] = null;
+    logger.debug(
+      `[GameStateManager] 棋盘槽位 ${index} 已清空` + (oldUnit?.tftUnit ? ` (原: ${oldUnit.tftUnit.displayName})` : "")
+    );
+  }
+  /**
+   * 给棋盘上的棋子添加装备
+   * @param boardLocation 棋盘位置（如 "R1_C1"）
+   * @param equipName 装备名称
+   * @description 当装备穿戴到棋子身上时，同步更新棋子的装备列表
+   */
+  addEquipToUnit(boardLocation, equipName) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法添加装备");
+      return;
+    }
+    const index = this.getBoardLocationIndex(boardLocation);
+    if (index === -1) {
+      logger.warn(`[GameStateManager] 无效的棋盘位置: ${boardLocation}`);
+      return;
+    }
+    const unit = this.snapshot.boardUnits[index];
+    if (!unit) {
+      logger.warn(`[GameStateManager] 棋盘位置 ${boardLocation} 没有棋子，无法添加装备`);
+      return;
+    }
+    if (unit.equips.length >= 3) {
+      logger.warn(`[GameStateManager] 棋子 ${unit.tftUnit.displayName} 装备已满，无法添加 ${equipName}`);
+      return;
+    }
+    unit.equips.push({ name: equipName });
+    logger.debug(
+      `[GameStateManager] 棋子 ${unit.tftUnit.displayName} 装备添加: ${equipName} (当前装备数: ${unit.equips.length})`
+    );
+  }
+  /**
    * 更新商店棋子列表
    * @param shopUnits 新的商店棋子数组
    * @description 刷新商店后，用新识别的商店数据更新快照
@@ -12604,6 +12675,138 @@ class GameStateManager {
       gameStartTime: 0
     };
     logger.info("[GameStateManager] 游戏状态已重置，准备下一局");
+  }
+  // ============================================================
+  // 🔧 棋子移动状态同步方法
+  // ============================================================
+  /**
+   * 根据 BoardLocation 获取数组索引
+   * @param location 棋盘位置（如 "R1_C1"）
+   * @returns 对应的数组索引，如果无效返回 -1
+   */
+  getBoardLocationIndex(location) {
+    const boardLocationKeys = Object.keys(fightBoardSlotPoint);
+    return boardLocationKeys.indexOf(location);
+  }
+  /**
+   * 根据 BenchLocation 获取数组索引
+   * @param location 备战席位置（如 "SLOT_1"）
+   * @returns 对应的数组索引（0-8），如果无效返回 -1
+   */
+  getBenchLocationIndex(location) {
+    const match = location.match(/SLOT_(\d+)/);
+    if (!match) return -1;
+    const slotNum = parseInt(match[1], 10);
+    return slotNum >= 1 && slotNum <= 9 ? slotNum - 1 : -1;
+  }
+  /**
+   * 将备战席棋子移动到棋盘（更新内部状态）
+   * @param benchLocation 备战席位置
+   * @param boardLocation 棋盘目标位置
+   * @description 同步更新 GameStateManager 的内部状态，
+   *              确保备战席和棋盘的状态与实际游戏一致
+   */
+  moveBenchToBoard(benchLocation, boardLocation) {
+    const benchIndex = this.getBenchLocationIndex(benchLocation);
+    const boardIndex = this.getBoardLocationIndex(boardLocation);
+    if (benchIndex === -1 || boardIndex === -1) {
+      logger.warn(`[GameStateManager] 无效的移动: ${benchLocation} -> ${boardLocation}`);
+      return;
+    }
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法移动棋子");
+      return;
+    }
+    const benchUnit = this.snapshot.benchUnits[benchIndex];
+    if (!benchUnit) {
+      logger.warn(`[GameStateManager] 备战席 ${benchLocation} 为空，无法移动`);
+      return;
+    }
+    const boardUnit = {
+      location: boardLocation,
+      tftUnit: benchUnit.tftUnit,
+      starLevel: benchUnit.starLevel,
+      equips: benchUnit.equips
+    };
+    this.snapshot.boardUnits[boardIndex] = boardUnit;
+    this.snapshot.benchUnits[benchIndex] = null;
+    logger.debug(
+      `[GameStateManager] 棋子移动: ${benchLocation} -> ${boardLocation} (${benchUnit.tftUnit.displayName} ${benchUnit.starLevel}★)`
+    );
+  }
+  /**
+   * 将棋盘棋子移回备战席（更新内部状态）
+   * @param boardLocation 棋盘位置
+   * @param benchIndex 备战席目标槽位索引（0-8）
+   */
+  moveBoardToBench(boardLocation, benchIndex) {
+    const boardIndex = this.getBoardLocationIndex(boardLocation);
+    if (boardIndex === -1 || benchIndex < 0 || benchIndex > 8) {
+      logger.warn(`[GameStateManager] 无效的移动: ${boardLocation} -> SLOT_${benchIndex + 1}`);
+      return;
+    }
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法移动棋子");
+      return;
+    }
+    const boardUnit = this.snapshot.boardUnits[boardIndex];
+    if (!boardUnit) {
+      logger.warn(`[GameStateManager] 棋盘 ${boardLocation} 为空，无法移动`);
+      return;
+    }
+    const benchUnit = {
+      location: `SLOT_${benchIndex + 1}`,
+      tftUnit: boardUnit.tftUnit,
+      starLevel: boardUnit.starLevel,
+      equips: boardUnit.equips
+    };
+    this.snapshot.benchUnits[benchIndex] = benchUnit;
+    this.snapshot.boardUnits[boardIndex] = null;
+    logger.debug(
+      `[GameStateManager] 棋子移回: ${boardLocation} -> SLOT_${benchIndex + 1} (${boardUnit.tftUnit.displayName} ${boardUnit.starLevel}★)`
+    );
+  }
+  /**
+   * 棋盘内移动棋子（调整站位）
+   * @param fromLocation 原位置
+   * @param toLocation 目标位置
+   * @description 同步更新 GameStateManager 的内部状态
+   */
+  moveBoardToBoard(fromLocation, toLocation) {
+    const fromIndex = this.getBoardLocationIndex(fromLocation);
+    const toIndex = this.getBoardLocationIndex(toLocation);
+    if (fromIndex === -1 || toIndex === -1) {
+      logger.warn(`[GameStateManager] 无效的棋盘移动: ${fromLocation} -> ${toLocation}`);
+      return;
+    }
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法移动棋子");
+      return;
+    }
+    const unit = this.snapshot.boardUnits[fromIndex];
+    if (!unit) {
+      logger.warn(`[GameStateManager] 棋盘 ${fromLocation} 为空，无法移动`);
+      return;
+    }
+    unit.location = toLocation;
+    this.snapshot.boardUnits[toIndex] = unit;
+    this.snapshot.boardUnits[fromIndex] = null;
+    logger.debug(
+      `[GameStateManager] 棋盘内移动: ${fromLocation} -> ${toLocation} (${unit.tftUnit.displayName} ${unit.starLevel}★)`
+    );
+  }
+  /**
+   * 清空棋盘指定位置（根据 BoardLocation）
+   * @param boardLocation 棋盘位置（如 "R1_C1"）
+   * @description 当棋子被卖出时，清空对应棋盘位置
+   */
+  clearBoardLocation(boardLocation) {
+    const index = this.getBoardLocationIndex(boardLocation);
+    if (index === -1) {
+      logger.warn(`[GameStateManager] 无效的棋盘位置: ${boardLocation}`);
+      return;
+    }
+    this.setBoardSlotEmpty(index);
   }
 }
 const gameStateManager = GameStateManager.getInstance();
@@ -14017,6 +14220,7 @@ class StrategyService {
         `[StrategyService] 摆放棋子: ${championName} (射程: ${getChampionRange(championName) ?? "未知"}) -> ${targetLocation}`
       );
       await tftOperator.moveBenchToBoard(unit.location, targetLocation);
+      gameStateManager.moveBenchToBoard(unit.location, targetLocation);
       await sleep(200);
     }
     logger.info(`[StrategyService] 棋子摆放完成，共摆放 ${unitsToPlace.length} 个棋子`);
@@ -14026,9 +14230,10 @@ class StrategyService {
    * @param targetChampions 目标棋子集合
    * @description 用备战席价值更高的棋子替换场上价值最低的棋子
    *
-   *              替换策略（保护目标阵容棋子）：
-   *              1. 备战席有空位 → 把场上棋子移回备战席 → 新棋子上场
-   *              2. 备战席没空位 → 卖掉场上棋子 → 新棋子上场
+   *              替换策略（保护目标阵容棋子，但优先回收装备）：
+   *              1. 如果被换下的棋子身上有装备 → 卖掉（让装备回到装备栏）
+   *              2. 备战席有空位且棋子无装备 → 把场上棋子移回备战席 → 新棋子上场
+   *              3. 备战席没空位 → 卖掉场上棋子 → 新棋子上场
    */
   async autoReplaceWeakestUnit(targetChampions) {
     const benchUnits = gameStateManager.getBenchUnits().filter((u) => u !== null);
@@ -14044,24 +14249,37 @@ class StrategyService {
     if (bestBench.score > worstBoard.score) {
       const worstName = worstBoard.unit.tftUnit.displayName;
       const bestName = bestBench.unit.tftUnit.displayName;
+      const hasEquips = worstBoard.unit.equips && worstBoard.unit.equips.length > 0;
       const emptyBenchSlot = gameStateManager.getFirstEmptyBenchSlotIndex();
       const hasEmptyBenchSlot = emptyBenchSlot !== -1;
-      if (hasEmptyBenchSlot) {
+      if (hasEquips) {
+        const equipNames = worstBoard.unit.equips.map((e) => e.name).join(", ");
+        logger.info(
+          `[StrategyService] 替换(卖出回收装备): ${worstName}(${worstBoard.score}分) [装备: ${equipNames}] -> ${bestName}(${bestBench.score}分) 上场`
+        );
+        await tftOperator.sellUnit(worstBoard.location);
+        await sleep(500);
+        await this.updateEquipStateFromScreen();
+        gameStateManager.clearBoardLocation(worstBoard.location);
+      } else if (hasEmptyBenchSlot) {
         logger.info(
           `[StrategyService] 替换(保留): ${worstName}(${worstBoard.score}分) 移回备战席，${bestName}(${bestBench.score}分) 上场`
         );
         await tftOperator.moveBoardToBench(worstBoard.location, emptyBenchSlot);
+        gameStateManager.moveBoardToBench(worstBoard.location, emptyBenchSlot);
         await sleep(100);
       } else {
         logger.info(
           `[StrategyService] 替换(卖出): ${worstName}(${worstBoard.score}分) -> ${bestName}(${bestBench.score}分)`
         );
         await tftOperator.sellUnit(worstBoard.location);
+        gameStateManager.clearBoardLocation(worstBoard.location);
         await sleep(100);
       }
       const targetLocation = this.findBestPositionForUnit(bestBench.unit);
       if (targetLocation) {
         await tftOperator.moveBenchToBoard(bestBench.unit.location, targetLocation);
+        gameStateManager.moveBenchToBoard(bestBench.unit.location, targetLocation);
         await sleep(10);
       } else {
         logger.warn(`[StrategyService] 找不到合适位置放置 ${bestName}`);
@@ -14547,6 +14765,7 @@ class StrategyService {
         if (targetLoc) {
           logger.info(`[StrategyService] 调整站位: ${name} (${unit.location} -> ${targetLoc})`);
           await tftOperator.moveBoardToBoard(unit.location, targetLoc);
+          gameStateManager.moveBoardToBoard(unit.location, targetLoc);
           await sleep(500);
           return;
         }
@@ -14614,7 +14833,13 @@ class StrategyService {
             logger.info(
               `[StrategyService] 合成 ${itemName} (${synthesis.component1} + ${synthesis.component2}) 给 ${targetWrapper.isCore ? "核心" : "打工"}: ${targetWrapper.unit.tftUnit.displayName}`
             );
-            await this.synthesizeAndEquip(synthesis.component1, synthesis.component2, targetWrapper.unit.location);
+            await this.synthesizeAndEquip(
+              synthesis.component1,
+              synthesis.component2,
+              targetWrapper.unit.location,
+              itemName
+              // 传入合成后的装备名称
+            );
             actionTaken = true;
             break;
           }
@@ -14723,12 +14948,17 @@ class StrategyService {
     logger.info(`[StrategyService] 穿戴: ${itemName} -> ${unitLocation}`);
     await tftOperator.equipToBoardUnit(equipIndex, unitLocation);
     gameStateManager.removeEquipment(equipIndex);
+    gameStateManager.addEquipToUnit(unitLocation, itemName);
     await sleep(100);
   }
   /**
    * 合成并穿戴（将两个散件依次给棋子）
+   * @param comp1 第一个散件名称
+   * @param comp2 第二个散件名称
+   * @param unitLocation 目标棋子位置
+   * @param resultItemName 合成后的装备名称（用于同步更新棋子装备状态）
    */
-  async synthesizeAndEquip(comp1, comp2, unitLocation) {
+  async synthesizeAndEquip(comp1, comp2, unitLocation, resultItemName) {
     const index1 = gameStateManager.findEquipmentIndex(comp1);
     if (index1 === -1) {
       logger.error(`[StrategyService] 合成失败：找不到第一个散件 ${comp1}`);
@@ -14746,6 +14976,7 @@ class StrategyService {
     logger.info(`[StrategyService] 合成步骤2: ${comp2}(slot${index2}) -> ${unitLocation}`);
     await tftOperator.equipToBoardUnit(index2, unitLocation);
     gameStateManager.removeEquipment(index2);
+    gameStateManager.addEquipToUnit(unitLocation, resultItemName);
     await sleep(500);
   }
   /**
@@ -15214,7 +15445,17 @@ class GameRunningState {
         if (hasTriedQuit) return;
         hasTriedQuit = true;
         logger.info("[GameRunningState] 收到 TFT_BATTLE_PASS 事件，玩家已死亡/对局结束");
+        const QUIT_DELAY_MS = 3e3;
+        logger.info(`[GameRunningState] 等待 ${QUIT_DELAY_MS / 1e3} 秒后退出游戏...`);
+        await new Promise((resolve2) => setTimeout(resolve2, QUIT_DELAY_MS));
         logger.info("[GameRunningState] 正在尝试关闭游戏窗口...");
+        try {
+          logger.info(`[GameRunningState] 点击"现在退出"按钮 (${exitGameButtonPoint.x}, ${exitGameButtonPoint.y})`);
+          await mouseController.clickAt(exitGameButtonPoint);
+          await sleep(100);
+        } catch (error) {
+          logger.warn(`[GameRunningState] 点击退出按钮失败: ${error}`);
+        }
         try {
           await this.lcuManager?.quitGame();
           logger.info("[GameRunningState] 退出游戏请求已发送，等待 GAMEFLOW_PHASE 变化...");
@@ -15225,8 +15466,8 @@ class GameRunningState {
       const onGameflowPhase = (eventData) => {
         const phase = eventData.data?.phase;
         logger.info(`[GameRunningState] 监听到游戏阶段: ${phase}`);
-        if (phase && phase === "WaitingForStats") {
-          logger.info(`[GameRunningState] 检测到游戏结束，游戏窗口已关闭。`);
+        if (phase && (phase === "WaitingForStats" || phase === "PreEndOfGame")) {
+          logger.info(`[GameRunningState] 检测到游戏结束 (${phase})，准备流转到下一状态`);
           safeResolve(true);
         }
       };

@@ -543,6 +543,95 @@ export class GameStateManager {
     }
 
     /**
+     * 设置棋盘指定槽位的棋子
+     * @param index 槽位索引 (0-27)
+     * @param unit 要放置的棋子
+     * @description 当棋子从备战席移动到棋盘时，更新棋盘状态
+     */
+    public setBoardSlotUnit(index: number, unit: BoardUnit): void {
+        if (!this.snapshot) {
+            logger.warn("[GameStateManager] 快照不存在，无法设置棋盘棋子");
+            return;
+        }
+
+        if (index < 0 || index >= this.snapshot.boardUnits.length) {
+            logger.warn(`[GameStateManager] 无效的棋盘索引: ${index}`);
+            return;
+        }
+
+        this.snapshot.boardUnits[index] = unit;
+
+        logger.debug(
+            `[GameStateManager] 棋盘槽位 ${index} 已放置: ` +
+            `${unit.tftUnit.displayName} ${unit.starLevel}★`
+        );
+    }
+
+    /**
+     * 清空棋盘指定槽位
+     * @param index 槽位索引 (0-27)
+     * @description 当棋子被卖出或移回备战席时，清空对应棋盘槽位
+     */
+    public setBoardSlotEmpty(index: number): void {
+        if (!this.snapshot) {
+            logger.warn("[GameStateManager] 快照不存在，无法清空棋盘槽位");
+            return;
+        }
+
+        if (index < 0 || index >= this.snapshot.boardUnits.length) {
+            logger.warn(`[GameStateManager] 无效的棋盘索引: ${index}`);
+            return;
+        }
+
+        const oldUnit = this.snapshot.boardUnits[index];
+        this.snapshot.boardUnits[index] = null;
+
+        logger.debug(
+            `[GameStateManager] 棋盘槽位 ${index} 已清空` +
+            (oldUnit?.tftUnit ? ` (原: ${oldUnit.tftUnit.displayName})` : '')
+        );
+    }
+
+    /**
+     * 给棋盘上的棋子添加装备
+     * @param boardLocation 棋盘位置（如 "R1_C1"）
+     * @param equipName 装备名称
+     * @description 当装备穿戴到棋子身上时，同步更新棋子的装备列表
+     */
+    public addEquipToUnit(boardLocation: BoardLocation, equipName: string): void {
+        if (!this.snapshot) {
+            logger.warn("[GameStateManager] 快照不存在，无法添加装备");
+            return;
+        }
+
+        const index = this.getBoardLocationIndex(boardLocation);
+        if (index === -1) {
+            logger.warn(`[GameStateManager] 无效的棋盘位置: ${boardLocation}`);
+            return;
+        }
+
+        const unit = this.snapshot.boardUnits[index];
+        if (!unit) {
+            logger.warn(`[GameStateManager] 棋盘位置 ${boardLocation} 没有棋子，无法添加装备`);
+            return;
+        }
+
+        // 检查装备是否已满（最多 3 件）
+        if (unit.equips.length >= 3) {
+            logger.warn(`[GameStateManager] 棋子 ${unit.tftUnit.displayName} 装备已满，无法添加 ${equipName}`);
+            return;
+        }
+
+        // 添加装备到棋子身上
+        unit.equips.push({ name: equipName });
+
+        logger.debug(
+            `[GameStateManager] 棋子 ${unit.tftUnit.displayName} 装备添加: ${equipName} ` +
+            `(当前装备数: ${unit.equips.length})`
+        );
+    }
+
+    /**
      * 更新商店棋子列表
      * @param shopUnits 新的商店棋子数组
      * @description 刷新商店后，用新识别的商店数据更新快照
@@ -938,6 +1027,176 @@ export class GameStateManager {
         };
 
         logger.info("[GameStateManager] 游戏状态已重置，准备下一局");
+    }
+
+    // ============================================================
+    // 🔧 棋子移动状态同步方法
+    // ============================================================
+
+    /**
+     * 根据 BoardLocation 获取数组索引
+     * @param location 棋盘位置（如 "R1_C1"）
+     * @returns 对应的数组索引，如果无效返回 -1
+     */
+    public getBoardLocationIndex(location: BoardLocation): number {
+        const boardLocationKeys = Object.keys(fightBoardSlotPoint) as BoardLocation[];
+        return boardLocationKeys.indexOf(location);
+    }
+
+    /**
+     * 根据 BenchLocation 获取数组索引
+     * @param location 备战席位置（如 "SLOT_1"）
+     * @returns 对应的数组索引（0-8），如果无效返回 -1
+     */
+    public getBenchLocationIndex(location: BenchLocation): number {
+        // SLOT_1 -> 0, SLOT_2 -> 1, ..., SLOT_9 -> 8
+        const match = location.match(/SLOT_(\d+)/);
+        if (!match) return -1;
+        const slotNum = parseInt(match[1], 10);
+        return slotNum >= 1 && slotNum <= 9 ? slotNum - 1 : -1;
+    }
+
+    /**
+     * 将备战席棋子移动到棋盘（更新内部状态）
+     * @param benchLocation 备战席位置
+     * @param boardLocation 棋盘目标位置
+     * @description 同步更新 GameStateManager 的内部状态，
+     *              确保备战席和棋盘的状态与实际游戏一致
+     */
+    public moveBenchToBoard(benchLocation: BenchLocation, boardLocation: BoardLocation): void {
+        const benchIndex = this.getBenchLocationIndex(benchLocation);
+        const boardIndex = this.getBoardLocationIndex(boardLocation);
+
+        if (benchIndex === -1 || boardIndex === -1) {
+            logger.warn(`[GameStateManager] 无效的移动: ${benchLocation} -> ${boardLocation}`);
+            return;
+        }
+
+        if (!this.snapshot) {
+            logger.warn("[GameStateManager] 快照不存在，无法移动棋子");
+            return;
+        }
+
+        const benchUnit = this.snapshot.benchUnits[benchIndex];
+        if (!benchUnit) {
+            logger.warn(`[GameStateManager] 备战席 ${benchLocation} 为空，无法移动`);
+            return;
+        }
+
+        // 构造 BoardUnit（从 BenchUnit 转换）
+        const boardUnit: BoardUnit = {
+            location: boardLocation,
+            tftUnit: benchUnit.tftUnit,
+            starLevel: benchUnit.starLevel,
+            equips: benchUnit.equips,
+        };
+
+        // 更新棋盘槽位
+        this.snapshot.boardUnits[boardIndex] = boardUnit;
+        // 清空备战席槽位
+        this.snapshot.benchUnits[benchIndex] = null;
+
+        logger.debug(
+            `[GameStateManager] 棋子移动: ${benchLocation} -> ${boardLocation} ` +
+            `(${benchUnit.tftUnit.displayName} ${benchUnit.starLevel}★)`
+        );
+    }
+
+    /**
+     * 将棋盘棋子移回备战席（更新内部状态）
+     * @param boardLocation 棋盘位置
+     * @param benchIndex 备战席目标槽位索引（0-8）
+     */
+    public moveBoardToBench(boardLocation: BoardLocation, benchIndex: number): void {
+        const boardIndex = this.getBoardLocationIndex(boardLocation);
+
+        if (boardIndex === -1 || benchIndex < 0 || benchIndex > 8) {
+            logger.warn(`[GameStateManager] 无效的移动: ${boardLocation} -> SLOT_${benchIndex + 1}`);
+            return;
+        }
+
+        if (!this.snapshot) {
+            logger.warn("[GameStateManager] 快照不存在，无法移动棋子");
+            return;
+        }
+
+        const boardUnit = this.snapshot.boardUnits[boardIndex];
+        if (!boardUnit) {
+            logger.warn(`[GameStateManager] 棋盘 ${boardLocation} 为空，无法移动`);
+            return;
+        }
+
+        // 构造 BenchUnit（从 BoardUnit 转换）
+        const benchUnit: BenchUnit = {
+            location: `SLOT_${benchIndex + 1}` as BenchLocation,
+            tftUnit: boardUnit.tftUnit,
+            starLevel: boardUnit.starLevel,
+            equips: boardUnit.equips,
+        };
+
+        // 更新备战席槽位
+        this.snapshot.benchUnits[benchIndex] = benchUnit;
+        // 清空棋盘槽位
+        this.snapshot.boardUnits[boardIndex] = null;
+
+        logger.debug(
+            `[GameStateManager] 棋子移回: ${boardLocation} -> SLOT_${benchIndex + 1} ` +
+            `(${boardUnit.tftUnit.displayName} ${boardUnit.starLevel}★)`
+        );
+    }
+
+    /**
+     * 棋盘内移动棋子（调整站位）
+     * @param fromLocation 原位置
+     * @param toLocation 目标位置
+     * @description 同步更新 GameStateManager 的内部状态
+     */
+    public moveBoardToBoard(fromLocation: BoardLocation, toLocation: BoardLocation): void {
+        const fromIndex = this.getBoardLocationIndex(fromLocation);
+        const toIndex = this.getBoardLocationIndex(toLocation);
+
+        if (fromIndex === -1 || toIndex === -1) {
+            logger.warn(`[GameStateManager] 无效的棋盘移动: ${fromLocation} -> ${toLocation}`);
+            return;
+        }
+
+        if (!this.snapshot) {
+            logger.warn("[GameStateManager] 快照不存在，无法移动棋子");
+            return;
+        }
+
+        const unit = this.snapshot.boardUnits[fromIndex];
+        if (!unit) {
+            logger.warn(`[GameStateManager] 棋盘 ${fromLocation} 为空，无法移动`);
+            return;
+        }
+
+        // 更新棋子的 location 属性
+        unit.location = toLocation;
+
+        // 移动到目标位置
+        this.snapshot.boardUnits[toIndex] = unit;
+        // 清空原位置
+        this.snapshot.boardUnits[fromIndex] = null;
+
+        logger.debug(
+            `[GameStateManager] 棋盘内移动: ${fromLocation} -> ${toLocation} ` +
+            `(${unit.tftUnit.displayName} ${unit.starLevel}★)`
+        );
+    }
+
+    /**
+     * 清空棋盘指定位置（根据 BoardLocation）
+     * @param boardLocation 棋盘位置（如 "R1_C1"）
+     * @description 当棋子被卖出时，清空对应棋盘位置
+     */
+    public clearBoardLocation(boardLocation: BoardLocation): void {
+        const index = this.getBoardLocationIndex(boardLocation);
+        if (index === -1) {
+            logger.warn(`[GameStateManager] 无效的棋盘位置: ${boardLocation}`);
+            return;
+        }
+        this.setBoardSlotEmpty(index);
     }
 }
 

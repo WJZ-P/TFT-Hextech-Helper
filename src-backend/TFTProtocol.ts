@@ -425,6 +425,10 @@ export const hexSlot = {   //  x+=295
 }
 //  选秀站位，为离自己最近的棋子位置。
 export const sharedDraftPoint = { x: 530, y: 400 }
+
+//  游戏结束后的"现在退出"按钮坐标
+//  玩家死亡后会弹出结算界面，点击此按钮可以退出游戏，不直到第一和第二名的结算UI跟这个是否一样，因为前两名就没有继续观看了。
+export const exitGameButtonPoint = { x: 515, y: 405 }
 //  游戏战斗阶段展示坐标，第一阶段。因为第一阶段只有四个回合，跟其他阶段的不一样。
 export const gameStageDisplayStageOne = {
     leftTop: { x: 411, y: 6 },

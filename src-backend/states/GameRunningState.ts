@@ -25,6 +25,9 @@ import { gameStageMonitor } from "../services/GameStageMonitor";
 import { strategyService } from "../services/StrategyService";
 import { gameStateManager } from "../services/GameStateManager";
 import { logger } from "../utils/Logger";
+import { mouseController } from "../tft";
+import { exitGameButtonPoint } from "../TFTProtocol";
+import {sleep} from "../utils/HelperTools";
 
 /** abort 信号轮询间隔 (ms)，作为事件监听的兜底 */
 const ABORT_CHECK_INTERVAL_MS = 2000;
@@ -150,15 +153,37 @@ export class GameRunningState implements IState {
 
             /**
              * 监听 TFT_BATTLE_PASS 事件（玩家死亡/对局结束）
-             * @description 此时游戏窗口还开着，需要主动调用 quitGame() 关闭
+             * @description 此时游戏窗口还开着，需要主动退出游戏
+             *              等待 3 秒后再退出，让玩家看到结算画面
+             *              
+             *              退出策略：
+             *              1. 先点击游戏内的"现在退出"按钮（更可靠）
+             *              2. 再调用 LCU API quitGame() 作为兜底
              */
             const onBattlePass = async (_eventData: LCUWebSocketMessage) => {
                 if (hasTriedQuit) return; // 避免重复调用
                 hasTriedQuit = true;
 
                 logger.info("[GameRunningState] 收到 TFT_BATTLE_PASS 事件，玩家已死亡/对局结束");
+                
+                // 等待 3 秒，让玩家看到结算画面，同时避免游戏还在做结算动画时就退出
+                const QUIT_DELAY_MS = 3000;
+                logger.info(`[GameRunningState] 等待 ${QUIT_DELAY_MS / 1000} 秒后退出游戏...`);
+                await new Promise(resolve => setTimeout(resolve, QUIT_DELAY_MS));
+                
                 logger.info("[GameRunningState] 正在尝试关闭游戏窗口...");
 
+                // 方案 1：点击游戏内的"现在退出"按钮
+                try {
+                    logger.info(`[GameRunningState] 点击"现在退出"按钮 (${exitGameButtonPoint.x}, ${exitGameButtonPoint.y})`);
+                    await mouseController.clickAt(exitGameButtonPoint);
+                    // 等待一小段时间让点击生效
+                    await sleep(100);
+                } catch (error) {
+                    logger.warn(`[GameRunningState] 点击退出按钮失败: ${error}`);
+                }
+
+                // 方案 2：调用 LCU API 作为兜底
                 try {
                     await this.lcuManager?.quitGame();
                     logger.info("[GameRunningState] 退出游戏请求已发送，等待 GAMEFLOW_PHASE 变化...");
@@ -170,15 +195,17 @@ export class GameRunningState implements IState {
 
             /**
              * 监听"游戏阶段变化"事件
-             * @description 当 phase 变为 "WaitingForStats" 时，表示游戏窗口已关闭
+             * @description 游戏结束的两种状态：
+             *              - PreEndOfGame: 游戏结束，进入结算画面
+             *              - WaitingForStats: 游戏窗口已关闭，等待统计数据
              */
             const onGameflowPhase = (eventData: LCUWebSocketMessage) => {
                 const phase = eventData.data?.phase as GameFlowPhase | undefined;
                 logger.info(`[GameRunningState] 监听到游戏阶段: ${phase}`);
 
-                // 游戏窗口关闭后会进入 WaitingForStats 状态
-                if (phase && phase === "WaitingForStats") {
-                    logger.info(`[GameRunningState] 检测到游戏结束，游戏窗口已关闭。`);
+                // 游戏结束的两种状态都表示对局已结束
+                if (phase && (phase === "WaitingForStats" || phase === "PreEndOfGame")) {
+                    logger.info(`[GameRunningState] 检测到游戏结束 (${phase})，准备流转到下一状态`);
                     safeResolve(true);
                 }
             };

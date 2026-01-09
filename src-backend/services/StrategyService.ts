@@ -1451,6 +1451,8 @@ export class StrategyService {
             );
 
             await tftOperator.moveBenchToBoard(unit.location, targetLocation);
+            // 同步更新 GameStateManager 状态
+            gameStateManager.moveBenchToBoard(unit.location, targetLocation);
             await sleep(200);
         }
 
@@ -1509,7 +1511,12 @@ export class StrategyService {
                 );
 
                 await tftOperator.sellUnit(worstBoard.location);
-                await sleep(100);
+                await sleep(500);
+                // 卖掉带装备的棋子后，立即刷新装备栏状态
+                // 因为装备已经回到装备栏了，需要同步更新 GameStateManager
+                await this.updateEquipStateFromScreen();
+                // 同步清空棋盘槽位状态
+                gameStateManager.clearBoardLocation(worstBoard.location);
             } else if (hasEmptyBenchSlot) {
                 // 方案 A：棋子无装备且备战席有空位，把场上棋子移回备战席（保护目标阵容棋子）
                 logger.info(
@@ -1519,6 +1526,8 @@ export class StrategyService {
 
                 // 先把场上棋子移回备战席（参数是数字索引 0-8）
                 await tftOperator.moveBoardToBench(worstBoard.location, emptyBenchSlot);
+                // 同步更新 GameStateManager 状态
+                gameStateManager.moveBoardToBench(worstBoard.location, emptyBenchSlot);
                 await sleep(100);
             } else {
                 // 方案 B：备战席没空位，只能卖掉
@@ -1528,6 +1537,8 @@ export class StrategyService {
                 );
 
                 await tftOperator.sellUnit(worstBoard.location);
+                // 同步清空棋盘槽位状态
+                gameStateManager.clearBoardLocation(worstBoard.location);
                 await sleep(100);
             }
 
@@ -1536,6 +1547,8 @@ export class StrategyService {
 
             if (targetLocation) {
                 await tftOperator.moveBenchToBoard(bestBench.unit.location, targetLocation);
+                // 同步更新 GameStateManager 状态
+                gameStateManager.moveBenchToBoard(bestBench.unit.location, targetLocation);
                 await sleep(10);
             } else {
                 logger.warn(`[StrategyService] 找不到合适位置放置 ${bestName}`);
@@ -2267,6 +2280,8 @@ export class StrategyService {
                 if (targetLoc) {
                     logger.info(`[StrategyService] 调整站位: ${name} (${unit.location} -> ${targetLoc})`);
                     await tftOperator.moveBoardToBoard(unit.location, targetLoc);
+                    // 同步更新 GameStateManager 状态
+                    gameStateManager.moveBoardToBoard(unit.location, targetLoc);
                     await sleep(500);
                     return; // 一次只调整一个
                 }
@@ -2359,7 +2374,12 @@ export class StrategyService {
                             `[StrategyService] 合成 ${itemName} (${synthesis.component1} + ${synthesis.component2}) ` +
                             `给 ${targetWrapper.isCore ? '核心' : '打工'}: ${targetWrapper.unit.tftUnit.displayName}`
                         );
-                        await this.synthesizeAndEquip(synthesis.component1, synthesis.component2, targetWrapper.unit.location);
+                        await this.synthesizeAndEquip(
+                            synthesis.component1, 
+                            synthesis.component2, 
+                            targetWrapper.unit.location,
+                            itemName  // 传入合成后的装备名称
+                        );
                         actionTaken = true;
                         break;
                     }
@@ -2516,6 +2536,8 @@ export class StrategyService {
         
         // 消耗了装备，更新 GameStateManager (模拟消耗，索引前移)
         gameStateManager.removeEquipment(equipIndex);
+        // 同步更新棋子身上的装备列表
+        gameStateManager.addEquipToUnit(unitLocation, itemName);
         
         // 这里为了稳妥，操作后暂停一下
         await sleep(100);
@@ -2523,8 +2545,17 @@ export class StrategyService {
 
     /**
      * 合成并穿戴（将两个散件依次给棋子）
+     * @param comp1 第一个散件名称
+     * @param comp2 第二个散件名称
+     * @param unitLocation 目标棋子位置
+     * @param resultItemName 合成后的装备名称（用于同步更新棋子装备状态）
      */
-    private async synthesizeAndEquip(comp1: string, comp2: string, unitLocation: BoardLocation): Promise<void> {
+    private async synthesizeAndEquip(
+        comp1: string, 
+        comp2: string, 
+        unitLocation: BoardLocation,
+        resultItemName: string
+    ): Promise<void> {
         // 1. 找到第一个散件
         const index1 = gameStateManager.findEquipmentIndex(comp1);
         if (index1 === -1) {
@@ -2551,6 +2582,8 @@ export class StrategyService {
         
         // 移除第二个散件
         gameStateManager.removeEquipment(index2);
+        // 同步更新棋子身上的装备列表（合成后的成装）
+        gameStateManager.addEquipToUnit(unitLocation, resultItemName);
         await sleep(500);
     }
 
