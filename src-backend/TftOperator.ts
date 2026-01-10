@@ -385,7 +385,8 @@ class TftOperator {
 
                 if (!matchResult) {
                     logger.error(`[TftOperator] ${slotName} 槽位识别失败`);
-                    await this.saveFailedImage("equip", slotName, targetMat, 3);
+                    // 【已注释】保存装备栏识别失败的截图到本地，用于排查问题
+                    // await this.saveFailedImage("equip", slotName, targetMat, 3);
                     continue;
                 }
 
@@ -954,13 +955,13 @@ class TftOperator {
             return ItemForgeType.BASIC;
         }
 
-        // 识别失败时保存截图到英雄备份文件夹，方便排查问题
-        const saveDir = this.failChampionTemplatePath;
-        fs.ensureDirSync(saveDir);
-        const filename = `itemForge_slot${slotIndex}_${Date.now()}.png`;
-        const savePath = path.join(saveDir, filename);
-        fs.writeFileSync(savePath, rawPngBuffer);  // 保存原图，方便排查
-        logger.warn(`[TftOperator] 锻造器识别失败(槽位${slotIndex})，已保存截图: ${filename}`);
+        // 【已注释】锻造器识别失败时保存截图到本地，用于排查问题
+        // const saveDir = this.failChampionTemplatePath;
+        // fs.ensureDirSync(saveDir);
+        // const filename = `itemForge_slot${slotIndex}_${Date.now()}.png`;
+        // const savePath = path.join(saveDir, filename);
+        // fs.writeFileSync(savePath, rawPngBuffer);  // 保存原图，方便排查
+        logger.warn(`[TftOperator] 锻造器识别失败(槽位${slotIndex})`);
 
         return ItemForgeType.NONE;
     }
@@ -1090,9 +1091,10 @@ class TftOperator {
         } else if (recognizedName && recognizedName.length > 0) {
             logger.warn(`[${type}槽位 ${slot}] 匹配到模板但名称未知: ${recognizedName}`);
         } else {
-            logger.warn(`[${type}槽位 ${slot}] 识别失败，保存截图...`);
-            const filename = `fail_${type}_slot_${slot}_${Date.now()}.png`;
-            fs.writeFileSync(path.join(this.failChampionTemplatePath, filename), imageBuffer);
+            logger.warn(`[${type}槽位 ${slot}] 识别失败`);
+            // 【已注释】保存识别失败的截图到本地，用于排查问题
+            // const filename = `fail_${type}_slot_${slot}_${Date.now()}.png`;
+            // fs.writeFileSync(path.join(this.failChampionTemplatePath, filename), imageBuffer);
             //logger.warn(`[${type}槽位 ${slot}] 识别失败，兜底判定为空槽位`);
         }
     }

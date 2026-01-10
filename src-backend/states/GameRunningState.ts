@@ -166,6 +166,10 @@ export class GameRunningState implements IState {
 
                 logger.info("[GameRunningState] 收到 TFT_BATTLE_PASS 事件，玩家已死亡/对局结束");
                 
+                // 标记游戏已结束，阻止 StrategyService 响应后续阶段事件
+                // 因为其他玩家可能还在游戏，会触发新阶段，但我们已经无法操作
+                strategyService.setGameEnded();
+
                 // 等待 3 秒，让玩家看到结算画面，同时避免游戏还在做结算动画时就退出
                 const QUIT_DELAY_MS = 3000;
                 logger.info(`[GameRunningState] 等待 ${QUIT_DELAY_MS / 1000} 秒后退出游戏...`);

@@ -104,6 +104,15 @@ export class StrategyService {
     private isSubscribed: boolean = false;
 
     /**
+     * 游戏是否已结束
+     * @description 当收到 TFT_BATTLE_PASS 事件（玩家死亡）时设为 true
+     *              此时虽然游戏窗口还开着，但玩家已经无法操作
+     *              其他玩家可能还在游戏，会触发新阶段事件，但我们不应该响应
+     *              在 initialize() 时会重置为 false（每局开始时重新初始化）
+     */
+    private isGameEnded: boolean = false;
+
+    /**
      * 事件处理器引用（⚠️ 必须缓存同一个函数引用，才能在 unsubscribe 时成功 off）
      * @description
      * - EventEmitter 的 on/off 是按"函数引用"匹配的
@@ -174,6 +183,17 @@ export class StrategyService {
         logger.info("[StrategyService] 已取消订阅 GameStageMonitor 事件");
     }
 
+    /**
+     * 标记游戏已结束
+     * @description 当收到 TFT_BATTLE_PASS 事件（玩家死亡）时调用
+     *              设置后，onStageChange 将不再响应新阶段事件
+     *              避免在等待退出按钮期间，因其他玩家触发的新阶段而执行操作
+     */
+    public setGameEnded(): void {
+        this.isGameEnded = true;
+        logger.info("[StrategyService] 游戏已标记为结束，后续阶段事件将被忽略");
+    }
+
     // ============================================================
     // 🎯 事件处理器
     // ============================================================
@@ -185,6 +205,13 @@ export class StrategyService {
      *              这是整个策略服务的核心入口！
      */
     private async onStageChange(event: GameStageEvent): Promise<void> {
+        // 游戏已结束（玩家已死亡），忽略后续阶段事件
+        // 避免在等待退出按钮期间，因其他玩家触发的新阶段而执行操作
+        if (this.isGameEnded) {
+            logger.debug(`[StrategyService] 游戏已结束，忽略阶段事件: ${event.stageText}`);
+            return;
+        }
+
         const {type, stageText, stage, round, isNewStage} = event;
 
         // 更新当前阶段/回合
@@ -261,6 +288,12 @@ export class StrategyService {
      * - CAROUSEL 阶段 (选秀)：不会触发战斗
      */
     private async onFightingStart(): Promise<void> {
+        // 游戏已结束，忽略战斗事件
+        if (this.isGameEnded) {
+            logger.debug("[StrategyService] 游戏已结束，忽略战斗开始事件");
+            return;
+        }
+
         logger.info("[StrategyService] 战斗阶段开始");
 
         // 获取当前阶段类型（从 GameStageMonitor 获取最新的阶段信息）
@@ -684,6 +717,9 @@ export class StrategyService {
      * @returns 是否初始化成功
      */
     public initialize(): boolean {
+        // 重置游戏结束标记（每局开始时重新初始化）
+        this.isGameEnded = false;
+
         // 防止重复初始化
         if (this.selectionState !== LineupSelectionState.NOT_INITIALIZED) {
             logger.debug("[StrategyService] 已初始化，跳过");
