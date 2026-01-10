@@ -283,4 +283,10 @@ function registerHandler() {
         // 同步更新 Logger 的最低日志级别
         logger.setMinLevel(mode === 'DETAILED' ? 'debug' : 'info')
     })
+    
+    // 日志自动清理阈值
+    ipcMain.handle(IpcChannel.LOG_GET_AUTO_CLEAN_THRESHOLD, async () => settingsStore.get('logAutoCleanThreshold'))
+    ipcMain.handle(IpcChannel.LOG_SET_AUTO_CLEAN_THRESHOLD, async (_event, threshold: number) => {
+        settingsStore.set('logAutoCleanThreshold', threshold as any)
+    })
 }

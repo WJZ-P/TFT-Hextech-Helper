@@ -34,4 +34,7 @@ export enum IpcChannel {
     // 日志模式相关
     LOG_GET_MODE = 'log-get-mode',              // 获取当前日志模式（简略/详细）
     LOG_SET_MODE = 'log-set-mode',              // 设置日志模式
+    // 日志自动清理阈值
+    LOG_GET_AUTO_CLEAN_THRESHOLD = 'log-get-auto-clean-threshold',  // 获取日志自动清理阈值
+    LOG_SET_AUTO_CLEAN_THRESHOLD = 'log-set-auto-clean-threshold',  // 设置日志自动清理阈值
 }

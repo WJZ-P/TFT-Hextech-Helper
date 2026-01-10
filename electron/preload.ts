@@ -103,6 +103,10 @@ const lineupApi = {
     getLogMode: (): Promise<string> => ipcRenderer.invoke(IpcChannel.LOG_GET_MODE),
     /** 设置日志模式 */
     setLogMode: (mode: string): Promise<void> => ipcRenderer.invoke(IpcChannel.LOG_SET_MODE, mode),
+    /** 获取日志自动清理阈值 */
+    getLogAutoCleanThreshold: (): Promise<number> => ipcRenderer.invoke(IpcChannel.LOG_GET_AUTO_CLEAN_THRESHOLD),
+    /** 设置日志自动清理阈值 */
+    setLogAutoCleanThreshold: (threshold: number): Promise<void> => ipcRenderer.invoke(IpcChannel.LOG_SET_AUTO_CLEAN_THRESHOLD, threshold),
 }
 export type LineupApi = typeof lineupApi
 contextBridge.exposeInMainWorld('lineup', lineupApi)

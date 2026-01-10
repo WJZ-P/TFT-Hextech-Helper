@@ -1,10 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-// 从 Material Icons 库中引入我们需要的图标
-import BackupIcon from '@mui/icons-material/Backup';
-import RestoreIcon from '@mui/icons-material/Restore';
 import {ThemeType} from "../../styles/theme.ts";
 import {toast} from "../toast/toast-core.ts";
+import { logStore, LogAutoCleanThreshold } from "../../stores/logStore.ts";
 
 // -------------------------------------------------------------------
 // ✨ 样式组件定义 (Styled Components Definitions) ✨
@@ -107,14 +105,63 @@ const ActionButton = styled.button`
   }
 `;
 
+// 下拉选择框样式
+const SelectWrapper = styled.select<{ theme: ThemeType }>`
+  background-color: ${props => props.theme.colors.elementBg};
+  color: ${props => props.theme.colors.text};
+  border: 1px solid ${props => props.theme.colors.border};
+  border-radius: ${props => props.theme.borderRadius};
+  padding: 0.5rem 1rem;
+  font-size: ${props => props.theme.fontSizes.small};
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  min-width: 120px;
+
+  &:hover {
+    border-color: ${props => props.theme.colors.primary};
+  }
+
+  &:focus {
+    outline: none;
+    border-color: ${props => props.theme.colors.primary};
+    box-shadow: 0 0 0 2px ${props => props.theme.colors.primary}30;
+  }
+
+  option {
+    background-color: ${props => props.theme.colors.elementBg};
+    color: ${props => props.theme.colors.text};
+  }
+`;
+
 // -------------------------------------------------------------------
 // ✨ React 组件本体 ✨
 // -------------------------------------------------------------------
 
 const SettingsPage = () => {
-    // 喵~ 在这里你可以添加状态管理，比如按钮是否在加载中
-    const [isBackingUp, setIsBackingUp] = React.useState(false);
-    const [isRestoring, setIsRestoring] = React.useState(false);
+    // 备份/恢复按钮的加载状态
+    const [isBackingUp, setIsBackingUp] = useState(false);
+    const [isRestoring, setIsRestoring] = useState(false);
+    
+    // 日志自动清理阈值设置
+    const [logAutoCleanThreshold, setLogAutoCleanThreshold] = useState<LogAutoCleanThreshold>(
+        logStore.getThreshold()
+    );
+
+    // 初始化时从后端获取设置
+    useEffect(() => {
+        const loadThreshold = async () => {
+            await logStore.refreshThreshold();
+            setLogAutoCleanThreshold(logStore.getThreshold());
+        };
+        loadThreshold();
+    }, []);
+
+    // 处理日志清理阈值变化
+    const handleLogThresholdChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = Number(e.target.value) as LogAutoCleanThreshold;
+        setLogAutoCleanThreshold(value);
+        await logStore.setThreshold(value);
+    };
 
     // 点击备份按钮的逻辑
     const handleBackup = async () => {
@@ -148,6 +195,32 @@ const SettingsPage = () => {
 
     return (
         <PageWrapper>
+            {/* 日志设置 */}
+            <SettingsHeader>
+                日志
+            </SettingsHeader>
+            <SettingsCard>
+                <SettingItem>
+                    <SettingInfo>
+                        <SettingText>
+                            <h3>日志自动清理</h3>
+                            <p>当日志数量超过阈值时，自动删除旧日志以节省内存。</p>
+                        </SettingText>
+                    </SettingInfo>
+                    <SelectWrapper 
+                        value={logAutoCleanThreshold} 
+                        onChange={handleLogThresholdChange}
+                    >
+                        <option value={0}>从不</option>
+                        <option value={100}>100 条</option>
+                        <option value={200}>200 条</option>
+                        <option value={500}>500 条</option>
+                        <option value={1000}>1000 条</option>
+                    </SelectWrapper>
+                </SettingItem>
+            </SettingsCard>
+
+            {/* 备份设置 */}
             <SettingsHeader>
                 备份
             </SettingsHeader>

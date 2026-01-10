@@ -2782,8 +2782,14 @@ class Logger {
   /**
    * 输出 warn 级别日志
    * @param message 日志消息
+   * @param verboseOnly 是否仅在详细模式（debug 级别）下显示，默认 false
+   *                    设为 true 时，只有当 minLevel 为 debug 时才会输出
+   *                    用于那些"技术上是警告，但频繁出现会刷屏"的日志
    */
-  warn(message) {
+  warn(message, verboseOnly = false) {
+    if (verboseOnly && this.minLevel !== "debug") {
+      return;
+    }
     this.log(message, "warn");
   }
   /**
@@ -5614,6 +5620,8 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["TFT_SET_MODE"] = "tft-set-mode";
   IpcChannel2["LOG_GET_MODE"] = "log-get-mode";
   IpcChannel2["LOG_SET_MODE"] = "log-set-mode";
+  IpcChannel2["LOG_GET_AUTO_CLEAN_THRESHOLD"] = "log-get-auto-clean-threshold";
+  IpcChannel2["LOG_SET_AUTO_CLEAN_THRESHOLD"] = "log-set-auto-clean-threshold";
   return IpcChannel2;
 })(IpcChannel || {});
 class IdleState {
@@ -5722,8 +5730,8 @@ const detailChampionStarRegion = {
   leftTop: { x: 919, y: 122 },
   rightBottom: { x: 974, y: 132 }
 };
-const refreshShopPoint = { x: 135, y: 680 };
-const buyExpPoint = { x: 135, y: 730 };
+const refreshShopPoint = { x: 135, y: 730 };
+const buyExpPoint = { x: 135, y: 680 };
 const equipmentSlot = {
   EQ_SLOT_1: { x: 20, y: 210 },
   //+35
@@ -10280,14 +10288,16 @@ class TemplateMatcher {
         }
       }
       if (maxConfidence >= MATCH_THRESHOLDS.STAR_LEVEL && bestMatchLevel !== null) {
-        logger.info(
+        logger.debug(
           `[TemplateMatcher] 星级识别成功: ${bestMatchLevel}星 (相似度: ${(maxConfidence * 100).toFixed(1)}%)`
         );
         return bestMatchLevel;
       }
       if (maxConfidence > 0.5) {
         logger.warn(
-          `[TemplateMatcher] 星级识别未达标 (最高相似度: ${(maxConfidence * 100).toFixed(1)}%)`
+          `[TemplateMatcher] 星级识别未达标 (最高相似度: ${(maxConfidence * 100).toFixed(1)}%)`,
+          true
+          // 仅详细模式下显示
         );
       }
       return -1;
@@ -10952,7 +10962,7 @@ class TftOperator {
       let cleanName = text.replace(/\s/g, "");
       let tftUnit = TFT_16_CHAMPION_DATA[cleanName] || null;
       if (!tftUnit) {
-        logger.warn(`[商店槽位 ${i}] OCR 识别失败，尝试模板匹配...`);
+        logger.warn(`[商店槽位 ${i}] OCR 识别失败，尝试模板匹配...`, true);
         const mat = await screenCapture.pngBufferToMat(processedPng);
         if (mat.channels() > 1) {
           cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
@@ -10962,7 +10972,7 @@ class TftOperator {
       }
       tftUnit = TFT_16_CHAMPION_DATA[cleanName] || null;
       if (tftUnit) {
-        logger.info(`[商店槽位 ${i}] 识别成功 -> ${tftUnit.displayName} (${tftUnit.price}费)`);
+        logger.debug(`[商店槽位 ${i}] 识别成功 -> ${tftUnit.displayName} (${tftUnit.price}费)`);
         shopUnits.push(tftUnit);
       } else {
         this.handleRecognitionFailure("shop", i, cleanName, processedPng);
@@ -11112,7 +11122,7 @@ class TftOperator {
       let cleanName = text.replace(/\s/g, "");
       let tftUnit = TFT_16_CHAMPION_DATA[cleanName] || null;
       if (!tftUnit) {
-        logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] OCR 识别失败，尝试模板匹配...`);
+        logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] OCR 识别失败，尝试模板匹配...`, true);
         const mat = await screenCapture.pngBufferToMat(namePng);
         if (mat.channels() > 1) {
           cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
@@ -11128,7 +11138,7 @@ class TftOperator {
         const starLevel = templateMatcher.matchStarLevel(starMat);
         starMat.delete();
         const equips = await this.getDetailPanelEquips();
-        logger.info(
+        logger.debug(
           `[备战席槽位 ${benchSlot.slice(-1)}] 识别成功 -> ${tftUnit.displayName} (${tftUnit.price}费-${starLevel}星)` + (equips.length > 0 ? ` [装备: ${equips.map((e) => e.name).join(", ")}]` : "")
         );
         benchUnits.push({
@@ -11157,6 +11167,7 @@ class TftOperator {
         } else {
           this.handleRecognitionFailure("bench", benchSlot.slice(-1), cleanName, namePng);
           benchUnits.push(null);
+          await this.selfResetPosition();
         }
       }
     }
@@ -11190,7 +11201,7 @@ class TftOperator {
       let cleanName = text.replace(/\s/g, "");
       let tftUnit = TFT_16_CHAMPION_DATA[cleanName] || null;
       if (!tftUnit) {
-        logger.warn(`[棋盘槽位 ${boardSlot}] OCR 识别失败，尝试模板匹配...`);
+        logger.warn(`[棋盘槽位 ${boardSlot}] OCR 识别失败，尝试模板匹配...`, true);
         const mat = await screenCapture.pngBufferToMat(namePng);
         if (mat.channels() > 1) {
           cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
@@ -11206,7 +11217,7 @@ class TftOperator {
         const starLevel = templateMatcher.matchStarLevel(starMat);
         starMat.delete();
         const equips = await this.getDetailPanelEquips();
-        logger.info(
+        logger.debug(
           `[棋盘槽位 ${boardSlot}] 识别成功 -> ${tftUnit.displayName} (${tftUnit.price}费-${starLevel}星)` + (equips.length > 0 ? ` [装备: ${equips.map((e) => e.name).join(", ")}]` : "")
         );
         boardUnits.push({
@@ -11393,7 +11404,7 @@ class TftOperator {
       logger.debug(`[TftOperator] 识别为基础装备锻造器`);
       return ItemForgeType.BASIC;
     }
-    logger.warn(`[TftOperator] 锻造器识别失败(槽位${slotIndex})`);
+    logger.warn(`[TftOperator] 锻造器识别失败(槽位${slotIndex})`, true);
     return ItemForgeType.NONE;
   }
   /**
@@ -11474,11 +11485,11 @@ class TftOperator {
    */
   handleRecognitionFailure(type, slot, recognizedName, imageBuffer) {
     if (recognizedName === "empty") {
-      logger.info(`[${type}槽位 ${slot}] 识别为空槽位`);
+      logger.debug(`[${type}槽位 ${slot}] 识别为空槽位`);
     } else if (recognizedName && recognizedName.length > 0) {
-      logger.warn(`[${type}槽位 ${slot}] 匹配到模板但名称未知: ${recognizedName}`);
+      logger.warn(`[${type}槽位 ${slot}] 匹配到模板但名称未知: ${recognizedName}`, true);
     } else {
-      logger.warn(`[${type}槽位 ${slot}] 识别失败`);
+      logger.warn(`[${type}槽位 ${slot}] 识别失败`, true);
     }
   }
   /**
@@ -13004,6 +13015,8 @@ class SettingsStore {
       //  默认是匹配模式
       logMode: LogMode.SIMPLE,
       //  默认是简略日志模式
+      logAutoCleanThreshold: 500,
+      //  默认超过 500 条时自动清理
       window: {
         bounds: null,
         //  第一次启动，默认为null
@@ -15454,38 +15467,48 @@ class GameRunningState {
           clearInterval(stopCheckInterval);
           stopCheckInterval = null;
         }
+        if (clickExitButtonTimer) {
+          clearTimeout(clickExitButtonTimer);
+          clickExitButtonTimer = null;
+        }
       };
       const onAbort = () => {
         logger.info("[GameRunningState] 收到取消信号，停止等待");
         safeResolve(false);
       };
+      let clickExitButtonTimer = null;
       const onBattlePass = async (_eventData) => {
         if (hasTriedQuit) return;
         hasTriedQuit = true;
         logger.info("[GameRunningState] 收到 TFT_BATTLE_PASS 事件，玩家已死亡/对局结束");
         strategyService.setGameEnded();
-        const QUIT_DELAY_MS = 3e3;
-        logger.info(`[GameRunningState] 等待 ${QUIT_DELAY_MS / 1e3} 秒后退出游戏...`);
-        await new Promise((resolve2) => setTimeout(resolve2, QUIT_DELAY_MS));
+        await sleep(100);
         logger.info("[GameRunningState] 正在尝试关闭游戏窗口...");
         try {
-          logger.info(`[GameRunningState] 点击"现在退出"按钮 (${exitGameButtonPoint.x}, ${exitGameButtonPoint.y})`);
-          await mouseController.clickAt(exitGameButtonPoint);
-          await sleep(100);
-        } catch (error) {
-          logger.warn(`[GameRunningState] 点击退出按钮失败: ${error}`);
-        }
-        try {
           await this.lcuManager?.quitGame();
-          logger.info("[GameRunningState] 退出游戏请求已发送，等待 GAMEFLOW_PHASE 变化...");
+          logger.info("[GameRunningState] 退出游戏请求已发送");
         } catch (error) {
           logger.warn(`[GameRunningState] 退出游戏请求失败: ${error}`);
         }
+        const CLICK_DELAY_MS = 3e3;
+        clickExitButtonTimer = setTimeout(async () => {
+          try {
+            logger.info(`[GameRunningState] 点击"现在退出"按钮 (${exitGameButtonPoint.x}, ${exitGameButtonPoint.y})`);
+            await mouseController.clickAt(exitGameButtonPoint);
+          } catch (error) {
+            logger.warn(`[GameRunningState] 点击退出按钮失败: ${error}`);
+          }
+        }, CLICK_DELAY_MS);
       };
       const onGameflowPhase = (eventData) => {
         const phase = eventData.data?.phase;
         logger.info(`[GameRunningState] 监听到游戏阶段: ${phase}`);
         if (phase && (phase === "WaitingForStats" || phase === "PreEndOfGame")) {
+          if (clickExitButtonTimer) {
+            clearTimeout(clickExitButtonTimer);
+            clickExitButtonTimer = null;
+            logger.debug("[GameRunningState] 游戏已退出，取消点击退出按钮的定时任务");
+          }
           logger.info(`[GameRunningState] 检测到游戏结束 (${phase})，准备流转到下一状态`);
           safeResolve(true);
         }
@@ -16032,6 +16055,10 @@ function registerHandler() {
   ipcMain.handle(IpcChannel.LOG_SET_MODE, async (_event, mode) => {
     settingsStore.set("logMode", mode);
     logger.setMinLevel(mode === "DETAILED" ? "debug" : "info");
+  });
+  ipcMain.handle(IpcChannel.LOG_GET_AUTO_CLEAN_THRESHOLD, async () => settingsStore.get("logAutoCleanThreshold"));
+  ipcMain.handle(IpcChannel.LOG_SET_AUTO_CLEAN_THRESHOLD, async (_event, threshold) => {
+    settingsStore.set("logAutoCleanThreshold", threshold);
   });
 }
 export {

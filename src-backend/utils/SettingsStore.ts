@@ -5,6 +5,9 @@ import {LogMode} from "../types/AppTypes";
 
 type WindowBounds = Pick<Rectangle, 'x' | 'y' | 'width' | 'height'>;
 
+// 日志自动清理阈值的可选值，0 表示"从不"自动清理
+export type LogAutoCleanThreshold = 0 | 100 | 200 | 500 | 1000;
+
 // ============================================================================
 // 点号路径类型工具 (Dot Notation Type Utilities)
 // ============================================================================
@@ -59,6 +62,7 @@ export type DotNotationValueFor<T, K extends string> =
 interface AppSettings {
     tftMode: TFTMode,    //  下棋模式选择
     logMode: LogMode,    //  日志模式：简略/详细
+    logAutoCleanThreshold: LogAutoCleanThreshold,  //  日志自动清理阈值
     window: {
         bounds: WindowBounds | null, // 上次关闭时的窗口信息
         isMaximized: boolean,   //  上次关闭是否最大化
@@ -82,6 +86,7 @@ class SettingsStore {
         const defaults: AppSettings = {
             tftMode: TFTMode.NORMAL,    //  默认是匹配模式
             logMode: LogMode.SIMPLE,    //  默认是简略日志模式
+            logAutoCleanThreshold: 500, //  默认超过 500 条时自动清理
             window: {
                 bounds: null,           //  第一次启动，默认为null
                 isMaximized: false     //  默认不最大化窗口

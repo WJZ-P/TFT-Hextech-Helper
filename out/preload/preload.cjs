@@ -29,6 +29,8 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["TFT_SET_MODE"] = "tft-set-mode";
   IpcChannel2["LOG_GET_MODE"] = "log-get-mode";
   IpcChannel2["LOG_SET_MODE"] = "log-set-mode";
+  IpcChannel2["LOG_GET_AUTO_CLEAN_THRESHOLD"] = "log-get-auto-clean-threshold";
+  IpcChannel2["LOG_SET_AUTO_CLEAN_THRESHOLD"] = "log-set-auto-clean-threshold";
   return IpcChannel2;
 })(IpcChannel || {});
 electron.contextBridge.exposeInMainWorld("ipcRenderer", {
@@ -114,7 +116,11 @@ const lineupApi = {
   /** 获取当前日志模式（简略/详细） */
   getLogMode: () => electron.ipcRenderer.invoke(IpcChannel.LOG_GET_MODE),
   /** 设置日志模式 */
-  setLogMode: (mode) => electron.ipcRenderer.invoke(IpcChannel.LOG_SET_MODE, mode)
+  setLogMode: (mode) => electron.ipcRenderer.invoke(IpcChannel.LOG_SET_MODE, mode),
+  /** 获取日志自动清理阈值 */
+  getLogAutoCleanThreshold: () => electron.ipcRenderer.invoke(IpcChannel.LOG_GET_AUTO_CLEAN_THRESHOLD),
+  /** 设置日志自动清理阈值 */
+  setLogAutoCleanThreshold: (threshold) => electron.ipcRenderer.invoke(IpcChannel.LOG_SET_AUTO_CLEAN_THRESHOLD, threshold)
 };
 electron.contextBridge.exposeInMainWorld("lineup", lineupApi);
 const lcuApi = {
