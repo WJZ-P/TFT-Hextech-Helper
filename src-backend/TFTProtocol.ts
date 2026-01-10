@@ -143,9 +143,10 @@ export const detailChampionStarRegion = {
     rightBottom: { x: 974, y: 132 }
 }
 
-//  刷新商店Point
-export const refreshShopPoint = {x:135,y:680}
-export const buyExpPoint = {x:135,y:730}
+//  刷新商店Point（D牌按钮，在升级按钮下方）
+export const refreshShopPoint = {x:135, y:730}
+//  购买经验Point（升级按钮，在D牌按钮上方）
+export const buyExpPoint = {x:135, y:680}
 
 //  装备槽位坐标
 export const equipmentSlot = {

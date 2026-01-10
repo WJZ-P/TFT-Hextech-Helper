@@ -10290,7 +10290,6 @@ class TemplateMatcher {
           `[TemplateMatcher] 星级识别未达标 (最高相似度: ${(maxConfidence * 100).toFixed(1)}%)`
         );
       }
-      this.saveFailedStarLevelImage(targetMat);
       return -1;
     } catch (e) {
       logger.error(`[TemplateMatcher] 星级匹配出错: ${e}`);
@@ -11001,7 +11000,6 @@ class TftOperator {
         const matchResult = templateMatcher.matchEquip(targetMat);
         if (!matchResult) {
           logger.error(`[TftOperator] ${slotName} 槽位识别失败`);
-          await this.saveFailedImage("equip", slotName, targetMat, 3);
           continue;
         }
         if (matchResult.name === "空槽位") {
@@ -11395,12 +11393,7 @@ class TftOperator {
       logger.debug(`[TftOperator] 识别为基础装备锻造器`);
       return ItemForgeType.BASIC;
     }
-    const saveDir = this.failChampionTemplatePath;
-    fs.ensureDirSync(saveDir);
-    const filename = `itemForge_slot${slotIndex}_${Date.now()}.png`;
-    const savePath = path__default.join(saveDir, filename);
-    fs.writeFileSync(savePath, rawPngBuffer);
-    logger.warn(`[TftOperator] 锻造器识别失败(槽位${slotIndex})，已保存截图: ${filename}`);
+    logger.warn(`[TftOperator] 锻造器识别失败(槽位${slotIndex})`);
     return ItemForgeType.NONE;
   }
   /**
@@ -11485,9 +11478,7 @@ class TftOperator {
     } else if (recognizedName && recognizedName.length > 0) {
       logger.warn(`[${type}槽位 ${slot}] 匹配到模板但名称未知: ${recognizedName}`);
     } else {
-      logger.warn(`[${type}槽位 ${slot}] 识别失败，保存截图...`);
-      const filename = `fail_${type}_slot_${slot}_${Date.now()}.png`;
-      fs.writeFileSync(path__default.join(this.failChampionTemplatePath, filename), imageBuffer);
+      logger.warn(`[${type}槽位 ${slot}] 识别失败`);
     }
   }
   /**
@@ -13261,6 +13252,14 @@ class StrategyService {
   /** 是否已订阅 GameStageMonitor 事件 */
   isSubscribed = false;
   /**
+   * 游戏是否已结束
+   * @description 当收到 TFT_BATTLE_PASS 事件（玩家死亡）时设为 true
+   *              此时虽然游戏窗口还开着，但玩家已经无法操作
+   *              其他玩家可能还在游戏，会触发新阶段事件，但我们不应该响应
+   *              在 initialize() 时会重置为 false（每局开始时重新初始化）
+   */
+  isGameEnded = false;
+  /**
    * 事件处理器引用（⚠️ 必须缓存同一个函数引用，才能在 unsubscribe 时成功 off）
    * @description
    * - EventEmitter 的 on/off 是按"函数引用"匹配的
@@ -13313,6 +13312,16 @@ class StrategyService {
     this.isSubscribed = false;
     logger.info("[StrategyService] 已取消订阅 GameStageMonitor 事件");
   }
+  /**
+   * 标记游戏已结束
+   * @description 当收到 TFT_BATTLE_PASS 事件（玩家死亡）时调用
+   *              设置后，onStageChange 将不再响应新阶段事件
+   *              避免在等待退出按钮期间，因其他玩家触发的新阶段而执行操作
+   */
+  setGameEnded() {
+    this.isGameEnded = true;
+    logger.info("[StrategyService] 游戏已标记为结束，后续阶段事件将被忽略");
+  }
   // ============================================================
   // 🎯 事件处理器
   // ============================================================
@@ -13323,6 +13332,10 @@ class StrategyService {
    *              这是整个策略服务的核心入口！
    */
   async onStageChange(event) {
+    if (this.isGameEnded) {
+      logger.debug(`[StrategyService] 游戏已结束，忽略阶段事件: ${event.stageText}`);
+      return;
+    }
     const { type, stageText, stage, round, isNewStage } = event;
     this.currentStage = stage;
     this.currentRound = round;
@@ -13373,6 +13386,10 @@ class StrategyService {
    * - CAROUSEL 阶段 (选秀)：不会触发战斗
    */
   async onFightingStart() {
+    if (this.isGameEnded) {
+      logger.debug("[StrategyService] 游戏已结束，忽略战斗开始事件");
+      return;
+    }
     logger.info("[StrategyService] 战斗阶段开始");
     const currentStageType = gameStageMonitor.currentStageType;
     switch (currentStageType) {
@@ -13688,6 +13705,7 @@ class StrategyService {
    * @returns 是否初始化成功
    */
   initialize() {
+    this.isGameEnded = false;
     if (this.selectionState !== "NOT_INITIALIZED") {
       logger.debug("[StrategyService] 已初始化，跳过");
       return true;
@@ -15445,6 +15463,7 @@ class GameRunningState {
         if (hasTriedQuit) return;
         hasTriedQuit = true;
         logger.info("[GameRunningState] 收到 TFT_BATTLE_PASS 事件，玩家已死亡/对局结束");
+        strategyService.setGameEnded();
         const QUIT_DELAY_MS = 3e3;
         logger.info(`[GameRunningState] 等待 ${QUIT_DELAY_MS / 1e3} 秒后退出游戏...`);
         await new Promise((resolve2) => setTimeout(resolve2, QUIT_DELAY_MS));
