@@ -279,7 +279,7 @@ export class TemplateMatcher {
             }
 
             if (maxConfidence >= MATCH_THRESHOLDS.STAR_LEVEL && bestMatchLevel !== null) {
-                logger.info(
+                logger.debug(
                     `[TemplateMatcher] 星级识别成功: ${bestMatchLevel}星 (相似度: ${(maxConfidence * 100).toFixed(1)}%)`
                 );
                 return bestMatchLevel;
@@ -288,7 +288,8 @@ export class TemplateMatcher {
             // 调试日志
             if (maxConfidence > 0.5) {
                 logger.warn(
-                    `[TemplateMatcher] 星级识别未达标 (最高相似度: ${(maxConfidence * 100).toFixed(1)}%)`
+                    `[TemplateMatcher] 星级识别未达标 (最高相似度: ${(maxConfidence * 100).toFixed(1)}%)`,
+                    true  // 仅详细模式下显示
                 );
             }
 

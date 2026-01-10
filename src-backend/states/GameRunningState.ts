@@ -27,7 +27,7 @@ import { gameStateManager } from "../services/GameStateManager";
 import { logger } from "../utils/Logger";
 import { mouseController } from "../tft";
 import { exitGameButtonPoint } from "../TFTProtocol";
-import {sleep} from "../utils/HelperTools";
+import { sleep } from "../utils/HelperTools";
 
 /** abort 信号轮询间隔 (ms)，作为事件监听的兜底 */
 const ABORT_CHECK_INTERVAL_MS = 2000;
@@ -141,6 +141,11 @@ export class GameRunningState implements IState {
                     clearInterval(stopCheckInterval);
                     stopCheckInterval = null;
                 }
+                // 清理点击退出按钮的定时器
+                if (clickExitButtonTimer) {
+                    clearTimeout(clickExitButtonTimer);
+                    clickExitButtonTimer = null;
+                }
             };
 
             /**
@@ -151,14 +156,17 @@ export class GameRunningState implements IState {
                 safeResolve(false);
             };
 
+            /** 点击退出按钮的定时器，用于在游戏结束时取消 */
+            let clickExitButtonTimer: NodeJS.Timeout | null = null;
+
             /**
              * 监听 TFT_BATTLE_PASS 事件（玩家死亡/对局结束）
              * @description 此时游戏窗口还开着，需要主动退出游戏
-             *              等待 3 秒后再退出，让玩家看到结算画面
              *              
              *              退出策略：
-             *              1. 先点击游戏内的"现在退出"按钮（更可靠）
-             *              2. 再调用 LCU API quitGame() 作为兜底
+             *              1. 等待 100ms 后调用 LCU API quitGame()（第一/第二名时会直接退出）
+             *              2. 启动定时任务，延迟 3s 点击"现在退出"按钮作为兜底
+             *              3. 如果游戏已退出（触发 onGameflowPhase），取消定时任务
              */
             const onBattlePass = async (_eventData: LCUWebSocketMessage) => {
                 if (hasTriedQuit) return; // 避免重复调用
@@ -170,31 +178,32 @@ export class GameRunningState implements IState {
                 // 因为其他玩家可能还在游戏，会触发新阶段，但我们已经无法操作
                 strategyService.setGameEnded();
 
-                // 等待 3 秒，让玩家看到结算画面，同时避免游戏还在做结算动画时就退出
-                const QUIT_DELAY_MS = 3000;
-                logger.info(`[GameRunningState] 等待 ${QUIT_DELAY_MS / 1000} 秒后退出游戏...`);
-                await new Promise(resolve => setTimeout(resolve, QUIT_DELAY_MS));
+                // 等待 100ms 后发送退出请求
+                await sleep(100);
                 
                 logger.info("[GameRunningState] 正在尝试关闭游戏窗口...");
 
-                // 方案 1：点击游戏内的"现在退出"按钮
-                try {
-                    logger.info(`[GameRunningState] 点击"现在退出"按钮 (${exitGameButtonPoint.x}, ${exitGameButtonPoint.y})`);
-                    await mouseController.clickAt(exitGameButtonPoint);
-                    // 等待一小段时间让点击生效
-                    await sleep(100);
-                } catch (error) {
-                    logger.warn(`[GameRunningState] 点击退出按钮失败: ${error}`);
-                }
-
-                // 方案 2：调用 LCU API 作为兜底
+                // 方案 1：先调用 LCU API（第一/第二名时会直接退出游戏）
                 try {
                     await this.lcuManager?.quitGame();
-                    logger.info("[GameRunningState] 退出游戏请求已发送，等待 GAMEFLOW_PHASE 变化...");
+                    logger.info("[GameRunningState] 退出游戏请求已发送");
                 } catch (error) {
                     logger.warn(`[GameRunningState] 退出游戏请求失败: ${error}`);
-                    // 即使失败也不阻塞，可能玩家已经手动关闭了
                 }
+
+                // 方案 2：启动定时任务点击"现在退出"按钮作为兜底
+                // 延迟 3s 让玩家看到结算画面
+                // 如果是第一/第二名，API 调用后游戏会直接退出，触发 onGameflowPhase，
+                // 此时会取消这个定时器，不会执行点击操作
+                const CLICK_DELAY_MS = 3000;
+                clickExitButtonTimer = setTimeout(async () => {
+                    try {
+                        logger.info(`[GameRunningState] 点击"现在退出"按钮 (${exitGameButtonPoint.x}, ${exitGameButtonPoint.y})`);
+                        await mouseController.clickAt(exitGameButtonPoint);
+                    } catch (error) {
+                        logger.warn(`[GameRunningState] 点击退出按钮失败: ${error}`);
+                    }
+                }, CLICK_DELAY_MS);
             };
 
             /**
@@ -209,6 +218,12 @@ export class GameRunningState implements IState {
 
                 // 游戏结束的两种状态都表示对局已结束
                 if (phase && (phase === "WaitingForStats" || phase === "PreEndOfGame")) {
+                    // 取消点击退出按钮的定时器（第一/第二名时 API 已让游戏退出，无需再点击）
+                    if (clickExitButtonTimer) {
+                        clearTimeout(clickExitButtonTimer);
+                        clickExitButtonTimer = null;
+                        logger.debug("[GameRunningState] 游戏已退出，取消点击退出按钮的定时任务");
+                    }
                     logger.info(`[GameRunningState] 检测到游戏结束 (${phase})，准备流转到下一状态`);
                     safeResolve(true);
                 }

@@ -321,7 +321,7 @@ class TftOperator {
 
             // OCR 失败时使用模板匹配兜底
             if (!tftUnit) {
-                logger.warn(`[商店槽位 ${i}] OCR 识别失败，尝试模板匹配...`);
+                logger.warn(`[商店槽位 ${i}] OCR 识别失败，尝试模板匹配...`, true);
                 // 复用 processedPng (已经是 3x 放大后的了)
                 const mat = await screenCapture.pngBufferToMat(processedPng);
 
@@ -339,7 +339,7 @@ class TftOperator {
             tftUnit = TFT_16_CHAMPION_DATA[cleanName] || null;
 
             if (tftUnit) {
-                logger.info(`[商店槽位 ${i}] 识别成功 -> ${tftUnit.displayName} (${tftUnit.price}费)`);
+                logger.debug(`[商店槽位 ${i}] 识别成功 -> ${tftUnit.displayName} (${tftUnit.price}费)`);
                 shopUnits.push(tftUnit);
             } else {
                 this.handleRecognitionFailure("shop", i, cleanName, processedPng);
@@ -549,7 +549,7 @@ class TftOperator {
 
             // OCR 失败时使用模板匹配兜底
             if (!tftUnit) {
-                logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] OCR 识别失败，尝试模板匹配...`);
+                logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] OCR 识别失败，尝试模板匹配...`, true);
                 // 喵~ 同样的，复用 namePng (3x 放大后的图片)
                 const mat = await screenCapture.pngBufferToMat(namePng);
                 // 转灰度
@@ -574,7 +574,7 @@ class TftOperator {
                 // 识别棋子携带的装备（详情面板右键后已显示，直接读取即可）
                 const equips = await this.getDetailPanelEquips();
 
-                logger.info(
+                logger.debug(
                     `[备战席槽位 ${benchSlot.slice(-1)}] 识别成功 -> ` +
                     `${tftUnit.displayName} (${tftUnit.price}费-${starLevel}星)` +
                     (equips.length > 0 ? ` [装备: ${equips.map(e => e.name).join(', ')}]` : '')
@@ -615,6 +615,11 @@ class TftOperator {
                 } else {
                     this.handleRecognitionFailure("bench", benchSlot.slice(-1), cleanName, namePng);
                     benchUnits.push(null);
+                    
+                    // 备战席识别失败时归位小小英雄
+                    // 原因：空槽位可能被误判为有棋子，右键点击后小小英雄会走过去
+                    //       导致视角偏移，影响后续槽位的识别准确性
+                    await this.selfResetPosition();
                 }
             }
         }
@@ -663,7 +668,7 @@ class TftOperator {
 
             // OCR 失败时使用模板匹配兜底
             if (!tftUnit) {
-                logger.warn(`[棋盘槽位 ${boardSlot}] OCR 识别失败，尝试模板匹配...`);
+                logger.warn(`[棋盘槽位 ${boardSlot}] OCR 识别失败，尝试模板匹配...`, true);
                 const mat = await screenCapture.pngBufferToMat(namePng);
                 // 转灰度
                 if (mat.channels() > 1) {
@@ -686,7 +691,7 @@ class TftOperator {
                 // 识别棋子携带的装备（详情面板右键后已显示，直接读取即可）
                 const equips = await this.getDetailPanelEquips();
 
-                logger.info(
+                logger.debug(
                     `[棋盘槽位 ${boardSlot}] 识别成功 -> ` +
                     `${tftUnit.displayName} (${tftUnit.price}费-${starLevel}星)` +
                     (equips.length > 0 ? ` [装备: ${equips.map(e => e.name).join(', ')}]` : '')
@@ -961,7 +966,7 @@ class TftOperator {
         // const filename = `itemForge_slot${slotIndex}_${Date.now()}.png`;
         // const savePath = path.join(saveDir, filename);
         // fs.writeFileSync(savePath, rawPngBuffer);  // 保存原图，方便排查
-        logger.warn(`[TftOperator] 锻造器识别失败(槽位${slotIndex})`);
+        logger.warn(`[TftOperator] 锻造器识别失败(槽位${slotIndex})`, true);
 
         return ItemForgeType.NONE;
     }
@@ -1087,11 +1092,11 @@ class TftOperator {
         imageBuffer: Buffer
     ): void {
         if (recognizedName === "empty") {
-            logger.info(`[${type}槽位 ${slot}] 识别为空槽位`);
+            logger.debug(`[${type}槽位 ${slot}] 识别为空槽位`);
         } else if (recognizedName && recognizedName.length > 0) {
-            logger.warn(`[${type}槽位 ${slot}] 匹配到模板但名称未知: ${recognizedName}`);
+            logger.warn(`[${type}槽位 ${slot}] 匹配到模板但名称未知: ${recognizedName}`, true);
         } else {
-            logger.warn(`[${type}槽位 ${slot}] 识别失败`);
+            logger.warn(`[${type}槽位 ${slot}] 识别失败`, true);
             // 【已注释】保存识别失败的截图到本地，用于排查问题
             // const filename = `fail_${type}_slot_${slot}_${Date.now()}.png`;
             // fs.writeFileSync(path.join(this.failChampionTemplatePath, filename), imageBuffer);

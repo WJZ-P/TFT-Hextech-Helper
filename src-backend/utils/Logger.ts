@@ -134,8 +134,15 @@ class Logger {
     /**
      * 输出 warn 级别日志
      * @param message 日志消息
+     * @param verboseOnly 是否仅在详细模式（debug 级别）下显示，默认 false
+     *                    设为 true 时，只有当 minLevel 为 debug 时才会输出
+     *                    用于那些"技术上是警告，但频繁出现会刷屏"的日志
      */
-    public warn(message: string): void {
+    public warn(message: string, verboseOnly: boolean = false): void {
+        // 如果设置了 verboseOnly，只有在 debug 模式下才输出
+        if (verboseOnly && this.minLevel !== "debug") {
+            return;
+        }
         this.log(message, "warn");
     }
 
