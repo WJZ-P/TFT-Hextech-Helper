@@ -487,8 +487,8 @@ class TftOperator {
 
         logger.info(`[TftOperator] 正在购买棋子，槽位: ${slot}...`);
 
-        // 双击确保购买成功
-        await mouseController.doubleClickAt(targetPoint, MouseButtonType.LEFT, 50);
+        // 单击购买
+        await mouseController.clickAt(targetPoint, MouseButtonType.LEFT);
     }
 
     /**
@@ -596,6 +596,9 @@ class TftOperator {
                 // 关闭浮窗：再次右键点击同一位置，避免浮窗遮挡后续槽位的检测
                 await mouseController.clickAt(benchSlotPoints[benchSlot], MouseButtonType.RIGHT);
                 await sleep(10) // 等待 UI 渲染完成（右键后游戏会立即刷新 UI，10ms 足够）
+                
+                // 关闭浮窗后归位小小英雄，避免右键点击导致小小英雄走到备战席位置
+                await this.selfResetPosition();
                 
                 if (forgeType !== ItemForgeType.NONE) {
                     // 根据锻造器类型选择对应的棋子数据

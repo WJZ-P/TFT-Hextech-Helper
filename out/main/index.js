@@ -11079,7 +11079,7 @@ class TftOperator {
       return;
     }
     logger.info(`[TftOperator] 正在购买棋子，槽位: ${slot}...`);
-    await mouseController.doubleClickAt(targetPoint, MouseButtonType.LEFT, 50);
+    await mouseController.clickAt(targetPoint, MouseButtonType.LEFT);
   }
   /**
    * 刷新商店 (D牌)
@@ -11153,6 +11153,7 @@ class TftOperator {
         const forgeType = await this.checkItemForgeTooltip(clickPoint, slotIndex);
         await mouseController.clickAt(benchSlotPoints[benchSlot], MouseButtonType.RIGHT);
         await sleep(10);
+        await this.selfResetPosition();
         if (forgeType !== ItemForgeType.NONE) {
           const forgeUnit = forgeType === ItemForgeType.COMPLETED ? TFT_16_CHAMPION_DATA.成装锻造器 : TFT_16_CHAMPION_DATA.基础装备锻造器;
           const forgeName = forgeType === ItemForgeType.COMPLETED ? "成装锻造器" : "基础装备锻造器";
@@ -13359,6 +13360,7 @@ class StrategyService {
         return;
       }
     }
+    await sleep(500);
     if (stage === 2 && round === 1 && this.selectionState === "PENDING") {
       logger.info("[StrategyService] 检测到 2-1 回合，开始阵容匹配...");
       await this.matchAndLockLineup();
@@ -15020,7 +15022,7 @@ class StrategyService {
   async handleCarousel() {
     logger.info("[StrategyService] 选秀阶段：开始循环点击选秀位置...");
     const entryStageText = gameStageMonitor.stageText;
-    const clickInterval = 3e3;
+    const clickInterval = 2e3;
     while (true) {
       if (gameStageMonitor.stageText !== entryStageText) {
         logger.info("[StrategyService] 选秀阶段结束，进入下一回合");
@@ -15042,7 +15044,7 @@ class StrategyService {
    */
   async handleAugment() {
     logger.info("[StrategyService] 海克斯阶段：等待海克斯选项加载...");
-    await sleep(1500);
+    await sleep(1e3);
     const slotKeys = Object.keys(hexSlot);
     const randomIndex = Math.floor(Math.random() * slotKeys.length);
     const selectedSlotKey = slotKeys[randomIndex];
@@ -15467,48 +15469,36 @@ class GameRunningState {
           clearInterval(stopCheckInterval);
           stopCheckInterval = null;
         }
-        if (clickExitButtonTimer) {
-          clearTimeout(clickExitButtonTimer);
-          clickExitButtonTimer = null;
-        }
       };
       const onAbort = () => {
         logger.info("[GameRunningState] 收到取消信号，停止等待");
         safeResolve(false);
       };
-      let clickExitButtonTimer = null;
       const onBattlePass = async (_eventData) => {
         if (hasTriedQuit) return;
         hasTriedQuit = true;
         logger.info("[GameRunningState] 收到 TFT_BATTLE_PASS 事件，玩家已死亡/对局结束");
         strategyService.setGameEnded();
-        await sleep(100);
+        const CLICK_DELAY_MS = 3e3;
+        await sleep(CLICK_DELAY_MS);
         logger.info("[GameRunningState] 正在尝试关闭游戏窗口...");
+        try {
+          logger.info(`[GameRunningState] 点击"现在退出"按钮 (${exitGameButtonPoint.x}, ${exitGameButtonPoint.y})`);
+          await mouseController.clickAt(exitGameButtonPoint);
+        } catch (error) {
+          logger.warn(`[GameRunningState] 点击退出按钮失败: ${error}`);
+        }
         try {
           await this.lcuManager?.quitGame();
           logger.info("[GameRunningState] 退出游戏请求已发送");
         } catch (error) {
           logger.warn(`[GameRunningState] 退出游戏请求失败: ${error}`);
         }
-        const CLICK_DELAY_MS = 3e3;
-        clickExitButtonTimer = setTimeout(async () => {
-          try {
-            logger.info(`[GameRunningState] 点击"现在退出"按钮 (${exitGameButtonPoint.x}, ${exitGameButtonPoint.y})`);
-            await mouseController.clickAt(exitGameButtonPoint);
-          } catch (error) {
-            logger.warn(`[GameRunningState] 点击退出按钮失败: ${error}`);
-          }
-        }, CLICK_DELAY_MS);
       };
       const onGameflowPhase = (eventData) => {
         const phase = eventData.data?.phase;
         logger.info(`[GameRunningState] 监听到游戏阶段: ${phase}`);
         if (phase && (phase === "WaitingForStats" || phase === "PreEndOfGame")) {
-          if (clickExitButtonTimer) {
-            clearTimeout(clickExitButtonTimer);
-            clickExitButtonTimer = null;
-            logger.debug("[GameRunningState] 游戏已退出，取消点击退出按钮的定时任务");
-          }
           logger.info(`[GameRunningState] 检测到游戏结束 (${phase})，准备流转到下一状态`);
           safeResolve(true);
         }

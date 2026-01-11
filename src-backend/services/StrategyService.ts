@@ -238,6 +238,9 @@ export class StrategyService {
             }
         }
 
+        // 等待，让游戏画面稳定，再进行后续操作（如 UI 识别、购买等）
+        await sleep(500);
+
         // 【2-1 回合】阵容匹配：在进入 2-1 时锁定阵容
         // 放在 onStageChange 而不是 handleAugment，原因：
         // - 阵容匹配是"进入 2-1"时的决策，跟"海克斯选择"是两件独立的事
@@ -2637,7 +2640,7 @@ export class StrategyService {
         const entryStageText = gameStageMonitor.stageText;
 
         // 点击间隔（毫秒）
-        const clickInterval = 3000;
+        const clickInterval = 2000;
 
         while (true) {
             // 检查是否已经进入下一个回合（stageText 变化说明选秀结束）
@@ -2665,8 +2668,8 @@ export class StrategyService {
     private async handleAugment(): Promise<void> {
         logger.info("[StrategyService] 海克斯阶段：等待海克斯选项加载...");
 
-        // 1. 等待 1.5 秒，让海克斯选项完全显示出来
-        await sleep(1500);
+        // 1. 等待，让海克斯选项完全显示出来
+        await sleep(1000);
 
         // 2. 随机选择一个海克斯槽位
         //    hexSlot 有 SLOT_1, SLOT_2, SLOT_3 三个选项
