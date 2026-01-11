@@ -716,6 +716,25 @@ export class GameStateManager {
     }
 
     /**
+     * 更新备战席棋子列表
+     * @param benchUnits 新的备战席棋子数组
+     * @description 从屏幕重新识别备战席后更新，用于卖棋子后刷新备战席状态
+     *              会完整替换原有的备战席数据
+     */
+    public updateBenchUnits(benchUnits: (BenchUnit | null)[]): void {
+        if (!this.snapshot) {
+            logger.warn("[GameStateManager] 快照不存在，无法更新备战席");
+            return;
+        }
+
+        this.snapshot.benchUnits = benchUnits;
+        
+        // 统计非空槽位数量
+        const occupiedCount = benchUnits.filter(u => u !== null).length;
+        logger.debug(`[GameStateManager] 备战席已更新: ${occupiedCount}/9 个槽位有棋子`);
+    }
+
+    /**
      * 更新等级信息
      * @param levelInfo 等级信息对象 { level, currentXp, totalXp }
      * @description 单独更新等级和经验，无需传入完整快照

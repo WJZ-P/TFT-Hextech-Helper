@@ -625,7 +625,7 @@ class TftOperator {
 
                 // 关闭浮窗：再次右键点击同一位置，避免浮窗遮挡后续槽位的检测
                 await mouseController.clickAt(benchSlotPoints[benchSlot], MouseButtonType.RIGHT);
-                await sleep(10) // 等待 UI 渲染完成（右键后游戏会立即刷新 UI，10ms 足够）
+                await sleep(10); // 等待 UI 渲染完成（右键后游戏会立即刷新 UI，10ms 足够）
                 
                 // 关闭浮窗后归位小小英雄，避免右键点击导致小小英雄走到备战席位置
                 await this.selfResetPosition();
@@ -1451,9 +1451,7 @@ class TftOperator {
 
         logger.info(`[TftOperator] 小小英雄归位中... 目标坐标: (${littleLegendDefaultPoint.x}, ${littleLegendDefaultPoint.y})`);
 
-        // 右键点击两次默认站位，确保小小英雄移动到目标位置
-        await mouseController.clickAt(littleLegendDefaultPoint, MouseButtonType.RIGHT);
-        await sleep(50); // 短暂等待，避免两次点击太快被合并
+        // 右键点击默认站位，让小小英雄移动到目标位置
         await mouseController.clickAt(littleLegendDefaultPoint, MouseButtonType.RIGHT);
     }
 

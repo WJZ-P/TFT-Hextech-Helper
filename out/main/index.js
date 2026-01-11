@@ -11094,6 +11094,26 @@ class TftOperator {
     return equips;
   }
   /**
+   * 检查指定商店槽位是否为空
+   * @param slotIndex 槽位索引 (0-4)
+   * @returns true 表示槽位为空（购买成功），false 表示还有棋子（购买失败）
+   * @description 复用 templateMatcher.matchChampion 的空槽检测逻辑
+   *              matchChampion 内部会先调用 isEmptySlot 快速检测空槽
+   *              如果返回 "empty" 则表示槽位为空
+   */
+  async isShopSlotEmpty(slotIndex) {
+    const slotKey = `SLOT_${slotIndex + 1}`;
+    const region = screenCapture.toAbsoluteRegion(shopSlotNameRegions[slotKey]);
+    const processedPng = await screenCapture.captureRegionAsPng(region);
+    const mat = await screenCapture.pngBufferToMat(processedPng);
+    if (mat.channels() > 1) {
+      cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
+    }
+    const result = templateMatcher.matchChampion(mat);
+    mat.delete();
+    return result === "empty" || result === null;
+  }
+  /**
    * 购买指定槽位的棋子
    * @param slot 槽位编号 (1-5)
    */
@@ -11656,7 +11676,10 @@ class TftOperator {
         logger.info(`[TftOperator] 金币识别成功: ${coinCount}`);
         return coinCount;
       }
-      logger.warn(`[TftOperator] 金币解析失败，OCR 结果: "${text}"，尝试点击商店槽位关闭遮挡...`);
+      logger.warn(`[TftOperator] 金币解析失败，OCR 结果: "${text}"，尝试点击关闭遮挡...`);
+      const hexPoint = screenCapture.toAbsolutePoint(hexSlot.SLOT_2);
+      await mouseController.click(hexPoint.x, hexPoint.y);
+      await sleep(50);
       await this.buyAtSlot(3);
       await sleep(100);
       const retryBuffer = await screenCapture.captureRegionAsPng(absoluteRegion);
@@ -14641,24 +14664,32 @@ class StrategyService {
   async executeRollingLoop(targetChampions) {
     let rollCount = 0;
     const maxRolls = 30;
-    const maxConsecutiveNoBuyRolls = 15;
+    const maxConsecutiveNoBuyRolls = 10;
     let consecutiveNoBuyRolls = 0;
     while (rollCount < maxRolls) {
       const rolled = await this.executeRollStrategy();
       if (!rolled) break;
       rollCount++;
-      const hasBought = await this.autoBuyFromShop(targetChampions, "D牌后购买");
-      if (hasBought) {
-        consecutiveNoBuyRolls = 0;
-        await this.optimizeBoard(targetChampions);
-        continue;
-      }
-      consecutiveNoBuyRolls++;
-      if (consecutiveNoBuyRolls >= maxConsecutiveNoBuyRolls) {
-        logger.info(
-          `[StrategyService] D牌提前停止：连续 ${consecutiveNoBuyRolls} 次刷新未购买任何棋子`
-        );
-        break;
+      const buyResult = await this.autoBuyFromShop(targetChampions, "D牌后购买");
+      switch (buyResult) {
+        case "BOUGHT":
+          consecutiveNoBuyRolls = 0;
+          await this.optimizeBoard(targetChampions);
+          continue;
+        case "BENCH_FULL":
+          logger.info(
+            `[StrategyService] D牌停止：备战席已满，无法继续购买`
+          );
+          return;
+        case "NOTHING_TO_BUY":
+          consecutiveNoBuyRolls++;
+          if (consecutiveNoBuyRolls >= maxConsecutiveNoBuyRolls) {
+            logger.info(
+              `[StrategyService] D牌提前停止：连续 ${consecutiveNoBuyRolls} 次刷新未购买任何棋子`
+            );
+            return;
+          }
+          break;
       }
     }
     if (rollCount > 0) {
@@ -15086,12 +15117,15 @@ class StrategyService {
   /**
    * 购买棋子并更新游戏状态
    * @param shopSlotIndex 商店槽位索引 (0-4)
-   * @returns 是否购买成功
+   * @param targetChampions 目标棋子集合（用于判断是否可以卖棋子腾位置）
+   * @returns SingleBuyResult 购买结果
    *
    * @description 这是一个核心方法，负责：
    *              1. 检查购买条件（金币、备战席空位、是否能升星）
    *              2. 执行购买操作
-   *              3. 更新 GameStateManager 中的状态（金币、备战席、商店）
+   *              3. **验证购买是否成功**（检查商店槽位是否真的空了）
+   *              4. 如果购买失败（备战席满了），尝试卖棋子腾位置后重试
+   *              5. 更新 GameStateManager 中的状态（金币、备战席、商店）
    *
    * TFT 合成规则：
    * - 3 个 1★ 同名棋子 → 自动合成 1 个 2★
@@ -15105,14 +15139,14 @@ class StrategyService {
    *   - B1：场上 1 个 + 备战席 1 个 → 场上棋子升 2★，备战席棋子消失
    *   - B2：备战席 2 个 → 靠左的升 2★，另一个消失
    * - 情况 C：备战席满且不能升星
-   *   → 无法购买，返回 false
+   *   → 尝试卖棋子腾位置，如果无法腾位置则返回 BENCH_FULL
    */
-  async buyAndUpdateState(shopSlotIndex) {
+  async buyAndUpdateState(shopSlotIndex, targetChampions) {
     const shopUnits = gameStateManager.getShopUnits();
     const unit = shopUnits[shopSlotIndex];
     if (!unit) {
       logger.error(`[StrategyService] 商店槽位 ${shopSlotIndex} 为空，无法购买`);
-      return false;
+      return "FAILED";
     }
     const championName = unit.displayName;
     const price = unit.price;
@@ -15121,20 +15155,46 @@ class StrategyService {
       logger.error(
         `[StrategyService] 金币不足，无法购买 ${championName}（需要 ${price}，当前 ${currentGold}）`
       );
-      return false;
+      return "NOT_ENOUGH_GOLD";
     }
     const emptyBenchSlots = gameStateManager.getEmptyBenchSlotCount();
     const canUpgrade = gameStateManager.canUpgradeAfterBuy(championName);
     if (emptyBenchSlots <= 0 && !canUpgrade) {
-      logger.error(
+      logger.warn(
         `[StrategyService] 备战席已满且买了不能升星，无法购买 ${championName}`
       );
-      return false;
+      return "BENCH_FULL";
     }
     logger.info(
       `[StrategyService] 购买 ${championName} (￥${price})` + (canUpgrade ? " [可升星]" : "")
     );
     await tftOperator.buyAtSlot(shopSlotIndex + 1);
+    await sleep(20);
+    const isSlotEmpty = await tftOperator.isShopSlotEmpty(shopSlotIndex);
+    if (!isSlotEmpty) {
+      logger.warn(
+        `[StrategyService] 购买 ${championName} 失败，商店槽位未清空，可能备战席已满`
+      );
+      if (targetChampions) {
+        const sold = await this.sellSingleTrashUnit(targetChampions);
+        if (sold) {
+          await this.updateBenchStateFromScreen();
+          logger.info(`[StrategyService] 已卖出棋子腾位置，重新尝试购买 ${championName}`);
+          await tftOperator.buyAtSlot(shopSlotIndex + 1);
+          await sleep(20);
+          const isSlotEmptyRetry = await tftOperator.isShopSlotEmpty(shopSlotIndex);
+          if (!isSlotEmptyRetry) {
+            logger.error(`[StrategyService] 重试购买 ${championName} 仍然失败`);
+            return "BENCH_FULL";
+          }
+        } else {
+          logger.error(`[StrategyService] 无法卖出棋子腾位置，放弃购买 ${championName}`);
+          return "BENCH_FULL";
+        }
+      } else {
+        return "BENCH_FULL";
+      }
+    }
     gameStateManager.deductGold(price);
     gameStateManager.setShopSlotEmpty(shopSlotIndex);
     if (canUpgrade) {
@@ -15160,7 +15220,7 @@ class StrategyService {
         );
       }
     }
-    return true;
+    return "SUCCESS";
   }
   /**
    * 处理购买后的升星逻辑
@@ -15301,16 +15361,20 @@ class StrategyService {
    * 自动购买商店中的目标棋子
    * @param targetChampions 目标棋子集合
    * @param logPrefix 日志前缀
-   * @returns 是否有购买行为
+   * @returns BuyResult 购买结果
+   *          - BOUGHT: 成功购买了至少一个棋子
+   *          - NOTHING_TO_BUY: 商店没有想买的棋子
+   *          - BENCH_FULL: 备战席已满，无法继续购买
    */
   async autoBuyFromShop(targetChampions, logPrefix = "自动购买") {
     const shopUnits = gameStateManager.getShopUnits();
     const ownedChampions = gameStateManager.getOwnedChampionNames();
     const buyIndices = this.analyzePurchaseDecision(shopUnits, ownedChampions, targetChampions);
     if (buyIndices.length === 0) {
-      return false;
+      return "NOTHING_TO_BUY";
     }
     let hasBought = false;
+    let benchFull = false;
     for (const index of buyIndices) {
       const unit = shopUnits[index];
       if (!unit) continue;
@@ -15319,24 +15383,24 @@ class StrategyService {
       logger.info(
         `[StrategyService] ${logPrefix}: ${championName} (￥${unit.price})，原因: ${this.getBuyReason(unit, ownedChampions, targetChampions)}`
       );
-      let success = await this.buyAndUpdateState(index);
-      if (!success && isTarget && gameStateManager.getEmptyBenchSlotCount() === 0) {
-        if (gameStateManager.getGold() >= unit.price) {
-          logger.warn(`[StrategyService] 备战席已满，尝试卖出一个打工棋子以购买目标棋子: ${championName}`);
-          const sold = await this.sellSingleTrashUnit(targetChampions);
-          if (sold) {
-            success = await this.buyAndUpdateState(index);
-          } else {
-            logger.warn(`[StrategyService] 腾位置失败，没有可卖出的打工棋子`);
-          }
-        }
-      }
-      if (success) {
+      const result = await this.buyAndUpdateState(index, targetChampions);
+      if (result === "SUCCESS") {
         hasBought = true;
         ownedChampions.add(championName);
+      } else if (result === "BENCH_FULL") {
+        benchFull = true;
+        if (isTarget) {
+          logger.warn(`[StrategyService] 备战席已满，无法购买目标棋子 ${championName}`);
+        }
+        break;
+      } else if (isTarget) {
+        logger.warn(`[StrategyService] 目标棋子 ${championName} 购买失败`);
       }
     }
-    return hasBought;
+    if (benchFull && !hasBought) {
+      return "BENCH_FULL";
+    }
+    return hasBought ? "BOUGHT" : "NOTHING_TO_BUY";
   }
   /**
    * 从屏幕重新识别并更新商店和金币状态
@@ -15359,6 +15423,14 @@ class StrategyService {
   async updateEquipStateFromScreen() {
     const equipments = await tftOperator.getEquipInfo();
     gameStateManager.updateEquipments(equipments);
+  }
+  /**
+   * 从屏幕重新识别并更新备战席状态
+   * @description 卖棋子后调用，重新识别备战席棋子并更新到 GameStateManager
+   */
+  async updateBenchStateFromScreen() {
+    const benchUnits = await tftOperator.getBenchInfo();
+    gameStateManager.updateBenchUnits(benchUnits);
   }
   /**
    * 重置策略服务状态
@@ -15513,6 +15585,12 @@ class GameRunningState {
           logger.info("[GameRunningState] 游戏进程已被杀掉");
         } catch (error) {
           logger.warn(`[GameRunningState] 杀掉游戏进程失败: ${error}`);
+        }
+        try {
+          await this.lcuManager?.quitGame();
+          logger.info("[GameRunningState] 退出游戏请求已发送");
+        } catch (error) {
+          logger.warn(`[GameRunningState] 退出游戏请求失败: ${error}`);
         }
       };
       const onGameflowPhase = (eventData) => {
