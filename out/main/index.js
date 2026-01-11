@@ -11760,8 +11760,6 @@ class TftOperator {
     this.ensureInitialized();
     logger.info(`[TftOperator] 小小英雄归位中... 目标坐标: (${littleLegendDefaultPoint.x}, ${littleLegendDefaultPoint.y})`);
     await mouseController.clickAt(littleLegendDefaultPoint, MouseButtonType.RIGHT);
-    await sleep(50);
-    await mouseController.clickAt(littleLegendDefaultPoint, MouseButtonType.RIGHT);
   }
   /**
    * 让小小英雄随机走动（防挂机）
@@ -12462,6 +12460,21 @@ class GameStateManager {
     }
     this.snapshot.equipments = equipments;
     logger.debug(`[GameStateManager] 装备已更新: ${equipments.length} 件`);
+  }
+  /**
+   * 更新备战席棋子列表
+   * @param benchUnits 新的备战席棋子数组
+   * @description 从屏幕重新识别备战席后更新，用于卖棋子后刷新备战席状态
+   *              会完整替换原有的备战席数据
+   */
+  updateBenchUnits(benchUnits) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法更新备战席");
+      return;
+    }
+    this.snapshot.benchUnits = benchUnits;
+    const occupiedCount = benchUnits.filter((u) => u !== null).length;
+    logger.debug(`[GameStateManager] 备战席已更新: ${occupiedCount}/9 个槽位有棋子`);
   }
   /**
    * 更新等级信息
