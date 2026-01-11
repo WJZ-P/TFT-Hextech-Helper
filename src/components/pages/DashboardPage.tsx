@@ -143,6 +143,11 @@ const DashboardPage = () => {
                 console.log(await window.tft.getLootOrbs())
             }}>检测战利品球
             </button>
+            <button onClick={async () => {
+                const result = await window.lcu.killGameProcess();
+                console.log('杀进程结果:', result);
+            }}>强制杀掉游戏进程
+            </button>
         </PageContaier>
     );
 }

@@ -31,6 +31,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["LOG_SET_MODE"] = "log-set-mode";
   IpcChannel2["LOG_GET_AUTO_CLEAN_THRESHOLD"] = "log-get-auto-clean-threshold";
   IpcChannel2["LOG_SET_AUTO_CLEAN_THRESHOLD"] = "log-set-auto-clean-threshold";
+  IpcChannel2["LCU_KILL_GAME_PROCESS"] = "lcu-kill-game-process";
   return IpcChannel2;
 })(IpcChannel || {});
 electron.contextBridge.exposeInMainWorld("ipcRenderer", {
@@ -206,6 +207,10 @@ const lcuApi = {
   },
   testFunc: () => {
     return electron.ipcRenderer.invoke(IpcChannel.LCU_REQUEST, "GET", "/lol-lobby/v2/notifications");
+  },
+  /** 强制杀掉游戏进程 */
+  killGameProcess: () => {
+    return electron.ipcRenderer.invoke(IpcChannel.LCU_KILL_GAME_PROCESS);
   }
 };
 electron.contextBridge.exposeInMainWorld("lcu", lcuApi);

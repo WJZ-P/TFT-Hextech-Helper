@@ -289,4 +289,10 @@ function registerHandler() {
     ipcMain.handle(IpcChannel.LOG_SET_AUTO_CLEAN_THRESHOLD, async (_event, threshold: number) => {
         settingsStore.set('logAutoCleanThreshold', threshold as any)
     })
+    
+    // 游戏进程操作
+    ipcMain.handle(IpcChannel.LCU_KILL_GAME_PROCESS, async () => {
+        const lcu = LCUManager.getInstance();
+        return lcu?.killGameProcess() ?? false;
+    })
 }

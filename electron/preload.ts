@@ -195,6 +195,10 @@ const lcuApi = {
     testFunc: (): Promise<{ data?: any; error?: string }> => {
         return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'GET', '/lol-lobby/v2/notifications');
     },
+    /** 强制杀掉游戏进程 */
+    killGameProcess: (): Promise<boolean> => {
+        return ipcRenderer.invoke(IpcChannel.LCU_KILL_GAME_PROCESS);
+    },
 }
 export type LcuApi = typeof lcuApi
 contextBridge.exposeInMainWorld('lcu', lcuApi)

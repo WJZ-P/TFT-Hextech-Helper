@@ -25,8 +25,6 @@ import { gameStageMonitor } from "../services/GameStageMonitor";
 import { strategyService } from "../services/StrategyService";
 import { gameStateManager } from "../services/GameStateManager";
 import { logger } from "../utils/Logger";
-import { mouseController } from "../tft";
-import { exitGameButtonPoint } from "../TFTProtocol";
 import { sleep } from "../utils/HelperTools";
 
 /** abort 信号轮询间隔 (ms)，作为事件监听的兜底 */
@@ -157,7 +155,7 @@ export class GameRunningState implements IState {
              *              
              *              退出策略：
              *              1. 等待 3s 让玩家看到结算画面
-             *              2. 点击"现在退出"按钮
+             *              2. 直接杀掉游戏进程
              *              3. 调用 LCU API quitGame() 作为兜底
              */
             const onBattlePass = async (_eventData: LCUWebSocketMessage) => {
@@ -171,17 +169,17 @@ export class GameRunningState implements IState {
                 strategyService.setGameEnded();
 
                 // 等待 3s 让玩家看到结算画面
-                const CLICK_DELAY_MS = 3000;
-                await sleep(CLICK_DELAY_MS);
+                const EXIT_DELAY_MS = 3000;
+                await sleep(EXIT_DELAY_MS);
                 
                 logger.info("[GameRunningState] 正在尝试关闭游戏窗口...");
 
-                // 步骤 1：点击"现在退出"按钮
+                // 步骤 1：直接杀掉游戏进程
                 try {
-                    logger.info(`[GameRunningState] 点击"现在退出"按钮 (${exitGameButtonPoint.x}, ${exitGameButtonPoint.y})`);
-                    await mouseController.clickAt(exitGameButtonPoint);
+                    await this.lcuManager?.killGameProcess();
+                    logger.info("[GameRunningState] 游戏进程已被杀掉");
                 } catch (error) {
-                    logger.warn(`[GameRunningState] 点击退出按钮失败: ${error}`);
+                    logger.warn(`[GameRunningState] 杀掉游戏进程失败: ${error}`);
                 }
 
                 // 步骤 2：调用 LCU API 作为兜底

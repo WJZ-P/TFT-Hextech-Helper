@@ -1,6 +1,7 @@
 import {EventEmitter} from 'events';
 import WebSocket from 'ws';
 import https from 'https';
+import cp from 'child_process';
 import {LCUProcessInfo} from "./utils/LcuConnector";
 import axios, {AxiosInstance} from "axios";
 import {LobbyConfig, MatchState, Queue, SummonerInfo} from "./utils/LCUProtocols.ts";
@@ -360,6 +361,39 @@ class LCUManager extends EventEmitter {
     public quitGame(): Promise<any> {
         logger.info('🚪 [LCUManager] 正在退出游戏...');
         return this.request("POST", '/lol-gameflow/v1/early-exit');
+    }
+
+    /**
+     * 强制杀掉游戏进程
+     * @description 直接通过 taskkill 命令杀掉 "League of Legends.exe" 进程
+     *              比调用 LCU API 或点击 UI 更快更可靠
+     * @returns Promise<boolean> 是否成功杀掉进程
+     */
+    public killGameProcess(): Promise<boolean> {
+        return new Promise((resolve) => {
+            logger.info('🔪 [LCUManager] 正在强制杀掉游戏进程...');
+            
+            // Windows 下使用 taskkill 命令强制杀掉进程
+            // /F 表示强制终止，/IM 表示按进程名匹配
+            const command = 'taskkill /F /IM "League of Legends.exe"';
+            
+            cp.exec(command, (err, stdout, stderr) => {
+                if (err) {
+                    // 进程不存在时 taskkill 会返回错误，这不算真正的失败
+                    if (stderr.includes('not found') || stderr.includes('没有找到')) {
+                        logger.info('[LCUManager] 游戏进程不存在，无需杀掉');
+                        resolve(true);
+                    } else {
+                        logger.warn(`[LCUManager] 杀掉游戏进程失败: ${err.message}`);
+                        resolve(false);
+                    }
+                    return;
+                }
+                
+                logger.info(`[LCUManager] 游戏进程已被杀掉: ${stdout.trim()}`);
+                resolve(true);
+            });
+        });
     }
 }
 

@@ -37,6 +37,7 @@ import {
     gameStageDisplayTheClockworkTrails,
     GameStageResult,
     GameStageType,
+    hexSlot,
     ItemForgeType,
     itemForgeTooltipRegion,
     itemForgeTooltipRegionEdge,
@@ -46,6 +47,7 @@ import {
     selfWalkAroundPoints,
     shopSlot,
     shopSlotNameRegions,
+    ShopSlotIndex,
     refreshShopPoint,
     buyExpPoint,
     TFT_16_CHAMPION_DATA,
@@ -470,6 +472,34 @@ class TftOperator {
         }
 
         return equips;
+    }
+
+    /**
+     * 检查指定商店槽位是否为空
+     * @param slotIndex 槽位索引 (0-4)
+     * @returns true 表示槽位为空（购买成功），false 表示还有棋子（购买失败）
+     * @description 复用 templateMatcher.matchChampion 的空槽检测逻辑
+     *              matchChampion 内部会先调用 isEmptySlot 快速检测空槽
+     *              如果返回 "empty" 则表示槽位为空
+     */
+    public async isShopSlotEmpty(slotIndex: ShopSlotIndex): Promise<boolean> {
+        // 槽位索引 0-4 对应 SLOT_1 到 SLOT_5
+        const slotKey = `SLOT_${slotIndex + 1}` as keyof typeof shopSlotNameRegions;
+        const region = screenCapture.toAbsoluteRegion(shopSlotNameRegions[slotKey]);
+
+        // 截图并转为灰度图
+        const processedPng = await screenCapture.captureRegionAsPng(region);
+        const mat = await screenCapture.pngBufferToMat(processedPng);
+        if (mat.channels() > 1) {
+            cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
+        }
+
+        // matchChampion 内部会先检测空槽，空槽返回 "empty"
+        const result = templateMatcher.matchChampion(mat);
+        mat.delete();
+
+        // 返回 "empty" 或 null 都表示槽位为空
+        return result === "empty" || result === null;
     }
 
     /**
@@ -1308,10 +1338,15 @@ class TftOperator {
                 return coinCount;
             }
 
-            // 4. 识别失败：可能有弹窗/事件遮挡，点击商店槽位 3 尝试关闭遮挡
-            logger.warn(`[TftOperator] 金币解析失败，OCR 结果: "${text}"，尝试点击商店槽位关闭遮挡...`);
+            // 4. 识别失败：可能有弹窗/海克斯选择/事件遮挡，尝试点击关闭遮挡
+            logger.warn(`[TftOperator] 金币解析失败，OCR 结果: "${text}"，尝试点击关闭遮挡...`);
             
-            // 点击商店槽位 3 关闭可能的遮挡弹窗/事件 (原本 dismissOverlay 的逻辑)
+            // 4.1 先点击海克斯槽位 2（可能是海克斯选择弹窗遮挡了金币区域）
+            const hexPoint = screenCapture.toAbsolutePoint(hexSlot.SLOT_2);
+            await mouseController.click(hexPoint.x, hexPoint.y);
+            await sleep(50);
+
+            // 4.2 再点击商店槽位 3 关闭可能的其他遮挡弹窗/事件
             await this.buyAtSlot(3);
             await sleep(100);  // 等待弹窗关闭动画
 

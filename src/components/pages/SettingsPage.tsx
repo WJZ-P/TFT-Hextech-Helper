@@ -204,7 +204,7 @@ const SettingsPage = () => {
                     <SettingInfo>
                         <SettingText>
                             <h3>日志自动清理</h3>
-                            <p>当日志数量超过阈值时，自动删除旧日志以节省内存。</p>
+                            <p>当日志数量超过阈值时，自动删除一半的旧日志以节省内存。</p>
                         </SettingText>
                     </SettingInfo>
                     <SelectWrapper 

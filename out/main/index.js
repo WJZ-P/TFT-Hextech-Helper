@@ -3180,6 +3180,32 @@ class LCUManager extends EventEmitter {
     logger.info("🚪 [LCUManager] 正在退出游戏...");
     return this.request("POST", "/lol-gameflow/v1/early-exit");
   }
+  /**
+   * 强制杀掉游戏进程
+   * @description 直接通过 taskkill 命令杀掉 "League of Legends.exe" 进程
+   *              比调用 LCU API 或点击 UI 更快更可靠
+   * @returns Promise<boolean> 是否成功杀掉进程
+   */
+  killGameProcess() {
+    return new Promise((resolve) => {
+      logger.info("🔪 [LCUManager] 正在强制杀掉游戏进程...");
+      const command = 'taskkill /F /IM "League of Legends.exe"';
+      cp.exec(command, (err, stdout, stderr) => {
+        if (err) {
+          if (stderr.includes("not found") || stderr.includes("没有找到")) {
+            logger.info("[LCUManager] 游戏进程不存在，无需杀掉");
+            resolve(true);
+          } else {
+            logger.warn(`[LCUManager] 杀掉游戏进程失败: ${err.message}`);
+            resolve(false);
+          }
+          return;
+        }
+        logger.info(`[LCUManager] 游戏进程已被杀掉: ${stdout.trim()}`);
+        resolve(true);
+      });
+    });
+  }
 }
 var register = {};
 var sourceMapSupport = { exports: {} };
@@ -5622,6 +5648,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["LOG_SET_MODE"] = "log-set-mode";
   IpcChannel2["LOG_GET_AUTO_CLEAN_THRESHOLD"] = "log-get-auto-clean-threshold";
   IpcChannel2["LOG_SET_AUTO_CLEAN_THRESHOLD"] = "log-set-auto-clean-threshold";
+  IpcChannel2["LCU_KILL_GAME_PROCESS"] = "lcu-kill-game-process";
   return IpcChannel2;
 })(IpcChannel || {});
 class IdleState {
@@ -6000,7 +6027,6 @@ const hexSlot = {
   SLOT_3: { x: 805, y: 410 }
 };
 const sharedDraftPoint = { x: 530, y: 400 };
-const exitGameButtonPoint = { x: 515, y: 405 };
 const gameStageDisplayStageOne = {
   leftTop: { x: 411, y: 6 },
   rightBottom: { x: 442, y: 22 }
@@ -15479,20 +15505,14 @@ class GameRunningState {
         hasTriedQuit = true;
         logger.info("[GameRunningState] 收到 TFT_BATTLE_PASS 事件，玩家已死亡/对局结束");
         strategyService.setGameEnded();
-        const CLICK_DELAY_MS = 3e3;
-        await sleep(CLICK_DELAY_MS);
+        const EXIT_DELAY_MS = 3e3;
+        await sleep(EXIT_DELAY_MS);
         logger.info("[GameRunningState] 正在尝试关闭游戏窗口...");
         try {
-          logger.info(`[GameRunningState] 点击"现在退出"按钮 (${exitGameButtonPoint.x}, ${exitGameButtonPoint.y})`);
-          await mouseController.clickAt(exitGameButtonPoint);
+          await this.lcuManager?.killGameProcess();
+          logger.info("[GameRunningState] 游戏进程已被杀掉");
         } catch (error) {
-          logger.warn(`[GameRunningState] 点击退出按钮失败: ${error}`);
-        }
-        try {
-          await this.lcuManager?.quitGame();
-          logger.info("[GameRunningState] 退出游戏请求已发送");
-        } catch (error) {
-          logger.warn(`[GameRunningState] 退出游戏请求失败: ${error}`);
+          logger.warn(`[GameRunningState] 杀掉游戏进程失败: ${error}`);
         }
       };
       const onGameflowPhase = (eventData) => {
@@ -16049,6 +16069,10 @@ function registerHandler() {
   ipcMain.handle(IpcChannel.LOG_GET_AUTO_CLEAN_THRESHOLD, async () => settingsStore.get("logAutoCleanThreshold"));
   ipcMain.handle(IpcChannel.LOG_SET_AUTO_CLEAN_THRESHOLD, async (_event, threshold) => {
     settingsStore.set("logAutoCleanThreshold", threshold);
+  });
+  ipcMain.handle(IpcChannel.LCU_KILL_GAME_PROCESS, async () => {
+    const lcu = LCUManager.getInstance();
+    return lcu?.killGameProcess() ?? false;
   });
 }
 export {

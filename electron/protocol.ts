@@ -37,4 +37,6 @@ export enum IpcChannel {
     // 日志自动清理阈值
     LOG_GET_AUTO_CLEAN_THRESHOLD = 'log-get-auto-clean-threshold',  // 获取日志自动清理阈值
     LOG_SET_AUTO_CLEAN_THRESHOLD = 'log-set-auto-clean-threshold',  // 设置日志自动清理阈值
+    // 游戏进程操作
+    LCU_KILL_GAME_PROCESS = 'lcu-kill-game-process',  // 强制杀掉游戏进程
 }
