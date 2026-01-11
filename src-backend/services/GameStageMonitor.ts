@@ -255,10 +255,18 @@ export class GameStageMonitor extends EventEmitter {
             return null;
         }
 
-        return {
-            stage: parseInt(match[1], 10),
-            round: parseInt(match[2], 10),
-        };
+        let stage = parseInt(match[1], 10);
+        const round = parseInt(match[2], 10);
+
+        // 修正 OCR 误识别：41-1 → 1-1, 11-1 → 1-1
+        // TFT 最多只有 7 个大阶段，超过说明是误识别，取最后一位
+        if (stage > 7 && match[1].length > 1) {
+            const fixedStage = parseInt(match[1].slice(-1), 10);
+            logger.info(`[GameStageMonitor] 修正阶段误识别: "${stageText}" → "${fixedStage}-${round}"`);
+            stage = fixedStage;
+        }
+
+        return { stage, round };
     }
 
     /**

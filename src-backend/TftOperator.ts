@@ -627,9 +627,6 @@ class TftOperator {
                 await mouseController.clickAt(benchSlotPoints[benchSlot], MouseButtonType.RIGHT);
                 await sleep(10); // 等待 UI 渲染完成（右键后游戏会立即刷新 UI，10ms 足够）
                 
-                // 关闭浮窗后归位小小英雄，避免右键点击导致小小英雄走到备战席位置
-                await this.selfResetPosition();
-                
                 if (forgeType !== ItemForgeType.NONE) {
                     // 根据锻造器类型选择对应的棋子数据
                     const forgeUnit = forgeType === ItemForgeType.COMPLETED 
@@ -646,12 +643,11 @@ class TftOperator {
                         equips: [],
                     });
                 } else {
+                    // 英雄和锻造器都识别失败，说明是误识别（空槽位被误判为有棋子）
                     this.handleRecognitionFailure("bench", benchSlot.slice(-1), cleanName, namePng);
                     benchUnits.push(null);
                     
-                    // 备战席识别失败时归位小小英雄
-                    // 原因：空槽位可能被误判为有棋子，右键点击后小小英雄会走过去
-                    //       导致视角偏移，影响后续槽位的识别准确性
+                    // 归位小小英雄：右键点击空槽位会导致小小英雄走过去，影响后续识别
                     await this.selfResetPosition();
                 }
             }
@@ -1342,8 +1338,7 @@ class TftOperator {
             logger.warn(`[TftOperator] 金币解析失败，OCR 结果: "${text}"，尝试点击关闭遮挡...`);
             
             // 4.1 先点击海克斯槽位 2（可能是海克斯选择弹窗遮挡了金币区域）
-            const hexPoint = screenCapture.toAbsolutePoint(hexSlot.SLOT_2);
-            await mouseController.click(hexPoint.x, hexPoint.y);
+            await mouseController.clickAt(hexSlot.SLOT_2, MouseButtonType.LEFT);
             await sleep(50);
 
             // 4.2 再点击商店槽位 3 关闭可能的其他遮挡弹窗/事件
