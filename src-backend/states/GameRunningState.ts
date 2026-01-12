@@ -26,6 +26,8 @@ import { strategyService } from "../services/StrategyService";
 import { gameStateManager } from "../services/GameStateManager";
 import { logger } from "../utils/Logger";
 import { sleep } from "../utils/HelperTools";
+import { inGameApi, InGameApiEndpoints } from "../lcu/InGameApi";
+import { showToast } from "../utils/ToastBridge";
 
 /** abort 信号轮询间隔 (ms)，作为事件监听的兜底 */
 const ABORT_CHECK_INTERVAL_MS = 2000;
@@ -62,6 +64,9 @@ export class GameRunningState implements IState {
         // 1. 标记游戏开始
         gameStateManager.startGame();
         logger.info("[GameRunningState] 游戏已开始");
+
+        // 1.5 检测对局中的人机玩家并发送 Toast 通知
+        await this.detectAndNotifyBots();
 
         // 2. 初始化策略服务（加载阵容配置）
         const initSuccess = strategyService.initialize();
@@ -222,6 +227,40 @@ export class GameRunningState implements IState {
                 }
             }, ABORT_CHECK_INTERVAL_MS);
         });
+    }
+
+    /**
+     * 检测对局中的人机玩家并发送 Toast 通知
+     * @description 通过 InGame API 获取所有玩家信息，筛选出 isBot=true 的玩家
+     *              并发送 Toast 通知告知用户本局有多少人机
+     */
+    private async detectAndNotifyBots(): Promise<void> {
+        try {
+            // 获取所有游戏数据
+            const response = await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);
+            const gameData = response.data;
+
+            // 从 allPlayers 数组中筛选出人机玩家
+            const allPlayers = gameData?.allPlayers || [];
+            const botPlayers = allPlayers.filter((player: any) => player.isBot === true);
+
+            // 获取人机玩家的名字列表（使用 riotIdGameName，不带 tag）
+            const botNames = botPlayers.map((player: any) => player.riotIdGameName || player.summonerName);
+
+            // 发送 Toast 通知
+            if (botNames.length > 0) {
+                const message = `对局已开始！本局有 ${botNames.length} 个人机：${botNames.join('、')}`;
+                showToast.info(message, { position: 'top-center' });
+                logger.info(`[GameRunningState] ${message}`);
+            } else {
+                showToast.info("对局已开始！本局全是真人玩家", { position: 'top-center' });
+                logger.info("[GameRunningState] 对局已开始，本局全是真人玩家");
+            }
+        } catch (error: any) {
+            logger.warn(`[GameRunningState] 检测人机玩家失败: ${error.message}`);
+            // 即使检测失败也发送对局开始通知
+            showToast.info("对局已开始！", { position: 'top-center' });
+        }
     }
 
     /**

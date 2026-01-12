@@ -39,4 +39,6 @@ export enum IpcChannel {
     LOG_SET_AUTO_CLEAN_THRESHOLD = 'log-set-auto-clean-threshold',  // 设置日志自动清理阈值
     // 游戏进程操作
     LCU_KILL_GAME_PROCESS = 'lcu-kill-game-process',  // 强制杀掉游戏进程
+    // Toast 通知（主进程 -> 渲染进程）
+    SHOW_TOAST = 'show-toast',  // 显示 Toast 通知
 }
