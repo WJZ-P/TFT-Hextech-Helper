@@ -1236,9 +1236,9 @@ class TftOperator {
      * - currentXp 范围是 0 ~ totalXp-1（可以是奇数，比如通过任务/战斗获得 1 点经验）
      * - currentXp 和 totalXp 最多都是两位数
      * 
-     * "/" 可能被误识别为 "1" 或 "7"：
-     * - "4/6" → "416" 或 "476"
-     * - "5/6" → "516" 或 "576"
+     * "/" 可能被误识别为 "1"、"7" 或 "0"：
+     * - "4/6" → "416" 或 "476" 或 "406"
+     * - "16/76" → "16176" 或 "16776" 或 "16076"
      * 
      * 修复策略：
      * 1. 匹配 "X级 数字串" 格式
@@ -1247,10 +1247,11 @@ class TftOperator {
      */
     private tryFixMisrecognizedXp(text: string): { level: number; currentXp: number; totalXp: number } | null {
         // TFT 各等级升级所需经验（totalXp 的所有合法值）
-        const VALID_TOTAL_XP = new Set([2, 6, 10, 20, 36, 48, 76, 84]);
+        // 等级3=2, 等级4=6, 等级5=10, 等级6=20, 等级7=36, 等级8=60, 等级9=68, 等级10=68
+        const VALID_TOTAL_XP = new Set([2, 6, 10, 20, 36, 60, 68]);
         
-        // "/" 可能被误识别的字符
-        const SLASH_MISRECOGNIZED_CHARS = ['1', '7'];
+        // "/" 可能被误识别的字符（斜杠形状类似 1、7，有时也会识别成 0）
+        const SLASH_MISRECOGNIZED_CHARS = ['1', '7', '0'];
 
         // 匹配 "X级 纯数字" 格式（没有 / 的情况）
         const match = text.match(/(\d+)\s*级\s*(\d+)/);

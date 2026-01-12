@@ -2738,15 +2738,12 @@ export class StrategyService {
     /**
      * 购买棋子并更新游戏状态
      * @param shopSlotIndex 商店槽位索引 (0-4)
-     * @param targetChampions 目标棋子集合（用于判断是否可以卖棋子腾位置）
      * @returns SingleBuyResult 购买结果
      *
      * @description 这是一个核心方法，负责：
      *              1. 检查购买条件（金币、备战席空位、是否能升星）
      *              2. 执行购买操作
-     *              3. **验证购买是否成功**（检查商店槽位是否真的空了）
-     *              4. 如果购买失败（备战席满了），尝试卖棋子腾位置后重试
-     *              5. 更新 GameStateManager 中的状态（金币、备战席、商店）
+     *              3. 更新 GameStateManager 中的状态（金币、备战席、商店）
      *
      * TFT 合成规则：
      * - 3 个 1★ 同名棋子 → 自动合成 1 个 2★
@@ -2763,8 +2760,7 @@ export class StrategyService {
      *   → 尝试卖棋子腾位置，如果无法腾位置则返回 BENCH_FULL
      */
     private async buyAndUpdateState(
-        shopSlotIndex: ShopSlotIndex,
-        targetChampions?: Set<ChampionKey>
+        shopSlotIndex: ShopSlotIndex
     ): Promise<SingleBuyResult> {
         // 1. 获取商店棋子信息
         const shopUnits = gameStateManager.getShopUnits();
@@ -2808,52 +2804,14 @@ export class StrategyService {
         );
         await tftOperator.buyAtSlot(shopSlotIndex + 1);
 
-        // 6. 验证购买是否成功（检查商店槽位是否真的空了）
-        await sleep(20); // 等待游戏 UI 更新
-        const isSlotEmpty = await tftOperator.isShopSlotEmpty(shopSlotIndex);
-        
-        if (!isSlotEmpty) {
-            // 购买失败，可能是备战席满了（捡了战利品等导致）
-            logger.warn(
-                `[StrategyService] 购买 ${championName} 失败，商店槽位未清空，可能备战席已满`
-            );
-            
-            // 尝试卖棋子腾位置
-            if (targetChampions) {
-                const sold = await this.sellSingleTrashUnit(targetChampions);
-                if (sold) {
-                    // 重新刷新备战席状态
-                    await this.updateBenchStateFromScreen();
-                    
-                    // 再次尝试购买
-                    logger.info(`[StrategyService] 已卖出棋子腾位置，重新尝试购买 ${championName}`);
-                    await tftOperator.buyAtSlot(shopSlotIndex + 1);
-                    
-                    // 再次验证
-                    await sleep(20);
-                    const isSlotEmptyRetry = await tftOperator.isShopSlotEmpty(shopSlotIndex);
-                    if (!isSlotEmptyRetry) {
-                        logger.error(`[StrategyService] 重试购买 ${championName} 仍然失败`);
-                        return SingleBuyResult.BENCH_FULL;
-                    }
-                } else {
-                    logger.error(`[StrategyService] 无法卖出棋子腾位置，放弃购买 ${championName}`);
-                    return SingleBuyResult.BENCH_FULL;
-                }
-            } else {
-                // 没有传入 targetChampions，无法判断哪些棋子可以卖
-                return SingleBuyResult.BENCH_FULL;
-            }
-        }
-
-        // 7. 购买成功，更新 GameStateManager 状态
-        // 7.1 扣减金币
+        // 6. 购买成功，更新 GameStateManager 状态
+        // 6.1 扣减金币
         gameStateManager.deductGold(price);
 
-        // 7.2 清空商店槽位
+        // 6.2 清空商店槽位
         gameStateManager.setShopSlotEmpty(shopSlotIndex);
 
-        // 7.3 更新备战席/棋盘状态
+        // 6.3 更新备战席/棋盘状态
         if (canUpgrade) {
             // 能升星：找到参与合成的 2 个 1★ 棋子
             this.handleUpgradeAfterBuy(championName);
@@ -3117,8 +3075,8 @@ export class StrategyService {
                 `原因: ${this.getBuyReason(unit, ownedChampions, targetChampions)}`
             );
 
-            // 尝试购买（传入 targetChampions 用于购买失败时判断哪些棋子可以卖）
-            const result = await this.buyAndUpdateState(index, targetChampions);
+            // 尝试购买
+            const result = await this.buyAndUpdateState(index);
 
             if (result === SingleBuyResult.SUCCESS) {
                 hasBought = true;

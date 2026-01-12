@@ -32,6 +32,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["LOG_GET_AUTO_CLEAN_THRESHOLD"] = "log-get-auto-clean-threshold";
   IpcChannel2["LOG_SET_AUTO_CLEAN_THRESHOLD"] = "log-set-auto-clean-threshold";
   IpcChannel2["LCU_KILL_GAME_PROCESS"] = "lcu-kill-game-process";
+  IpcChannel2["SHOW_TOAST"] = "show-toast";
   return IpcChannel2;
 })(IpcChannel || {});
 electron.contextBridge.exposeInMainWorld("ipcRenderer", {

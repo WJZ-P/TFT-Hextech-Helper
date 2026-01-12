@@ -101,6 +101,7 @@ export class LobbyState implements IState {
         return new Promise((resolve) => {
             let stopCheckInterval: NodeJS.Timeout | null = null;
             let isResolved = false;
+            let lastAcceptTime = 0;  // 上次接受对局的时间戳，用于节流
 
             /**
              * 安全的 resolve，防止重复调用
@@ -134,9 +135,12 @@ export class LobbyState implements IState {
 
             /**
              * 监听"找到对局"事件，自动接受
+             * 使用节流：1秒内只调用一次 acceptMatch
              */
             const onReadyCheck = (eventData: LCUWebSocketMessage) => {
-                if (eventData.data?.state === "InProgress") {
+                const now = Date.now();
+                if (eventData.data?.state === "InProgress" && now - lastAcceptTime >= 1000) {
+                    lastAcceptTime = now;
                     logger.info("[LobbyState] 已找到对局！正在自动接受...");
                     this.lcuManager?.acceptMatch().catch((reason) => {
                         logger.warn(`[LobbyState] 接受对局失败: ${reason}`);

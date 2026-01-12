@@ -5649,6 +5649,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["LOG_GET_AUTO_CLEAN_THRESHOLD"] = "log-get-auto-clean-threshold";
   IpcChannel2["LOG_SET_AUTO_CLEAN_THRESHOLD"] = "log-set-auto-clean-threshold";
   IpcChannel2["LCU_KILL_GAME_PROCESS"] = "lcu-kill-game-process";
+  IpcChannel2["SHOW_TOAST"] = "show-toast";
   return IpcChannel2;
 })(IpcChannel || {});
 class IdleState {
@@ -11199,7 +11200,6 @@ class TftOperator {
         const forgeType = await this.checkItemForgeTooltip(clickPoint, slotIndex);
         await mouseController.clickAt(benchSlotPoints[benchSlot], MouseButtonType.RIGHT);
         await sleep(10);
-        await this.selfResetPosition();
         if (forgeType !== ItemForgeType.NONE) {
           const forgeUnit = forgeType === ItemForgeType.COMPLETED ? TFT_16_CHAMPION_DATA.成装锻造器 : TFT_16_CHAMPION_DATA.基础装备锻造器;
           const forgeName = forgeType === ItemForgeType.COMPLETED ? "成装锻造器" : "基础装备锻造器";
@@ -11615,9 +11615,9 @@ class TftOperator {
    * - currentXp 范围是 0 ~ totalXp-1（可以是奇数，比如通过任务/战斗获得 1 点经验）
    * - currentXp 和 totalXp 最多都是两位数
    * 
-   * "/" 可能被误识别为 "1" 或 "7"：
-   * - "4/6" → "416" 或 "476"
-   * - "5/6" → "516" 或 "576"
+   * "/" 可能被误识别为 "1"、"7" 或 "0"：
+   * - "4/6" → "416" 或 "476" 或 "406"
+   * - "16/76" → "16176" 或 "16776" 或 "16076"
    * 
    * 修复策略：
    * 1. 匹配 "X级 数字串" 格式
@@ -11625,8 +11625,8 @@ class TftOperator {
    * 3. 检查切分后的 currentXp 和 totalXp 是否符合规则
    */
   tryFixMisrecognizedXp(text) {
-    const VALID_TOTAL_XP = /* @__PURE__ */ new Set([2, 6, 10, 20, 36, 48, 76, 84]);
-    const SLASH_MISRECOGNIZED_CHARS = ["1", "7"];
+    const VALID_TOTAL_XP = /* @__PURE__ */ new Set([2, 6, 10, 20, 36, 60, 68]);
+    const SLASH_MISRECOGNIZED_CHARS = ["1", "7", "0"];
     const match = text.match(/(\d+)\s*级\s*(\d+)/);
     if (!match) return null;
     const level = parseInt(match[1], 10);
@@ -11677,8 +11677,7 @@ class TftOperator {
         return coinCount;
       }
       logger.warn(`[TftOperator] 金币解析失败，OCR 结果: "${text}"，尝试点击关闭遮挡...`);
-      const hexPoint = screenCapture.toAbsolutePoint(hexSlot.SLOT_2);
-      await mouseController.click(hexPoint.x, hexPoint.y);
+      await mouseController.clickAt(hexSlot.SLOT_2, MouseButtonType.LEFT);
       await sleep(50);
       await this.buyAtSlot(3);
       await sleep(100);
@@ -13010,10 +13009,14 @@ class GameStageMonitor extends EventEmitter {
       logger.debug(`[GameStageMonitor] 无法解析阶段文本: "${stageText}"`);
       return null;
     }
-    return {
-      stage: parseInt(match[1], 10),
-      round: parseInt(match[2], 10)
-    };
+    let stage = parseInt(match[1], 10);
+    const round = parseInt(match[2], 10);
+    if (stage > 7 && match[1].length > 1) {
+      const fixedStage = parseInt(match[1].slice(-1), 10);
+      logger.info(`[GameStageMonitor] 修正阶段误识别: "${stageText}" → "${fixedStage}-${round}"`);
+      stage = fixedStage;
+    }
+    return { stage, round };
   }
   /**
    * 检测战斗阶段
@@ -15130,15 +15133,12 @@ class StrategyService {
   /**
    * 购买棋子并更新游戏状态
    * @param shopSlotIndex 商店槽位索引 (0-4)
-   * @param targetChampions 目标棋子集合（用于判断是否可以卖棋子腾位置）
    * @returns SingleBuyResult 购买结果
    *
    * @description 这是一个核心方法，负责：
    *              1. 检查购买条件（金币、备战席空位、是否能升星）
    *              2. 执行购买操作
-   *              3. **验证购买是否成功**（检查商店槽位是否真的空了）
-   *              4. 如果购买失败（备战席满了），尝试卖棋子腾位置后重试
-   *              5. 更新 GameStateManager 中的状态（金币、备战席、商店）
+   *              3. 更新 GameStateManager 中的状态（金币、备战席、商店）
    *
    * TFT 合成规则：
    * - 3 个 1★ 同名棋子 → 自动合成 1 个 2★
@@ -15154,7 +15154,7 @@ class StrategyService {
    * - 情况 C：备战席满且不能升星
    *   → 尝试卖棋子腾位置，如果无法腾位置则返回 BENCH_FULL
    */
-  async buyAndUpdateState(shopSlotIndex, targetChampions) {
+  async buyAndUpdateState(shopSlotIndex) {
     const shopUnits = gameStateManager.getShopUnits();
     const unit = shopUnits[shopSlotIndex];
     if (!unit) {
@@ -15182,32 +15182,6 @@ class StrategyService {
       `[StrategyService] 购买 ${championName} (￥${price})` + (canUpgrade ? " [可升星]" : "")
     );
     await tftOperator.buyAtSlot(shopSlotIndex + 1);
-    await sleep(20);
-    const isSlotEmpty = await tftOperator.isShopSlotEmpty(shopSlotIndex);
-    if (!isSlotEmpty) {
-      logger.warn(
-        `[StrategyService] 购买 ${championName} 失败，商店槽位未清空，可能备战席已满`
-      );
-      if (targetChampions) {
-        const sold = await this.sellSingleTrashUnit(targetChampions);
-        if (sold) {
-          await this.updateBenchStateFromScreen();
-          logger.info(`[StrategyService] 已卖出棋子腾位置，重新尝试购买 ${championName}`);
-          await tftOperator.buyAtSlot(shopSlotIndex + 1);
-          await sleep(20);
-          const isSlotEmptyRetry = await tftOperator.isShopSlotEmpty(shopSlotIndex);
-          if (!isSlotEmptyRetry) {
-            logger.error(`[StrategyService] 重试购买 ${championName} 仍然失败`);
-            return "BENCH_FULL";
-          }
-        } else {
-          logger.error(`[StrategyService] 无法卖出棋子腾位置，放弃购买 ${championName}`);
-          return "BENCH_FULL";
-        }
-      } else {
-        return "BENCH_FULL";
-      }
-    }
     gameStateManager.deductGold(price);
     gameStateManager.setShopSlotEmpty(shopSlotIndex);
     if (canUpgrade) {
@@ -15396,7 +15370,7 @@ class StrategyService {
       logger.info(
         `[StrategyService] ${logPrefix}: ${championName} (￥${unit.price})，原因: ${this.getBuyReason(unit, ownedChampions, targetChampions)}`
       );
-      const result = await this.buyAndUpdateState(index, targetChampions);
+      const result = await this.buyAndUpdateState(index);
       if (result === "SUCCESS") {
         hasBought = true;
         ownedChampions.add(championName);
@@ -15506,6 +15480,45 @@ var Queue = /* @__PURE__ */ ((Queue2) => {
   Queue2[Queue2["MORIRENJI_VERY_HARD"] = 4260] = "MORIRENJI_VERY_HARD";
   return Queue2;
 })(Queue || {});
+const IN_GAME_API_PORT = 2999;
+const REQUEST_TIMEOUT_MS = 1e3;
+const inGameApi = axios.create({
+  baseURL: `https://127.0.0.1:${IN_GAME_API_PORT}`,
+  httpsAgent: new https.Agent({
+    rejectUnauthorized: false
+    // 游戏使用自签名证书
+  }),
+  timeout: REQUEST_TIMEOUT_MS,
+  proxy: false
+  // 禁用代理，避免连接问题
+});
+const InGameApiEndpoints = {
+  /** 获取所有游戏数据 */
+  ALL_GAME_DATA: "/liveclientdata/allgamedata",
+  /** 获取当前玩家信息 */
+  ACTIVE_PLAYER: "/liveclientdata/activeplayer",
+  /** 获取所有玩家列表 */
+  PLAYER_LIST: "/liveclientdata/playerlist",
+  /** 获取游戏事件 */
+  EVENT_DATA: "/liveclientdata/eventdata",
+  /** 获取游戏统计数据 */
+  GAME_STATS: "/liveclientdata/gamestats"
+};
+function showToast(message, options = {}) {
+  const { type = "info", position = "top-right" } = options;
+  const windows = BrowserWindow.getAllWindows();
+  for (const win2 of windows) {
+    win2.webContents.send(IpcChannel.SHOW_TOAST, {
+      message,
+      type,
+      position
+    });
+  }
+}
+showToast.info = (message, options) => showToast(message, { ...options, type: "info" });
+showToast.success = (message, options) => showToast(message, { ...options, type: "success" });
+showToast.warning = (message, options) => showToast(message, { ...options, type: "warning" });
+showToast.error = (message, options) => showToast(message, { ...options, type: "error" });
 const ABORT_CHECK_INTERVAL_MS$1 = 2e3;
 class GameRunningState {
   /** 状态名称 */
@@ -15530,6 +15543,7 @@ class GameRunningState {
     logger.info("[GameRunningState] 进入游戏运行状态");
     gameStateManager.startGame();
     logger.info("[GameRunningState] 游戏已开始");
+    await this.detectAndNotifyBots();
     const initSuccess = strategyService.initialize();
     if (!initSuccess) {
       logger.error("[GameRunningState] 策略服务初始化失败，请先选择阵容");
@@ -15625,6 +15639,31 @@ class GameRunningState {
     });
   }
   /**
+   * 检测对局中的人机玩家并发送 Toast 通知
+   * @description 通过 InGame API 获取所有玩家信息，筛选出 isBot=true 的玩家
+   *              并发送 Toast 通知告知用户本局有多少人机
+   */
+  async detectAndNotifyBots() {
+    try {
+      const response = await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);
+      const gameData = response.data;
+      const allPlayers = gameData?.allPlayers || [];
+      const botPlayers = allPlayers.filter((player) => player.isBot === true);
+      const botNames = botPlayers.map((player) => player.riotIdGameName || player.summonerName);
+      if (botNames.length > 0) {
+        const message = `对局已开始！本局有 ${botNames.length} 个人机：${botNames.join("、")}`;
+        showToast.info(message, { position: "top-center" });
+        logger.info(`[GameRunningState] ${message}`);
+      } else {
+        showToast.info("对局已开始！本局全是真人玩家", { position: "top-center" });
+        logger.info("[GameRunningState] 对局已开始，本局全是真人玩家");
+      }
+    } catch (error) {
+      logger.warn(`[GameRunningState] 检测人机玩家失败: ${error.message}`);
+      showToast.info("对局已开始！", { position: "top-center" });
+    }
+  }
+  /**
    * 清理资源
    * @description 游戏结束时调用，停止 Monitor 并重置相关服务
    */
@@ -15638,30 +15677,6 @@ class GameRunningState {
     logger.info("[GameRunningState] GameStateManager 已重置");
   }
 }
-const IN_GAME_API_PORT = 2999;
-const REQUEST_TIMEOUT_MS = 1e3;
-const inGameApi = axios.create({
-  baseURL: `https://127.0.0.1:${IN_GAME_API_PORT}`,
-  httpsAgent: new https.Agent({
-    rejectUnauthorized: false
-    // 游戏使用自签名证书
-  }),
-  timeout: REQUEST_TIMEOUT_MS,
-  proxy: false
-  // 禁用代理，避免连接问题
-});
-const InGameApiEndpoints = {
-  /** 获取所有游戏数据 */
-  ALL_GAME_DATA: "/liveclientdata/allgamedata",
-  /** 获取当前玩家信息 */
-  ACTIVE_PLAYER: "/liveclientdata/activeplayer",
-  /** 获取所有玩家列表 */
-  PLAYER_LIST: "/liveclientdata/playerlist",
-  /** 获取游戏事件 */
-  EVENT_DATA: "/liveclientdata/eventdata",
-  /** 获取游戏统计数据 */
-  GAME_STATS: "/liveclientdata/gamestats"
-};
 const POLL_INTERVAL_MS = 2e3;
 class GameLoadingState {
   /** 状态名称 */
@@ -15782,6 +15797,7 @@ class LobbyState {
     return new Promise((resolve) => {
       let stopCheckInterval = null;
       let isResolved = false;
+      let hasAcceptedMatch = false;
       const safeResolve = (value) => {
         if (isResolved) return;
         isResolved = true;
@@ -15801,7 +15817,8 @@ class LobbyState {
         safeResolve(false);
       };
       const onReadyCheck = (eventData) => {
-        if (eventData.data?.state === "InProgress") {
+        if (eventData.data?.state === "InProgress" && !hasAcceptedMatch) {
+          hasAcceptedMatch = true;
           logger.info("[LobbyState] 已找到对局！正在自动接受...");
           this.lcuManager?.acceptMatch().catch((reason) => {
             logger.warn(`[LobbyState] 接受对局失败: ${reason}`);
