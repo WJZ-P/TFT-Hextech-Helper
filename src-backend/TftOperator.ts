@@ -519,6 +519,9 @@ class TftOperator {
 
         // 单击购买
         await mouseController.clickAt(targetPoint, MouseButtonType.LEFT);
+        
+        // 等待游戏 UI 响应，避免连续购买时漏买
+        await sleep(10);
     }
 
     /**

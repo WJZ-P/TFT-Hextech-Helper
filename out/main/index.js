@@ -15797,7 +15797,7 @@ class LobbyState {
     return new Promise((resolve) => {
       let stopCheckInterval = null;
       let isResolved = false;
-      let hasAcceptedMatch = false;
+      let lastAcceptTime = 0;
       const safeResolve = (value) => {
         if (isResolved) return;
         isResolved = true;
@@ -15817,8 +15817,9 @@ class LobbyState {
         safeResolve(false);
       };
       const onReadyCheck = (eventData) => {
-        if (eventData.data?.state === "InProgress" && !hasAcceptedMatch) {
-          hasAcceptedMatch = true;
+        const now = Date.now();
+        if (eventData.data?.state === "InProgress" && now - lastAcceptTime >= 1e3) {
+          lastAcceptTime = now;
           logger.info("[LobbyState] 已找到对局！正在自动接受...");
           this.lcuManager?.acceptMatch().catch((reason) => {
             logger.warn(`[LobbyState] 接受对局失败: ${reason}`);
