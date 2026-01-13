@@ -11,6 +11,8 @@ export enum IpcChannel {
     HEX_START = 'hex-start',
     HEX_STOP = 'hex-stop',
     HEX_GET_STATUS = 'hex-get-status',
+    // 挂机开关快捷键触发事件（主进程 -> 渲染进程）
+    HEX_TOGGLE_TRIGGERED = 'hex-toggle-triggered',
     TFT_BUY_AT_SLOT = 'tft-buy-at-slot',
     TFT_GET_SHOP_INFO = 'tft-get-shop-info',
     TFT_GET_EQUIP_INFO = 'tft-get-equip-info',
@@ -41,4 +43,7 @@ export enum IpcChannel {
     LCU_KILL_GAME_PROCESS = 'lcu-kill-game-process',  // 强制杀掉游戏进程
     // Toast 通知（主进程 -> 渲染进程）
     SHOW_TOAST = 'show-toast',  // 显示 Toast 通知
+    // 快捷键设置
+    HOTKEY_GET_TOGGLE = 'hotkey-get-toggle',    // 获取挂机开关快捷键
+    HOTKEY_SET_TOGGLE = 'hotkey-set-toggle',    // 设置挂机开关快捷键
 }

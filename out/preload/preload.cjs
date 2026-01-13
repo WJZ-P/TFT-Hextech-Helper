@@ -10,6 +10,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["HEX_START"] = "hex-start";
   IpcChannel2["HEX_STOP"] = "hex-stop";
   IpcChannel2["HEX_GET_STATUS"] = "hex-get-status";
+  IpcChannel2["HEX_TOGGLE_TRIGGERED"] = "hex-toggle-triggered";
   IpcChannel2["TFT_BUY_AT_SLOT"] = "tft-buy-at-slot";
   IpcChannel2["TFT_GET_SHOP_INFO"] = "tft-get-shop-info";
   IpcChannel2["TFT_GET_EQUIP_INFO"] = "tft-get-equip-info";
@@ -33,6 +34,8 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["LOG_SET_AUTO_CLEAN_THRESHOLD"] = "log-set-auto-clean-threshold";
   IpcChannel2["LCU_KILL_GAME_PROCESS"] = "lcu-kill-game-process";
   IpcChannel2["SHOW_TOAST"] = "show-toast";
+  IpcChannel2["HOTKEY_GET_TOGGLE"] = "hotkey-get-toggle";
+  IpcChannel2["HOTKEY_SET_TOGGLE"] = "hotkey-set-toggle";
   return IpcChannel2;
 })(IpcChannel || {});
 electron.contextBridge.exposeInMainWorld("ipcRenderer", {
@@ -86,6 +89,12 @@ const hexApi = {
   /** 获取当前运行状态 */
   getStatus: () => {
     return electron.ipcRenderer.invoke(IpcChannel.HEX_GET_STATUS);
+  },
+  /** 监听快捷键触发的挂机切换事件 */
+  onToggleTriggered: (callback) => {
+    const listener = () => callback();
+    electron.ipcRenderer.on(IpcChannel.HEX_TOGGLE_TRIGGERED, listener);
+    return () => electron.ipcRenderer.removeListener(IpcChannel.HEX_TOGGLE_TRIGGERED, listener);
   }
 };
 electron.contextBridge.exposeInMainWorld("hex", hexApi);
@@ -122,7 +131,11 @@ const lineupApi = {
   /** 获取日志自动清理阈值 */
   getLogAutoCleanThreshold: () => electron.ipcRenderer.invoke(IpcChannel.LOG_GET_AUTO_CLEAN_THRESHOLD),
   /** 设置日志自动清理阈值 */
-  setLogAutoCleanThreshold: (threshold) => electron.ipcRenderer.invoke(IpcChannel.LOG_SET_AUTO_CLEAN_THRESHOLD, threshold)
+  setLogAutoCleanThreshold: (threshold) => electron.ipcRenderer.invoke(IpcChannel.LOG_SET_AUTO_CLEAN_THRESHOLD, threshold),
+  /** 获取挂机开关快捷键 */
+  getToggleHotkey: () => electron.ipcRenderer.invoke(IpcChannel.HOTKEY_GET_TOGGLE),
+  /** 设置挂机开关快捷键（返回是否设置成功） */
+  setToggleHotkey: (accelerator) => electron.ipcRenderer.invoke(IpcChannel.HOTKEY_SET_TOGGLE, accelerator)
 };
 electron.contextBridge.exposeInMainWorld("lineup", lineupApi);
 const lcuApi = {

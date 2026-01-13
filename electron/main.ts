@@ -48,6 +48,42 @@ process.env.VITE_PUBLIC = is.dev ? path.join(process.env.APP_ROOT, '../public') 
 
 let win: BrowserWindow | null
 
+// 当前注册的快捷键（用于更新时先注销旧的）
+let currentHotkey: string | null = null;
+
+/**
+ * 注册挂机开关的全局快捷键
+ * @param accelerator Electron Accelerator 格式的快捷键字符串
+ * @returns 是否注册成功
+ */
+function registerToggleHotkey(accelerator: string): boolean {
+    // 先注销旧的快捷键
+    if (currentHotkey) {
+        globalShortcut.unregister(currentHotkey);
+        currentHotkey = null;
+    }
+    
+    // 尝试注册新的快捷键
+    try {
+        const success = globalShortcut.register(accelerator, () => {
+            console.log(`🎮 [Main] 快捷键 ${accelerator} 被触发，切换挂机状态`);
+            // 通知渲染进程切换挂机状态
+            win?.webContents.send(IpcChannel.HEX_TOGGLE_TRIGGERED);
+        });
+        
+        if (success) {
+            currentHotkey = accelerator;
+            console.log(`✅ [Main] 全局快捷键 ${accelerator} 注册成功`);
+        } else {
+            console.error(`❌ [Main] 全局快捷键 ${accelerator} 注册失败`);
+        }
+        return success;
+    } catch (error) {
+        console.error(`❌ [Main] 注册快捷键 ${accelerator} 时出错:`, error);
+        return false;
+    }
+}
+
 function createWindow() {
     const savedWindowInfo = settingsStore.get("window")
 
@@ -128,6 +164,10 @@ app.whenReady().then(async () => {
     // 加载阵容配置
     const lineupCount = await lineupLoader.loadAllLineups()
     console.log(`📦 [Main] 已加载 ${lineupCount} 个阵容配置`)
+    
+    // 注册挂机开关快捷键（从设置中读取）
+    const savedHotkey = settingsStore.get('toggleHotkeyAccelerator');
+    registerToggleHotkey(savedHotkey);
 })
 
 function init() {
@@ -294,5 +334,19 @@ function registerHandler() {
     ipcMain.handle(IpcChannel.LCU_KILL_GAME_PROCESS, async () => {
         const lcu = LCUManager.getInstance();
         return lcu?.killGameProcess() ?? false;
+    })
+    
+    // 快捷键设置
+    ipcMain.handle(IpcChannel.HOTKEY_GET_TOGGLE, async () => {
+        return settingsStore.get('toggleHotkeyAccelerator');
+    })
+    ipcMain.handle(IpcChannel.HOTKEY_SET_TOGGLE, async (_event, accelerator: string) => {
+        // 尝试注册新快捷键
+        const success = registerToggleHotkey(accelerator);
+        if (success) {
+            // 注册成功才保存到设置
+            settingsStore.set('toggleHotkeyAccelerator', accelerator);
+        }
+        return success;
     })
 }

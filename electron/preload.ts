@@ -65,6 +65,12 @@ const hexApi = {
     getStatus: (): Promise<boolean> => {
         return ipcRenderer.invoke(IpcChannel.HEX_GET_STATUS)
     },
+    /** 监听快捷键触发的挂机切换事件 */
+    onToggleTriggered: (callback: () => void): (() => void) => {
+        const listener = () => callback();
+        ipcRenderer.on(IpcChannel.HEX_TOGGLE_TRIGGERED, listener);
+        return () => ipcRenderer.removeListener(IpcChannel.HEX_TOGGLE_TRIGGERED, listener);
+    },
 }
 export type HexApi = typeof hexApi
 contextBridge.exposeInMainWorld('hex', hexApi)
@@ -107,6 +113,10 @@ const lineupApi = {
     getLogAutoCleanThreshold: (): Promise<number> => ipcRenderer.invoke(IpcChannel.LOG_GET_AUTO_CLEAN_THRESHOLD),
     /** 设置日志自动清理阈值 */
     setLogAutoCleanThreshold: (threshold: number): Promise<void> => ipcRenderer.invoke(IpcChannel.LOG_SET_AUTO_CLEAN_THRESHOLD, threshold),
+    /** 获取挂机开关快捷键 */
+    getToggleHotkey: (): Promise<string> => ipcRenderer.invoke(IpcChannel.HOTKEY_GET_TOGGLE),
+    /** 设置挂机开关快捷键（返回是否设置成功） */
+    setToggleHotkey: (accelerator: string): Promise<boolean> => ipcRenderer.invoke(IpcChannel.HOTKEY_SET_TOGGLE, accelerator),
 }
 export type LineupApi = typeof lineupApi
 contextBridge.exposeInMainWorld('lineup', lineupApi)

@@ -5627,6 +5627,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["HEX_START"] = "hex-start";
   IpcChannel2["HEX_STOP"] = "hex-stop";
   IpcChannel2["HEX_GET_STATUS"] = "hex-get-status";
+  IpcChannel2["HEX_TOGGLE_TRIGGERED"] = "hex-toggle-triggered";
   IpcChannel2["TFT_BUY_AT_SLOT"] = "tft-buy-at-slot";
   IpcChannel2["TFT_GET_SHOP_INFO"] = "tft-get-shop-info";
   IpcChannel2["TFT_GET_EQUIP_INFO"] = "tft-get-equip-info";
@@ -5650,6 +5651,8 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["LOG_SET_AUTO_CLEAN_THRESHOLD"] = "log-set-auto-clean-threshold";
   IpcChannel2["LCU_KILL_GAME_PROCESS"] = "lcu-kill-game-process";
   IpcChannel2["SHOW_TOAST"] = "show-toast";
+  IpcChannel2["HOTKEY_GET_TOGGLE"] = "hotkey-get-toggle";
+  IpcChannel2["HOTKEY_SET_TOGGLE"] = "hotkey-set-toggle";
   return IpcChannel2;
 })(IpcChannel || {});
 class IdleState {
@@ -11127,6 +11130,7 @@ class TftOperator {
     }
     logger.info(`[TftOperator] 正在购买棋子，槽位: ${slot}...`);
     await mouseController.clickAt(targetPoint, MouseButtonType.LEFT);
+    await sleep(10);
   }
   /**
    * 刷新商店 (D牌)
@@ -13083,6 +13087,8 @@ class SettingsStore {
       //  默认是简略日志模式
       logAutoCleanThreshold: 500,
       //  默认超过 500 条时自动清理
+      toggleHotkeyAccelerator: "F1",
+      //  默认快捷键是 F1
       window: {
         bounds: null,
         //  第一次启动，默认为null
@@ -16031,6 +16037,29 @@ const MAIN_DIST = path__default.join(process.env.APP_ROOT, "dist-electron");
 const RENDERER_DIST = path__default.join(process.env.APP_ROOT);
 process.env.VITE_PUBLIC = is.dev ? path__default.join(process.env.APP_ROOT, "../public") : RENDERER_DIST;
 let win;
+let currentHotkey = null;
+function registerToggleHotkey(accelerator) {
+  if (currentHotkey) {
+    globalShortcut.unregister(currentHotkey);
+    currentHotkey = null;
+  }
+  try {
+    const success = globalShortcut.register(accelerator, () => {
+      console.log(`🎮 [Main] 快捷键 ${accelerator} 被触发，切换挂机状态`);
+      win?.webContents.send(IpcChannel.HEX_TOGGLE_TRIGGERED);
+    });
+    if (success) {
+      currentHotkey = accelerator;
+      console.log(`✅ [Main] 全局快捷键 ${accelerator} 注册成功`);
+    } else {
+      console.error(`❌ [Main] 全局快捷键 ${accelerator} 注册失败`);
+    }
+    return success;
+  } catch (error) {
+    console.error(`❌ [Main] 注册快捷键 ${accelerator} 时出错:`, error);
+    return false;
+  }
+}
 function createWindow() {
   const savedWindowInfo = settingsStore.get("window");
   win = new BrowserWindow({
@@ -16087,6 +16116,8 @@ app.whenReady().then(async () => {
   registerHandler();
   const lineupCount = await lineupLoader.loadAllLineups();
   console.log(`📦 [Main] 已加载 ${lineupCount} 个阵容配置`);
+  const savedHotkey = settingsStore.get("toggleHotkeyAccelerator");
+  registerToggleHotkey(savedHotkey);
 });
 function init() {
   logger.init(win);
@@ -16182,6 +16213,16 @@ function registerHandler() {
   ipcMain.handle(IpcChannel.LCU_KILL_GAME_PROCESS, async () => {
     const lcu = LCUManager.getInstance();
     return lcu?.killGameProcess() ?? false;
+  });
+  ipcMain.handle(IpcChannel.HOTKEY_GET_TOGGLE, async () => {
+    return settingsStore.get("toggleHotkeyAccelerator");
+  });
+  ipcMain.handle(IpcChannel.HOTKEY_SET_TOGGLE, async (_event, accelerator) => {
+    const success = registerToggleHotkey(accelerator);
+    if (success) {
+      settingsStore.set("toggleHotkeyAccelerator", accelerator);
+    }
+    return success;
   });
 }
 export {
