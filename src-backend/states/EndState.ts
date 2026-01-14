@@ -9,6 +9,10 @@ import { IdleState } from "./IdleState.ts";
 import { logger } from "../utils/Logger.ts";
 import GameConfigHelper from "../utils/GameConfigHelper.ts";
 import { strategyService } from "../services/StrategyService.ts";
+import { sleep } from "../utils/HelperTools.ts";
+
+/** 恢复前等待时间（毫秒），等待 LOL 完成结算写入 */
+const RESTORE_DELAY_MS = 500;
 
 /**
  * 结束状态类
@@ -24,16 +28,20 @@ export class EndState implements IState {
      * @returns 返回 IdleState，回到空闲状态
      */
     async action(_signal: AbortSignal): Promise<IdleState> {
-        logger.info("[EndState] 正在恢复客户端设置...");
-
         // 重置策略服务状态（如果 GameRunningState 没有正常清理的话，这里兜底）
         strategyService.reset();
 
+        logger.info("[EndState] 正在恢复客户端设置...");
         try {
-            await GameConfigHelper.restore();
-            logger.info("[EndState] 客户端设置恢复完成");
+            // 带重试机制的恢复，防止文件被占用
+            const success = await GameConfigHelper.restore(3, 1500);
+            if (success) {
+                logger.info("[EndState] 客户端设置恢复完成");
+            } else {
+                logger.warn("[EndState] 设置恢复返回失败，可能需要手动恢复");
+            }
         } catch (error) {
-            logger.error("[EndState] 恢复设置失败，可能需要手动恢复");
+            logger.error("[EndState] 恢复设置异常，可能需要手动恢复");
             if (error instanceof Error) {
                 logger.error(error);
             }

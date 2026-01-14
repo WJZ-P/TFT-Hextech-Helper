@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 // 从 electron 中引入 'app'，用来获取我们应用的安全数据存储路径
 import {app} from 'electron';
 import {logger} from "./Logger.ts";
+import {sleep} from "./HelperTools.ts";
 
 // -------------------------------------------------------------------
 // ✨ GameConfigHelper 类的定义 ✨
@@ -115,8 +116,11 @@ class GameConfigHelper {
     /**
      * 从备份恢复游戏设置
      * @description 把我们备份的 Config 文件夹拷贝回游戏目录
+     * @important 必须先清空目标目录，否则 TFT 配置文件可能残留！
+     * @param retryCount 重试次数，默认 3 次
+     * @param retryDelay 重试间隔（毫秒），默认 1000ms
      */
-    public static async restore(): Promise<boolean> {
+    public static async restore(retryCount: number = 3, retryDelay: number = 1000): Promise<boolean> {
         const instance = GameConfigHelper.getInstance();
         if (!instance) {
             console.log("[GameConfigHelper] restore错误。尚未初始化！")
@@ -126,19 +130,38 @@ class GameConfigHelper {
         const backupExists = await fs.pathExists(instance.backupPath);
         if (!backupExists) {
             console.error(`恢复设置失败！找不到备份目录：${instance.backupPath}`);
-            // TODO: Toast
             return false
         }
-        try {
-            // 为安全起见，先清空目标文件夹再恢复
-            await fs.copy(instance.backupPath, instance.gameConfigPath);
-            logger.info('设置恢复成功！');
-            // TODO: Toast
-        } catch (err) {
-            console.error('恢复过程中发生错误:', err);
-            return false
+        
+        // 带重试的恢复逻辑
+        for (let attempt = 1; attempt <= retryCount; attempt++) {
+            try {
+                // 🔑 关键修复：先清空游戏配置目录，再从备份恢复
+                // 如果不清空，TFT 配置的文件可能会残留（fs.copy 默认只覆盖同名文件）
+                await fs.emptyDir(instance.gameConfigPath);
+                await fs.copy(instance.backupPath, instance.gameConfigPath, {
+                    overwrite: true,       // 强制覆盖已存在的文件
+                    errorOnExist: false,   // 文件存在时不报错
+                });
+                instance.isTFTConfig = false;  // 标记当前不是 TFT 配置
+                return true;
+            } catch (err: unknown) {
+                const errMsg = err instanceof Error ? err.message : String(err);
+                // 检查是否是文件被占用的错误 (Windows EBUSY / EPERM)
+                const isFileLocked = errMsg.includes('EBUSY') || errMsg.includes('EPERM') || errMsg.includes('resource busy');
+                
+                if (attempt < retryCount && isFileLocked) {
+                    logger.warn(`[GameConfigHelper] 配置文件被占用，${retryDelay}ms 后重试 (${attempt}/${retryCount})...`);
+                    await sleep(retryDelay);
+                } else {
+                    console.error(`[GameConfigHelper] 恢复设置失败 (尝试 ${attempt}/${retryCount}):`, err);
+                    if (attempt === retryCount) {
+                        return false;
+                    }
+                }
+            }
         }
-        return true
+        return false;
     }
 }
 
