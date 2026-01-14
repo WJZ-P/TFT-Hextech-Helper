@@ -888,37 +888,22 @@ export const HomePage = () => {
         };
     }, []);
     
-    // 监听快捷键触发的挂机切换事件
+    // 监听快捷键触发的挂机切换事件（主进程已完成 start/stop，这里只同步 UI 状态）
     useEffect(() => {
-        const cleanup = window.hex.onToggleTriggered(async () => {
-            console.log('🎮 [HomePage] 收到快捷键触发事件');
-            // 未连接客户端时提示
-            if (!isLcuConnected) {
-                toast.error('请先启动游戏客户端');
-                return;
-            }
+        const cleanup = window.hex.onToggleTriggered((newRunningState: boolean) => {
+            console.log('🎮 [HomePage] 收到快捷键切换事件，新状态:', newRunningState);
+            setIsRunning(newRunningState);
             
-            if (!isRunning) {
-                const success = await window.hex.start();
-                if (success) {
-                    toast.success('海克斯科技启动!');
-                    setIsRunning(true);
-                } else {
-                    toast.error('海克斯科技启动失败!');
-                }
+            // 显示提示
+            if (newRunningState) {
+                toast.success('海克斯科技启动!');
             } else {
-                const success = await window.hex.stop();
-                if (success) {
-                    toast.success('海克斯科技已关闭!');
-                    setIsRunning(false);
-                } else {
-                    toast.error('海克斯科技关闭失败!');
-                }
+                toast.success('海克斯科技已关闭!');
             }
         });
         
         return () => cleanup();
-    }, [isLcuConnected, isRunning]);
+    }, []);
 
     const handleToggle = async () => {
         // 未连接客户端时禁止操作

@@ -65,9 +65,12 @@ const hexApi = {
     getStatus: (): Promise<boolean> => {
         return ipcRenderer.invoke(IpcChannel.HEX_GET_STATUS)
     },
-    /** 监听快捷键触发的挂机切换事件 */
-    onToggleTriggered: (callback: () => void): (() => void) => {
-        const listener = () => callback();
+    /** 
+     * 监听快捷键触发的挂机切换事件
+     * @param callback 回调函数，参数为切换后的运行状态（true=运行中，false=已停止）
+     */
+    onToggleTriggered: (callback: (isRunning: boolean) => void): (() => void) => {
+        const listener = (_event: IpcRendererEvent, isRunning: boolean) => callback(isRunning);
         ipcRenderer.on(IpcChannel.HEX_TOGGLE_TRIGGERED, listener);
         return () => ipcRenderer.removeListener(IpcChannel.HEX_TOGGLE_TRIGGERED, listener);
     },

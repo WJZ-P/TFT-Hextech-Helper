@@ -65,10 +65,18 @@ function registerToggleHotkey(accelerator: string): boolean {
     
     // 尝试注册新的快捷键
     try {
-        const success = globalShortcut.register(accelerator, () => {
+        const success = globalShortcut.register(accelerator, async () => {
             console.log(`🎮 [Main] 快捷键 ${accelerator} 被触发，切换挂机状态`);
-            // 通知渲染进程切换挂机状态
-            win?.webContents.send(IpcChannel.HEX_TOGGLE_TRIGGERED);
+            
+            // 直接在主进程切换挂机状态，无需依赖前端页面
+            if (hexService.isRunning) {
+                await hexService.stop();
+            } else {
+                await hexService.start();
+            }
+            
+            // 通知渲染进程更新 UI 状态
+            win?.webContents.send(IpcChannel.HEX_TOGGLE_TRIGGERED, hexService.isRunning);
         });
         
         if (success) {
