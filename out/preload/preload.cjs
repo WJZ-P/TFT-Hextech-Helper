@@ -90,9 +90,12 @@ const hexApi = {
   getStatus: () => {
     return electron.ipcRenderer.invoke(IpcChannel.HEX_GET_STATUS);
   },
-  /** 监听快捷键触发的挂机切换事件 */
+  /** 
+   * 监听快捷键触发的挂机切换事件
+   * @param callback 回调函数，参数为切换后的运行状态（true=运行中，false=已停止）
+   */
   onToggleTriggered: (callback) => {
-    const listener = () => callback();
+    const listener = (_event, isRunning) => callback(isRunning);
     electron.ipcRenderer.on(IpcChannel.HEX_TOGGLE_TRIGGERED, listener);
     return () => electron.ipcRenderer.removeListener(IpcChannel.HEX_TOGGLE_TRIGGERED, listener);
   }

@@ -230,7 +230,7 @@ const SettingsPage = () => {
             setLogAutoCleanThreshold(logStore.getThreshold());
             
             // 加载快捷键设置
-            const hotkey = await window.lineup.getToggleHotkey();
+            const hotkey = await window.util.getToggleHotkey();
             setToggleHotkey(hotkey);
         };
         loadSettings();
@@ -241,11 +241,29 @@ const SettingsPage = () => {
         e.preventDefault();
         e.stopPropagation();
         
+        // ESC 键：取消绑定快捷键
+        if (e.key === 'Escape') {
+            const success = await window.util.setToggleHotkey('');
+            if (success) {
+                setToggleHotkey('');
+                toast.success('快捷键已取消绑定');
+            }
+            setIsRecordingHotkey(false);
+            return;
+        }
+        
         const accelerator = keyEventToAccelerator(e);
         if (!accelerator) return;  // 只按了修饰键，忽略
         
+        // 如果按下的快捷键和当前一样，直接退出录入模式
+        if (accelerator === toggleHotkey) {
+            toast.success(`快捷键保持为 ${accelerator}`);
+            setIsRecordingHotkey(false);
+            return;
+        }
+        
         // 尝试设置新快捷键
-        const success = await window.lineup.setToggleHotkey(accelerator);
+        const success = await window.util.setToggleHotkey(accelerator);
         if (success) {
             setToggleHotkey(accelerator);
             toast.success(`快捷键已设置为 ${accelerator}`);
@@ -254,7 +272,7 @@ const SettingsPage = () => {
         }
         
         setIsRecordingHotkey(false);
-    }, []);
+    }, [toggleHotkey]);
     
     // 监听快捷键录入
     useEffect(() => {
@@ -325,7 +343,7 @@ const SettingsPage = () => {
                         onClick={handleHotkeyClick}
                         tabIndex={0}
                     >
-                        {isRecordingHotkey ? '按下快捷键...' : toggleHotkey}
+                        {isRecordingHotkey ? '按下快捷键... (ESC取消绑定)' : (toggleHotkey || '未绑定')}
                     </HotkeyInput>
                 </SettingItem>
             </SettingsCard>

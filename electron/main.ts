@@ -53,14 +53,20 @@ let currentHotkey: string | null = null;
 
 /**
  * 注册挂机开关的全局快捷键
- * @param accelerator Electron Accelerator 格式的快捷键字符串
- * @returns 是否注册成功
+ * @param accelerator Electron Accelerator 格式的快捷键字符串，空字符串表示取消绑定
+ * @returns 是否操作成功
  */
 function registerToggleHotkey(accelerator: string): boolean {
     // 先注销旧的快捷键
     if (currentHotkey) {
         globalShortcut.unregister(currentHotkey);
         currentHotkey = null;
+    }
+    
+    // 空字符串表示取消绑定，直接返回成功
+    if (!accelerator) {
+        console.log('🎮 [Main] 快捷键已取消绑定');
+        return true;
     }
     
     // 尝试注册新的快捷键

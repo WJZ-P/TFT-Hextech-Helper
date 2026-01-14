@@ -116,13 +116,19 @@ const lineupApi = {
     getLogAutoCleanThreshold: (): Promise<number> => ipcRenderer.invoke(IpcChannel.LOG_GET_AUTO_CLEAN_THRESHOLD),
     /** 设置日志自动清理阈值 */
     setLogAutoCleanThreshold: (threshold: number): Promise<void> => ipcRenderer.invoke(IpcChannel.LOG_SET_AUTO_CLEAN_THRESHOLD, threshold),
-    /** 获取挂机开关快捷键 */
-    getToggleHotkey: (): Promise<string> => ipcRenderer.invoke(IpcChannel.HOTKEY_GET_TOGGLE),
-    /** 设置挂机开关快捷键（返回是否设置成功） */
-    setToggleHotkey: (accelerator: string): Promise<boolean> => ipcRenderer.invoke(IpcChannel.HOTKEY_SET_TOGGLE, accelerator),
 }
 export type LineupApi = typeof lineupApi
 contextBridge.exposeInMainWorld('lineup', lineupApi)
+
+// utilApi: 通用工具 API（快捷键等）
+const utilApi = {
+    /** 获取挂机开关快捷键 */
+    getToggleHotkey: (): Promise<string> => ipcRenderer.invoke(IpcChannel.HOTKEY_GET_TOGGLE),
+    /** 设置挂机开关快捷键（返回是否设置成功），空字符串表示取消绑定 */
+    setToggleHotkey: (accelerator: string): Promise<boolean> => ipcRenderer.invoke(IpcChannel.HOTKEY_SET_TOGGLE, accelerator),
+}
+export type UtilApi = typeof utilApi
+contextBridge.exposeInMainWorld('util', utilApi)
 
 const lcuApi = {
     /**
