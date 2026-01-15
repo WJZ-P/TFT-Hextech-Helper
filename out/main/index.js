@@ -16068,6 +16068,10 @@ function registerToggleHotkey(accelerator) {
     globalShortcut.unregister(currentHotkey);
     currentHotkey = null;
   }
+  if (!accelerator) {
+    console.log("🎮 [Main] 快捷键已取消绑定");
+    return true;
+  }
   try {
     const success = globalShortcut.register(accelerator, async () => {
       console.log(`🎮 [Main] 快捷键 ${accelerator} 被触发，切换挂机状态`);

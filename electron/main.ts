@@ -1,4 +1,4 @@
-import {app, BrowserWindow, globalShortcut, ipcMain} from 'electron'
+import {app, BrowserWindow, ipcMain} from 'electron'
 import LCUConnector from "../src-backend/lcu/utils/LcuConnector.ts";
 import LCUManager, { LcuEventUri, LCUWebSocketMessage } from "../src-backend/lcu/LCUManager.ts";
 import 'source-map-support/register';
@@ -14,6 +14,7 @@ import {Point} from "@nut-tree-fork/nut-js";
 import {is, optimizer} from "@electron-toolkit/utils";
 import {lineupLoader} from "../src-backend/lineup";  // 导入阵容加载器
 import {TFT_16_CHAMPION_DATA} from "../src-backend/TFTProtocol";  // 导入棋子数据
+import {globalHotkeyManager} from "../src-backend/utils/GlobalHotkeyManager.ts";  // 全局快捷键管理器
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -48,8 +49,8 @@ process.env.VITE_PUBLIC = is.dev ? path.join(process.env.APP_ROOT, '../public') 
 
 let win: BrowserWindow | null
 
-// 当前注册的快捷键（用于更新时先注销旧的）
-let currentHotkey: string | null = null;
+// 当前注册的挂机切换快捷键（用于更新时先注销旧的）
+let currentToggleHotkey: string | null = null;
 
 /**
  * 注册挂机开关的全局快捷键
@@ -58,44 +59,36 @@ let currentHotkey: string | null = null;
  */
 function registerToggleHotkey(accelerator: string): boolean {
     // 先注销旧的快捷键
-    if (currentHotkey) {
-        globalShortcut.unregister(currentHotkey);
-        currentHotkey = null;
+    if (currentToggleHotkey) {
+        globalHotkeyManager.unregister(currentToggleHotkey);
+        currentToggleHotkey = null;
     }
     
-    // 空字符串表示取消绑定，直接返回成功
+    // 空字符串表示取消绑定
     if (!accelerator) {
-        console.log('🎮 [Main] 快捷键已取消绑定');
+        console.log('🎮 [Main] 挂机快捷键已取消绑定');
         return true;
     }
     
-    // 尝试注册新的快捷键
-    try {
-        const success = globalShortcut.register(accelerator, async () => {
-            console.log(`🎮 [Main] 快捷键 ${accelerator} 被触发，切换挂机状态`);
-            
-            // 直接在主进程切换挂机状态，无需依赖前端页面
-            if (hexService.isRunning) {
-                await hexService.stop();
-            } else {
-                await hexService.start();
-            }
-            
-            // 通知渲染进程更新 UI 状态
-            win?.webContents.send(IpcChannel.HEX_TOGGLE_TRIGGERED, hexService.isRunning);
-        });
+    // 注册新快捷键，回调函数中切换挂机状态
+    const success = globalHotkeyManager.register(accelerator, async () => {
+        console.log(`🎮 [Main] 快捷键 ${accelerator} 被触发，切换挂机状态`);
         
-        if (success) {
-            currentHotkey = accelerator;
-            console.log(`✅ [Main] 全局快捷键 ${accelerator} 注册成功`);
+        // 直接在主进程切换挂机状态
+        if (hexService.isRunning) {
+            await hexService.stop();
         } else {
-            console.error(`❌ [Main] 全局快捷键 ${accelerator} 注册失败`);
+            await hexService.start();
         }
-        return success;
-    } catch (error) {
-        console.error(`❌ [Main] 注册快捷键 ${accelerator} 时出错:`, error);
-        return false;
+        
+        // 通知渲染进程更新 UI 状态
+        win?.webContents.send(IpcChannel.HEX_TOGGLE_TRIGGERED, hexService.isRunning);
+    });
+    
+    if (success) {
+        currentToggleHotkey = accelerator;
     }
+    return success;
 }
 
 function createWindow() {
@@ -164,9 +157,9 @@ app.on('activate', () => {
     }
 })
 
-// 喵~ 这是一个好习惯：在应用退出前，注销所有已注册的快捷键
+// 在应用退出前，停止全局快捷键管理器
 app.on('will-quit', () => {
-    globalShortcut.unregisterAll()
+    globalHotkeyManager.stop();
 })
 
 //  正式启动app

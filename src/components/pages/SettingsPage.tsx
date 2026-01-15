@@ -335,7 +335,7 @@ const SettingsPage = () => {
                     <SettingInfo>
                         <SettingText>
                             <h3>挂机开关</h3>
-                            <p>按下此快捷键可随时开启/关闭自动挂机功能。</p>
+                            <p>随时开启/关闭自动挂机功能，按ESC取消绑定</p>
                         </SettingText>
                     </SettingInfo>
                     <HotkeyInput 
@@ -343,7 +343,7 @@ const SettingsPage = () => {
                         onClick={handleHotkeyClick}
                         tabIndex={0}
                     >
-                        {isRecordingHotkey ? '按下快捷键... (ESC取消绑定)' : (toggleHotkey || '未绑定')}
+                        {isRecordingHotkey ? '请按下快捷键' : (toggleHotkey || '未绑定')}
                     </HotkeyInput>
                 </SettingItem>
             </SettingsCard>

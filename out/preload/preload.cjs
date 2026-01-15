@@ -134,13 +134,16 @@ const lineupApi = {
   /** 获取日志自动清理阈值 */
   getLogAutoCleanThreshold: () => electron.ipcRenderer.invoke(IpcChannel.LOG_GET_AUTO_CLEAN_THRESHOLD),
   /** 设置日志自动清理阈值 */
-  setLogAutoCleanThreshold: (threshold) => electron.ipcRenderer.invoke(IpcChannel.LOG_SET_AUTO_CLEAN_THRESHOLD, threshold),
-  /** 获取挂机开关快捷键 */
-  getToggleHotkey: () => electron.ipcRenderer.invoke(IpcChannel.HOTKEY_GET_TOGGLE),
-  /** 设置挂机开关快捷键（返回是否设置成功） */
-  setToggleHotkey: (accelerator) => electron.ipcRenderer.invoke(IpcChannel.HOTKEY_SET_TOGGLE, accelerator)
+  setLogAutoCleanThreshold: (threshold) => electron.ipcRenderer.invoke(IpcChannel.LOG_SET_AUTO_CLEAN_THRESHOLD, threshold)
 };
 electron.contextBridge.exposeInMainWorld("lineup", lineupApi);
+const utilApi = {
+  /** 获取挂机开关快捷键 */
+  getToggleHotkey: () => electron.ipcRenderer.invoke(IpcChannel.HOTKEY_GET_TOGGLE),
+  /** 设置挂机开关快捷键（返回是否设置成功），空字符串表示取消绑定 */
+  setToggleHotkey: (accelerator) => electron.ipcRenderer.invoke(IpcChannel.HOTKEY_SET_TOGGLE, accelerator)
+};
+electron.contextBridge.exposeInMainWorld("util", utilApi);
 const lcuApi = {
   /**
    * 获取当前召唤师信息
