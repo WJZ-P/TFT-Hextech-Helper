@@ -51,6 +51,8 @@ let win: BrowserWindow | null
 
 // 当前注册的挂机切换快捷键（用于更新时先注销旧的）
 let currentToggleHotkey: string | null = null;
+// 当前注册的"本局结束后停止"快捷键
+let currentStopAfterGameHotkey: string | null = null;
 
 /**
  * 注册挂机开关的全局快捷键
@@ -73,20 +75,48 @@ function registerToggleHotkey(accelerator: string): boolean {
     // 注册新快捷键，回调函数中切换挂机状态
     const success = globalHotkeyManager.register(accelerator, async () => {
         console.log(`🎮 [Main] 快捷键 ${accelerator} 被触发，切换挂机状态`);
+        hexService.isRunning? await hexService.stop() : await hexService.start();
         
-        // 直接在主进程切换挂机状态
-        if (hexService.isRunning) {
-            await hexService.stop();
-        } else {
-            await hexService.start();
-        }
-        
-        // 通知渲染进程更新 UI 状态
+        // 通知渲染进程更新 UI 状态（使用切换后的期望状态，而非 isRunning）
+        // 因为 stop() 是异步的，isRunning 可能还没更新
         win?.webContents.send(IpcChannel.HEX_TOGGLE_TRIGGERED, hexService.isRunning);
     });
     
     if (success) {
         currentToggleHotkey = accelerator;
+    }
+    return success;
+}
+
+/**
+ * 注册"本局结束后停止"的全局快捷键
+ * @param accelerator Electron Accelerator 格式的快捷键字符串，空字符串表示取消绑定
+ * @returns 是否操作成功
+ */
+function registerStopAfterGameHotkey(accelerator: string): boolean {
+    // 先注销旧的快捷键
+    if (currentStopAfterGameHotkey) {
+        globalHotkeyManager.unregister(currentStopAfterGameHotkey);
+        currentStopAfterGameHotkey = null;
+    }
+    
+    // 空字符串表示取消绑定
+    if (!accelerator) {
+        console.log('🎮 [Main] "本局结束后停止"快捷键已取消绑定');
+        return true;
+    }
+    
+    // 注册新快捷键，回调函数中切换"本局结束后停止"状态
+    const success = globalHotkeyManager.register(accelerator, () => {
+        console.log(`🎮 [Main] 快捷键 ${accelerator} 被触发，切换"本局结束后停止"状态`);
+        const newState = hexService.toggleStopAfterCurrentGame();
+        
+        // 通知渲染进程更新 UI 状态
+        win?.webContents.send(IpcChannel.HEX_STOP_AFTER_GAME_TRIGGERED, newState);
+    });
+    
+    if (success) {
+        currentStopAfterGameHotkey = accelerator;
     }
     return success;
 }
@@ -175,6 +205,10 @@ app.whenReady().then(async () => {
     // 注册挂机开关快捷键（从设置中读取）
     const savedHotkey = settingsStore.get('toggleHotkeyAccelerator');
     registerToggleHotkey(savedHotkey);
+    
+    // 注册"本局结束后停止"快捷键（从设置中读取）
+    const savedStopAfterGameHotkey = settingsStore.get('stopAfterGameHotkeyAccelerator');
+    registerStopAfterGameHotkey(savedStopAfterGameHotkey);
 })
 
 function init() {
@@ -355,5 +389,28 @@ function registerHandler() {
             settingsStore.set('toggleHotkeyAccelerator', accelerator);
         }
         return success;
+    })
+    
+    // "本局结束后停止"快捷键设置
+    ipcMain.handle(IpcChannel.HOTKEY_GET_STOP_AFTER_GAME, async () => {
+        return settingsStore.get('stopAfterGameHotkeyAccelerator');
+    })
+    ipcMain.handle(IpcChannel.HOTKEY_SET_STOP_AFTER_GAME, async (_event, accelerator: string) => {
+        const success = registerStopAfterGameHotkey(accelerator);
+        if (success) {
+            settingsStore.set('stopAfterGameHotkeyAccelerator', accelerator);
+        }
+        return success;
+    })
+    
+    // "本局结束后停止"状态查询/切换
+    ipcMain.handle(IpcChannel.HEX_GET_STOP_AFTER_GAME, async () => {
+        return hexService.stopAfterCurrentGame;
+    })
+    ipcMain.handle(IpcChannel.HEX_TOGGLE_STOP_AFTER_GAME, async () => {
+        const newState = hexService.toggleStopAfterCurrentGame();
+        // 通知渲染进程更新 UI 状态
+        win?.webContents.send(IpcChannel.HEX_STOP_AFTER_GAME_TRIGGERED, newState);
+        return newState;
     })
 }

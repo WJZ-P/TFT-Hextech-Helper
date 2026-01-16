@@ -64,6 +64,7 @@ interface AppSettings {
     logMode: LogMode,    //  日志模式：简略/详细
     logAutoCleanThreshold: LogAutoCleanThreshold,  //  日志自动清理阈值
     toggleHotkeyAccelerator: string,  //  挂机开关快捷键（Electron Accelerator 格式，如 "F1", "Ctrl+Shift+F1"）
+    stopAfterGameHotkeyAccelerator: string,  //  "本局结束后停止"快捷键
     window: {
         bounds: WindowBounds | null, // 上次关闭时的窗口信息
         isMaximized: boolean,   //  上次关闭是否最大化
@@ -89,6 +90,7 @@ class SettingsStore {
             logMode: LogMode.SIMPLE,    //  默认是简略日志模式
             logAutoCleanThreshold: 500, //  默认超过 500 条时自动清理
             toggleHotkeyAccelerator: 'F1',  //  默认快捷键是 F1
+            stopAfterGameHotkeyAccelerator: 'F2',  //  默认快捷键是 F2
             window: {
                 bounds: null,           //  第一次启动，默认为null
                 isMaximized: false     //  默认不最大化窗口

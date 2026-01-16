@@ -27,6 +27,9 @@ export class HexService {
 
     /** 当前状态 */
     private currentState: IState;
+    
+    /** 本局结束后自动停止的标志 */
+    private _stopAfterCurrentGame: boolean = false;
 
     /**
      * 私有构造函数，确保单例
@@ -52,6 +55,32 @@ export class HexService {
     public get isRunning(): boolean {
         return this.abortController !== null;
     }
+    
+    /**
+     * 获取"本局结束后自动停止"状态
+     */
+    public get stopAfterCurrentGame(): boolean {
+        return this._stopAfterCurrentGame;
+    }
+    
+    /**
+     * 切换"本局结束后自动停止"状态
+     * @returns 切换后的状态值
+     */
+    public toggleStopAfterCurrentGame(): boolean {
+        this._stopAfterCurrentGame = !this._stopAfterCurrentGame;
+        logger.info(`[HexService] 本局结束后自动停止: ${this._stopAfterCurrentGame ? '已开启' : '已关闭'}`);
+        return this._stopAfterCurrentGame;
+    }
+    
+    /**
+     * 设置"本局结束后自动停止"状态
+     * @param value 要设置的值
+     */
+    public setStopAfterCurrentGame(value: boolean): void {
+        this._stopAfterCurrentGame = value;
+        logger.info(`[HexService] 本局结束后自动停止: ${value ? '已开启' : '已关闭'}`);
+    }
 
     /**
      * 启动海克斯科技
@@ -69,6 +98,7 @@ export class HexService {
 
             this.abortController = new AbortController();
             this.currentState = new StartState();
+            this._stopAfterCurrentGame = false;  // 重置"本局结束后停止"标志
 
             // 启动主循环 (异步，不阻塞)
             this.runMainLoop(this.abortController.signal);

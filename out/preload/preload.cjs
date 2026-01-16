@@ -36,6 +36,11 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["SHOW_TOAST"] = "show-toast";
   IpcChannel2["HOTKEY_GET_TOGGLE"] = "hotkey-get-toggle";
   IpcChannel2["HOTKEY_SET_TOGGLE"] = "hotkey-set-toggle";
+  IpcChannel2["HOTKEY_GET_STOP_AFTER_GAME"] = "hotkey-get-stop-after-game";
+  IpcChannel2["HOTKEY_SET_STOP_AFTER_GAME"] = "hotkey-set-stop-after-game";
+  IpcChannel2["HEX_STOP_AFTER_GAME_TRIGGERED"] = "hex-stop-after-game-triggered";
+  IpcChannel2["HEX_GET_STOP_AFTER_GAME"] = "hex-get-stop-after-game";
+  IpcChannel2["HEX_TOGGLE_STOP_AFTER_GAME"] = "hex-toggle-stop-after-game";
   return IpcChannel2;
 })(IpcChannel || {});
 electron.contextBridge.exposeInMainWorld("ipcRenderer", {
@@ -98,6 +103,23 @@ const hexApi = {
     const listener = (_event, isRunning) => callback(isRunning);
     electron.ipcRenderer.on(IpcChannel.HEX_TOGGLE_TRIGGERED, listener);
     return () => electron.ipcRenderer.removeListener(IpcChannel.HEX_TOGGLE_TRIGGERED, listener);
+  },
+  /** 获取"本局结束后停止"状态 */
+  getStopAfterGame: () => {
+    return electron.ipcRenderer.invoke(IpcChannel.HEX_GET_STOP_AFTER_GAME);
+  },
+  /** 切换"本局结束后停止"状态 */
+  toggleStopAfterGame: () => {
+    return electron.ipcRenderer.invoke(IpcChannel.HEX_TOGGLE_STOP_AFTER_GAME);
+  },
+  /**
+   * 监听快捷键触发的"本局结束后停止"切换事件
+   * @param callback 回调函数，参数为切换后的状态（true=开启，false=关闭）
+   */
+  onStopAfterGameTriggered: (callback) => {
+    const listener = (_event, isEnabled) => callback(isEnabled);
+    electron.ipcRenderer.on(IpcChannel.HEX_STOP_AFTER_GAME_TRIGGERED, listener);
+    return () => electron.ipcRenderer.removeListener(IpcChannel.HEX_STOP_AFTER_GAME_TRIGGERED, listener);
   }
 };
 electron.contextBridge.exposeInMainWorld("hex", hexApi);
@@ -141,7 +163,11 @@ const utilApi = {
   /** 获取挂机开关快捷键 */
   getToggleHotkey: () => electron.ipcRenderer.invoke(IpcChannel.HOTKEY_GET_TOGGLE),
   /** 设置挂机开关快捷键（返回是否设置成功），空字符串表示取消绑定 */
-  setToggleHotkey: (accelerator) => electron.ipcRenderer.invoke(IpcChannel.HOTKEY_SET_TOGGLE, accelerator)
+  setToggleHotkey: (accelerator) => electron.ipcRenderer.invoke(IpcChannel.HOTKEY_SET_TOGGLE, accelerator),
+  /** 获取"本局结束后停止"快捷键 */
+  getStopAfterGameHotkey: () => electron.ipcRenderer.invoke(IpcChannel.HOTKEY_GET_STOP_AFTER_GAME),
+  /** 设置"本局结束后停止"快捷键（返回是否设置成功），空字符串表示取消绑定 */
+  setStopAfterGameHotkey: (accelerator) => electron.ipcRenderer.invoke(IpcChannel.HOTKEY_SET_STOP_AFTER_GAME, accelerator)
 };
 electron.contextBridge.exposeInMainWorld("util", utilApi);
 const lcuApi = {

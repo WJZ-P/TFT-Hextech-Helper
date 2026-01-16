@@ -1,4 +1,4 @@
-import { app, screen as screen$1, BrowserWindow, globalShortcut, ipcMain } from "electron";
+import { app, screen as screen$1, BrowserWindow, ipcMain } from "electron";
 import { EventEmitter } from "events";
 import require$$1 from "os";
 import cp from "child_process";
@@ -20,6 +20,7 @@ import cv from "@techstark/opencv-js";
 import { createWorker, PSM } from "tesseract.js";
 import Store from "electron-store";
 import { is, optimizer } from "@electron-toolkit/utils";
+import { UiohookKey, uIOhook } from "uiohook-napi";
 import __cjs_mod__ from "node:module";
 const __filename = import.meta.filename;
 const __dirname = import.meta.dirname;
@@ -5686,6 +5687,11 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["SHOW_TOAST"] = "show-toast";
   IpcChannel2["HOTKEY_GET_TOGGLE"] = "hotkey-get-toggle";
   IpcChannel2["HOTKEY_SET_TOGGLE"] = "hotkey-set-toggle";
+  IpcChannel2["HOTKEY_GET_STOP_AFTER_GAME"] = "hotkey-get-stop-after-game";
+  IpcChannel2["HOTKEY_SET_STOP_AFTER_GAME"] = "hotkey-set-stop-after-game";
+  IpcChannel2["HEX_STOP_AFTER_GAME_TRIGGERED"] = "hex-stop-after-game-triggered";
+  IpcChannel2["HEX_GET_STOP_AFTER_GAME"] = "hex-get-stop-after-game";
+  IpcChannel2["HEX_TOGGLE_STOP_AFTER_GAME"] = "hex-toggle-stop-after-game";
   return IpcChannel2;
 })(IpcChannel || {});
 class IdleState {
@@ -13110,6 +13116,8 @@ class SettingsStore {
       //  默认超过 500 条时自动清理
       toggleHotkeyAccelerator: "F1",
       //  默认快捷键是 F1
+      stopAfterGameHotkeyAccelerator: "F2",
+      //  默认快捷键是 F2
       window: {
         bounds: null,
         //  第一次启动，默认为null
@@ -15588,6 +15596,11 @@ class GameRunningState {
       logger.info("[GameRunningState] 用户手动停止，流转到 EndState");
       return new EndState();
     } else if (isGameEnded) {
+      if (hexService.stopAfterCurrentGame) {
+        logger.info("[GameRunningState] 游戏结束，检测到【本局结束后停止】标志，流转到 EndState");
+        showToast.success("本局已结束，自动停止挂机", { position: "top-center" });
+        return new EndState();
+      }
       logger.info("[GameRunningState] 游戏结束，流转到 LobbyState 开始下一局");
       return new LobbyState();
     } else {
@@ -15954,6 +15967,8 @@ class HexService {
   abortController = null;
   /** 当前状态 */
   currentState;
+  /** 本局结束后自动停止的标志 */
+  _stopAfterCurrentGame = false;
   /**
    * 私有构造函数，确保单例
    */
@@ -15977,6 +15992,29 @@ class HexService {
     return this.abortController !== null;
   }
   /**
+   * 获取"本局结束后自动停止"状态
+   */
+  get stopAfterCurrentGame() {
+    return this._stopAfterCurrentGame;
+  }
+  /**
+   * 切换"本局结束后自动停止"状态
+   * @returns 切换后的状态值
+   */
+  toggleStopAfterCurrentGame() {
+    this._stopAfterCurrentGame = !this._stopAfterCurrentGame;
+    logger.info(`[HexService] 本局结束后自动停止: ${this._stopAfterCurrentGame ? "已开启" : "已关闭"}`);
+    return this._stopAfterCurrentGame;
+  }
+  /**
+   * 设置"本局结束后自动停止"状态
+   * @param value 要设置的值
+   */
+  setStopAfterCurrentGame(value) {
+    this._stopAfterCurrentGame = value;
+    logger.info(`[HexService] 本局结束后自动停止: ${value ? "已开启" : "已关闭"}`);
+  }
+  /**
    * 启动海克斯科技
    * @returns true 表示启动成功
    */
@@ -15990,6 +16028,7 @@ class HexService {
       logger.info("[HexService] 海克斯科技，启动！");
       this.abortController = new AbortController();
       this.currentState = new StartState();
+      this._stopAfterCurrentGame = false;
       this.runMainLoop(this.abortController.signal);
       return true;
     } catch (e) {
@@ -16056,43 +16095,293 @@ class HexService {
   }
 }
 const hexService = HexService.getInstance();
+const keyCodeToName = {
+  // F1-F12 功能键
+  [UiohookKey.F1]: "F1",
+  [UiohookKey.F2]: "F2",
+  [UiohookKey.F3]: "F3",
+  [UiohookKey.F4]: "F4",
+  [UiohookKey.F5]: "F5",
+  [UiohookKey.F6]: "F6",
+  [UiohookKey.F7]: "F7",
+  [UiohookKey.F8]: "F8",
+  [UiohookKey.F9]: "F9",
+  [UiohookKey.F10]: "F10",
+  [UiohookKey.F11]: "F11",
+  [UiohookKey.F12]: "F12",
+  // 数字键 0-9
+  [UiohookKey["0"]]: "0",
+  [UiohookKey["1"]]: "1",
+  [UiohookKey["2"]]: "2",
+  [UiohookKey["3"]]: "3",
+  [UiohookKey["4"]]: "4",
+  [UiohookKey["5"]]: "5",
+  [UiohookKey["6"]]: "6",
+  [UiohookKey["7"]]: "7",
+  [UiohookKey["8"]]: "8",
+  [UiohookKey["9"]]: "9",
+  // 字母键 A-Z
+  [UiohookKey.A]: "A",
+  [UiohookKey.B]: "B",
+  [UiohookKey.C]: "C",
+  [UiohookKey.D]: "D",
+  [UiohookKey.E]: "E",
+  [UiohookKey.F]: "F",
+  [UiohookKey.G]: "G",
+  [UiohookKey.H]: "H",
+  [UiohookKey.I]: "I",
+  [UiohookKey.J]: "J",
+  [UiohookKey.K]: "K",
+  [UiohookKey.L]: "L",
+  [UiohookKey.M]: "M",
+  [UiohookKey.N]: "N",
+  [UiohookKey.O]: "O",
+  [UiohookKey.P]: "P",
+  [UiohookKey.Q]: "Q",
+  [UiohookKey.R]: "R",
+  [UiohookKey.S]: "S",
+  [UiohookKey.T]: "T",
+  [UiohookKey.U]: "U",
+  [UiohookKey.V]: "V",
+  [UiohookKey.W]: "W",
+  [UiohookKey.X]: "X",
+  [UiohookKey.Y]: "Y",
+  [UiohookKey.Z]: "Z",
+  // 特殊键
+  [UiohookKey.Space]: "Space",
+  [UiohookKey.Tab]: "Tab",
+  [UiohookKey.Enter]: "Enter",
+  [UiohookKey.Backspace]: "Backspace",
+  [UiohookKey.Delete]: "Delete",
+  [UiohookKey.Insert]: "Insert",
+  [UiohookKey.Home]: "Home",
+  [UiohookKey.End]: "End",
+  [UiohookKey.PageUp]: "PageUp",
+  [UiohookKey.PageDown]: "PageDown",
+  [UiohookKey.ArrowUp]: "Up",
+  [UiohookKey.ArrowDown]: "Down",
+  [UiohookKey.ArrowLeft]: "Left",
+  [UiohookKey.ArrowRight]: "Right",
+  // 小键盘
+  [UiohookKey.Numpad0]: "num0",
+  [UiohookKey.Numpad1]: "num1",
+  [UiohookKey.Numpad2]: "num2",
+  [UiohookKey.Numpad3]: "num3",
+  [UiohookKey.Numpad4]: "num4",
+  [UiohookKey.Numpad5]: "num5",
+  [UiohookKey.Numpad6]: "num6",
+  [UiohookKey.Numpad7]: "num7",
+  [UiohookKey.Numpad8]: "num8",
+  [UiohookKey.Numpad9]: "num9"
+};
+class GlobalHotkeyManager {
+  /** 单例实例 */
+  static instance = null;
+  /** 是否已启动 uiohook */
+  isStarted = false;
+  /** 当前按下的修饰键状态 */
+  modifierState = {
+    ctrl: false,
+    alt: false,
+    shift: false,
+    meta: false
+  };
+  /** 已注册的快捷键映射 (accelerator -> { callback, parsed }) */
+  hotkeyMap = /* @__PURE__ */ new Map();
+  constructor() {
+  }
+  /**
+   * 获取单例实例
+   */
+  static getInstance() {
+    if (!GlobalHotkeyManager.instance) {
+      GlobalHotkeyManager.instance = new GlobalHotkeyManager();
+    }
+    return GlobalHotkeyManager.instance;
+  }
+  /**
+   * 解析 Electron Accelerator 字符串为组件
+   * @param accelerator 如 "Ctrl+Shift+F1"
+   */
+  parseAccelerator(accelerator) {
+    const parts = accelerator.split("+");
+    const result = { ctrl: false, alt: false, shift: false, meta: false, key: "" };
+    for (const part of parts) {
+      const lowerPart = part.toLowerCase();
+      if (lowerPart === "ctrl" || lowerPart === "control" || lowerPart === "commandorcontrol") {
+        result.ctrl = true;
+      } else if (lowerPart === "alt") {
+        result.alt = true;
+      } else if (lowerPart === "shift") {
+        result.shift = true;
+      } else if (lowerPart === "meta" || lowerPart === "super" || lowerPart === "command") {
+        result.meta = true;
+      } else {
+        result.key = part.toUpperCase();
+      }
+    }
+    return result;
+  }
+  /**
+   * 检查当前按键是否匹配指定的已解析快捷键
+   * @param keyCode 按下的键码
+   * @param parsed 已解析的快捷键结构
+   */
+  matchHotkey(keyCode, parsed) {
+    const keyName = keyCodeToName[keyCode];
+    if (!keyName) return false;
+    return this.modifierState.ctrl === parsed.ctrl && this.modifierState.alt === parsed.alt && this.modifierState.shift === parsed.shift && this.modifierState.meta === parsed.meta && keyName.toUpperCase() === parsed.key;
+  }
+  /**
+   * 启动键盘监听
+   */
+  start() {
+    if (this.isStarted) return;
+    uIOhook.on("keydown", (e) => {
+      if (e.keycode === UiohookKey.Ctrl || e.keycode === UiohookKey.CtrlRight) {
+        this.modifierState.ctrl = true;
+        return;
+      }
+      if (e.keycode === UiohookKey.Alt || e.keycode === UiohookKey.AltRight) {
+        this.modifierState.alt = true;
+        return;
+      }
+      if (e.keycode === UiohookKey.Shift || e.keycode === UiohookKey.ShiftRight) {
+        this.modifierState.shift = true;
+        return;
+      }
+      if (e.keycode === UiohookKey.Meta || e.keycode === UiohookKey.MetaRight) {
+        this.modifierState.meta = true;
+        return;
+      }
+      for (const [accelerator, { callback, parsed }] of this.hotkeyMap) {
+        if (this.matchHotkey(e.keycode, parsed)) {
+          console.log(`🎮 [GlobalHotkeyManager] 快捷键 ${accelerator} 被触发`);
+          callback();
+          break;
+        }
+      }
+    });
+    uIOhook.on("keyup", (e) => {
+      if (e.keycode === UiohookKey.Ctrl || e.keycode === UiohookKey.CtrlRight) {
+        this.modifierState.ctrl = false;
+      }
+      if (e.keycode === UiohookKey.Alt || e.keycode === UiohookKey.AltRight) {
+        this.modifierState.alt = false;
+      }
+      if (e.keycode === UiohookKey.Shift || e.keycode === UiohookKey.ShiftRight) {
+        this.modifierState.shift = false;
+      }
+      if (e.keycode === UiohookKey.Meta || e.keycode === UiohookKey.MetaRight) {
+        this.modifierState.meta = false;
+      }
+    });
+    uIOhook.start();
+    this.isStarted = true;
+    console.log("🎮 [GlobalHotkeyManager] 低级键盘钩子已启动");
+  }
+  /**
+   * 停止键盘监听
+   */
+  stop() {
+    if (!this.isStarted) return;
+    uIOhook.stop();
+    this.isStarted = false;
+    this.hotkeyMap.clear();
+    console.log("🎮 [GlobalHotkeyManager] 低级键盘钩子已停止");
+  }
+  /**
+   * 注册快捷键
+   * @param accelerator Electron Accelerator 格式的快捷键字符串，如 "Ctrl+F1"
+   * @param callback 快捷键触发时的回调函数
+   * @returns 是否注册成功
+   */
+  register(accelerator, callback) {
+    if (!accelerator) {
+      console.error("[GlobalHotkeyManager] 快捷键不能为空");
+      return false;
+    }
+    const parsed = this.parseAccelerator(accelerator);
+    if (!parsed.key) {
+      console.error(`[GlobalHotkeyManager] 无效的快捷键格式: ${accelerator}`);
+      return false;
+    }
+    if (!this.isStarted) {
+      this.start();
+    }
+    this.hotkeyMap.set(accelerator, { callback, parsed });
+    console.log(`✅ [GlobalHotkeyManager] 快捷键 ${accelerator} 注册成功`);
+    return true;
+  }
+  /**
+   * 注销快捷键
+   * @param accelerator 要注销的快捷键
+   */
+  unregister(accelerator) {
+    if (this.hotkeyMap.delete(accelerator)) {
+      console.log(`🎮 [GlobalHotkeyManager] 快捷键 ${accelerator} 已注销`);
+    }
+  }
+  /**
+   * 注销所有快捷键
+   */
+  unregisterAll() {
+    this.hotkeyMap.clear();
+    console.log("🎮 [GlobalHotkeyManager] 所有快捷键已注销");
+  }
+  /**
+   * 检查是否已注册某个快捷键
+   */
+  isRegistered(accelerator) {
+    return this.hotkeyMap.has(accelerator);
+  }
+}
+const globalHotkeyManager = GlobalHotkeyManager.getInstance();
 process.env.APP_ROOT = path__default.join(__dirname, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
 const MAIN_DIST = path__default.join(process.env.APP_ROOT, "dist-electron");
 const RENDERER_DIST = path__default.join(process.env.APP_ROOT);
 process.env.VITE_PUBLIC = is.dev ? path__default.join(process.env.APP_ROOT, "../public") : RENDERER_DIST;
 let win;
-let currentHotkey = null;
+let currentToggleHotkey = null;
+let currentStopAfterGameHotkey = null;
 function registerToggleHotkey(accelerator) {
-  if (currentHotkey) {
-    globalShortcut.unregister(currentHotkey);
-    currentHotkey = null;
+  if (currentToggleHotkey) {
+    globalHotkeyManager.unregister(currentToggleHotkey);
+    currentToggleHotkey = null;
   }
   if (!accelerator) {
-    console.log("🎮 [Main] 快捷键已取消绑定");
+    console.log("🎮 [Main] 挂机快捷键已取消绑定");
     return true;
   }
-  try {
-    const success = globalShortcut.register(accelerator, async () => {
-      console.log(`🎮 [Main] 快捷键 ${accelerator} 被触发，切换挂机状态`);
-      if (hexService.isRunning) {
-        await hexService.stop();
-      } else {
-        await hexService.start();
-      }
-      win?.webContents.send(IpcChannel.HEX_TOGGLE_TRIGGERED, hexService.isRunning);
-    });
-    if (success) {
-      currentHotkey = accelerator;
-      console.log(`✅ [Main] 全局快捷键 ${accelerator} 注册成功`);
-    } else {
-      console.error(`❌ [Main] 全局快捷键 ${accelerator} 注册失败`);
-    }
-    return success;
-  } catch (error) {
-    console.error(`❌ [Main] 注册快捷键 ${accelerator} 时出错:`, error);
-    return false;
+  const success = globalHotkeyManager.register(accelerator, async () => {
+    console.log(`🎮 [Main] 快捷键 ${accelerator} 被触发，切换挂机状态`);
+    hexService.isRunning ? await hexService.stop() : await hexService.start();
+    win?.webContents.send(IpcChannel.HEX_TOGGLE_TRIGGERED, hexService.isRunning);
+  });
+  if (success) {
+    currentToggleHotkey = accelerator;
   }
+  return success;
+}
+function registerStopAfterGameHotkey(accelerator) {
+  if (currentStopAfterGameHotkey) {
+    globalHotkeyManager.unregister(currentStopAfterGameHotkey);
+    currentStopAfterGameHotkey = null;
+  }
+  if (!accelerator) {
+    console.log('🎮 [Main] "本局结束后停止"快捷键已取消绑定');
+    return true;
+  }
+  const success = globalHotkeyManager.register(accelerator, () => {
+    console.log(`🎮 [Main] 快捷键 ${accelerator} 被触发，切换"本局结束后停止"状态`);
+    const newState = hexService.toggleStopAfterCurrentGame();
+    win?.webContents.send(IpcChannel.HEX_STOP_AFTER_GAME_TRIGGERED, newState);
+  });
+  if (success) {
+    currentStopAfterGameHotkey = accelerator;
+  }
+  return success;
 }
 function createWindow() {
   const savedWindowInfo = settingsStore.get("window");
@@ -16142,7 +16431,7 @@ app.on("activate", () => {
   }
 });
 app.on("will-quit", () => {
-  globalShortcut.unregisterAll();
+  globalHotkeyManager.stop();
 });
 app.whenReady().then(async () => {
   createWindow();
@@ -16152,6 +16441,8 @@ app.whenReady().then(async () => {
   console.log(`📦 [Main] 已加载 ${lineupCount} 个阵容配置`);
   const savedHotkey = settingsStore.get("toggleHotkeyAccelerator");
   registerToggleHotkey(savedHotkey);
+  const savedStopAfterGameHotkey = settingsStore.get("stopAfterGameHotkeyAccelerator");
+  registerStopAfterGameHotkey(savedStopAfterGameHotkey);
 });
 function init() {
   logger.init(win);
@@ -16257,6 +16548,24 @@ function registerHandler() {
       settingsStore.set("toggleHotkeyAccelerator", accelerator);
     }
     return success;
+  });
+  ipcMain.handle(IpcChannel.HOTKEY_GET_STOP_AFTER_GAME, async () => {
+    return settingsStore.get("stopAfterGameHotkeyAccelerator");
+  });
+  ipcMain.handle(IpcChannel.HOTKEY_SET_STOP_AFTER_GAME, async (_event, accelerator) => {
+    const success = registerStopAfterGameHotkey(accelerator);
+    if (success) {
+      settingsStore.set("stopAfterGameHotkeyAccelerator", accelerator);
+    }
+    return success;
+  });
+  ipcMain.handle(IpcChannel.HEX_GET_STOP_AFTER_GAME, async () => {
+    return hexService.stopAfterCurrentGame;
+  });
+  ipcMain.handle(IpcChannel.HEX_TOGGLE_STOP_AFTER_GAME, async () => {
+    const newState = hexService.toggleStopAfterCurrentGame();
+    win?.webContents.send(IpcChannel.HEX_STOP_AFTER_GAME_TRIGGERED, newState);
+    return newState;
   });
 }
 export {

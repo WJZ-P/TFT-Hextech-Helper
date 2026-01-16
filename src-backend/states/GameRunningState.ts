@@ -28,6 +28,7 @@ import { logger } from "../utils/Logger";
 import { sleep } from "../utils/HelperTools";
 import { inGameApi, InGameApiEndpoints } from "../lcu/InGameApi";
 import { showToast } from "../utils/ToastBridge";
+import { hexService } from "../services/HexService";
 
 /** abort 信号轮询间隔 (ms)，作为事件监听的兜底 */
 const ABORT_CHECK_INTERVAL_MS = 2000;
@@ -95,7 +96,13 @@ export class GameRunningState implements IState {
             logger.info("[GameRunningState] 用户手动停止，流转到 EndState");
             return new EndState();
         } else if (isGameEnded) {
-            // 游戏正常结束，返回大厅开始下一局
+            // 游戏正常结束，检查是否设置了"本局结束后停止"
+            if (hexService.stopAfterCurrentGame) {
+                logger.info("[GameRunningState] 游戏结束，检测到【本局结束后停止】标志，流转到 EndState");
+                showToast.success("本局已结束，自动停止挂机", { position: 'top-center' });
+                return new EndState();
+            }
+            // 否则返回大厅开始下一局
             logger.info("[GameRunningState] 游戏结束，流转到 LobbyState 开始下一局");
             return new LobbyState();
         } else {

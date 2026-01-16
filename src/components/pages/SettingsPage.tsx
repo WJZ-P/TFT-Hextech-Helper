@@ -221,6 +221,10 @@ const SettingsPage = () => {
     // 快捷键设置
     const [toggleHotkey, setToggleHotkey] = useState<string>('F1');
     const [isRecordingHotkey, setIsRecordingHotkey] = useState(false);
+    
+    // "本局结束后停止"快捷键设置
+    const [stopAfterGameHotkey, setStopAfterGameHotkey] = useState<string>('F2');
+    const [isRecordingStopAfterGameHotkey, setIsRecordingStopAfterGameHotkey] = useState(false);
 
     // 初始化时从后端获取设置
     useEffect(() => {
@@ -232,6 +236,10 @@ const SettingsPage = () => {
             // 加载快捷键设置
             const hotkey = await window.util.getToggleHotkey();
             setToggleHotkey(hotkey);
+            
+            // 加载"本局结束后停止"快捷键设置
+            const stopAfterGameHk = await window.util.getStopAfterGameHotkey();
+            setStopAfterGameHotkey(stopAfterGameHk);
         };
         loadSettings();
     }, []);
@@ -262,6 +270,13 @@ const SettingsPage = () => {
             return;
         }
         
+        // 检查是否与"本局结束后停止"快捷键冲突
+        if (accelerator === stopAfterGameHotkey) {
+            toast.error(`快捷键 ${accelerator} 已被"本局结束后停止"使用`);
+            setIsRecordingHotkey(false);
+            return;
+        }
+        
         // 尝试设置新快捷键
         const success = await window.util.setToggleHotkey(accelerator);
         if (success) {
@@ -272,15 +287,64 @@ const SettingsPage = () => {
         }
         
         setIsRecordingHotkey(false);
-    }, [toggleHotkey]);
+    }, [toggleHotkey, stopAfterGameHotkey]);
     
-    // 监听快捷键录入
+    // "本局结束后停止"快捷键录入处理
+    const handleStopAfterGameHotkeyKeyDown = useCallback(async (e: KeyboardEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // ESC 键：取消绑定快捷键
+        if (e.key === 'Escape') {
+            const success = await window.util.setStopAfterGameHotkey('');
+            if (success) {
+                setStopAfterGameHotkey('');
+                toast.success('快捷键已取消绑定');
+            }
+            setIsRecordingStopAfterGameHotkey(false);
+            return;
+        }
+        
+        const accelerator = keyEventToAccelerator(e);
+        if (!accelerator) return;  // 只按了修饰键，忽略
+        
+        // 如果按下的快捷键和当前一样，直接退出录入模式
+        if (accelerator === stopAfterGameHotkey) {
+            toast.success(`快捷键保持为 ${accelerator}`);
+            setIsRecordingStopAfterGameHotkey(false);
+            return;
+        }
+        
+        // 检查是否与"挂机开关"快捷键冲突
+        if (accelerator === toggleHotkey) {
+            toast.error(`快捷键 ${accelerator} 已被"挂机开关"使用`);
+            setIsRecordingStopAfterGameHotkey(false);
+            return;
+        }
+        
+        // 尝试设置新快捷键
+        const success = await window.util.setStopAfterGameHotkey(accelerator);
+        if (success) {
+            setStopAfterGameHotkey(accelerator);
+            toast.success(`快捷键已设置为 ${accelerator}`);
+        } else {
+            toast.error(`快捷键 ${accelerator} 设置失败，可能被其他程序占用`);
+        }
+        
+        setIsRecordingStopAfterGameHotkey(false);
+    }, [toggleHotkey, stopAfterGameHotkey]);
+    
+    // 监听快捷键录入（统一处理两个快捷键的录入）
     useEffect(() => {
         if (isRecordingHotkey) {
             window.addEventListener('keydown', handleHotkeyKeyDown);
             return () => window.removeEventListener('keydown', handleHotkeyKeyDown);
         }
-    }, [isRecordingHotkey, handleHotkeyKeyDown]);
+        if (isRecordingStopAfterGameHotkey) {
+            window.addEventListener('keydown', handleStopAfterGameHotkeyKeyDown);
+            return () => window.removeEventListener('keydown', handleStopAfterGameHotkeyKeyDown);
+        }
+    }, [isRecordingHotkey, isRecordingStopAfterGameHotkey, handleHotkeyKeyDown, handleStopAfterGameHotkeyKeyDown]);
 
     // 处理日志清理阈值变化
     const handleLogThresholdChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -319,9 +383,16 @@ const SettingsPage = () => {
         setIsRestoring(false);
     };
     
-    // 点击快捷键输入框，开始录入
+    // 点击快捷键输入框，开始录入（互斥：关闭另一个的录入状态）
     const handleHotkeyClick = () => {
+        setIsRecordingStopAfterGameHotkey(false);
         setIsRecordingHotkey(true);
+    };
+    
+    // 点击"本局结束后停止"快捷键输入框，开始录入（互斥：关闭另一个的录入状态）
+    const handleStopAfterGameHotkeyClick = () => {
+        setIsRecordingHotkey(false);
+        setIsRecordingStopAfterGameHotkey(true);
     };
 
     return (
@@ -344,6 +415,22 @@ const SettingsPage = () => {
                         tabIndex={0}
                     >
                         {isRecordingHotkey ? '请按下快捷键' : (toggleHotkey || '未绑定')}
+                    </HotkeyInput>
+                </SettingItem>
+                
+                <SettingItem>
+                    <SettingInfo>
+                        <SettingText>
+                            <h3>本局结束后停止</h3>
+                            <p>开启后，当前对局结束将自动停止挂机，按ESC取消绑定</p>
+                        </SettingText>
+                    </SettingInfo>
+                    <HotkeyInput 
+                        $isRecording={isRecordingStopAfterGameHotkey}
+                        onClick={handleStopAfterGameHotkeyClick}
+                        tabIndex={0}
+                    >
+                        {isRecordingStopAfterGameHotkey ? '请按下快捷键' : (stopAfterGameHotkey || '未绑定')}
                     </HotkeyInput>
                 </SettingItem>
             </SettingsCard>

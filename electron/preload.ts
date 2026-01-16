@@ -74,6 +74,23 @@ const hexApi = {
         ipcRenderer.on(IpcChannel.HEX_TOGGLE_TRIGGERED, listener);
         return () => ipcRenderer.removeListener(IpcChannel.HEX_TOGGLE_TRIGGERED, listener);
     },
+    /** 获取"本局结束后停止"状态 */
+    getStopAfterGame: (): Promise<boolean> => {
+        return ipcRenderer.invoke(IpcChannel.HEX_GET_STOP_AFTER_GAME)
+    },
+    /** 切换"本局结束后停止"状态 */
+    toggleStopAfterGame: (): Promise<boolean> => {
+        return ipcRenderer.invoke(IpcChannel.HEX_TOGGLE_STOP_AFTER_GAME)
+    },
+    /**
+     * 监听快捷键触发的"本局结束后停止"切换事件
+     * @param callback 回调函数，参数为切换后的状态（true=开启，false=关闭）
+     */
+    onStopAfterGameTriggered: (callback: (isEnabled: boolean) => void): (() => void) => {
+        const listener = (_event: IpcRendererEvent, isEnabled: boolean) => callback(isEnabled);
+        ipcRenderer.on(IpcChannel.HEX_STOP_AFTER_GAME_TRIGGERED, listener);
+        return () => ipcRenderer.removeListener(IpcChannel.HEX_STOP_AFTER_GAME_TRIGGERED, listener);
+    },
 }
 export type HexApi = typeof hexApi
 contextBridge.exposeInMainWorld('hex', hexApi)
@@ -126,6 +143,10 @@ const utilApi = {
     getToggleHotkey: (): Promise<string> => ipcRenderer.invoke(IpcChannel.HOTKEY_GET_TOGGLE),
     /** 设置挂机开关快捷键（返回是否设置成功），空字符串表示取消绑定 */
     setToggleHotkey: (accelerator: string): Promise<boolean> => ipcRenderer.invoke(IpcChannel.HOTKEY_SET_TOGGLE, accelerator),
+    /** 获取"本局结束后停止"快捷键 */
+    getStopAfterGameHotkey: (): Promise<string> => ipcRenderer.invoke(IpcChannel.HOTKEY_GET_STOP_AFTER_GAME),
+    /** 设置"本局结束后停止"快捷键（返回是否设置成功），空字符串表示取消绑定 */
+    setStopAfterGameHotkey: (accelerator: string): Promise<boolean> => ipcRenderer.invoke(IpcChannel.HOTKEY_SET_STOP_AFTER_GAME, accelerator),
 }
 export type UtilApi = typeof utilApi
 contextBridge.exposeInMainWorld('util', utilApi)

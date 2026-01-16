@@ -46,4 +46,11 @@ export enum IpcChannel {
     // 快捷键设置
     HOTKEY_GET_TOGGLE = 'hotkey-get-toggle',    // 获取挂机开关快捷键
     HOTKEY_SET_TOGGLE = 'hotkey-set-toggle',    // 设置挂机开关快捷键
+    HOTKEY_GET_STOP_AFTER_GAME = 'hotkey-get-stop-after-game',    // 获取"本局结束后停止"快捷键
+    HOTKEY_SET_STOP_AFTER_GAME = 'hotkey-set-stop-after-game',    // 设置"本局结束后停止"快捷键
+    // 本局结束后停止功能（主进程 -> 渲染进程）
+    HEX_STOP_AFTER_GAME_TRIGGERED = 'hex-stop-after-game-triggered',  // 快捷键触发时通知前端更新状态
+    // 本局结束后停止功能（渲染进程 -> 主进程）
+    HEX_GET_STOP_AFTER_GAME = 'hex-get-stop-after-game',    // 获取当前状态
+    HEX_TOGGLE_STOP_AFTER_GAME = 'hex-toggle-stop-after-game',  // 切换状态
 }
