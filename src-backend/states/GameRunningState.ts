@@ -27,7 +27,7 @@ import { gameStateManager } from "../services/GameStateManager";
 import { logger } from "../utils/Logger";
 import { sleep } from "../utils/HelperTools";
 import { inGameApi, InGameApiEndpoints } from "../lcu/InGameApi";
-import { showToast } from "../utils/ToastBridge";
+import { showToast, notifyStopAfterGameState, notifyHexRunningState } from "../utils/ToastBridge";
 import { hexService } from "../services/HexService";
 
 /** abort 信号轮询间隔 (ms)，作为事件监听的兜底 */
@@ -98,8 +98,19 @@ export class GameRunningState implements IState {
         } else if (isGameEnded) {
             // 游戏正常结束，检查是否设置了"本局结束后停止"
             if (hexService.stopAfterCurrentGame) {
-                logger.info("[GameRunningState] 游戏结束，检测到【本局结束后停止】标志，流转到 EndState");
+                logger.info("[GameRunningState] 游戏结束，检测到【本局结束后停止】标志，停止挂机");
                 showToast.success("本局已结束，自动停止挂机", { position: 'top-center' });
+                
+                // 通知前端重置"本局结束后停止"状态（因为是一次性功能，生效后自动取消）
+                notifyStopAfterGameState(false);
+                
+                // 通知前端挂机已停止（更新开关按钮状态）
+                notifyHexRunningState(false);
+                
+                // 调用 hexService.stop() 来正确停止服务
+                // 这会触发 AbortSignal，主循环会进入 finally 块执行 EndState 清理
+                await hexService.stop();
+                
                 return new EndState();
             }
             // 否则返回大厅开始下一局

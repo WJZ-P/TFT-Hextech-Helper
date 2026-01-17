@@ -61,3 +61,31 @@ showToast.warning = (message: string, options?: Omit<ToastOptions, 'type'>) =>
 
 showToast.error = (message: string, options?: Omit<ToastOptions, 'type'>) =>
     showToast(message, { ...options, type: 'error' });
+
+/**
+ * 通知前端更新"本局结束后停止"状态
+ * @param newState 新的状态值
+ * 
+ * @description 用于从后端状态机通知前端更新 UI 状态
+ *              主要在 GameRunningState 中，当"本局结束后停止"功能生效时调用
+ */
+export function notifyStopAfterGameState(newState: boolean): void {
+    const windows = BrowserWindow.getAllWindows();
+    for (const win of windows) {
+        win.webContents.send(IpcChannel.HEX_STOP_AFTER_GAME_TRIGGERED, newState);
+    }
+}
+
+/**
+ * 通知前端挂机服务运行状态变化
+ * @param isRunning 新的运行状态（true=运行中，false=已停止）
+ * 
+ * @description 用于从后端通知前端更新挂机开关的 UI 状态
+ *              主要在"本局结束后停止"功能生效、自动停止挂机时调用
+ */
+export function notifyHexRunningState(isRunning: boolean): void {
+    const windows = BrowserWindow.getAllWindows();
+    for (const win of windows) {
+        win.webContents.send(IpcChannel.HEX_TOGGLE_TRIGGERED, isRunning);
+    }
+}

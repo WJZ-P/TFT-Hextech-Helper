@@ -16375,8 +16375,14 @@ function registerToggleHotkey(accelerator) {
   }
   const success = globalHotkeyManager.register(accelerator, async () => {
     console.log(`🎮 [Main] 快捷键 ${accelerator} 被触发，切换挂机状态`);
-    hexService.isRunning ? await hexService.stop() : await hexService.start();
-    win?.webContents.send(IpcChannel.HEX_TOGGLE_TRIGGERED, hexService.isRunning);
+    const wasRunning = hexService.isRunning;
+    if (wasRunning) {
+      await hexService.stop();
+    } else {
+      await hexService.start();
+    }
+    const newState = !wasRunning;
+    win?.webContents.send(IpcChannel.HEX_TOGGLE_TRIGGERED, newState);
   });
   if (success) {
     currentToggleHotkey = accelerator;

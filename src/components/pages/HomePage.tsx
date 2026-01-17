@@ -1,9 +1,10 @@
 import React, {useState, useEffect} from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import StopCircleOutlinedIcon from '@mui/icons-material/StopCircleOutlined';
 import BlockIcon from '@mui/icons-material/Block';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import TimerOffIcon from '@mui/icons-material/TimerOff';
 import {ThemeType} from "../../styles/theme.ts";
 import {LogPanel} from "../LogPanel.tsx";
 import {toast} from "../toast/toast-core.ts";
@@ -243,6 +244,45 @@ const AdminWarningBanner = styled.div<{ theme: ThemeType }>`
   display: flex;
   align-items: center;
   gap: 6px;
+`;
+
+/** 横幅滑入动画 - 从上方滑入并淡入 */
+const slideInFromTop = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+    padding: 0 12px;
+    margin-bottom: 0;
+    margin-top: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 50px;
+    padding: 6px 12px;
+    margin-bottom: 12px;
+    margin-top: -12px;
+  }
+`;
+
+/** "本局结束后停止"信息横幅 */
+const StopAfterGameBanner = styled.div<{ theme: ThemeType }>`
+  background-color: ${props => props.theme.colors.primary}20;
+  border: 1px solid ${props => props.theme.colors.primary}60;
+  border-radius: ${props => props.theme.borderRadius};
+  padding: 6px 12px;
+  margin-bottom: 12px;
+  margin-top: -12px;
+  font-size: 1rem;
+  color: ${props => props.theme.colors.primary};
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  
+  /* 入场动画 */
+  animation: ${slideInFromTop} 0.3s ease-out forwards;
 `;
 
 // ============================================
@@ -811,6 +851,8 @@ export const HomePage = () => {
     const [logMode, setLogMode] = useState<LogMode>(LogMode.SIMPLE);
     // 新增：管理员权限状态（null 表示还在检测中）
     const [isElevated, setIsElevated] = useState<boolean | null>(null);
+    // 新增："本局结束后停止"状态
+    const [stopAfterGame, setStopAfterGame] = useState(false);
 
     /**
      * 获取召唤师信息的函数
@@ -927,6 +969,25 @@ export const HomePage = () => {
                 toast.success('海克斯科技启动!');
             } else {
                 toast.success('海克斯科技已关闭!');
+                // 停止时清除"本局结束后停止"状态
+                setStopAfterGame(false);
+            }
+        });
+        
+        return () => cleanup();
+    }, []);
+    
+    // 监听快捷键触发的"本局结束后停止"切换事件
+    useEffect(() => {
+        const cleanup = window.hex.onStopAfterGameTriggered((newState: boolean) => {
+            console.log('🎮 [HomePage] 收到"本局结束后停止"切换事件，新状态:', newState);
+            setStopAfterGame(newState);
+            
+            // 显示提示
+            if (newState) {
+                toast.info('对局结束后自动停止挂机');
+            } else {
+                toast.info('已取消对局结束后停止');
             }
         });
         
@@ -1086,6 +1147,14 @@ export const HomePage = () => {
                     </LoadingPlaceholder>
                 )}
             </SummonerSection>
+            
+            {/* "本局结束后停止"状态提示 - 在召唤师区域下方显示 */}
+            {stopAfterGame && (
+                <StopAfterGameBanner>
+                    <TimerOffIcon style={{ fontSize: '1rem' }} />
+                    对局结束后自动停止挂机
+                </StopAfterGameBanner>
+            )}
 
             {/* 控制区域 - Flexbox 水平排列 */}
             <ControlRow>
