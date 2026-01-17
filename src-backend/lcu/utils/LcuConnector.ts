@@ -66,11 +66,12 @@ class LCUConnector extends EventEmitter {
             // const INSTALL_REGEX = IS_WIN || IS_WSL ? INSTALL_REGEX_WIN : INSTALL_REGEX_MAC;
 
             // 根据操作系统构建不同的命令行命令
+            // macOS: 使用 [L] 技巧防止 grep 匹配自身，并过滤掉 Helper 子进程
             const command = IS_WIN ?
                 `WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline` :
                 IS_WSL ?
                     `WMIC.exe PROCESS WHERE "name='LeagueClientUx.exe'" GET commandline` :
-                    `ps x -o args | grep 'LeagueClientUx'`;
+                    `ps x -o args | grep '[L]eagueClientUx' | grep -v 'Helper' | grep -v '/Frameworks/'`;
 
             // 执行命令行命令
             cp.exec(command, (err, stdout, stderr) => {
@@ -82,24 +83,32 @@ class LCUConnector extends EventEmitter {
 
                 console.log(`process命令执行结果：${stdout}`)
 
-                // 匹配命令行输出，提取安装路径
-                //const parts = stdout.match(INSTALL_REGEX) || [];
-                // 处理 WSL 路径，将 Windows 路径转换为 Linux 路径
-                //const dirPath = !IS_WSL ? parts[1] : parts[1].split(path.win32.sep).join(path.sep).replace(/^([a-zA-Z]):/, match => '/mnt/' + match[0].toLowerCase());
-
+                // macOS 上可能返回多行，取第一行有效的进程信息
+                const lines = stdout.split('\n').filter(line => line.trim() && line.includes('--app-port='));
+                const processLine = lines[0] || stdout;
 
                 //  拿我们其他需要用到的数据
-                const portMatch = stdout.match(/--app-port=(\d+)/)
-                const tokenMatch = stdout.match(/--remoting-auth-token=([\w-]+)/)
-                const pidMatch = stdout.match(/--app-pid=(\d+)/)
-                const installDirectoryMatch = stdout.match(/--install-directory=(.*?)"/)
+                const portMatch = processLine.match(/--app-port=(\d+)/)
+                const tokenMatch = processLine.match(/--remoting-auth-token=([\w-]+)/)
+                const pidMatch = processLine.match(/--app-pid=(\d+)/)
+                
+                // 安装目录匹配：兼容 Windows（带引号）和 macOS（不带引号）
+                // Windows 格式: --install-directory=D:\path\to\game"
+                // macOS 格式: --install-directory=/Applications/League of Legends.app/Contents/LoL --next-param
+                let installDirectoryMatch = processLine.match(/--install-directory=(.*?)"/)  // Windows: 以引号结尾
+                if (!installDirectoryMatch) {
+                    // macOS: 匹配到下一个 -- 参数或行尾，处理路径中可能的空格
+                    installDirectoryMatch = processLine.match(/--install-directory=(.+?)(?=\s+--|$)/)
+                }
+                
                 // 确保所有需要的信息都找到了
                 if (portMatch && tokenMatch && pidMatch && installDirectoryMatch) {
+                    const installDir = installDirectoryMatch[1].trim();
                     const data: LCUProcessInfo = {
                         port: parseInt(portMatch[1]),
                         pid: parseInt(pidMatch[1]) ,
                         token: tokenMatch[1],
-                        installDirectory:path.dirname(installDirectoryMatch[1]) //  父目录
+                        installDirectory: path.dirname(installDir) //  父目录
                     }
                     resolve(data);
                 }

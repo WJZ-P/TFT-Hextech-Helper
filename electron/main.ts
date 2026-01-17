@@ -1,4 +1,4 @@
-import {app, BrowserWindow, ipcMain, shell} from 'electron'
+import {app, BrowserWindow, ipcMain, shell, net} from 'electron'
 import LCUConnector from "../src-backend/lcu/utils/LcuConnector.ts";
 import LCUManager, { LcuEventUri, LCUWebSocketMessage } from "../src-backend/lcu/LCUManager.ts";
 import 'source-map-support/register';
@@ -452,9 +452,11 @@ function registerHandler() {
     })
     
     // 检查更新：调用 GitHub API 获取最新 release
+    // 使用 Electron 的 net 模块，它会自动使用系统代理设置
     ipcMain.handle(IpcChannel.APP_CHECK_UPDATE, async () => {
         try {
-            const response = await fetch(
+            // net.fetch 是 Electron 提供的 fetch，会自动读取系统代理配置
+            const response = await net.fetch(
                 'https://api.github.com/repos/WJZ-P/TFT-Hextech-Helper/releases/latest',
                 {
                     headers: {

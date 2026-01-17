@@ -1,4 +1,4 @@
-import { app, screen as screen$1, BrowserWindow, ipcMain, shell } from "electron";
+import { app, screen as screen$1, BrowserWindow, ipcMain, net, shell } from "electron";
 import { EventEmitter } from "events";
 import require$$1 from "os";
 import cp, { exec } from "child_process";
@@ -16600,7 +16600,7 @@ function registerHandler() {
   });
   ipcMain.handle(IpcChannel.APP_CHECK_UPDATE, async () => {
     try {
-      const response = await fetch(
+      const response = await net.fetch(
         "https://api.github.com/repos/WJZ-P/TFT-Hextech-Helper/releases/latest",
         {
           headers: {
