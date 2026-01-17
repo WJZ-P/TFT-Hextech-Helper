@@ -1,4 +1,4 @@
-## 一款智能又省心的云顶之弈自动下棋助手 —— 海克斯科技！
+## TFT-Hextech-Helper！ 一款能让你在云顶之弈中自动下棋的软件！
 
 <!-- PROJECT SHIELDS -->
 
@@ -48,7 +48,13 @@
   </p>
 </p>
 
-<br>
+<p align="center">
+  <a href="https://www.bilibili.com/video/BV1z64y1b7H4">
+    <img src="markdown/纯蓝.jpg" alt="纯蓝">
+  </a>
+</p>
+<h2 align="center">"喜悦也好&nbsp;悲伤也好&nbsp;阴晴雨雪&nbsp;欢聚离别
+<br>世界上所有美好与苦难，&nbsp;通通都坠入那片纯蓝。"</h2>
 
 ## 目录
 

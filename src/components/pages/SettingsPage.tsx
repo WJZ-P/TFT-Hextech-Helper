@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import {ThemeType} from "../../styles/theme.ts";
 import {toast} from "../toast/toast-core.ts";
 import { logStore, LogAutoCleanThreshold } from "../../stores/logStore.ts";
@@ -218,6 +218,48 @@ const GitHubButton = styled.a<{ theme: ThemeType }>`
     height: 18px;
     fill: currentColor;
     flex-shrink: 0;
+  }
+`;
+
+/** 名字抖动动画 - 左右位移 + 角度旋转 */
+const shakeAnimation = keyframes`
+  0% { transform: translateX(0) rotate(0deg); }
+  25% { transform: translateX(-3px) rotate(-3deg); }
+  50% { transform: translateX(3px) rotate(3deg); }
+  75% { transform: translateX(-2px) rotate(-2deg); }
+  100% { transform: translateX(0) rotate(0deg); }
+`;
+
+/** 作者 Banner - 显示在页面底部的酷酷卡片 */
+const AuthorBanner = styled.div<{ theme: ThemeType }>`
+  text-align: center;
+  padding: ${props => props.theme.spacing.large};
+  margin-top: ${props => props.theme.spacing.large};
+  background: linear-gradient(135deg, 
+    ${props => props.theme.colors.elementBg} 0%, 
+    ${props => props.theme.colors.cardBg} 100%
+  );
+  border-radius: ${props => props.theme.borderRadius};
+  border: 1px solid ${props => props.theme.colors.border};
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  font-size: ${props => props.theme.fontSizes.medium};
+  color: ${props => props.theme.colors.text};
+  
+  a {
+    background: linear-gradient(135deg, ${props => props.theme.colors.primary}, #ff6b6b, #ffd93d);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 900;
+    font-size: 1.1em;
+    text-decoration: none;
+    cursor: pointer;
+    display: inline-block;
+    
+    &:hover {
+      animation: ${shakeAnimation} 0.8s ease-in-out infinite;
+    }
   }
 `;
 
@@ -662,6 +704,11 @@ const SettingsPage = () => {
                 </SettingItem>
                 
             </SettingsCard>
+
+            {/* 作者署名 */}
+            <AuthorBanner>
+                本软件由神奇的 <a href="https://github.com/WJZ-P" target="_blank" rel="noopener noreferrer">WJZ_P</a> 倾力打造 ( •̀ ω •́ )✧ ✨
+            </AuthorBanner>
         </PageWrapper>
     );
 };
