@@ -28,8 +28,15 @@ class GameConfigHelper {
 
         // 备份路径
         this.backupPath = path.join(app.getPath('userData'), 'GameConfigBackup');
-        //  预设云顶配置路径
-        this.tftConfigPath = path.join(app.getAppPath(), 'public', 'GameConfig', 'TFTConfig')
+        
+        // 预设云顶配置路径
+        // 开发环境：项目根目录/public/GameConfig/TFTConfig
+        // 生产环境：应用资源目录/GameConfig/TFTConfig
+        if (app.isPackaged) {
+            this.tftConfigPath = path.join(process.resourcesPath, 'GameConfig', 'TFTConfig');
+        } else {
+            this.tftConfigPath = path.join(app.getAppPath(), 'public', 'GameConfig', 'TFTConfig');
+        }
 
         console.log(`[ConfigHelper] 游戏设置目录已设定: ${this.gameConfigPath}`);
         console.log(`[ConfigHelper] 备份将存储在: ${this.backupPath}`);

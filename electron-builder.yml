@@ -1,24 +1,84 @@
 appId: com.wjz.tft-hextech-helper
-productName: TFT-Hextech-Helper("云顶之弈海克斯科技助手")
+productName: TFT-Hextech-Helper
 directories:
   buildResources: build
+  output: release  # 打包输出目录
+
+# 排除不需要打包进 app.asar 的文件/目录
 files:
   - '!**/.vscode/*'
   - '!src/*'
+  - '!src-backend/*'
+  - '!electron/*'
+  - '!public/*'
+  - '!test/*'
+  - '!scripts/*'
+  - '!.codebuddy/*'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+
+# 额外资源文件：复制到 resources 目录，运行时通过 process.resourcesPath 访问
+extraResources:
+  - from: public/lineups
+    to: lineups
+    filter:
+      - '**/*'
+  - from: public/TFTInfo
+    to: TFTInfo
+    filter:
+      - '**/*'
+  - from: public/GameConfig
+    to: GameConfig
+    filter:
+      - '**/*'
+  - from: public/gamePhotos
+    to: gamePhotos
+    filter:
+      - '**/*'
+  - from: public/icon.png
+    to: icon.png
+  - from: public/icon.ico
+    to: icon.ico
+
+# 不打包进 asar 的文件（原生模块需要解压才能运行）
+# 这些模块包含 .node 二进制文件，必须解压到文件系统才能被 Node.js 加载
 asarUnpack:
-  - resources/**
+  - node_modules/sharp/**
+  - node_modules/@nut-tree-fork/**
+  - node_modules/uiohook-napi/**
+
+# Windows 配置
 win:
   executableName: TFT-Hextech-Helper
+  icon: public/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+  # 请求管理员权限
+  requestedExecutionLevel: requireAdministrator
+
+# NSIS 安装包配置
 nsis:
+  oneClick: false  # 非一键安装，允许用户选择安装路径
+  allowToChangeInstallationDirectory: true
   artifactName: ${name}-${version}-setup.${ext}
-  shortcutName: ${productName}
-  uninstallDisplayName: ${productName}
+  shortcutName: TFT-Hextech-Helper
+  uninstallDisplayName: TFT-Hextech-Helper
   createDesktopShortcut: always
+  createStartMenuShortcut: true
+
+# macOS 配置
 mac:
+  icon: public/icon.png
+  category: public.app-category.games
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
@@ -26,18 +86,13 @@ mac:
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
   notarize: false
+
+# DMG 配置
 dmg:
-  artifactName: ${name}-${version}.${ext}
-linux:
-  target:
-    - AppImage
-    - snap
-    - deb
-  maintainer: electronjs.org
-  category: Utility
-appImage:
-  artifactName: ${name}-${version}.${ext}
-npmRebuild: false
-publish:
-  provider: generic
-  url: https://example.com/auto-updates
+  artifactName: ${name}-${version}-${arch}.${ext}
+
+# 重新编译原生模块（sharp、nut-js 等需要）
+npmRebuild: true
+
+# 发布配置（暂时禁用自动更新）
+publish: null

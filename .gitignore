@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Electron-vite 编译输出目录
+out
+
 # Electron-builder 打包输出目录
 release
 

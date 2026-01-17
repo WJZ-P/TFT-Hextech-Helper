@@ -2842,23 +2842,29 @@ class LCUConnector extends EventEmitter {
    */
   static getLCUInfoFromProcess() {
     return new Promise((resolve) => {
-      const command = IS_WIN ? `WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline` : IS_WSL ? `WMIC.exe PROCESS WHERE "name='LeagueClientUx.exe'" GET commandline` : `ps x -o args | grep 'LeagueClientUx'`;
+      const command = IS_WIN ? `WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline` : IS_WSL ? `WMIC.exe PROCESS WHERE "name='LeagueClientUx.exe'" GET commandline` : `ps x -o args | grep '[L]eagueClientUx' | grep -v 'Helper' | grep -v '/Frameworks/'`;
       cp.exec(command, (err, stdout, stderr) => {
         if (err || !stdout || stderr) {
           resolve(null);
           return;
         }
         console.log(`process命令执行结果：${stdout}`);
-        const portMatch = stdout.match(/--app-port=(\d+)/);
-        const tokenMatch = stdout.match(/--remoting-auth-token=([\w-]+)/);
-        const pidMatch = stdout.match(/--app-pid=(\d+)/);
-        const installDirectoryMatch = stdout.match(/--install-directory=(.*?)"/);
+        const lines = stdout.split("\n").filter((line) => line.trim() && line.includes("--app-port="));
+        const processLine = lines[0] || stdout;
+        const portMatch = processLine.match(/--app-port=(\d+)/);
+        const tokenMatch = processLine.match(/--remoting-auth-token=([\w-]+)/);
+        const pidMatch = processLine.match(/--app-pid=(\d+)/);
+        let installDirectoryMatch = processLine.match(/--install-directory=(.*?)"/);
+        if (!installDirectoryMatch) {
+          installDirectoryMatch = processLine.match(/--install-directory=(.+?)(?=\s+--|$)/);
+        }
         if (portMatch && tokenMatch && pidMatch && installDirectoryMatch) {
+          const installDir = installDirectoryMatch[1].trim();
           const data = {
             port: parseInt(portMatch[1]),
             pid: parseInt(pidMatch[1]),
             token: tokenMatch[1],
-            installDirectory: path$1.dirname(installDirectoryMatch[1])
+            installDirectory: path$1.dirname(installDir)
             //  父目录
           };
           resolve(data);
@@ -5531,7 +5537,11 @@ class GameConfigHelper {
     this.installPath = installPath;
     this.gameConfigPath = path__default.join(this.installPath, "Game", "Config");
     this.backupPath = path__default.join(app.getPath("userData"), "GameConfigBackup");
-    this.tftConfigPath = path__default.join(app.getAppPath(), "public", "GameConfig", "TFTConfig");
+    if (app.isPackaged) {
+      this.tftConfigPath = path__default.join(process.resourcesPath, "GameConfig", "TFTConfig");
+    } else {
+      this.tftConfigPath = path__default.join(app.getAppPath(), "public", "GameConfig", "TFTConfig");
+    }
     console.log(`[ConfigHelper] 游戏设置目录已设定: ${this.gameConfigPath}`);
     console.log(`[ConfigHelper] 备份将存储在: ${this.backupPath}`);
     console.log(`[ConfigHelper] 预设云顶之弈设置目录: ${this.tftConfigPath}`);

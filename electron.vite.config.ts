@@ -32,7 +32,7 @@ export default defineConfig({
         }
     },
     renderer: {
-        root :  resolve(__dirname,'src'), // dev模式下，index.html所在的目录
+        root: resolve(__dirname, 'src'), // dev模式下，index.html所在的目录
         resolve: {  // renderer（你的React src/）
             alias: {
                 "@": resolve(__dirname, 'src'),  // 你的src别名
@@ -42,8 +42,8 @@ export default defineConfig({
         build: {
             rollupOptions: {
                 // 告诉它 React App 的入口 HTML 是
-                // 根目录下的 "index.html" 文件！
-                input: resolve(__dirname, 'index.html'),
+                // src 目录下的 "index.html" 文件！
+                input: resolve(__dirname, 'src/index.html'),
             }
         },
         plugins: [react({
