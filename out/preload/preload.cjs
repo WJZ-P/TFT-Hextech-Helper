@@ -43,6 +43,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["HEX_TOGGLE_STOP_AFTER_GAME"] = "hex-toggle-stop-after-game";
   IpcChannel2["SETTINGS_GET"] = "settings-get";
   IpcChannel2["SETTINGS_SET"] = "settings-set";
+  IpcChannel2["UTIL_IS_ELEVATED"] = "util-is-elevated";
   return IpcChannel2;
 })(IpcChannel || {});
 electron.contextBridge.exposeInMainWorld("ipcRenderer", {
@@ -169,7 +170,13 @@ const utilApi = {
   /** 获取"本局结束后停止"快捷键 */
   getStopAfterGameHotkey: () => electron.ipcRenderer.invoke(IpcChannel.HOTKEY_GET_STOP_AFTER_GAME),
   /** 设置"本局结束后停止"快捷键（返回是否设置成功），空字符串表示取消绑定 */
-  setStopAfterGameHotkey: (accelerator) => electron.ipcRenderer.invoke(IpcChannel.HOTKEY_SET_STOP_AFTER_GAME, accelerator)
+  setStopAfterGameHotkey: (accelerator) => electron.ipcRenderer.invoke(IpcChannel.HOTKEY_SET_STOP_AFTER_GAME, accelerator),
+  /**
+   * 检测当前是否以管理员权限运行
+   * 原理：执行 `net session` 命令，该命令只有管理员权限下才能成功
+   * @returns true = 有管理员权限，false = 无管理员权限
+   */
+  isElevated: () => electron.ipcRenderer.invoke(IpcChannel.UTIL_IS_ELEVATED)
 };
 electron.contextBridge.exposeInMainWorld("util", utilApi);
 const settingsApi = {

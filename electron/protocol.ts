@@ -56,4 +56,6 @@ export enum IpcChannel {
     // 通用设置读写（取代单独的 get/set 通道）
     SETTINGS_GET = 'settings-get',    // 读取设置项
     SETTINGS_SET = 'settings-set',    // 写入设置项
+    // 系统工具
+    UTIL_IS_ELEVATED = 'util-is-elevated',  // 检测当前是否有管理员权限
 }

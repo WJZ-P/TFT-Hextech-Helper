@@ -147,6 +147,12 @@ const utilApi = {
     getStopAfterGameHotkey: (): Promise<string> => ipcRenderer.invoke(IpcChannel.HOTKEY_GET_STOP_AFTER_GAME),
     /** 设置"本局结束后停止"快捷键（返回是否设置成功），空字符串表示取消绑定 */
     setStopAfterGameHotkey: (accelerator: string): Promise<boolean> => ipcRenderer.invoke(IpcChannel.HOTKEY_SET_STOP_AFTER_GAME, accelerator),
+    /**
+     * 检测当前是否以管理员权限运行
+     * 原理：执行 `net session` 命令，该命令只有管理员权限下才能成功
+     * @returns true = 有管理员权限，false = 无管理员权限
+     */
+    isElevated: (): Promise<boolean> => ipcRenderer.invoke(IpcChannel.UTIL_IS_ELEVATED),
 }
 export type UtilApi = typeof utilApi
 contextBridge.exposeInMainWorld('util', utilApi)

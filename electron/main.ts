@@ -15,6 +15,7 @@ import {is, optimizer} from "@electron-toolkit/utils";
 import {lineupLoader} from "../src-backend/lineup";  // 导入阵容加载器
 import {TFT_16_CHAMPION_DATA} from "../src-backend/TFTProtocol";  // 导入棋子数据
 import {globalHotkeyManager} from "../src-backend/utils/GlobalHotkeyManager.ts";  // 全局快捷键管理器
+import { exec } from 'child_process';  // 用于执行系统命令
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -420,5 +421,16 @@ function registerHandler() {
     })
     ipcMain.handle(IpcChannel.SETTINGS_SET, async (_event, key: string, value: any) => {
         settingsStore.set(key as any, value);
+    })
+    
+    // 系统工具：检测管理员权限
+    // 原理：执行 `net session` 命令，该命令只有在管理员权限下才能成功执行
+    ipcMain.handle(IpcChannel.UTIL_IS_ELEVATED, async () => {
+        return new Promise<boolean>((resolve) => {
+            exec('net session', (error) => {
+                // 没有错误 = 有管理员权限
+                resolve(!error);
+            });
+        });
     })
 }

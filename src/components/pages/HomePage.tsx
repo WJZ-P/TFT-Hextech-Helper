@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import StopCircleOutlinedIcon from '@mui/icons-material/StopCircleOutlined';
 import BlockIcon from '@mui/icons-material/Block';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import {ThemeType} from "../../styles/theme.ts";
 import {LogPanel} from "../LogPanel.tsx";
 import {toast} from "../toast/toast-core.ts";
@@ -228,6 +229,20 @@ const LoadingPlaceholder = styled.div<{ theme: ThemeType }>`
   color: ${props => props.theme.colors.textSecondary};
   font-size: 0.9rem;
   padding: ${props => props.theme.spacing.small};
+`;
+
+/** 管理员权限提示横幅 */
+const AdminWarningBanner = styled.div<{ theme: ThemeType }>`
+  background-color: ${props => props.theme.colors.warning}20;
+  border: 1px solid ${props => props.theme.colors.warning}60;
+  border-radius: ${props => props.theme.borderRadius};
+  padding: 6px 12px;
+  margin-top: 8px;
+  font-size: 1rem;
+  color: ${props => props.theme.colors.warning};
+  display: flex;
+  align-items: center;
+  gap: 6px;
 `;
 
 // ============================================
@@ -794,6 +809,8 @@ export const HomePage = () => {
     const [tftMode, setTftMode] = useState<TFTMode>(TFTMode.NORMAL);
     // 新增：日志模式（简略/详细）
     const [logMode, setLogMode] = useState<LogMode>(LogMode.SIMPLE);
+    // 新增：管理员权限状态（null 表示还在检测中）
+    const [isElevated, setIsElevated] = useState<boolean | null>(null);
 
     /**
      * 获取召唤师信息的函数
@@ -836,6 +853,10 @@ export const HomePage = () => {
     useEffect(() => {
         // 1. 先检查当前是否已经连接
         const checkInitialStatus = async () => {
+            // 检测管理员权限
+            const elevated = await window.util.isElevated();
+            setIsElevated(elevated);
+            
             // 获取 LCU 连接状态
             const connected = await window.lcu.getConnectionStatus();
             setIsLcuConnected(connected);
@@ -988,6 +1009,14 @@ export const HomePage = () => {
                             <RadarCircleInner />
                             <AppIconImage src={appIconUrl} alt="App Icon" />
                         </AppIconContainer>
+                        
+                        {/* 未检测到管理员权限时显示警告 */}
+                        {isElevated === false && (
+                            <AdminWarningBanner>
+                                <WarningAmberIcon style={{ fontSize: '1rem' }} />
+                                请以管理员模式运行本软件！(╯°□°)╯︵ ┻━┻
+                            </AdminWarningBanner>
+                        )}
                     </LoadingPlaceholder>
                 ) : summonerInfo ? (
                     <>

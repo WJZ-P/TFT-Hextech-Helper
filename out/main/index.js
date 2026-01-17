@@ -1,7 +1,7 @@
 import { app, screen as screen$1, BrowserWindow, ipcMain } from "electron";
 import { EventEmitter } from "events";
 import require$$1 from "os";
-import cp from "child_process";
+import cp, { exec } from "child_process";
 import path$1 from "node:path";
 import * as fs$2 from "fs";
 import fs__default from "fs";
@@ -5694,6 +5694,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["HEX_TOGGLE_STOP_AFTER_GAME"] = "hex-toggle-stop-after-game";
   IpcChannel2["SETTINGS_GET"] = "settings-get";
   IpcChannel2["SETTINGS_SET"] = "settings-set";
+  IpcChannel2["UTIL_IS_ELEVATED"] = "util-is-elevated";
   return IpcChannel2;
 })(IpcChannel || {});
 class IdleState {
@@ -16576,6 +16577,13 @@ function registerHandler() {
   });
   ipcMain.handle(IpcChannel.SETTINGS_SET, async (_event, key, value) => {
     settingsStore.set(key, value);
+  });
+  ipcMain.handle(IpcChannel.UTIL_IS_ELEVATED, async () => {
+    return new Promise((resolve) => {
+      exec("net session", (error) => {
+        resolve(!error);
+      });
+    });
   });
 }
 export {
