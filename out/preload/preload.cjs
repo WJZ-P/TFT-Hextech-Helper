@@ -41,6 +41,8 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["HEX_STOP_AFTER_GAME_TRIGGERED"] = "hex-stop-after-game-triggered";
   IpcChannel2["HEX_GET_STOP_AFTER_GAME"] = "hex-get-stop-after-game";
   IpcChannel2["HEX_TOGGLE_STOP_AFTER_GAME"] = "hex-toggle-stop-after-game";
+  IpcChannel2["SETTINGS_GET"] = "settings-get";
+  IpcChannel2["SETTINGS_SET"] = "settings-set";
   return IpcChannel2;
 })(IpcChannel || {});
 electron.contextBridge.exposeInMainWorld("ipcRenderer", {
@@ -170,6 +172,21 @@ const utilApi = {
   setStopAfterGameHotkey: (accelerator) => electron.ipcRenderer.invoke(IpcChannel.HOTKEY_SET_STOP_AFTER_GAME, accelerator)
 };
 electron.contextBridge.exposeInMainWorld("util", utilApi);
+const settingsApi = {
+  /** 
+   * 读取设置项（支持点号路径）
+   * @example settings.get('showDebugPage')
+   * @example settings.get('window.bounds')
+   */
+  get: (key) => electron.ipcRenderer.invoke(IpcChannel.SETTINGS_GET, key),
+  /**
+   * 写入设置项（支持点号路径）
+   * @example settings.set('showDebugPage', true)
+   * @example settings.set('window.bounds', { x: 0, y: 0, width: 800, height: 600 })
+   */
+  set: (key, value) => electron.ipcRenderer.invoke(IpcChannel.SETTINGS_SET, key, value)
+};
+electron.contextBridge.exposeInMainWorld("settings", settingsApi);
 const lcuApi = {
   /**
    * 获取当前召唤师信息

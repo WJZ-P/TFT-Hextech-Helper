@@ -53,4 +53,7 @@ export enum IpcChannel {
     // 本局结束后停止功能（渲染进程 -> 主进程）
     HEX_GET_STOP_AFTER_GAME = 'hex-get-stop-after-game',    // 获取当前状态
     HEX_TOGGLE_STOP_AFTER_GAME = 'hex-toggle-stop-after-game',  // 切换状态
+    // 通用设置读写（取代单独的 get/set 通道）
+    SETTINGS_GET = 'settings-get',    // 读取设置项
+    SETTINGS_SET = 'settings-set',    // 写入设置项
 }

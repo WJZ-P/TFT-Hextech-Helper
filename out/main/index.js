@@ -5692,6 +5692,8 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["HEX_STOP_AFTER_GAME_TRIGGERED"] = "hex-stop-after-game-triggered";
   IpcChannel2["HEX_GET_STOP_AFTER_GAME"] = "hex-get-stop-after-game";
   IpcChannel2["HEX_TOGGLE_STOP_AFTER_GAME"] = "hex-toggle-stop-after-game";
+  IpcChannel2["SETTINGS_GET"] = "settings-get";
+  IpcChannel2["SETTINGS_SET"] = "settings-set";
   return IpcChannel2;
 })(IpcChannel || {});
 class IdleState {
@@ -13118,6 +13120,8 @@ class SettingsStore {
       //  默认快捷键是 F1
       stopAfterGameHotkeyAccelerator: "F2",
       //  默认快捷键是 F2
+      showDebugPage: false,
+      //  默认隐藏调试页面
       window: {
         bounds: null,
         //  第一次启动，默认为null
@@ -16566,6 +16570,12 @@ function registerHandler() {
     const newState = hexService.toggleStopAfterCurrentGame();
     win?.webContents.send(IpcChannel.HEX_STOP_AFTER_GAME_TRIGGERED, newState);
     return newState;
+  });
+  ipcMain.handle(IpcChannel.SETTINGS_GET, async (_event, key) => {
+    return settingsStore.get(key);
+  });
+  ipcMain.handle(IpcChannel.SETTINGS_SET, async (_event, key, value) => {
+    settingsStore.set(key, value);
   });
 }
 export {

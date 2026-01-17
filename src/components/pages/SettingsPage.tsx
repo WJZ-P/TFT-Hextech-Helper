@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import {ThemeType} from "../../styles/theme.ts";
 import {toast} from "../toast/toast-core.ts";
 import { logStore, LogAutoCleanThreshold } from "../../stores/logStore.ts";
+import { settingsStore } from "../../stores/settingsStore.ts"; // 全局设置状态
 
 // -------------------------------------------------------------------
 // ✨ 样式组件定义 (Styled Components Definitions) ✨
@@ -158,6 +159,39 @@ const HotkeyInput = styled.div<{ $isRecording: boolean }>`
   }
 `;
 
+// Toggle Switch 开关样式
+const ToggleSwitch = styled.label`
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+  cursor: pointer;
+`;
+
+const ToggleSlider = styled.span<{ $isOn: boolean }>`
+  position: absolute;
+  top: 0;           /* ← 加上这个 */
+  left: 0;          /* ← 加上这个 */
+  width: 100%;
+  height: 100%;
+  background-color: ${props => props.$isOn ? props.theme.colors.primary : props.theme.colors.border};
+  border-radius: 26px;
+  transition: all 0.3s ease-in-out;
+
+  &::before {
+    content: '';
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    left: ${props => props.$isOn ? '25px' : '3px'};
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+`;
+
 // -------------------------------------------------------------------
 // ✨ 工具函数 ✨
 // -------------------------------------------------------------------
@@ -225,6 +259,9 @@ const SettingsPage = () => {
     // "本局结束后停止"快捷键设置
     const [stopAfterGameHotkey, setStopAfterGameHotkey] = useState<string>('F2');
     const [isRecordingStopAfterGameHotkey, setIsRecordingStopAfterGameHotkey] = useState(false);
+    
+    // 调试页面显示设置
+    const [showDebugPage, setShowDebugPage] = useState(false);
 
     // 初始化时从后端获取设置
     useEffect(() => {
@@ -240,8 +277,19 @@ const SettingsPage = () => {
             // 加载"本局结束后停止"快捷键设置
             const stopAfterGameHk = await window.util.getStopAfterGameHotkey();
             setStopAfterGameHotkey(stopAfterGameHk);
+            
+            // 加载调试页面显示设置（通过 settingsStore）
+            await settingsStore.init();
+            setShowDebugPage(settingsStore.getShowDebugPage());
         };
         loadSettings();
+        
+        // 订阅 settingsStore 变化（其他组件修改时同步更新）
+        const unsubscribe = settingsStore.subscribe((settings) => {
+            setShowDebugPage(settings.showDebugPage);
+        });
+        
+        return unsubscribe;
     }, []);
     
     // 快捷键录入处理
@@ -394,6 +442,14 @@ const SettingsPage = () => {
         setIsRecordingHotkey(false);
         setIsRecordingStopAfterGameHotkey(true);
     };
+    
+    // 切换调试页面显示
+    const handleToggleDebugPage = async () => {
+        const newValue = !showDebugPage;
+        // 通过 settingsStore 修改，会自动通知 Sidebar 更新
+        await settingsStore.setShowDebugPage(newValue);
+        toast.success(newValue ? '调试页面已显示' : '调试页面已隐藏');
+    };
 
     return (
         <PageWrapper>
@@ -487,6 +543,24 @@ const SettingsPage = () => {
                     <ActionButton onClick={handleRestore} disabled={isBackingUp || isRestoring}>
                         {isRestoring ? '恢复中...' : '恢复备份'}
                     </ActionButton>
+                </SettingItem>
+            </SettingsCard>
+
+            {/* 开发者选项 */}
+            <SettingsHeader>
+                开发者选项
+            </SettingsHeader>
+            <SettingsCard>
+                <SettingItem>
+                    <SettingInfo>
+                        <SettingText>
+                            <h3>显示调试页面</h3>
+                            <p>在侧边栏显示调试页面入口，用于开发调试。</p>
+                        </SettingText>
+                    </SettingInfo>
+                    <ToggleSwitch onClick={handleToggleDebugPage}>
+                        <ToggleSlider $isOn={showDebugPage} />
+                    </ToggleSwitch>
                 </SettingItem>
             </SettingsCard>
         </PageWrapper>

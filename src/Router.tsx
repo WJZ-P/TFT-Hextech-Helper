@@ -4,8 +4,9 @@ import {createHashRouter, Navigate} from "react-router-dom";
 import MainLayout from "./components/MainLayout.tsx";
 import ErrorPage from "./components/pages/ErrorPage.tsx";
 import {HomePage} from "./components/pages/HomePage.tsx";
+import { RoutePath } from "./constants/routes";
 
-const DashboardPage = lazy(() => import('./components/pages/DashboardPage'));
+const DebugPage = lazy(() => import('./components/pages/DebugPage'));
 const SettingsPage = lazy(() => import('./components/pages/SettingsPage'));
 const LineupsPage = lazy(() => import('./components/pages/LineupsPage')); // 阵容搭配页面
 
@@ -20,11 +21,11 @@ const LoadingSpinner = () => (
 
 export const router = createHashRouter([
     {
-        path: '/',
-        element: <MainLayout/>, // 喵~ 使用我们的主布局
+        path: RoutePath.HOME,
+        element: <MainLayout/>, // 使用我们的主布局
         errorElement: <ErrorPage/>,
         children: [
-            // 当用户访问根路径时，自动跳转到仪表盘
+            // 当用户访问根路径时，显示主页
             {
                 index:true,
                 element: (
@@ -34,7 +35,8 @@ export const router = createHashRouter([
                 )
             },
             {
-                path: 'lineups',
+                // 去掉开头的 '/'，因为这是嵌套路由
+                path: RoutePath.LINEUPS.slice(1),
                 element: (
                     <Suspense fallback={<LoadingSpinner/>}>
                         <LineupsPage/>
@@ -42,15 +44,15 @@ export const router = createHashRouter([
                 )
             },
             {
-                path: 'dashboard',
+                path: RoutePath.DEBUG.slice(1),
                 element: (
                     <Suspense fallback={<LoadingSpinner/>}>
-                        <DashboardPage/>
+                        <DebugPage/>
                     </Suspense>
                 )
             },
             {
-                path: 'settings',
+                path: RoutePath.SETTINGS.slice(1),
                 element: (
                     <Suspense fallback={<LoadingSpinner/>}>
                         <SettingsPage/>

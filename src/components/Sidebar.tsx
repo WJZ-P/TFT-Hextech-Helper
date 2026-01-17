@@ -3,19 +3,31 @@ import {NavLink} from "react-router-dom";
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import SettingsIcon from '@mui/icons-material/Settings';
 import BoltIcon from '@mui/icons-material/Bolt';
-import styled, {ThemeContext} from "styled-components";
-import React, {useContext, useRef, useState} from "react"; // 一个好看的闪电图标给 Logo
+import styled from "styled-components";
+import React, {useEffect, useState} from "react";
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import HomeIcon from '@mui/icons-material/Home'; // 新增：导入 Home 图标
-import ExtensionIcon from '@mui/icons-material/Extension'; // 阵容搭配图标（拼图块，代表组合搭配）
+import HomeIcon from '@mui/icons-material/Home';
+import ExtensionIcon from '@mui/icons-material/Extension';
+import { settingsStore } from "../stores/settingsStore";
+import type { SvgIconComponent } from "@mui/icons-material";
+import { RoutePath } from "../constants/routes";
 
-const navItems = [
-    {path: '/',label:'主界面',icon:HomeIcon},
-    {path: '/lineups', label: '阵容搭配', icon: ExtensionIcon},
-    {path: '/dashboard', label: '仪表盘', icon: DashboardIcon},
-    {path: '/settings', label: '设置', icon: SettingsIcon},
-]
+// 导航项类型定义
+interface NavItem {
+    path: RoutePath;  // 使用枚举类型，类型更安全
+    label: string;
+    icon: SvgIconComponent;
+    show: boolean;  // 是否显示
+}
+
+// 导航项初始配置（默认全部显示）
+const defaultNavItems: NavItem[] = [
+    { path: RoutePath.HOME, label: '主界面', icon: HomeIcon, show: true },
+    { path: RoutePath.LINEUPS, label: '阵容搭配', icon: ExtensionIcon, show: true },
+    { path: RoutePath.DEBUG, label: '调试页', icon: DashboardIcon, show: true },
+    { path: RoutePath.SETTINGS, label: '设置', icon: SettingsIcon, show: true },
+];
 
 // 喵~ 这是一个新的组件，专门用来包裹需要“消失”的文字
 const LinkText = styled.span<{ $isCollapsed: boolean }>`
@@ -123,8 +135,43 @@ const ToggleButton = styled.button`
   }
 `;
 
+// 导航项动画包装器 - 用于实现平滑的显示/隐藏动画
+const NavItemWrapper = styled.div<{ $isVisible: boolean }>`
+  /* 使用 grid 技巧实现高度动画（从 0 到 auto） */
+  display: grid;
+  grid-template-rows: ${props => props.$isVisible ? '1fr' : '0fr'};
+  transition: grid-template-rows 0.3s ease-in-out;
+  
+  /* 内部容器，配合 grid 实现溢出隐藏 */
+  > div {
+    overflow: hidden;
+  }
+`;
+
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
+  // 导航项列表（带 show 属性）
+  const [navItems, setNavItems] = useState<NavItem[]>(defaultNavItems);
+  
+  // 根据设置更新指定导航项的 show 属性
+  const updateNavItemShow = (path: RoutePath, show: boolean) => {
+    setNavItems(prev => prev.map(item => 
+      item.path === path ? { ...item, show } : item
+    ));
+  };
+  
+  // 初始化 settingsStore 并订阅变化
+  useEffect(() => {
+    // 初始化（会从后端加载设置）
+    settingsStore.init().then(() => {
+      updateNavItemShow(RoutePath.DEBUG, settingsStore.getShowDebugPage());
+    });
+    
+    // 订阅设置变化，当其他组件修改设置时，动态更新对应项的 show
+    return settingsStore.subscribe((settings) => {
+      updateNavItemShow(RoutePath.DEBUG, settings.showDebugPage);
+    });
+  }, []);
 
   return (
     <SidebarContainer $isCollapsed={isCollapsed}>
@@ -136,10 +183,14 @@ const Sidebar = () => {
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
-            <StyledNavLink key={item.path} to={item.path} $isCollapsed={isCollapsed}>
-              <Icon />
-              <LinkText $isCollapsed={isCollapsed}>{item.label}</LinkText>
-            </StyledNavLink>
+            <NavItemWrapper key={item.path} $isVisible={item.show}>
+              <div>
+                <StyledNavLink to={item.path} $isCollapsed={isCollapsed}>
+                  <Icon />
+                  <LinkText $isCollapsed={isCollapsed}>{item.label}</LinkText>
+                </StyledNavLink>
+              </div>
+            </NavItemWrapper>
           );
         })}
       </Nav>

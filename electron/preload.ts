@@ -151,6 +151,24 @@ const utilApi = {
 export type UtilApi = typeof utilApi
 contextBridge.exposeInMainWorld('util', utilApi)
 
+// settingsApi: 通用设置读写 API（与后端 SettingsStore 对接）
+const settingsApi = {
+    /** 
+     * 读取设置项（支持点号路径）
+     * @example settings.get('showDebugPage')
+     * @example settings.get('window.bounds')
+     */
+    get: <T = any>(key: string): Promise<T> => ipcRenderer.invoke(IpcChannel.SETTINGS_GET, key),
+    /**
+     * 写入设置项（支持点号路径）
+     * @example settings.set('showDebugPage', true)
+     * @example settings.set('window.bounds', { x: 0, y: 0, width: 800, height: 600 })
+     */
+    set: <T = any>(key: string, value: T): Promise<void> => ipcRenderer.invoke(IpcChannel.SETTINGS_SET, key, value),
+}
+export type SettingsApi = typeof settingsApi
+contextBridge.exposeInMainWorld('settings', settingsApi)
+
 const lcuApi = {
     /**
      * 获取当前召唤师信息

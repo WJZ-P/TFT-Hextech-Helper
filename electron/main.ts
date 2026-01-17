@@ -413,4 +413,12 @@ function registerHandler() {
         win?.webContents.send(IpcChannel.HEX_STOP_AFTER_GAME_TRIGGERED, newState);
         return newState;
     })
+    
+    // 通用设置读写（支持点号路径，如 'window.bounds'）
+    ipcMain.handle(IpcChannel.SETTINGS_GET, async (_event, key: string) => {
+        return settingsStore.get(key as any);
+    })
+    ipcMain.handle(IpcChannel.SETTINGS_SET, async (_event, key: string, value: any) => {
+        settingsStore.set(key as any, value);
+    })
 }
