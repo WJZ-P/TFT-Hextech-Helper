@@ -1,4 +1,4 @@
-## TFT-Hextech-Helper！ 一款能让你在云顶之弈中自动下棋的软件！
+# TFT-Hextech-Helper —— 云顶之弈挂机小助手
 
 <!-- PROJECT SHIELDS -->
 
@@ -38,7 +38,6 @@
   </a>
   <h1 align="center">TFT Hextech Helper</h1>
   <p align="center">
-    云顶之弈海克斯科技助手
     <br>
     <a href="https://github.com/WJZ-P/TFT-Hextech-Helper">查看Demo</a>
     ·
@@ -49,12 +48,11 @@
 </p>
 
 <p align="center">
-  <a href="https://www.bilibili.com/video/BV1z64y1b7H4">
-    <img src="markdown/纯蓝.jpg" alt="纯蓝">
+  <a href="https://www.bilibili.com/video/BV1vx4y1t7rH">
+    <img src="markdown/深蓝雨.jpg" alt="深蓝雨">
   </a>
 </p>
-<h2 align="center">"喜悦也好&nbsp;悲伤也好&nbsp;阴晴雨雪&nbsp;欢聚离别
-<br>世界上所有美好与苦难，&nbsp;通通都坠入那片纯蓝。"</h2>
+<h2 align="center">"尽握在手沉重的花束名誉&nbsp;沾着泥土的指尖始终&nbsp;怯于靠近&nbsp;那脸庞遥不可及"</h2>
 
 ## 目录
 
@@ -73,7 +71,9 @@
 
 TFT Hextech Helper 是一款基于 Electron + React + TypeScript 开发的云顶之弈自动下棋助手。它可以帮助你在云顶之弈中自动进行对局，解放你的双手，让你可以边挂机边做其他事情。（当然挂机的时候你就不能玩电脑了，因为软件会使用你的鼠标！）
 
-<!-- TODO: 添加软件截图 -->
+<p align="center">
+  <img src="markdown/项目示意图.png" alt="软件截图" width="80%">
+</p>
 
 ## 功能特性
 
@@ -91,14 +91,16 @@ TFT Hextech Helper 是一款基于 Electron + React + TypeScript 开发的云顶
 - **安装版** (.exe setup) - 推荐，支持自动更新
 - **便携版** (.zip) - 解压即用，无需安装
 
-**或点击右侧高速下载**：[TFT-Hextech-Helper-1.0.0-win.zip](https://static1.keepcdn.com/user-avatar/2026/01/17/22/6943f6affbbe480001c744e2/ciallo/d3ccb81c71a517b09584b937c8f7d541_TFT-Hextech-Helper-1.0.0-win.zip)
+**或点击右侧高速下载**：[TFT-Hextech-Helper-1.0.0-win.zip](https://static1.keepcdn.com/user-avatar/2026/01/17/22/6943f6affbbe480001c744e2/ciallo/82672950ad9b996250910d6919e85631_TFT-Hextech-Helper-1.0.0-win.zip)
 
 
 ### 2. 启动软件
 
 > ⚠️ **重要**：本软件需要**以管理员身份运行**才能正常工作！目前只支持Windows系统运行。
 
-<!-- TODO: 添加启动截图 -->
+<p align="center">
+  <img src="markdown/软件首页.png" alt="软件截图" width="80%">
+</p>
 
 ### 3. 连接游戏客户端
 
@@ -148,7 +150,7 @@ TFT Hextech Helper 是一款基于 Electron + React + TypeScript 开发的云顶
 
 ## 重要声明
 
-### 本项目仅供学习交流使用，**禁止**用于任何商业用途或违反游戏规则的行为！使用本软件产生的任何后果由用户自行承担。(｡•́︿•̀｡)
+### 本项目仅供学习交流使用，**禁止**用于任何商业用途！使用本软件产生的任何后果由用户自行承担。(｡•́︿•̀｡)
 
 ## 📝 To Do List
 
@@ -170,7 +172,18 @@ TFT Hextech Helper 是一款基于 Electron + React + TypeScript 开发的云顶
 
 [![Stargazers over time](https://starchart.cc/WJZ-P/TFT-Hextech-Helper.svg?variant=adaptive)](https://starchart.cc/WJZ-P/TFT-Hextech-Helper)
 
-<!-- links -->
+---
+
+<details>
+<summary align="center"><b>另一条时间线</b></summary>
+<br>
+<p align="center">
+  <img src="markdown/艾克与爆爆.jpg" alt="Ekko & Jinx" width="90%">
+</p>
+<p align="center"><i>"但至少在这里，他们在一起。"</i></p>
+</details>
+
+<!-- 时至今日，你依然在我的梦境中挥之不去。 -->
 
 [contributors-shield]: https://img.shields.io/github/contributors/WJZ-P/TFT-Hextech-Helper.svg?style=flat-square
 [contributors-url]: https://github.com/WJZ-P/TFT-Hextech-Helper/graphs/contributors
