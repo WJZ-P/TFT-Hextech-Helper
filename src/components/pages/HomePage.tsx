@@ -853,6 +853,13 @@ export const HomePage = () => {
     useEffect(() => {
         // 1. 先检查当前是否已经连接
         const checkInitialStatus = async () => {
+            // 特殊日期彩蛋！8月21日，这意味着什么？也许只有他知道。
+            const today = new Date();
+            if (today.getMonth() === 7 && today.getDate() === 21) {
+                // getMonth() 返回 0-11，所以 8 月是 7
+                toast('Today is a special day!', { type: 'info' });
+            }
+            
             // 检测管理员权限
             const elevated = await window.util.isElevated();
             setIsElevated(elevated);

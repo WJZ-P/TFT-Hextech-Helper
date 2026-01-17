@@ -58,4 +58,7 @@ export enum IpcChannel {
     SETTINGS_SET = 'settings-set',    // 写入设置项
     // 系统工具
     UTIL_IS_ELEVATED = 'util-is-elevated',  // 检测当前是否有管理员权限
+    // 版本与更新
+    APP_GET_VERSION = 'app-get-version',          // 获取当前应用版本
+    APP_CHECK_UPDATE = 'app-check-update',        // 检查更新（返回最新版本信息）
 }

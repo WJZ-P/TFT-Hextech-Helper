@@ -1,4 +1,4 @@
-import { app, screen as screen$1, BrowserWindow, ipcMain } from "electron";
+import { app, screen as screen$1, BrowserWindow, ipcMain, shell } from "electron";
 import { EventEmitter } from "events";
 import require$$1 from "os";
 import cp, { exec } from "child_process";
@@ -5695,6 +5695,8 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["SETTINGS_GET"] = "settings-get";
   IpcChannel2["SETTINGS_SET"] = "settings-set";
   IpcChannel2["UTIL_IS_ELEVATED"] = "util-is-elevated";
+  IpcChannel2["APP_GET_VERSION"] = "app-get-version";
+  IpcChannel2["APP_CHECK_UPDATE"] = "app-check-update";
   return IpcChannel2;
 })(IpcChannel || {});
 class IdleState {
@@ -13111,6 +13113,8 @@ class SettingsStore {
   }
   constructor() {
     const defaults = {
+      isFirstLaunch: true,
+      //  首次启动默认为 true，用户确认后设为 false
       tftMode: TFTMode.NORMAL,
       //  默认是匹配模式
       logMode: LogMode.SIMPLE,
@@ -16417,6 +16421,12 @@ function createWindow() {
   win.webContents.on("did-finish-load", () => {
     win?.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
   });
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      shell.openExternal(url);
+    }
+    return { action: "deny" };
+  });
   if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
     console.log("Renderer URL:", process.env.ELECTRON_RENDERER_URL);
     win.loadURL(process.env["ELECTRON_RENDERER_URL"]);
@@ -16584,6 +16594,38 @@ function registerHandler() {
         resolve(!error);
       });
     });
+  });
+  ipcMain.handle(IpcChannel.APP_GET_VERSION, async () => {
+    return app.getVersion();
+  });
+  ipcMain.handle(IpcChannel.APP_CHECK_UPDATE, async () => {
+    try {
+      const response = await fetch(
+        "https://api.github.com/repos/WJZ-P/TFT-Hextech-Helper/releases/latest",
+        {
+          headers: {
+            "Accept": "application/vnd.github.v3+json",
+            "User-Agent": "TFT-Hextech-Helper"
+          }
+        }
+      );
+      if (!response.ok) {
+        return { error: `GitHub API 请求失败: ${response.status}` };
+      }
+      const data = await response.json();
+      const latestVersion = data.tag_name?.replace(/^v/, "") || "";
+      const currentVersion = app.getVersion();
+      return {
+        currentVersion,
+        latestVersion,
+        hasUpdate: latestVersion && latestVersion !== currentVersion,
+        releaseUrl: data.html_url,
+        releaseNotes: data.body || "",
+        publishedAt: data.published_at
+      };
+    } catch (error) {
+      return { error: error.message || "检查更新失败" };
+    }
   });
 }
 export {

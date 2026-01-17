@@ -153,6 +153,21 @@ const utilApi = {
      * @returns true = 有管理员权限，false = 无管理员权限
      */
     isElevated: (): Promise<boolean> => ipcRenderer.invoke(IpcChannel.UTIL_IS_ELEVATED),
+    /** 获取当前应用版本号 */
+    getAppVersion: (): Promise<string> => ipcRenderer.invoke(IpcChannel.APP_GET_VERSION),
+    /** 
+     * 检查更新
+     * @returns 更新信息对象，包含当前版本、最新版本、是否有更新等
+     */
+    checkUpdate: (): Promise<{
+        currentVersion?: string;
+        latestVersion?: string;
+        hasUpdate?: boolean;
+        releaseUrl?: string;
+        releaseNotes?: string;
+        publishedAt?: string;
+        error?: string;
+    }> => ipcRenderer.invoke(IpcChannel.APP_CHECK_UPDATE),
 }
 export type UtilApi = typeof utilApi
 contextBridge.exposeInMainWorld('util', utilApi)

@@ -60,6 +60,7 @@ export type DotNotationValueFor<T, K extends string> =
 
 //  配置类
 interface AppSettings {
+    isFirstLaunch: boolean,  //  是否为首次启动（用于显示引导弹窗）
     tftMode: TFTMode,    //  下棋模式选择
     logMode: LogMode,    //  日志模式：简略/详细
     logAutoCleanThreshold: LogAutoCleanThreshold,  //  日志自动清理阈值
@@ -87,6 +88,7 @@ class SettingsStore {
     private constructor() {
         //  创建默认配置
         const defaults: AppSettings = {
+            isFirstLaunch: true,        //  首次启动默认为 true，用户确认后设为 false
             tftMode: TFTMode.NORMAL,    //  默认是匹配模式
             logMode: LogMode.SIMPLE,    //  默认是简略日志模式
             logAutoCleanThreshold: 500, //  默认超过 500 条时自动清理

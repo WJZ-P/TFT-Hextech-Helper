@@ -1,4 +1,4 @@
-import {app, BrowserWindow, ipcMain} from 'electron'
+import {app, BrowserWindow, ipcMain, shell} from 'electron'
 import LCUConnector from "../src-backend/lcu/utils/LcuConnector.ts";
 import LCUManager, { LcuEventUri, LCUWebSocketMessage } from "../src-backend/lcu/LCUManager.ts";
 import 'source-map-support/register';
@@ -158,6 +158,17 @@ function createWindow() {
     // Test active push message to Renderer-process.
     win.webContents.on('did-finish-load', () => {
         win?.webContents.send('main-process-message', (new Date).toLocaleString())
+    })
+    
+    // 拦截所有外部链接，使用系统默认浏览器打开
+    // 当渲染进程中 <a target="_blank"> 被点击时触发
+    win.webContents.setWindowOpenHandler(({ url }) => {
+        // 只处理 http/https 链接，用系统浏览器打开
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+            shell.openExternal(url);
+        }
+        // 返回 { action: 'deny' } 阻止 Electron 打开新窗口
+        return { action: 'deny' };
     })
     //  判断是在开发环境还是打包好的程序
     if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
@@ -432,5 +443,45 @@ function registerHandler() {
                 resolve(!error);
             });
         });
+    })
+    
+    // 版本与更新
+    // 获取当前应用版本（从 package.json 读取）
+    ipcMain.handle(IpcChannel.APP_GET_VERSION, async () => {
+        return app.getVersion();
+    })
+    
+    // 检查更新：调用 GitHub API 获取最新 release
+    ipcMain.handle(IpcChannel.APP_CHECK_UPDATE, async () => {
+        try {
+            const response = await fetch(
+                'https://api.github.com/repos/WJZ-P/TFT-Hextech-Helper/releases/latest',
+                {
+                    headers: {
+                        'Accept': 'application/vnd.github.v3+json',
+                        'User-Agent': 'TFT-Hextech-Helper'
+                    }
+                }
+            );
+            
+            if (!response.ok) {
+                return { error: `GitHub API 请求失败: ${response.status}` };
+            }
+            
+            const data = await response.json();
+            const latestVersion = data.tag_name?.replace(/^v/, '') || '';  // 去掉版本号前的 'v'
+            const currentVersion = app.getVersion();
+            
+            return {
+                currentVersion,
+                latestVersion,
+                hasUpdate: latestVersion && latestVersion !== currentVersion,
+                releaseUrl: data.html_url,
+                releaseNotes: data.body || '',
+                publishedAt: data.published_at
+            };
+        } catch (error: any) {
+            return { error: error.message || '检查更新失败' };
+        }
     })
 }

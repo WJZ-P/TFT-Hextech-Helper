@@ -44,6 +44,8 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["SETTINGS_GET"] = "settings-get";
   IpcChannel2["SETTINGS_SET"] = "settings-set";
   IpcChannel2["UTIL_IS_ELEVATED"] = "util-is-elevated";
+  IpcChannel2["APP_GET_VERSION"] = "app-get-version";
+  IpcChannel2["APP_CHECK_UPDATE"] = "app-check-update";
   return IpcChannel2;
 })(IpcChannel || {});
 electron.contextBridge.exposeInMainWorld("ipcRenderer", {
@@ -176,7 +178,14 @@ const utilApi = {
    * 原理：执行 `net session` 命令，该命令只有管理员权限下才能成功
    * @returns true = 有管理员权限，false = 无管理员权限
    */
-  isElevated: () => electron.ipcRenderer.invoke(IpcChannel.UTIL_IS_ELEVATED)
+  isElevated: () => electron.ipcRenderer.invoke(IpcChannel.UTIL_IS_ELEVATED),
+  /** 获取当前应用版本号 */
+  getAppVersion: () => electron.ipcRenderer.invoke(IpcChannel.APP_GET_VERSION),
+  /** 
+   * 检查更新
+   * @returns 更新信息对象，包含当前版本、最新版本、是否有更新等
+   */
+  checkUpdate: () => electron.ipcRenderer.invoke(IpcChannel.APP_CHECK_UPDATE)
 };
 electron.contextBridge.exposeInMainWorld("util", utilApi);
 const settingsApi = {

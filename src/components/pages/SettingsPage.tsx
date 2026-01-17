@@ -24,7 +24,7 @@ const SettingsHeader = styled.h2`
   margin: ${props=>props.theme.spacing.small};
   font-size: ${props=>props.theme.fontSizes.large};
   text-align: start;
-  margin-bottom: ${props=>props.theme.spacing.medium};
+  margin: ${props=>props.theme.spacing.medium} 8px 6px;
 `;
 
 // 用来包裹设置项的卡片
@@ -192,6 +192,35 @@ const ToggleSlider = styled.span<{ $isOn: boolean }>`
   }
 `;
 
+/** GitHub 链接按钮 - 放在设置项右侧 */
+const GitHubButton = styled.a<{ theme: ThemeType }>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.6rem 1.2rem;
+  background: linear-gradient(135deg, #24292e 0%, #1a1e22 100%);
+  border-radius: ${props => props.theme.borderRadius};
+  text-decoration: none;
+  color: #ffffff;
+  font-weight: bold;
+  font-size: ${props => props.theme.fontSizes.small};
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    background: linear-gradient(135deg, #2d333b 0%, #24292e 100%);
+  }
+  
+  svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+    flex-shrink: 0;
+  }
+`;
+
 // -------------------------------------------------------------------
 // ✨ 工具函数 ✨
 // -------------------------------------------------------------------
@@ -262,6 +291,10 @@ const SettingsPage = () => {
     
     // 调试页面显示设置
     const [showDebugPage, setShowDebugPage] = useState(false);
+    
+    // 版本与更新
+    const [currentVersion, setCurrentVersion] = useState<string>('');
+    const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
 
     // 初始化时从后端获取设置
     useEffect(() => {
@@ -281,6 +314,10 @@ const SettingsPage = () => {
             // 加载调试页面显示设置（通过 settingsStore）
             await settingsStore.init();
             setShowDebugPage(settingsStore.getShowDebugPage());
+            
+            // 加载当前版本号
+            const version = await window.util.getAppVersion();
+            setCurrentVersion(version);
         };
         loadSettings();
         
@@ -450,6 +487,31 @@ const SettingsPage = () => {
         await settingsStore.setShowDebugPage(newValue);
         toast.success(newValue ? '调试页面已显示' : '调试页面已隐藏');
     };
+    
+    // 检查更新
+    const handleCheckUpdate = async () => {
+        setIsCheckingUpdate(true);
+        try {
+            const result = await window.util.checkUpdate();
+            
+            if (result.error) {
+                toast.error(`检查更新失败: ${result.error}`);
+                return;
+            }
+            
+            if (result.hasUpdate) {
+                toast.success(`发现新版本 v${result.latestVersion}！请前往 GitHub 下载更新`);
+                // 自动打开 release 页面
+                window.open(result.releaseUrl, '_blank');
+            } else {
+                toast.success('当前已是最新版本！');
+            }
+        } catch (error: any) {
+            toast.error(`检查更新失败: ${error.message || '未知错误'}`);
+        } finally {
+            setIsCheckingUpdate(false);
+        }
+    };
 
     return (
         <PageWrapper>
@@ -562,6 +624,43 @@ const SettingsPage = () => {
                         <ToggleSlider $isOn={showDebugPage} />
                     </ToggleSwitch>
                 </SettingItem>
+            </SettingsCard>
+
+            {/* 关于 */}
+            <SettingsHeader>
+                关于
+            </SettingsHeader>
+            <SettingsCard>
+                <SettingItem>
+                    <SettingInfo>
+                        <SettingText>
+                            <h3>项目地址</h3>
+                            <p>请你给我点个 Star⭐吧！</p>
+                        </SettingText>
+                    </SettingInfo>
+                    <GitHubButton 
+                        href="https://github.com/WJZ-P/TFT-Hextech-Helper" 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                        </svg>
+                        GitHub ⭐
+                    </GitHubButton>
+                </SettingItem>
+                <SettingItem>
+                    <SettingInfo>
+                        <SettingText>
+                            <h3>检查更新</h3>
+                            <p>当前版本：v{currentVersion || '加载中...'}</p>
+                        </SettingText>
+                    </SettingInfo>
+                    <ActionButton onClick={handleCheckUpdate} disabled={isCheckingUpdate}>
+                        {isCheckingUpdate ? '检查中...' : '检查更新'}
+                    </ActionButton>
+                </SettingItem>
+                
             </SettingsCard>
         </PageWrapper>
     );
