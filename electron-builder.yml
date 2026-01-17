@@ -61,6 +61,9 @@ win:
     - target: nsis
       arch:
         - x64
+    - target: zip    # 添加 ZIP 便携版打包
+      arch:
+        - x64
   # 请求管理员权限
   requestedExecutionLevel: requireAdministrator
 

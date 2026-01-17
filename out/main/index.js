@@ -15577,6 +15577,18 @@ showToast.info = (message, options) => showToast(message, { ...options, type: "i
 showToast.success = (message, options) => showToast(message, { ...options, type: "success" });
 showToast.warning = (message, options) => showToast(message, { ...options, type: "warning" });
 showToast.error = (message, options) => showToast(message, { ...options, type: "error" });
+function notifyStopAfterGameState(newState) {
+  const windows = BrowserWindow.getAllWindows();
+  for (const win2 of windows) {
+    win2.webContents.send(IpcChannel.HEX_STOP_AFTER_GAME_TRIGGERED, newState);
+  }
+}
+function notifyHexRunningState(isRunning) {
+  const windows = BrowserWindow.getAllWindows();
+  for (const win2 of windows) {
+    win2.webContents.send(IpcChannel.HEX_TOGGLE_TRIGGERED, isRunning);
+  }
+}
 const ABORT_CHECK_INTERVAL_MS$1 = 2e3;
 class GameRunningState {
   /** 状态名称 */
@@ -15616,8 +15628,11 @@ class GameRunningState {
       return new EndState();
     } else if (isGameEnded) {
       if (hexService.stopAfterCurrentGame) {
-        logger.info("[GameRunningState] 游戏结束，检测到【本局结束后停止】标志，流转到 EndState");
+        logger.info("[GameRunningState] 游戏结束，检测到【本局结束后停止】标志，停止挂机");
         showToast.success("本局已结束，自动停止挂机", { position: "top-center" });
+        notifyStopAfterGameState(false);
+        notifyHexRunningState(false);
+        await hexService.stop();
         return new EndState();
       }
       logger.info("[GameRunningState] 游戏结束，流转到 LobbyState 开始下一局");

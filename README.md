@@ -1,32 +1,178 @@
-# React + TypeScript + Vite
+## 一款智能又省心的云顶之弈自动下棋助手 —— 海克斯科技！
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<!-- PROJECT SHIELDS -->
 
-Currently, two official plugins are available:
+<br>
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+<div align="center">
 
-## Expanding the ESLint configuration
+  <a href="https://github.com/WJZ-P/TFT-Hextech-Helper/graphs/contributors">
+    <img src="https://img.shields.io/github/contributors/WJZ-P/TFT-Hextech-Helper.svg?style=flat-square" alt="Contributors" style="height: 30px">
+  </a>
+  &nbsp;
+  <a href="https://github.com/WJZ-P/TFT-Hextech-Helper/network/members">
+    <img src="https://img.shields.io/github/forks/WJZ-P/TFT-Hextech-Helper.svg?style=flat-square" alt="Forks" style="height: 30px">
+  </a>
+  &nbsp;
+  <a href="https://github.com/WJZ-P/TFT-Hextech-Helper/stargazers">
+    <img src="https://img.shields.io/github/stars/WJZ-P/TFT-Hextech-Helper.svg?style=flat-square" alt="Stargazers" style="height: 30px">
+  </a>
+  &nbsp;
+  <a href="https://img.shields.io/github/issues/WJZ-P/TFT-Hextech-Helper.svg">
+    <img src="https://img.shields.io/github/issues/WJZ-P/TFT-Hextech-Helper.svg?style=flat-square" alt="Issues" style="height: 30px">
+  </a>
+  &nbsp;
+  <a href="https://github.com/WJZ-P/TFT-Hextech-Helper/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/WJZ-P/TFT-Hextech-Helper.svg?style=flat-square" alt="MIT License" style="height: 30px">
+  </a>
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+</div>
 
-- Configure the top-level `parserOptions` property like this:
+<br><br>
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
-```
+<!-- PROJECT LOGO -->
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+<p align="center">
+  <a href="https://github.com/WJZ-P/TFT-Hextech-Helper/">
+    <img src="public/icon.png" alt="Logo" width="150" height="150" style="margin: 0; border-radius: 24px;">
+  </a>
+  <h1 align="center">TFT Hextech Helper</h1>
+  <p align="center">
+    云顶之弈海克斯科技助手
+    <br>
+    <a href="https://github.com/WJZ-P/TFT-Hextech-Helper">查看Demo</a>
+    ·
+    <a href="https://github.com/WJZ-P/TFT-Hextech-Helper/issues">报告Bug</a>
+    ·
+    <a href="https://github.com/WJZ-P/TFT-Hextech-Helper/issues">提出新特性</a>
+  </p>
+</p>
 
-2025.9.21 起开始开发
+<br>
+
+## 目录
+
+- [TFT Hextech Helper](#tft-hextech-helper)
+    - [目录](#目录)
+    - [项目简介](#项目简介)
+    - [功能特性](#功能特性)
+    - [使用教程](#使用教程)
+    - [下载链接](#下载链接)
+    - [技术栈](#技术栈)
+    - [版权说明](#版权说明)
+    - [鸣谢](#鸣谢)
+    - [重要声明](#重要声明)
+
+## 项目简介
+
+TFT Hextech Helper 是一款基于 Electron + React + TypeScript 开发的云顶之弈自动下棋助手。它可以帮助你在云顶之弈中自动进行对局，解放你的双手，让你可以边挂机边做其他事情。（当然挂机的时候你就不能玩电脑了，因为软件会使用你的鼠标！）
+
+<!-- TODO: 添加软件截图 -->
+
+## 功能特性
+
+- 🎮 **自动下棋** - 智能识别游戏状态，自动购买英雄、整理阵容
+- 🎯 **阵容推荐** - 内置多套热门阵容配置，一键选择
+- ⌨️ **快捷键控制** - F1 开启/关闭挂机，F2 本局结束后停止
+- 🎨 **现代化界面** - 美观的 UI 设计，超级酷
+- 📊 **实时日志** - 查看详细的运行日志，了解程序状态
+
+## 使用教程
+
+### 1. 下载并安装
+
+从 [Release](https://github.com/WJZ-P/TFT-Hextech-Helper/releases) 页面下载最新版本：
+- **安装版** (.exe setup) - 推荐，支持自动更新
+- **便携版** (.zip) - 解压即用，无需安装
+
+**或点击右侧高速下载**：[TFT-Hextech-Helper-1.0.0-win.zip](https://static1.keepcdn.com/user-avatar/2026/01/17/22/6943f6affbbe480001c744e2/ciallo/d3ccb81c71a517b09584b937c8f7d541_TFT-Hextech-Helper-1.0.0-win.zip)
+
+
+### 2. 启动软件
+
+> ⚠️ **重要**：本软件需要**以管理员身份运行**才能正常工作！目前只支持Windows系统运行。
+
+<!-- TODO: 添加启动截图 -->
+
+### 3. 连接游戏客户端
+
+启动英雄联盟客户端，软件会自动检测并连接。如果出现打开了客户端却显示未连接的情况，请检查是否使用管理员模式启动软件！
+
+<!-- TODO: 添加连接成功截图 -->
+
+### 4. 开始挂机
+
+1. 选择你想要的阵容配置
+2. 点击"开始挂机"按钮或按 **F1** 快捷键
+3. 程序会自动开始匹配并进行对局
+
+### 快捷键说明
+
+| 快捷键 | 功能 |
+|:------:|:----:|
+| F1 | 开启/关闭挂机 |
+| F2 | 本局结束后自动停止 |
+
+## 获取更新
+
+#### [前往 Release 页面](https://github.com/WJZ-P/TFT-Hextech-Helper/releases)
+
+## 技术栈
+
+- **前端框架**: React 18 + TypeScript
+- **桌面框架**: Electron 32
+- **构建工具**: electron-vite
+- **UI 组件**: MUI (Material-UI) + styled-components
+- **图像识别**: OpenCV.js + Tesseract.js
+- **自动化**: nut-js (鼠标键盘控制)
+
+## 版权说明
+
+本项目采用 **CC BY-NC-ND 4.0** 协议，这意味着：
+
+- ✅ 可以下载、使用、分享（需注明出处）
+- ❌ **禁止**商业使用
+- ❌ **禁止**二次开发/修改后发布
+
+详情请参阅 [LICENSE](https://github.com/WJZ-P/TFT-Hextech-Helper/blob/main/LICENSE)
+
+## 鸣谢
+
+- 感谢所有为这个项目提供建议和反馈的朋友们
+
+## 重要声明
+
+### 本项目仅供学习交流使用，**禁止**用于任何商业用途或违反游戏规则的行为！使用本软件产生的任何后果由用户自行承担。(｡•́︿•̀｡)
+
+## 📝 To Do List
+
+- [x] **基础挂机功能**
+
+- [x] **阵容配置系统**
+
+- [x] **快捷键支持**
+
+- [ ] **更多阵容配置**
+
+- [ ] **自动更新功能**
+
+- [ ] **战绩统计**
+
+## 如果您喜欢本项目，请给我点个⭐吧(๑>◡<๑)！
+
+## ⭐ Star 历史
+
+[![Stargazers over time](https://starchart.cc/WJZ-P/TFT-Hextech-Helper.svg?variant=adaptive)](https://starchart.cc/WJZ-P/TFT-Hextech-Helper)
+
+<!-- links -->
+
+[contributors-shield]: https://img.shields.io/github/contributors/WJZ-P/TFT-Hextech-Helper.svg?style=flat-square
+[contributors-url]: https://github.com/WJZ-P/TFT-Hextech-Helper/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/WJZ-P/TFT-Hextech-Helper.svg?style=flat-square
+[forks-url]: https://github.com/WJZ-P/TFT-Hextech-Helper/network/members
+[stars-shield]: https://img.shields.io/github/stars/WJZ-P/TFT-Hextech-Helper.svg?style=flat-square
+[stars-url]: https://github.com/WJZ-P/TFT-Hextech-Helper/stargazers
+[issues-shield]: https://img.shields.io/github/issues/WJZ-P/TFT-Hextech-Helper.svg?style=flat-square
+[issues-url]: https://img.shields.io/github/issues/WJZ-P/TFT-Hextech-Helper.svg
+[license-shield]: https://img.shields.io/github/license/WJZ-P/TFT-Hextech-Helper.svg?style=flat-square
+[license-url]: https://github.com/WJZ-P/TFT-Hextech-Helper/blob/main/LICENSE
