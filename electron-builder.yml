@@ -37,6 +37,10 @@ extraResources:
     to: gamePhotos
     filter:
       - '**/*'
+  - from: public/resources
+    to: resources
+    filter:
+      - '**/*'
   - from: public/icon.png
     to: icon.png
   - from: public/icon.ico

@@ -46,7 +46,13 @@ export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
 export const RENDERER_DIST = path.join(process.env.APP_ROOT)    //  renderer的文件路径，很重要
 
-process.env.VITE_PUBLIC = is.dev ? path.join(process.env.APP_ROOT, '../public') : RENDERER_DIST
+// VITE_PUBLIC 指向静态资源目录
+// - 开发环境: 项目根目录下的 public 文件夹
+// - 生产环境: 打包后的 resources 文件夹（extraResources 会把 public 下的文件复制到这里）
+//   process.resourcesPath 在打包后指向 .../resources/ 目录
+process.env.VITE_PUBLIC = is.dev 
+    ? path.join(process.env.APP_ROOT, '../public') 
+    : process.resourcesPath
 
 let win: BrowserWindow | null
 
@@ -76,11 +82,19 @@ function registerToggleHotkey(accelerator: string): boolean {
     // 注册新快捷键，回调函数中切换挂机状态
     const success = globalHotkeyManager.register(accelerator, async () => {
         console.log(`🎮 [Main] 快捷键 ${accelerator} 被触发，切换挂机状态`);
-        hexService.isRunning? await hexService.stop() : await hexService.start();
         
-        // 通知渲染进程更新 UI 状态（使用切换后的期望状态，而非 isRunning）
-        // 因为 stop() 是异步的，isRunning 可能还没更新
-        win?.webContents.send(IpcChannel.HEX_TOGGLE_TRIGGERED, hexService.isRunning);
+        // 记录切换前的状态，用于计算切换后的期望状态
+        const wasRunning = hexService.isRunning;
+        
+        if (wasRunning) {
+            await hexService.stop();
+        } else {
+            await hexService.start();
+        }
+        
+        // 发送切换后的期望状态（与切换前相反）
+        const newState = !wasRunning;
+        win?.webContents.send(IpcChannel.HEX_TOGGLE_TRIGGERED, newState);
     });
     
     if (success) {
@@ -177,7 +191,8 @@ function createWindow() {
         win.loadURL(process.env['ELECTRON_RENDERER_URL'])
     } else {
         // prod: load built index.html
-        win.loadFile(path.join(__dirname, 'index.html'))
+        // __dirname 在打包后指向 out/main/，而 index.html 在 out/renderer/ 目录
+        win.loadFile(path.join(__dirname, '../renderer/index.html'))
     }
 }
 
