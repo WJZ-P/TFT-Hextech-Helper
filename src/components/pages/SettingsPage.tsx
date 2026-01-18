@@ -263,6 +263,82 @@ const AuthorBanner = styled.div<{ theme: ThemeType }>`
   }
 `;
 
+/** 使用提示卡片 - 现代玻璃拟态风格 */
+const TipsCard = styled.div<{ theme: ThemeType }>`
+  position: relative;
+  background: linear-gradient(135deg, 
+    ${props => props.theme.colors.primary}10 0%, 
+    ${props => props.theme.colors.primary}05 100%
+  );
+  border: 1px solid ${props => props.theme.colors.primary}30;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: ${props => props.theme.spacing.large};
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+  
+  /* 左侧装饰条 */
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, 
+      ${props => props.theme.colors.primary} 0%, 
+      #ff6b6b 100%
+    );
+    border-radius: 4px 0 0 4px;
+  }
+  
+  h3 {
+    color: ${props => props.theme.colors.text};
+    font-size: ${props => props.theme.fontSizes.medium};
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    span {
+      font-size: 1.1em;
+    }
+  }
+  
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    
+    li {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 8px;
+      color: ${props => props.theme.colors.secondaryText};
+      font-size: ${props => props.theme.fontSizes.small};
+      line-height: 1.6;
+      
+      /* 自定义列表符号 */
+      &::before {
+        content: '→';
+        position: absolute;
+        left: 0;
+        color: ${props => props.theme.colors.primary};
+        font-weight: bold;
+      }
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+      
+      strong {
+        color: ${props => props.theme.colors.text};
+      }
+    }
+  }
+`;
+
 // -------------------------------------------------------------------
 // ✨ 工具函数 ✨
 // -------------------------------------------------------------------
@@ -557,6 +633,14 @@ const SettingsPage = () => {
 
     return (
         <PageWrapper>
+            {/* 使用提示 */}
+            <TipsCard>
+                <ul>
+                    <li><strong>游戏语言必须设置为中文</strong>，否则无法正确识别棋子</li>
+                    <li><strong>推荐使用默认棋盘皮肤</strong>，已针对默认棋盘优化，能加快棋子识别速度</li>
+                </ul>
+            </TipsCard>
+
             {/* 快捷键设置 */}
             <SettingsHeader>
                 快捷键
