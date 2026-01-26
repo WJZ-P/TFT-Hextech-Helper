@@ -1,21 +1,75 @@
-import {app, BrowserWindow, ipcMain, shell, net} from 'electron'
+import {app, BrowserWindow, ipcMain, shell, net, dialog} from 'electron'
+import 'source-map-support/register';
+import path from "path";
+import { exec } from 'child_process';  // 用于执行系统命令
+
+// ============================================================================
+// 崩溃日志系统 - 必须最先导入，用于捕获后续模块加载时的错误
+// ============================================================================
+import { writeCrashLog, initGlobalCrashHandler } from "../src-backend/utils/CrashLogger.ts";
+
+// 初始化全局崩溃捕获（越早调用越好，这样后续模块加载失败也能记录）
+initGlobalCrashHandler();
+
+// ============================================================================
+// 原生模块安全加载
+// 这些模块依赖 VC++ 运行库，如果用户电脑缺失会直接崩溃
+// 我们用 try-catch 包装，给出友好提示
+// ============================================================================
+
+/**
+ * 检查原生模块是否可用
+ * 如果加载失败，记录错误并显示友好提示
+ */
+function checkNativeModules(): { success: boolean; failedModules: string[] } {
+    const failedModules: string[] = [];
+    
+    // 检查 sharp（图像处理库）
+    try {
+        require('sharp');
+    } catch (error) {
+        failedModules.push('sharp');
+        writeCrashLog(error as Error, '加载 sharp 模块失败 - 可能缺少 VC++ 运行库');
+    }
+    
+    // 检查 @nut-tree-fork/nut-js（鼠标键盘自动化）
+    try {
+        require('@nut-tree-fork/nut-js');
+    } catch (error) {
+        failedModules.push('@nut-tree-fork/nut-js');
+        writeCrashLog(error as Error, '加载 nut-js 模块失败 - 可能缺少 VC++ 运行库');
+    }
+    
+    // 检查 uiohook-napi（全局快捷键监听）
+    try {
+        require('uiohook-napi');
+    } catch (error) {
+        failedModules.push('uiohook-napi');
+        writeCrashLog(error as Error, '加载 uiohook-napi 模块失败 - 可能缺少 VC++ 运行库');
+    }
+    
+    return {
+        success: failedModules.length === 0,
+        failedModules
+    };
+}
+
+// ============================================================================
+// 正常模块导入（在原生模块检查后进行）
+// ============================================================================
 import LCUConnector from "../src-backend/lcu/utils/LcuConnector.ts";
 import LCUManager, { LcuEventUri, LCUWebSocketMessage } from "../src-backend/lcu/LCUManager.ts";
-import 'source-map-support/register';
 import GameConfigHelper from "../src-backend/utils/GameConfigHelper.ts";
-import path from "path";
 import {IpcChannel} from "./protocol.ts";
 import {logger} from "../src-backend/utils/Logger.ts";
-import {hexService} from "../src-backend/services/HexService.ts";
+import {hexService} from "../src-backend/services";
 import {settingsStore} from "../src-backend/utils/SettingsStore.ts";
 import {debounce} from "../src-backend/utils/HelperTools.ts";
 import {tftOperator} from "../src-backend/TftOperator.ts";
-import {Point} from "@nut-tree-fork/nut-js";
 import {is, optimizer} from "@electron-toolkit/utils";
 import {lineupLoader} from "../src-backend/lineup";  // 导入阵容加载器
 import {TFT_16_CHAMPION_DATA} from "../src-backend/TFTProtocol";  // 导入棋子数据
 import {globalHotkeyManager} from "../src-backend/utils/GlobalHotkeyManager.ts";  // 全局快捷键管理器
-import { exec } from 'child_process';  // 用于执行系统命令
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -221,6 +275,47 @@ app.on('will-quit', () => {
 
 //  正式启动app
 app.whenReady().then(async () => {
+    // ========================================================================
+    // 原生模块预检查
+    // 在创建窗口之前检查关键原生模块是否可用
+    // 如果缺少 VC++ 运行库，这些模块会加载失败
+    // ========================================================================
+    console.log('🔍 [Main] 正在检查原生模块...');
+    const nativeModuleCheck = checkNativeModules();
+    
+    if (!nativeModuleCheck.success) {
+        // 原生模块加载失败，显示友好的错误提示
+        const failedList = nativeModuleCheck.failedModules.join(', ');
+        console.error(`❌ [Main] 以下原生模块加载失败: ${failedList}`);
+        
+        // 显示错误对话框
+        const result = await dialog.showMessageBox({
+            type: 'error',
+            title: '运行环境检测失败',
+            message: '程序运行所需的组件加载失败',
+            detail: `以下模块无法加载: ${failedList}\n\n` +
+                    `这通常是因为您的电脑缺少 Microsoft Visual C++ 运行库。\n\n` +
+                    `解决方法:\n` +
+                    `1. 下载并安装 VC++ 运行库 (推荐)\n` +
+                    `2. 访问 Microsoft 官网下载 "Visual C++ Redistributable"\n\n` +
+                    `崩溃日志已保存到程序目录下的 crash-logs 文件夹`,
+            buttons: ['下载 VC++ 运行库', '退出程序'],
+            defaultId: 0,
+            cancelId: 1,
+        });
+        
+        if (result.response === 0) {
+            // 打开 VC++ 下载页面
+            shell.openExternal('https://aka.ms/vs/17/release/vc_redist.x64.exe');
+        }
+        
+        // 退出应用
+        app.quit();
+        return;
+    }
+    
+    console.log('✅ [Main] 原生模块检查通过');
+    
     createWindow()  //  创建窗口
     init()  //  执行LCU相关函数
     registerHandler()

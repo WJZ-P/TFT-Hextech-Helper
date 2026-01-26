@@ -1,16 +1,17 @@
-import { app, screen as screen$1, BrowserWindow, ipcMain, net, shell } from "electron";
-import { EventEmitter } from "events";
-import require$$1 from "os";
+import { app, screen as screen$1, BrowserWindow, dialog, shell, ipcMain, net } from "electron";
+import * as path from "path";
+import path__default from "path";
 import cp, { exec } from "child_process";
-import path$1 from "node:path";
 import * as fs$2 from "fs";
 import fs__default from "fs";
+import * as os from "os";
+import os__default from "os";
+import { EventEmitter } from "events";
+import path$1 from "node:path";
 import require$$0 from "constants";
 import require$$0$1 from "stream";
 import require$$4 from "util";
 import require$$5 from "assert";
-import * as path from "path";
-import path__default from "path";
 import WebSocket from "ws";
 import https from "https";
 import axios from "axios";
@@ -28,3191 +29,6 @@ const require2 = __cjs_mod__.createRequire(import.meta.url);
 var commonjsGlobal = typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : {};
 function getDefaultExportFromCjs(x) {
   return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
-}
-var lib = { exports: {} };
-var fs$1 = {};
-var universalify = {};
-var hasRequiredUniversalify;
-function requireUniversalify() {
-  if (hasRequiredUniversalify) return universalify;
-  hasRequiredUniversalify = 1;
-  universalify.fromCallback = function(fn) {
-    return Object.defineProperty(function() {
-      if (typeof arguments[arguments.length - 1] === "function") fn.apply(this, arguments);
-      else {
-        return new Promise((resolve, reject) => {
-          arguments[arguments.length] = (err, res) => {
-            if (err) return reject(err);
-            resolve(res);
-          };
-          arguments.length++;
-          fn.apply(this, arguments);
-        });
-      }
-    }, "name", { value: fn.name });
-  };
-  universalify.fromPromise = function(fn) {
-    return Object.defineProperty(function() {
-      const cb = arguments[arguments.length - 1];
-      if (typeof cb !== "function") return fn.apply(this, arguments);
-      else fn.apply(this, arguments).then((r) => cb(null, r), cb);
-    }, "name", { value: fn.name });
-  };
-  return universalify;
-}
-var polyfills;
-var hasRequiredPolyfills;
-function requirePolyfills() {
-  if (hasRequiredPolyfills) return polyfills;
-  hasRequiredPolyfills = 1;
-  var constants = require$$0;
-  var origCwd = process.cwd;
-  var cwd = null;
-  var platform = process.env.GRACEFUL_FS_PLATFORM || process.platform;
-  process.cwd = function() {
-    if (!cwd)
-      cwd = origCwd.call(process);
-    return cwd;
-  };
-  try {
-    process.cwd();
-  } catch (er) {
-  }
-  if (typeof process.chdir === "function") {
-    var chdir = process.chdir;
-    process.chdir = function(d) {
-      cwd = null;
-      chdir.call(process, d);
-    };
-    if (Object.setPrototypeOf) Object.setPrototypeOf(process.chdir, chdir);
-  }
-  polyfills = patch;
-  function patch(fs2) {
-    if (constants.hasOwnProperty("O_SYMLINK") && process.version.match(/^v0\.6\.[0-2]|^v0\.5\./)) {
-      patchLchmod(fs2);
-    }
-    if (!fs2.lutimes) {
-      patchLutimes(fs2);
-    }
-    fs2.chown = chownFix(fs2.chown);
-    fs2.fchown = chownFix(fs2.fchown);
-    fs2.lchown = chownFix(fs2.lchown);
-    fs2.chmod = chmodFix(fs2.chmod);
-    fs2.fchmod = chmodFix(fs2.fchmod);
-    fs2.lchmod = chmodFix(fs2.lchmod);
-    fs2.chownSync = chownFixSync(fs2.chownSync);
-    fs2.fchownSync = chownFixSync(fs2.fchownSync);
-    fs2.lchownSync = chownFixSync(fs2.lchownSync);
-    fs2.chmodSync = chmodFixSync(fs2.chmodSync);
-    fs2.fchmodSync = chmodFixSync(fs2.fchmodSync);
-    fs2.lchmodSync = chmodFixSync(fs2.lchmodSync);
-    fs2.stat = statFix(fs2.stat);
-    fs2.fstat = statFix(fs2.fstat);
-    fs2.lstat = statFix(fs2.lstat);
-    fs2.statSync = statFixSync(fs2.statSync);
-    fs2.fstatSync = statFixSync(fs2.fstatSync);
-    fs2.lstatSync = statFixSync(fs2.lstatSync);
-    if (fs2.chmod && !fs2.lchmod) {
-      fs2.lchmod = function(path2, mode, cb) {
-        if (cb) process.nextTick(cb);
-      };
-      fs2.lchmodSync = function() {
-      };
-    }
-    if (fs2.chown && !fs2.lchown) {
-      fs2.lchown = function(path2, uid, gid, cb) {
-        if (cb) process.nextTick(cb);
-      };
-      fs2.lchownSync = function() {
-      };
-    }
-    if (platform === "win32") {
-      fs2.rename = typeof fs2.rename !== "function" ? fs2.rename : (function(fs$rename) {
-        function rename(from, to, cb) {
-          var start = Date.now();
-          var backoff = 0;
-          fs$rename(from, to, function CB(er) {
-            if (er && (er.code === "EACCES" || er.code === "EPERM" || er.code === "EBUSY") && Date.now() - start < 6e4) {
-              setTimeout(function() {
-                fs2.stat(to, function(stater, st) {
-                  if (stater && stater.code === "ENOENT")
-                    fs$rename(from, to, CB);
-                  else
-                    cb(er);
-                });
-              }, backoff);
-              if (backoff < 100)
-                backoff += 10;
-              return;
-            }
-            if (cb) cb(er);
-          });
-        }
-        if (Object.setPrototypeOf) Object.setPrototypeOf(rename, fs$rename);
-        return rename;
-      })(fs2.rename);
-    }
-    fs2.read = typeof fs2.read !== "function" ? fs2.read : (function(fs$read) {
-      function read(fd, buffer2, offset, length, position, callback_) {
-        var callback;
-        if (callback_ && typeof callback_ === "function") {
-          var eagCounter = 0;
-          callback = function(er, _, __) {
-            if (er && er.code === "EAGAIN" && eagCounter < 10) {
-              eagCounter++;
-              return fs$read.call(fs2, fd, buffer2, offset, length, position, callback);
-            }
-            callback_.apply(this, arguments);
-          };
-        }
-        return fs$read.call(fs2, fd, buffer2, offset, length, position, callback);
-      }
-      if (Object.setPrototypeOf) Object.setPrototypeOf(read, fs$read);
-      return read;
-    })(fs2.read);
-    fs2.readSync = typeof fs2.readSync !== "function" ? fs2.readSync : /* @__PURE__ */ (function(fs$readSync) {
-      return function(fd, buffer2, offset, length, position) {
-        var eagCounter = 0;
-        while (true) {
-          try {
-            return fs$readSync.call(fs2, fd, buffer2, offset, length, position);
-          } catch (er) {
-            if (er.code === "EAGAIN" && eagCounter < 10) {
-              eagCounter++;
-              continue;
-            }
-            throw er;
-          }
-        }
-      };
-    })(fs2.readSync);
-    function patchLchmod(fs22) {
-      fs22.lchmod = function(path2, mode, callback) {
-        fs22.open(
-          path2,
-          constants.O_WRONLY | constants.O_SYMLINK,
-          mode,
-          function(err, fd) {
-            if (err) {
-              if (callback) callback(err);
-              return;
-            }
-            fs22.fchmod(fd, mode, function(err2) {
-              fs22.close(fd, function(err22) {
-                if (callback) callback(err2 || err22);
-              });
-            });
-          }
-        );
-      };
-      fs22.lchmodSync = function(path2, mode) {
-        var fd = fs22.openSync(path2, constants.O_WRONLY | constants.O_SYMLINK, mode);
-        var threw = true;
-        var ret;
-        try {
-          ret = fs22.fchmodSync(fd, mode);
-          threw = false;
-        } finally {
-          if (threw) {
-            try {
-              fs22.closeSync(fd);
-            } catch (er) {
-            }
-          } else {
-            fs22.closeSync(fd);
-          }
-        }
-        return ret;
-      };
-    }
-    function patchLutimes(fs22) {
-      if (constants.hasOwnProperty("O_SYMLINK") && fs22.futimes) {
-        fs22.lutimes = function(path2, at, mt, cb) {
-          fs22.open(path2, constants.O_SYMLINK, function(er, fd) {
-            if (er) {
-              if (cb) cb(er);
-              return;
-            }
-            fs22.futimes(fd, at, mt, function(er2) {
-              fs22.close(fd, function(er22) {
-                if (cb) cb(er2 || er22);
-              });
-            });
-          });
-        };
-        fs22.lutimesSync = function(path2, at, mt) {
-          var fd = fs22.openSync(path2, constants.O_SYMLINK);
-          var ret;
-          var threw = true;
-          try {
-            ret = fs22.futimesSync(fd, at, mt);
-            threw = false;
-          } finally {
-            if (threw) {
-              try {
-                fs22.closeSync(fd);
-              } catch (er) {
-              }
-            } else {
-              fs22.closeSync(fd);
-            }
-          }
-          return ret;
-        };
-      } else if (fs22.futimes) {
-        fs22.lutimes = function(_a, _b, _c, cb) {
-          if (cb) process.nextTick(cb);
-        };
-        fs22.lutimesSync = function() {
-        };
-      }
-    }
-    function chmodFix(orig) {
-      if (!orig) return orig;
-      return function(target, mode, cb) {
-        return orig.call(fs2, target, mode, function(er) {
-          if (chownErOk(er)) er = null;
-          if (cb) cb.apply(this, arguments);
-        });
-      };
-    }
-    function chmodFixSync(orig) {
-      if (!orig) return orig;
-      return function(target, mode) {
-        try {
-          return orig.call(fs2, target, mode);
-        } catch (er) {
-          if (!chownErOk(er)) throw er;
-        }
-      };
-    }
-    function chownFix(orig) {
-      if (!orig) return orig;
-      return function(target, uid, gid, cb) {
-        return orig.call(fs2, target, uid, gid, function(er) {
-          if (chownErOk(er)) er = null;
-          if (cb) cb.apply(this, arguments);
-        });
-      };
-    }
-    function chownFixSync(orig) {
-      if (!orig) return orig;
-      return function(target, uid, gid) {
-        try {
-          return orig.call(fs2, target, uid, gid);
-        } catch (er) {
-          if (!chownErOk(er)) throw er;
-        }
-      };
-    }
-    function statFix(orig) {
-      if (!orig) return orig;
-      return function(target, options, cb) {
-        if (typeof options === "function") {
-          cb = options;
-          options = null;
-        }
-        function callback(er, stats) {
-          if (stats) {
-            if (stats.uid < 0) stats.uid += 4294967296;
-            if (stats.gid < 0) stats.gid += 4294967296;
-          }
-          if (cb) cb.apply(this, arguments);
-        }
-        return options ? orig.call(fs2, target, options, callback) : orig.call(fs2, target, callback);
-      };
-    }
-    function statFixSync(orig) {
-      if (!orig) return orig;
-      return function(target, options) {
-        var stats = options ? orig.call(fs2, target, options) : orig.call(fs2, target);
-        if (stats) {
-          if (stats.uid < 0) stats.uid += 4294967296;
-          if (stats.gid < 0) stats.gid += 4294967296;
-        }
-        return stats;
-      };
-    }
-    function chownErOk(er) {
-      if (!er)
-        return true;
-      if (er.code === "ENOSYS")
-        return true;
-      var nonroot = !process.getuid || process.getuid() !== 0;
-      if (nonroot) {
-        if (er.code === "EINVAL" || er.code === "EPERM")
-          return true;
-      }
-      return false;
-    }
-  }
-  return polyfills;
-}
-var legacyStreams;
-var hasRequiredLegacyStreams;
-function requireLegacyStreams() {
-  if (hasRequiredLegacyStreams) return legacyStreams;
-  hasRequiredLegacyStreams = 1;
-  var Stream = require$$0$1.Stream;
-  legacyStreams = legacy;
-  function legacy(fs2) {
-    return {
-      ReadStream,
-      WriteStream
-    };
-    function ReadStream(path2, options) {
-      if (!(this instanceof ReadStream)) return new ReadStream(path2, options);
-      Stream.call(this);
-      var self2 = this;
-      this.path = path2;
-      this.fd = null;
-      this.readable = true;
-      this.paused = false;
-      this.flags = "r";
-      this.mode = 438;
-      this.bufferSize = 64 * 1024;
-      options = options || {};
-      var keys = Object.keys(options);
-      for (var index = 0, length = keys.length; index < length; index++) {
-        var key = keys[index];
-        this[key] = options[key];
-      }
-      if (this.encoding) this.setEncoding(this.encoding);
-      if (this.start !== void 0) {
-        if ("number" !== typeof this.start) {
-          throw TypeError("start must be a Number");
-        }
-        if (this.end === void 0) {
-          this.end = Infinity;
-        } else if ("number" !== typeof this.end) {
-          throw TypeError("end must be a Number");
-        }
-        if (this.start > this.end) {
-          throw new Error("start must be <= end");
-        }
-        this.pos = this.start;
-      }
-      if (this.fd !== null) {
-        process.nextTick(function() {
-          self2._read();
-        });
-        return;
-      }
-      fs2.open(this.path, this.flags, this.mode, function(err, fd) {
-        if (err) {
-          self2.emit("error", err);
-          self2.readable = false;
-          return;
-        }
-        self2.fd = fd;
-        self2.emit("open", fd);
-        self2._read();
-      });
-    }
-    function WriteStream(path2, options) {
-      if (!(this instanceof WriteStream)) return new WriteStream(path2, options);
-      Stream.call(this);
-      this.path = path2;
-      this.fd = null;
-      this.writable = true;
-      this.flags = "w";
-      this.encoding = "binary";
-      this.mode = 438;
-      this.bytesWritten = 0;
-      options = options || {};
-      var keys = Object.keys(options);
-      for (var index = 0, length = keys.length; index < length; index++) {
-        var key = keys[index];
-        this[key] = options[key];
-      }
-      if (this.start !== void 0) {
-        if ("number" !== typeof this.start) {
-          throw TypeError("start must be a Number");
-        }
-        if (this.start < 0) {
-          throw new Error("start must be >= zero");
-        }
-        this.pos = this.start;
-      }
-      this.busy = false;
-      this._queue = [];
-      if (this.fd === null) {
-        this._open = fs2.open;
-        this._queue.push([this._open, this.path, this.flags, this.mode, void 0]);
-        this.flush();
-      }
-    }
-  }
-  return legacyStreams;
-}
-var clone_1;
-var hasRequiredClone;
-function requireClone() {
-  if (hasRequiredClone) return clone_1;
-  hasRequiredClone = 1;
-  clone_1 = clone;
-  var getPrototypeOf = Object.getPrototypeOf || function(obj) {
-    return obj.__proto__;
-  };
-  function clone(obj) {
-    if (obj === null || typeof obj !== "object")
-      return obj;
-    if (obj instanceof Object)
-      var copy2 = { __proto__: getPrototypeOf(obj) };
-    else
-      var copy2 = /* @__PURE__ */ Object.create(null);
-    Object.getOwnPropertyNames(obj).forEach(function(key) {
-      Object.defineProperty(copy2, key, Object.getOwnPropertyDescriptor(obj, key));
-    });
-    return copy2;
-  }
-  return clone_1;
-}
-var gracefulFs;
-var hasRequiredGracefulFs;
-function requireGracefulFs() {
-  if (hasRequiredGracefulFs) return gracefulFs;
-  hasRequiredGracefulFs = 1;
-  var fs2 = fs__default;
-  var polyfills2 = requirePolyfills();
-  var legacy = requireLegacyStreams();
-  var clone = requireClone();
-  var util2 = require$$4;
-  var gracefulQueue;
-  var previousSymbol;
-  if (typeof Symbol === "function" && typeof Symbol.for === "function") {
-    gracefulQueue = Symbol.for("graceful-fs.queue");
-    previousSymbol = Symbol.for("graceful-fs.previous");
-  } else {
-    gracefulQueue = "___graceful-fs.queue";
-    previousSymbol = "___graceful-fs.previous";
-  }
-  function noop() {
-  }
-  function publishQueue(context, queue2) {
-    Object.defineProperty(context, gracefulQueue, {
-      get: function() {
-        return queue2;
-      }
-    });
-  }
-  var debug = noop;
-  if (util2.debuglog)
-    debug = util2.debuglog("gfs4");
-  else if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || ""))
-    debug = function() {
-      var m = util2.format.apply(util2, arguments);
-      m = "GFS4: " + m.split(/\n/).join("\nGFS4: ");
-      console.error(m);
-    };
-  if (!fs2[gracefulQueue]) {
-    var queue = commonjsGlobal[gracefulQueue] || [];
-    publishQueue(fs2, queue);
-    fs2.close = (function(fs$close) {
-      function close(fd, cb) {
-        return fs$close.call(fs2, fd, function(err) {
-          if (!err) {
-            resetQueue();
-          }
-          if (typeof cb === "function")
-            cb.apply(this, arguments);
-        });
-      }
-      Object.defineProperty(close, previousSymbol, {
-        value: fs$close
-      });
-      return close;
-    })(fs2.close);
-    fs2.closeSync = (function(fs$closeSync) {
-      function closeSync(fd) {
-        fs$closeSync.apply(fs2, arguments);
-        resetQueue();
-      }
-      Object.defineProperty(closeSync, previousSymbol, {
-        value: fs$closeSync
-      });
-      return closeSync;
-    })(fs2.closeSync);
-    if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || "")) {
-      process.on("exit", function() {
-        debug(fs2[gracefulQueue]);
-        require$$5.equal(fs2[gracefulQueue].length, 0);
-      });
-    }
-  }
-  if (!commonjsGlobal[gracefulQueue]) {
-    publishQueue(commonjsGlobal, fs2[gracefulQueue]);
-  }
-  gracefulFs = patch(clone(fs2));
-  if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs2.__patched) {
-    gracefulFs = patch(fs2);
-    fs2.__patched = true;
-  }
-  function patch(fs22) {
-    polyfills2(fs22);
-    fs22.gracefulify = patch;
-    fs22.createReadStream = createReadStream;
-    fs22.createWriteStream = createWriteStream;
-    var fs$readFile = fs22.readFile;
-    fs22.readFile = readFile;
-    function readFile(path2, options, cb) {
-      if (typeof options === "function")
-        cb = options, options = null;
-      return go$readFile(path2, options, cb);
-      function go$readFile(path22, options2, cb2, startTime) {
-        return fs$readFile(path22, options2, function(err) {
-          if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-            enqueue([go$readFile, [path22, options2, cb2], err, startTime || Date.now(), Date.now()]);
-          else {
-            if (typeof cb2 === "function")
-              cb2.apply(this, arguments);
-          }
-        });
-      }
-    }
-    var fs$writeFile = fs22.writeFile;
-    fs22.writeFile = writeFile;
-    function writeFile(path2, data, options, cb) {
-      if (typeof options === "function")
-        cb = options, options = null;
-      return go$writeFile(path2, data, options, cb);
-      function go$writeFile(path22, data2, options2, cb2, startTime) {
-        return fs$writeFile(path22, data2, options2, function(err) {
-          if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-            enqueue([go$writeFile, [path22, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
-          else {
-            if (typeof cb2 === "function")
-              cb2.apply(this, arguments);
-          }
-        });
-      }
-    }
-    var fs$appendFile = fs22.appendFile;
-    if (fs$appendFile)
-      fs22.appendFile = appendFile;
-    function appendFile(path2, data, options, cb) {
-      if (typeof options === "function")
-        cb = options, options = null;
-      return go$appendFile(path2, data, options, cb);
-      function go$appendFile(path22, data2, options2, cb2, startTime) {
-        return fs$appendFile(path22, data2, options2, function(err) {
-          if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-            enqueue([go$appendFile, [path22, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
-          else {
-            if (typeof cb2 === "function")
-              cb2.apply(this, arguments);
-          }
-        });
-      }
-    }
-    var fs$copyFile = fs22.copyFile;
-    if (fs$copyFile)
-      fs22.copyFile = copyFile;
-    function copyFile(src, dest, flags, cb) {
-      if (typeof flags === "function") {
-        cb = flags;
-        flags = 0;
-      }
-      return go$copyFile(src, dest, flags, cb);
-      function go$copyFile(src2, dest2, flags2, cb2, startTime) {
-        return fs$copyFile(src2, dest2, flags2, function(err) {
-          if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-            enqueue([go$copyFile, [src2, dest2, flags2, cb2], err, startTime || Date.now(), Date.now()]);
-          else {
-            if (typeof cb2 === "function")
-              cb2.apply(this, arguments);
-          }
-        });
-      }
-    }
-    var fs$readdir = fs22.readdir;
-    fs22.readdir = readdir;
-    var noReaddirOptionVersions = /^v[0-5]\./;
-    function readdir(path2, options, cb) {
-      if (typeof options === "function")
-        cb = options, options = null;
-      var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path22, options2, cb2, startTime) {
-        return fs$readdir(path22, fs$readdirCallback(
-          path22,
-          options2,
-          cb2,
-          startTime
-        ));
-      } : function go$readdir2(path22, options2, cb2, startTime) {
-        return fs$readdir(path22, options2, fs$readdirCallback(
-          path22,
-          options2,
-          cb2,
-          startTime
-        ));
-      };
-      return go$readdir(path2, options, cb);
-      function fs$readdirCallback(path22, options2, cb2, startTime) {
-        return function(err, files) {
-          if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-            enqueue([
-              go$readdir,
-              [path22, options2, cb2],
-              err,
-              startTime || Date.now(),
-              Date.now()
-            ]);
-          else {
-            if (files && files.sort)
-              files.sort();
-            if (typeof cb2 === "function")
-              cb2.call(this, err, files);
-          }
-        };
-      }
-    }
-    if (process.version.substr(0, 4) === "v0.8") {
-      var legStreams = legacy(fs22);
-      ReadStream = legStreams.ReadStream;
-      WriteStream = legStreams.WriteStream;
-    }
-    var fs$ReadStream = fs22.ReadStream;
-    if (fs$ReadStream) {
-      ReadStream.prototype = Object.create(fs$ReadStream.prototype);
-      ReadStream.prototype.open = ReadStream$open;
-    }
-    var fs$WriteStream = fs22.WriteStream;
-    if (fs$WriteStream) {
-      WriteStream.prototype = Object.create(fs$WriteStream.prototype);
-      WriteStream.prototype.open = WriteStream$open;
-    }
-    Object.defineProperty(fs22, "ReadStream", {
-      get: function() {
-        return ReadStream;
-      },
-      set: function(val) {
-        ReadStream = val;
-      },
-      enumerable: true,
-      configurable: true
-    });
-    Object.defineProperty(fs22, "WriteStream", {
-      get: function() {
-        return WriteStream;
-      },
-      set: function(val) {
-        WriteStream = val;
-      },
-      enumerable: true,
-      configurable: true
-    });
-    var FileReadStream = ReadStream;
-    Object.defineProperty(fs22, "FileReadStream", {
-      get: function() {
-        return FileReadStream;
-      },
-      set: function(val) {
-        FileReadStream = val;
-      },
-      enumerable: true,
-      configurable: true
-    });
-    var FileWriteStream = WriteStream;
-    Object.defineProperty(fs22, "FileWriteStream", {
-      get: function() {
-        return FileWriteStream;
-      },
-      set: function(val) {
-        FileWriteStream = val;
-      },
-      enumerable: true,
-      configurable: true
-    });
-    function ReadStream(path2, options) {
-      if (this instanceof ReadStream)
-        return fs$ReadStream.apply(this, arguments), this;
-      else
-        return ReadStream.apply(Object.create(ReadStream.prototype), arguments);
-    }
-    function ReadStream$open() {
-      var that = this;
-      open(that.path, that.flags, that.mode, function(err, fd) {
-        if (err) {
-          if (that.autoClose)
-            that.destroy();
-          that.emit("error", err);
-        } else {
-          that.fd = fd;
-          that.emit("open", fd);
-          that.read();
-        }
-      });
-    }
-    function WriteStream(path2, options) {
-      if (this instanceof WriteStream)
-        return fs$WriteStream.apply(this, arguments), this;
-      else
-        return WriteStream.apply(Object.create(WriteStream.prototype), arguments);
-    }
-    function WriteStream$open() {
-      var that = this;
-      open(that.path, that.flags, that.mode, function(err, fd) {
-        if (err) {
-          that.destroy();
-          that.emit("error", err);
-        } else {
-          that.fd = fd;
-          that.emit("open", fd);
-        }
-      });
-    }
-    function createReadStream(path2, options) {
-      return new fs22.ReadStream(path2, options);
-    }
-    function createWriteStream(path2, options) {
-      return new fs22.WriteStream(path2, options);
-    }
-    var fs$open = fs22.open;
-    fs22.open = open;
-    function open(path2, flags, mode, cb) {
-      if (typeof mode === "function")
-        cb = mode, mode = null;
-      return go$open(path2, flags, mode, cb);
-      function go$open(path22, flags2, mode2, cb2, startTime) {
-        return fs$open(path22, flags2, mode2, function(err, fd) {
-          if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-            enqueue([go$open, [path22, flags2, mode2, cb2], err, startTime || Date.now(), Date.now()]);
-          else {
-            if (typeof cb2 === "function")
-              cb2.apply(this, arguments);
-          }
-        });
-      }
-    }
-    return fs22;
-  }
-  function enqueue(elem) {
-    debug("ENQUEUE", elem[0].name, elem[1]);
-    fs2[gracefulQueue].push(elem);
-    retry();
-  }
-  var retryTimer;
-  function resetQueue() {
-    var now = Date.now();
-    for (var i = 0; i < fs2[gracefulQueue].length; ++i) {
-      if (fs2[gracefulQueue][i].length > 2) {
-        fs2[gracefulQueue][i][3] = now;
-        fs2[gracefulQueue][i][4] = now;
-      }
-    }
-    retry();
-  }
-  function retry() {
-    clearTimeout(retryTimer);
-    retryTimer = void 0;
-    if (fs2[gracefulQueue].length === 0)
-      return;
-    var elem = fs2[gracefulQueue].shift();
-    var fn = elem[0];
-    var args = elem[1];
-    var err = elem[2];
-    var startTime = elem[3];
-    var lastTime = elem[4];
-    if (startTime === void 0) {
-      debug("RETRY", fn.name, args);
-      fn.apply(null, args);
-    } else if (Date.now() - startTime >= 6e4) {
-      debug("TIMEOUT", fn.name, args);
-      var cb = args.pop();
-      if (typeof cb === "function")
-        cb.call(null, err);
-    } else {
-      var sinceAttempt = Date.now() - lastTime;
-      var sinceStart = Math.max(lastTime - startTime, 1);
-      var desiredDelay = Math.min(sinceStart * 1.2, 100);
-      if (sinceAttempt >= desiredDelay) {
-        debug("RETRY", fn.name, args);
-        fn.apply(null, args.concat([startTime]));
-      } else {
-        fs2[gracefulQueue].push(elem);
-      }
-    }
-    if (retryTimer === void 0) {
-      retryTimer = setTimeout(retry, 0);
-    }
-  }
-  return gracefulFs;
-}
-var hasRequiredFs;
-function requireFs() {
-  if (hasRequiredFs) return fs$1;
-  hasRequiredFs = 1;
-  (function(exports) {
-    const u = requireUniversalify().fromCallback;
-    const fs2 = requireGracefulFs();
-    const api = [
-      "access",
-      "appendFile",
-      "chmod",
-      "chown",
-      "close",
-      "copyFile",
-      "fchmod",
-      "fchown",
-      "fdatasync",
-      "fstat",
-      "fsync",
-      "ftruncate",
-      "futimes",
-      "lchown",
-      "lchmod",
-      "link",
-      "lstat",
-      "mkdir",
-      "mkdtemp",
-      "open",
-      "readFile",
-      "readdir",
-      "readlink",
-      "realpath",
-      "rename",
-      "rmdir",
-      "stat",
-      "symlink",
-      "truncate",
-      "unlink",
-      "utimes",
-      "writeFile"
-    ].filter((key) => {
-      return typeof fs2[key] === "function";
-    });
-    Object.keys(fs2).forEach((key) => {
-      if (key === "promises") {
-        return;
-      }
-      exports[key] = fs2[key];
-    });
-    api.forEach((method) => {
-      exports[method] = u(fs2[method]);
-    });
-    exports.exists = function(filename, callback) {
-      if (typeof callback === "function") {
-        return fs2.exists(filename, callback);
-      }
-      return new Promise((resolve) => {
-        return fs2.exists(filename, resolve);
-      });
-    };
-    exports.read = function(fd, buffer2, offset, length, position, callback) {
-      if (typeof callback === "function") {
-        return fs2.read(fd, buffer2, offset, length, position, callback);
-      }
-      return new Promise((resolve, reject) => {
-        fs2.read(fd, buffer2, offset, length, position, (err, bytesRead, buffer3) => {
-          if (err) return reject(err);
-          resolve({ bytesRead, buffer: buffer3 });
-        });
-      });
-    };
-    exports.write = function(fd, buffer2, ...args) {
-      if (typeof args[args.length - 1] === "function") {
-        return fs2.write(fd, buffer2, ...args);
-      }
-      return new Promise((resolve, reject) => {
-        fs2.write(fd, buffer2, ...args, (err, bytesWritten, buffer3) => {
-          if (err) return reject(err);
-          resolve({ bytesWritten, buffer: buffer3 });
-        });
-      });
-    };
-    if (typeof fs2.realpath.native === "function") {
-      exports.realpath.native = u(fs2.realpath.native);
-    }
-  })(fs$1);
-  return fs$1;
-}
-var win32;
-var hasRequiredWin32;
-function requireWin32() {
-  if (hasRequiredWin32) return win32;
-  hasRequiredWin32 = 1;
-  const path2 = path__default;
-  function getRootPath(p) {
-    p = path2.normalize(path2.resolve(p)).split(path2.sep);
-    if (p.length > 0) return p[0];
-    return null;
-  }
-  const INVALID_PATH_CHARS = /[<>:"|?*]/;
-  function invalidWin32Path(p) {
-    const rp = getRootPath(p);
-    p = p.replace(rp, "");
-    return INVALID_PATH_CHARS.test(p);
-  }
-  win32 = {
-    getRootPath,
-    invalidWin32Path
-  };
-  return win32;
-}
-var mkdirs_1$1;
-var hasRequiredMkdirs$1;
-function requireMkdirs$1() {
-  if (hasRequiredMkdirs$1) return mkdirs_1$1;
-  hasRequiredMkdirs$1 = 1;
-  const fs2 = requireGracefulFs();
-  const path2 = path__default;
-  const invalidWin32Path = requireWin32().invalidWin32Path;
-  const o777 = parseInt("0777", 8);
-  function mkdirs(p, opts, callback, made) {
-    if (typeof opts === "function") {
-      callback = opts;
-      opts = {};
-    } else if (!opts || typeof opts !== "object") {
-      opts = { mode: opts };
-    }
-    if (process.platform === "win32" && invalidWin32Path(p)) {
-      const errInval = new Error(p + " contains invalid WIN32 path characters.");
-      errInval.code = "EINVAL";
-      return callback(errInval);
-    }
-    let mode = opts.mode;
-    const xfs = opts.fs || fs2;
-    if (mode === void 0) {
-      mode = o777 & ~process.umask();
-    }
-    if (!made) made = null;
-    callback = callback || function() {
-    };
-    p = path2.resolve(p);
-    xfs.mkdir(p, mode, (er) => {
-      if (!er) {
-        made = made || p;
-        return callback(null, made);
-      }
-      switch (er.code) {
-        case "ENOENT":
-          if (path2.dirname(p) === p) return callback(er);
-          mkdirs(path2.dirname(p), opts, (er2, made2) => {
-            if (er2) callback(er2, made2);
-            else mkdirs(p, opts, callback, made2);
-          });
-          break;
-        // In the case of any other error, just see if there's a dir
-        // there already.  If so, then hooray!  If not, then something
-        // is borked.
-        default:
-          xfs.stat(p, (er2, stat2) => {
-            if (er2 || !stat2.isDirectory()) callback(er, made);
-            else callback(null, made);
-          });
-          break;
-      }
-    });
-  }
-  mkdirs_1$1 = mkdirs;
-  return mkdirs_1$1;
-}
-var mkdirsSync_1;
-var hasRequiredMkdirsSync;
-function requireMkdirsSync() {
-  if (hasRequiredMkdirsSync) return mkdirsSync_1;
-  hasRequiredMkdirsSync = 1;
-  const fs2 = requireGracefulFs();
-  const path2 = path__default;
-  const invalidWin32Path = requireWin32().invalidWin32Path;
-  const o777 = parseInt("0777", 8);
-  function mkdirsSync(p, opts, made) {
-    if (!opts || typeof opts !== "object") {
-      opts = { mode: opts };
-    }
-    let mode = opts.mode;
-    const xfs = opts.fs || fs2;
-    if (process.platform === "win32" && invalidWin32Path(p)) {
-      const errInval = new Error(p + " contains invalid WIN32 path characters.");
-      errInval.code = "EINVAL";
-      throw errInval;
-    }
-    if (mode === void 0) {
-      mode = o777 & ~process.umask();
-    }
-    if (!made) made = null;
-    p = path2.resolve(p);
-    try {
-      xfs.mkdirSync(p, mode);
-      made = made || p;
-    } catch (err0) {
-      if (err0.code === "ENOENT") {
-        if (path2.dirname(p) === p) throw err0;
-        made = mkdirsSync(path2.dirname(p), opts, made);
-        mkdirsSync(p, opts, made);
-      } else {
-        let stat2;
-        try {
-          stat2 = xfs.statSync(p);
-        } catch (err1) {
-          throw err0;
-        }
-        if (!stat2.isDirectory()) throw err0;
-      }
-    }
-    return made;
-  }
-  mkdirsSync_1 = mkdirsSync;
-  return mkdirsSync_1;
-}
-var mkdirs_1;
-var hasRequiredMkdirs;
-function requireMkdirs() {
-  if (hasRequiredMkdirs) return mkdirs_1;
-  hasRequiredMkdirs = 1;
-  const u = requireUniversalify().fromCallback;
-  const mkdirs = u(requireMkdirs$1());
-  const mkdirsSync = requireMkdirsSync();
-  mkdirs_1 = {
-    mkdirs,
-    mkdirsSync,
-    // alias
-    mkdirp: mkdirs,
-    mkdirpSync: mkdirsSync,
-    ensureDir: mkdirs,
-    ensureDirSync: mkdirsSync
-  };
-  return mkdirs_1;
-}
-var utimes;
-var hasRequiredUtimes;
-function requireUtimes() {
-  if (hasRequiredUtimes) return utimes;
-  hasRequiredUtimes = 1;
-  const fs2 = requireGracefulFs();
-  const os = require$$1;
-  const path2 = path__default;
-  function hasMillisResSync() {
-    let tmpfile = path2.join("millis-test-sync" + Date.now().toString() + Math.random().toString().slice(2));
-    tmpfile = path2.join(os.tmpdir(), tmpfile);
-    const d = /* @__PURE__ */ new Date(1435410243862);
-    fs2.writeFileSync(tmpfile, "https://github.com/jprichardson/node-fs-extra/pull/141");
-    const fd = fs2.openSync(tmpfile, "r+");
-    fs2.futimesSync(fd, d, d);
-    fs2.closeSync(fd);
-    return fs2.statSync(tmpfile).mtime > 1435410243e3;
-  }
-  function hasMillisRes(callback) {
-    let tmpfile = path2.join("millis-test" + Date.now().toString() + Math.random().toString().slice(2));
-    tmpfile = path2.join(os.tmpdir(), tmpfile);
-    const d = /* @__PURE__ */ new Date(1435410243862);
-    fs2.writeFile(tmpfile, "https://github.com/jprichardson/node-fs-extra/pull/141", (err) => {
-      if (err) return callback(err);
-      fs2.open(tmpfile, "r+", (err2, fd) => {
-        if (err2) return callback(err2);
-        fs2.futimes(fd, d, d, (err3) => {
-          if (err3) return callback(err3);
-          fs2.close(fd, (err4) => {
-            if (err4) return callback(err4);
-            fs2.stat(tmpfile, (err5, stats) => {
-              if (err5) return callback(err5);
-              callback(null, stats.mtime > 1435410243e3);
-            });
-          });
-        });
-      });
-    });
-  }
-  function timeRemoveMillis(timestamp) {
-    if (typeof timestamp === "number") {
-      return Math.floor(timestamp / 1e3) * 1e3;
-    } else if (timestamp instanceof Date) {
-      return new Date(Math.floor(timestamp.getTime() / 1e3) * 1e3);
-    } else {
-      throw new Error("fs-extra: timeRemoveMillis() unknown parameter type");
-    }
-  }
-  function utimesMillis(path3, atime, mtime, callback) {
-    fs2.open(path3, "r+", (err, fd) => {
-      if (err) return callback(err);
-      fs2.futimes(fd, atime, mtime, (futimesErr) => {
-        fs2.close(fd, (closeErr) => {
-          if (callback) callback(futimesErr || closeErr);
-        });
-      });
-    });
-  }
-  function utimesMillisSync(path3, atime, mtime) {
-    const fd = fs2.openSync(path3, "r+");
-    fs2.futimesSync(fd, atime, mtime);
-    return fs2.closeSync(fd);
-  }
-  utimes = {
-    hasMillisRes,
-    hasMillisResSync,
-    timeRemoveMillis,
-    utimesMillis,
-    utimesMillisSync
-  };
-  return utimes;
-}
-var stat;
-var hasRequiredStat;
-function requireStat() {
-  if (hasRequiredStat) return stat;
-  hasRequiredStat = 1;
-  const fs2 = requireGracefulFs();
-  const path2 = path__default;
-  const NODE_VERSION_MAJOR_WITH_BIGINT = 10;
-  const NODE_VERSION_MINOR_WITH_BIGINT = 5;
-  const NODE_VERSION_PATCH_WITH_BIGINT = 0;
-  const nodeVersion = process.versions.node.split(".");
-  const nodeVersionMajor = Number.parseInt(nodeVersion[0], 10);
-  const nodeVersionMinor = Number.parseInt(nodeVersion[1], 10);
-  const nodeVersionPatch = Number.parseInt(nodeVersion[2], 10);
-  function nodeSupportsBigInt() {
-    if (nodeVersionMajor > NODE_VERSION_MAJOR_WITH_BIGINT) {
-      return true;
-    } else if (nodeVersionMajor === NODE_VERSION_MAJOR_WITH_BIGINT) {
-      if (nodeVersionMinor > NODE_VERSION_MINOR_WITH_BIGINT) {
-        return true;
-      } else if (nodeVersionMinor === NODE_VERSION_MINOR_WITH_BIGINT) {
-        if (nodeVersionPatch >= NODE_VERSION_PATCH_WITH_BIGINT) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-  function getStats(src, dest, cb) {
-    if (nodeSupportsBigInt()) {
-      fs2.stat(src, { bigint: true }, (err, srcStat) => {
-        if (err) return cb(err);
-        fs2.stat(dest, { bigint: true }, (err2, destStat) => {
-          if (err2) {
-            if (err2.code === "ENOENT") return cb(null, { srcStat, destStat: null });
-            return cb(err2);
-          }
-          return cb(null, { srcStat, destStat });
-        });
-      });
-    } else {
-      fs2.stat(src, (err, srcStat) => {
-        if (err) return cb(err);
-        fs2.stat(dest, (err2, destStat) => {
-          if (err2) {
-            if (err2.code === "ENOENT") return cb(null, { srcStat, destStat: null });
-            return cb(err2);
-          }
-          return cb(null, { srcStat, destStat });
-        });
-      });
-    }
-  }
-  function getStatsSync(src, dest) {
-    let srcStat, destStat;
-    if (nodeSupportsBigInt()) {
-      srcStat = fs2.statSync(src, { bigint: true });
-    } else {
-      srcStat = fs2.statSync(src);
-    }
-    try {
-      if (nodeSupportsBigInt()) {
-        destStat = fs2.statSync(dest, { bigint: true });
-      } else {
-        destStat = fs2.statSync(dest);
-      }
-    } catch (err) {
-      if (err.code === "ENOENT") return { srcStat, destStat: null };
-      throw err;
-    }
-    return { srcStat, destStat };
-  }
-  function checkPaths(src, dest, funcName, cb) {
-    getStats(src, dest, (err, stats) => {
-      if (err) return cb(err);
-      const { srcStat, destStat } = stats;
-      if (destStat && destStat.ino && destStat.dev && destStat.ino === srcStat.ino && destStat.dev === srcStat.dev) {
-        return cb(new Error("Source and destination must not be the same."));
-      }
-      if (srcStat.isDirectory() && isSrcSubdir(src, dest)) {
-        return cb(new Error(errMsg(src, dest, funcName)));
-      }
-      return cb(null, { srcStat, destStat });
-    });
-  }
-  function checkPathsSync(src, dest, funcName) {
-    const { srcStat, destStat } = getStatsSync(src, dest);
-    if (destStat && destStat.ino && destStat.dev && destStat.ino === srcStat.ino && destStat.dev === srcStat.dev) {
-      throw new Error("Source and destination must not be the same.");
-    }
-    if (srcStat.isDirectory() && isSrcSubdir(src, dest)) {
-      throw new Error(errMsg(src, dest, funcName));
-    }
-    return { srcStat, destStat };
-  }
-  function checkParentPaths(src, srcStat, dest, funcName, cb) {
-    const srcParent = path2.resolve(path2.dirname(src));
-    const destParent = path2.resolve(path2.dirname(dest));
-    if (destParent === srcParent || destParent === path2.parse(destParent).root) return cb();
-    if (nodeSupportsBigInt()) {
-      fs2.stat(destParent, { bigint: true }, (err, destStat) => {
-        if (err) {
-          if (err.code === "ENOENT") return cb();
-          return cb(err);
-        }
-        if (destStat.ino && destStat.dev && destStat.ino === srcStat.ino && destStat.dev === srcStat.dev) {
-          return cb(new Error(errMsg(src, dest, funcName)));
-        }
-        return checkParentPaths(src, srcStat, destParent, funcName, cb);
-      });
-    } else {
-      fs2.stat(destParent, (err, destStat) => {
-        if (err) {
-          if (err.code === "ENOENT") return cb();
-          return cb(err);
-        }
-        if (destStat.ino && destStat.dev && destStat.ino === srcStat.ino && destStat.dev === srcStat.dev) {
-          return cb(new Error(errMsg(src, dest, funcName)));
-        }
-        return checkParentPaths(src, srcStat, destParent, funcName, cb);
-      });
-    }
-  }
-  function checkParentPathsSync(src, srcStat, dest, funcName) {
-    const srcParent = path2.resolve(path2.dirname(src));
-    const destParent = path2.resolve(path2.dirname(dest));
-    if (destParent === srcParent || destParent === path2.parse(destParent).root) return;
-    let destStat;
-    try {
-      if (nodeSupportsBigInt()) {
-        destStat = fs2.statSync(destParent, { bigint: true });
-      } else {
-        destStat = fs2.statSync(destParent);
-      }
-    } catch (err) {
-      if (err.code === "ENOENT") return;
-      throw err;
-    }
-    if (destStat.ino && destStat.dev && destStat.ino === srcStat.ino && destStat.dev === srcStat.dev) {
-      throw new Error(errMsg(src, dest, funcName));
-    }
-    return checkParentPathsSync(src, srcStat, destParent, funcName);
-  }
-  function isSrcSubdir(src, dest) {
-    const srcArr = path2.resolve(src).split(path2.sep).filter((i) => i);
-    const destArr = path2.resolve(dest).split(path2.sep).filter((i) => i);
-    return srcArr.reduce((acc, cur, i) => acc && destArr[i] === cur, true);
-  }
-  function errMsg(src, dest, funcName) {
-    return `Cannot ${funcName} '${src}' to a subdirectory of itself, '${dest}'.`;
-  }
-  stat = {
-    checkPaths,
-    checkPathsSync,
-    checkParentPaths,
-    checkParentPathsSync,
-    isSrcSubdir
-  };
-  return stat;
-}
-var buffer;
-var hasRequiredBuffer;
-function requireBuffer() {
-  if (hasRequiredBuffer) return buffer;
-  hasRequiredBuffer = 1;
-  buffer = function(size) {
-    if (typeof Buffer.allocUnsafe === "function") {
-      try {
-        return Buffer.allocUnsafe(size);
-      } catch (e) {
-        return new Buffer(size);
-      }
-    }
-    return new Buffer(size);
-  };
-  return buffer;
-}
-var copySync_1;
-var hasRequiredCopySync$1;
-function requireCopySync$1() {
-  if (hasRequiredCopySync$1) return copySync_1;
-  hasRequiredCopySync$1 = 1;
-  const fs2 = requireGracefulFs();
-  const path2 = path__default;
-  const mkdirpSync = requireMkdirs().mkdirsSync;
-  const utimesSync = requireUtimes().utimesMillisSync;
-  const stat2 = requireStat();
-  function copySync2(src, dest, opts) {
-    if (typeof opts === "function") {
-      opts = { filter: opts };
-    }
-    opts = opts || {};
-    opts.clobber = "clobber" in opts ? !!opts.clobber : true;
-    opts.overwrite = "overwrite" in opts ? !!opts.overwrite : opts.clobber;
-    if (opts.preserveTimestamps && process.arch === "ia32") {
-      console.warn(`fs-extra: Using the preserveTimestamps option in 32-bit node is not recommended;
-
-    see https://github.com/jprichardson/node-fs-extra/issues/269`);
-    }
-    const { srcStat, destStat } = stat2.checkPathsSync(src, dest, "copy");
-    stat2.checkParentPathsSync(src, srcStat, dest, "copy");
-    return handleFilterAndCopy(destStat, src, dest, opts);
-  }
-  function handleFilterAndCopy(destStat, src, dest, opts) {
-    if (opts.filter && !opts.filter(src, dest)) return;
-    const destParent = path2.dirname(dest);
-    if (!fs2.existsSync(destParent)) mkdirpSync(destParent);
-    return startCopy(destStat, src, dest, opts);
-  }
-  function startCopy(destStat, src, dest, opts) {
-    if (opts.filter && !opts.filter(src, dest)) return;
-    return getStats(destStat, src, dest, opts);
-  }
-  function getStats(destStat, src, dest, opts) {
-    const statSync = opts.dereference ? fs2.statSync : fs2.lstatSync;
-    const srcStat = statSync(src);
-    if (srcStat.isDirectory()) return onDir(srcStat, destStat, src, dest, opts);
-    else if (srcStat.isFile() || srcStat.isCharacterDevice() || srcStat.isBlockDevice()) return onFile(srcStat, destStat, src, dest, opts);
-    else if (srcStat.isSymbolicLink()) return onLink(destStat, src, dest, opts);
-  }
-  function onFile(srcStat, destStat, src, dest, opts) {
-    if (!destStat) return copyFile(srcStat, src, dest, opts);
-    return mayCopyFile(srcStat, src, dest, opts);
-  }
-  function mayCopyFile(srcStat, src, dest, opts) {
-    if (opts.overwrite) {
-      fs2.unlinkSync(dest);
-      return copyFile(srcStat, src, dest, opts);
-    } else if (opts.errorOnExist) {
-      throw new Error(`'${dest}' already exists`);
-    }
-  }
-  function copyFile(srcStat, src, dest, opts) {
-    if (typeof fs2.copyFileSync === "function") {
-      fs2.copyFileSync(src, dest);
-      fs2.chmodSync(dest, srcStat.mode);
-      if (opts.preserveTimestamps) {
-        return utimesSync(dest, srcStat.atime, srcStat.mtime);
-      }
-      return;
-    }
-    return copyFileFallback(srcStat, src, dest, opts);
-  }
-  function copyFileFallback(srcStat, src, dest, opts) {
-    const BUF_LENGTH = 64 * 1024;
-    const _buff = requireBuffer()(BUF_LENGTH);
-    const fdr = fs2.openSync(src, "r");
-    const fdw = fs2.openSync(dest, "w", srcStat.mode);
-    let pos = 0;
-    while (pos < srcStat.size) {
-      const bytesRead = fs2.readSync(fdr, _buff, 0, BUF_LENGTH, pos);
-      fs2.writeSync(fdw, _buff, 0, bytesRead);
-      pos += bytesRead;
-    }
-    if (opts.preserveTimestamps) fs2.futimesSync(fdw, srcStat.atime, srcStat.mtime);
-    fs2.closeSync(fdr);
-    fs2.closeSync(fdw);
-  }
-  function onDir(srcStat, destStat, src, dest, opts) {
-    if (!destStat) return mkDirAndCopy(srcStat, src, dest, opts);
-    if (destStat && !destStat.isDirectory()) {
-      throw new Error(`Cannot overwrite non-directory '${dest}' with directory '${src}'.`);
-    }
-    return copyDir(src, dest, opts);
-  }
-  function mkDirAndCopy(srcStat, src, dest, opts) {
-    fs2.mkdirSync(dest);
-    copyDir(src, dest, opts);
-    return fs2.chmodSync(dest, srcStat.mode);
-  }
-  function copyDir(src, dest, opts) {
-    fs2.readdirSync(src).forEach((item) => copyDirItem(item, src, dest, opts));
-  }
-  function copyDirItem(item, src, dest, opts) {
-    const srcItem = path2.join(src, item);
-    const destItem = path2.join(dest, item);
-    const { destStat } = stat2.checkPathsSync(srcItem, destItem, "copy");
-    return startCopy(destStat, srcItem, destItem, opts);
-  }
-  function onLink(destStat, src, dest, opts) {
-    let resolvedSrc = fs2.readlinkSync(src);
-    if (opts.dereference) {
-      resolvedSrc = path2.resolve(process.cwd(), resolvedSrc);
-    }
-    if (!destStat) {
-      return fs2.symlinkSync(resolvedSrc, dest);
-    } else {
-      let resolvedDest;
-      try {
-        resolvedDest = fs2.readlinkSync(dest);
-      } catch (err) {
-        if (err.code === "EINVAL" || err.code === "UNKNOWN") return fs2.symlinkSync(resolvedSrc, dest);
-        throw err;
-      }
-      if (opts.dereference) {
-        resolvedDest = path2.resolve(process.cwd(), resolvedDest);
-      }
-      if (stat2.isSrcSubdir(resolvedSrc, resolvedDest)) {
-        throw new Error(`Cannot copy '${resolvedSrc}' to a subdirectory of itself, '${resolvedDest}'.`);
-      }
-      if (fs2.statSync(dest).isDirectory() && stat2.isSrcSubdir(resolvedDest, resolvedSrc)) {
-        throw new Error(`Cannot overwrite '${resolvedDest}' with '${resolvedSrc}'.`);
-      }
-      return copyLink(resolvedSrc, dest);
-    }
-  }
-  function copyLink(resolvedSrc, dest) {
-    fs2.unlinkSync(dest);
-    return fs2.symlinkSync(resolvedSrc, dest);
-  }
-  copySync_1 = copySync2;
-  return copySync_1;
-}
-var copySync;
-var hasRequiredCopySync;
-function requireCopySync() {
-  if (hasRequiredCopySync) return copySync;
-  hasRequiredCopySync = 1;
-  copySync = {
-    copySync: requireCopySync$1()
-  };
-  return copySync;
-}
-var pathExists_1;
-var hasRequiredPathExists;
-function requirePathExists() {
-  if (hasRequiredPathExists) return pathExists_1;
-  hasRequiredPathExists = 1;
-  const u = requireUniversalify().fromPromise;
-  const fs2 = requireFs();
-  function pathExists(path2) {
-    return fs2.access(path2).then(() => true).catch(() => false);
-  }
-  pathExists_1 = {
-    pathExists: u(pathExists),
-    pathExistsSync: fs2.existsSync
-  };
-  return pathExists_1;
-}
-var copy_1;
-var hasRequiredCopy$1;
-function requireCopy$1() {
-  if (hasRequiredCopy$1) return copy_1;
-  hasRequiredCopy$1 = 1;
-  const fs2 = requireGracefulFs();
-  const path2 = path__default;
-  const mkdirp = requireMkdirs().mkdirs;
-  const pathExists = requirePathExists().pathExists;
-  const utimes2 = requireUtimes().utimesMillis;
-  const stat2 = requireStat();
-  function copy2(src, dest, opts, cb) {
-    if (typeof opts === "function" && !cb) {
-      cb = opts;
-      opts = {};
-    } else if (typeof opts === "function") {
-      opts = { filter: opts };
-    }
-    cb = cb || function() {
-    };
-    opts = opts || {};
-    opts.clobber = "clobber" in opts ? !!opts.clobber : true;
-    opts.overwrite = "overwrite" in opts ? !!opts.overwrite : opts.clobber;
-    if (opts.preserveTimestamps && process.arch === "ia32") {
-      console.warn(`fs-extra: Using the preserveTimestamps option in 32-bit node is not recommended;
-
-    see https://github.com/jprichardson/node-fs-extra/issues/269`);
-    }
-    stat2.checkPaths(src, dest, "copy", (err, stats) => {
-      if (err) return cb(err);
-      const { srcStat, destStat } = stats;
-      stat2.checkParentPaths(src, srcStat, dest, "copy", (err2) => {
-        if (err2) return cb(err2);
-        if (opts.filter) return handleFilter(checkParentDir, destStat, src, dest, opts, cb);
-        return checkParentDir(destStat, src, dest, opts, cb);
-      });
-    });
-  }
-  function checkParentDir(destStat, src, dest, opts, cb) {
-    const destParent = path2.dirname(dest);
-    pathExists(destParent, (err, dirExists) => {
-      if (err) return cb(err);
-      if (dirExists) return startCopy(destStat, src, dest, opts, cb);
-      mkdirp(destParent, (err2) => {
-        if (err2) return cb(err2);
-        return startCopy(destStat, src, dest, opts, cb);
-      });
-    });
-  }
-  function handleFilter(onInclude, destStat, src, dest, opts, cb) {
-    Promise.resolve(opts.filter(src, dest)).then((include) => {
-      if (include) return onInclude(destStat, src, dest, opts, cb);
-      return cb();
-    }, (error) => cb(error));
-  }
-  function startCopy(destStat, src, dest, opts, cb) {
-    if (opts.filter) return handleFilter(getStats, destStat, src, dest, opts, cb);
-    return getStats(destStat, src, dest, opts, cb);
-  }
-  function getStats(destStat, src, dest, opts, cb) {
-    const stat3 = opts.dereference ? fs2.stat : fs2.lstat;
-    stat3(src, (err, srcStat) => {
-      if (err) return cb(err);
-      if (srcStat.isDirectory()) return onDir(srcStat, destStat, src, dest, opts, cb);
-      else if (srcStat.isFile() || srcStat.isCharacterDevice() || srcStat.isBlockDevice()) return onFile(srcStat, destStat, src, dest, opts, cb);
-      else if (srcStat.isSymbolicLink()) return onLink(destStat, src, dest, opts, cb);
-    });
-  }
-  function onFile(srcStat, destStat, src, dest, opts, cb) {
-    if (!destStat) return copyFile(srcStat, src, dest, opts, cb);
-    return mayCopyFile(srcStat, src, dest, opts, cb);
-  }
-  function mayCopyFile(srcStat, src, dest, opts, cb) {
-    if (opts.overwrite) {
-      fs2.unlink(dest, (err) => {
-        if (err) return cb(err);
-        return copyFile(srcStat, src, dest, opts, cb);
-      });
-    } else if (opts.errorOnExist) {
-      return cb(new Error(`'${dest}' already exists`));
-    } else return cb();
-  }
-  function copyFile(srcStat, src, dest, opts, cb) {
-    if (typeof fs2.copyFile === "function") {
-      return fs2.copyFile(src, dest, (err) => {
-        if (err) return cb(err);
-        return setDestModeAndTimestamps(srcStat, dest, opts, cb);
-      });
-    }
-    return copyFileFallback(srcStat, src, dest, opts, cb);
-  }
-  function copyFileFallback(srcStat, src, dest, opts, cb) {
-    const rs = fs2.createReadStream(src);
-    rs.on("error", (err) => cb(err)).once("open", () => {
-      const ws = fs2.createWriteStream(dest, { mode: srcStat.mode });
-      ws.on("error", (err) => cb(err)).on("open", () => rs.pipe(ws)).once("close", () => setDestModeAndTimestamps(srcStat, dest, opts, cb));
-    });
-  }
-  function setDestModeAndTimestamps(srcStat, dest, opts, cb) {
-    fs2.chmod(dest, srcStat.mode, (err) => {
-      if (err) return cb(err);
-      if (opts.preserveTimestamps) {
-        return utimes2(dest, srcStat.atime, srcStat.mtime, cb);
-      }
-      return cb();
-    });
-  }
-  function onDir(srcStat, destStat, src, dest, opts, cb) {
-    if (!destStat) return mkDirAndCopy(srcStat, src, dest, opts, cb);
-    if (destStat && !destStat.isDirectory()) {
-      return cb(new Error(`Cannot overwrite non-directory '${dest}' with directory '${src}'.`));
-    }
-    return copyDir(src, dest, opts, cb);
-  }
-  function mkDirAndCopy(srcStat, src, dest, opts, cb) {
-    fs2.mkdir(dest, (err) => {
-      if (err) return cb(err);
-      copyDir(src, dest, opts, (err2) => {
-        if (err2) return cb(err2);
-        return fs2.chmod(dest, srcStat.mode, cb);
-      });
-    });
-  }
-  function copyDir(src, dest, opts, cb) {
-    fs2.readdir(src, (err, items) => {
-      if (err) return cb(err);
-      return copyDirItems(items, src, dest, opts, cb);
-    });
-  }
-  function copyDirItems(items, src, dest, opts, cb) {
-    const item = items.pop();
-    if (!item) return cb();
-    return copyDirItem(items, item, src, dest, opts, cb);
-  }
-  function copyDirItem(items, item, src, dest, opts, cb) {
-    const srcItem = path2.join(src, item);
-    const destItem = path2.join(dest, item);
-    stat2.checkPaths(srcItem, destItem, "copy", (err, stats) => {
-      if (err) return cb(err);
-      const { destStat } = stats;
-      startCopy(destStat, srcItem, destItem, opts, (err2) => {
-        if (err2) return cb(err2);
-        return copyDirItems(items, src, dest, opts, cb);
-      });
-    });
-  }
-  function onLink(destStat, src, dest, opts, cb) {
-    fs2.readlink(src, (err, resolvedSrc) => {
-      if (err) return cb(err);
-      if (opts.dereference) {
-        resolvedSrc = path2.resolve(process.cwd(), resolvedSrc);
-      }
-      if (!destStat) {
-        return fs2.symlink(resolvedSrc, dest, cb);
-      } else {
-        fs2.readlink(dest, (err2, resolvedDest) => {
-          if (err2) {
-            if (err2.code === "EINVAL" || err2.code === "UNKNOWN") return fs2.symlink(resolvedSrc, dest, cb);
-            return cb(err2);
-          }
-          if (opts.dereference) {
-            resolvedDest = path2.resolve(process.cwd(), resolvedDest);
-          }
-          if (stat2.isSrcSubdir(resolvedSrc, resolvedDest)) {
-            return cb(new Error(`Cannot copy '${resolvedSrc}' to a subdirectory of itself, '${resolvedDest}'.`));
-          }
-          if (destStat.isDirectory() && stat2.isSrcSubdir(resolvedDest, resolvedSrc)) {
-            return cb(new Error(`Cannot overwrite '${resolvedDest}' with '${resolvedSrc}'.`));
-          }
-          return copyLink(resolvedSrc, dest, cb);
-        });
-      }
-    });
-  }
-  function copyLink(resolvedSrc, dest, cb) {
-    fs2.unlink(dest, (err) => {
-      if (err) return cb(err);
-      return fs2.symlink(resolvedSrc, dest, cb);
-    });
-  }
-  copy_1 = copy2;
-  return copy_1;
-}
-var copy;
-var hasRequiredCopy;
-function requireCopy() {
-  if (hasRequiredCopy) return copy;
-  hasRequiredCopy = 1;
-  const u = requireUniversalify().fromCallback;
-  copy = {
-    copy: u(requireCopy$1())
-  };
-  return copy;
-}
-var rimraf_1;
-var hasRequiredRimraf;
-function requireRimraf() {
-  if (hasRequiredRimraf) return rimraf_1;
-  hasRequiredRimraf = 1;
-  const fs2 = requireGracefulFs();
-  const path2 = path__default;
-  const assert = require$$5;
-  const isWindows = process.platform === "win32";
-  function defaults(options) {
-    const methods = [
-      "unlink",
-      "chmod",
-      "stat",
-      "lstat",
-      "rmdir",
-      "readdir"
-    ];
-    methods.forEach((m) => {
-      options[m] = options[m] || fs2[m];
-      m = m + "Sync";
-      options[m] = options[m] || fs2[m];
-    });
-    options.maxBusyTries = options.maxBusyTries || 3;
-  }
-  function rimraf(p, options, cb) {
-    let busyTries = 0;
-    if (typeof options === "function") {
-      cb = options;
-      options = {};
-    }
-    assert(p, "rimraf: missing path");
-    assert.strictEqual(typeof p, "string", "rimraf: path should be a string");
-    assert.strictEqual(typeof cb, "function", "rimraf: callback function required");
-    assert(options, "rimraf: invalid options argument provided");
-    assert.strictEqual(typeof options, "object", "rimraf: options should be object");
-    defaults(options);
-    rimraf_(p, options, function CB(er) {
-      if (er) {
-        if ((er.code === "EBUSY" || er.code === "ENOTEMPTY" || er.code === "EPERM") && busyTries < options.maxBusyTries) {
-          busyTries++;
-          const time = busyTries * 100;
-          return setTimeout(() => rimraf_(p, options, CB), time);
-        }
-        if (er.code === "ENOENT") er = null;
-      }
-      cb(er);
-    });
-  }
-  function rimraf_(p, options, cb) {
-    assert(p);
-    assert(options);
-    assert(typeof cb === "function");
-    options.lstat(p, (er, st) => {
-      if (er && er.code === "ENOENT") {
-        return cb(null);
-      }
-      if (er && er.code === "EPERM" && isWindows) {
-        return fixWinEPERM(p, options, er, cb);
-      }
-      if (st && st.isDirectory()) {
-        return rmdir(p, options, er, cb);
-      }
-      options.unlink(p, (er2) => {
-        if (er2) {
-          if (er2.code === "ENOENT") {
-            return cb(null);
-          }
-          if (er2.code === "EPERM") {
-            return isWindows ? fixWinEPERM(p, options, er2, cb) : rmdir(p, options, er2, cb);
-          }
-          if (er2.code === "EISDIR") {
-            return rmdir(p, options, er2, cb);
-          }
-        }
-        return cb(er2);
-      });
-    });
-  }
-  function fixWinEPERM(p, options, er, cb) {
-    assert(p);
-    assert(options);
-    assert(typeof cb === "function");
-    if (er) {
-      assert(er instanceof Error);
-    }
-    options.chmod(p, 438, (er2) => {
-      if (er2) {
-        cb(er2.code === "ENOENT" ? null : er);
-      } else {
-        options.stat(p, (er3, stats) => {
-          if (er3) {
-            cb(er3.code === "ENOENT" ? null : er);
-          } else if (stats.isDirectory()) {
-            rmdir(p, options, er, cb);
-          } else {
-            options.unlink(p, cb);
-          }
-        });
-      }
-    });
-  }
-  function fixWinEPERMSync(p, options, er) {
-    let stats;
-    assert(p);
-    assert(options);
-    if (er) {
-      assert(er instanceof Error);
-    }
-    try {
-      options.chmodSync(p, 438);
-    } catch (er2) {
-      if (er2.code === "ENOENT") {
-        return;
-      } else {
-        throw er;
-      }
-    }
-    try {
-      stats = options.statSync(p);
-    } catch (er3) {
-      if (er3.code === "ENOENT") {
-        return;
-      } else {
-        throw er;
-      }
-    }
-    if (stats.isDirectory()) {
-      rmdirSync(p, options, er);
-    } else {
-      options.unlinkSync(p);
-    }
-  }
-  function rmdir(p, options, originalEr, cb) {
-    assert(p);
-    assert(options);
-    if (originalEr) {
-      assert(originalEr instanceof Error);
-    }
-    assert(typeof cb === "function");
-    options.rmdir(p, (er) => {
-      if (er && (er.code === "ENOTEMPTY" || er.code === "EEXIST" || er.code === "EPERM")) {
-        rmkids(p, options, cb);
-      } else if (er && er.code === "ENOTDIR") {
-        cb(originalEr);
-      } else {
-        cb(er);
-      }
-    });
-  }
-  function rmkids(p, options, cb) {
-    assert(p);
-    assert(options);
-    assert(typeof cb === "function");
-    options.readdir(p, (er, files) => {
-      if (er) return cb(er);
-      let n = files.length;
-      let errState;
-      if (n === 0) return options.rmdir(p, cb);
-      files.forEach((f) => {
-        rimraf(path2.join(p, f), options, (er2) => {
-          if (errState) {
-            return;
-          }
-          if (er2) return cb(errState = er2);
-          if (--n === 0) {
-            options.rmdir(p, cb);
-          }
-        });
-      });
-    });
-  }
-  function rimrafSync(p, options) {
-    let st;
-    options = options || {};
-    defaults(options);
-    assert(p, "rimraf: missing path");
-    assert.strictEqual(typeof p, "string", "rimraf: path should be a string");
-    assert(options, "rimraf: missing options");
-    assert.strictEqual(typeof options, "object", "rimraf: options should be object");
-    try {
-      st = options.lstatSync(p);
-    } catch (er) {
-      if (er.code === "ENOENT") {
-        return;
-      }
-      if (er.code === "EPERM" && isWindows) {
-        fixWinEPERMSync(p, options, er);
-      }
-    }
-    try {
-      if (st && st.isDirectory()) {
-        rmdirSync(p, options, null);
-      } else {
-        options.unlinkSync(p);
-      }
-    } catch (er) {
-      if (er.code === "ENOENT") {
-        return;
-      } else if (er.code === "EPERM") {
-        return isWindows ? fixWinEPERMSync(p, options, er) : rmdirSync(p, options, er);
-      } else if (er.code !== "EISDIR") {
-        throw er;
-      }
-      rmdirSync(p, options, er);
-    }
-  }
-  function rmdirSync(p, options, originalEr) {
-    assert(p);
-    assert(options);
-    if (originalEr) {
-      assert(originalEr instanceof Error);
-    }
-    try {
-      options.rmdirSync(p);
-    } catch (er) {
-      if (er.code === "ENOTDIR") {
-        throw originalEr;
-      } else if (er.code === "ENOTEMPTY" || er.code === "EEXIST" || er.code === "EPERM") {
-        rmkidsSync(p, options);
-      } else if (er.code !== "ENOENT") {
-        throw er;
-      }
-    }
-  }
-  function rmkidsSync(p, options) {
-    assert(p);
-    assert(options);
-    options.readdirSync(p).forEach((f) => rimrafSync(path2.join(p, f), options));
-    if (isWindows) {
-      const startTime = Date.now();
-      do {
-        try {
-          const ret = options.rmdirSync(p, options);
-          return ret;
-        } catch (er) {
-        }
-      } while (Date.now() - startTime < 500);
-    } else {
-      const ret = options.rmdirSync(p, options);
-      return ret;
-    }
-  }
-  rimraf_1 = rimraf;
-  rimraf.sync = rimrafSync;
-  return rimraf_1;
-}
-var remove;
-var hasRequiredRemove;
-function requireRemove() {
-  if (hasRequiredRemove) return remove;
-  hasRequiredRemove = 1;
-  const u = requireUniversalify().fromCallback;
-  const rimraf = requireRimraf();
-  remove = {
-    remove: u(rimraf),
-    removeSync: rimraf.sync
-  };
-  return remove;
-}
-var empty;
-var hasRequiredEmpty;
-function requireEmpty() {
-  if (hasRequiredEmpty) return empty;
-  hasRequiredEmpty = 1;
-  const u = requireUniversalify().fromCallback;
-  const fs2 = requireGracefulFs();
-  const path2 = path__default;
-  const mkdir = requireMkdirs();
-  const remove2 = requireRemove();
-  const emptyDir = u(function emptyDir2(dir, callback) {
-    callback = callback || function() {
-    };
-    fs2.readdir(dir, (err, items) => {
-      if (err) return mkdir.mkdirs(dir, callback);
-      items = items.map((item) => path2.join(dir, item));
-      deleteItem();
-      function deleteItem() {
-        const item = items.pop();
-        if (!item) return callback();
-        remove2.remove(item, (err2) => {
-          if (err2) return callback(err2);
-          deleteItem();
-        });
-      }
-    });
-  });
-  function emptyDirSync(dir) {
-    let items;
-    try {
-      items = fs2.readdirSync(dir);
-    } catch (err) {
-      return mkdir.mkdirsSync(dir);
-    }
-    items.forEach((item) => {
-      item = path2.join(dir, item);
-      remove2.removeSync(item);
-    });
-  }
-  empty = {
-    emptyDirSync,
-    emptydirSync: emptyDirSync,
-    emptyDir,
-    emptydir: emptyDir
-  };
-  return empty;
-}
-var file;
-var hasRequiredFile;
-function requireFile() {
-  if (hasRequiredFile) return file;
-  hasRequiredFile = 1;
-  const u = requireUniversalify().fromCallback;
-  const path2 = path__default;
-  const fs2 = requireGracefulFs();
-  const mkdir = requireMkdirs();
-  const pathExists = requirePathExists().pathExists;
-  function createFile(file2, callback) {
-    function makeFile() {
-      fs2.writeFile(file2, "", (err) => {
-        if (err) return callback(err);
-        callback();
-      });
-    }
-    fs2.stat(file2, (err, stats) => {
-      if (!err && stats.isFile()) return callback();
-      const dir = path2.dirname(file2);
-      pathExists(dir, (err2, dirExists) => {
-        if (err2) return callback(err2);
-        if (dirExists) return makeFile();
-        mkdir.mkdirs(dir, (err3) => {
-          if (err3) return callback(err3);
-          makeFile();
-        });
-      });
-    });
-  }
-  function createFileSync(file2) {
-    let stats;
-    try {
-      stats = fs2.statSync(file2);
-    } catch (e) {
-    }
-    if (stats && stats.isFile()) return;
-    const dir = path2.dirname(file2);
-    if (!fs2.existsSync(dir)) {
-      mkdir.mkdirsSync(dir);
-    }
-    fs2.writeFileSync(file2, "");
-  }
-  file = {
-    createFile: u(createFile),
-    createFileSync
-  };
-  return file;
-}
-var link;
-var hasRequiredLink;
-function requireLink() {
-  if (hasRequiredLink) return link;
-  hasRequiredLink = 1;
-  const u = requireUniversalify().fromCallback;
-  const path2 = path__default;
-  const fs2 = requireGracefulFs();
-  const mkdir = requireMkdirs();
-  const pathExists = requirePathExists().pathExists;
-  function createLink(srcpath, dstpath, callback) {
-    function makeLink(srcpath2, dstpath2) {
-      fs2.link(srcpath2, dstpath2, (err) => {
-        if (err) return callback(err);
-        callback(null);
-      });
-    }
-    pathExists(dstpath, (err, destinationExists) => {
-      if (err) return callback(err);
-      if (destinationExists) return callback(null);
-      fs2.lstat(srcpath, (err2) => {
-        if (err2) {
-          err2.message = err2.message.replace("lstat", "ensureLink");
-          return callback(err2);
-        }
-        const dir = path2.dirname(dstpath);
-        pathExists(dir, (err3, dirExists) => {
-          if (err3) return callback(err3);
-          if (dirExists) return makeLink(srcpath, dstpath);
-          mkdir.mkdirs(dir, (err4) => {
-            if (err4) return callback(err4);
-            makeLink(srcpath, dstpath);
-          });
-        });
-      });
-    });
-  }
-  function createLinkSync(srcpath, dstpath) {
-    const destinationExists = fs2.existsSync(dstpath);
-    if (destinationExists) return void 0;
-    try {
-      fs2.lstatSync(srcpath);
-    } catch (err) {
-      err.message = err.message.replace("lstat", "ensureLink");
-      throw err;
-    }
-    const dir = path2.dirname(dstpath);
-    const dirExists = fs2.existsSync(dir);
-    if (dirExists) return fs2.linkSync(srcpath, dstpath);
-    mkdir.mkdirsSync(dir);
-    return fs2.linkSync(srcpath, dstpath);
-  }
-  link = {
-    createLink: u(createLink),
-    createLinkSync
-  };
-  return link;
-}
-var symlinkPaths_1;
-var hasRequiredSymlinkPaths;
-function requireSymlinkPaths() {
-  if (hasRequiredSymlinkPaths) return symlinkPaths_1;
-  hasRequiredSymlinkPaths = 1;
-  const path2 = path__default;
-  const fs2 = requireGracefulFs();
-  const pathExists = requirePathExists().pathExists;
-  function symlinkPaths(srcpath, dstpath, callback) {
-    if (path2.isAbsolute(srcpath)) {
-      return fs2.lstat(srcpath, (err) => {
-        if (err) {
-          err.message = err.message.replace("lstat", "ensureSymlink");
-          return callback(err);
-        }
-        return callback(null, {
-          "toCwd": srcpath,
-          "toDst": srcpath
-        });
-      });
-    } else {
-      const dstdir = path2.dirname(dstpath);
-      const relativeToDst = path2.join(dstdir, srcpath);
-      return pathExists(relativeToDst, (err, exists) => {
-        if (err) return callback(err);
-        if (exists) {
-          return callback(null, {
-            "toCwd": relativeToDst,
-            "toDst": srcpath
-          });
-        } else {
-          return fs2.lstat(srcpath, (err2) => {
-            if (err2) {
-              err2.message = err2.message.replace("lstat", "ensureSymlink");
-              return callback(err2);
-            }
-            return callback(null, {
-              "toCwd": srcpath,
-              "toDst": path2.relative(dstdir, srcpath)
-            });
-          });
-        }
-      });
-    }
-  }
-  function symlinkPathsSync(srcpath, dstpath) {
-    let exists;
-    if (path2.isAbsolute(srcpath)) {
-      exists = fs2.existsSync(srcpath);
-      if (!exists) throw new Error("absolute srcpath does not exist");
-      return {
-        "toCwd": srcpath,
-        "toDst": srcpath
-      };
-    } else {
-      const dstdir = path2.dirname(dstpath);
-      const relativeToDst = path2.join(dstdir, srcpath);
-      exists = fs2.existsSync(relativeToDst);
-      if (exists) {
-        return {
-          "toCwd": relativeToDst,
-          "toDst": srcpath
-        };
-      } else {
-        exists = fs2.existsSync(srcpath);
-        if (!exists) throw new Error("relative srcpath does not exist");
-        return {
-          "toCwd": srcpath,
-          "toDst": path2.relative(dstdir, srcpath)
-        };
-      }
-    }
-  }
-  symlinkPaths_1 = {
-    symlinkPaths,
-    symlinkPathsSync
-  };
-  return symlinkPaths_1;
-}
-var symlinkType_1;
-var hasRequiredSymlinkType;
-function requireSymlinkType() {
-  if (hasRequiredSymlinkType) return symlinkType_1;
-  hasRequiredSymlinkType = 1;
-  const fs2 = requireGracefulFs();
-  function symlinkType(srcpath, type, callback) {
-    callback = typeof type === "function" ? type : callback;
-    type = typeof type === "function" ? false : type;
-    if (type) return callback(null, type);
-    fs2.lstat(srcpath, (err, stats) => {
-      if (err) return callback(null, "file");
-      type = stats && stats.isDirectory() ? "dir" : "file";
-      callback(null, type);
-    });
-  }
-  function symlinkTypeSync(srcpath, type) {
-    let stats;
-    if (type) return type;
-    try {
-      stats = fs2.lstatSync(srcpath);
-    } catch (e) {
-      return "file";
-    }
-    return stats && stats.isDirectory() ? "dir" : "file";
-  }
-  symlinkType_1 = {
-    symlinkType,
-    symlinkTypeSync
-  };
-  return symlinkType_1;
-}
-var symlink;
-var hasRequiredSymlink;
-function requireSymlink() {
-  if (hasRequiredSymlink) return symlink;
-  hasRequiredSymlink = 1;
-  const u = requireUniversalify().fromCallback;
-  const path2 = path__default;
-  const fs2 = requireGracefulFs();
-  const _mkdirs = requireMkdirs();
-  const mkdirs = _mkdirs.mkdirs;
-  const mkdirsSync = _mkdirs.mkdirsSync;
-  const _symlinkPaths = requireSymlinkPaths();
-  const symlinkPaths = _symlinkPaths.symlinkPaths;
-  const symlinkPathsSync = _symlinkPaths.symlinkPathsSync;
-  const _symlinkType = requireSymlinkType();
-  const symlinkType = _symlinkType.symlinkType;
-  const symlinkTypeSync = _symlinkType.symlinkTypeSync;
-  const pathExists = requirePathExists().pathExists;
-  function createSymlink(srcpath, dstpath, type, callback) {
-    callback = typeof type === "function" ? type : callback;
-    type = typeof type === "function" ? false : type;
-    pathExists(dstpath, (err, destinationExists) => {
-      if (err) return callback(err);
-      if (destinationExists) return callback(null);
-      symlinkPaths(srcpath, dstpath, (err2, relative) => {
-        if (err2) return callback(err2);
-        srcpath = relative.toDst;
-        symlinkType(relative.toCwd, type, (err3, type2) => {
-          if (err3) return callback(err3);
-          const dir = path2.dirname(dstpath);
-          pathExists(dir, (err4, dirExists) => {
-            if (err4) return callback(err4);
-            if (dirExists) return fs2.symlink(srcpath, dstpath, type2, callback);
-            mkdirs(dir, (err5) => {
-              if (err5) return callback(err5);
-              fs2.symlink(srcpath, dstpath, type2, callback);
-            });
-          });
-        });
-      });
-    });
-  }
-  function createSymlinkSync(srcpath, dstpath, type) {
-    const destinationExists = fs2.existsSync(dstpath);
-    if (destinationExists) return void 0;
-    const relative = symlinkPathsSync(srcpath, dstpath);
-    srcpath = relative.toDst;
-    type = symlinkTypeSync(relative.toCwd, type);
-    const dir = path2.dirname(dstpath);
-    const exists = fs2.existsSync(dir);
-    if (exists) return fs2.symlinkSync(srcpath, dstpath, type);
-    mkdirsSync(dir);
-    return fs2.symlinkSync(srcpath, dstpath, type);
-  }
-  symlink = {
-    createSymlink: u(createSymlink),
-    createSymlinkSync
-  };
-  return symlink;
-}
-var ensure;
-var hasRequiredEnsure;
-function requireEnsure() {
-  if (hasRequiredEnsure) return ensure;
-  hasRequiredEnsure = 1;
-  const file2 = requireFile();
-  const link2 = requireLink();
-  const symlink2 = requireSymlink();
-  ensure = {
-    // file
-    createFile: file2.createFile,
-    createFileSync: file2.createFileSync,
-    ensureFile: file2.createFile,
-    ensureFileSync: file2.createFileSync,
-    // link
-    createLink: link2.createLink,
-    createLinkSync: link2.createLinkSync,
-    ensureLink: link2.createLink,
-    ensureLinkSync: link2.createLinkSync,
-    // symlink
-    createSymlink: symlink2.createSymlink,
-    createSymlinkSync: symlink2.createSymlinkSync,
-    ensureSymlink: symlink2.createSymlink,
-    ensureSymlinkSync: symlink2.createSymlinkSync
-  };
-  return ensure;
-}
-var jsonfile_1;
-var hasRequiredJsonfile$1;
-function requireJsonfile$1() {
-  if (hasRequiredJsonfile$1) return jsonfile_1;
-  hasRequiredJsonfile$1 = 1;
-  var _fs;
-  try {
-    _fs = requireGracefulFs();
-  } catch (_) {
-    _fs = fs__default;
-  }
-  function readFile(file2, options, callback) {
-    if (callback == null) {
-      callback = options;
-      options = {};
-    }
-    if (typeof options === "string") {
-      options = { encoding: options };
-    }
-    options = options || {};
-    var fs2 = options.fs || _fs;
-    var shouldThrow = true;
-    if ("throws" in options) {
-      shouldThrow = options.throws;
-    }
-    fs2.readFile(file2, options, function(err, data) {
-      if (err) return callback(err);
-      data = stripBom(data);
-      var obj;
-      try {
-        obj = JSON.parse(data, options ? options.reviver : null);
-      } catch (err2) {
-        if (shouldThrow) {
-          err2.message = file2 + ": " + err2.message;
-          return callback(err2);
-        } else {
-          return callback(null, null);
-        }
-      }
-      callback(null, obj);
-    });
-  }
-  function readFileSync(file2, options) {
-    options = options || {};
-    if (typeof options === "string") {
-      options = { encoding: options };
-    }
-    var fs2 = options.fs || _fs;
-    var shouldThrow = true;
-    if ("throws" in options) {
-      shouldThrow = options.throws;
-    }
-    try {
-      var content = fs2.readFileSync(file2, options);
-      content = stripBom(content);
-      return JSON.parse(content, options.reviver);
-    } catch (err) {
-      if (shouldThrow) {
-        err.message = file2 + ": " + err.message;
-        throw err;
-      } else {
-        return null;
-      }
-    }
-  }
-  function stringify(obj, options) {
-    var spaces;
-    var EOL = "\n";
-    if (typeof options === "object" && options !== null) {
-      if (options.spaces) {
-        spaces = options.spaces;
-      }
-      if (options.EOL) {
-        EOL = options.EOL;
-      }
-    }
-    var str = JSON.stringify(obj, options ? options.replacer : null, spaces);
-    return str.replace(/\n/g, EOL) + EOL;
-  }
-  function writeFile(file2, obj, options, callback) {
-    if (callback == null) {
-      callback = options;
-      options = {};
-    }
-    options = options || {};
-    var fs2 = options.fs || _fs;
-    var str = "";
-    try {
-      str = stringify(obj, options);
-    } catch (err) {
-      if (callback) callback(err, null);
-      return;
-    }
-    fs2.writeFile(file2, str, options, callback);
-  }
-  function writeFileSync(file2, obj, options) {
-    options = options || {};
-    var fs2 = options.fs || _fs;
-    var str = stringify(obj, options);
-    return fs2.writeFileSync(file2, str, options);
-  }
-  function stripBom(content) {
-    if (Buffer.isBuffer(content)) content = content.toString("utf8");
-    content = content.replace(/^\uFEFF/, "");
-    return content;
-  }
-  var jsonfile2 = {
-    readFile,
-    readFileSync,
-    writeFile,
-    writeFileSync
-  };
-  jsonfile_1 = jsonfile2;
-  return jsonfile_1;
-}
-var jsonfile;
-var hasRequiredJsonfile;
-function requireJsonfile() {
-  if (hasRequiredJsonfile) return jsonfile;
-  hasRequiredJsonfile = 1;
-  const u = requireUniversalify().fromCallback;
-  const jsonFile = requireJsonfile$1();
-  jsonfile = {
-    // jsonfile exports
-    readJson: u(jsonFile.readFile),
-    readJsonSync: jsonFile.readFileSync,
-    writeJson: u(jsonFile.writeFile),
-    writeJsonSync: jsonFile.writeFileSync
-  };
-  return jsonfile;
-}
-var outputJson_1;
-var hasRequiredOutputJson;
-function requireOutputJson() {
-  if (hasRequiredOutputJson) return outputJson_1;
-  hasRequiredOutputJson = 1;
-  const path2 = path__default;
-  const mkdir = requireMkdirs();
-  const pathExists = requirePathExists().pathExists;
-  const jsonFile = requireJsonfile();
-  function outputJson(file2, data, options, callback) {
-    if (typeof options === "function") {
-      callback = options;
-      options = {};
-    }
-    const dir = path2.dirname(file2);
-    pathExists(dir, (err, itDoes) => {
-      if (err) return callback(err);
-      if (itDoes) return jsonFile.writeJson(file2, data, options, callback);
-      mkdir.mkdirs(dir, (err2) => {
-        if (err2) return callback(err2);
-        jsonFile.writeJson(file2, data, options, callback);
-      });
-    });
-  }
-  outputJson_1 = outputJson;
-  return outputJson_1;
-}
-var outputJsonSync_1;
-var hasRequiredOutputJsonSync;
-function requireOutputJsonSync() {
-  if (hasRequiredOutputJsonSync) return outputJsonSync_1;
-  hasRequiredOutputJsonSync = 1;
-  const fs2 = requireGracefulFs();
-  const path2 = path__default;
-  const mkdir = requireMkdirs();
-  const jsonFile = requireJsonfile();
-  function outputJsonSync(file2, data, options) {
-    const dir = path2.dirname(file2);
-    if (!fs2.existsSync(dir)) {
-      mkdir.mkdirsSync(dir);
-    }
-    jsonFile.writeJsonSync(file2, data, options);
-  }
-  outputJsonSync_1 = outputJsonSync;
-  return outputJsonSync_1;
-}
-var json;
-var hasRequiredJson;
-function requireJson() {
-  if (hasRequiredJson) return json;
-  hasRequiredJson = 1;
-  const u = requireUniversalify().fromCallback;
-  const jsonFile = requireJsonfile();
-  jsonFile.outputJson = u(requireOutputJson());
-  jsonFile.outputJsonSync = requireOutputJsonSync();
-  jsonFile.outputJSON = jsonFile.outputJson;
-  jsonFile.outputJSONSync = jsonFile.outputJsonSync;
-  jsonFile.writeJSON = jsonFile.writeJson;
-  jsonFile.writeJSONSync = jsonFile.writeJsonSync;
-  jsonFile.readJSON = jsonFile.readJson;
-  jsonFile.readJSONSync = jsonFile.readJsonSync;
-  json = jsonFile;
-  return json;
-}
-var moveSync_1;
-var hasRequiredMoveSync$1;
-function requireMoveSync$1() {
-  if (hasRequiredMoveSync$1) return moveSync_1;
-  hasRequiredMoveSync$1 = 1;
-  const fs2 = requireGracefulFs();
-  const path2 = path__default;
-  const copySync2 = requireCopySync().copySync;
-  const removeSync = requireRemove().removeSync;
-  const mkdirpSync = requireMkdirs().mkdirpSync;
-  const stat2 = requireStat();
-  function moveSync2(src, dest, opts) {
-    opts = opts || {};
-    const overwrite = opts.overwrite || opts.clobber || false;
-    const { srcStat } = stat2.checkPathsSync(src, dest, "move");
-    stat2.checkParentPathsSync(src, srcStat, dest, "move");
-    mkdirpSync(path2.dirname(dest));
-    return doRename(src, dest, overwrite);
-  }
-  function doRename(src, dest, overwrite) {
-    if (overwrite) {
-      removeSync(dest);
-      return rename(src, dest, overwrite);
-    }
-    if (fs2.existsSync(dest)) throw new Error("dest already exists.");
-    return rename(src, dest, overwrite);
-  }
-  function rename(src, dest, overwrite) {
-    try {
-      fs2.renameSync(src, dest);
-    } catch (err) {
-      if (err.code !== "EXDEV") throw err;
-      return moveAcrossDevice(src, dest, overwrite);
-    }
-  }
-  function moveAcrossDevice(src, dest, overwrite) {
-    const opts = {
-      overwrite,
-      errorOnExist: true
-    };
-    copySync2(src, dest, opts);
-    return removeSync(src);
-  }
-  moveSync_1 = moveSync2;
-  return moveSync_1;
-}
-var moveSync;
-var hasRequiredMoveSync;
-function requireMoveSync() {
-  if (hasRequiredMoveSync) return moveSync;
-  hasRequiredMoveSync = 1;
-  moveSync = {
-    moveSync: requireMoveSync$1()
-  };
-  return moveSync;
-}
-var move_1;
-var hasRequiredMove$1;
-function requireMove$1() {
-  if (hasRequiredMove$1) return move_1;
-  hasRequiredMove$1 = 1;
-  const fs2 = requireGracefulFs();
-  const path2 = path__default;
-  const copy2 = requireCopy().copy;
-  const remove2 = requireRemove().remove;
-  const mkdirp = requireMkdirs().mkdirp;
-  const pathExists = requirePathExists().pathExists;
-  const stat2 = requireStat();
-  function move2(src, dest, opts, cb) {
-    if (typeof opts === "function") {
-      cb = opts;
-      opts = {};
-    }
-    const overwrite = opts.overwrite || opts.clobber || false;
-    stat2.checkPaths(src, dest, "move", (err, stats) => {
-      if (err) return cb(err);
-      const { srcStat } = stats;
-      stat2.checkParentPaths(src, srcStat, dest, "move", (err2) => {
-        if (err2) return cb(err2);
-        mkdirp(path2.dirname(dest), (err3) => {
-          if (err3) return cb(err3);
-          return doRename(src, dest, overwrite, cb);
-        });
-      });
-    });
-  }
-  function doRename(src, dest, overwrite, cb) {
-    if (overwrite) {
-      return remove2(dest, (err) => {
-        if (err) return cb(err);
-        return rename(src, dest, overwrite, cb);
-      });
-    }
-    pathExists(dest, (err, destExists) => {
-      if (err) return cb(err);
-      if (destExists) return cb(new Error("dest already exists."));
-      return rename(src, dest, overwrite, cb);
-    });
-  }
-  function rename(src, dest, overwrite, cb) {
-    fs2.rename(src, dest, (err) => {
-      if (!err) return cb();
-      if (err.code !== "EXDEV") return cb(err);
-      return moveAcrossDevice(src, dest, overwrite, cb);
-    });
-  }
-  function moveAcrossDevice(src, dest, overwrite, cb) {
-    const opts = {
-      overwrite,
-      errorOnExist: true
-    };
-    copy2(src, dest, opts, (err) => {
-      if (err) return cb(err);
-      return remove2(src, cb);
-    });
-  }
-  move_1 = move2;
-  return move_1;
-}
-var move;
-var hasRequiredMove;
-function requireMove() {
-  if (hasRequiredMove) return move;
-  hasRequiredMove = 1;
-  const u = requireUniversalify().fromCallback;
-  move = {
-    move: u(requireMove$1())
-  };
-  return move;
-}
-var output;
-var hasRequiredOutput;
-function requireOutput() {
-  if (hasRequiredOutput) return output;
-  hasRequiredOutput = 1;
-  const u = requireUniversalify().fromCallback;
-  const fs2 = requireGracefulFs();
-  const path2 = path__default;
-  const mkdir = requireMkdirs();
-  const pathExists = requirePathExists().pathExists;
-  function outputFile(file2, data, encoding, callback) {
-    if (typeof encoding === "function") {
-      callback = encoding;
-      encoding = "utf8";
-    }
-    const dir = path2.dirname(file2);
-    pathExists(dir, (err, itDoes) => {
-      if (err) return callback(err);
-      if (itDoes) return fs2.writeFile(file2, data, encoding, callback);
-      mkdir.mkdirs(dir, (err2) => {
-        if (err2) return callback(err2);
-        fs2.writeFile(file2, data, encoding, callback);
-      });
-    });
-  }
-  function outputFileSync(file2, ...args) {
-    const dir = path2.dirname(file2);
-    if (fs2.existsSync(dir)) {
-      return fs2.writeFileSync(file2, ...args);
-    }
-    mkdir.mkdirsSync(dir);
-    fs2.writeFileSync(file2, ...args);
-  }
-  output = {
-    outputFile: u(outputFile),
-    outputFileSync
-  };
-  return output;
-}
-var hasRequiredLib;
-function requireLib() {
-  if (hasRequiredLib) return lib.exports;
-  hasRequiredLib = 1;
-  (function(module) {
-    module.exports = Object.assign(
-      {},
-      // Export promiseified graceful-fs:
-      requireFs(),
-      // Export extra methods:
-      requireCopySync(),
-      requireCopy(),
-      requireEmpty(),
-      requireEnsure(),
-      requireJson(),
-      requireMkdirs(),
-      requireMoveSync(),
-      requireMove(),
-      requireOutput(),
-      requirePathExists(),
-      requireRemove()
-    );
-    const fs2 = fs__default;
-    if (Object.getOwnPropertyDescriptor(fs2, "promises")) {
-      Object.defineProperty(module.exports, "promises", {
-        get() {
-          return fs2.promises;
-        }
-      });
-    }
-  })(lib);
-  return lib.exports;
-}
-var libExports = requireLib();
-const fs = /* @__PURE__ */ getDefaultExportFromCjs(libExports);
-const LOG_LEVEL_PRIORITY = {
-  debug: 0,
-  info: 1,
-  warn: 2,
-  error: 3
-};
-const LOG_LEVEL_COLORS = {
-  debug: "\x1B[36m",
-  // 青色
-  info: "\x1B[32m",
-  // 绿色
-  warn: "\x1B[33m",
-  // 黄色
-  error: "\x1B[31m"
-  // 红色
-};
-const COLOR_RESET = "\x1B[0m";
-class Logger {
-  static instance = null;
-  window;
-  /** 当前日志级别，低于此级别的日志不会输出 */
-  minLevel = "debug";
-  /** 是否启用时间戳 */
-  enableTimestamp = true;
-  /**
-   * 获取 Logger 单例
-   */
-  static getInstance() {
-    if (!Logger.instance) {
-      Logger.instance = new Logger();
-    }
-    return Logger.instance;
-  }
-  constructor() {
-  }
-  /**
-   * 初始化 Logger
-   * @param window Electron BrowserWindow 实例，用于向前端推送日志
-   */
-  init(window2) {
-    this.window = window2;
-  }
-  /**
-   * 设置最低日志级别
-   * @param level 日志级别
-   */
-  setMinLevel(level) {
-    this.minLevel = level;
-  }
-  /**
-   * 设置是否启用时间戳
-   * @param enable 是否启用
-   */
-  setTimestampEnabled(enable) {
-    this.enableTimestamp = enable;
-  }
-  /**
-   * 格式化时间戳
-   * @returns 格式化的时间字符串 [HH:MM:SS.mmm]
-   */
-  getTimestamp() {
-    if (!this.enableTimestamp) return "";
-    const now = /* @__PURE__ */ new Date();
-    const hours = now.getHours().toString().padStart(2, "0");
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    const seconds = now.getSeconds().toString().padStart(2, "0");
-    const ms = now.getMilliseconds().toString().padStart(3, "0");
-    return `[${hours}:${minutes}:${seconds}.${ms}]`;
-  }
-  /**
-   * 检查日志级别是否应该输出
-   * @param level 要检查的日志级别
-   */
-  shouldLog(level) {
-    return LOG_LEVEL_PRIORITY[level] >= LOG_LEVEL_PRIORITY[this.minLevel];
-  }
-  /**
-   * 输出 debug 级别日志
-   * @param message 日志消息
-   */
-  debug(message) {
-    this.log(message, "debug");
-  }
-  /**
-   * 输出 info 级别日志
-   * @param message 日志消息
-   */
-  info(message) {
-    this.log(message, "info");
-  }
-  /**
-   * 输出 warn 级别日志
-   * @param message 日志消息
-   * @param verboseOnly 是否仅在详细模式（debug 级别）下显示，默认 false
-   *                    设为 true 时，只有当 minLevel 为 debug 时才会输出
-   *                    用于那些"技术上是警告，但频繁出现会刷屏"的日志
-   */
-  warn(message, verboseOnly = false) {
-    if (verboseOnly && this.minLevel !== "debug") {
-      return;
-    }
-    this.log(message, "warn");
-  }
-  /**
-   * 输出 error 级别日志
-   * @param message 日志消息或 Error 对象
-   */
-  error(message) {
-    const msg = message instanceof Error ? message.message : message;
-    this.log(msg, "error");
-    if (message instanceof Error && message.stack) {
-      console.error(message.stack);
-    }
-  }
-  /**
-   * 核心日志方法
-   * @param message 日志消息
-   * @param level 日志级别
-   */
-  log(message, level) {
-    if (!this.shouldLog(level)) return;
-    const timestamp = this.getTimestamp();
-    const color = LOG_LEVEL_COLORS[level];
-    const levelTag = `[${level.toUpperCase()}]`.padEnd(7);
-    console.log(`${color}${timestamp}${levelTag}${COLOR_RESET} ${message}`);
-    this.sendLogToFrontend(`${timestamp}${levelTag} ${message}`, level);
-  }
-  /**
-   * 向前端发送日志
-   * @param message 日志消息
-   * @param level 日志级别
-   */
-  sendLogToFrontend(message, level) {
-    if (this.window) {
-      this.window.webContents.send("log-message", { message, level });
-    }
-  }
-}
-const logger = Logger.getInstance();
-const IS_WIN = process.platform === "win32";
-const IS_MAC = process.platform === "darwin";
-const IS_WSL = process.platform === "linux" && require$$1.release().toLowerCase().includes("microsoft");
-class LCUConnector extends EventEmitter {
-  /** 进程监听定时器句柄（未启动时为 null） */
-  processWatcher = null;
-  /**
-   * @static
-   * @description 从进程命令行中获取英雄联盟客户端的有关信息
-   * @returns {Promise<LCUProcessInfo>}
-   */
-  static getLCUInfoFromProcess() {
-    return new Promise((resolve) => {
-      const command = IS_WIN ? `WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline` : IS_WSL ? `WMIC.exe PROCESS WHERE "name='LeagueClientUx.exe'" GET commandline` : `ps x -o args | grep '[L]eagueClientUx' | grep -v 'Helper' | grep -v '/Frameworks/'`;
-      cp.exec(command, (err, stdout, stderr) => {
-        if (err || !stdout || stderr) {
-          resolve(null);
-          return;
-        }
-        console.log(`process命令执行结果：${stdout}`);
-        const lines = stdout.split("\n").filter((line) => line.trim() && line.includes("--app-port="));
-        const processLine = lines[0] || stdout;
-        const portMatch = processLine.match(/--app-port=(\d+)/);
-        const tokenMatch = processLine.match(/--remoting-auth-token=([\w-]+)/);
-        const pidMatch = processLine.match(/--app-pid=(\d+)/);
-        let installDirectoryMatch = processLine.match(/--install-directory=(.*?)"/);
-        if (!installDirectoryMatch) {
-          installDirectoryMatch = processLine.match(/--install-directory=(.+?)(?=\s+--|$)/);
-        }
-        if (portMatch && tokenMatch && pidMatch && installDirectoryMatch) {
-          const installDir = installDirectoryMatch[1].trim();
-          const data = {
-            port: parseInt(portMatch[1]),
-            pid: parseInt(pidMatch[1]),
-            token: tokenMatch[1],
-            installDirectory: path$1.dirname(installDir)
-            //  父目录
-          };
-          resolve(data);
-        } else resolve(null);
-      });
-    });
-  }
-  /**
-   * @static
-   * @description 检查给定的路径是否是一个有效的英雄联盟客户端路径
-   * @param {string} dirPath - 目录路径
-   * @returns {boolean}
-   */
-  static isValidLCUPath(dirPath) {
-    if (!dirPath) {
-      return false;
-    }
-    const lcuClientApp = IS_MAC ? "LeagueClient.app" : "LeagueClient.exe";
-    const common = fs.existsSync(path$1.join(dirPath, lcuClientApp)) && fs.existsSync(path$1.join(dirPath, "Config"));
-    const isGlobal = common && fs.existsSync(path$1.join(dirPath, "RADS"));
-    const isCN = common && fs.existsSync(path$1.join(dirPath, "TQM"));
-    const isGarena = common;
-    return isGlobal || isCN || isGarena;
-  }
-  /**
-   * @description 启动连接器，开始监听客户端进程和 lockfile
-   */
-  start() {
-    this.initProcessWatcher();
-  }
-  stop() {
-    this.clearProcessWatcher();
-  }
-  /**
-   * @private
-   * @description 初始化客户端进程监听器
-   */
-  initProcessWatcher() {
-    return LCUConnector.getLCUInfoFromProcess().then((lcuData) => {
-      if (lcuData) {
-        this.emit("connect", lcuData);
-        this.clearProcessWatcher();
-        return;
-      }
-      logger.error("LOL客户端未启动，一秒后将再次检查...");
-      if (!this.processWatcher) {
-        this.processWatcher = setInterval(this.initProcessWatcher.bind(this), 1e3);
-      }
-    });
-  }
-  /**
-   * @description 清除进程监听器
-   */
-  clearProcessWatcher() {
-    if (this.processWatcher) {
-      clearInterval(this.processWatcher);
-      this.processWatcher = null;
-    }
-  }
-}
-var LcuEventUri = /* @__PURE__ */ ((LcuEventUri2) => {
-  LcuEventUri2["READY_CHECK"] = "/lol-matchmaking/v1/ready-check";
-  LcuEventUri2["GAMEFLOW_PHASE"] = "/lol-gameflow/v1/session";
-  LcuEventUri2["CHAMP_SELECT"] = "/lol-champ-select/v1/session";
-  LcuEventUri2["TFT_BATTLE_PASS"] = "/lol-tft-pass/v1/battle-pass";
-  return LcuEventUri2;
-})(LcuEventUri || {});
-class LCUManager extends EventEmitter {
-  port;
-  token;
-  httpsAgent;
-  api;
-  // 我们将拥有一个专属的 axios 实例
-  ws = null;
-  isConnected = false;
-  // --- 单例模式核心 ---
-  static instance = null;
-  static init(details) {
-    if (!LCUManager.instance) {
-      LCUManager.instance = new LCUManager(details);
-    }
-    return LCUManager.instance;
-  }
-  static getInstance() {
-    if (!LCUManager.instance) {
-      console.error("[LCUManager] 尚未初始化，无法获取实例。");
-      return null;
-    }
-    return LCUManager.instance;
-  }
-  /**
-   * 全新的启动方法，它会先确认 REST API 就绪，再连接 WebSocket
-   */
-  async start() {
-    console.log("🚀 [LCUManager] 开始启动，正在确认 API 服务状态...");
-    try {
-      await this.confirmApiReady();
-      this.connectWebSocket();
-    } catch (e) {
-      console.error("❌ [LCUManager] 启动过程中发生错误:", e);
-    }
-  }
-  // 构造函数是私有的，这确保了外部不能用 new 来创建实例
-  constructor(details) {
-    super();
-    this.port = details.port;
-    this.token = details.token;
-    this.httpsAgent = new https.Agent({
-      rejectUnauthorized: false
-      // LCU 使用的是自签名证书，我们必须忽略它
-    });
-    this.api = axios.create({
-      baseURL: `https://127.0.0.1:${this.port}`,
-      httpsAgent: this.httpsAgent,
-      // 把我们的"通行证"交给 axios
-      proxy: false,
-      // ← 关键：禁止任何系统/环境变量代理!!!这里debug找了一万年才发现是这个问题。
-      auth: {
-        username: "riot",
-        password: this.token
-      },
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      }
-    });
-    console.log(`🔌 [LCUManager] 准备就绪，目标端口: ${this.port}`);
-  }
-  /**
-   * 连接到 LCU WebSocket
-   */
-  connectWebSocket() {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) return;
-    const wsUrl = `wss://127.0.0.1:${this.port}`;
-    this.ws = new WebSocket(wsUrl, {
-      headers: { Authorization: "Basic " + Buffer.from(`riot:${this.token}`).toString("base64") },
-      agent: this.httpsAgent
-    });
-    this.ws.on("open", () => {
-      this.isConnected = true;
-      console.log("✅ [LCUManager] WebSocket 连接成功！");
-      this.emit("connect");
-      this.subscribe("OnJsonApiEvent");
-    });
-    this.ws.on("message", (data) => {
-      const messageString = data.toString();
-      if (!messageString) return;
-      try {
-        const message = JSON.parse(messageString);
-        if (message[0] === 8 && message[1] === "OnJsonApiEvent" && message[2]) {
-          const eventData = message[2];
-          const eventUri = eventData.uri;
-          this.emit("lcu-event", eventData);
-          if (Object.values(LcuEventUri).includes(eventUri)) {
-            this.emit(eventUri, eventData);
-          }
-        }
-      } catch (e) {
-        console.error("❌ [LCUManager] 解析 WebSocket 消息失败:", e);
-      }
-    });
-    this.ws.on("close", () => {
-      if (this.isConnected) {
-        console.log("❌ [LCUManager] WebSocket 连接已断开。");
-        this.isConnected = false;
-        this.emit("disconnect");
-        this.unsubscribe("OnJsonApiEvent");
-        LCUManager.instance = null;
-      }
-    });
-    this.ws.on("error", (err) => {
-      console.error("❌ [LCUManager] WebSocket 发生错误:", err);
-    });
-  }
-  /**
-   * 发送一个 REST API 请求到 LCU
-   * @param method 'GET', 'POST', 'PUT', 'DELETE', etc.
-   * @param endpoint API 端点, e.g., '/lol-summoner/v1/current-summoner'
-   * @param body 请求体 (可选)
-   */
-  async request(method, endpoint, body) {
-    try {
-      const fullUrl = `${this.api.defaults.baseURL}${endpoint}`;
-      console.log(`➡️  [LCUManager] 准备发起请求: ${method} ${fullUrl}`);
-      const response = await this.api.request({
-        method,
-        url: fullUrl,
-        // axios 会自动拼接 baseURL
-        data: body
-      });
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error(`❌ [LCUManager] Axios 请求失败: ${error.message}`);
-        throw new Error(`LCU 请求失败:endpoint:${endpoint} state: ${error.response?.status} - ${error.response?.statusText}`);
-      } else {
-        console.error(`❌ [LCUManager] 未知请求错误:`, error);
-        throw error;
-      }
-    }
-  }
-  /**
-   * 订阅一个 WebSocket 事件
-   * @param event 事件名, e.g., 'OnJsonApiEvent'
-   */
-  subscribe(event) {
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify([5, event]));
-    }
-  }
-  /**
-   * 取消订阅一个 WebSocket 事件
-   * @param event 事件名
-   */
-  unsubscribe(event) {
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify([6, event]));
-    }
-  }
-  /**
-   * 关闭所有连接
-   */
-  close() {
-    if (this.ws) {
-      this.ws.close();
-    }
-  }
-  /**
-   * 确认 LCU API 服务就绪
-   * @description 轮询检测 API 是否可用，带超时机制防止无限等待
-   * @param timeoutMs 超时时间 (ms)，默认 30 秒
-   * @throws 超时后抛出错误
-   */
-  async confirmApiReady(timeoutMs = 3e4) {
-    const startTime = Date.now();
-    const retryIntervalMs = 2e3;
-    while (true) {
-      if (Date.now() - startTime > timeoutMs) {
-        throw new Error(
-          `[LCUManager] API 服务在 ${timeoutMs / 1e3} 秒内未就绪，请检查客户端状态`
-        );
-      }
-      try {
-        await this.request("GET", "/riotclient/ux-state");
-        console.log("✅ [LCUManager] API 服务已就绪！");
-        return;
-      } catch (error) {
-        const elapsed = Math.round((Date.now() - startTime) / 1e3);
-        console.log(`⏳ [LCUManager] API 服务尚未就绪 (已等待 ${elapsed}s)，${retryIntervalMs / 1e3}s 后重试...`);
-        await new Promise((resolve) => setTimeout(resolve, retryIntervalMs));
-      }
-    }
-  }
-  //  一堆专注于后端使用的方法
-  getSummonerInfo() {
-    return this.request("GET", "/lol-summoner/v1/current-summoner");
-  }
-  createCustomLobby(config) {
-    logger.info("📬 [LCUManager] 正在创建自定义房间...");
-    return this.request("POST", "/lol-lobby/v2/lobby", config);
-  }
-  createLobbyByQueueId(queueId) {
-    logger.info(`📬 [LCUManager] 正在创建房间 (队列ID: ${queueId})...`);
-    return this.request("POST", "/lol-lobby/v2/lobby", { queueId });
-  }
-  getCurrentGamemodeInfo() {
-    return this.request("GET", "/lol-lobby/v1/parties/gamemode");
-  }
-  startMatch() {
-    logger.info("📬 [LCUManager] 正在开始匹配...");
-    return this.request("POST", "/lol-lobby/v2/lobby/matchmaking/search");
-  }
-  stopMatch() {
-    logger.info("📬 [LCUManager] 正在停止匹配...");
-    return this.request("DELETE", "/lol-lobby/v2/lobby/matchmaking/search");
-  }
-  async checkMatchState() {
-    const result = await this.request("GET", "/lol-lobby/v2/lobby/matchmaking/search-state");
-    return result.searchState;
-  }
-  getCustomGames() {
-    return this.request("GET", "/lol-lobby/v1/custom-games");
-  }
-  getQueues() {
-    return this.request("GET", "/lol-game-queues/v1/queues");
-  }
-  getChatConfig() {
-    return this.request("GET", "/lol-game-queues/v1/queues");
-  }
-  getChampSelectSession() {
-    return this.request("GET", "/lol-champ-select/v1/session");
-  }
-  getChatConversations() {
-    return this.request("GET", "/lol-chat/v1/conversations");
-  }
-  getGameflowSession() {
-    return this.request("GET", "/lol-gameflow/v1/session");
-  }
-  getExtraGameClientArgs() {
-    return this.request("GET", "/lol-gameflow/v1/extra-game-client-args");
-  }
-  getLobby() {
-    return this.request("GET", "/lol-lobby/v2/lobby");
-  }
-  //  接受对局
-  acceptMatch() {
-    return this.request("POST", "/lol-matchmaking/v1/ready-check/accept");
-  }
-  //  拒绝对局
-  declineMatch() {
-    return this.request("POST", "/lol-matchmaking/v1/ready-check/decline");
-  }
-  /**
-   * 退出当前游戏（关闭游戏窗口）
-   * @description 在 TFT 对局结束（玩家死亡）后调用，主动关闭游戏窗口
-   *              调用后会触发 GAMEFLOW_PHASE 变为 "WaitingForStats"
-   * @returns Promise<any>
-   */
-  quitGame() {
-    logger.info("🚪 [LCUManager] 正在退出游戏...");
-    return this.request("POST", "/lol-gameflow/v1/early-exit");
-  }
-  /**
-   * 强制杀掉游戏进程
-   * @description 直接通过 taskkill 命令杀掉 "League of Legends.exe" 进程
-   *              比调用 LCU API 或点击 UI 更快更可靠
-   * @returns Promise<boolean> 是否成功杀掉进程
-   */
-  killGameProcess() {
-    return new Promise((resolve) => {
-      logger.info("🔪 [LCUManager] 正在强制杀掉游戏进程...");
-      const command = 'taskkill /F /IM "League of Legends.exe"';
-      cp.exec(command, (err, stdout, stderr) => {
-        if (err) {
-          if (stderr.includes("not found") || stderr.includes("没有找到")) {
-            logger.info("[LCUManager] 游戏进程不存在，无需杀掉");
-            resolve(true);
-          } else {
-            logger.warn(`[LCUManager] 杀掉游戏进程失败: ${err.message}`);
-            resolve(false);
-          }
-          return;
-        }
-        logger.info(`[LCUManager] 游戏进程已被杀掉: ${stdout.trim()}`);
-        resolve(true);
-      });
-    });
-  }
 }
 var register = {};
 var sourceMapSupport = { exports: {} };
@@ -5509,6 +2325,3313 @@ function requireRegister() {
   return register;
 }
 requireRegister();
+const LOG_DIR_NAME = "crash-logs";
+function getCrashLogDir() {
+  const candidates = [];
+  try {
+    let exeDir = path.dirname(app.getPath("exe"));
+    if (!app.isPackaged) {
+      exeDir = process.cwd();
+    }
+    candidates.push(path.join(exeDir, LOG_DIR_NAME));
+  } catch (e) {
+  }
+  try {
+    candidates.push(path.join(app.getPath("userData"), LOG_DIR_NAME));
+  } catch (e) {
+  }
+  try {
+    candidates.push(path.join(os.tmpdir(), app.name || "electron-app", LOG_DIR_NAME));
+  } catch (e) {
+  }
+  for (const dir of candidates) {
+    try {
+      if (!fs$2.existsSync(dir)) {
+        fs$2.mkdirSync(dir, { recursive: true });
+      }
+      const testFile = path.join(dir, ".test-write");
+      fs$2.writeFileSync(testFile, "test");
+      fs$2.unlinkSync(testFile);
+      return dir;
+    } catch (e) {
+      continue;
+    }
+  }
+  return path.join(process.cwd(), LOG_DIR_NAME);
+}
+function getTimestampForFilename() {
+  const now = /* @__PURE__ */ new Date();
+  return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0") + "_" + String(now.getHours()).padStart(2, "0") + "-" + String(now.getMinutes()).padStart(2, "0") + "-" + String(now.getSeconds()).padStart(2, "0");
+}
+function getSystemInfo() {
+  const info = [
+    `操作系统: ${os.platform()} ${os.release()} (${os.arch()})`,
+    `主机名: ${os.hostname()}`,
+    `Node.js: ${process.version}`,
+    `Electron: ${process.versions.electron || "未知"}`,
+    `Chrome: ${process.versions.chrome || "未知"}`,
+    `总内存: ${Math.round(os.totalmem() / 1024 / 1024 / 1024)} GB`,
+    `可用内存: ${Math.round(os.freemem() / 1024 / 1024 / 1024)} GB`,
+    `CPU 型号: ${os.cpus()[0]?.model || "未知"}`
+  ];
+  try {
+    info.push(`应用版本: ${app.getVersion()}`);
+    info.push(`是否打包: ${app.isPackaged ? "是" : "否"}`);
+  } catch {
+    info.push(`应用状态: App 尚未初始化完成`);
+  }
+  return info.join("\n");
+}
+function writeCrashLog(error, context = "未知错误上下文") {
+  let finalLogPath = "";
+  try {
+    const logDir = getCrashLogDir();
+    const timestamp = getTimestampForFilename();
+    finalLogPath = path.join(logDir, `crash_${timestamp}.log`);
+    let errorMessage = "";
+    let errorStack = "";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      errorStack = error.stack || "无堆栈";
+    } else if (typeof error === "object") {
+      try {
+        errorMessage = JSON.stringify(error);
+        errorStack = "非 Error 对象，无堆栈";
+      } catch {
+        errorMessage = String(error);
+      }
+    } else {
+      errorMessage = String(error);
+    }
+    const logContent = `
+================================================================================
+                        应用崩溃报告 (Crash Report)
+================================================================================
+时间: ${(/* @__PURE__ */ new Date()).toLocaleString("zh-CN")}
+上下文: ${context}
+日志路径: ${finalLogPath}
+--------------------------------------------------------------------------------
+[错误信息 / Message]
+${errorMessage}
+
+--------------------------------------------------------------------------------
+[错误堆栈 / Stack Trace]
+${errorStack}
+
+--------------------------------------------------------------------------------
+[系统环境 / System Info]
+${getSystemInfo()}
+
+--------------------------------------------------------------------------------
+[环境变量 / Env]
+NODE_ENV: ${process.env.NODE_ENV}
+USER_DATA: ${app.getPath("userData")}
+EXE_PATH: ${app.getPath("exe")}
+================================================================================
+`;
+    fs$2.writeFileSync(finalLogPath, logContent, "utf-8");
+    console.error(`
+🔴 严重错误！崩溃日志已保存至: ${finalLogPath}
+`);
+  } catch (writeError) {
+    console.error("❌ 写入崩溃日志失败 (Write Failed):", writeError);
+    console.error("原始错误 (Original Error):", error);
+  }
+  return finalLogPath;
+}
+function initGlobalCrashHandler() {
+  process.on("uncaughtException", (error) => {
+    writeCrashLog(error, "Main Process Uncaught Exception (主进程未捕获异常)");
+  });
+  process.on("unhandledRejection", (reason) => {
+    writeCrashLog(reason, "Main Process Unhandled Rejection (主进程未处理 Promise)");
+  });
+}
+var lib = { exports: {} };
+var fs$1 = {};
+var universalify = {};
+var hasRequiredUniversalify;
+function requireUniversalify() {
+  if (hasRequiredUniversalify) return universalify;
+  hasRequiredUniversalify = 1;
+  universalify.fromCallback = function(fn) {
+    return Object.defineProperty(function() {
+      if (typeof arguments[arguments.length - 1] === "function") fn.apply(this, arguments);
+      else {
+        return new Promise((resolve, reject) => {
+          arguments[arguments.length] = (err, res) => {
+            if (err) return reject(err);
+            resolve(res);
+          };
+          arguments.length++;
+          fn.apply(this, arguments);
+        });
+      }
+    }, "name", { value: fn.name });
+  };
+  universalify.fromPromise = function(fn) {
+    return Object.defineProperty(function() {
+      const cb = arguments[arguments.length - 1];
+      if (typeof cb !== "function") return fn.apply(this, arguments);
+      else fn.apply(this, arguments).then((r) => cb(null, r), cb);
+    }, "name", { value: fn.name });
+  };
+  return universalify;
+}
+var polyfills;
+var hasRequiredPolyfills;
+function requirePolyfills() {
+  if (hasRequiredPolyfills) return polyfills;
+  hasRequiredPolyfills = 1;
+  var constants = require$$0;
+  var origCwd = process.cwd;
+  var cwd = null;
+  var platform = process.env.GRACEFUL_FS_PLATFORM || process.platform;
+  process.cwd = function() {
+    if (!cwd)
+      cwd = origCwd.call(process);
+    return cwd;
+  };
+  try {
+    process.cwd();
+  } catch (er) {
+  }
+  if (typeof process.chdir === "function") {
+    var chdir = process.chdir;
+    process.chdir = function(d) {
+      cwd = null;
+      chdir.call(process, d);
+    };
+    if (Object.setPrototypeOf) Object.setPrototypeOf(process.chdir, chdir);
+  }
+  polyfills = patch;
+  function patch(fs2) {
+    if (constants.hasOwnProperty("O_SYMLINK") && process.version.match(/^v0\.6\.[0-2]|^v0\.5\./)) {
+      patchLchmod(fs2);
+    }
+    if (!fs2.lutimes) {
+      patchLutimes(fs2);
+    }
+    fs2.chown = chownFix(fs2.chown);
+    fs2.fchown = chownFix(fs2.fchown);
+    fs2.lchown = chownFix(fs2.lchown);
+    fs2.chmod = chmodFix(fs2.chmod);
+    fs2.fchmod = chmodFix(fs2.fchmod);
+    fs2.lchmod = chmodFix(fs2.lchmod);
+    fs2.chownSync = chownFixSync(fs2.chownSync);
+    fs2.fchownSync = chownFixSync(fs2.fchownSync);
+    fs2.lchownSync = chownFixSync(fs2.lchownSync);
+    fs2.chmodSync = chmodFixSync(fs2.chmodSync);
+    fs2.fchmodSync = chmodFixSync(fs2.fchmodSync);
+    fs2.lchmodSync = chmodFixSync(fs2.lchmodSync);
+    fs2.stat = statFix(fs2.stat);
+    fs2.fstat = statFix(fs2.fstat);
+    fs2.lstat = statFix(fs2.lstat);
+    fs2.statSync = statFixSync(fs2.statSync);
+    fs2.fstatSync = statFixSync(fs2.fstatSync);
+    fs2.lstatSync = statFixSync(fs2.lstatSync);
+    if (fs2.chmod && !fs2.lchmod) {
+      fs2.lchmod = function(path2, mode, cb) {
+        if (cb) process.nextTick(cb);
+      };
+      fs2.lchmodSync = function() {
+      };
+    }
+    if (fs2.chown && !fs2.lchown) {
+      fs2.lchown = function(path2, uid, gid, cb) {
+        if (cb) process.nextTick(cb);
+      };
+      fs2.lchownSync = function() {
+      };
+    }
+    if (platform === "win32") {
+      fs2.rename = typeof fs2.rename !== "function" ? fs2.rename : (function(fs$rename) {
+        function rename(from, to, cb) {
+          var start = Date.now();
+          var backoff = 0;
+          fs$rename(from, to, function CB(er) {
+            if (er && (er.code === "EACCES" || er.code === "EPERM" || er.code === "EBUSY") && Date.now() - start < 6e4) {
+              setTimeout(function() {
+                fs2.stat(to, function(stater, st) {
+                  if (stater && stater.code === "ENOENT")
+                    fs$rename(from, to, CB);
+                  else
+                    cb(er);
+                });
+              }, backoff);
+              if (backoff < 100)
+                backoff += 10;
+              return;
+            }
+            if (cb) cb(er);
+          });
+        }
+        if (Object.setPrototypeOf) Object.setPrototypeOf(rename, fs$rename);
+        return rename;
+      })(fs2.rename);
+    }
+    fs2.read = typeof fs2.read !== "function" ? fs2.read : (function(fs$read) {
+      function read(fd, buffer2, offset, length, position, callback_) {
+        var callback;
+        if (callback_ && typeof callback_ === "function") {
+          var eagCounter = 0;
+          callback = function(er, _, __) {
+            if (er && er.code === "EAGAIN" && eagCounter < 10) {
+              eagCounter++;
+              return fs$read.call(fs2, fd, buffer2, offset, length, position, callback);
+            }
+            callback_.apply(this, arguments);
+          };
+        }
+        return fs$read.call(fs2, fd, buffer2, offset, length, position, callback);
+      }
+      if (Object.setPrototypeOf) Object.setPrototypeOf(read, fs$read);
+      return read;
+    })(fs2.read);
+    fs2.readSync = typeof fs2.readSync !== "function" ? fs2.readSync : /* @__PURE__ */ (function(fs$readSync) {
+      return function(fd, buffer2, offset, length, position) {
+        var eagCounter = 0;
+        while (true) {
+          try {
+            return fs$readSync.call(fs2, fd, buffer2, offset, length, position);
+          } catch (er) {
+            if (er.code === "EAGAIN" && eagCounter < 10) {
+              eagCounter++;
+              continue;
+            }
+            throw er;
+          }
+        }
+      };
+    })(fs2.readSync);
+    function patchLchmod(fs22) {
+      fs22.lchmod = function(path2, mode, callback) {
+        fs22.open(
+          path2,
+          constants.O_WRONLY | constants.O_SYMLINK,
+          mode,
+          function(err, fd) {
+            if (err) {
+              if (callback) callback(err);
+              return;
+            }
+            fs22.fchmod(fd, mode, function(err2) {
+              fs22.close(fd, function(err22) {
+                if (callback) callback(err2 || err22);
+              });
+            });
+          }
+        );
+      };
+      fs22.lchmodSync = function(path2, mode) {
+        var fd = fs22.openSync(path2, constants.O_WRONLY | constants.O_SYMLINK, mode);
+        var threw = true;
+        var ret;
+        try {
+          ret = fs22.fchmodSync(fd, mode);
+          threw = false;
+        } finally {
+          if (threw) {
+            try {
+              fs22.closeSync(fd);
+            } catch (er) {
+            }
+          } else {
+            fs22.closeSync(fd);
+          }
+        }
+        return ret;
+      };
+    }
+    function patchLutimes(fs22) {
+      if (constants.hasOwnProperty("O_SYMLINK") && fs22.futimes) {
+        fs22.lutimes = function(path2, at, mt, cb) {
+          fs22.open(path2, constants.O_SYMLINK, function(er, fd) {
+            if (er) {
+              if (cb) cb(er);
+              return;
+            }
+            fs22.futimes(fd, at, mt, function(er2) {
+              fs22.close(fd, function(er22) {
+                if (cb) cb(er2 || er22);
+              });
+            });
+          });
+        };
+        fs22.lutimesSync = function(path2, at, mt) {
+          var fd = fs22.openSync(path2, constants.O_SYMLINK);
+          var ret;
+          var threw = true;
+          try {
+            ret = fs22.futimesSync(fd, at, mt);
+            threw = false;
+          } finally {
+            if (threw) {
+              try {
+                fs22.closeSync(fd);
+              } catch (er) {
+              }
+            } else {
+              fs22.closeSync(fd);
+            }
+          }
+          return ret;
+        };
+      } else if (fs22.futimes) {
+        fs22.lutimes = function(_a, _b, _c, cb) {
+          if (cb) process.nextTick(cb);
+        };
+        fs22.lutimesSync = function() {
+        };
+      }
+    }
+    function chmodFix(orig) {
+      if (!orig) return orig;
+      return function(target, mode, cb) {
+        return orig.call(fs2, target, mode, function(er) {
+          if (chownErOk(er)) er = null;
+          if (cb) cb.apply(this, arguments);
+        });
+      };
+    }
+    function chmodFixSync(orig) {
+      if (!orig) return orig;
+      return function(target, mode) {
+        try {
+          return orig.call(fs2, target, mode);
+        } catch (er) {
+          if (!chownErOk(er)) throw er;
+        }
+      };
+    }
+    function chownFix(orig) {
+      if (!orig) return orig;
+      return function(target, uid, gid, cb) {
+        return orig.call(fs2, target, uid, gid, function(er) {
+          if (chownErOk(er)) er = null;
+          if (cb) cb.apply(this, arguments);
+        });
+      };
+    }
+    function chownFixSync(orig) {
+      if (!orig) return orig;
+      return function(target, uid, gid) {
+        try {
+          return orig.call(fs2, target, uid, gid);
+        } catch (er) {
+          if (!chownErOk(er)) throw er;
+        }
+      };
+    }
+    function statFix(orig) {
+      if (!orig) return orig;
+      return function(target, options, cb) {
+        if (typeof options === "function") {
+          cb = options;
+          options = null;
+        }
+        function callback(er, stats) {
+          if (stats) {
+            if (stats.uid < 0) stats.uid += 4294967296;
+            if (stats.gid < 0) stats.gid += 4294967296;
+          }
+          if (cb) cb.apply(this, arguments);
+        }
+        return options ? orig.call(fs2, target, options, callback) : orig.call(fs2, target, callback);
+      };
+    }
+    function statFixSync(orig) {
+      if (!orig) return orig;
+      return function(target, options) {
+        var stats = options ? orig.call(fs2, target, options) : orig.call(fs2, target);
+        if (stats) {
+          if (stats.uid < 0) stats.uid += 4294967296;
+          if (stats.gid < 0) stats.gid += 4294967296;
+        }
+        return stats;
+      };
+    }
+    function chownErOk(er) {
+      if (!er)
+        return true;
+      if (er.code === "ENOSYS")
+        return true;
+      var nonroot = !process.getuid || process.getuid() !== 0;
+      if (nonroot) {
+        if (er.code === "EINVAL" || er.code === "EPERM")
+          return true;
+      }
+      return false;
+    }
+  }
+  return polyfills;
+}
+var legacyStreams;
+var hasRequiredLegacyStreams;
+function requireLegacyStreams() {
+  if (hasRequiredLegacyStreams) return legacyStreams;
+  hasRequiredLegacyStreams = 1;
+  var Stream = require$$0$1.Stream;
+  legacyStreams = legacy;
+  function legacy(fs2) {
+    return {
+      ReadStream,
+      WriteStream
+    };
+    function ReadStream(path2, options) {
+      if (!(this instanceof ReadStream)) return new ReadStream(path2, options);
+      Stream.call(this);
+      var self2 = this;
+      this.path = path2;
+      this.fd = null;
+      this.readable = true;
+      this.paused = false;
+      this.flags = "r";
+      this.mode = 438;
+      this.bufferSize = 64 * 1024;
+      options = options || {};
+      var keys = Object.keys(options);
+      for (var index = 0, length = keys.length; index < length; index++) {
+        var key = keys[index];
+        this[key] = options[key];
+      }
+      if (this.encoding) this.setEncoding(this.encoding);
+      if (this.start !== void 0) {
+        if ("number" !== typeof this.start) {
+          throw TypeError("start must be a Number");
+        }
+        if (this.end === void 0) {
+          this.end = Infinity;
+        } else if ("number" !== typeof this.end) {
+          throw TypeError("end must be a Number");
+        }
+        if (this.start > this.end) {
+          throw new Error("start must be <= end");
+        }
+        this.pos = this.start;
+      }
+      if (this.fd !== null) {
+        process.nextTick(function() {
+          self2._read();
+        });
+        return;
+      }
+      fs2.open(this.path, this.flags, this.mode, function(err, fd) {
+        if (err) {
+          self2.emit("error", err);
+          self2.readable = false;
+          return;
+        }
+        self2.fd = fd;
+        self2.emit("open", fd);
+        self2._read();
+      });
+    }
+    function WriteStream(path2, options) {
+      if (!(this instanceof WriteStream)) return new WriteStream(path2, options);
+      Stream.call(this);
+      this.path = path2;
+      this.fd = null;
+      this.writable = true;
+      this.flags = "w";
+      this.encoding = "binary";
+      this.mode = 438;
+      this.bytesWritten = 0;
+      options = options || {};
+      var keys = Object.keys(options);
+      for (var index = 0, length = keys.length; index < length; index++) {
+        var key = keys[index];
+        this[key] = options[key];
+      }
+      if (this.start !== void 0) {
+        if ("number" !== typeof this.start) {
+          throw TypeError("start must be a Number");
+        }
+        if (this.start < 0) {
+          throw new Error("start must be >= zero");
+        }
+        this.pos = this.start;
+      }
+      this.busy = false;
+      this._queue = [];
+      if (this.fd === null) {
+        this._open = fs2.open;
+        this._queue.push([this._open, this.path, this.flags, this.mode, void 0]);
+        this.flush();
+      }
+    }
+  }
+  return legacyStreams;
+}
+var clone_1;
+var hasRequiredClone;
+function requireClone() {
+  if (hasRequiredClone) return clone_1;
+  hasRequiredClone = 1;
+  clone_1 = clone;
+  var getPrototypeOf = Object.getPrototypeOf || function(obj) {
+    return obj.__proto__;
+  };
+  function clone(obj) {
+    if (obj === null || typeof obj !== "object")
+      return obj;
+    if (obj instanceof Object)
+      var copy2 = { __proto__: getPrototypeOf(obj) };
+    else
+      var copy2 = /* @__PURE__ */ Object.create(null);
+    Object.getOwnPropertyNames(obj).forEach(function(key) {
+      Object.defineProperty(copy2, key, Object.getOwnPropertyDescriptor(obj, key));
+    });
+    return copy2;
+  }
+  return clone_1;
+}
+var gracefulFs;
+var hasRequiredGracefulFs;
+function requireGracefulFs() {
+  if (hasRequiredGracefulFs) return gracefulFs;
+  hasRequiredGracefulFs = 1;
+  var fs2 = fs__default;
+  var polyfills2 = requirePolyfills();
+  var legacy = requireLegacyStreams();
+  var clone = requireClone();
+  var util2 = require$$4;
+  var gracefulQueue;
+  var previousSymbol;
+  if (typeof Symbol === "function" && typeof Symbol.for === "function") {
+    gracefulQueue = Symbol.for("graceful-fs.queue");
+    previousSymbol = Symbol.for("graceful-fs.previous");
+  } else {
+    gracefulQueue = "___graceful-fs.queue";
+    previousSymbol = "___graceful-fs.previous";
+  }
+  function noop() {
+  }
+  function publishQueue(context, queue2) {
+    Object.defineProperty(context, gracefulQueue, {
+      get: function() {
+        return queue2;
+      }
+    });
+  }
+  var debug = noop;
+  if (util2.debuglog)
+    debug = util2.debuglog("gfs4");
+  else if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || ""))
+    debug = function() {
+      var m = util2.format.apply(util2, arguments);
+      m = "GFS4: " + m.split(/\n/).join("\nGFS4: ");
+      console.error(m);
+    };
+  if (!fs2[gracefulQueue]) {
+    var queue = commonjsGlobal[gracefulQueue] || [];
+    publishQueue(fs2, queue);
+    fs2.close = (function(fs$close) {
+      function close(fd, cb) {
+        return fs$close.call(fs2, fd, function(err) {
+          if (!err) {
+            resetQueue();
+          }
+          if (typeof cb === "function")
+            cb.apply(this, arguments);
+        });
+      }
+      Object.defineProperty(close, previousSymbol, {
+        value: fs$close
+      });
+      return close;
+    })(fs2.close);
+    fs2.closeSync = (function(fs$closeSync) {
+      function closeSync(fd) {
+        fs$closeSync.apply(fs2, arguments);
+        resetQueue();
+      }
+      Object.defineProperty(closeSync, previousSymbol, {
+        value: fs$closeSync
+      });
+      return closeSync;
+    })(fs2.closeSync);
+    if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || "")) {
+      process.on("exit", function() {
+        debug(fs2[gracefulQueue]);
+        require$$5.equal(fs2[gracefulQueue].length, 0);
+      });
+    }
+  }
+  if (!commonjsGlobal[gracefulQueue]) {
+    publishQueue(commonjsGlobal, fs2[gracefulQueue]);
+  }
+  gracefulFs = patch(clone(fs2));
+  if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs2.__patched) {
+    gracefulFs = patch(fs2);
+    fs2.__patched = true;
+  }
+  function patch(fs22) {
+    polyfills2(fs22);
+    fs22.gracefulify = patch;
+    fs22.createReadStream = createReadStream;
+    fs22.createWriteStream = createWriteStream;
+    var fs$readFile = fs22.readFile;
+    fs22.readFile = readFile;
+    function readFile(path2, options, cb) {
+      if (typeof options === "function")
+        cb = options, options = null;
+      return go$readFile(path2, options, cb);
+      function go$readFile(path22, options2, cb2, startTime) {
+        return fs$readFile(path22, options2, function(err) {
+          if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
+            enqueue([go$readFile, [path22, options2, cb2], err, startTime || Date.now(), Date.now()]);
+          else {
+            if (typeof cb2 === "function")
+              cb2.apply(this, arguments);
+          }
+        });
+      }
+    }
+    var fs$writeFile = fs22.writeFile;
+    fs22.writeFile = writeFile;
+    function writeFile(path2, data, options, cb) {
+      if (typeof options === "function")
+        cb = options, options = null;
+      return go$writeFile(path2, data, options, cb);
+      function go$writeFile(path22, data2, options2, cb2, startTime) {
+        return fs$writeFile(path22, data2, options2, function(err) {
+          if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
+            enqueue([go$writeFile, [path22, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
+          else {
+            if (typeof cb2 === "function")
+              cb2.apply(this, arguments);
+          }
+        });
+      }
+    }
+    var fs$appendFile = fs22.appendFile;
+    if (fs$appendFile)
+      fs22.appendFile = appendFile;
+    function appendFile(path2, data, options, cb) {
+      if (typeof options === "function")
+        cb = options, options = null;
+      return go$appendFile(path2, data, options, cb);
+      function go$appendFile(path22, data2, options2, cb2, startTime) {
+        return fs$appendFile(path22, data2, options2, function(err) {
+          if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
+            enqueue([go$appendFile, [path22, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
+          else {
+            if (typeof cb2 === "function")
+              cb2.apply(this, arguments);
+          }
+        });
+      }
+    }
+    var fs$copyFile = fs22.copyFile;
+    if (fs$copyFile)
+      fs22.copyFile = copyFile;
+    function copyFile(src, dest, flags, cb) {
+      if (typeof flags === "function") {
+        cb = flags;
+        flags = 0;
+      }
+      return go$copyFile(src, dest, flags, cb);
+      function go$copyFile(src2, dest2, flags2, cb2, startTime) {
+        return fs$copyFile(src2, dest2, flags2, function(err) {
+          if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
+            enqueue([go$copyFile, [src2, dest2, flags2, cb2], err, startTime || Date.now(), Date.now()]);
+          else {
+            if (typeof cb2 === "function")
+              cb2.apply(this, arguments);
+          }
+        });
+      }
+    }
+    var fs$readdir = fs22.readdir;
+    fs22.readdir = readdir;
+    var noReaddirOptionVersions = /^v[0-5]\./;
+    function readdir(path2, options, cb) {
+      if (typeof options === "function")
+        cb = options, options = null;
+      var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path22, options2, cb2, startTime) {
+        return fs$readdir(path22, fs$readdirCallback(
+          path22,
+          options2,
+          cb2,
+          startTime
+        ));
+      } : function go$readdir2(path22, options2, cb2, startTime) {
+        return fs$readdir(path22, options2, fs$readdirCallback(
+          path22,
+          options2,
+          cb2,
+          startTime
+        ));
+      };
+      return go$readdir(path2, options, cb);
+      function fs$readdirCallback(path22, options2, cb2, startTime) {
+        return function(err, files) {
+          if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
+            enqueue([
+              go$readdir,
+              [path22, options2, cb2],
+              err,
+              startTime || Date.now(),
+              Date.now()
+            ]);
+          else {
+            if (files && files.sort)
+              files.sort();
+            if (typeof cb2 === "function")
+              cb2.call(this, err, files);
+          }
+        };
+      }
+    }
+    if (process.version.substr(0, 4) === "v0.8") {
+      var legStreams = legacy(fs22);
+      ReadStream = legStreams.ReadStream;
+      WriteStream = legStreams.WriteStream;
+    }
+    var fs$ReadStream = fs22.ReadStream;
+    if (fs$ReadStream) {
+      ReadStream.prototype = Object.create(fs$ReadStream.prototype);
+      ReadStream.prototype.open = ReadStream$open;
+    }
+    var fs$WriteStream = fs22.WriteStream;
+    if (fs$WriteStream) {
+      WriteStream.prototype = Object.create(fs$WriteStream.prototype);
+      WriteStream.prototype.open = WriteStream$open;
+    }
+    Object.defineProperty(fs22, "ReadStream", {
+      get: function() {
+        return ReadStream;
+      },
+      set: function(val) {
+        ReadStream = val;
+      },
+      enumerable: true,
+      configurable: true
+    });
+    Object.defineProperty(fs22, "WriteStream", {
+      get: function() {
+        return WriteStream;
+      },
+      set: function(val) {
+        WriteStream = val;
+      },
+      enumerable: true,
+      configurable: true
+    });
+    var FileReadStream = ReadStream;
+    Object.defineProperty(fs22, "FileReadStream", {
+      get: function() {
+        return FileReadStream;
+      },
+      set: function(val) {
+        FileReadStream = val;
+      },
+      enumerable: true,
+      configurable: true
+    });
+    var FileWriteStream = WriteStream;
+    Object.defineProperty(fs22, "FileWriteStream", {
+      get: function() {
+        return FileWriteStream;
+      },
+      set: function(val) {
+        FileWriteStream = val;
+      },
+      enumerable: true,
+      configurable: true
+    });
+    function ReadStream(path2, options) {
+      if (this instanceof ReadStream)
+        return fs$ReadStream.apply(this, arguments), this;
+      else
+        return ReadStream.apply(Object.create(ReadStream.prototype), arguments);
+    }
+    function ReadStream$open() {
+      var that = this;
+      open(that.path, that.flags, that.mode, function(err, fd) {
+        if (err) {
+          if (that.autoClose)
+            that.destroy();
+          that.emit("error", err);
+        } else {
+          that.fd = fd;
+          that.emit("open", fd);
+          that.read();
+        }
+      });
+    }
+    function WriteStream(path2, options) {
+      if (this instanceof WriteStream)
+        return fs$WriteStream.apply(this, arguments), this;
+      else
+        return WriteStream.apply(Object.create(WriteStream.prototype), arguments);
+    }
+    function WriteStream$open() {
+      var that = this;
+      open(that.path, that.flags, that.mode, function(err, fd) {
+        if (err) {
+          that.destroy();
+          that.emit("error", err);
+        } else {
+          that.fd = fd;
+          that.emit("open", fd);
+        }
+      });
+    }
+    function createReadStream(path2, options) {
+      return new fs22.ReadStream(path2, options);
+    }
+    function createWriteStream(path2, options) {
+      return new fs22.WriteStream(path2, options);
+    }
+    var fs$open = fs22.open;
+    fs22.open = open;
+    function open(path2, flags, mode, cb) {
+      if (typeof mode === "function")
+        cb = mode, mode = null;
+      return go$open(path2, flags, mode, cb);
+      function go$open(path22, flags2, mode2, cb2, startTime) {
+        return fs$open(path22, flags2, mode2, function(err, fd) {
+          if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
+            enqueue([go$open, [path22, flags2, mode2, cb2], err, startTime || Date.now(), Date.now()]);
+          else {
+            if (typeof cb2 === "function")
+              cb2.apply(this, arguments);
+          }
+        });
+      }
+    }
+    return fs22;
+  }
+  function enqueue(elem) {
+    debug("ENQUEUE", elem[0].name, elem[1]);
+    fs2[gracefulQueue].push(elem);
+    retry();
+  }
+  var retryTimer;
+  function resetQueue() {
+    var now = Date.now();
+    for (var i = 0; i < fs2[gracefulQueue].length; ++i) {
+      if (fs2[gracefulQueue][i].length > 2) {
+        fs2[gracefulQueue][i][3] = now;
+        fs2[gracefulQueue][i][4] = now;
+      }
+    }
+    retry();
+  }
+  function retry() {
+    clearTimeout(retryTimer);
+    retryTimer = void 0;
+    if (fs2[gracefulQueue].length === 0)
+      return;
+    var elem = fs2[gracefulQueue].shift();
+    var fn = elem[0];
+    var args = elem[1];
+    var err = elem[2];
+    var startTime = elem[3];
+    var lastTime = elem[4];
+    if (startTime === void 0) {
+      debug("RETRY", fn.name, args);
+      fn.apply(null, args);
+    } else if (Date.now() - startTime >= 6e4) {
+      debug("TIMEOUT", fn.name, args);
+      var cb = args.pop();
+      if (typeof cb === "function")
+        cb.call(null, err);
+    } else {
+      var sinceAttempt = Date.now() - lastTime;
+      var sinceStart = Math.max(lastTime - startTime, 1);
+      var desiredDelay = Math.min(sinceStart * 1.2, 100);
+      if (sinceAttempt >= desiredDelay) {
+        debug("RETRY", fn.name, args);
+        fn.apply(null, args.concat([startTime]));
+      } else {
+        fs2[gracefulQueue].push(elem);
+      }
+    }
+    if (retryTimer === void 0) {
+      retryTimer = setTimeout(retry, 0);
+    }
+  }
+  return gracefulFs;
+}
+var hasRequiredFs;
+function requireFs() {
+  if (hasRequiredFs) return fs$1;
+  hasRequiredFs = 1;
+  (function(exports) {
+    const u = requireUniversalify().fromCallback;
+    const fs2 = requireGracefulFs();
+    const api = [
+      "access",
+      "appendFile",
+      "chmod",
+      "chown",
+      "close",
+      "copyFile",
+      "fchmod",
+      "fchown",
+      "fdatasync",
+      "fstat",
+      "fsync",
+      "ftruncate",
+      "futimes",
+      "lchown",
+      "lchmod",
+      "link",
+      "lstat",
+      "mkdir",
+      "mkdtemp",
+      "open",
+      "readFile",
+      "readdir",
+      "readlink",
+      "realpath",
+      "rename",
+      "rmdir",
+      "stat",
+      "symlink",
+      "truncate",
+      "unlink",
+      "utimes",
+      "writeFile"
+    ].filter((key) => {
+      return typeof fs2[key] === "function";
+    });
+    Object.keys(fs2).forEach((key) => {
+      if (key === "promises") {
+        return;
+      }
+      exports[key] = fs2[key];
+    });
+    api.forEach((method) => {
+      exports[method] = u(fs2[method]);
+    });
+    exports.exists = function(filename, callback) {
+      if (typeof callback === "function") {
+        return fs2.exists(filename, callback);
+      }
+      return new Promise((resolve) => {
+        return fs2.exists(filename, resolve);
+      });
+    };
+    exports.read = function(fd, buffer2, offset, length, position, callback) {
+      if (typeof callback === "function") {
+        return fs2.read(fd, buffer2, offset, length, position, callback);
+      }
+      return new Promise((resolve, reject) => {
+        fs2.read(fd, buffer2, offset, length, position, (err, bytesRead, buffer3) => {
+          if (err) return reject(err);
+          resolve({ bytesRead, buffer: buffer3 });
+        });
+      });
+    };
+    exports.write = function(fd, buffer2, ...args) {
+      if (typeof args[args.length - 1] === "function") {
+        return fs2.write(fd, buffer2, ...args);
+      }
+      return new Promise((resolve, reject) => {
+        fs2.write(fd, buffer2, ...args, (err, bytesWritten, buffer3) => {
+          if (err) return reject(err);
+          resolve({ bytesWritten, buffer: buffer3 });
+        });
+      });
+    };
+    if (typeof fs2.realpath.native === "function") {
+      exports.realpath.native = u(fs2.realpath.native);
+    }
+  })(fs$1);
+  return fs$1;
+}
+var win32;
+var hasRequiredWin32;
+function requireWin32() {
+  if (hasRequiredWin32) return win32;
+  hasRequiredWin32 = 1;
+  const path2 = path__default;
+  function getRootPath(p) {
+    p = path2.normalize(path2.resolve(p)).split(path2.sep);
+    if (p.length > 0) return p[0];
+    return null;
+  }
+  const INVALID_PATH_CHARS = /[<>:"|?*]/;
+  function invalidWin32Path(p) {
+    const rp = getRootPath(p);
+    p = p.replace(rp, "");
+    return INVALID_PATH_CHARS.test(p);
+  }
+  win32 = {
+    getRootPath,
+    invalidWin32Path
+  };
+  return win32;
+}
+var mkdirs_1$1;
+var hasRequiredMkdirs$1;
+function requireMkdirs$1() {
+  if (hasRequiredMkdirs$1) return mkdirs_1$1;
+  hasRequiredMkdirs$1 = 1;
+  const fs2 = requireGracefulFs();
+  const path2 = path__default;
+  const invalidWin32Path = requireWin32().invalidWin32Path;
+  const o777 = parseInt("0777", 8);
+  function mkdirs(p, opts, callback, made) {
+    if (typeof opts === "function") {
+      callback = opts;
+      opts = {};
+    } else if (!opts || typeof opts !== "object") {
+      opts = { mode: opts };
+    }
+    if (process.platform === "win32" && invalidWin32Path(p)) {
+      const errInval = new Error(p + " contains invalid WIN32 path characters.");
+      errInval.code = "EINVAL";
+      return callback(errInval);
+    }
+    let mode = opts.mode;
+    const xfs = opts.fs || fs2;
+    if (mode === void 0) {
+      mode = o777 & ~process.umask();
+    }
+    if (!made) made = null;
+    callback = callback || function() {
+    };
+    p = path2.resolve(p);
+    xfs.mkdir(p, mode, (er) => {
+      if (!er) {
+        made = made || p;
+        return callback(null, made);
+      }
+      switch (er.code) {
+        case "ENOENT":
+          if (path2.dirname(p) === p) return callback(er);
+          mkdirs(path2.dirname(p), opts, (er2, made2) => {
+            if (er2) callback(er2, made2);
+            else mkdirs(p, opts, callback, made2);
+          });
+          break;
+        // In the case of any other error, just see if there's a dir
+        // there already.  If so, then hooray!  If not, then something
+        // is borked.
+        default:
+          xfs.stat(p, (er2, stat2) => {
+            if (er2 || !stat2.isDirectory()) callback(er, made);
+            else callback(null, made);
+          });
+          break;
+      }
+    });
+  }
+  mkdirs_1$1 = mkdirs;
+  return mkdirs_1$1;
+}
+var mkdirsSync_1;
+var hasRequiredMkdirsSync;
+function requireMkdirsSync() {
+  if (hasRequiredMkdirsSync) return mkdirsSync_1;
+  hasRequiredMkdirsSync = 1;
+  const fs2 = requireGracefulFs();
+  const path2 = path__default;
+  const invalidWin32Path = requireWin32().invalidWin32Path;
+  const o777 = parseInt("0777", 8);
+  function mkdirsSync(p, opts, made) {
+    if (!opts || typeof opts !== "object") {
+      opts = { mode: opts };
+    }
+    let mode = opts.mode;
+    const xfs = opts.fs || fs2;
+    if (process.platform === "win32" && invalidWin32Path(p)) {
+      const errInval = new Error(p + " contains invalid WIN32 path characters.");
+      errInval.code = "EINVAL";
+      throw errInval;
+    }
+    if (mode === void 0) {
+      mode = o777 & ~process.umask();
+    }
+    if (!made) made = null;
+    p = path2.resolve(p);
+    try {
+      xfs.mkdirSync(p, mode);
+      made = made || p;
+    } catch (err0) {
+      if (err0.code === "ENOENT") {
+        if (path2.dirname(p) === p) throw err0;
+        made = mkdirsSync(path2.dirname(p), opts, made);
+        mkdirsSync(p, opts, made);
+      } else {
+        let stat2;
+        try {
+          stat2 = xfs.statSync(p);
+        } catch (err1) {
+          throw err0;
+        }
+        if (!stat2.isDirectory()) throw err0;
+      }
+    }
+    return made;
+  }
+  mkdirsSync_1 = mkdirsSync;
+  return mkdirsSync_1;
+}
+var mkdirs_1;
+var hasRequiredMkdirs;
+function requireMkdirs() {
+  if (hasRequiredMkdirs) return mkdirs_1;
+  hasRequiredMkdirs = 1;
+  const u = requireUniversalify().fromCallback;
+  const mkdirs = u(requireMkdirs$1());
+  const mkdirsSync = requireMkdirsSync();
+  mkdirs_1 = {
+    mkdirs,
+    mkdirsSync,
+    // alias
+    mkdirp: mkdirs,
+    mkdirpSync: mkdirsSync,
+    ensureDir: mkdirs,
+    ensureDirSync: mkdirsSync
+  };
+  return mkdirs_1;
+}
+var utimes;
+var hasRequiredUtimes;
+function requireUtimes() {
+  if (hasRequiredUtimes) return utimes;
+  hasRequiredUtimes = 1;
+  const fs2 = requireGracefulFs();
+  const os2 = os__default;
+  const path2 = path__default;
+  function hasMillisResSync() {
+    let tmpfile = path2.join("millis-test-sync" + Date.now().toString() + Math.random().toString().slice(2));
+    tmpfile = path2.join(os2.tmpdir(), tmpfile);
+    const d = /* @__PURE__ */ new Date(1435410243862);
+    fs2.writeFileSync(tmpfile, "https://github.com/jprichardson/node-fs-extra/pull/141");
+    const fd = fs2.openSync(tmpfile, "r+");
+    fs2.futimesSync(fd, d, d);
+    fs2.closeSync(fd);
+    return fs2.statSync(tmpfile).mtime > 1435410243e3;
+  }
+  function hasMillisRes(callback) {
+    let tmpfile = path2.join("millis-test" + Date.now().toString() + Math.random().toString().slice(2));
+    tmpfile = path2.join(os2.tmpdir(), tmpfile);
+    const d = /* @__PURE__ */ new Date(1435410243862);
+    fs2.writeFile(tmpfile, "https://github.com/jprichardson/node-fs-extra/pull/141", (err) => {
+      if (err) return callback(err);
+      fs2.open(tmpfile, "r+", (err2, fd) => {
+        if (err2) return callback(err2);
+        fs2.futimes(fd, d, d, (err3) => {
+          if (err3) return callback(err3);
+          fs2.close(fd, (err4) => {
+            if (err4) return callback(err4);
+            fs2.stat(tmpfile, (err5, stats) => {
+              if (err5) return callback(err5);
+              callback(null, stats.mtime > 1435410243e3);
+            });
+          });
+        });
+      });
+    });
+  }
+  function timeRemoveMillis(timestamp) {
+    if (typeof timestamp === "number") {
+      return Math.floor(timestamp / 1e3) * 1e3;
+    } else if (timestamp instanceof Date) {
+      return new Date(Math.floor(timestamp.getTime() / 1e3) * 1e3);
+    } else {
+      throw new Error("fs-extra: timeRemoveMillis() unknown parameter type");
+    }
+  }
+  function utimesMillis(path3, atime, mtime, callback) {
+    fs2.open(path3, "r+", (err, fd) => {
+      if (err) return callback(err);
+      fs2.futimes(fd, atime, mtime, (futimesErr) => {
+        fs2.close(fd, (closeErr) => {
+          if (callback) callback(futimesErr || closeErr);
+        });
+      });
+    });
+  }
+  function utimesMillisSync(path3, atime, mtime) {
+    const fd = fs2.openSync(path3, "r+");
+    fs2.futimesSync(fd, atime, mtime);
+    return fs2.closeSync(fd);
+  }
+  utimes = {
+    hasMillisRes,
+    hasMillisResSync,
+    timeRemoveMillis,
+    utimesMillis,
+    utimesMillisSync
+  };
+  return utimes;
+}
+var stat;
+var hasRequiredStat;
+function requireStat() {
+  if (hasRequiredStat) return stat;
+  hasRequiredStat = 1;
+  const fs2 = requireGracefulFs();
+  const path2 = path__default;
+  const NODE_VERSION_MAJOR_WITH_BIGINT = 10;
+  const NODE_VERSION_MINOR_WITH_BIGINT = 5;
+  const NODE_VERSION_PATCH_WITH_BIGINT = 0;
+  const nodeVersion = process.versions.node.split(".");
+  const nodeVersionMajor = Number.parseInt(nodeVersion[0], 10);
+  const nodeVersionMinor = Number.parseInt(nodeVersion[1], 10);
+  const nodeVersionPatch = Number.parseInt(nodeVersion[2], 10);
+  function nodeSupportsBigInt() {
+    if (nodeVersionMajor > NODE_VERSION_MAJOR_WITH_BIGINT) {
+      return true;
+    } else if (nodeVersionMajor === NODE_VERSION_MAJOR_WITH_BIGINT) {
+      if (nodeVersionMinor > NODE_VERSION_MINOR_WITH_BIGINT) {
+        return true;
+      } else if (nodeVersionMinor === NODE_VERSION_MINOR_WITH_BIGINT) {
+        if (nodeVersionPatch >= NODE_VERSION_PATCH_WITH_BIGINT) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  function getStats(src, dest, cb) {
+    if (nodeSupportsBigInt()) {
+      fs2.stat(src, { bigint: true }, (err, srcStat) => {
+        if (err) return cb(err);
+        fs2.stat(dest, { bigint: true }, (err2, destStat) => {
+          if (err2) {
+            if (err2.code === "ENOENT") return cb(null, { srcStat, destStat: null });
+            return cb(err2);
+          }
+          return cb(null, { srcStat, destStat });
+        });
+      });
+    } else {
+      fs2.stat(src, (err, srcStat) => {
+        if (err) return cb(err);
+        fs2.stat(dest, (err2, destStat) => {
+          if (err2) {
+            if (err2.code === "ENOENT") return cb(null, { srcStat, destStat: null });
+            return cb(err2);
+          }
+          return cb(null, { srcStat, destStat });
+        });
+      });
+    }
+  }
+  function getStatsSync(src, dest) {
+    let srcStat, destStat;
+    if (nodeSupportsBigInt()) {
+      srcStat = fs2.statSync(src, { bigint: true });
+    } else {
+      srcStat = fs2.statSync(src);
+    }
+    try {
+      if (nodeSupportsBigInt()) {
+        destStat = fs2.statSync(dest, { bigint: true });
+      } else {
+        destStat = fs2.statSync(dest);
+      }
+    } catch (err) {
+      if (err.code === "ENOENT") return { srcStat, destStat: null };
+      throw err;
+    }
+    return { srcStat, destStat };
+  }
+  function checkPaths(src, dest, funcName, cb) {
+    getStats(src, dest, (err, stats) => {
+      if (err) return cb(err);
+      const { srcStat, destStat } = stats;
+      if (destStat && destStat.ino && destStat.dev && destStat.ino === srcStat.ino && destStat.dev === srcStat.dev) {
+        return cb(new Error("Source and destination must not be the same."));
+      }
+      if (srcStat.isDirectory() && isSrcSubdir(src, dest)) {
+        return cb(new Error(errMsg(src, dest, funcName)));
+      }
+      return cb(null, { srcStat, destStat });
+    });
+  }
+  function checkPathsSync(src, dest, funcName) {
+    const { srcStat, destStat } = getStatsSync(src, dest);
+    if (destStat && destStat.ino && destStat.dev && destStat.ino === srcStat.ino && destStat.dev === srcStat.dev) {
+      throw new Error("Source and destination must not be the same.");
+    }
+    if (srcStat.isDirectory() && isSrcSubdir(src, dest)) {
+      throw new Error(errMsg(src, dest, funcName));
+    }
+    return { srcStat, destStat };
+  }
+  function checkParentPaths(src, srcStat, dest, funcName, cb) {
+    const srcParent = path2.resolve(path2.dirname(src));
+    const destParent = path2.resolve(path2.dirname(dest));
+    if (destParent === srcParent || destParent === path2.parse(destParent).root) return cb();
+    if (nodeSupportsBigInt()) {
+      fs2.stat(destParent, { bigint: true }, (err, destStat) => {
+        if (err) {
+          if (err.code === "ENOENT") return cb();
+          return cb(err);
+        }
+        if (destStat.ino && destStat.dev && destStat.ino === srcStat.ino && destStat.dev === srcStat.dev) {
+          return cb(new Error(errMsg(src, dest, funcName)));
+        }
+        return checkParentPaths(src, srcStat, destParent, funcName, cb);
+      });
+    } else {
+      fs2.stat(destParent, (err, destStat) => {
+        if (err) {
+          if (err.code === "ENOENT") return cb();
+          return cb(err);
+        }
+        if (destStat.ino && destStat.dev && destStat.ino === srcStat.ino && destStat.dev === srcStat.dev) {
+          return cb(new Error(errMsg(src, dest, funcName)));
+        }
+        return checkParentPaths(src, srcStat, destParent, funcName, cb);
+      });
+    }
+  }
+  function checkParentPathsSync(src, srcStat, dest, funcName) {
+    const srcParent = path2.resolve(path2.dirname(src));
+    const destParent = path2.resolve(path2.dirname(dest));
+    if (destParent === srcParent || destParent === path2.parse(destParent).root) return;
+    let destStat;
+    try {
+      if (nodeSupportsBigInt()) {
+        destStat = fs2.statSync(destParent, { bigint: true });
+      } else {
+        destStat = fs2.statSync(destParent);
+      }
+    } catch (err) {
+      if (err.code === "ENOENT") return;
+      throw err;
+    }
+    if (destStat.ino && destStat.dev && destStat.ino === srcStat.ino && destStat.dev === srcStat.dev) {
+      throw new Error(errMsg(src, dest, funcName));
+    }
+    return checkParentPathsSync(src, srcStat, destParent, funcName);
+  }
+  function isSrcSubdir(src, dest) {
+    const srcArr = path2.resolve(src).split(path2.sep).filter((i) => i);
+    const destArr = path2.resolve(dest).split(path2.sep).filter((i) => i);
+    return srcArr.reduce((acc, cur, i) => acc && destArr[i] === cur, true);
+  }
+  function errMsg(src, dest, funcName) {
+    return `Cannot ${funcName} '${src}' to a subdirectory of itself, '${dest}'.`;
+  }
+  stat = {
+    checkPaths,
+    checkPathsSync,
+    checkParentPaths,
+    checkParentPathsSync,
+    isSrcSubdir
+  };
+  return stat;
+}
+var buffer;
+var hasRequiredBuffer;
+function requireBuffer() {
+  if (hasRequiredBuffer) return buffer;
+  hasRequiredBuffer = 1;
+  buffer = function(size) {
+    if (typeof Buffer.allocUnsafe === "function") {
+      try {
+        return Buffer.allocUnsafe(size);
+      } catch (e) {
+        return new Buffer(size);
+      }
+    }
+    return new Buffer(size);
+  };
+  return buffer;
+}
+var copySync_1;
+var hasRequiredCopySync$1;
+function requireCopySync$1() {
+  if (hasRequiredCopySync$1) return copySync_1;
+  hasRequiredCopySync$1 = 1;
+  const fs2 = requireGracefulFs();
+  const path2 = path__default;
+  const mkdirpSync = requireMkdirs().mkdirsSync;
+  const utimesSync = requireUtimes().utimesMillisSync;
+  const stat2 = requireStat();
+  function copySync2(src, dest, opts) {
+    if (typeof opts === "function") {
+      opts = { filter: opts };
+    }
+    opts = opts || {};
+    opts.clobber = "clobber" in opts ? !!opts.clobber : true;
+    opts.overwrite = "overwrite" in opts ? !!opts.overwrite : opts.clobber;
+    if (opts.preserveTimestamps && process.arch === "ia32") {
+      console.warn(`fs-extra: Using the preserveTimestamps option in 32-bit node is not recommended;
+
+    see https://github.com/jprichardson/node-fs-extra/issues/269`);
+    }
+    const { srcStat, destStat } = stat2.checkPathsSync(src, dest, "copy");
+    stat2.checkParentPathsSync(src, srcStat, dest, "copy");
+    return handleFilterAndCopy(destStat, src, dest, opts);
+  }
+  function handleFilterAndCopy(destStat, src, dest, opts) {
+    if (opts.filter && !opts.filter(src, dest)) return;
+    const destParent = path2.dirname(dest);
+    if (!fs2.existsSync(destParent)) mkdirpSync(destParent);
+    return startCopy(destStat, src, dest, opts);
+  }
+  function startCopy(destStat, src, dest, opts) {
+    if (opts.filter && !opts.filter(src, dest)) return;
+    return getStats(destStat, src, dest, opts);
+  }
+  function getStats(destStat, src, dest, opts) {
+    const statSync = opts.dereference ? fs2.statSync : fs2.lstatSync;
+    const srcStat = statSync(src);
+    if (srcStat.isDirectory()) return onDir(srcStat, destStat, src, dest, opts);
+    else if (srcStat.isFile() || srcStat.isCharacterDevice() || srcStat.isBlockDevice()) return onFile(srcStat, destStat, src, dest, opts);
+    else if (srcStat.isSymbolicLink()) return onLink(destStat, src, dest, opts);
+  }
+  function onFile(srcStat, destStat, src, dest, opts) {
+    if (!destStat) return copyFile(srcStat, src, dest, opts);
+    return mayCopyFile(srcStat, src, dest, opts);
+  }
+  function mayCopyFile(srcStat, src, dest, opts) {
+    if (opts.overwrite) {
+      fs2.unlinkSync(dest);
+      return copyFile(srcStat, src, dest, opts);
+    } else if (opts.errorOnExist) {
+      throw new Error(`'${dest}' already exists`);
+    }
+  }
+  function copyFile(srcStat, src, dest, opts) {
+    if (typeof fs2.copyFileSync === "function") {
+      fs2.copyFileSync(src, dest);
+      fs2.chmodSync(dest, srcStat.mode);
+      if (opts.preserveTimestamps) {
+        return utimesSync(dest, srcStat.atime, srcStat.mtime);
+      }
+      return;
+    }
+    return copyFileFallback(srcStat, src, dest, opts);
+  }
+  function copyFileFallback(srcStat, src, dest, opts) {
+    const BUF_LENGTH = 64 * 1024;
+    const _buff = requireBuffer()(BUF_LENGTH);
+    const fdr = fs2.openSync(src, "r");
+    const fdw = fs2.openSync(dest, "w", srcStat.mode);
+    let pos = 0;
+    while (pos < srcStat.size) {
+      const bytesRead = fs2.readSync(fdr, _buff, 0, BUF_LENGTH, pos);
+      fs2.writeSync(fdw, _buff, 0, bytesRead);
+      pos += bytesRead;
+    }
+    if (opts.preserveTimestamps) fs2.futimesSync(fdw, srcStat.atime, srcStat.mtime);
+    fs2.closeSync(fdr);
+    fs2.closeSync(fdw);
+  }
+  function onDir(srcStat, destStat, src, dest, opts) {
+    if (!destStat) return mkDirAndCopy(srcStat, src, dest, opts);
+    if (destStat && !destStat.isDirectory()) {
+      throw new Error(`Cannot overwrite non-directory '${dest}' with directory '${src}'.`);
+    }
+    return copyDir(src, dest, opts);
+  }
+  function mkDirAndCopy(srcStat, src, dest, opts) {
+    fs2.mkdirSync(dest);
+    copyDir(src, dest, opts);
+    return fs2.chmodSync(dest, srcStat.mode);
+  }
+  function copyDir(src, dest, opts) {
+    fs2.readdirSync(src).forEach((item) => copyDirItem(item, src, dest, opts));
+  }
+  function copyDirItem(item, src, dest, opts) {
+    const srcItem = path2.join(src, item);
+    const destItem = path2.join(dest, item);
+    const { destStat } = stat2.checkPathsSync(srcItem, destItem, "copy");
+    return startCopy(destStat, srcItem, destItem, opts);
+  }
+  function onLink(destStat, src, dest, opts) {
+    let resolvedSrc = fs2.readlinkSync(src);
+    if (opts.dereference) {
+      resolvedSrc = path2.resolve(process.cwd(), resolvedSrc);
+    }
+    if (!destStat) {
+      return fs2.symlinkSync(resolvedSrc, dest);
+    } else {
+      let resolvedDest;
+      try {
+        resolvedDest = fs2.readlinkSync(dest);
+      } catch (err) {
+        if (err.code === "EINVAL" || err.code === "UNKNOWN") return fs2.symlinkSync(resolvedSrc, dest);
+        throw err;
+      }
+      if (opts.dereference) {
+        resolvedDest = path2.resolve(process.cwd(), resolvedDest);
+      }
+      if (stat2.isSrcSubdir(resolvedSrc, resolvedDest)) {
+        throw new Error(`Cannot copy '${resolvedSrc}' to a subdirectory of itself, '${resolvedDest}'.`);
+      }
+      if (fs2.statSync(dest).isDirectory() && stat2.isSrcSubdir(resolvedDest, resolvedSrc)) {
+        throw new Error(`Cannot overwrite '${resolvedDest}' with '${resolvedSrc}'.`);
+      }
+      return copyLink(resolvedSrc, dest);
+    }
+  }
+  function copyLink(resolvedSrc, dest) {
+    fs2.unlinkSync(dest);
+    return fs2.symlinkSync(resolvedSrc, dest);
+  }
+  copySync_1 = copySync2;
+  return copySync_1;
+}
+var copySync;
+var hasRequiredCopySync;
+function requireCopySync() {
+  if (hasRequiredCopySync) return copySync;
+  hasRequiredCopySync = 1;
+  copySync = {
+    copySync: requireCopySync$1()
+  };
+  return copySync;
+}
+var pathExists_1;
+var hasRequiredPathExists;
+function requirePathExists() {
+  if (hasRequiredPathExists) return pathExists_1;
+  hasRequiredPathExists = 1;
+  const u = requireUniversalify().fromPromise;
+  const fs2 = requireFs();
+  function pathExists(path2) {
+    return fs2.access(path2).then(() => true).catch(() => false);
+  }
+  pathExists_1 = {
+    pathExists: u(pathExists),
+    pathExistsSync: fs2.existsSync
+  };
+  return pathExists_1;
+}
+var copy_1;
+var hasRequiredCopy$1;
+function requireCopy$1() {
+  if (hasRequiredCopy$1) return copy_1;
+  hasRequiredCopy$1 = 1;
+  const fs2 = requireGracefulFs();
+  const path2 = path__default;
+  const mkdirp = requireMkdirs().mkdirs;
+  const pathExists = requirePathExists().pathExists;
+  const utimes2 = requireUtimes().utimesMillis;
+  const stat2 = requireStat();
+  function copy2(src, dest, opts, cb) {
+    if (typeof opts === "function" && !cb) {
+      cb = opts;
+      opts = {};
+    } else if (typeof opts === "function") {
+      opts = { filter: opts };
+    }
+    cb = cb || function() {
+    };
+    opts = opts || {};
+    opts.clobber = "clobber" in opts ? !!opts.clobber : true;
+    opts.overwrite = "overwrite" in opts ? !!opts.overwrite : opts.clobber;
+    if (opts.preserveTimestamps && process.arch === "ia32") {
+      console.warn(`fs-extra: Using the preserveTimestamps option in 32-bit node is not recommended;
+
+    see https://github.com/jprichardson/node-fs-extra/issues/269`);
+    }
+    stat2.checkPaths(src, dest, "copy", (err, stats) => {
+      if (err) return cb(err);
+      const { srcStat, destStat } = stats;
+      stat2.checkParentPaths(src, srcStat, dest, "copy", (err2) => {
+        if (err2) return cb(err2);
+        if (opts.filter) return handleFilter(checkParentDir, destStat, src, dest, opts, cb);
+        return checkParentDir(destStat, src, dest, opts, cb);
+      });
+    });
+  }
+  function checkParentDir(destStat, src, dest, opts, cb) {
+    const destParent = path2.dirname(dest);
+    pathExists(destParent, (err, dirExists) => {
+      if (err) return cb(err);
+      if (dirExists) return startCopy(destStat, src, dest, opts, cb);
+      mkdirp(destParent, (err2) => {
+        if (err2) return cb(err2);
+        return startCopy(destStat, src, dest, opts, cb);
+      });
+    });
+  }
+  function handleFilter(onInclude, destStat, src, dest, opts, cb) {
+    Promise.resolve(opts.filter(src, dest)).then((include) => {
+      if (include) return onInclude(destStat, src, dest, opts, cb);
+      return cb();
+    }, (error) => cb(error));
+  }
+  function startCopy(destStat, src, dest, opts, cb) {
+    if (opts.filter) return handleFilter(getStats, destStat, src, dest, opts, cb);
+    return getStats(destStat, src, dest, opts, cb);
+  }
+  function getStats(destStat, src, dest, opts, cb) {
+    const stat3 = opts.dereference ? fs2.stat : fs2.lstat;
+    stat3(src, (err, srcStat) => {
+      if (err) return cb(err);
+      if (srcStat.isDirectory()) return onDir(srcStat, destStat, src, dest, opts, cb);
+      else if (srcStat.isFile() || srcStat.isCharacterDevice() || srcStat.isBlockDevice()) return onFile(srcStat, destStat, src, dest, opts, cb);
+      else if (srcStat.isSymbolicLink()) return onLink(destStat, src, dest, opts, cb);
+    });
+  }
+  function onFile(srcStat, destStat, src, dest, opts, cb) {
+    if (!destStat) return copyFile(srcStat, src, dest, opts, cb);
+    return mayCopyFile(srcStat, src, dest, opts, cb);
+  }
+  function mayCopyFile(srcStat, src, dest, opts, cb) {
+    if (opts.overwrite) {
+      fs2.unlink(dest, (err) => {
+        if (err) return cb(err);
+        return copyFile(srcStat, src, dest, opts, cb);
+      });
+    } else if (opts.errorOnExist) {
+      return cb(new Error(`'${dest}' already exists`));
+    } else return cb();
+  }
+  function copyFile(srcStat, src, dest, opts, cb) {
+    if (typeof fs2.copyFile === "function") {
+      return fs2.copyFile(src, dest, (err) => {
+        if (err) return cb(err);
+        return setDestModeAndTimestamps(srcStat, dest, opts, cb);
+      });
+    }
+    return copyFileFallback(srcStat, src, dest, opts, cb);
+  }
+  function copyFileFallback(srcStat, src, dest, opts, cb) {
+    const rs = fs2.createReadStream(src);
+    rs.on("error", (err) => cb(err)).once("open", () => {
+      const ws = fs2.createWriteStream(dest, { mode: srcStat.mode });
+      ws.on("error", (err) => cb(err)).on("open", () => rs.pipe(ws)).once("close", () => setDestModeAndTimestamps(srcStat, dest, opts, cb));
+    });
+  }
+  function setDestModeAndTimestamps(srcStat, dest, opts, cb) {
+    fs2.chmod(dest, srcStat.mode, (err) => {
+      if (err) return cb(err);
+      if (opts.preserveTimestamps) {
+        return utimes2(dest, srcStat.atime, srcStat.mtime, cb);
+      }
+      return cb();
+    });
+  }
+  function onDir(srcStat, destStat, src, dest, opts, cb) {
+    if (!destStat) return mkDirAndCopy(srcStat, src, dest, opts, cb);
+    if (destStat && !destStat.isDirectory()) {
+      return cb(new Error(`Cannot overwrite non-directory '${dest}' with directory '${src}'.`));
+    }
+    return copyDir(src, dest, opts, cb);
+  }
+  function mkDirAndCopy(srcStat, src, dest, opts, cb) {
+    fs2.mkdir(dest, (err) => {
+      if (err) return cb(err);
+      copyDir(src, dest, opts, (err2) => {
+        if (err2) return cb(err2);
+        return fs2.chmod(dest, srcStat.mode, cb);
+      });
+    });
+  }
+  function copyDir(src, dest, opts, cb) {
+    fs2.readdir(src, (err, items) => {
+      if (err) return cb(err);
+      return copyDirItems(items, src, dest, opts, cb);
+    });
+  }
+  function copyDirItems(items, src, dest, opts, cb) {
+    const item = items.pop();
+    if (!item) return cb();
+    return copyDirItem(items, item, src, dest, opts, cb);
+  }
+  function copyDirItem(items, item, src, dest, opts, cb) {
+    const srcItem = path2.join(src, item);
+    const destItem = path2.join(dest, item);
+    stat2.checkPaths(srcItem, destItem, "copy", (err, stats) => {
+      if (err) return cb(err);
+      const { destStat } = stats;
+      startCopy(destStat, srcItem, destItem, opts, (err2) => {
+        if (err2) return cb(err2);
+        return copyDirItems(items, src, dest, opts, cb);
+      });
+    });
+  }
+  function onLink(destStat, src, dest, opts, cb) {
+    fs2.readlink(src, (err, resolvedSrc) => {
+      if (err) return cb(err);
+      if (opts.dereference) {
+        resolvedSrc = path2.resolve(process.cwd(), resolvedSrc);
+      }
+      if (!destStat) {
+        return fs2.symlink(resolvedSrc, dest, cb);
+      } else {
+        fs2.readlink(dest, (err2, resolvedDest) => {
+          if (err2) {
+            if (err2.code === "EINVAL" || err2.code === "UNKNOWN") return fs2.symlink(resolvedSrc, dest, cb);
+            return cb(err2);
+          }
+          if (opts.dereference) {
+            resolvedDest = path2.resolve(process.cwd(), resolvedDest);
+          }
+          if (stat2.isSrcSubdir(resolvedSrc, resolvedDest)) {
+            return cb(new Error(`Cannot copy '${resolvedSrc}' to a subdirectory of itself, '${resolvedDest}'.`));
+          }
+          if (destStat.isDirectory() && stat2.isSrcSubdir(resolvedDest, resolvedSrc)) {
+            return cb(new Error(`Cannot overwrite '${resolvedDest}' with '${resolvedSrc}'.`));
+          }
+          return copyLink(resolvedSrc, dest, cb);
+        });
+      }
+    });
+  }
+  function copyLink(resolvedSrc, dest, cb) {
+    fs2.unlink(dest, (err) => {
+      if (err) return cb(err);
+      return fs2.symlink(resolvedSrc, dest, cb);
+    });
+  }
+  copy_1 = copy2;
+  return copy_1;
+}
+var copy;
+var hasRequiredCopy;
+function requireCopy() {
+  if (hasRequiredCopy) return copy;
+  hasRequiredCopy = 1;
+  const u = requireUniversalify().fromCallback;
+  copy = {
+    copy: u(requireCopy$1())
+  };
+  return copy;
+}
+var rimraf_1;
+var hasRequiredRimraf;
+function requireRimraf() {
+  if (hasRequiredRimraf) return rimraf_1;
+  hasRequiredRimraf = 1;
+  const fs2 = requireGracefulFs();
+  const path2 = path__default;
+  const assert = require$$5;
+  const isWindows = process.platform === "win32";
+  function defaults(options) {
+    const methods = [
+      "unlink",
+      "chmod",
+      "stat",
+      "lstat",
+      "rmdir",
+      "readdir"
+    ];
+    methods.forEach((m) => {
+      options[m] = options[m] || fs2[m];
+      m = m + "Sync";
+      options[m] = options[m] || fs2[m];
+    });
+    options.maxBusyTries = options.maxBusyTries || 3;
+  }
+  function rimraf(p, options, cb) {
+    let busyTries = 0;
+    if (typeof options === "function") {
+      cb = options;
+      options = {};
+    }
+    assert(p, "rimraf: missing path");
+    assert.strictEqual(typeof p, "string", "rimraf: path should be a string");
+    assert.strictEqual(typeof cb, "function", "rimraf: callback function required");
+    assert(options, "rimraf: invalid options argument provided");
+    assert.strictEqual(typeof options, "object", "rimraf: options should be object");
+    defaults(options);
+    rimraf_(p, options, function CB(er) {
+      if (er) {
+        if ((er.code === "EBUSY" || er.code === "ENOTEMPTY" || er.code === "EPERM") && busyTries < options.maxBusyTries) {
+          busyTries++;
+          const time = busyTries * 100;
+          return setTimeout(() => rimraf_(p, options, CB), time);
+        }
+        if (er.code === "ENOENT") er = null;
+      }
+      cb(er);
+    });
+  }
+  function rimraf_(p, options, cb) {
+    assert(p);
+    assert(options);
+    assert(typeof cb === "function");
+    options.lstat(p, (er, st) => {
+      if (er && er.code === "ENOENT") {
+        return cb(null);
+      }
+      if (er && er.code === "EPERM" && isWindows) {
+        return fixWinEPERM(p, options, er, cb);
+      }
+      if (st && st.isDirectory()) {
+        return rmdir(p, options, er, cb);
+      }
+      options.unlink(p, (er2) => {
+        if (er2) {
+          if (er2.code === "ENOENT") {
+            return cb(null);
+          }
+          if (er2.code === "EPERM") {
+            return isWindows ? fixWinEPERM(p, options, er2, cb) : rmdir(p, options, er2, cb);
+          }
+          if (er2.code === "EISDIR") {
+            return rmdir(p, options, er2, cb);
+          }
+        }
+        return cb(er2);
+      });
+    });
+  }
+  function fixWinEPERM(p, options, er, cb) {
+    assert(p);
+    assert(options);
+    assert(typeof cb === "function");
+    if (er) {
+      assert(er instanceof Error);
+    }
+    options.chmod(p, 438, (er2) => {
+      if (er2) {
+        cb(er2.code === "ENOENT" ? null : er);
+      } else {
+        options.stat(p, (er3, stats) => {
+          if (er3) {
+            cb(er3.code === "ENOENT" ? null : er);
+          } else if (stats.isDirectory()) {
+            rmdir(p, options, er, cb);
+          } else {
+            options.unlink(p, cb);
+          }
+        });
+      }
+    });
+  }
+  function fixWinEPERMSync(p, options, er) {
+    let stats;
+    assert(p);
+    assert(options);
+    if (er) {
+      assert(er instanceof Error);
+    }
+    try {
+      options.chmodSync(p, 438);
+    } catch (er2) {
+      if (er2.code === "ENOENT") {
+        return;
+      } else {
+        throw er;
+      }
+    }
+    try {
+      stats = options.statSync(p);
+    } catch (er3) {
+      if (er3.code === "ENOENT") {
+        return;
+      } else {
+        throw er;
+      }
+    }
+    if (stats.isDirectory()) {
+      rmdirSync(p, options, er);
+    } else {
+      options.unlinkSync(p);
+    }
+  }
+  function rmdir(p, options, originalEr, cb) {
+    assert(p);
+    assert(options);
+    if (originalEr) {
+      assert(originalEr instanceof Error);
+    }
+    assert(typeof cb === "function");
+    options.rmdir(p, (er) => {
+      if (er && (er.code === "ENOTEMPTY" || er.code === "EEXIST" || er.code === "EPERM")) {
+        rmkids(p, options, cb);
+      } else if (er && er.code === "ENOTDIR") {
+        cb(originalEr);
+      } else {
+        cb(er);
+      }
+    });
+  }
+  function rmkids(p, options, cb) {
+    assert(p);
+    assert(options);
+    assert(typeof cb === "function");
+    options.readdir(p, (er, files) => {
+      if (er) return cb(er);
+      let n = files.length;
+      let errState;
+      if (n === 0) return options.rmdir(p, cb);
+      files.forEach((f) => {
+        rimraf(path2.join(p, f), options, (er2) => {
+          if (errState) {
+            return;
+          }
+          if (er2) return cb(errState = er2);
+          if (--n === 0) {
+            options.rmdir(p, cb);
+          }
+        });
+      });
+    });
+  }
+  function rimrafSync(p, options) {
+    let st;
+    options = options || {};
+    defaults(options);
+    assert(p, "rimraf: missing path");
+    assert.strictEqual(typeof p, "string", "rimraf: path should be a string");
+    assert(options, "rimraf: missing options");
+    assert.strictEqual(typeof options, "object", "rimraf: options should be object");
+    try {
+      st = options.lstatSync(p);
+    } catch (er) {
+      if (er.code === "ENOENT") {
+        return;
+      }
+      if (er.code === "EPERM" && isWindows) {
+        fixWinEPERMSync(p, options, er);
+      }
+    }
+    try {
+      if (st && st.isDirectory()) {
+        rmdirSync(p, options, null);
+      } else {
+        options.unlinkSync(p);
+      }
+    } catch (er) {
+      if (er.code === "ENOENT") {
+        return;
+      } else if (er.code === "EPERM") {
+        return isWindows ? fixWinEPERMSync(p, options, er) : rmdirSync(p, options, er);
+      } else if (er.code !== "EISDIR") {
+        throw er;
+      }
+      rmdirSync(p, options, er);
+    }
+  }
+  function rmdirSync(p, options, originalEr) {
+    assert(p);
+    assert(options);
+    if (originalEr) {
+      assert(originalEr instanceof Error);
+    }
+    try {
+      options.rmdirSync(p);
+    } catch (er) {
+      if (er.code === "ENOTDIR") {
+        throw originalEr;
+      } else if (er.code === "ENOTEMPTY" || er.code === "EEXIST" || er.code === "EPERM") {
+        rmkidsSync(p, options);
+      } else if (er.code !== "ENOENT") {
+        throw er;
+      }
+    }
+  }
+  function rmkidsSync(p, options) {
+    assert(p);
+    assert(options);
+    options.readdirSync(p).forEach((f) => rimrafSync(path2.join(p, f), options));
+    if (isWindows) {
+      const startTime = Date.now();
+      do {
+        try {
+          const ret = options.rmdirSync(p, options);
+          return ret;
+        } catch (er) {
+        }
+      } while (Date.now() - startTime < 500);
+    } else {
+      const ret = options.rmdirSync(p, options);
+      return ret;
+    }
+  }
+  rimraf_1 = rimraf;
+  rimraf.sync = rimrafSync;
+  return rimraf_1;
+}
+var remove;
+var hasRequiredRemove;
+function requireRemove() {
+  if (hasRequiredRemove) return remove;
+  hasRequiredRemove = 1;
+  const u = requireUniversalify().fromCallback;
+  const rimraf = requireRimraf();
+  remove = {
+    remove: u(rimraf),
+    removeSync: rimraf.sync
+  };
+  return remove;
+}
+var empty;
+var hasRequiredEmpty;
+function requireEmpty() {
+  if (hasRequiredEmpty) return empty;
+  hasRequiredEmpty = 1;
+  const u = requireUniversalify().fromCallback;
+  const fs2 = requireGracefulFs();
+  const path2 = path__default;
+  const mkdir = requireMkdirs();
+  const remove2 = requireRemove();
+  const emptyDir = u(function emptyDir2(dir, callback) {
+    callback = callback || function() {
+    };
+    fs2.readdir(dir, (err, items) => {
+      if (err) return mkdir.mkdirs(dir, callback);
+      items = items.map((item) => path2.join(dir, item));
+      deleteItem();
+      function deleteItem() {
+        const item = items.pop();
+        if (!item) return callback();
+        remove2.remove(item, (err2) => {
+          if (err2) return callback(err2);
+          deleteItem();
+        });
+      }
+    });
+  });
+  function emptyDirSync(dir) {
+    let items;
+    try {
+      items = fs2.readdirSync(dir);
+    } catch (err) {
+      return mkdir.mkdirsSync(dir);
+    }
+    items.forEach((item) => {
+      item = path2.join(dir, item);
+      remove2.removeSync(item);
+    });
+  }
+  empty = {
+    emptyDirSync,
+    emptydirSync: emptyDirSync,
+    emptyDir,
+    emptydir: emptyDir
+  };
+  return empty;
+}
+var file;
+var hasRequiredFile;
+function requireFile() {
+  if (hasRequiredFile) return file;
+  hasRequiredFile = 1;
+  const u = requireUniversalify().fromCallback;
+  const path2 = path__default;
+  const fs2 = requireGracefulFs();
+  const mkdir = requireMkdirs();
+  const pathExists = requirePathExists().pathExists;
+  function createFile(file2, callback) {
+    function makeFile() {
+      fs2.writeFile(file2, "", (err) => {
+        if (err) return callback(err);
+        callback();
+      });
+    }
+    fs2.stat(file2, (err, stats) => {
+      if (!err && stats.isFile()) return callback();
+      const dir = path2.dirname(file2);
+      pathExists(dir, (err2, dirExists) => {
+        if (err2) return callback(err2);
+        if (dirExists) return makeFile();
+        mkdir.mkdirs(dir, (err3) => {
+          if (err3) return callback(err3);
+          makeFile();
+        });
+      });
+    });
+  }
+  function createFileSync(file2) {
+    let stats;
+    try {
+      stats = fs2.statSync(file2);
+    } catch (e) {
+    }
+    if (stats && stats.isFile()) return;
+    const dir = path2.dirname(file2);
+    if (!fs2.existsSync(dir)) {
+      mkdir.mkdirsSync(dir);
+    }
+    fs2.writeFileSync(file2, "");
+  }
+  file = {
+    createFile: u(createFile),
+    createFileSync
+  };
+  return file;
+}
+var link;
+var hasRequiredLink;
+function requireLink() {
+  if (hasRequiredLink) return link;
+  hasRequiredLink = 1;
+  const u = requireUniversalify().fromCallback;
+  const path2 = path__default;
+  const fs2 = requireGracefulFs();
+  const mkdir = requireMkdirs();
+  const pathExists = requirePathExists().pathExists;
+  function createLink(srcpath, dstpath, callback) {
+    function makeLink(srcpath2, dstpath2) {
+      fs2.link(srcpath2, dstpath2, (err) => {
+        if (err) return callback(err);
+        callback(null);
+      });
+    }
+    pathExists(dstpath, (err, destinationExists) => {
+      if (err) return callback(err);
+      if (destinationExists) return callback(null);
+      fs2.lstat(srcpath, (err2) => {
+        if (err2) {
+          err2.message = err2.message.replace("lstat", "ensureLink");
+          return callback(err2);
+        }
+        const dir = path2.dirname(dstpath);
+        pathExists(dir, (err3, dirExists) => {
+          if (err3) return callback(err3);
+          if (dirExists) return makeLink(srcpath, dstpath);
+          mkdir.mkdirs(dir, (err4) => {
+            if (err4) return callback(err4);
+            makeLink(srcpath, dstpath);
+          });
+        });
+      });
+    });
+  }
+  function createLinkSync(srcpath, dstpath) {
+    const destinationExists = fs2.existsSync(dstpath);
+    if (destinationExists) return void 0;
+    try {
+      fs2.lstatSync(srcpath);
+    } catch (err) {
+      err.message = err.message.replace("lstat", "ensureLink");
+      throw err;
+    }
+    const dir = path2.dirname(dstpath);
+    const dirExists = fs2.existsSync(dir);
+    if (dirExists) return fs2.linkSync(srcpath, dstpath);
+    mkdir.mkdirsSync(dir);
+    return fs2.linkSync(srcpath, dstpath);
+  }
+  link = {
+    createLink: u(createLink),
+    createLinkSync
+  };
+  return link;
+}
+var symlinkPaths_1;
+var hasRequiredSymlinkPaths;
+function requireSymlinkPaths() {
+  if (hasRequiredSymlinkPaths) return symlinkPaths_1;
+  hasRequiredSymlinkPaths = 1;
+  const path2 = path__default;
+  const fs2 = requireGracefulFs();
+  const pathExists = requirePathExists().pathExists;
+  function symlinkPaths(srcpath, dstpath, callback) {
+    if (path2.isAbsolute(srcpath)) {
+      return fs2.lstat(srcpath, (err) => {
+        if (err) {
+          err.message = err.message.replace("lstat", "ensureSymlink");
+          return callback(err);
+        }
+        return callback(null, {
+          "toCwd": srcpath,
+          "toDst": srcpath
+        });
+      });
+    } else {
+      const dstdir = path2.dirname(dstpath);
+      const relativeToDst = path2.join(dstdir, srcpath);
+      return pathExists(relativeToDst, (err, exists) => {
+        if (err) return callback(err);
+        if (exists) {
+          return callback(null, {
+            "toCwd": relativeToDst,
+            "toDst": srcpath
+          });
+        } else {
+          return fs2.lstat(srcpath, (err2) => {
+            if (err2) {
+              err2.message = err2.message.replace("lstat", "ensureSymlink");
+              return callback(err2);
+            }
+            return callback(null, {
+              "toCwd": srcpath,
+              "toDst": path2.relative(dstdir, srcpath)
+            });
+          });
+        }
+      });
+    }
+  }
+  function symlinkPathsSync(srcpath, dstpath) {
+    let exists;
+    if (path2.isAbsolute(srcpath)) {
+      exists = fs2.existsSync(srcpath);
+      if (!exists) throw new Error("absolute srcpath does not exist");
+      return {
+        "toCwd": srcpath,
+        "toDst": srcpath
+      };
+    } else {
+      const dstdir = path2.dirname(dstpath);
+      const relativeToDst = path2.join(dstdir, srcpath);
+      exists = fs2.existsSync(relativeToDst);
+      if (exists) {
+        return {
+          "toCwd": relativeToDst,
+          "toDst": srcpath
+        };
+      } else {
+        exists = fs2.existsSync(srcpath);
+        if (!exists) throw new Error("relative srcpath does not exist");
+        return {
+          "toCwd": srcpath,
+          "toDst": path2.relative(dstdir, srcpath)
+        };
+      }
+    }
+  }
+  symlinkPaths_1 = {
+    symlinkPaths,
+    symlinkPathsSync
+  };
+  return symlinkPaths_1;
+}
+var symlinkType_1;
+var hasRequiredSymlinkType;
+function requireSymlinkType() {
+  if (hasRequiredSymlinkType) return symlinkType_1;
+  hasRequiredSymlinkType = 1;
+  const fs2 = requireGracefulFs();
+  function symlinkType(srcpath, type, callback) {
+    callback = typeof type === "function" ? type : callback;
+    type = typeof type === "function" ? false : type;
+    if (type) return callback(null, type);
+    fs2.lstat(srcpath, (err, stats) => {
+      if (err) return callback(null, "file");
+      type = stats && stats.isDirectory() ? "dir" : "file";
+      callback(null, type);
+    });
+  }
+  function symlinkTypeSync(srcpath, type) {
+    let stats;
+    if (type) return type;
+    try {
+      stats = fs2.lstatSync(srcpath);
+    } catch (e) {
+      return "file";
+    }
+    return stats && stats.isDirectory() ? "dir" : "file";
+  }
+  symlinkType_1 = {
+    symlinkType,
+    symlinkTypeSync
+  };
+  return symlinkType_1;
+}
+var symlink;
+var hasRequiredSymlink;
+function requireSymlink() {
+  if (hasRequiredSymlink) return symlink;
+  hasRequiredSymlink = 1;
+  const u = requireUniversalify().fromCallback;
+  const path2 = path__default;
+  const fs2 = requireGracefulFs();
+  const _mkdirs = requireMkdirs();
+  const mkdirs = _mkdirs.mkdirs;
+  const mkdirsSync = _mkdirs.mkdirsSync;
+  const _symlinkPaths = requireSymlinkPaths();
+  const symlinkPaths = _symlinkPaths.symlinkPaths;
+  const symlinkPathsSync = _symlinkPaths.symlinkPathsSync;
+  const _symlinkType = requireSymlinkType();
+  const symlinkType = _symlinkType.symlinkType;
+  const symlinkTypeSync = _symlinkType.symlinkTypeSync;
+  const pathExists = requirePathExists().pathExists;
+  function createSymlink(srcpath, dstpath, type, callback) {
+    callback = typeof type === "function" ? type : callback;
+    type = typeof type === "function" ? false : type;
+    pathExists(dstpath, (err, destinationExists) => {
+      if (err) return callback(err);
+      if (destinationExists) return callback(null);
+      symlinkPaths(srcpath, dstpath, (err2, relative) => {
+        if (err2) return callback(err2);
+        srcpath = relative.toDst;
+        symlinkType(relative.toCwd, type, (err3, type2) => {
+          if (err3) return callback(err3);
+          const dir = path2.dirname(dstpath);
+          pathExists(dir, (err4, dirExists) => {
+            if (err4) return callback(err4);
+            if (dirExists) return fs2.symlink(srcpath, dstpath, type2, callback);
+            mkdirs(dir, (err5) => {
+              if (err5) return callback(err5);
+              fs2.symlink(srcpath, dstpath, type2, callback);
+            });
+          });
+        });
+      });
+    });
+  }
+  function createSymlinkSync(srcpath, dstpath, type) {
+    const destinationExists = fs2.existsSync(dstpath);
+    if (destinationExists) return void 0;
+    const relative = symlinkPathsSync(srcpath, dstpath);
+    srcpath = relative.toDst;
+    type = symlinkTypeSync(relative.toCwd, type);
+    const dir = path2.dirname(dstpath);
+    const exists = fs2.existsSync(dir);
+    if (exists) return fs2.symlinkSync(srcpath, dstpath, type);
+    mkdirsSync(dir);
+    return fs2.symlinkSync(srcpath, dstpath, type);
+  }
+  symlink = {
+    createSymlink: u(createSymlink),
+    createSymlinkSync
+  };
+  return symlink;
+}
+var ensure;
+var hasRequiredEnsure;
+function requireEnsure() {
+  if (hasRequiredEnsure) return ensure;
+  hasRequiredEnsure = 1;
+  const file2 = requireFile();
+  const link2 = requireLink();
+  const symlink2 = requireSymlink();
+  ensure = {
+    // file
+    createFile: file2.createFile,
+    createFileSync: file2.createFileSync,
+    ensureFile: file2.createFile,
+    ensureFileSync: file2.createFileSync,
+    // link
+    createLink: link2.createLink,
+    createLinkSync: link2.createLinkSync,
+    ensureLink: link2.createLink,
+    ensureLinkSync: link2.createLinkSync,
+    // symlink
+    createSymlink: symlink2.createSymlink,
+    createSymlinkSync: symlink2.createSymlinkSync,
+    ensureSymlink: symlink2.createSymlink,
+    ensureSymlinkSync: symlink2.createSymlinkSync
+  };
+  return ensure;
+}
+var jsonfile_1;
+var hasRequiredJsonfile$1;
+function requireJsonfile$1() {
+  if (hasRequiredJsonfile$1) return jsonfile_1;
+  hasRequiredJsonfile$1 = 1;
+  var _fs;
+  try {
+    _fs = requireGracefulFs();
+  } catch (_) {
+    _fs = fs__default;
+  }
+  function readFile(file2, options, callback) {
+    if (callback == null) {
+      callback = options;
+      options = {};
+    }
+    if (typeof options === "string") {
+      options = { encoding: options };
+    }
+    options = options || {};
+    var fs2 = options.fs || _fs;
+    var shouldThrow = true;
+    if ("throws" in options) {
+      shouldThrow = options.throws;
+    }
+    fs2.readFile(file2, options, function(err, data) {
+      if (err) return callback(err);
+      data = stripBom(data);
+      var obj;
+      try {
+        obj = JSON.parse(data, options ? options.reviver : null);
+      } catch (err2) {
+        if (shouldThrow) {
+          err2.message = file2 + ": " + err2.message;
+          return callback(err2);
+        } else {
+          return callback(null, null);
+        }
+      }
+      callback(null, obj);
+    });
+  }
+  function readFileSync(file2, options) {
+    options = options || {};
+    if (typeof options === "string") {
+      options = { encoding: options };
+    }
+    var fs2 = options.fs || _fs;
+    var shouldThrow = true;
+    if ("throws" in options) {
+      shouldThrow = options.throws;
+    }
+    try {
+      var content = fs2.readFileSync(file2, options);
+      content = stripBom(content);
+      return JSON.parse(content, options.reviver);
+    } catch (err) {
+      if (shouldThrow) {
+        err.message = file2 + ": " + err.message;
+        throw err;
+      } else {
+        return null;
+      }
+    }
+  }
+  function stringify(obj, options) {
+    var spaces;
+    var EOL = "\n";
+    if (typeof options === "object" && options !== null) {
+      if (options.spaces) {
+        spaces = options.spaces;
+      }
+      if (options.EOL) {
+        EOL = options.EOL;
+      }
+    }
+    var str = JSON.stringify(obj, options ? options.replacer : null, spaces);
+    return str.replace(/\n/g, EOL) + EOL;
+  }
+  function writeFile(file2, obj, options, callback) {
+    if (callback == null) {
+      callback = options;
+      options = {};
+    }
+    options = options || {};
+    var fs2 = options.fs || _fs;
+    var str = "";
+    try {
+      str = stringify(obj, options);
+    } catch (err) {
+      if (callback) callback(err, null);
+      return;
+    }
+    fs2.writeFile(file2, str, options, callback);
+  }
+  function writeFileSync(file2, obj, options) {
+    options = options || {};
+    var fs2 = options.fs || _fs;
+    var str = stringify(obj, options);
+    return fs2.writeFileSync(file2, str, options);
+  }
+  function stripBom(content) {
+    if (Buffer.isBuffer(content)) content = content.toString("utf8");
+    content = content.replace(/^\uFEFF/, "");
+    return content;
+  }
+  var jsonfile2 = {
+    readFile,
+    readFileSync,
+    writeFile,
+    writeFileSync
+  };
+  jsonfile_1 = jsonfile2;
+  return jsonfile_1;
+}
+var jsonfile;
+var hasRequiredJsonfile;
+function requireJsonfile() {
+  if (hasRequiredJsonfile) return jsonfile;
+  hasRequiredJsonfile = 1;
+  const u = requireUniversalify().fromCallback;
+  const jsonFile = requireJsonfile$1();
+  jsonfile = {
+    // jsonfile exports
+    readJson: u(jsonFile.readFile),
+    readJsonSync: jsonFile.readFileSync,
+    writeJson: u(jsonFile.writeFile),
+    writeJsonSync: jsonFile.writeFileSync
+  };
+  return jsonfile;
+}
+var outputJson_1;
+var hasRequiredOutputJson;
+function requireOutputJson() {
+  if (hasRequiredOutputJson) return outputJson_1;
+  hasRequiredOutputJson = 1;
+  const path2 = path__default;
+  const mkdir = requireMkdirs();
+  const pathExists = requirePathExists().pathExists;
+  const jsonFile = requireJsonfile();
+  function outputJson(file2, data, options, callback) {
+    if (typeof options === "function") {
+      callback = options;
+      options = {};
+    }
+    const dir = path2.dirname(file2);
+    pathExists(dir, (err, itDoes) => {
+      if (err) return callback(err);
+      if (itDoes) return jsonFile.writeJson(file2, data, options, callback);
+      mkdir.mkdirs(dir, (err2) => {
+        if (err2) return callback(err2);
+        jsonFile.writeJson(file2, data, options, callback);
+      });
+    });
+  }
+  outputJson_1 = outputJson;
+  return outputJson_1;
+}
+var outputJsonSync_1;
+var hasRequiredOutputJsonSync;
+function requireOutputJsonSync() {
+  if (hasRequiredOutputJsonSync) return outputJsonSync_1;
+  hasRequiredOutputJsonSync = 1;
+  const fs2 = requireGracefulFs();
+  const path2 = path__default;
+  const mkdir = requireMkdirs();
+  const jsonFile = requireJsonfile();
+  function outputJsonSync(file2, data, options) {
+    const dir = path2.dirname(file2);
+    if (!fs2.existsSync(dir)) {
+      mkdir.mkdirsSync(dir);
+    }
+    jsonFile.writeJsonSync(file2, data, options);
+  }
+  outputJsonSync_1 = outputJsonSync;
+  return outputJsonSync_1;
+}
+var json;
+var hasRequiredJson;
+function requireJson() {
+  if (hasRequiredJson) return json;
+  hasRequiredJson = 1;
+  const u = requireUniversalify().fromCallback;
+  const jsonFile = requireJsonfile();
+  jsonFile.outputJson = u(requireOutputJson());
+  jsonFile.outputJsonSync = requireOutputJsonSync();
+  jsonFile.outputJSON = jsonFile.outputJson;
+  jsonFile.outputJSONSync = jsonFile.outputJsonSync;
+  jsonFile.writeJSON = jsonFile.writeJson;
+  jsonFile.writeJSONSync = jsonFile.writeJsonSync;
+  jsonFile.readJSON = jsonFile.readJson;
+  jsonFile.readJSONSync = jsonFile.readJsonSync;
+  json = jsonFile;
+  return json;
+}
+var moveSync_1;
+var hasRequiredMoveSync$1;
+function requireMoveSync$1() {
+  if (hasRequiredMoveSync$1) return moveSync_1;
+  hasRequiredMoveSync$1 = 1;
+  const fs2 = requireGracefulFs();
+  const path2 = path__default;
+  const copySync2 = requireCopySync().copySync;
+  const removeSync = requireRemove().removeSync;
+  const mkdirpSync = requireMkdirs().mkdirpSync;
+  const stat2 = requireStat();
+  function moveSync2(src, dest, opts) {
+    opts = opts || {};
+    const overwrite = opts.overwrite || opts.clobber || false;
+    const { srcStat } = stat2.checkPathsSync(src, dest, "move");
+    stat2.checkParentPathsSync(src, srcStat, dest, "move");
+    mkdirpSync(path2.dirname(dest));
+    return doRename(src, dest, overwrite);
+  }
+  function doRename(src, dest, overwrite) {
+    if (overwrite) {
+      removeSync(dest);
+      return rename(src, dest, overwrite);
+    }
+    if (fs2.existsSync(dest)) throw new Error("dest already exists.");
+    return rename(src, dest, overwrite);
+  }
+  function rename(src, dest, overwrite) {
+    try {
+      fs2.renameSync(src, dest);
+    } catch (err) {
+      if (err.code !== "EXDEV") throw err;
+      return moveAcrossDevice(src, dest, overwrite);
+    }
+  }
+  function moveAcrossDevice(src, dest, overwrite) {
+    const opts = {
+      overwrite,
+      errorOnExist: true
+    };
+    copySync2(src, dest, opts);
+    return removeSync(src);
+  }
+  moveSync_1 = moveSync2;
+  return moveSync_1;
+}
+var moveSync;
+var hasRequiredMoveSync;
+function requireMoveSync() {
+  if (hasRequiredMoveSync) return moveSync;
+  hasRequiredMoveSync = 1;
+  moveSync = {
+    moveSync: requireMoveSync$1()
+  };
+  return moveSync;
+}
+var move_1;
+var hasRequiredMove$1;
+function requireMove$1() {
+  if (hasRequiredMove$1) return move_1;
+  hasRequiredMove$1 = 1;
+  const fs2 = requireGracefulFs();
+  const path2 = path__default;
+  const copy2 = requireCopy().copy;
+  const remove2 = requireRemove().remove;
+  const mkdirp = requireMkdirs().mkdirp;
+  const pathExists = requirePathExists().pathExists;
+  const stat2 = requireStat();
+  function move2(src, dest, opts, cb) {
+    if (typeof opts === "function") {
+      cb = opts;
+      opts = {};
+    }
+    const overwrite = opts.overwrite || opts.clobber || false;
+    stat2.checkPaths(src, dest, "move", (err, stats) => {
+      if (err) return cb(err);
+      const { srcStat } = stats;
+      stat2.checkParentPaths(src, srcStat, dest, "move", (err2) => {
+        if (err2) return cb(err2);
+        mkdirp(path2.dirname(dest), (err3) => {
+          if (err3) return cb(err3);
+          return doRename(src, dest, overwrite, cb);
+        });
+      });
+    });
+  }
+  function doRename(src, dest, overwrite, cb) {
+    if (overwrite) {
+      return remove2(dest, (err) => {
+        if (err) return cb(err);
+        return rename(src, dest, overwrite, cb);
+      });
+    }
+    pathExists(dest, (err, destExists) => {
+      if (err) return cb(err);
+      if (destExists) return cb(new Error("dest already exists."));
+      return rename(src, dest, overwrite, cb);
+    });
+  }
+  function rename(src, dest, overwrite, cb) {
+    fs2.rename(src, dest, (err) => {
+      if (!err) return cb();
+      if (err.code !== "EXDEV") return cb(err);
+      return moveAcrossDevice(src, dest, overwrite, cb);
+    });
+  }
+  function moveAcrossDevice(src, dest, overwrite, cb) {
+    const opts = {
+      overwrite,
+      errorOnExist: true
+    };
+    copy2(src, dest, opts, (err) => {
+      if (err) return cb(err);
+      return remove2(src, cb);
+    });
+  }
+  move_1 = move2;
+  return move_1;
+}
+var move;
+var hasRequiredMove;
+function requireMove() {
+  if (hasRequiredMove) return move;
+  hasRequiredMove = 1;
+  const u = requireUniversalify().fromCallback;
+  move = {
+    move: u(requireMove$1())
+  };
+  return move;
+}
+var output;
+var hasRequiredOutput;
+function requireOutput() {
+  if (hasRequiredOutput) return output;
+  hasRequiredOutput = 1;
+  const u = requireUniversalify().fromCallback;
+  const fs2 = requireGracefulFs();
+  const path2 = path__default;
+  const mkdir = requireMkdirs();
+  const pathExists = requirePathExists().pathExists;
+  function outputFile(file2, data, encoding, callback) {
+    if (typeof encoding === "function") {
+      callback = encoding;
+      encoding = "utf8";
+    }
+    const dir = path2.dirname(file2);
+    pathExists(dir, (err, itDoes) => {
+      if (err) return callback(err);
+      if (itDoes) return fs2.writeFile(file2, data, encoding, callback);
+      mkdir.mkdirs(dir, (err2) => {
+        if (err2) return callback(err2);
+        fs2.writeFile(file2, data, encoding, callback);
+      });
+    });
+  }
+  function outputFileSync(file2, ...args) {
+    const dir = path2.dirname(file2);
+    if (fs2.existsSync(dir)) {
+      return fs2.writeFileSync(file2, ...args);
+    }
+    mkdir.mkdirsSync(dir);
+    fs2.writeFileSync(file2, ...args);
+  }
+  output = {
+    outputFile: u(outputFile),
+    outputFileSync
+  };
+  return output;
+}
+var hasRequiredLib;
+function requireLib() {
+  if (hasRequiredLib) return lib.exports;
+  hasRequiredLib = 1;
+  (function(module) {
+    module.exports = Object.assign(
+      {},
+      // Export promiseified graceful-fs:
+      requireFs(),
+      // Export extra methods:
+      requireCopySync(),
+      requireCopy(),
+      requireEmpty(),
+      requireEnsure(),
+      requireJson(),
+      requireMkdirs(),
+      requireMoveSync(),
+      requireMove(),
+      requireOutput(),
+      requirePathExists(),
+      requireRemove()
+    );
+    const fs2 = fs__default;
+    if (Object.getOwnPropertyDescriptor(fs2, "promises")) {
+      Object.defineProperty(module.exports, "promises", {
+        get() {
+          return fs2.promises;
+        }
+      });
+    }
+  })(lib);
+  return lib.exports;
+}
+var libExports = requireLib();
+const fs = /* @__PURE__ */ getDefaultExportFromCjs(libExports);
+const LOG_LEVEL_PRIORITY = {
+  debug: 0,
+  info: 1,
+  warn: 2,
+  error: 3
+};
+const LOG_LEVEL_COLORS = {
+  debug: "\x1B[36m",
+  // 青色
+  info: "\x1B[32m",
+  // 绿色
+  warn: "\x1B[33m",
+  // 黄色
+  error: "\x1B[31m"
+  // 红色
+};
+const COLOR_RESET = "\x1B[0m";
+class Logger {
+  static instance = null;
+  window;
+  /** 当前日志级别，低于此级别的日志不会输出 */
+  minLevel = "debug";
+  /** 是否启用时间戳 */
+  enableTimestamp = true;
+  /**
+   * 获取 Logger 单例
+   */
+  static getInstance() {
+    if (!Logger.instance) {
+      Logger.instance = new Logger();
+    }
+    return Logger.instance;
+  }
+  constructor() {
+  }
+  /**
+   * 初始化 Logger
+   * @param window Electron BrowserWindow 实例，用于向前端推送日志
+   */
+  init(window2) {
+    this.window = window2;
+  }
+  /**
+   * 设置最低日志级别
+   * @param level 日志级别
+   */
+  setMinLevel(level) {
+    this.minLevel = level;
+  }
+  /**
+   * 设置是否启用时间戳
+   * @param enable 是否启用
+   */
+  setTimestampEnabled(enable) {
+    this.enableTimestamp = enable;
+  }
+  /**
+   * 格式化时间戳
+   * @returns 格式化的时间字符串 [HH:MM:SS.mmm]
+   */
+  getTimestamp() {
+    if (!this.enableTimestamp) return "";
+    const now = /* @__PURE__ */ new Date();
+    const hours = now.getHours().toString().padStart(2, "0");
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    const seconds = now.getSeconds().toString().padStart(2, "0");
+    const ms = now.getMilliseconds().toString().padStart(3, "0");
+    return `[${hours}:${minutes}:${seconds}.${ms}]`;
+  }
+  /**
+   * 检查日志级别是否应该输出
+   * @param level 要检查的日志级别
+   */
+  shouldLog(level) {
+    return LOG_LEVEL_PRIORITY[level] >= LOG_LEVEL_PRIORITY[this.minLevel];
+  }
+  /**
+   * 输出 debug 级别日志
+   * @param message 日志消息
+   */
+  debug(message) {
+    this.log(message, "debug");
+  }
+  /**
+   * 输出 info 级别日志
+   * @param message 日志消息
+   */
+  info(message) {
+    this.log(message, "info");
+  }
+  /**
+   * 输出 warn 级别日志
+   * @param message 日志消息
+   * @param verboseOnly 是否仅在详细模式（debug 级别）下显示，默认 false
+   *                    设为 true 时，只有当 minLevel 为 debug 时才会输出
+   *                    用于那些"技术上是警告，但频繁出现会刷屏"的日志
+   */
+  warn(message, verboseOnly = false) {
+    if (verboseOnly && this.minLevel !== "debug") {
+      return;
+    }
+    this.log(message, "warn");
+  }
+  /**
+   * 输出 error 级别日志
+   * @param message 日志消息或 Error 对象
+   */
+  error(message) {
+    const msg = message instanceof Error ? message.message : message;
+    this.log(msg, "error");
+    if (message instanceof Error && message.stack) {
+      console.error(message.stack);
+    }
+  }
+  /**
+   * 核心日志方法
+   * @param message 日志消息
+   * @param level 日志级别
+   */
+  log(message, level) {
+    if (!this.shouldLog(level)) return;
+    const timestamp = this.getTimestamp();
+    const color = LOG_LEVEL_COLORS[level];
+    const levelTag = `[${level.toUpperCase()}]`.padEnd(7);
+    console.log(`${color}${timestamp}${levelTag}${COLOR_RESET} ${message}`);
+    this.sendLogToFrontend(`${timestamp}${levelTag} ${message}`, level);
+  }
+  /**
+   * 向前端发送日志
+   * @param message 日志消息
+   * @param level 日志级别
+   */
+  sendLogToFrontend(message, level) {
+    if (this.window) {
+      this.window.webContents.send("log-message", { message, level });
+    }
+  }
+}
+const logger = Logger.getInstance();
+const IS_WIN = process.platform === "win32";
+const IS_MAC = process.platform === "darwin";
+const IS_WSL = process.platform === "linux" && os__default.release().toLowerCase().includes("microsoft");
+class LCUConnector extends EventEmitter {
+  /** 进程监听定时器句柄（未启动时为 null） */
+  processWatcher = null;
+  /**
+   * @static
+   * @description 从进程命令行中获取英雄联盟客户端的有关信息
+   * @returns {Promise<LCUProcessInfo>}
+   */
+  static getLCUInfoFromProcess() {
+    return new Promise((resolve) => {
+      const command = IS_WIN ? `WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline` : IS_WSL ? `WMIC.exe PROCESS WHERE "name='LeagueClientUx.exe'" GET commandline` : `ps x -o args | grep '[L]eagueClientUx' | grep -v 'Helper' | grep -v '/Frameworks/'`;
+      cp.exec(command, (err, stdout, stderr) => {
+        if (err || !stdout || stderr) {
+          resolve(null);
+          return;
+        }
+        console.log(`process命令执行结果：${stdout}`);
+        const lines = stdout.split("\n").filter((line) => line.trim() && line.includes("--app-port="));
+        const processLine = lines[0] || stdout;
+        const portMatch = processLine.match(/--app-port=(\d+)/);
+        const tokenMatch = processLine.match(/--remoting-auth-token=([\w-]+)/);
+        const pidMatch = processLine.match(/--app-pid=(\d+)/);
+        let installDirectoryMatch = processLine.match(/--install-directory=(.*?)"/);
+        if (!installDirectoryMatch) {
+          installDirectoryMatch = processLine.match(/--install-directory=(.+?)(?=\s+--|$)/);
+        }
+        if (portMatch && tokenMatch && pidMatch && installDirectoryMatch) {
+          const installDir = installDirectoryMatch[1].trim();
+          const data = {
+            port: parseInt(portMatch[1]),
+            pid: parseInt(pidMatch[1]),
+            token: tokenMatch[1],
+            installDirectory: path$1.dirname(installDir)
+            //  父目录
+          };
+          resolve(data);
+        } else resolve(null);
+      });
+    });
+  }
+  /**
+   * @static
+   * @description 检查给定的路径是否是一个有效的英雄联盟客户端路径
+   * @param {string} dirPath - 目录路径
+   * @returns {boolean}
+   */
+  static isValidLCUPath(dirPath) {
+    if (!dirPath) {
+      return false;
+    }
+    const lcuClientApp = IS_MAC ? "LeagueClient.app" : "LeagueClient.exe";
+    const common = fs.existsSync(path$1.join(dirPath, lcuClientApp)) && fs.existsSync(path$1.join(dirPath, "Config"));
+    const isGlobal = common && fs.existsSync(path$1.join(dirPath, "RADS"));
+    const isCN = common && fs.existsSync(path$1.join(dirPath, "TQM"));
+    const isGarena = common;
+    return isGlobal || isCN || isGarena;
+  }
+  /**
+   * @description 启动连接器，开始监听客户端进程和 lockfile
+   */
+  start() {
+    this.initProcessWatcher();
+  }
+  stop() {
+    this.clearProcessWatcher();
+  }
+  /**
+   * @private
+   * @description 初始化客户端进程监听器
+   */
+  initProcessWatcher() {
+    return LCUConnector.getLCUInfoFromProcess().then((lcuData) => {
+      if (lcuData) {
+        this.emit("connect", lcuData);
+        this.clearProcessWatcher();
+        return;
+      }
+      logger.error("LOL客户端未启动，一秒后将再次检查...");
+      if (!this.processWatcher) {
+        this.processWatcher = setInterval(this.initProcessWatcher.bind(this), 1e3);
+      }
+    });
+  }
+  /**
+   * @description 清除进程监听器
+   */
+  clearProcessWatcher() {
+    if (this.processWatcher) {
+      clearInterval(this.processWatcher);
+      this.processWatcher = null;
+    }
+  }
+}
+var LcuEventUri = /* @__PURE__ */ ((LcuEventUri2) => {
+  LcuEventUri2["READY_CHECK"] = "/lol-matchmaking/v1/ready-check";
+  LcuEventUri2["GAMEFLOW_PHASE"] = "/lol-gameflow/v1/session";
+  LcuEventUri2["CHAMP_SELECT"] = "/lol-champ-select/v1/session";
+  LcuEventUri2["TFT_BATTLE_PASS"] = "/lol-tft-pass/v1/battle-pass";
+  return LcuEventUri2;
+})(LcuEventUri || {});
+class LCUManager extends EventEmitter {
+  port;
+  token;
+  httpsAgent;
+  api;
+  // 我们将拥有一个专属的 axios 实例
+  ws = null;
+  isConnected = false;
+  // --- 单例模式核心 ---
+  static instance = null;
+  static init(details) {
+    if (!LCUManager.instance) {
+      LCUManager.instance = new LCUManager(details);
+    }
+    return LCUManager.instance;
+  }
+  static getInstance() {
+    if (!LCUManager.instance) {
+      console.error("[LCUManager] 尚未初始化，无法获取实例。");
+      return null;
+    }
+    return LCUManager.instance;
+  }
+  /**
+   * 全新的启动方法，它会先确认 REST API 就绪，再连接 WebSocket
+   */
+  async start() {
+    console.log("🚀 [LCUManager] 开始启动，正在确认 API 服务状态...");
+    try {
+      await this.confirmApiReady();
+      this.connectWebSocket();
+    } catch (e) {
+      console.error("❌ [LCUManager] 启动过程中发生错误:", e);
+    }
+  }
+  // 构造函数是私有的，这确保了外部不能用 new 来创建实例
+  constructor(details) {
+    super();
+    this.port = details.port;
+    this.token = details.token;
+    this.httpsAgent = new https.Agent({
+      rejectUnauthorized: false
+      // LCU 使用的是自签名证书，我们必须忽略它
+    });
+    this.api = axios.create({
+      baseURL: `https://127.0.0.1:${this.port}`,
+      httpsAgent: this.httpsAgent,
+      // 把我们的"通行证"交给 axios
+      proxy: false,
+      // ← 关键：禁止任何系统/环境变量代理!!!这里debug找了一万年才发现是这个问题。
+      auth: {
+        username: "riot",
+        password: this.token
+      },
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      }
+    });
+    console.log(`🔌 [LCUManager] 准备就绪，目标端口: ${this.port}`);
+  }
+  /**
+   * 连接到 LCU WebSocket
+   */
+  connectWebSocket() {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) return;
+    const wsUrl = `wss://127.0.0.1:${this.port}`;
+    this.ws = new WebSocket(wsUrl, {
+      headers: { Authorization: "Basic " + Buffer.from(`riot:${this.token}`).toString("base64") },
+      agent: this.httpsAgent
+    });
+    this.ws.on("open", () => {
+      this.isConnected = true;
+      console.log("✅ [LCUManager] WebSocket 连接成功！");
+      this.emit("connect");
+      this.subscribe("OnJsonApiEvent");
+    });
+    this.ws.on("message", (data) => {
+      const messageString = data.toString();
+      if (!messageString) return;
+      try {
+        const message = JSON.parse(messageString);
+        if (message[0] === 8 && message[1] === "OnJsonApiEvent" && message[2]) {
+          const eventData = message[2];
+          const eventUri = eventData.uri;
+          this.emit("lcu-event", eventData);
+          if (Object.values(LcuEventUri).includes(eventUri)) {
+            this.emit(eventUri, eventData);
+          }
+        }
+      } catch (e) {
+        console.error("❌ [LCUManager] 解析 WebSocket 消息失败:", e);
+      }
+    });
+    this.ws.on("close", () => {
+      if (this.isConnected) {
+        console.log("❌ [LCUManager] WebSocket 连接已断开。");
+        this.isConnected = false;
+        this.emit("disconnect");
+        this.unsubscribe("OnJsonApiEvent");
+        LCUManager.instance = null;
+      }
+    });
+    this.ws.on("error", (err) => {
+      console.error("❌ [LCUManager] WebSocket 发生错误:", err);
+    });
+  }
+  /**
+   * 发送一个 REST API 请求到 LCU
+   * @param method 'GET', 'POST', 'PUT', 'DELETE', etc.
+   * @param endpoint API 端点, e.g., '/lol-summoner/v1/current-summoner'
+   * @param body 请求体 (可选)
+   */
+  async request(method, endpoint, body) {
+    try {
+      const fullUrl = `${this.api.defaults.baseURL}${endpoint}`;
+      console.log(`➡️  [LCUManager] 准备发起请求: ${method} ${fullUrl}`);
+      const response = await this.api.request({
+        method,
+        url: fullUrl,
+        // axios 会自动拼接 baseURL
+        data: body
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error(`❌ [LCUManager] Axios 请求失败: ${error.message}`);
+        throw new Error(`LCU 请求失败:endpoint:${endpoint} state: ${error.response?.status} - ${error.response?.statusText}`);
+      } else {
+        console.error(`❌ [LCUManager] 未知请求错误:`, error);
+        throw error;
+      }
+    }
+  }
+  /**
+   * 订阅一个 WebSocket 事件
+   * @param event 事件名, e.g., 'OnJsonApiEvent'
+   */
+  subscribe(event) {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify([5, event]));
+    }
+  }
+  /**
+   * 取消订阅一个 WebSocket 事件
+   * @param event 事件名
+   */
+  unsubscribe(event) {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify([6, event]));
+    }
+  }
+  /**
+   * 关闭所有连接
+   */
+  close() {
+    if (this.ws) {
+      this.ws.close();
+    }
+  }
+  /**
+   * 确认 LCU API 服务就绪
+   * @description 轮询检测 API 是否可用，带超时机制防止无限等待
+   * @param timeoutMs 超时时间 (ms)，默认 30 秒
+   * @throws 超时后抛出错误
+   */
+  async confirmApiReady(timeoutMs = 3e4) {
+    const startTime = Date.now();
+    const retryIntervalMs = 2e3;
+    while (true) {
+      if (Date.now() - startTime > timeoutMs) {
+        throw new Error(
+          `[LCUManager] API 服务在 ${timeoutMs / 1e3} 秒内未就绪，请检查客户端状态`
+        );
+      }
+      try {
+        await this.request("GET", "/riotclient/ux-state");
+        console.log("✅ [LCUManager] API 服务已就绪！");
+        return;
+      } catch (error) {
+        const elapsed = Math.round((Date.now() - startTime) / 1e3);
+        console.log(`⏳ [LCUManager] API 服务尚未就绪 (已等待 ${elapsed}s)，${retryIntervalMs / 1e3}s 后重试...`);
+        await new Promise((resolve) => setTimeout(resolve, retryIntervalMs));
+      }
+    }
+  }
+  //  一堆专注于后端使用的方法
+  getSummonerInfo() {
+    return this.request("GET", "/lol-summoner/v1/current-summoner");
+  }
+  createCustomLobby(config) {
+    logger.info("📬 [LCUManager] 正在创建自定义房间...");
+    return this.request("POST", "/lol-lobby/v2/lobby", config);
+  }
+  createLobbyByQueueId(queueId) {
+    logger.info(`📬 [LCUManager] 正在创建房间 (队列ID: ${queueId})...`);
+    return this.request("POST", "/lol-lobby/v2/lobby", { queueId });
+  }
+  getCurrentGamemodeInfo() {
+    return this.request("GET", "/lol-lobby/v1/parties/gamemode");
+  }
+  startMatch() {
+    logger.info("📬 [LCUManager] 正在开始匹配...");
+    return this.request("POST", "/lol-lobby/v2/lobby/matchmaking/search");
+  }
+  stopMatch() {
+    logger.info("📬 [LCUManager] 正在停止匹配...");
+    return this.request("DELETE", "/lol-lobby/v2/lobby/matchmaking/search");
+  }
+  async checkMatchState() {
+    const result = await this.request("GET", "/lol-lobby/v2/lobby/matchmaking/search-state");
+    return result.searchState;
+  }
+  getCustomGames() {
+    return this.request("GET", "/lol-lobby/v1/custom-games");
+  }
+  getQueues() {
+    return this.request("GET", "/lol-game-queues/v1/queues");
+  }
+  getChatConfig() {
+    return this.request("GET", "/lol-game-queues/v1/queues");
+  }
+  getChampSelectSession() {
+    return this.request("GET", "/lol-champ-select/v1/session");
+  }
+  getChatConversations() {
+    return this.request("GET", "/lol-chat/v1/conversations");
+  }
+  getGameflowSession() {
+    return this.request("GET", "/lol-gameflow/v1/session");
+  }
+  getExtraGameClientArgs() {
+    return this.request("GET", "/lol-gameflow/v1/extra-game-client-args");
+  }
+  getLobby() {
+    return this.request("GET", "/lol-lobby/v2/lobby");
+  }
+  //  接受对局
+  acceptMatch() {
+    return this.request("POST", "/lol-matchmaking/v1/ready-check/accept");
+  }
+  //  拒绝对局
+  declineMatch() {
+    return this.request("POST", "/lol-matchmaking/v1/ready-check/decline");
+  }
+  /**
+   * 退出当前游戏（关闭游戏窗口）
+   * @description 在 TFT 对局结束（玩家死亡）后调用，主动关闭游戏窗口
+   *              调用后会触发 GAMEFLOW_PHASE 变为 "WaitingForStats"
+   * @returns Promise<any>
+   */
+  quitGame() {
+    logger.info("🚪 [LCUManager] 正在退出游戏...");
+    return this.request("POST", "/lol-gameflow/v1/early-exit");
+  }
+  /**
+   * 强制杀掉游戏进程
+   * @description 直接通过 taskkill 命令杀掉 "League of Legends.exe" 进程
+   *              比调用 LCU API 或点击 UI 更快更可靠
+   * @returns Promise<boolean> 是否成功杀掉进程
+   */
+  killGameProcess() {
+    return new Promise((resolve) => {
+      logger.info("🔪 [LCUManager] 正在强制杀掉游戏进程...");
+      const command = 'taskkill /F /IM "League of Legends.exe"';
+      cp.exec(command, (err, stdout, stderr) => {
+        if (err) {
+          if (stderr.includes("not found") || stderr.includes("没有找到")) {
+            logger.info("[LCUManager] 游戏进程不存在，无需杀掉");
+            resolve(true);
+          } else {
+            logger.warn(`[LCUManager] 杀掉游戏进程失败: ${err.message}`);
+            resolve(false);
+          }
+          return;
+        }
+        logger.info(`[LCUManager] 游戏进程已被杀掉: ${stdout.trim()}`);
+        resolve(true);
+      });
+    });
+  }
+}
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -5709,19 +5832,6 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["APP_CHECK_UPDATE"] = "app-check-update";
   return IpcChannel2;
 })(IpcChannel || {});
-class IdleState {
-  /** 状态名称 */
-  name = "IdleState";
-  /**
-   * 执行空闲状态逻辑
-   * @param _signal AbortSignal (此状态不需要，但为保持接口一致性保留)
-   * @returns 返回自身，保持空闲状态
-   * @description 空闲状态下不做任何操作，等待外部触发状态转换
-   */
-  async action(_signal) {
-    return this;
-  }
-}
 var GameStageType = /* @__PURE__ */ ((GameStageType2) => {
   GameStageType2["EARLY_PVE"] = "EARLY_PVE";
   GameStageType2["PVE"] = "PVE";
@@ -9470,6 +9580,921 @@ Object.assign(EQUIP_EN_TO_CN, EQUIP_ALIASES);
 function getChampionRange(championName) {
   return TFT_16_CHAMPION_DATA[championName]?.attackRange;
 }
+class GameStateManager {
+  static instance;
+  // ========== 游戏状态快照 ==========
+  /** 当前阶段的游戏状态快照 */
+  snapshot = null;
+  // ========== 游戏进程状态 ==========
+  /** 游戏进程信息 */
+  progress = {
+    currentStage: "",
+    currentStageType: GameStageType.UNKNOWN,
+    hasFirstPvpOccurred: false,
+    isGameRunning: false,
+    gameStartTime: 0
+  };
+  // ========== 等级相关（独立追踪，因为可能频繁变化）==========
+  /** 当前人口等级 */
+  currentLevel = 1;
+  constructor() {
+  }
+  /**
+   * 获取单例实例
+   */
+  static getInstance() {
+    if (!GameStateManager.instance) {
+      GameStateManager.instance = new GameStateManager();
+    }
+    return GameStateManager.instance;
+  }
+  // ============================================================================
+  // 快照管理
+  // ============================================================================
+  /**
+   * 更新游戏状态快照
+   * @description 由 StrategyService 调用 TftOperator 采集数据后，通过此方法更新快照
+   *              GameStateManager 本身不负责数据采集，只负责存储
+   * @param data 快照数据（不含 timestamp，会自动添加）
+   */
+  updateSnapshot(data) {
+    if (data.level !== this.currentLevel) {
+      logger.info(`[GameStateManager] 人口变化: ${this.currentLevel} -> ${data.level}`);
+      this.currentLevel = data.level;
+    }
+    this.snapshot = {
+      ...data,
+      timestamp: Date.now()
+    };
+    const benchCount = data.benchUnits.filter((u) => u !== null).length;
+    const boardCount = data.boardUnits.filter((u) => u !== null).length;
+    const shopCount = data.shopUnits.filter((u) => u !== null).length;
+    logger.info(
+      `[GameStateManager] 快照更新完成: 备战席 ${benchCount}/9, 棋盘 ${boardCount}/28, 商店 ${shopCount}/5, 装备 ${data.equipments.length} 件, 等级 Lv.${data.level}, 金币 ${data.gold}`
+    );
+  }
+  /**
+   * 刷新游戏状态快照 (已废弃，保留向后兼容)
+   * @deprecated 请使用 StrategyService.refreshGameState() 代替
+   *             GameStateManager 不再直接调用 TftOperator
+   * @returns 当前快照，如果不存在则返回空快照
+   */
+  async refreshSnapshot() {
+    logger.warn("[GameStateManager] refreshSnapshot() 已废弃，请使用 StrategyService.refreshGameState()");
+    if (this.snapshot) {
+      return this.snapshot;
+    }
+    return {
+      benchUnits: [],
+      boardUnits: [],
+      shopUnits: [],
+      equipments: [],
+      level: this.currentLevel,
+      currentXp: 0,
+      totalXp: 0,
+      gold: 0,
+      timestamp: Date.now()
+    };
+  }
+  /**
+   * 获取当前快照（同步版本）
+   * @returns 快照或 null（如果尚未更新）
+   */
+  getSnapshotSync() {
+    return this.snapshot;
+  }
+  /**
+   * 获取当前快照 (已废弃，保留向后兼容)
+   * @deprecated 请使用 getSnapshotSync() 代替
+   *             异步版本不再自动刷新，直接返回当前快照
+   * @returns 游戏状态快照
+   */
+  async getSnapshot() {
+    logger.warn("[GameStateManager] getSnapshot() 已废弃，请使用 getSnapshotSync()");
+    if (!this.snapshot) {
+      return this.refreshSnapshot();
+    }
+    return this.snapshot;
+  }
+  /**
+   * 检查快照是否存在
+   */
+  hasSnapshot() {
+    return this.snapshot !== null;
+  }
+  /**
+   * 清除当前快照
+   * @description 在阶段切换时调用，强制下次获取时重新扫描
+   */
+  clearSnapshot() {
+    this.snapshot = null;
+    logger.debug("[GameStateManager] 快照已清除");
+  }
+  // ============================================================================
+  // 便捷 Getter（直接从快照读取）
+  // ============================================================================
+  /**
+   * 获取备战席棋子
+   * @returns 备战席棋子数组，如果快照不存在返回空数组
+   */
+  getBenchUnits() {
+    return this.snapshot?.benchUnits ?? [];
+  }
+  /**
+   * 获取棋盘棋子
+   * @returns 棋盘棋子数组，如果快照不存在返回空数组
+   */
+  getBoardUnits() {
+    return this.snapshot?.boardUnits ?? [];
+  }
+  /**
+   * 获取商店棋子
+   * @returns 商店棋子数组，如果快照不存在返回空数组
+   */
+  getShopUnits() {
+    return this.snapshot?.shopUnits ?? [];
+  }
+  /**
+   * 获取装备栏装备
+   * @returns 装备数组，如果快照不存在返回空数组
+   */
+  getEquipments() {
+    return this.snapshot?.equipments ?? [];
+  }
+  /**
+   * 获取当前等级
+   * @returns 当前人口等级
+   */
+  getLevel() {
+    return this.currentLevel;
+  }
+  /**
+   * 获取当前金币
+   * @returns 金币数量，如果快照不存在返回 0
+   */
+  getGold() {
+    return this.snapshot?.gold ?? 0;
+  }
+  /**
+   * 获取备战席空位数量
+   * @returns 空位数量 (0-9)
+   * @description 备战席共 9 个槽位，遍历统计 null（空槽）的数量
+   *              TftOperator 扫描备战席时，空槽位会返回 null
+   */
+  getEmptyBenchSlotCount() {
+    const benchUnits = this.getBenchUnits();
+    return benchUnits.filter((unit) => unit === null).length;
+  }
+  /**
+   * 获取当前经验值信息
+   * @returns 经验值对象 { current, total }
+   */
+  getXpInfo() {
+    return {
+      current: this.snapshot?.currentXp ?? 0,
+      total: this.snapshot?.totalXp ?? 0
+    };
+  }
+  /**
+   * 获取所有已拥有的棋子名称（备战席 + 棋盘）
+   * @returns 棋子名称集合
+   */
+  getOwnedChampionNames() {
+    const names = /* @__PURE__ */ new Set();
+    for (const unit of this.getBenchUnits()) {
+      if (unit?.tftUnit) {
+        names.add(unit.tftUnit.displayName);
+      }
+    }
+    for (const unit of this.getBoardUnits()) {
+      if (unit?.tftUnit) {
+        names.add(unit.tftUnit.displayName);
+      }
+    }
+    return names;
+  }
+  /**
+   * 获取所有可见棋子名称（备战席 + 棋盘 + 商店）
+   * @returns 棋子名称集合
+   */
+  getAllVisibleChampionNames() {
+    const names = this.getOwnedChampionNames();
+    for (const unit of this.getShopUnits()) {
+      if (unit) {
+        names.add(unit.displayName);
+      }
+    }
+    return names;
+  }
+  /**
+   * 获取指定棋子的 1 星数量（备战席 + 棋盘）
+   * @param championName 棋子名称
+   * @returns 1 星棋子的数量
+   * @description 用于判断购买后是否能升星
+   *              TFT 合成规则：3 个 1 星 → 1 个 2 星，3 个 2 星 → 1 个 3 星
+   *              所以如果已有 2 个 1 星，再买 1 个就能升 2 星
+   */
+  getOneStarChampionCount(championName) {
+    let count = 0;
+    for (const unit of this.getBenchUnits()) {
+      if (unit?.tftUnit?.displayName === championName && unit.starLevel === 1) {
+        count++;
+      }
+    }
+    for (const unit of this.getBoardUnits()) {
+      if (unit?.tftUnit?.displayName === championName && unit.starLevel === 1) {
+        count++;
+      }
+    }
+    return count;
+  }
+  /**
+   * 判断购买指定棋子后是否能升星
+   * @param championName 棋子名称
+   * @returns 是否能升星（true = 买了能升星，不占额外格子）
+   * @description 如果已有 2 个 1 星同名棋子，买第 3 个会自动合成 2 星
+   *              这种情况下即使备战席满了也可以购买
+   */
+  canUpgradeAfterBuy(championName) {
+    const oneStarCount = this.getOneStarChampionCount(championName);
+    return oneStarCount >= 2;
+  }
+  /**
+   * 查找指定棋子的 1 星位置信息
+   * @param championName 棋子名称
+   * @returns 所有 1 星棋子的位置数组，包含位置类型（bench/board）和索引
+   * @description 用于购买后更新状态时，确定哪些棋子会参与合成
+   *              TFT 合成规则：优先合成场上的棋子，备战席按从左到右顺序
+   */
+  findOneStarChampionPositions(championName) {
+    const positions = [];
+    const boardUnits = this.getBoardUnits();
+    for (let i = 0; i < boardUnits.length; i++) {
+      const unit = boardUnits[i];
+      if (unit?.tftUnit?.displayName === championName && unit.starLevel === 1) {
+        positions.push({ location: "board", index: i });
+      }
+    }
+    const benchUnits = this.getBenchUnits();
+    for (let i = 0; i < benchUnits.length; i++) {
+      const unit = benchUnits[i];
+      if (unit?.tftUnit?.displayName === championName && unit.starLevel === 1) {
+        positions.push({ location: "bench", index: i });
+      }
+    }
+    return positions;
+  }
+  /**
+   * 获取备战席第一个空位的索引
+   * @returns 空位索引 (0-8)，如果没有空位返回 -1
+   * @description 购买棋子后，新棋子会放到备战席最左边的空位
+   */
+  getFirstEmptyBenchSlotIndex() {
+    const benchUnits = this.getBenchUnits();
+    for (let i = 0; i < benchUnits.length; i++) {
+      if (benchUnits[i] === null) {
+        return i;
+      }
+    }
+    return -1;
+  }
+  /**
+   * 更新备战席指定槽位为空
+   * @param index 槽位索引 (0-8)
+   * @description 当棋子被合成消耗时，需要将对应槽位标记为空
+   *              直接修改快照中的 benchUnits 数组
+   */
+  setBenchSlotEmpty(index) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法更新备战席");
+      return;
+    }
+    if (index < 0 || index >= this.snapshot.benchUnits.length) {
+      logger.warn(`[GameStateManager] 无效的备战席索引: ${index}`);
+      return;
+    }
+    const oldUnit = this.snapshot.benchUnits[index];
+    this.snapshot.benchUnits[index] = null;
+    logger.debug(
+      `[GameStateManager] 备战席槽位 ${index} 已清空` + (oldUnit?.tftUnit ? ` (原: ${oldUnit.tftUnit.displayName})` : "")
+    );
+  }
+  /**
+   * 设置备战席指定槽位的棋子
+   * @param index 槽位索引 (0-8)
+   * @param unit 要放置的棋子
+   * @description 购买棋子后，将新棋子放入备战席指定槽位
+   */
+  setBenchSlotUnit(index, unit) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法设置棋子");
+      return;
+    }
+    if (index < 0 || index >= this.snapshot.benchUnits.length) {
+      logger.warn(`[GameStateManager] 无效的备战席索引: ${index}`);
+      return;
+    }
+    this.snapshot.benchUnits[index] = unit;
+    logger.debug(
+      `[GameStateManager] 备战席槽位 ${index} 已放置: ${unit.tftUnit.displayName} ${unit.starLevel}★`
+    );
+  }
+  /**
+   * 更新备战席指定槽位的棋子星级
+   * @param index 槽位索引 (0-8)
+   * @param newStarLevel 新的星级
+   * @description 当棋子升星时，更新对应槽位的星级
+   */
+  updateBenchSlotStarLevel(index, newStarLevel) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法更新星级");
+      return;
+    }
+    const unit = this.snapshot.benchUnits[index];
+    if (!unit) {
+      logger.warn(`[GameStateManager] 备战席槽位 ${index} 为空，无法更新星级`);
+      return;
+    }
+    const oldStarLevel = unit.starLevel;
+    unit.starLevel = newStarLevel;
+    logger.debug(
+      `[GameStateManager] 备战席槽位 ${index} 星级更新: ${unit.tftUnit?.displayName} ${oldStarLevel}★ → ${newStarLevel}★`
+    );
+  }
+  /**
+   * 更新棋盘指定槽位的棋子星级
+   * @param index 槽位索引 (0-27)
+   * @param newStarLevel 新的星级
+   * @description 当场上棋子升星时，更新对应槽位的星级
+   */
+  updateBoardSlotStarLevel(index, newStarLevel) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法更新星级");
+      return;
+    }
+    const unit = this.snapshot.boardUnits[index];
+    if (!unit) {
+      logger.warn(`[GameStateManager] 棋盘槽位 ${index} 为空，无法更新星级`);
+      return;
+    }
+    const oldStarLevel = unit.starLevel;
+    unit.starLevel = newStarLevel;
+    logger.debug(
+      `[GameStateManager] 棋盘槽位 ${index} 星级更新: ${unit.tftUnit?.displayName} ${oldStarLevel}★ → ${newStarLevel}★`
+    );
+  }
+  /**
+   * 设置棋盘指定槽位的棋子
+   * @param index 槽位索引 (0-27)
+   * @param unit 要放置的棋子
+   * @description 当棋子从备战席移动到棋盘时，更新棋盘状态
+   */
+  setBoardSlotUnit(index, unit) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法设置棋盘棋子");
+      return;
+    }
+    if (index < 0 || index >= this.snapshot.boardUnits.length) {
+      logger.warn(`[GameStateManager] 无效的棋盘索引: ${index}`);
+      return;
+    }
+    this.snapshot.boardUnits[index] = unit;
+    logger.debug(
+      `[GameStateManager] 棋盘槽位 ${index} 已放置: ${unit.tftUnit.displayName} ${unit.starLevel}★`
+    );
+  }
+  /**
+   * 清空棋盘指定槽位
+   * @param index 槽位索引 (0-27)
+   * @description 当棋子被卖出或移回备战席时，清空对应棋盘槽位
+   */
+  setBoardSlotEmpty(index) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法清空棋盘槽位");
+      return;
+    }
+    if (index < 0 || index >= this.snapshot.boardUnits.length) {
+      logger.warn(`[GameStateManager] 无效的棋盘索引: ${index}`);
+      return;
+    }
+    const oldUnit = this.snapshot.boardUnits[index];
+    this.snapshot.boardUnits[index] = null;
+    logger.debug(
+      `[GameStateManager] 棋盘槽位 ${index} 已清空` + (oldUnit?.tftUnit ? ` (原: ${oldUnit.tftUnit.displayName})` : "")
+    );
+  }
+  /**
+   * 给棋盘上的棋子添加装备
+   * @param boardLocation 棋盘位置（如 "R1_C1"）
+   * @param equipName 装备名称
+   * @description 当装备穿戴到棋子身上时，同步更新棋子的装备列表
+   */
+  addEquipToUnit(boardLocation, equipName) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法添加装备");
+      return;
+    }
+    const index = this.getBoardLocationIndex(boardLocation);
+    if (index === -1) {
+      logger.warn(`[GameStateManager] 无效的棋盘位置: ${boardLocation}`);
+      return;
+    }
+    const unit = this.snapshot.boardUnits[index];
+    if (!unit) {
+      logger.warn(`[GameStateManager] 棋盘位置 ${boardLocation} 没有棋子，无法添加装备`);
+      return;
+    }
+    if (unit.equips.length >= 3) {
+      logger.warn(`[GameStateManager] 棋子 ${unit.tftUnit.displayName} 装备已满，无法添加 ${equipName}`);
+      return;
+    }
+    unit.equips.push({ name: equipName });
+    logger.debug(
+      `[GameStateManager] 棋子 ${unit.tftUnit.displayName} 装备添加: ${equipName} (当前装备数: ${unit.equips.length})`
+    );
+  }
+  /**
+   * 更新商店棋子列表
+   * @param shopUnits 新的商店棋子数组
+   * @description 刷新商店后，用新识别的商店数据更新快照
+   *              只更新 shopUnits 字段，不影响其他数据
+   */
+  updateShopUnits(shopUnits) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法更新商店");
+      return;
+    }
+    this.snapshot.shopUnits = shopUnits;
+    const shopCount = shopUnits.filter((u) => u !== null).length;
+    logger.debug(`[GameStateManager] 商店已更新: ${shopCount}/5 个棋子`);
+  }
+  /**
+   * 更新商店指定槽位为空（已购买）
+   * @param index 槽位索引 (0-4)
+   * @description 购买棋子后，将商店对应槽位标记为空
+   */
+  setShopSlotEmpty(index) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法更新商店");
+      return;
+    }
+    if (index < 0 || index >= this.snapshot.shopUnits.length) {
+      logger.warn(`[GameStateManager] 无效的商店索引: ${index}`);
+      return;
+    }
+    const oldUnit = this.snapshot.shopUnits[index];
+    this.snapshot.shopUnits[index] = null;
+    logger.debug(
+      `[GameStateManager] 商店槽位 ${index} 已清空` + (oldUnit ? ` (原: ${oldUnit.displayName})` : "")
+    );
+  }
+  /**
+   * 移除指定索引的装备（模拟消耗）
+   * @param index 装备栏索引 (0-9)
+   * @description 当使用装备后，后续装备会自动前移
+   *              此方法用于在不重新截图的情况下更新内存状态，确保连续操作的索引正确
+   */
+  removeEquipment(index) {
+    if (!this.snapshot) return;
+    if (index < 0 || index >= this.snapshot.equipments.length) {
+      logger.warn(`[GameStateManager] 尝试移除无效的装备索引: ${index}`);
+      return;
+    }
+    const removed = this.snapshot.equipments.splice(index, 1);
+    logger.debug(
+      `[GameStateManager] 移除装备: ${removed[0]?.name} (索引 ${index})，剩余 ${this.snapshot.equipments.length} 件 (后续装备已自动前移)`
+    );
+    for (let i = index; i < this.snapshot.equipments.length; i++) {
+      this.snapshot.equipments[i].slot = `SLOT_${i + 1}`;
+    }
+  }
+  /**
+   * 更新装备列表
+   * @param equipments 新的装备数组
+   * @description 从屏幕识别装备后更新，用于 D 牌/卖牌后刷新装备栏
+   */
+  updateEquipments(equipments) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法更新装备");
+      return;
+    }
+    this.snapshot.equipments = equipments;
+    logger.debug(`[GameStateManager] 装备已更新: ${equipments.length} 件`);
+  }
+  /**
+   * 更新备战席棋子列表
+   * @param benchUnits 新的备战席棋子数组
+   * @description 从屏幕重新识别备战席后更新，用于卖棋子后刷新备战席状态
+   *              会完整替换原有的备战席数据
+   */
+  updateBenchUnits(benchUnits) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法更新备战席");
+      return;
+    }
+    this.snapshot.benchUnits = benchUnits;
+    const occupiedCount = benchUnits.filter((u) => u !== null).length;
+    logger.debug(`[GameStateManager] 备战席已更新: ${occupiedCount}/9 个槽位有棋子`);
+  }
+  /**
+   * 更新等级信息
+   * @param levelInfo 等级信息对象 { level, currentXp, totalXp }
+   * @description 单独更新等级和经验，无需传入完整快照
+   */
+  updateLevelInfo(levelInfo) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法更新等级信息");
+      return;
+    }
+    if (levelInfo.level !== this.currentLevel) {
+      logger.info(`[GameStateManager] 人口变化: ${this.currentLevel} -> ${levelInfo.level}`);
+      this.currentLevel = levelInfo.level;
+    }
+    this.snapshot.level = levelInfo.level;
+    this.snapshot.currentXp = levelInfo.currentXp;
+    this.snapshot.totalXp = levelInfo.totalXp;
+    logger.debug(
+      `[GameStateManager] 等级信息更新: Lv.${levelInfo.level} (${levelInfo.currentXp}/${levelInfo.totalXp})`
+    );
+  }
+  /**
+   * 扣减金币
+   * @param amount 扣减数量
+   * @description 购买棋子后更新金币数量
+   */
+  deductGold(amount) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法扣减金币");
+      return;
+    }
+    const oldGold = this.snapshot.gold;
+    this.snapshot.gold = Math.max(0, this.snapshot.gold - amount);
+    logger.debug(`[GameStateManager] 金币扣减: ${oldGold} - ${amount} = ${this.snapshot.gold}`);
+  }
+  /**
+   * 更新金币数量
+   * @param gold 新的金币数量
+   * @description 从屏幕识别金币后更新，比 deductGold 更准确
+   *              因为某些海克斯强化会让刷新免费或打折
+   */
+  updateGold(gold) {
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法更新金币");
+      return;
+    }
+    const oldGold = this.snapshot.gold;
+    this.snapshot.gold = gold;
+    if (oldGold !== gold) {
+      logger.debug(`[GameStateManager] 金币更新: ${oldGold} → ${gold}`);
+    }
+  }
+  // ============================================================================
+  // 游戏进程管理
+  // ============================================================================
+  /**
+   * 获取游戏进程信息
+   */
+  getProgress() {
+    return { ...this.progress };
+  }
+  /**
+   * 更新当前阶段
+   * @param stage 阶段字符串 (如 "2-1")
+   * @param stageType 阶段类型
+   */
+  updateStage(stage, stageType) {
+    this.progress.currentStage = stage;
+    this.progress.currentStageType = stageType;
+    if (stageType === GameStageType.PVP && !this.progress.hasFirstPvpOccurred) {
+      this.progress.hasFirstPvpOccurred = true;
+      logger.info("[GameStateManager] 检测到第一个 PVP 阶段");
+    }
+  }
+  /**
+   * 标记游戏开始
+   */
+  startGame() {
+    this.progress.isGameRunning = true;
+    this.progress.gameStartTime = Date.now();
+    logger.info("[GameStateManager] 游戏开始");
+  }
+  /**
+   * 标记游戏结束
+   */
+  endGame() {
+    this.progress.isGameRunning = false;
+    logger.info("[GameStateManager] 游戏结束");
+  }
+  /**
+   * 检查游戏是否正在进行
+   */
+  isGameRunning() {
+    return this.progress.isGameRunning;
+  }
+  /**
+   * 检查是否已经过了第一个 PVP 阶段
+   */
+  hasFirstPvpOccurred() {
+    return this.progress.hasFirstPvpOccurred;
+  }
+  // ============================================================================
+  // 棋盘状态查询
+  // ============================================================================
+  /**
+   * 获取当前棋盘上的棋子数量
+   * @returns 棋盘上非空槽位的数量
+   * @description 用于判断是否需要上更多棋子
+   *              棋盘最大容量 = 玩家等级
+   */
+  getBoardUnitCount() {
+    const boardUnits = this.getBoardUnits();
+    return boardUnits.filter((unit) => unit !== null).length;
+  }
+  /**
+   * 获取棋盘空位数量
+   * @returns 棋盘上空槽位的数量
+   * @description 棋盘共 28 个槽位 (4行 x 7列)
+   *              但实际可用数量受等级限制
+   */
+  getEmptyBoardSlotCount() {
+    const boardUnits = this.getBoardUnits();
+    return boardUnits.filter((unit) => unit === null).length;
+  }
+  /**
+   * 获取可以再上场的棋子数量
+   * @returns 当前等级下还能上场多少棋子
+   * @description 计算公式: 等级 - 当前棋盘棋子数
+   *              如果返回 0 或负数，说明已满员或超员
+   */
+  getAvailableBoardSlots() {
+    const level = this.getLevel();
+    const currentCount = this.getBoardUnitCount();
+    return Math.max(0, level - currentCount);
+  }
+  /**
+   * 获取备战席上的非空棋子列表（带索引）
+   * @returns 包含棋子信息和索引的数组
+   * @description 用于遍历备战席上的棋子，决定哪些应该上场
+   */
+  getBenchUnitsWithIndex() {
+    const result = [];
+    const benchUnits = this.getBenchUnits();
+    for (let i = 0; i < benchUnits.length; i++) {
+      const unit = benchUnits[i];
+      if (unit !== null) {
+        result.push({ unit, index: i });
+      }
+    }
+    return result;
+  }
+  /**
+   * 查找备战席中的锻造器
+   * @returns 锻造器的 BenchUnit 数组
+   * @description 锻造器是特殊单位，displayName 包含"锻造器"即可识别
+   *              直接返回 BenchUnit，因为它已包含所有需要的信息：
+   *              - location: 槽位位置 (如 "SLOT_1")
+   *              - tftUnit: 棋子信息 (包含 displayName)
+   *              - starLevel: 星级 (锻造器为 -1)
+   *              - equips: 装备列表 (锻造器为空数组)
+   */
+  findItemForges() {
+    return this.getBenchUnits().filter(
+      (unit) => unit !== null && unit.tftUnit.displayName.includes("锻造器")
+    );
+  }
+  /**
+   * 获取棋盘上的非空棋子列表（带位置）
+   * @returns 包含棋子信息的数组
+   * @description 用于遍历棋盘上的棋子，分析当前站位
+   */
+  getBoardUnitsWithLocation() {
+    const boardUnits = this.getBoardUnits();
+    return boardUnits.filter((unit) => unit !== null);
+  }
+  /**
+   * 获取棋盘上的空位列表
+   * @returns 空位的 BoardLocation 数组
+   * @description 返回所有空槽位的位置标识（如 "R1_C1"）
+   */
+  getEmptyBoardLocations() {
+    const boardUnits = this.getBoardUnits();
+    const emptyLocations = [];
+    const boardLocationKeys = Object.keys(fightBoardSlotPoint);
+    for (let i = 0; i < boardUnits.length && i < boardLocationKeys.length; i++) {
+      if (boardUnits[i] === null) {
+        emptyLocations.push(boardLocationKeys[i]);
+      }
+    }
+    return emptyLocations;
+  }
+  /**
+   * 获取前排空位列表
+   * @returns 前排（R1, R2）的空位 BoardLocation 数组
+   * @description 前排适合放置近战棋子（射程 1-2）
+   */
+  getFrontRowEmptyLocations() {
+    return this.getEmptyBoardLocations().filter(
+      (loc) => loc.startsWith("R1_") || loc.startsWith("R2_")
+    );
+  }
+  /**
+   * 获取后排空位列表
+   * @returns 后排（R3, R4）的空位 BoardLocation 数组
+   * @description 后排适合放置远程棋子（射程 3+）
+   */
+  getBackRowEmptyLocations() {
+    return this.getEmptyBoardLocations().filter(
+      (loc) => loc.startsWith("R3_") || loc.startsWith("R4_")
+    );
+  }
+  /**
+   * 查找装备栏中指定名称的第一个装备索引
+   * @param itemName 装备名称
+   * @returns 装备索引 (0..n-1)，如果未找到返回 -1
+   *
+   * @description
+   * - 这里返回的是 **equipments 数组索引**（也就是 UI 从左到右的槽位索引）。
+   * - `TftOperator.getEquipInfo()` 会过滤掉“空槽位”，并把 slot 重写为紧凑的 `SLOT_1..SLOT_n`。
+   *   因此数组索引与槽位索引保持一致，便于连续穿戴/合成时做“前移模拟”。
+   */
+  findEquipmentIndex(itemName) {
+    const equipments = this.getEquipments();
+    for (let i = 0; i < equipments.length; i++) {
+      const equip = equipments[i];
+      if (equip.name === itemName) {
+        return i;
+      }
+    }
+    return -1;
+  }
+  /**
+   * 查找装备栏中指定名称的所有装备索引
+   * @param itemName 装备名称
+   * @returns 装备索引数组 (0..n-1)
+   */
+  findAllEquipmentIndices(itemName) {
+    const equipments = this.getEquipments();
+    const indices = [];
+    for (let i = 0; i < equipments.length; i++) {
+      if (equipments[i].name === itemName) {
+        indices.push(i);
+      }
+    }
+    return indices;
+  }
+  // ============================================================================
+  // 重置
+  // ============================================================================
+  /**
+   * 重置所有状态
+   * @description 在游戏结束或停止时调用，清理所有状态，准备下一局
+   */
+  reset() {
+    this.snapshot = null;
+    this.currentLevel = 1;
+    this.progress = {
+      currentStage: "",
+      currentStageType: GameStageType.UNKNOWN,
+      hasFirstPvpOccurred: false,
+      isGameRunning: false,
+      gameStartTime: 0
+    };
+    logger.info("[GameStateManager] 游戏状态已重置，准备下一局");
+  }
+  // ============================================================
+  // 🔧 棋子移动状态同步方法
+  // ============================================================
+  /**
+   * 根据 BoardLocation 获取数组索引
+   * @param location 棋盘位置（如 "R1_C1"）
+   * @returns 对应的数组索引，如果无效返回 -1
+   */
+  getBoardLocationIndex(location) {
+    const boardLocationKeys = Object.keys(fightBoardSlotPoint);
+    return boardLocationKeys.indexOf(location);
+  }
+  /**
+   * 根据 BenchLocation 获取数组索引
+   * @param location 备战席位置（如 "SLOT_1"）
+   * @returns 对应的数组索引（0-8），如果无效返回 -1
+   */
+  getBenchLocationIndex(location) {
+    const match = location.match(/SLOT_(\d+)/);
+    if (!match) return -1;
+    const slotNum = parseInt(match[1], 10);
+    return slotNum >= 1 && slotNum <= 9 ? slotNum - 1 : -1;
+  }
+  /**
+   * 将备战席棋子移动到棋盘（更新内部状态）
+   * @param benchLocation 备战席位置
+   * @param boardLocation 棋盘目标位置
+   * @description 同步更新 GameStateManager 的内部状态，
+   *              确保备战席和棋盘的状态与实际游戏一致
+   */
+  moveBenchToBoard(benchLocation, boardLocation) {
+    const benchIndex = this.getBenchLocationIndex(benchLocation);
+    const boardIndex = this.getBoardLocationIndex(boardLocation);
+    if (benchIndex === -1 || boardIndex === -1) {
+      logger.warn(`[GameStateManager] 无效的移动: ${benchLocation} -> ${boardLocation}`);
+      return;
+    }
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法移动棋子");
+      return;
+    }
+    const benchUnit = this.snapshot.benchUnits[benchIndex];
+    if (!benchUnit) {
+      logger.warn(`[GameStateManager] 备战席 ${benchLocation} 为空，无法移动`);
+      return;
+    }
+    const boardUnit = {
+      location: boardLocation,
+      tftUnit: benchUnit.tftUnit,
+      starLevel: benchUnit.starLevel,
+      equips: benchUnit.equips
+    };
+    this.snapshot.boardUnits[boardIndex] = boardUnit;
+    this.snapshot.benchUnits[benchIndex] = null;
+    logger.debug(
+      `[GameStateManager] 棋子移动: ${benchLocation} -> ${boardLocation} (${benchUnit.tftUnit.displayName} ${benchUnit.starLevel}★)`
+    );
+  }
+  /**
+   * 将棋盘棋子移回备战席（更新内部状态）
+   * @param boardLocation 棋盘位置
+   * @param benchIndex 备战席目标槽位索引（0-8）
+   */
+  moveBoardToBench(boardLocation, benchIndex) {
+    const boardIndex = this.getBoardLocationIndex(boardLocation);
+    if (boardIndex === -1 || benchIndex < 0 || benchIndex > 8) {
+      logger.warn(`[GameStateManager] 无效的移动: ${boardLocation} -> SLOT_${benchIndex + 1}`);
+      return;
+    }
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法移动棋子");
+      return;
+    }
+    const boardUnit = this.snapshot.boardUnits[boardIndex];
+    if (!boardUnit) {
+      logger.warn(`[GameStateManager] 棋盘 ${boardLocation} 为空，无法移动`);
+      return;
+    }
+    const benchUnit = {
+      location: `SLOT_${benchIndex + 1}`,
+      tftUnit: boardUnit.tftUnit,
+      starLevel: boardUnit.starLevel,
+      equips: boardUnit.equips
+    };
+    this.snapshot.benchUnits[benchIndex] = benchUnit;
+    this.snapshot.boardUnits[boardIndex] = null;
+    logger.debug(
+      `[GameStateManager] 棋子移回: ${boardLocation} -> SLOT_${benchIndex + 1} (${boardUnit.tftUnit.displayName} ${boardUnit.starLevel}★)`
+    );
+  }
+  /**
+   * 棋盘内移动棋子（调整站位）
+   * @param fromLocation 原位置
+   * @param toLocation 目标位置
+   * @description 同步更新 GameStateManager 的内部状态
+   */
+  moveBoardToBoard(fromLocation, toLocation) {
+    const fromIndex = this.getBoardLocationIndex(fromLocation);
+    const toIndex = this.getBoardLocationIndex(toLocation);
+    if (fromIndex === -1 || toIndex === -1) {
+      logger.warn(`[GameStateManager] 无效的棋盘移动: ${fromLocation} -> ${toLocation}`);
+      return;
+    }
+    if (!this.snapshot) {
+      logger.warn("[GameStateManager] 快照不存在，无法移动棋子");
+      return;
+    }
+    const unit = this.snapshot.boardUnits[fromIndex];
+    if (!unit) {
+      logger.warn(`[GameStateManager] 棋盘 ${fromLocation} 为空，无法移动`);
+      return;
+    }
+    unit.location = toLocation;
+    this.snapshot.boardUnits[toIndex] = unit;
+    this.snapshot.boardUnits[fromIndex] = null;
+    logger.debug(
+      `[GameStateManager] 棋盘内移动: ${fromLocation} -> ${toLocation} (${unit.tftUnit.displayName} ${unit.starLevel}★)`
+    );
+  }
+  /**
+   * 清空棋盘指定位置（根据 BoardLocation）
+   * @param boardLocation 棋盘位置（如 "R1_C1"）
+   * @description 当棋子被卖出时，清空对应棋盘位置
+   */
+  clearBoardLocation(boardLocation) {
+    const index = this.getBoardLocationIndex(boardLocation);
+    if (index === -1) {
+      logger.warn(`[GameStateManager] 无效的棋盘位置: ${boardLocation}`);
+      return;
+    }
+    this.setBoardSlotEmpty(index);
+  }
+}
+const gameStateManager = GameStateManager.getInstance();
 const GAME_WIDTH = 1024;
 const GAME_HEIGHT = 768;
 const EQUIP_CATEGORY_PRIORITY = [
@@ -12005,921 +13030,6 @@ class TftOperator {
   }
 }
 const tftOperator = TftOperator.getInstance();
-class GameStateManager {
-  static instance;
-  // ========== 游戏状态快照 ==========
-  /** 当前阶段的游戏状态快照 */
-  snapshot = null;
-  // ========== 游戏进程状态 ==========
-  /** 游戏进程信息 */
-  progress = {
-    currentStage: "",
-    currentStageType: GameStageType.UNKNOWN,
-    hasFirstPvpOccurred: false,
-    isGameRunning: false,
-    gameStartTime: 0
-  };
-  // ========== 等级相关（独立追踪，因为可能频繁变化）==========
-  /** 当前人口等级 */
-  currentLevel = 1;
-  constructor() {
-  }
-  /**
-   * 获取单例实例
-   */
-  static getInstance() {
-    if (!GameStateManager.instance) {
-      GameStateManager.instance = new GameStateManager();
-    }
-    return GameStateManager.instance;
-  }
-  // ============================================================================
-  // 快照管理
-  // ============================================================================
-  /**
-   * 更新游戏状态快照
-   * @description 由 StrategyService 调用 TftOperator 采集数据后，通过此方法更新快照
-   *              GameStateManager 本身不负责数据采集，只负责存储
-   * @param data 快照数据（不含 timestamp，会自动添加）
-   */
-  updateSnapshot(data) {
-    if (data.level !== this.currentLevel) {
-      logger.info(`[GameStateManager] 人口变化: ${this.currentLevel} -> ${data.level}`);
-      this.currentLevel = data.level;
-    }
-    this.snapshot = {
-      ...data,
-      timestamp: Date.now()
-    };
-    const benchCount = data.benchUnits.filter((u) => u !== null).length;
-    const boardCount = data.boardUnits.filter((u) => u !== null).length;
-    const shopCount = data.shopUnits.filter((u) => u !== null).length;
-    logger.info(
-      `[GameStateManager] 快照更新完成: 备战席 ${benchCount}/9, 棋盘 ${boardCount}/28, 商店 ${shopCount}/5, 装备 ${data.equipments.length} 件, 等级 Lv.${data.level}, 金币 ${data.gold}`
-    );
-  }
-  /**
-   * 刷新游戏状态快照 (已废弃，保留向后兼容)
-   * @deprecated 请使用 StrategyService.refreshGameState() 代替
-   *             GameStateManager 不再直接调用 TftOperator
-   * @returns 当前快照，如果不存在则返回空快照
-   */
-  async refreshSnapshot() {
-    logger.warn("[GameStateManager] refreshSnapshot() 已废弃，请使用 StrategyService.refreshGameState()");
-    if (this.snapshot) {
-      return this.snapshot;
-    }
-    return {
-      benchUnits: [],
-      boardUnits: [],
-      shopUnits: [],
-      equipments: [],
-      level: this.currentLevel,
-      currentXp: 0,
-      totalXp: 0,
-      gold: 0,
-      timestamp: Date.now()
-    };
-  }
-  /**
-   * 获取当前快照（同步版本）
-   * @returns 快照或 null（如果尚未更新）
-   */
-  getSnapshotSync() {
-    return this.snapshot;
-  }
-  /**
-   * 获取当前快照 (已废弃，保留向后兼容)
-   * @deprecated 请使用 getSnapshotSync() 代替
-   *             异步版本不再自动刷新，直接返回当前快照
-   * @returns 游戏状态快照
-   */
-  async getSnapshot() {
-    logger.warn("[GameStateManager] getSnapshot() 已废弃，请使用 getSnapshotSync()");
-    if (!this.snapshot) {
-      return this.refreshSnapshot();
-    }
-    return this.snapshot;
-  }
-  /**
-   * 检查快照是否存在
-   */
-  hasSnapshot() {
-    return this.snapshot !== null;
-  }
-  /**
-   * 清除当前快照
-   * @description 在阶段切换时调用，强制下次获取时重新扫描
-   */
-  clearSnapshot() {
-    this.snapshot = null;
-    logger.debug("[GameStateManager] 快照已清除");
-  }
-  // ============================================================================
-  // 便捷 Getter（直接从快照读取）
-  // ============================================================================
-  /**
-   * 获取备战席棋子
-   * @returns 备战席棋子数组，如果快照不存在返回空数组
-   */
-  getBenchUnits() {
-    return this.snapshot?.benchUnits ?? [];
-  }
-  /**
-   * 获取棋盘棋子
-   * @returns 棋盘棋子数组，如果快照不存在返回空数组
-   */
-  getBoardUnits() {
-    return this.snapshot?.boardUnits ?? [];
-  }
-  /**
-   * 获取商店棋子
-   * @returns 商店棋子数组，如果快照不存在返回空数组
-   */
-  getShopUnits() {
-    return this.snapshot?.shopUnits ?? [];
-  }
-  /**
-   * 获取装备栏装备
-   * @returns 装备数组，如果快照不存在返回空数组
-   */
-  getEquipments() {
-    return this.snapshot?.equipments ?? [];
-  }
-  /**
-   * 获取当前等级
-   * @returns 当前人口等级
-   */
-  getLevel() {
-    return this.currentLevel;
-  }
-  /**
-   * 获取当前金币
-   * @returns 金币数量，如果快照不存在返回 0
-   */
-  getGold() {
-    return this.snapshot?.gold ?? 0;
-  }
-  /**
-   * 获取备战席空位数量
-   * @returns 空位数量 (0-9)
-   * @description 备战席共 9 个槽位，遍历统计 null（空槽）的数量
-   *              TftOperator 扫描备战席时，空槽位会返回 null
-   */
-  getEmptyBenchSlotCount() {
-    const benchUnits = this.getBenchUnits();
-    return benchUnits.filter((unit) => unit === null).length;
-  }
-  /**
-   * 获取当前经验值信息
-   * @returns 经验值对象 { current, total }
-   */
-  getXpInfo() {
-    return {
-      current: this.snapshot?.currentXp ?? 0,
-      total: this.snapshot?.totalXp ?? 0
-    };
-  }
-  /**
-   * 获取所有已拥有的棋子名称（备战席 + 棋盘）
-   * @returns 棋子名称集合
-   */
-  getOwnedChampionNames() {
-    const names = /* @__PURE__ */ new Set();
-    for (const unit of this.getBenchUnits()) {
-      if (unit?.tftUnit) {
-        names.add(unit.tftUnit.displayName);
-      }
-    }
-    for (const unit of this.getBoardUnits()) {
-      if (unit?.tftUnit) {
-        names.add(unit.tftUnit.displayName);
-      }
-    }
-    return names;
-  }
-  /**
-   * 获取所有可见棋子名称（备战席 + 棋盘 + 商店）
-   * @returns 棋子名称集合
-   */
-  getAllVisibleChampionNames() {
-    const names = this.getOwnedChampionNames();
-    for (const unit of this.getShopUnits()) {
-      if (unit) {
-        names.add(unit.displayName);
-      }
-    }
-    return names;
-  }
-  /**
-   * 获取指定棋子的 1 星数量（备战席 + 棋盘）
-   * @param championName 棋子名称
-   * @returns 1 星棋子的数量
-   * @description 用于判断购买后是否能升星
-   *              TFT 合成规则：3 个 1 星 → 1 个 2 星，3 个 2 星 → 1 个 3 星
-   *              所以如果已有 2 个 1 星，再买 1 个就能升 2 星
-   */
-  getOneStarChampionCount(championName) {
-    let count = 0;
-    for (const unit of this.getBenchUnits()) {
-      if (unit?.tftUnit?.displayName === championName && unit.starLevel === 1) {
-        count++;
-      }
-    }
-    for (const unit of this.getBoardUnits()) {
-      if (unit?.tftUnit?.displayName === championName && unit.starLevel === 1) {
-        count++;
-      }
-    }
-    return count;
-  }
-  /**
-   * 判断购买指定棋子后是否能升星
-   * @param championName 棋子名称
-   * @returns 是否能升星（true = 买了能升星，不占额外格子）
-   * @description 如果已有 2 个 1 星同名棋子，买第 3 个会自动合成 2 星
-   *              这种情况下即使备战席满了也可以购买
-   */
-  canUpgradeAfterBuy(championName) {
-    const oneStarCount = this.getOneStarChampionCount(championName);
-    return oneStarCount >= 2;
-  }
-  /**
-   * 查找指定棋子的 1 星位置信息
-   * @param championName 棋子名称
-   * @returns 所有 1 星棋子的位置数组，包含位置类型（bench/board）和索引
-   * @description 用于购买后更新状态时，确定哪些棋子会参与合成
-   *              TFT 合成规则：优先合成场上的棋子，备战席按从左到右顺序
-   */
-  findOneStarChampionPositions(championName) {
-    const positions = [];
-    const boardUnits = this.getBoardUnits();
-    for (let i = 0; i < boardUnits.length; i++) {
-      const unit = boardUnits[i];
-      if (unit?.tftUnit?.displayName === championName && unit.starLevel === 1) {
-        positions.push({ location: "board", index: i });
-      }
-    }
-    const benchUnits = this.getBenchUnits();
-    for (let i = 0; i < benchUnits.length; i++) {
-      const unit = benchUnits[i];
-      if (unit?.tftUnit?.displayName === championName && unit.starLevel === 1) {
-        positions.push({ location: "bench", index: i });
-      }
-    }
-    return positions;
-  }
-  /**
-   * 获取备战席第一个空位的索引
-   * @returns 空位索引 (0-8)，如果没有空位返回 -1
-   * @description 购买棋子后，新棋子会放到备战席最左边的空位
-   */
-  getFirstEmptyBenchSlotIndex() {
-    const benchUnits = this.getBenchUnits();
-    for (let i = 0; i < benchUnits.length; i++) {
-      if (benchUnits[i] === null) {
-        return i;
-      }
-    }
-    return -1;
-  }
-  /**
-   * 更新备战席指定槽位为空
-   * @param index 槽位索引 (0-8)
-   * @description 当棋子被合成消耗时，需要将对应槽位标记为空
-   *              直接修改快照中的 benchUnits 数组
-   */
-  setBenchSlotEmpty(index) {
-    if (!this.snapshot) {
-      logger.warn("[GameStateManager] 快照不存在，无法更新备战席");
-      return;
-    }
-    if (index < 0 || index >= this.snapshot.benchUnits.length) {
-      logger.warn(`[GameStateManager] 无效的备战席索引: ${index}`);
-      return;
-    }
-    const oldUnit = this.snapshot.benchUnits[index];
-    this.snapshot.benchUnits[index] = null;
-    logger.debug(
-      `[GameStateManager] 备战席槽位 ${index} 已清空` + (oldUnit?.tftUnit ? ` (原: ${oldUnit.tftUnit.displayName})` : "")
-    );
-  }
-  /**
-   * 设置备战席指定槽位的棋子
-   * @param index 槽位索引 (0-8)
-   * @param unit 要放置的棋子
-   * @description 购买棋子后，将新棋子放入备战席指定槽位
-   */
-  setBenchSlotUnit(index, unit) {
-    if (!this.snapshot) {
-      logger.warn("[GameStateManager] 快照不存在，无法设置棋子");
-      return;
-    }
-    if (index < 0 || index >= this.snapshot.benchUnits.length) {
-      logger.warn(`[GameStateManager] 无效的备战席索引: ${index}`);
-      return;
-    }
-    this.snapshot.benchUnits[index] = unit;
-    logger.debug(
-      `[GameStateManager] 备战席槽位 ${index} 已放置: ${unit.tftUnit.displayName} ${unit.starLevel}★`
-    );
-  }
-  /**
-   * 更新备战席指定槽位的棋子星级
-   * @param index 槽位索引 (0-8)
-   * @param newStarLevel 新的星级
-   * @description 当棋子升星时，更新对应槽位的星级
-   */
-  updateBenchSlotStarLevel(index, newStarLevel) {
-    if (!this.snapshot) {
-      logger.warn("[GameStateManager] 快照不存在，无法更新星级");
-      return;
-    }
-    const unit = this.snapshot.benchUnits[index];
-    if (!unit) {
-      logger.warn(`[GameStateManager] 备战席槽位 ${index} 为空，无法更新星级`);
-      return;
-    }
-    const oldStarLevel = unit.starLevel;
-    unit.starLevel = newStarLevel;
-    logger.debug(
-      `[GameStateManager] 备战席槽位 ${index} 星级更新: ${unit.tftUnit?.displayName} ${oldStarLevel}★ → ${newStarLevel}★`
-    );
-  }
-  /**
-   * 更新棋盘指定槽位的棋子星级
-   * @param index 槽位索引 (0-27)
-   * @param newStarLevel 新的星级
-   * @description 当场上棋子升星时，更新对应槽位的星级
-   */
-  updateBoardSlotStarLevel(index, newStarLevel) {
-    if (!this.snapshot) {
-      logger.warn("[GameStateManager] 快照不存在，无法更新星级");
-      return;
-    }
-    const unit = this.snapshot.boardUnits[index];
-    if (!unit) {
-      logger.warn(`[GameStateManager] 棋盘槽位 ${index} 为空，无法更新星级`);
-      return;
-    }
-    const oldStarLevel = unit.starLevel;
-    unit.starLevel = newStarLevel;
-    logger.debug(
-      `[GameStateManager] 棋盘槽位 ${index} 星级更新: ${unit.tftUnit?.displayName} ${oldStarLevel}★ → ${newStarLevel}★`
-    );
-  }
-  /**
-   * 设置棋盘指定槽位的棋子
-   * @param index 槽位索引 (0-27)
-   * @param unit 要放置的棋子
-   * @description 当棋子从备战席移动到棋盘时，更新棋盘状态
-   */
-  setBoardSlotUnit(index, unit) {
-    if (!this.snapshot) {
-      logger.warn("[GameStateManager] 快照不存在，无法设置棋盘棋子");
-      return;
-    }
-    if (index < 0 || index >= this.snapshot.boardUnits.length) {
-      logger.warn(`[GameStateManager] 无效的棋盘索引: ${index}`);
-      return;
-    }
-    this.snapshot.boardUnits[index] = unit;
-    logger.debug(
-      `[GameStateManager] 棋盘槽位 ${index} 已放置: ${unit.tftUnit.displayName} ${unit.starLevel}★`
-    );
-  }
-  /**
-   * 清空棋盘指定槽位
-   * @param index 槽位索引 (0-27)
-   * @description 当棋子被卖出或移回备战席时，清空对应棋盘槽位
-   */
-  setBoardSlotEmpty(index) {
-    if (!this.snapshot) {
-      logger.warn("[GameStateManager] 快照不存在，无法清空棋盘槽位");
-      return;
-    }
-    if (index < 0 || index >= this.snapshot.boardUnits.length) {
-      logger.warn(`[GameStateManager] 无效的棋盘索引: ${index}`);
-      return;
-    }
-    const oldUnit = this.snapshot.boardUnits[index];
-    this.snapshot.boardUnits[index] = null;
-    logger.debug(
-      `[GameStateManager] 棋盘槽位 ${index} 已清空` + (oldUnit?.tftUnit ? ` (原: ${oldUnit.tftUnit.displayName})` : "")
-    );
-  }
-  /**
-   * 给棋盘上的棋子添加装备
-   * @param boardLocation 棋盘位置（如 "R1_C1"）
-   * @param equipName 装备名称
-   * @description 当装备穿戴到棋子身上时，同步更新棋子的装备列表
-   */
-  addEquipToUnit(boardLocation, equipName) {
-    if (!this.snapshot) {
-      logger.warn("[GameStateManager] 快照不存在，无法添加装备");
-      return;
-    }
-    const index = this.getBoardLocationIndex(boardLocation);
-    if (index === -1) {
-      logger.warn(`[GameStateManager] 无效的棋盘位置: ${boardLocation}`);
-      return;
-    }
-    const unit = this.snapshot.boardUnits[index];
-    if (!unit) {
-      logger.warn(`[GameStateManager] 棋盘位置 ${boardLocation} 没有棋子，无法添加装备`);
-      return;
-    }
-    if (unit.equips.length >= 3) {
-      logger.warn(`[GameStateManager] 棋子 ${unit.tftUnit.displayName} 装备已满，无法添加 ${equipName}`);
-      return;
-    }
-    unit.equips.push({ name: equipName });
-    logger.debug(
-      `[GameStateManager] 棋子 ${unit.tftUnit.displayName} 装备添加: ${equipName} (当前装备数: ${unit.equips.length})`
-    );
-  }
-  /**
-   * 更新商店棋子列表
-   * @param shopUnits 新的商店棋子数组
-   * @description 刷新商店后，用新识别的商店数据更新快照
-   *              只更新 shopUnits 字段，不影响其他数据
-   */
-  updateShopUnits(shopUnits) {
-    if (!this.snapshot) {
-      logger.warn("[GameStateManager] 快照不存在，无法更新商店");
-      return;
-    }
-    this.snapshot.shopUnits = shopUnits;
-    const shopCount = shopUnits.filter((u) => u !== null).length;
-    logger.debug(`[GameStateManager] 商店已更新: ${shopCount}/5 个棋子`);
-  }
-  /**
-   * 更新商店指定槽位为空（已购买）
-   * @param index 槽位索引 (0-4)
-   * @description 购买棋子后，将商店对应槽位标记为空
-   */
-  setShopSlotEmpty(index) {
-    if (!this.snapshot) {
-      logger.warn("[GameStateManager] 快照不存在，无法更新商店");
-      return;
-    }
-    if (index < 0 || index >= this.snapshot.shopUnits.length) {
-      logger.warn(`[GameStateManager] 无效的商店索引: ${index}`);
-      return;
-    }
-    const oldUnit = this.snapshot.shopUnits[index];
-    this.snapshot.shopUnits[index] = null;
-    logger.debug(
-      `[GameStateManager] 商店槽位 ${index} 已清空` + (oldUnit ? ` (原: ${oldUnit.displayName})` : "")
-    );
-  }
-  /**
-   * 移除指定索引的装备（模拟消耗）
-   * @param index 装备栏索引 (0-9)
-   * @description 当使用装备后，后续装备会自动前移
-   *              此方法用于在不重新截图的情况下更新内存状态，确保连续操作的索引正确
-   */
-  removeEquipment(index) {
-    if (!this.snapshot) return;
-    if (index < 0 || index >= this.snapshot.equipments.length) {
-      logger.warn(`[GameStateManager] 尝试移除无效的装备索引: ${index}`);
-      return;
-    }
-    const removed = this.snapshot.equipments.splice(index, 1);
-    logger.debug(
-      `[GameStateManager] 移除装备: ${removed[0]?.name} (索引 ${index})，剩余 ${this.snapshot.equipments.length} 件 (后续装备已自动前移)`
-    );
-    for (let i = index; i < this.snapshot.equipments.length; i++) {
-      this.snapshot.equipments[i].slot = `SLOT_${i + 1}`;
-    }
-  }
-  /**
-   * 更新装备列表
-   * @param equipments 新的装备数组
-   * @description 从屏幕识别装备后更新，用于 D 牌/卖牌后刷新装备栏
-   */
-  updateEquipments(equipments) {
-    if (!this.snapshot) {
-      logger.warn("[GameStateManager] 快照不存在，无法更新装备");
-      return;
-    }
-    this.snapshot.equipments = equipments;
-    logger.debug(`[GameStateManager] 装备已更新: ${equipments.length} 件`);
-  }
-  /**
-   * 更新备战席棋子列表
-   * @param benchUnits 新的备战席棋子数组
-   * @description 从屏幕重新识别备战席后更新，用于卖棋子后刷新备战席状态
-   *              会完整替换原有的备战席数据
-   */
-  updateBenchUnits(benchUnits) {
-    if (!this.snapshot) {
-      logger.warn("[GameStateManager] 快照不存在，无法更新备战席");
-      return;
-    }
-    this.snapshot.benchUnits = benchUnits;
-    const occupiedCount = benchUnits.filter((u) => u !== null).length;
-    logger.debug(`[GameStateManager] 备战席已更新: ${occupiedCount}/9 个槽位有棋子`);
-  }
-  /**
-   * 更新等级信息
-   * @param levelInfo 等级信息对象 { level, currentXp, totalXp }
-   * @description 单独更新等级和经验，无需传入完整快照
-   */
-  updateLevelInfo(levelInfo) {
-    if (!this.snapshot) {
-      logger.warn("[GameStateManager] 快照不存在，无法更新等级信息");
-      return;
-    }
-    if (levelInfo.level !== this.currentLevel) {
-      logger.info(`[GameStateManager] 人口变化: ${this.currentLevel} -> ${levelInfo.level}`);
-      this.currentLevel = levelInfo.level;
-    }
-    this.snapshot.level = levelInfo.level;
-    this.snapshot.currentXp = levelInfo.currentXp;
-    this.snapshot.totalXp = levelInfo.totalXp;
-    logger.debug(
-      `[GameStateManager] 等级信息更新: Lv.${levelInfo.level} (${levelInfo.currentXp}/${levelInfo.totalXp})`
-    );
-  }
-  /**
-   * 扣减金币
-   * @param amount 扣减数量
-   * @description 购买棋子后更新金币数量
-   */
-  deductGold(amount) {
-    if (!this.snapshot) {
-      logger.warn("[GameStateManager] 快照不存在，无法扣减金币");
-      return;
-    }
-    const oldGold = this.snapshot.gold;
-    this.snapshot.gold = Math.max(0, this.snapshot.gold - amount);
-    logger.debug(`[GameStateManager] 金币扣减: ${oldGold} - ${amount} = ${this.snapshot.gold}`);
-  }
-  /**
-   * 更新金币数量
-   * @param gold 新的金币数量
-   * @description 从屏幕识别金币后更新，比 deductGold 更准确
-   *              因为某些海克斯强化会让刷新免费或打折
-   */
-  updateGold(gold) {
-    if (!this.snapshot) {
-      logger.warn("[GameStateManager] 快照不存在，无法更新金币");
-      return;
-    }
-    const oldGold = this.snapshot.gold;
-    this.snapshot.gold = gold;
-    if (oldGold !== gold) {
-      logger.debug(`[GameStateManager] 金币更新: ${oldGold} → ${gold}`);
-    }
-  }
-  // ============================================================================
-  // 游戏进程管理
-  // ============================================================================
-  /**
-   * 获取游戏进程信息
-   */
-  getProgress() {
-    return { ...this.progress };
-  }
-  /**
-   * 更新当前阶段
-   * @param stage 阶段字符串 (如 "2-1")
-   * @param stageType 阶段类型
-   */
-  updateStage(stage, stageType) {
-    this.progress.currentStage = stage;
-    this.progress.currentStageType = stageType;
-    if (stageType === GameStageType.PVP && !this.progress.hasFirstPvpOccurred) {
-      this.progress.hasFirstPvpOccurred = true;
-      logger.info("[GameStateManager] 检测到第一个 PVP 阶段");
-    }
-  }
-  /**
-   * 标记游戏开始
-   */
-  startGame() {
-    this.progress.isGameRunning = true;
-    this.progress.gameStartTime = Date.now();
-    logger.info("[GameStateManager] 游戏开始");
-  }
-  /**
-   * 标记游戏结束
-   */
-  endGame() {
-    this.progress.isGameRunning = false;
-    logger.info("[GameStateManager] 游戏结束");
-  }
-  /**
-   * 检查游戏是否正在进行
-   */
-  isGameRunning() {
-    return this.progress.isGameRunning;
-  }
-  /**
-   * 检查是否已经过了第一个 PVP 阶段
-   */
-  hasFirstPvpOccurred() {
-    return this.progress.hasFirstPvpOccurred;
-  }
-  // ============================================================================
-  // 棋盘状态查询
-  // ============================================================================
-  /**
-   * 获取当前棋盘上的棋子数量
-   * @returns 棋盘上非空槽位的数量
-   * @description 用于判断是否需要上更多棋子
-   *              棋盘最大容量 = 玩家等级
-   */
-  getBoardUnitCount() {
-    const boardUnits = this.getBoardUnits();
-    return boardUnits.filter((unit) => unit !== null).length;
-  }
-  /**
-   * 获取棋盘空位数量
-   * @returns 棋盘上空槽位的数量
-   * @description 棋盘共 28 个槽位 (4行 x 7列)
-   *              但实际可用数量受等级限制
-   */
-  getEmptyBoardSlotCount() {
-    const boardUnits = this.getBoardUnits();
-    return boardUnits.filter((unit) => unit === null).length;
-  }
-  /**
-   * 获取可以再上场的棋子数量
-   * @returns 当前等级下还能上场多少棋子
-   * @description 计算公式: 等级 - 当前棋盘棋子数
-   *              如果返回 0 或负数，说明已满员或超员
-   */
-  getAvailableBoardSlots() {
-    const level = this.getLevel();
-    const currentCount = this.getBoardUnitCount();
-    return Math.max(0, level - currentCount);
-  }
-  /**
-   * 获取备战席上的非空棋子列表（带索引）
-   * @returns 包含棋子信息和索引的数组
-   * @description 用于遍历备战席上的棋子，决定哪些应该上场
-   */
-  getBenchUnitsWithIndex() {
-    const result = [];
-    const benchUnits = this.getBenchUnits();
-    for (let i = 0; i < benchUnits.length; i++) {
-      const unit = benchUnits[i];
-      if (unit !== null) {
-        result.push({ unit, index: i });
-      }
-    }
-    return result;
-  }
-  /**
-   * 查找备战席中的锻造器
-   * @returns 锻造器的 BenchUnit 数组
-   * @description 锻造器是特殊单位，displayName 包含"锻造器"即可识别
-   *              直接返回 BenchUnit，因为它已包含所有需要的信息：
-   *              - location: 槽位位置 (如 "SLOT_1")
-   *              - tftUnit: 棋子信息 (包含 displayName)
-   *              - starLevel: 星级 (锻造器为 -1)
-   *              - equips: 装备列表 (锻造器为空数组)
-   */
-  findItemForges() {
-    return this.getBenchUnits().filter(
-      (unit) => unit !== null && unit.tftUnit.displayName.includes("锻造器")
-    );
-  }
-  /**
-   * 获取棋盘上的非空棋子列表（带位置）
-   * @returns 包含棋子信息的数组
-   * @description 用于遍历棋盘上的棋子，分析当前站位
-   */
-  getBoardUnitsWithLocation() {
-    const boardUnits = this.getBoardUnits();
-    return boardUnits.filter((unit) => unit !== null);
-  }
-  /**
-   * 获取棋盘上的空位列表
-   * @returns 空位的 BoardLocation 数组
-   * @description 返回所有空槽位的位置标识（如 "R1_C1"）
-   */
-  getEmptyBoardLocations() {
-    const boardUnits = this.getBoardUnits();
-    const emptyLocations = [];
-    const boardLocationKeys = Object.keys(fightBoardSlotPoint);
-    for (let i = 0; i < boardUnits.length && i < boardLocationKeys.length; i++) {
-      if (boardUnits[i] === null) {
-        emptyLocations.push(boardLocationKeys[i]);
-      }
-    }
-    return emptyLocations;
-  }
-  /**
-   * 获取前排空位列表
-   * @returns 前排（R1, R2）的空位 BoardLocation 数组
-   * @description 前排适合放置近战棋子（射程 1-2）
-   */
-  getFrontRowEmptyLocations() {
-    return this.getEmptyBoardLocations().filter(
-      (loc) => loc.startsWith("R1_") || loc.startsWith("R2_")
-    );
-  }
-  /**
-   * 获取后排空位列表
-   * @returns 后排（R3, R4）的空位 BoardLocation 数组
-   * @description 后排适合放置远程棋子（射程 3+）
-   */
-  getBackRowEmptyLocations() {
-    return this.getEmptyBoardLocations().filter(
-      (loc) => loc.startsWith("R3_") || loc.startsWith("R4_")
-    );
-  }
-  /**
-   * 查找装备栏中指定名称的第一个装备索引
-   * @param itemName 装备名称
-   * @returns 装备索引 (0..n-1)，如果未找到返回 -1
-   *
-   * @description
-   * - 这里返回的是 **equipments 数组索引**（也就是 UI 从左到右的槽位索引）。
-   * - `TftOperator.getEquipInfo()` 会过滤掉“空槽位”，并把 slot 重写为紧凑的 `SLOT_1..SLOT_n`。
-   *   因此数组索引与槽位索引保持一致，便于连续穿戴/合成时做“前移模拟”。
-   */
-  findEquipmentIndex(itemName) {
-    const equipments = this.getEquipments();
-    for (let i = 0; i < equipments.length; i++) {
-      const equip = equipments[i];
-      if (equip.name === itemName) {
-        return i;
-      }
-    }
-    return -1;
-  }
-  /**
-   * 查找装备栏中指定名称的所有装备索引
-   * @param itemName 装备名称
-   * @returns 装备索引数组 (0..n-1)
-   */
-  findAllEquipmentIndices(itemName) {
-    const equipments = this.getEquipments();
-    const indices = [];
-    for (let i = 0; i < equipments.length; i++) {
-      if (equipments[i].name === itemName) {
-        indices.push(i);
-      }
-    }
-    return indices;
-  }
-  // ============================================================================
-  // 重置
-  // ============================================================================
-  /**
-   * 重置所有状态
-   * @description 在游戏结束或停止时调用，清理所有状态，准备下一局
-   */
-  reset() {
-    this.snapshot = null;
-    this.currentLevel = 1;
-    this.progress = {
-      currentStage: "",
-      currentStageType: GameStageType.UNKNOWN,
-      hasFirstPvpOccurred: false,
-      isGameRunning: false,
-      gameStartTime: 0
-    };
-    logger.info("[GameStateManager] 游戏状态已重置，准备下一局");
-  }
-  // ============================================================
-  // 🔧 棋子移动状态同步方法
-  // ============================================================
-  /**
-   * 根据 BoardLocation 获取数组索引
-   * @param location 棋盘位置（如 "R1_C1"）
-   * @returns 对应的数组索引，如果无效返回 -1
-   */
-  getBoardLocationIndex(location) {
-    const boardLocationKeys = Object.keys(fightBoardSlotPoint);
-    return boardLocationKeys.indexOf(location);
-  }
-  /**
-   * 根据 BenchLocation 获取数组索引
-   * @param location 备战席位置（如 "SLOT_1"）
-   * @returns 对应的数组索引（0-8），如果无效返回 -1
-   */
-  getBenchLocationIndex(location) {
-    const match = location.match(/SLOT_(\d+)/);
-    if (!match) return -1;
-    const slotNum = parseInt(match[1], 10);
-    return slotNum >= 1 && slotNum <= 9 ? slotNum - 1 : -1;
-  }
-  /**
-   * 将备战席棋子移动到棋盘（更新内部状态）
-   * @param benchLocation 备战席位置
-   * @param boardLocation 棋盘目标位置
-   * @description 同步更新 GameStateManager 的内部状态，
-   *              确保备战席和棋盘的状态与实际游戏一致
-   */
-  moveBenchToBoard(benchLocation, boardLocation) {
-    const benchIndex = this.getBenchLocationIndex(benchLocation);
-    const boardIndex = this.getBoardLocationIndex(boardLocation);
-    if (benchIndex === -1 || boardIndex === -1) {
-      logger.warn(`[GameStateManager] 无效的移动: ${benchLocation} -> ${boardLocation}`);
-      return;
-    }
-    if (!this.snapshot) {
-      logger.warn("[GameStateManager] 快照不存在，无法移动棋子");
-      return;
-    }
-    const benchUnit = this.snapshot.benchUnits[benchIndex];
-    if (!benchUnit) {
-      logger.warn(`[GameStateManager] 备战席 ${benchLocation} 为空，无法移动`);
-      return;
-    }
-    const boardUnit = {
-      location: boardLocation,
-      tftUnit: benchUnit.tftUnit,
-      starLevel: benchUnit.starLevel,
-      equips: benchUnit.equips
-    };
-    this.snapshot.boardUnits[boardIndex] = boardUnit;
-    this.snapshot.benchUnits[benchIndex] = null;
-    logger.debug(
-      `[GameStateManager] 棋子移动: ${benchLocation} -> ${boardLocation} (${benchUnit.tftUnit.displayName} ${benchUnit.starLevel}★)`
-    );
-  }
-  /**
-   * 将棋盘棋子移回备战席（更新内部状态）
-   * @param boardLocation 棋盘位置
-   * @param benchIndex 备战席目标槽位索引（0-8）
-   */
-  moveBoardToBench(boardLocation, benchIndex) {
-    const boardIndex = this.getBoardLocationIndex(boardLocation);
-    if (boardIndex === -1 || benchIndex < 0 || benchIndex > 8) {
-      logger.warn(`[GameStateManager] 无效的移动: ${boardLocation} -> SLOT_${benchIndex + 1}`);
-      return;
-    }
-    if (!this.snapshot) {
-      logger.warn("[GameStateManager] 快照不存在，无法移动棋子");
-      return;
-    }
-    const boardUnit = this.snapshot.boardUnits[boardIndex];
-    if (!boardUnit) {
-      logger.warn(`[GameStateManager] 棋盘 ${boardLocation} 为空，无法移动`);
-      return;
-    }
-    const benchUnit = {
-      location: `SLOT_${benchIndex + 1}`,
-      tftUnit: boardUnit.tftUnit,
-      starLevel: boardUnit.starLevel,
-      equips: boardUnit.equips
-    };
-    this.snapshot.benchUnits[benchIndex] = benchUnit;
-    this.snapshot.boardUnits[boardIndex] = null;
-    logger.debug(
-      `[GameStateManager] 棋子移回: ${boardLocation} -> SLOT_${benchIndex + 1} (${boardUnit.tftUnit.displayName} ${boardUnit.starLevel}★)`
-    );
-  }
-  /**
-   * 棋盘内移动棋子（调整站位）
-   * @param fromLocation 原位置
-   * @param toLocation 目标位置
-   * @description 同步更新 GameStateManager 的内部状态
-   */
-  moveBoardToBoard(fromLocation, toLocation) {
-    const fromIndex = this.getBoardLocationIndex(fromLocation);
-    const toIndex = this.getBoardLocationIndex(toLocation);
-    if (fromIndex === -1 || toIndex === -1) {
-      logger.warn(`[GameStateManager] 无效的棋盘移动: ${fromLocation} -> ${toLocation}`);
-      return;
-    }
-    if (!this.snapshot) {
-      logger.warn("[GameStateManager] 快照不存在，无法移动棋子");
-      return;
-    }
-    const unit = this.snapshot.boardUnits[fromIndex];
-    if (!unit) {
-      logger.warn(`[GameStateManager] 棋盘 ${fromLocation} 为空，无法移动`);
-      return;
-    }
-    unit.location = toLocation;
-    this.snapshot.boardUnits[toIndex] = unit;
-    this.snapshot.boardUnits[fromIndex] = null;
-    logger.debug(
-      `[GameStateManager] 棋盘内移动: ${fromLocation} -> ${toLocation} (${unit.tftUnit.displayName} ${unit.starLevel}★)`
-    );
-  }
-  /**
-   * 清空棋盘指定位置（根据 BoardLocation）
-   * @param boardLocation 棋盘位置（如 "R1_C1"）
-   * @description 当棋子被卖出时，清空对应棋盘位置
-   */
-  clearBoardLocation(boardLocation) {
-    const index = this.getBoardLocationIndex(boardLocation);
-    if (index === -1) {
-      logger.warn(`[GameStateManager] 无效的棋盘位置: ${boardLocation}`);
-      return;
-    }
-    this.setBoardSlotEmpty(index);
-  }
-}
-const gameStateManager = GameStateManager.getInstance();
 class GameStageMonitor extends EventEmitter {
   static instance;
   /** 轮询间隔（毫秒）：2 秒一次，避免高频检测 */
@@ -15491,6 +15601,19 @@ class StrategyService {
   }
 }
 const strategyService = StrategyService.getInstance();
+class IdleState {
+  /** 状态名称 */
+  name = "IdleState";
+  /**
+   * 执行空闲状态逻辑
+   * @param _signal AbortSignal (此状态不需要，但为保持接口一致性保留)
+   * @returns 返回自身，保持空闲状态
+   * @description 空闲状态下不做任何操作，等待外部触发状态转换
+   */
+  async action(_signal) {
+    return this;
+  }
+}
 class EndState {
   /** 状态名称 */
   name = "EndState";
@@ -16371,6 +16494,32 @@ class GlobalHotkeyManager {
   }
 }
 const globalHotkeyManager = GlobalHotkeyManager.getInstance();
+initGlobalCrashHandler();
+function checkNativeModules() {
+  const failedModules = [];
+  try {
+    require2("sharp");
+  } catch (error) {
+    failedModules.push("sharp");
+    writeCrashLog(error, "加载 sharp 模块失败 - 可能缺少 VC++ 运行库");
+  }
+  try {
+    require2("@nut-tree-fork/nut-js");
+  } catch (error) {
+    failedModules.push("@nut-tree-fork/nut-js");
+    writeCrashLog(error, "加载 nut-js 模块失败 - 可能缺少 VC++ 运行库");
+  }
+  try {
+    require2("uiohook-napi");
+  } catch (error) {
+    failedModules.push("uiohook-napi");
+    writeCrashLog(error, "加载 uiohook-napi 模块失败 - 可能缺少 VC++ 运行库");
+  }
+  return {
+    success: failedModules.length === 0,
+    failedModules
+  };
+}
 process.env.APP_ROOT = path__default.join(__dirname, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
 const MAIN_DIST = path__default.join(process.env.APP_ROOT, "dist-electron");
@@ -16480,6 +16629,35 @@ app.on("will-quit", () => {
   globalHotkeyManager.stop();
 });
 app.whenReady().then(async () => {
+  console.log("🔍 [Main] 正在检查原生模块...");
+  const nativeModuleCheck = checkNativeModules();
+  if (!nativeModuleCheck.success) {
+    const failedList = nativeModuleCheck.failedModules.join(", ");
+    console.error(`❌ [Main] 以下原生模块加载失败: ${failedList}`);
+    const result = await dialog.showMessageBox({
+      type: "error",
+      title: "运行环境检测失败",
+      message: "程序运行所需的组件加载失败",
+      detail: `以下模块无法加载: ${failedList}
+
+这通常是因为您的电脑缺少 Microsoft Visual C++ 运行库。
+
+解决方法:
+1. 下载并安装 VC++ 运行库 (推荐)
+2. 访问 Microsoft 官网下载 "Visual C++ Redistributable"
+
+崩溃日志已保存到程序目录下的 crash-logs 文件夹`,
+      buttons: ["下载 VC++ 运行库", "退出程序"],
+      defaultId: 0,
+      cancelId: 1
+    });
+    if (result.response === 0) {
+      shell.openExternal("https://aka.ms/vs/17/release/vc_redist.x64.exe");
+    }
+    app.quit();
+    return;
+  }
+  console.log("✅ [Main] 原生模块检查通过");
   createWindow();
   init();
   registerHandler();

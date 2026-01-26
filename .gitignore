@@ -7,6 +7,9 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# 崩溃日志目录（运行时生成）
+crash-logs
+
 node_modules
 dist
 dist-ssr
