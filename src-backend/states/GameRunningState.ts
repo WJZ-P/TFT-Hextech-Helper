@@ -29,6 +29,8 @@ import { sleep } from "../utils/HelperTools";
 import { inGameApi, InGameApiEndpoints } from "../lcu/InGameApi";
 import { showToast, notifyStopAfterGameState, notifyHexRunningState } from "../utils/ToastBridge";
 import { hexService } from "../services/HexService";
+import { settingsStore } from "../utils/SettingsStore";
+import { TFTMode } from "../TFTProtocol";
 
 /** abort 信号轮询间隔 (ms)，作为事件监听的兜底 */
 const ABORT_CHECK_INTERVAL_MS = 2000;
@@ -69,10 +71,16 @@ export class GameRunningState implements IState {
         // 1.5 检测对局中的人机玩家并发送 Toast 通知
         await this.detectAndNotifyBots();
 
-        // 2. 初始化策略服务（加载阵容配置）
-        const initSuccess = strategyService.initialize();
+        // 2. 获取当前游戏模式并初始化策略服务
+        const currentMode = settingsStore.get('tftMode') as TFTMode || TFTMode.NORMAL;
+        logger.info(`[GameRunningState] 当前游戏模式: ${currentMode}`);
+        
+        const initSuccess = strategyService.initialize(currentMode);
         if (!initSuccess) {
-            logger.error("[GameRunningState] 策略服务初始化失败，请先选择阵容");
+            // 发条鸟模式不需要阵容，普通模式需要
+            if (currentMode !== TFTMode.CLOCKWORK_TRAILS) {
+                logger.error("[GameRunningState] 策略服务初始化失败，请先选择阵容");
+            }
             // 即使初始化失败，也继续运行（避免卡死）
         }
 
@@ -100,7 +108,6 @@ export class GameRunningState implements IState {
             if (hexService.stopAfterCurrentGame) {
                 logger.info("[GameRunningState] 游戏结束，检测到【本局结束后停止】标志，停止挂机");
                 showToast.success("本局已结束，自动停止挂机", { position: 'top-center' });
-                
                 // 通知前端重置"本局结束后停止"状态（因为是一次性功能，生效后自动取消）
                 notifyStopAfterGameState(false);
                 

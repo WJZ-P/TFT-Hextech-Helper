@@ -308,26 +308,25 @@ const ModeToggleTitle = styled.span<{ theme: ThemeType }>`
 `;
 
 /**
- * 模式切换开关（整块可点击，点击任意位置切换）
+ * 模式切换容器（三选一：匹配/排位/发条鸟）
  *
  * 设计目标：
- * - 比“分段按钮”更像真实开关
- * - 整块可点，交互简单
- * - 圆角完全裁切，解决右侧“白边没包住”的问题（关键是 overflow: hidden）
+ * - 三栏分段按钮，点击对应选项切换到该模式
+ * - 圆角完全裁切，解决边缘"白边没包住"的问题（关键是 overflow: hidden）
+ * - 滑块指示器会根据当前选中项平滑移动
  */
-const ModeTogglePill = styled.button<{ theme: ThemeType; $isRanked: boolean }>`
+const ModeTogglePill = styled.div<{ theme: ThemeType }>`
   appearance: none;
   border: 1px solid ${props => props.theme.colors.border};
   background: ${props => props.theme.colors.elementBg};
   border-radius: 32px;
   padding: 4px;
   height: 36px;
-  width: 128px;
+  width: 192px; /* 三选一需要更宽 */
   display: inline-flex;
   align-items: center;
   position: relative;
   overflow: hidden; /* 关键：让内部滑块与背景都被圆角裁切 */
-  cursor: pointer;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
 
@@ -335,49 +334,74 @@ const ModeTogglePill = styled.button<{ theme: ThemeType; $isRanked: boolean }>`
     border-color: ${props => props.theme.colors.primary};
     box-shadow: 0 5px 11px rgba(0, 0, 0, 0.22);
   }
-
-  &:active {
-    transform: translateY(0);
-  }
-
-  &:focus-visible {
-    outline: 3px solid ${props => props.theme.colors.primary}80;
-    outline-offset: 2px;
-  }
 `;
 
-/** 滑块指示器（内部移动的那一块） */
-const ModeToggleIndicator = styled.div<{ theme: ThemeType; $isRanked: boolean }>`
+/**
+ * 滑块指示器（内部移动的那一块）
+ * $modeIndex: 0=匹配, 1=排位, 2=发条鸟
+ * 
+ * 计算逻辑：
+ * - 三等分，每份宽度为 (总宽度 - 4px内边距) / 3
+ * - 滑块宽度 = calc(33.33% - 2px)
+ * - 位置 = index * 33.33% + 2px 偏移
+ */
+const ModeToggleIndicator = styled.div<{ theme: ThemeType; $modeIndex: number }>`
   position: absolute;
   top: 2px;
-  left: ${props => props.$isRanked ? 'calc(50% + 2px)' : '2px'};
-  width: calc(50% - 4px);
+  /* 根据选中的模式索引计算 left 位置 */
+  left: ${props => {
+    // 计算每个选项的宽度百分比（三等分）
+    const percent = 33.33;
+    // 根据索引计算位置，加上初始偏移
+    return `calc(${props.$modeIndex * percent}% + 2px)`;
+  }};
+  width: calc(33.33% - 3px); /* 三等分减去间隙 */
   height: calc(100% - 4px);
   border-radius: 999px;
-  background: ${props => props.$isRanked
-    ? `linear-gradient(135deg, ${props.theme.colors.warning} 0%, ${props.theme.colors.warning}cc 100%)`
-    : `linear-gradient(135deg, ${props.theme.colors.primary} 0%, ${props.theme.colors.primaryHover} 100%)`};
+  /* 根据模式显示不同颜色：匹配=主色, 排位=警告色, 发条鸟=紫色 */
+  background: ${props => {
+    switch (props.$modeIndex) {
+      case 1: // 排位 - 橙色警告色
+        return `linear-gradient(135deg, ${props.theme.colors.warning} 0%, ${props.theme.colors.warning}cc 100%)`;
+      case 2: // 发条鸟 - 紫色
+        return `linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%)`;
+      default: // 匹配 - 主色
+        return `linear-gradient(135deg, ${props.theme.colors.primary} 0%, ${props.theme.colors.primaryHover} 100%)`;
+    }
+  }};
   transition: left 0.22s ease, background 0.22s ease;
 `;
 
-/** 文本层（在滑块之上） */
+/** 文本层（在滑块之上），三栏 grid 布局 */
 const ModeToggleTextRow = styled.div`
   position: relative;
   z-index: 1;
   width: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr; /* 三等分 */
   align-items: center;
 `;
 
-/** 单个文本 */
-const ModeToggleLabel = styled.span<{ theme: ThemeType; $active: boolean }>`
-  font-size: 0.85rem;
+/** 单个文本标签（可点击切换） */
+const ModeToggleLabel = styled.button<{ theme: ThemeType; $active: boolean }>`
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.75rem; /* 稍微小一点适应三栏 */
   font-weight: 800;
   text-align: center;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   color: ${props => props.$active ? props.theme.colors.textOnPrimary : props.theme.colors.textSecondary};
   transition: color 0.25s ease;
+  cursor: pointer;
+
+  &:hover {
+    color: ${props => props.$active ? props.theme.colors.textOnPrimary : props.theme.colors.text};
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
 `;
 
 // ============================================
@@ -707,21 +731,31 @@ const ControlButton = styled.button<{ $isRunning: boolean; $disabled: boolean; t
   }
 `;
 
-/** 
+/**
  * 控制区域容器 - 使用 Flexbox 水平排列
  * 左：日志模式 | 中：控制按钮 | 右：游戏模式
- * 标题用绝对定位浮在胶囊上方，不参与对齐
+ * 
+ * 布局策略：
+ * - 中间按钮使用绝对定位，始终保持水平居中
+ * - 左右两侧使用 space-between 分布在两端
+ * - 这样无论左右组件宽度如何，中间按钮始终居中
  */
 const ControlRow = styled.div`
   display: flex;
   align-items: center;  /* 垂直居中对齐 */
-  justify-content: center;
-  gap: 24px;  /* 元素之间的间距 */
+  justify-content: space-between;  /* 左右两端分布 */
+  position: relative;  /* 为中间按钮的绝对定位提供参照 */
+  width: 100%;
+  padding: 0 20px;  /* 左右留白 */
+  min-height: 60px;  /* 最小高度，确保绝对定位的按钮有空间 */
 `;
 
-/** 按钮水纹外层容器 */
+/** 按钮水纹外层容器 - 绝对定位保持居中 */
 const ButtonWrapper = styled.div`
-  position: relative;
+  /* 绝对定位，始终保持水平居中 */
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   
   /* 外围水纹 - 始终显示 */
   &::before {
@@ -916,9 +950,9 @@ export const HomePage = () => {
             const running = await window.hex.getStatus();
             setIsRunning(running);
 
-            // 获取 TFT 游戏模式
+            // 获取 TFT 游戏模式（匹配/排位/发条鸟）
             const mode = await window.lineup.getTftMode();
-            if (mode === TFTMode.RANK || mode === TFTMode.NORMAL) {
+            if (mode === TFTMode.RANK || mode === TFTMode.NORMAL || mode === TFTMode.CLOCKWORK_TRAILS) {
                 setTftMode(mode as TFTMode);
             }
 
@@ -1031,22 +1065,53 @@ export const HomePage = () => {
     };
 
     /**
-     * 切换 TFT 游戏模式（匹配/排位）
+     * 切换 TFT 游戏模式（匹配/排位/发条鸟）
      *
      * 交互说明：
-     * - 主页上的模式开关“整块可点”，点任意位置都会在“匹配 <-> 排位”之间切换。
-     * - 运行中禁止切换，避免队列创建与实际期望不一致。
+     * - 点击对应的模式标签切换到该模式
+     * - 运行中禁止切换，避免队列创建与实际期望不一致
+     * 
+     * @param newMode - 要切换到的新模式
      */
-    const handleModeToggle = async () => {
+    const handleModeChange = async (newMode: TFTMode) => {
+        // 如果点击的是当前模式，不做任何操作
+        if (newMode === tftMode) {
+            return;
+        }
+
         if (isRunning) {
             toast.error('运行中无法切换模式');
             return;
         }
 
-        const newMode = tftMode === TFTMode.RANK ? TFTMode.NORMAL : TFTMode.RANK;
         setTftMode(newMode);
         await window.lineup.setTftMode(newMode);
-        toast.success(newMode === TFTMode.RANK ? '已切换到排位模式' : '已切换到匹配模式');
+        
+        // 根据模式显示不同的提示
+        const modeNames: Record<TFTMode, string> = {
+            [TFTMode.NORMAL]: '匹配模式',
+            [TFTMode.RANK]: '排位模式',
+            [TFTMode.CLOCKWORK_TRAILS]: '发条鸟的试炼',
+            [TFTMode.CLASSIC]: '经典模式', // 不会用到，但类型完整性需要
+        };
+        toast.success(`已切换到${modeNames[newMode]}`);
+    };
+
+    /**
+     * 获取当前模式对应的索引（用于滑块位置计算）
+     * 0=匹配, 1=排位, 2=发条鸟
+     */
+    const getModeIndex = (mode: TFTMode): number => {
+        switch (mode) {
+            case TFTMode.NORMAL:
+                return 0;
+            case TFTMode.RANK:
+                return 1;
+            case TFTMode.CLOCKWORK_TRAILS:
+                return 2;
+            default:
+                return 0;
+        }
     };
 
     /**
@@ -1218,19 +1283,37 @@ export const HomePage = () => {
                     </ControlButton>
                 </ButtonWrapper>
 
-                {/* 游戏模式切换 - 匹配/排位（右侧） */}
+                {/* 游戏模式切换 - 匹配/排位/发条鸟（右侧） */}
                 <ModeToggleContainer>
                     <ModeToggleTitle>模式选择</ModeToggleTitle>
                     <ModeTogglePill
-                        type="button"
-                        $isRanked={tftMode === TFTMode.RANK}
-                        onClick={handleModeToggle}
-                        title={tftMode === TFTMode.RANK ? '当前：排位（点击切换到匹配）' : '当前：匹配（点击切换到排位）'}
+                        title={`当前模式：${tftMode === TFTMode.NORMAL ? '匹配' : tftMode === TFTMode.RANK ? '排位' : '发条鸟'}`}
                     >
-                        <ModeToggleIndicator $isRanked={tftMode === TFTMode.RANK} />
+                        {/* 滑块指示器 - 根据当前模式索引定位 */}
+                        <ModeToggleIndicator $modeIndex={getModeIndex(tftMode)} />
+                        {/* 三个可点击的模式标签 */}
                         <ModeToggleTextRow>
-                            <ModeToggleLabel $active={tftMode === TFTMode.NORMAL}>匹配</ModeToggleLabel>
-                            <ModeToggleLabel $active={tftMode === TFTMode.RANK}>排位</ModeToggleLabel>
+                            <ModeToggleLabel 
+                                $active={tftMode === TFTMode.NORMAL}
+                                onClick={() => handleModeChange(TFTMode.NORMAL)}
+                                title="匹配模式"
+                            >
+                                匹配
+                            </ModeToggleLabel>
+                            <ModeToggleLabel 
+                                $active={tftMode === TFTMode.RANK}
+                                onClick={() => handleModeChange(TFTMode.RANK)}
+                                title="排位模式"
+                            >
+                                排位
+                            </ModeToggleLabel>
+                            <ModeToggleLabel 
+                                $active={tftMode === TFTMode.CLOCKWORK_TRAILS}
+                                onClick={() => handleModeChange(TFTMode.CLOCKWORK_TRAILS)}
+                                title="发条鸟的试炼"
+                            >
+                                发条鸟
+                            </ModeToggleLabel>
                         </ModeToggleTextRow>
                     </ModeTogglePill>
                 </ModeToggleContainer>

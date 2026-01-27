@@ -28,6 +28,8 @@ const MATCH_THRESHOLDS = {
     EMPTY_SLOT_STDDEV: 10,
     /** 战利品球匹配阈值 */
     LOOT_ORB: 0.75,
+    /** 按钮匹配阈值 (按钮有明显文字特征，阈值设较高) */
+    BUTTON: 0.80,
 } as const;
 
 /**
@@ -437,6 +439,74 @@ export class TemplateMatcher {
         } catch (e) {
             logger.error(`[TemplateMatcher] 战利品球匹配出错: ${e}`);
             return [];
+        } finally {
+            mask.delete();
+            resultMat.delete();
+        }
+    }
+
+    /**
+     * 匹配按钮模板
+     * @description 在目标图像中查找指定按钮，返回是否匹配成功及置信度
+     * @param targetMat 目标图像 (需要是 RGB 3 通道)
+     * @param buttonName 按钮名称，例如 "clockwork_quit_button"
+     * @returns 匹配结果对象，包含 matched (是否匹配) 和 confidence (置信度)
+     */
+    public matchButton(targetMat: cv.Mat, buttonName: string): { matched: boolean; confidence: number } {
+        const templateMat = templateLoader.getButtonTemplate(buttonName);
+        
+        if (!templateMat) {
+            logger.warn(`[TemplateMatcher] 未找到按钮模板: ${buttonName}`);
+            return { matched: false, confidence: 0 };
+        }
+
+        // 尺寸检查：模板不能大于目标图像
+        if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) {
+            logger.warn(
+                `[TemplateMatcher] 按钮模板尺寸过大: ${buttonName} ` +
+                `(模板: ${templateMat.cols}x${templateMat.rows}, 目标: ${targetMat.cols}x${targetMat.rows})`
+            );
+            return { matched: false, confidence: 0 };
+        }
+
+        // 通道检查
+        if (templateMat.type() !== targetMat.type()) {
+            logger.warn(
+                `[TemplateMatcher] 按钮模板通道不匹配: ${buttonName} ` +
+                `(模板: ${templateMat.type()}, 目标: ${targetMat.type()})`
+            );
+            return { matched: false, confidence: 0 };
+        }
+
+        const mask = new cv.Mat();
+        const resultMat = new cv.Mat();
+
+        try {
+            // 执行模板匹配 (使用归一化相关系数匹配法)
+            cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
+
+            // 获取最大匹配值
+            const minMax = cv.minMaxLoc(resultMat, mask);
+            const confidence = minMax.maxVal;
+
+            const matched = confidence >= MATCH_THRESHOLDS.BUTTON;
+
+            if (matched) {
+                logger.info(
+                    `[TemplateMatcher] 按钮匹配成功: ${buttonName} ` +
+                    `(置信度: ${(confidence * 100).toFixed(1)}%)`
+                );
+            } else {
+                logger.debug(
+                    `[TemplateMatcher] 按钮匹配失败: ${buttonName} ` +
+                    `(置信度: ${(confidence * 100).toFixed(1)}%, 阈值: ${MATCH_THRESHOLDS.BUTTON * 100}%)`
+                );
+            }
+
+            return { matched, confidence };
+        } catch (e) {
+            logger.error(`[TemplateMatcher] 按钮匹配出错: ${e}`);
+            return { matched: false, confidence: 0 };
         } finally {
             mask.delete();
             resultMat.delete();

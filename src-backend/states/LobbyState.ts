@@ -35,7 +35,7 @@ export class LobbyState implements IState {
 
     /**
      * 根据用户设置获取对应的队列 ID
-     * @returns TFT 队列 ID（匹配或排位）
+     * @returns TFT 队列 ID（匹配、排位或发条鸟）
      */
     private getQueueId(): Queue {
         const tftMode = settingsStore.get('tftMode');
@@ -44,6 +44,9 @@ export class LobbyState implements IState {
             case TFTMode.RANK:
                 logger.info("[LobbyState] 当前模式: 排位赛");
                 return Queue.TFT_RANKED;
+            case TFTMode.CLOCKWORK_TRAILS:
+                logger.info("[LobbyState] 当前模式: 发条鸟的试炼");
+                return Queue.TFT_FATIAO; // 发条鸟队列ID = 1220
             case TFTMode.NORMAL:
             default:
                 logger.info("[LobbyState] 当前模式: 匹配模式");
@@ -135,11 +138,11 @@ export class LobbyState implements IState {
 
             /**
              * 监听"找到对局"事件，自动接受
-             * 使用节流：1秒内只调用一次 acceptMatch
+             * 使用节流：100ms内只调用一次 acceptMatch
              */
             const onReadyCheck = (eventData: LCUWebSocketMessage) => {
                 const now = Date.now();
-                if (eventData.data?.state === "InProgress" && now - lastAcceptTime >= 1000) {
+                if (eventData.data?.state === "InProgress" && now - lastAcceptTime >= 100) {
                     lastAcceptTime = now;
                     logger.info("[LobbyState] 已找到对局！正在自动接受...");
                     this.lcuManager?.acceptMatch().catch((reason) => {

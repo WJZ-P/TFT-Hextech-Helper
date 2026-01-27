@@ -253,6 +253,11 @@ const DebugPage = () => {
                         toast.success('棋盘截图已保存');
                     }}>保存棋盘截图</DebugButton>
                     
+                    <DebugButton $variant="warning" onClick={async () => {
+                        console.log(await window.tft.saveQuitButtonSnapshot());
+                        toast.success('发条鸟退出按钮截图已保存');
+                    }}>发条鸟退出按钮截图</DebugButton>
+                    
                     <DebugButton onClick={async () => {
                         toast("这是一个测试弹窗！", { type: "success" });
                     }}>测试 Toast 弹窗</DebugButton>

@@ -445,6 +445,21 @@ export const gameStageDisplayTheClockworkTrails = {
     leftTop: { x: 337, y: 6 },
     rightBottom: { x: 366, y: 22 }
 }
+//  发条鸟模式右下角战斗按钮
+export const clockworkTrailsFightButtonPoint = {
+    x: 955,
+    y: 705
+}
+//  发条鸟模式死亡后右侧"现在退出按钮"
+export const clockworkTrailsQuitNowButtonRegion = {
+    leftTop: { x: 780, y: 555},
+    rightBottom: { x: 845, y:570}
+}
+//  发条鸟模式"现在退出"按钮点击坐标
+export const clockworkTrailsQuitNowButtonPoint = {
+    x: 815,
+    y: 560
+}
 
 //  "战斗环节"四字region（用来判断是否停止操作）
 //  TODO: 数据还没填充，需要实际测量确认坐标

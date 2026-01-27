@@ -107,6 +107,7 @@ const tftApi = {
     getLootOrbs: () => ipcRenderer.invoke(IpcChannel.TFT_GET_LOOT_ORBS),
     saveBenchSlotSnapshots : ()=> ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT),
     saveFightBoardSlotSnapshots : ()=>ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT),
+    saveQuitButtonSnapshot: () => ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_QUIT_BUTTON_SNAPSHOT),  // 保存发条鸟退出按钮截图
 }
 export type TftApi = typeof tftApi
 contextBridge.exposeInMainWorld('tft', tftApi)

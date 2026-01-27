@@ -23,6 +23,8 @@ import cv from "@techstark/opencv-js";
 import {
     benchSlotPoints,
     benchSlotRegion,
+    clockworkTrailsQuitNowButtonPoint,
+    clockworkTrailsQuitNowButtonRegion,
     coinRegion,
     detailChampionNameRegion,
     detailChampionStarRegion,
@@ -73,6 +75,7 @@ import {
     parseStageStringToEnum,
     isValidStageFormat,
 } from "./tft";
+import { settingsStore } from "./utils/SettingsStore";
 import type {
     IdentifiedEquip,
     BenchUnit,
@@ -242,6 +245,7 @@ class TftOperator {
     /**
      * 获取当前游戏阶段
      * @description 通过 OCR 识别游戏阶段 (如 "2-1", "3-5")
+     *              根据用户设置的游戏模式，直接读取对应区域，避免逐个试错
      * @returns 游戏阶段结果，包含阶段类型和原始文本
      */
     public async getGameStage(): Promise<GameStageResult> {
@@ -250,47 +254,70 @@ class TftOperator {
              * 阶段识别统一使用 `forOCR=false`（原图，不做二值化/灰度等预处理）。
              *
              * 原因：海克斯出现时背景会整体变暗，二值化(threshold)会丢失大量细节，
-             * 直接导致 "2-1" 这类阶段文字被“吃掉”。用原图 OCR 能保留色彩/对比信息。
+             * 直接导致 "2-1" 这类阶段文字被"吃掉"。用原图 OCR 能保留色彩/对比信息。
              */
             const recognizeStageText = async (region: Region): Promise<string> => {
                 const rawPng = await screenCapture.captureRegionAsPng(region, false);
                 return await ocrService.recognize(rawPng, OcrWorkerType.GAME_STAGE);
             };
 
+            // 从设置中获取当前游戏模式，根据模式选择识别策略
+            const currentMode = settingsStore.get('tftMode');
+
+            // ============================================================
+            // 发条鸟试炼模式：直接读取固定区域
+            // ============================================================
+            if (currentMode === TFTMode.CLOCKWORK_TRAILS) {
+                const clockworkRegion = this.getClockworkTrialsRegion();
+                const clockText = await recognizeStageText(clockworkRegion);
+
+                if (clockText && clockText.length > 0) {
+                    this.tftMode = TFTMode.CLOCKWORK_TRAILS;
+                    const stageType = parseStageStringToEnum(clockText);
+                    if (stageType !== GameStageType.UNKNOWN) {
+                        return { type: stageType, stageText: clockText };
+                    }
+                    // 解析失败时，返回 PVP 类型（发条鸟模式全程都是战斗）
+                    return { type: GameStageType.PVP, stageText: clockText };
+                }
+
+                // 发条鸟区域识别失败，尝试检测"现在退出"按钮
+                // 可能是玩家已死亡，屏幕上显示了退出按钮
+                const quitButtonClicked = await this.checkAndClickClockworkQuitButton();
+                if (quitButtonClicked) {
+                    // 点击了退出按钮，返回特殊状态让上层知道游戏即将结束
+                    return { type: GameStageType.UNKNOWN, stageText: "quit_clicked" };
+                }
+
+                // 既没有识别到阶段，也没有退出按钮，返回未知状态
+                logger.warn(`[TftOperator] 发条鸟模式阶段识别失败: "${clockText ?? "null"}"`);
+                return { type: GameStageType.UNKNOWN, stageText: "" };
+            }
+
+            // ============================================================
+            // 经典/排位模式：标准识别流程
+            // ============================================================
             let stageText = "";
 
-            // 1. 尝试识别标准区域 (2-1, 3-5, 4-2 等)
+            // 1. 先尝试标准区域 (2-1, 3-5, 4-2 等)
             const normalRegion = this.getStageAbsoluteRegion(false);
             stageText = await recognizeStageText(normalRegion);
 
             // 2. 如果标准区域识别失败，尝试 Stage 1 区域
+            //    （第一阶段的 UI 位置略有不同）
             if (!isValidStageFormat(stageText)) {
-                // logger.info(`[TftOperator] 标准区域识别未命中: "${stageText}"，尝试 Stage-1 区域...`);
                 const stageOneRegion = this.getStageAbsoluteRegion(true);
                 stageText = await recognizeStageText(stageOneRegion);
             }
 
-            // 3. 检查是否为"发条鸟试炼"模式
-            if (!isValidStageFormat(stageText)) {
-                const clockworkRegion = this.getClockworkTrialsRegion();
-                const clockText = await recognizeStageText(clockworkRegion);
-
-                if (clockText && clockText.length > 2) {
-                    this.tftMode = TFTMode.CLOCKWORK_TRAILS;
-                    logger.info("[TftOperator] 识别为发条鸟试炼模式");
-                    // 发条鸟模式没有标准阶段文本，用特殊标记
-                    return { type: GameStageType.PVP, stageText: "clockwork" };
-                }
-            }
-
-            // 4. 解析阶段字符串
+            // 3. 解析阶段字符串
             const stageType = parseStageStringToEnum(stageText);
 
             if (stageType !== GameStageType.UNKNOWN) {
                 // logger.info(`[TftOperator] 识别阶段: [${stageText}] -> ${stageType}`);
                 this.tftMode = TFTMode.CLASSIC;
             } else {
-                logger.warn(`[TftOperator] 无法识别当前阶段: "${stageText ?? "null"}"`);
+                logger.warn(`[TftOperator] 无法识别当前阶段: "${stageText ?? "null"}，请确保游戏最小分辨率无边框居中，且不能被其他窗口遮挡"`);
             }
 
             return { type: stageType, stageText: stageText || "" };
@@ -392,14 +419,14 @@ class TftOperator {
                     continue;
                 }
 
-                // 空槽位不写入结果列表：让上层拿到的是“紧凑装备数组”，避免把 10 个空格当成 10 件装备。
+                // 空槽位不写入结果列表：让上层拿到的是"紧凑装备数组"，避免把 10 个空格当成 10 件装备。
                 if (matchResult.name === "空槽位") {
                     logger.debug(`[TftOperator] ${slotName} 为空槽位`);
                     continue;
                 }
 
                 // 注意：这里把 slot 统一写成紧凑后的槽位（SLOT_1..SLOT_n）。
-                // 这样 StrategyService/GameStateManager 的“索引=槽位”假设始终成立。
+                // 这样 StrategyService/GameStateManager 的"索引=槽位"假设始终成立。
                 matchResult.slot = `SLOT_${resultEquips.length + 1}`;
 
                 logger.debug(
@@ -824,6 +851,38 @@ class TftOperator {
         }
     }
 
+    /**
+     * 保存发条鸟模式"现在退出"按钮区域截图
+     * @description 用于调试发条鸟模式下的退出按钮识别
+     *              截图保存到 public/resources/assets/images/button 目录
+     *              使用原图（不做 OCR 预处理），保留完整色彩信息
+     */
+    public async saveQuitButtonSnapshot(): Promise<void> {
+        this.ensureInitialized();
+
+        // 保存目录：public/resources/assets/images/button
+        const saveDir = path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/button");
+        fs.ensureDirSync(saveDir);
+
+        try {
+            // 将相对坐标转换为屏幕绝对坐标
+            const region = screenCapture.toAbsoluteRegion(clockworkTrailsQuitNowButtonRegion);
+
+            // 截图时 forOCR=false，保留原始色彩（不做灰度/二值化处理）
+            const pngBuffer = await screenCapture.captureRegionAsPng(region, false);
+
+            // 文件名带时间戳，方便多次截图对比
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const filename = `clockwork_quit_button_${timestamp}.png`;
+            const savePath = path.join(saveDir, filename);
+
+            fs.writeFileSync(savePath, pngBuffer);
+            logger.info(`[TftOperator] 发条鸟退出按钮截图已保存: ${filename}`);
+        } catch (e: any) {
+            logger.error(`[TftOperator] 保存发条鸟退出按钮截图失败: ${e.message}`);
+        }
+    }
+
     // ============================================================================
     // 私有方法 (Private Methods)
     // ============================================================================
@@ -1095,6 +1154,58 @@ class TftOperator {
             gameStageDisplayTheClockworkTrails.rightBottom.x - gameStageDisplayTheClockworkTrails.leftTop.x,
             gameStageDisplayTheClockworkTrails.rightBottom.y - gameStageDisplayTheClockworkTrails.leftTop.y
         );
+    }
+
+    /**
+     * 检测并点击发条鸟模式的"现在退出"按钮
+     * @description 当玩家在发条鸟模式中死亡后，屏幕右侧会出现"现在退出"按钮
+     *              此方法通过模板匹配检测该按钮，如果存在则点击它
+     * @returns 是否成功点击了退出按钮
+     */
+    private async checkAndClickClockworkQuitButton(): Promise<boolean> {
+        this.ensureInitialized();
+
+        // 检查模板是否已加载
+        if (!templateLoader.isReady()) {
+            logger.warn("[TftOperator] 模板未加载完成，跳过退出按钮检测");
+            return false;
+        }
+
+        try {
+            // 截取退出按钮区域的图像
+            const buttonRegion = screenCapture.toAbsoluteRegion(clockworkTrailsQuitNowButtonRegion);
+            const targetMat = await screenCapture.captureRegionAsMat(buttonRegion);
+
+            // 确保图像是 RGB 3 通道（模板匹配要求通道一致）
+            let rgbMat = targetMat;
+            if (targetMat.channels() === 4) {
+                rgbMat = new cv.Mat();
+                cv.cvtColor(targetMat, rgbMat, cv.COLOR_RGBA2RGB);
+                targetMat.delete();
+            }
+
+            // 使用模板匹配检测退出按钮
+            const matchResult = templateMatcher.matchButton(rgbMat, "clockwork_quit_button");
+            rgbMat.delete();
+
+            if (matchResult.matched) {
+                logger.info(
+                    `[TftOperator] 检测到发条鸟"现在退出"按钮 ` +
+                    `(置信度: ${(matchResult.confidence * 100).toFixed(1)}%)，正在点击...`
+                );
+
+                // 点击按钮
+                await mouseController.clickAt(clockworkTrailsQuitNowButtonPoint, MouseButtonType.LEFT);
+                await sleep(100);  // 等待点击响应
+
+                return true;
+            }
+
+            return false;
+        } catch (e: any) {
+            logger.error(`[TftOperator] 检测发条鸟退出按钮异常: ${e.message}`);
+            return false;
+        }
     }
 
     /**

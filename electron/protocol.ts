@@ -23,6 +23,7 @@ export enum IpcChannel {
     TFT_GET_LOOT_ORBS = 'tft-get-loot-orbs',
     TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT = 'tft-test-save-bench-slot-snapshot',
     TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT = 'tft-test-save-fight-board-slot-snapshot',
+    TFT_TEST_SAVE_QUIT_BUTTON_SNAPSHOT = 'tft-test-save-quit-button-snapshot',  // 保存发条鸟退出按钮截图
     // 阵容相关
     LINEUP_GET_ALL = 'lineup-get-all',          // 获取所有阵容
     LINEUP_GET_BY_ID = 'lineup-get-by-id',      // 根据 ID 获取单个阵容

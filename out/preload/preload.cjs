@@ -21,6 +21,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["TFT_GET_LOOT_ORBS"] = "tft-get-loot-orbs";
   IpcChannel2["TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT"] = "tft-test-save-bench-slot-snapshot";
   IpcChannel2["TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT"] = "tft-test-save-fight-board-slot-snapshot";
+  IpcChannel2["TFT_TEST_SAVE_QUIT_BUTTON_SNAPSHOT"] = "tft-test-save-quit-button-snapshot";
   IpcChannel2["LINEUP_GET_ALL"] = "lineup-get-all";
   IpcChannel2["LINEUP_GET_BY_ID"] = "lineup-get-by-id";
   IpcChannel2["LINEUP_GET_SELECTED_IDS"] = "lineup-get-selected-ids";
@@ -138,7 +139,9 @@ const tftApi = {
   getCoinCount: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_COIN_COUNT),
   getLootOrbs: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_LOOT_ORBS),
   saveBenchSlotSnapshots: () => electron.ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT),
-  saveFightBoardSlotSnapshots: () => electron.ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT)
+  saveFightBoardSlotSnapshots: () => electron.ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT),
+  saveQuitButtonSnapshot: () => electron.ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_QUIT_BUTTON_SNAPSHOT)
+  // 保存发条鸟退出按钮截图
 };
 electron.contextBridge.exposeInMainWorld("tft", tftApi);
 const lineupApi = {

@@ -58,6 +58,9 @@ export class TemplateLoader {
     /** 战利品球模板缓存 (RGB 彩色图，用于多目标匹配) */
     private lootOrbTemplates: Map<LootOrbType, cv.Mat> = new Map();
 
+    /** 按钮模板缓存 (RGB 彩色图，用于按钮检测) */
+    private buttonTemplates: Map<string, cv.Mat> = new Map();
+
     /** 空装备槽位模板 (24x24 纯黑) */
     private emptyEquipSlotTemplate: cv.Mat | null = null;
 
@@ -91,6 +94,10 @@ export class TemplateLoader {
 
     private get lootOrbTemplatePath(): string {
         return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/loot");
+    }
+
+    private get buttonTemplatePath(): string {
+        return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/button");
     }
 
     private constructor() {}
@@ -128,6 +135,7 @@ export class TemplateLoader {
             this.loadBenchSlotTemplates(),
             this.loadFightBoardSlotTemplates(),
             this.loadLootOrbTemplates(),
+            this.loadButtonTemplates(),
         ]);
 
         // 启动文件监听
@@ -184,6 +192,15 @@ export class TemplateLoader {
      */
     public getLootOrbTemplates(): Map<LootOrbType, cv.Mat> {
         return this.lootOrbTemplates;
+    }
+
+    /**
+     * 获取按钮模板
+     * @param buttonName 按钮名称，例如 "clockwork_quit_button"
+     * @returns 对应的 RGB 模板 Mat，未找到返回 null
+     */
+    public getButtonTemplate(buttonName: string): cv.Mat | null {
+        return this.buttonTemplates.get(buttonName) || null;
     }
 
     /**
@@ -498,6 +515,58 @@ export class TemplateLoader {
         logger.info(`[TemplateLoader] 战利品球模板加载完成，共 ${this.lootOrbTemplates.size} 个`);
     }
 
+    /**
+     * 加载按钮模板
+     * @description 加载 button 目录下的按钮模板，用于 UI 按钮检测
+     *              目前支持：clockwork_quit_button.png (发条鸟退出按钮)
+     *              保留 RGB 彩色信息用于模板匹配
+     */
+    private async loadButtonTemplates(): Promise<void> {
+        // 清理旧模板
+        this.clearButtonTemplates();
+
+        logger.info("[TemplateLoader] 开始加载按钮模板...");
+
+        if (!fs.existsSync(this.buttonTemplatePath)) {
+            fs.ensureDirSync(this.buttonTemplatePath);
+            logger.info(`[TemplateLoader] 按钮模板目录不存在，已自动创建: ${this.buttonTemplatePath}`);
+            return;
+        }
+
+        // 定义需要加载的按钮模板
+        // key: 模板名称（用于代码中引用），filename: 实际文件名
+        const buttonFiles: { key: string; filename: string }[] = [
+            { key: "clockwork_quit_button", filename: "clockwork_quit_button.png" },
+        ];
+
+        for (const { key, filename } of buttonFiles) {
+            const filePath = path.join(this.buttonTemplatePath, filename);
+
+            if (!fs.existsSync(filePath)) {
+                logger.warn(`[TemplateLoader] 未找到按钮模板: ${filename}`);
+                continue;
+            }
+
+            try {
+                // 加载为 RGB 彩色图 (移除 Alpha 通道)
+                const mat = await this.loadImageAsMat(filePath, {
+                    ensureAlpha: false,
+                    removeAlpha: true,
+                    grayscale: false,
+                });
+
+                if (mat) {
+                    this.buttonTemplates.set(key, mat);
+                    logger.info(`[TemplateLoader] 加载按钮模板: ${key} (${mat.cols}x${mat.rows})`);
+                }
+            } catch (e) {
+                logger.error(`[TemplateLoader] 加载按钮模板失败 [${filename}]: ${e}`);
+            }
+        }
+
+        logger.info(`[TemplateLoader] 按钮模板加载完成，共 ${this.buttonTemplates.size} 个`);
+    }
+
     // ========== 工具方法 ==========
 
     /**
@@ -673,6 +742,18 @@ export class TemplateLoader {
     }
 
     /**
+     * 清理按钮模板缓存
+     */
+    private clearButtonTemplates(): void {
+        for (const mat of this.buttonTemplates.values()) {
+            if (mat && !mat.isDeleted()) {
+                mat.delete();
+            }
+        }
+        this.buttonTemplates.clear();
+    }
+
+    /**
      * 销毁所有资源
      */
     public destroy(): void {
@@ -682,6 +763,7 @@ export class TemplateLoader {
         this.clearBenchSlotTemplates();
         this.clearFightBoardSlotTemplates();
         this.clearLootOrbTemplates();
+        this.clearButtonTemplates();
 
         if (this.emptyEquipSlotTemplate && !this.emptyEquipSlotTemplate.isDeleted()) {
             this.emptyEquipSlotTemplate.delete();

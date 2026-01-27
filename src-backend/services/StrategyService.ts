@@ -28,6 +28,8 @@ import {
     EquipKey,
     sharedDraftPoint,
     hexSlot,
+    TFTMode,
+    clockworkTrailsFightButtonPoint,
 } from "../TFTProtocol";
 import {gameStateManager} from "./GameStateManager";
 import {gameStageMonitor, GameStageEvent} from "./GameStageMonitor";
@@ -141,6 +143,14 @@ export class StrategyService {
     private isGameEnded: boolean = false;
 
     /**
+     * 当前游戏模式
+     * @description 用于区分不同模式的策略逻辑：
+     *              - NORMAL/RANK：普通模式，执行完整的自动下棋策略
+     *              - CLOCKWORK_TRAILS：发条鸟模式，执行速通刷经验策略
+     */
+    private gameMode: TFTMode = TFTMode.NORMAL;
+
+    /**
      * 事件处理器引用（⚠️ 必须缓存同一个函数引用，才能在 unsubscribe 时成功 off）
      * @description
      * - EventEmitter 的 on/off 是按"函数引用"匹配的
@@ -246,20 +256,17 @@ export class StrategyService {
         this.currentStage = stage;
         this.currentRound = round;
 
-        // 日志输出 这里和monitor里面的日志重复了，所以注释掉了
-        // if (isNewStage) {
-        //     logger.info(
-        //         `[StrategyService] ====== 进入新阶段: ${stageText} (第${stage}阶段第${round}回合) ======`
-        //     );
-        // } else {
-        //     logger.info(
-        //         `[StrategyService] 进入新回合: ${stageText} (第${stage}阶段第${round}回合)`
-        //     );
-        // }
+        // ====== 发条鸟模式：走专用的速通逻辑 ======
+        if (this.gameMode === TFTMode.CLOCKWORK_TRAILS) {
+            await this.handleClockworkTrailsStage(stage, round);
+            return; // 发条鸟模式不走普通逻辑
+        }
+
+        // ====== 以下是普通模式（匹配/排位）的处理逻辑 ======
 
         // 确保已初始化
         if (this.selectionState === LineupSelectionState.NOT_INITIALIZED) {
-            const success = this.initialize();
+            const success = this.initialize(this.gameMode);
             if (!success) {
                 logger.error("[StrategyService] 策略服务未初始化，跳过执行");
                 return;
@@ -322,6 +329,12 @@ export class StrategyService {
         // 游戏已结束，忽略战斗事件
         if (this.isGameEnded) {
             logger.debug("[StrategyService] 游戏已结束，忽略战斗开始事件");
+            return;
+        }
+
+        // 发条鸟模式：战斗阶段不需要做任何事情，等死就行
+        if (this.gameMode === TFTMode.CLOCKWORK_TRAILS) {
+            logger.debug("[StrategyService] 发条鸟模式：战斗阶段无需处理，等待死亡...");
             return;
         }
 
@@ -742,14 +755,27 @@ export class StrategyService {
 
     /**
      * 初始化策略服务
+     * @param mode 游戏模式（匹配/排位/发条鸟）
      * @description 加载用户选中的阵容配置，准备执行策略
+     *              - 发条鸟模式：不需要阵容，直接返回成功
      *              - 单阵容：直接锁定
      *              - 多阵容：进入 PENDING 状态，等待匹配
      * @returns 是否初始化成功
      */
-    public initialize(): boolean {
+    public initialize(mode: TFTMode = TFTMode.NORMAL): boolean {
         // 重置游戏结束标记（每局开始时重新初始化）
         this.isGameEnded = false;
+
+        // 保存当前游戏模式
+        this.gameMode = mode;
+        logger.info(`[StrategyService] 初始化，游戏模式: ${mode}`);
+
+        // 发条鸟模式：不需要阵容配置，直接初始化成功
+        if (mode === TFTMode.CLOCKWORK_TRAILS) {
+            this.selectionState = LineupSelectionState.LOCKED; // 标记为已锁定，避免后续检查
+            logger.info("[StrategyService] 发条鸟模式：速通刷经验，无需阵容配置");
+            return true;
+        }
 
         // 防止重复初始化
         if (this.selectionState !== LineupSelectionState.NOT_INITIALIZED) {
@@ -1224,20 +1250,20 @@ export class StrategyService {
      * 1. 检测场上所有战利品球的位置
      * 2. 按 X 坐标从左到右排序（小小英雄默认在左下角，从左往右是最短路径）
      * 3. 依次移动小小英雄到战利品球位置拾取
-     * 
+     *
      * 中断策略：
      * - 记录调用时的战斗状态（isFighting）
      * - 每次拾取前检查状态是否变化
      * - 状态变化时立即停止（无论是战斗→非战斗，还是非战斗→战斗）
-     * 
+     *
      * @returns 是否成功拾取了至少一个法球（用于判断是否需要重新执行装备策略）
      */
     private async pickUpLootOrbs(): Promise<boolean> {
         const sleepTime = 2500; //  每次点击之间的间隔时间
-        
+
         // 记录调用时的战斗状态，用于检测状态变化
         const initialFightingState = this.isFighting();
-        
+
         logger.info(`[StrategyService] 开始检测战利品球... (当前战斗状态: ${initialFightingState})`);
 
         // 1. 检测场上的战利品球
@@ -1255,7 +1281,7 @@ export class StrategyService {
 
         // 3. 依次拾取战利品球
         let pickedCount = 0;  // 记录成功拾取的数量
-        
+
         for (const orb of sortedOrbs) {
             // 检查战斗状态是否发生变化
             // 无论是 战斗→非战斗 还是 非战斗→战斗，状态变了就停止拾取
@@ -1266,7 +1292,7 @@ export class StrategyService {
                 );
                 break;
             }
-            
+
             logger.info(`[StrategyService] 正在拾取 ${orb.type} 战利品球，位置: (${orb.x}, ${orb.y}), 等待 ${sleepTime}ms`);
 
             // 右键点击战利品球位置，小小英雄会自动移动过去拾取
@@ -1277,12 +1303,45 @@ export class StrategyService {
             await sleep(sleepTime);
             pickedCount++;
         }
-        
+
         logger.info(`[StrategyService] 战利品拾取完成，共拾取 ${pickedCount} 个`);
         await tftOperator.selfResetPosition();
-        
+
         return pickedCount > 0;
     }
+
+    // ============================================================
+    // 🤖 发条鸟模式专用处理器 (Clockwork Trails Mode)
+    // ============================================================
+
+    /**
+     * 发条鸟模式阶段处理器
+     * @param stage 阶段号
+     * @param round 回合号
+     * @description 发条鸟模式的速通刷经验策略：
+     *              - 1-1 回合：卖掉备战席第一个棋子，然后点击右下角开始战斗按钮
+     *              - 其他回合：直接点击右下角开始战斗按钮
+     *              - 战斗阶段：什么都不做，等待死亡
+     *              - 死亡后自动退出，开始下一局
+     */
+    private async handleClockworkTrailsStage(stage: number, round: number): Promise<void> {
+        logger.info(`[StrategyService] 发条鸟模式：阶段 ${stage}-${round}`);
+
+        // 1-1 回合特殊处理：先卖掉备战席第一个棋子
+        if (stage === 1 && round === 1) {
+            logger.info("[StrategyService] 发条鸟模式 1-1：卖掉备战席第一个棋子...");
+            await tftOperator.sellUnit('SLOT_1');
+        }
+        // 点击右下角的"开始战斗"按钮
+        logger.info("[StrategyService] 发条鸟模式：点击开始战斗按钮...");
+        await mouseController.clickAt(clockworkTrailsFightButtonPoint, MouseButtonType.LEFT);
+        // 等待按钮响应
+        await sleep(10);
+    }
+
+    // ============================================================
+    // 🎮 普通模式阶段处理器 (Normal/Ranked Mode)
+    // ============================================================
 
     /**
      * 处理游戏前期阶段（第一阶段 1-1 ~ 1-4）
@@ -1362,7 +1421,7 @@ export class StrategyService {
      */
     private async sellSingleTrashUnit(targetChampions: Set<ChampionKey>): Promise<boolean> {
         const benchUnits = gameStateManager.getBenchUnitsWithIndex();
-        
+
         // 筛选可卖棋子：非目标、非对子、非核心
         const candidates = benchUnits.filter(({unit}) => {
             const name = unit.tftUnit.displayName as ChampionKey;
@@ -1380,7 +1439,7 @@ export class StrategyService {
 
         const target = candidates[0];
         logger.info(`[StrategyService] 腾位置卖出: ${target.unit.tftUnit.displayName}`);
-        
+
         await tftOperator.sellUnit(`SLOT_${target.index + 1}`);
         gameStateManager.setBenchSlotEmpty(target.index);
         gameStateManager.updateGold(gameStateManager.getGold() + target.unit.tftUnit.price);
@@ -1562,7 +1621,7 @@ export class StrategyService {
 
             // 检查被换下的棋子是否带有装备
             const hasEquips = worstBoard.unit.equips && worstBoard.unit.equips.length > 0;
-            
+
             // 检查备战席是否有空位
             const emptyBenchSlot = gameStateManager.getFirstEmptyBenchSlotIndex();
             const hasEmptyBenchSlot = emptyBenchSlot !== -1;
@@ -1889,7 +1948,7 @@ export class StrategyService {
             try {
                 logger.info("[StrategyService] 通用策略结束，兜底拾取法球...");
                 const pickedOrbs = await this.pickUpLootOrbs();
-                
+
                 // 如果捡到了法球，重新执行装备策略（法球可能掉落装备）
                 // executeEquipStrategy 内部会自动判断是否满足执行条件
                 if (pickedOrbs) {
@@ -1897,7 +1956,7 @@ export class StrategyService {
                     // 先刷新装备栏状态
                     const newEquipments = await tftOperator.getEquipInfo();
                     gameStateManager.updateEquipments(newEquipments);
-                    
+
                     // 直接调用，内部会判断是否需要执行
                     await this.executeEquipStrategy();
                 }
@@ -1921,7 +1980,7 @@ export class StrategyService {
      *              及时处理可以：
      *              1. 腾出备战席空间，方便购买棋子
      *              2. 获得装备，可以立即用于后续的装备策略
-     * 
+     *
      *              策略：固定选择中间的装备，免去复杂的装备识别和评估
      */
     private async handleItemForges(): Promise<void> {
@@ -2044,7 +2103,7 @@ export class StrategyService {
     /**
      * 获取当前回合的关键升级目标等级
      * @returns 目标等级，如果不是关键回合返回 null
-     * 
+     *
      * @description 标准运营节奏 (Standard Curve):
      * - 2-1: 升 4 级
      * - 2-5: 升 5 级
@@ -2376,7 +2435,7 @@ export class StrategyService {
      * 3. 优先给核心英雄分配最佳装备
      * 4. 如果核心英雄不在场，给"打工仔"（非目标阵容棋子）分配装备，保住血量
      * 5. 考虑装备合成逻辑
-     * 
+     *
      * @returns 是否执行了装备策略（用于日志/调试）
      */
     private async executeEquipStrategy(): Promise<boolean> {
@@ -2386,9 +2445,9 @@ export class StrategyService {
             logger.debug(`[StrategyService] 跳过装备策略：${gate.reason}`);
             return false;
         }
-        
+
         logger.info(`[StrategyService] 执行装备策略：${gate.reason}`);
-        
+
         const maxOperations = 10; // 防止死循环
         let operationCount = 0;
 
@@ -2454,8 +2513,8 @@ export class StrategyService {
                             `给 ${targetWrapper.isCore ? '核心' : '打工'}: ${targetWrapper.unit.tftUnit.displayName}`
                         );
                         await this.synthesizeAndEquip(
-                            synthesis.component1, 
-                            synthesis.component2, 
+                            synthesis.component1,
+                            synthesis.component2,
                             targetWrapper.unit.location,
                             itemName  // 传入合成后的装备名称
                         );
@@ -2495,7 +2554,7 @@ export class StrategyService {
             operationCount++;
             await sleep(100);
         }
-        
+
         return true;  // 成功执行了装备策略
     }
 
@@ -2609,15 +2668,15 @@ export class StrategyService {
         }
 
         logger.info(`[StrategyService] 穿戴: ${itemName} -> ${unitLocation}`);
-        
+
         // 装备栏索引 0-9，对应槽位 EQ_SLOT_1 ~ 10
         await tftOperator.equipToBoardUnit(equipIndex, unitLocation);
-        
+
         // 消耗了装备，更新 GameStateManager (模拟消耗，索引前移)
         gameStateManager.removeEquipment(equipIndex);
         // 同步更新棋子身上的装备列表
         gameStateManager.addEquipToUnit(unitLocation, itemName);
-        
+
         // 这里为了稳妥，操作后暂停一下
         await sleep(100);
     }
@@ -2630,8 +2689,8 @@ export class StrategyService {
      * @param resultItemName 合成后的装备名称（用于同步更新棋子装备状态）
      */
     private async synthesizeAndEquip(
-        comp1: string, 
-        comp2: string, 
+        comp1: string,
+        comp2: string,
         unitLocation: BoardLocation,
         resultItemName: string
     ): Promise<void> {
@@ -2644,7 +2703,7 @@ export class StrategyService {
 
         logger.info(`[StrategyService] 合成步骤1: ${comp1}(slot${index1}) -> ${unitLocation}`);
         await tftOperator.equipToBoardUnit(index1, unitLocation);
-        
+
         // 移除第一个散件，后续索引会自动前移
         gameStateManager.removeEquipment(index1);
         await sleep(500);
@@ -2658,7 +2717,7 @@ export class StrategyService {
 
         logger.info(`[StrategyService] 合成步骤2: ${comp2}(slot${index2}) -> ${unitLocation}`);
         await tftOperator.equipToBoardUnit(index2, unitLocation);
-        
+
         // 移除第二个散件
         gameStateManager.removeEquipment(index2);
         // 同步更新棋子身上的装备列表（合成后的成装）
@@ -3066,7 +3125,7 @@ export class StrategyService {
         for (const index of buyIndices) {
             const unit = shopUnits[index];
             if (!unit) continue;
-            
+
             const championName = unit.displayName as ChampionKey;
             const isTarget = targetChampions.has(championName);
 
@@ -3156,6 +3215,9 @@ export class StrategyService {
         // 重置阶段/回合追踪
         this.currentStage = 0;
         this.currentRound = 0;
+
+        // 重置游戏模式为默认值
+        this.gameMode = TFTMode.NORMAL;
 
         // 同时重置 GameStateManager
         gameStateManager.reset();

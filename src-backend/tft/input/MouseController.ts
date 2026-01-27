@@ -201,8 +201,8 @@ export class MouseController {
     public async drag(
         from: SimplePoint,
         to: SimplePoint,
-        holdDelay: number = 100,
-        moveDelay: number = 150
+        holdDelay: number = 50,
+        moveDelay: number = 50
     ): Promise<void> {
         if (!this.gameWindowOrigin) {
             throw new Error("[MouseController] 尚未设置游戏窗口基准点，请先调用 setGameWindowOrigin()");

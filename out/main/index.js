@@ -1,16 +1,16 @@
 import { app, screen as screen$1, BrowserWindow, dialog, shell, ipcMain, net } from "electron";
 import * as path from "path";
 import path__default from "path";
-import cp, { exec } from "child_process";
+import cp, { exec as exec$1 } from "child_process";
 import * as fs$2 from "fs";
 import fs__default from "fs";
 import * as os from "os";
 import os__default from "os";
 import { EventEmitter } from "events";
+import require$$4 from "util";
 import path$1 from "node:path";
 import require$$0 from "constants";
 import require$$0$1 from "stream";
-import require$$4 from "util";
 import require$$5 from "assert";
 import WebSocket from "ws";
 import https from "https";
@@ -5247,48 +5247,117 @@ class Logger {
   }
 }
 const logger = Logger.getInstance();
-const IS_WIN = process.platform === "win32";
-const IS_MAC = process.platform === "darwin";
-const IS_WSL = process.platform === "linux" && os__default.release().toLowerCase().includes("microsoft");
+const exec = require$$4.promisify(cp.exec);
+class ClientNotFoundError extends Error {
+  constructor() {
+    super("无法找到英雄联盟客户端进程！");
+  }
+}
+class ClientElevatedPermsError extends Error {
+  constructor() {
+    super("软件没有在管理员模式下运行！");
+  }
+}
 class LCUConnector extends EventEmitter {
-  /** 进程监听定时器句柄（未启动时为 null） */
-  processWatcher = null;
+  isMonitoring = false;
+  pollInterval = 1e3;
+  checkTimer = null;
   /**
-   * @static
-   * @description 从进程命令行中获取英雄联盟客户端的有关信息
-   * @returns {Promise<LCUProcessInfo>}
+   * 启动连接器，开始轮询查找客户端进程
    */
-  static getLCUInfoFromProcess() {
-    return new Promise((resolve) => {
-      const command = IS_WIN ? `WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline` : IS_WSL ? `WMIC.exe PROCESS WHERE "name='LeagueClientUx.exe'" GET commandline` : `ps x -o args | grep '[L]eagueClientUx' | grep -v 'Helper' | grep -v '/Frameworks/'`;
-      cp.exec(command, (err, stdout, stderr) => {
-        if (err || !stdout || stderr) {
-          resolve(null);
-          return;
+  start() {
+    if (this.isMonitoring) return;
+    this.isMonitoring = true;
+    console.info("[LCUConnector] 开始监听 LOL 客户端进程...");
+    this.monitor();
+  }
+  /**
+   * 停止连接器
+   */
+  stop() {
+    this.isMonitoring = false;
+    if (this.checkTimer) {
+      clearTimeout(this.checkTimer);
+      this.checkTimer = null;
+    }
+    console.info("[LCUConnector] 停止监听 LOL 客户端进程");
+  }
+  /**
+   * 轮询监控逻辑
+   */
+  async monitor() {
+    if (!this.isMonitoring) return;
+    try {
+      const info = await this.authenticate();
+      console.info(`[LCUConnector] 成功获取客户端信息: PID=${info.pid}, Port=${info.port}`);
+      this.emit("connect", info);
+      this.isMonitoring = false;
+    } catch (err) {
+      if (err instanceof ClientNotFoundError) {
+        logger.error("未检测到LOL客户端，一秒后将再次检查...");
+      } else if (err instanceof ClientElevatedPermsError) {
+        logger.warn("[LCUConnector] 检测到客户端以管理员权限运行，获取进程信息失败。请以管理员身份运行海克斯科技助手！");
+      } else {
+        logger.error(`[LCUConnector] 查找客户端时发生未知错误: ${err}`);
+      }
+      if (this.isMonitoring) {
+        this.checkTimer = setTimeout(() => this.monitor(), this.pollInterval);
+      }
+    }
+  }
+  /**
+   * 核心认证逻辑，参考 league-connect 实现
+   */
+  async authenticate() {
+    const name = "LeagueClientUx";
+    const isWindows = process.platform === "win32";
+    const portRegex = /--app-port=([0-9]+)(?= *"| --)/;
+    const passwordRegex = /--remoting-auth-token=(.+?)(?= *"| --)/;
+    const pidRegex = /--app-pid=([0-9]+)(?= *"| --)/;
+    const installDirRegexWin = /--install-directory=(.*?)"/;
+    const installDirRegexMac = /--install-directory=(.+?)(?=\s+--|$)/;
+    let command;
+    let executionOptions = {};
+    if (!isWindows) {
+      command = `ps x -o args | grep '${name}'`;
+    } else {
+      command = `Get-CimInstance -Query "SELECT * from Win32_Process WHERE name LIKE '${name}.exe'" | Select-Object -ExpandProperty CommandLine`;
+      executionOptions = { shell: "powershell" };
+    }
+    try {
+      const { stdout: rawStdout } = await exec(command, executionOptions);
+      const stdout = rawStdout.replace(/\n|\r/g, "");
+      const portMatch = stdout.match(portRegex);
+      const passwordMatch = stdout.match(passwordRegex);
+      const pidMatch = stdout.match(pidRegex);
+      if (!portMatch || !passwordMatch || !pidMatch) {
+        throw new ClientNotFoundError();
+      }
+      let installDir = "";
+      const installDirMatch = stdout.match(installDirRegexWin) || stdout.match(installDirRegexMac);
+      if (installDirMatch) {
+        installDir = installDirMatch[1].trim();
+      }
+      return {
+        port: Number(portMatch[1]),
+        pid: Number(pidMatch[1]),
+        token: passwordMatch[1],
+        installDirectory: installDir ? path$1.dirname(installDir) : ""
+        // 返回父目录作为安装目录
+      };
+    } catch (err) {
+      if (isWindows && executionOptions["shell"] === "powershell") {
+        try {
+          const checkAdminCmd = `if ((Get-Process -Name ${name} -ErrorAction SilentlyContinue | Where-Object {!$_.Handle -and !$_.Path})) {Write-Output "True"} else {Write-Output "False"}`;
+          const { stdout: isAdmin } = await exec(checkAdminCmd, executionOptions);
+          if (isAdmin.includes("True")) {
+            throw new ClientElevatedPermsError();
+          }
+        } catch (ignore) {
         }
-        console.log(`process命令执行结果：${stdout}`);
-        const lines = stdout.split("\n").filter((line) => line.trim() && line.includes("--app-port="));
-        const processLine = lines[0] || stdout;
-        const portMatch = processLine.match(/--app-port=(\d+)/);
-        const tokenMatch = processLine.match(/--remoting-auth-token=([\w-]+)/);
-        const pidMatch = processLine.match(/--app-pid=(\d+)/);
-        let installDirectoryMatch = processLine.match(/--install-directory=(.*?)"/);
-        if (!installDirectoryMatch) {
-          installDirectoryMatch = processLine.match(/--install-directory=(.+?)(?=\s+--|$)/);
-        }
-        if (portMatch && tokenMatch && pidMatch && installDirectoryMatch) {
-          const installDir = installDirectoryMatch[1].trim();
-          const data = {
-            port: parseInt(portMatch[1]),
-            pid: parseInt(pidMatch[1]),
-            token: tokenMatch[1],
-            installDirectory: path$1.dirname(installDir)
-            //  父目录
-          };
-          resolve(data);
-        } else resolve(null);
-      });
-    });
+      }
+      throw new ClientNotFoundError();
+    }
   }
   /**
    * @static
@@ -5297,50 +5366,14 @@ class LCUConnector extends EventEmitter {
    * @returns {boolean}
    */
   static isValidLCUPath(dirPath) {
-    if (!dirPath) {
-      return false;
-    }
+    if (!dirPath) return false;
+    const IS_MAC = process.platform === "darwin";
     const lcuClientApp = IS_MAC ? "LeagueClient.app" : "LeagueClient.exe";
     const common = fs.existsSync(path$1.join(dirPath, lcuClientApp)) && fs.existsSync(path$1.join(dirPath, "Config"));
     const isGlobal = common && fs.existsSync(path$1.join(dirPath, "RADS"));
     const isCN = common && fs.existsSync(path$1.join(dirPath, "TQM"));
     const isGarena = common;
     return isGlobal || isCN || isGarena;
-  }
-  /**
-   * @description 启动连接器，开始监听客户端进程和 lockfile
-   */
-  start() {
-    this.initProcessWatcher();
-  }
-  stop() {
-    this.clearProcessWatcher();
-  }
-  /**
-   * @private
-   * @description 初始化客户端进程监听器
-   */
-  initProcessWatcher() {
-    return LCUConnector.getLCUInfoFromProcess().then((lcuData) => {
-      if (lcuData) {
-        this.emit("connect", lcuData);
-        this.clearProcessWatcher();
-        return;
-      }
-      logger.error("LOL客户端未启动，一秒后将再次检查...");
-      if (!this.processWatcher) {
-        this.processWatcher = setInterval(this.initProcessWatcher.bind(this), 1e3);
-      }
-    });
-  }
-  /**
-   * @description 清除进程监听器
-   */
-  clearProcessWatcher() {
-    if (this.processWatcher) {
-      clearInterval(this.processWatcher);
-      this.processWatcher = null;
-    }
   }
 }
 var LcuEventUri = /* @__PURE__ */ ((LcuEventUri2) => {
@@ -5805,6 +5838,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["TFT_GET_LOOT_ORBS"] = "tft-get-loot-orbs";
   IpcChannel2["TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT"] = "tft-test-save-bench-slot-snapshot";
   IpcChannel2["TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT"] = "tft-test-save-fight-board-slot-snapshot";
+  IpcChannel2["TFT_TEST_SAVE_QUIT_BUTTON_SNAPSHOT"] = "tft-test-save-quit-button-snapshot";
   IpcChannel2["LINEUP_GET_ALL"] = "lineup-get-all";
   IpcChannel2["LINEUP_GET_BY_ID"] = "lineup-get-by-id";
   IpcChannel2["LINEUP_GET_SELECTED_IDS"] = "lineup-get-selected-ids";
@@ -6206,6 +6240,18 @@ const gameStageDisplayNormal = {
 const gameStageDisplayTheClockworkTrails = {
   leftTop: { x: 337, y: 6 },
   rightBottom: { x: 366, y: 22 }
+};
+const clockworkTrailsFightButtonPoint = {
+  x: 955,
+  y: 705
+};
+const clockworkTrailsQuitNowButtonRegion = {
+  leftTop: { x: 780, y: 555 },
+  rightBottom: { x: 845, y: 570 }
+};
+const clockworkTrailsQuitNowButtonPoint = {
+  x: 815,
+  y: 560
 };
 const combatPhaseTextRegion = {
   leftTop: { x: 465, y: 110 },
@@ -10697,6 +10743,8 @@ class TemplateLoader {
   fightBoardSlotTemplates = /* @__PURE__ */ new Map();
   /** 战利品球模板缓存 (RGB 彩色图，用于多目标匹配) */
   lootOrbTemplates = /* @__PURE__ */ new Map();
+  /** 按钮模板缓存 (RGB 彩色图，用于按钮检测) */
+  buttonTemplates = /* @__PURE__ */ new Map();
   /** 空装备槽位模板 (24x24 纯黑) */
   emptyEquipSlotTemplate = null;
   /** 文件监听器防抖定时器 */
@@ -10721,6 +10769,9 @@ class TemplateLoader {
   }
   get lootOrbTemplatePath() {
     return path__default.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/loot");
+  }
+  get buttonTemplatePath() {
+    return path__default.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/button");
   }
   constructor() {
   }
@@ -10750,7 +10801,8 @@ class TemplateLoader {
       this.loadStarLevelTemplates(),
       this.loadBenchSlotTemplates(),
       this.loadFightBoardSlotTemplates(),
-      this.loadLootOrbTemplates()
+      this.loadLootOrbTemplates(),
+      this.loadButtonTemplates()
     ]);
     this.setupChampionTemplateWatcher();
     this.isLoaded = true;
@@ -10797,6 +10849,14 @@ class TemplateLoader {
    */
   getLootOrbTemplates() {
     return this.lootOrbTemplates;
+  }
+  /**
+   * 获取按钮模板
+   * @param buttonName 按钮名称，例如 "clockwork_quit_button"
+   * @returns 对应的 RGB 模板 Mat，未找到返回 null
+   */
+  getButtonTemplate(buttonName) {
+    return this.buttonTemplates.get(buttonName) || null;
   }
   /**
    * 获取空装备槽位模板
@@ -11038,6 +11098,45 @@ class TemplateLoader {
     }
     logger.info(`[TemplateLoader] 战利品球模板加载完成，共 ${this.lootOrbTemplates.size} 个`);
   }
+  /**
+   * 加载按钮模板
+   * @description 加载 button 目录下的按钮模板，用于 UI 按钮检测
+   *              目前支持：clockwork_quit_button.png (发条鸟退出按钮)
+   *              保留 RGB 彩色信息用于模板匹配
+   */
+  async loadButtonTemplates() {
+    this.clearButtonTemplates();
+    logger.info("[TemplateLoader] 开始加载按钮模板...");
+    if (!fs.existsSync(this.buttonTemplatePath)) {
+      fs.ensureDirSync(this.buttonTemplatePath);
+      logger.info(`[TemplateLoader] 按钮模板目录不存在，已自动创建: ${this.buttonTemplatePath}`);
+      return;
+    }
+    const buttonFiles = [
+      { key: "clockwork_quit_button", filename: "clockwork_quit_button.png" }
+    ];
+    for (const { key, filename } of buttonFiles) {
+      const filePath = path__default.join(this.buttonTemplatePath, filename);
+      if (!fs.existsSync(filePath)) {
+        logger.warn(`[TemplateLoader] 未找到按钮模板: ${filename}`);
+        continue;
+      }
+      try {
+        const mat = await this.loadImageAsMat(filePath, {
+          ensureAlpha: false,
+          removeAlpha: true,
+          grayscale: false
+        });
+        if (mat) {
+          this.buttonTemplates.set(key, mat);
+          logger.info(`[TemplateLoader] 加载按钮模板: ${key} (${mat.cols}x${mat.rows})`);
+        }
+      } catch (e) {
+        logger.error(`[TemplateLoader] 加载按钮模板失败 [${filename}]: ${e}`);
+      }
+    }
+    logger.info(`[TemplateLoader] 按钮模板加载完成，共 ${this.buttonTemplates.size} 个`);
+  }
   // ========== 工具方法 ==========
   /**
    * 加载图片为 OpenCV Mat
@@ -11174,6 +11273,17 @@ class TemplateLoader {
     this.lootOrbTemplates.clear();
   }
   /**
+   * 清理按钮模板缓存
+   */
+  clearButtonTemplates() {
+    for (const mat of this.buttonTemplates.values()) {
+      if (mat && !mat.isDeleted()) {
+        mat.delete();
+      }
+    }
+    this.buttonTemplates.clear();
+  }
+  /**
    * 销毁所有资源
    */
   destroy() {
@@ -11183,6 +11293,7 @@ class TemplateLoader {
     this.clearBenchSlotTemplates();
     this.clearFightBoardSlotTemplates();
     this.clearLootOrbTemplates();
+    this.clearButtonTemplates();
     if (this.emptyEquipSlotTemplate && !this.emptyEquipSlotTemplate.isDeleted()) {
       this.emptyEquipSlotTemplate.delete();
       this.emptyEquipSlotTemplate = null;
@@ -11205,7 +11316,9 @@ const MATCH_THRESHOLDS = {
   /** 空槽位标准差阈值 (低于此值判定为空) */
   EMPTY_SLOT_STDDEV: 10,
   /** 战利品球匹配阈值 */
-  LOOT_ORB: 0.75
+  LOOT_ORB: 0.75,
+  /** 按钮匹配阈值 (按钮有明显文字特征，阈值设较高) */
+  BUTTON: 0.8
 };
 class TemplateMatcher {
   static instance;
@@ -11513,6 +11626,56 @@ class TemplateMatcher {
     } catch (e) {
       logger.error(`[TemplateMatcher] 战利品球匹配出错: ${e}`);
       return [];
+    } finally {
+      mask.delete();
+      resultMat.delete();
+    }
+  }
+  /**
+   * 匹配按钮模板
+   * @description 在目标图像中查找指定按钮，返回是否匹配成功及置信度
+   * @param targetMat 目标图像 (需要是 RGB 3 通道)
+   * @param buttonName 按钮名称，例如 "clockwork_quit_button"
+   * @returns 匹配结果对象，包含 matched (是否匹配) 和 confidence (置信度)
+   */
+  matchButton(targetMat, buttonName) {
+    const templateMat = templateLoader.getButtonTemplate(buttonName);
+    if (!templateMat) {
+      logger.warn(`[TemplateMatcher] 未找到按钮模板: ${buttonName}`);
+      return { matched: false, confidence: 0 };
+    }
+    if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) {
+      logger.warn(
+        `[TemplateMatcher] 按钮模板尺寸过大: ${buttonName} (模板: ${templateMat.cols}x${templateMat.rows}, 目标: ${targetMat.cols}x${targetMat.rows})`
+      );
+      return { matched: false, confidence: 0 };
+    }
+    if (templateMat.type() !== targetMat.type()) {
+      logger.warn(
+        `[TemplateMatcher] 按钮模板通道不匹配: ${buttonName} (模板: ${templateMat.type()}, 目标: ${targetMat.type()})`
+      );
+      return { matched: false, confidence: 0 };
+    }
+    const mask = new cv.Mat();
+    const resultMat = new cv.Mat();
+    try {
+      cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
+      const minMax = cv.minMaxLoc(resultMat, mask);
+      const confidence = minMax.maxVal;
+      const matched = confidence >= MATCH_THRESHOLDS.BUTTON;
+      if (matched) {
+        logger.info(
+          `[TemplateMatcher] 按钮匹配成功: ${buttonName} (置信度: ${(confidence * 100).toFixed(1)}%)`
+        );
+      } else {
+        logger.debug(
+          `[TemplateMatcher] 按钮匹配失败: ${buttonName} (置信度: ${(confidence * 100).toFixed(1)}%, 阈值: ${MATCH_THRESHOLDS.BUTTON * 100}%)`
+        );
+      }
+      return { matched, confidence };
+    } catch (e) {
+      logger.error(`[TemplateMatcher] 按钮匹配出错: ${e}`);
+      return { matched: false, confidence: 0 };
     } finally {
       mask.delete();
       resultMat.delete();
@@ -11835,7 +11998,7 @@ class MouseController {
    * @param holdDelay 按下鼠标后等待的时间（ms），确保游戏识别到拖拽开始
    * @param moveDelay 移动过程中的延迟（ms），模拟人类拖拽速度
    */
-  async drag(from, to, holdDelay = 100, moveDelay = 150) {
+  async drag(from, to, holdDelay = 50, moveDelay = 50) {
     if (!this.gameWindowOrigin) {
       throw new Error("[MouseController] 尚未设置游戏窗口基准点，请先调用 setGameWindowOrigin()");
     }
@@ -11916,6 +12079,91 @@ function fixMisrecognizedStage(text) {
   }
   return text;
 }
+var LogMode = /* @__PURE__ */ ((LogMode2) => {
+  LogMode2["SIMPLE"] = "SIMPLE";
+  LogMode2["DETAILED"] = "DETAILED";
+  return LogMode2;
+})(LogMode || {});
+class SettingsStore {
+  static instance;
+  store;
+  static getInstance() {
+    if (!SettingsStore.instance) {
+      SettingsStore.instance = new SettingsStore();
+    }
+    return SettingsStore.instance;
+  }
+  constructor() {
+    const defaults = {
+      isFirstLaunch: true,
+      //  首次启动默认为 true，用户确认后设为 false
+      tftMode: TFTMode.NORMAL,
+      //  默认是匹配模式
+      logMode: LogMode.SIMPLE,
+      //  默认是简略日志模式
+      logAutoCleanThreshold: 500,
+      //  默认超过 500 条时自动清理
+      toggleHotkeyAccelerator: "F1",
+      //  默认快捷键是 F1
+      stopAfterGameHotkeyAccelerator: "F2",
+      //  默认快捷键是 F2
+      showDebugPage: false,
+      //  默认隐藏调试页面
+      window: {
+        bounds: null,
+        //  第一次启动，默认为null
+        isMaximized: false
+        //  默认不最大化窗口
+      },
+      selectedLineupIds: []
+      //  默认没有选中任何阵容
+    };
+    this.store = new Store({ defaults });
+  }
+  /**
+   * 获取配置项（支持点号路径访问嵌套属性）
+   * @param key 配置 key，支持 "window.bounds" 这样的点号路径
+   * @returns 对应的配置值
+   * 
+   * @example
+   * settingsStore.get('tftMode')           // 返回 TFTMode
+   * settingsStore.get('window')            // 返回整个 window 对象
+   * settingsStore.get('window.bounds')     // 返回 WindowBounds | null
+   * settingsStore.get('window.isMaximized') // 返回 boolean
+   */
+  get(key) {
+    return this.store.get(key);
+  }
+  /**
+   * 设置配置项（支持点号路径访问嵌套属性）
+   * @param key 配置 key，支持 "window.bounds" 这样的点号路径
+   * @param value 要设置的值
+   * 
+   * @example
+   * settingsStore.set('tftMode', TFTMode.CLASSIC)
+   * settingsStore.set('window.isMaximized', true)
+   * settingsStore.set('window.bounds', { x: 0, y: 0, width: 800, height: 600 })
+   */
+  set(key, value) {
+    this.store.set(key, value);
+  }
+  getRawStore() {
+    return this.store;
+  }
+  /**
+   * 【批量设置】
+   * (类型安全) 一次性写入 *多个* 设置项。
+   * @param settings 要合并的设置对象 (Partial 意味着 "部分的", 允许你只传一个子集)
+   */
+  setMultiple(settings) {
+    this.store.set(settings);
+  }
+  //  返回的是unsubscribe，方便取消订阅
+  onDidChange(key, callback) {
+    return this.store.onDidChange(key, callback);
+  }
+}
+const settingsStore = SettingsStore.getInstance();
 class TftOperator {
   static instance;
   /** 游戏窗口左上角坐标 */
@@ -12007,6 +12255,7 @@ class TftOperator {
   /**
    * 获取当前游戏阶段
    * @description 通过 OCR 识别游戏阶段 (如 "2-1", "3-5")
+   *              根据用户设置的游戏模式，直接读取对应区域，避免逐个试错
    * @returns 游戏阶段结果，包含阶段类型和原始文本
    */
   async getGameStage() {
@@ -12015,6 +12264,25 @@ class TftOperator {
         const rawPng = await screenCapture.captureRegionAsPng(region, false);
         return await ocrService.recognize(rawPng, OcrWorkerType.GAME_STAGE);
       };
+      const currentMode = settingsStore.get("tftMode");
+      if (currentMode === TFTMode.CLOCKWORK_TRAILS) {
+        const clockworkRegion = this.getClockworkTrialsRegion();
+        const clockText = await recognizeStageText(clockworkRegion);
+        if (clockText && clockText.length > 0) {
+          this.tftMode = TFTMode.CLOCKWORK_TRAILS;
+          const stageType2 = parseStageStringToEnum(clockText);
+          if (stageType2 !== GameStageType.UNKNOWN) {
+            return { type: stageType2, stageText: clockText };
+          }
+          return { type: GameStageType.PVP, stageText: clockText };
+        }
+        const quitButtonClicked = await this.checkAndClickClockworkQuitButton();
+        if (quitButtonClicked) {
+          return { type: GameStageType.UNKNOWN, stageText: "quit_clicked" };
+        }
+        logger.warn(`[TftOperator] 发条鸟模式阶段识别失败: "${clockText ?? "null"}"`);
+        return { type: GameStageType.UNKNOWN, stageText: "" };
+      }
       let stageText = "";
       const normalRegion = this.getStageAbsoluteRegion(false);
       stageText = await recognizeStageText(normalRegion);
@@ -12022,20 +12290,11 @@ class TftOperator {
         const stageOneRegion = this.getStageAbsoluteRegion(true);
         stageText = await recognizeStageText(stageOneRegion);
       }
-      if (!isValidStageFormat(stageText)) {
-        const clockworkRegion = this.getClockworkTrialsRegion();
-        const clockText = await recognizeStageText(clockworkRegion);
-        if (clockText && clockText.length > 2) {
-          this.tftMode = TFTMode.CLOCKWORK_TRAILS;
-          logger.info("[TftOperator] 识别为发条鸟试炼模式");
-          return { type: GameStageType.PVP, stageText: "clockwork" };
-        }
-      }
       const stageType = parseStageStringToEnum(stageText);
       if (stageType !== GameStageType.UNKNOWN) {
         this.tftMode = TFTMode.CLASSIC;
       } else {
-        logger.warn(`[TftOperator] 无法识别当前阶段: "${stageText ?? "null"}"`);
+        logger.warn(`[TftOperator] 无法识别当前阶段: "${stageText ?? "null"}，请确保游戏最小分辨率无边框居中，且不能被其他窗口遮挡"`);
       }
       return { type: stageType, stageText: stageText || "" };
     } catch (e) {
@@ -12415,6 +12674,28 @@ class TftOperator {
       }
     }
   }
+  /**
+   * 保存发条鸟模式"现在退出"按钮区域截图
+   * @description 用于调试发条鸟模式下的退出按钮识别
+   *              截图保存到 public/resources/assets/images/button 目录
+   *              使用原图（不做 OCR 预处理），保留完整色彩信息
+   */
+  async saveQuitButtonSnapshot() {
+    this.ensureInitialized();
+    const saveDir = path__default.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/button");
+    fs.ensureDirSync(saveDir);
+    try {
+      const region = screenCapture.toAbsoluteRegion(clockworkTrailsQuitNowButtonRegion);
+      const pngBuffer = await screenCapture.captureRegionAsPng(region, false);
+      const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+      const filename = `clockwork_quit_button_${timestamp}.png`;
+      const savePath = path__default.join(saveDir, filename);
+      fs.writeFileSync(savePath, pngBuffer);
+      logger.info(`[TftOperator] 发条鸟退出按钮截图已保存: ${filename}`);
+    } catch (e) {
+      logger.error(`[TftOperator] 保存发条鸟退出按钮截图失败: ${e.message}`);
+    }
+  }
   // ============================================================================
   // 私有方法 (Private Methods)
   // ============================================================================
@@ -12581,6 +12862,43 @@ class TftOperator {
       gameStageDisplayTheClockworkTrails.rightBottom.x - gameStageDisplayTheClockworkTrails.leftTop.x,
       gameStageDisplayTheClockworkTrails.rightBottom.y - gameStageDisplayTheClockworkTrails.leftTop.y
     );
+  }
+  /**
+   * 检测并点击发条鸟模式的"现在退出"按钮
+   * @description 当玩家在发条鸟模式中死亡后，屏幕右侧会出现"现在退出"按钮
+   *              此方法通过模板匹配检测该按钮，如果存在则点击它
+   * @returns 是否成功点击了退出按钮
+   */
+  async checkAndClickClockworkQuitButton() {
+    this.ensureInitialized();
+    if (!templateLoader.isReady()) {
+      logger.warn("[TftOperator] 模板未加载完成，跳过退出按钮检测");
+      return false;
+    }
+    try {
+      const buttonRegion = screenCapture.toAbsoluteRegion(clockworkTrailsQuitNowButtonRegion);
+      const targetMat = await screenCapture.captureRegionAsMat(buttonRegion);
+      let rgbMat = targetMat;
+      if (targetMat.channels() === 4) {
+        rgbMat = new cv.Mat();
+        cv.cvtColor(targetMat, rgbMat, cv.COLOR_RGBA2RGB);
+        targetMat.delete();
+      }
+      const matchResult = templateMatcher.matchButton(rgbMat, "clockwork_quit_button");
+      rgbMat.delete();
+      if (matchResult.matched) {
+        logger.info(
+          `[TftOperator] 检测到发条鸟"现在退出"按钮 (置信度: ${(matchResult.confidence * 100).toFixed(1)}%)，正在点击...`
+        );
+        await mouseController.clickAt(clockworkTrailsQuitNowButtonPoint, MouseButtonType.LEFT);
+        await sleep(100);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      logger.error(`[TftOperator] 检测发条鸟退出按钮异常: ${e.message}`);
+      return false;
+    }
   }
   /**
    * 确保操作器已初始化
@@ -13217,91 +13535,6 @@ class GameStageMonitor extends EventEmitter {
   }
 }
 const gameStageMonitor = GameStageMonitor.getInstance();
-var LogMode = /* @__PURE__ */ ((LogMode2) => {
-  LogMode2["SIMPLE"] = "SIMPLE";
-  LogMode2["DETAILED"] = "DETAILED";
-  return LogMode2;
-})(LogMode || {});
-class SettingsStore {
-  static instance;
-  store;
-  static getInstance() {
-    if (!SettingsStore.instance) {
-      SettingsStore.instance = new SettingsStore();
-    }
-    return SettingsStore.instance;
-  }
-  constructor() {
-    const defaults = {
-      isFirstLaunch: true,
-      //  首次启动默认为 true，用户确认后设为 false
-      tftMode: TFTMode.NORMAL,
-      //  默认是匹配模式
-      logMode: LogMode.SIMPLE,
-      //  默认是简略日志模式
-      logAutoCleanThreshold: 500,
-      //  默认超过 500 条时自动清理
-      toggleHotkeyAccelerator: "F1",
-      //  默认快捷键是 F1
-      stopAfterGameHotkeyAccelerator: "F2",
-      //  默认快捷键是 F2
-      showDebugPage: false,
-      //  默认隐藏调试页面
-      window: {
-        bounds: null,
-        //  第一次启动，默认为null
-        isMaximized: false
-        //  默认不最大化窗口
-      },
-      selectedLineupIds: []
-      //  默认没有选中任何阵容
-    };
-    this.store = new Store({ defaults });
-  }
-  /**
-   * 获取配置项（支持点号路径访问嵌套属性）
-   * @param key 配置 key，支持 "window.bounds" 这样的点号路径
-   * @returns 对应的配置值
-   * 
-   * @example
-   * settingsStore.get('tftMode')           // 返回 TFTMode
-   * settingsStore.get('window')            // 返回整个 window 对象
-   * settingsStore.get('window.bounds')     // 返回 WindowBounds | null
-   * settingsStore.get('window.isMaximized') // 返回 boolean
-   */
-  get(key) {
-    return this.store.get(key);
-  }
-  /**
-   * 设置配置项（支持点号路径访问嵌套属性）
-   * @param key 配置 key，支持 "window.bounds" 这样的点号路径
-   * @param value 要设置的值
-   * 
-   * @example
-   * settingsStore.set('tftMode', TFTMode.CLASSIC)
-   * settingsStore.set('window.isMaximized', true)
-   * settingsStore.set('window.bounds', { x: 0, y: 0, width: 800, height: 600 })
-   */
-  set(key, value) {
-    this.store.set(key, value);
-  }
-  getRawStore() {
-    return this.store;
-  }
-  /**
-   * 【批量设置】
-   * (类型安全) 一次性写入 *多个* 设置项。
-   * @param settings 要合并的设置对象 (Partial 意味着 "部分的", 允许你只传一个子集)
-   */
-  setMultiple(settings) {
-    this.store.set(settings);
-  }
-  //  返回的是unsubscribe，方便取消订阅
-  onDidChange(key, callback) {
-    return this.store.onDidChange(key, callback);
-  }
-}
-const settingsStore = SettingsStore.getInstance();
 class LineupLoader {
   static instance;
   /** 已加载的阵容配置 Map<阵容ID, 阵容配置> */
@@ -13503,6 +13736,13 @@ class StrategyService {
    */
   isGameEnded = false;
   /**
+   * 当前游戏模式
+   * @description 用于区分不同模式的策略逻辑：
+   *              - NORMAL/RANK：普通模式，执行完整的自动下棋策略
+   *              - CLOCKWORK_TRAILS：发条鸟模式，执行速通刷经验策略
+   */
+  gameMode = TFTMode.NORMAL;
+  /**
    * 事件处理器引用（⚠️ 必须缓存同一个函数引用，才能在 unsubscribe 时成功 off）
    * @description
    * - EventEmitter 的 on/off 是按"函数引用"匹配的
@@ -13582,8 +13822,12 @@ class StrategyService {
     const { type, stageText, stage, round, isNewStage } = event;
     this.currentStage = stage;
     this.currentRound = round;
+    if (this.gameMode === TFTMode.CLOCKWORK_TRAILS) {
+      await this.handleClockworkTrailsStage(stage, round);
+      return;
+    }
     if (this.selectionState === "NOT_INITIALIZED") {
-      const success = this.initialize();
+      const success = this.initialize(this.gameMode);
       if (!success) {
         logger.error("[StrategyService] 策略服务未初始化，跳过执行");
         return;
@@ -13632,6 +13876,10 @@ class StrategyService {
   async onFightingStart() {
     if (this.isGameEnded) {
       logger.debug("[StrategyService] 游戏已结束，忽略战斗开始事件");
+      return;
+    }
+    if (this.gameMode === TFTMode.CLOCKWORK_TRAILS) {
+      logger.debug("[StrategyService] 发条鸟模式：战斗阶段无需处理，等待死亡...");
       return;
     }
     logger.info("[StrategyService] 战斗阶段开始");
@@ -13943,13 +14191,22 @@ class StrategyService {
   }
   /**
    * 初始化策略服务
+   * @param mode 游戏模式（匹配/排位/发条鸟）
    * @description 加载用户选中的阵容配置，准备执行策略
+   *              - 发条鸟模式：不需要阵容，直接返回成功
    *              - 单阵容：直接锁定
    *              - 多阵容：进入 PENDING 状态，等待匹配
    * @returns 是否初始化成功
    */
-  initialize() {
+  initialize(mode = TFTMode.NORMAL) {
     this.isGameEnded = false;
+    this.gameMode = mode;
+    logger.info(`[StrategyService] 初始化，游戏模式: ${mode}`);
+    if (mode === TFTMode.CLOCKWORK_TRAILS) {
+      this.selectionState = "LOCKED";
+      logger.info("[StrategyService] 发条鸟模式：速通刷经验，无需阵容配置");
+      return true;
+    }
     if (this.selectionState !== "NOT_INITIALIZED") {
       logger.debug("[StrategyService] 已初始化，跳过");
       return true;
@@ -14284,12 +14541,12 @@ class StrategyService {
    * 1. 检测场上所有战利品球的位置
    * 2. 按 X 坐标从左到右排序（小小英雄默认在左下角，从左往右是最短路径）
    * 3. 依次移动小小英雄到战利品球位置拾取
-   * 
+   *
    * 中断策略：
    * - 记录调用时的战斗状态（isFighting）
    * - 每次拾取前检查状态是否变化
    * - 状态变化时立即停止（无论是战斗→非战斗，还是非战斗→战斗）
-   * 
+   *
    * @returns 是否成功拾取了至少一个法球（用于判断是否需要重新执行装备策略）
    */
   async pickUpLootOrbs() {
@@ -14321,6 +14578,32 @@ class StrategyService {
     await tftOperator.selfResetPosition();
     return pickedCount > 0;
   }
+  // ============================================================
+  // 🤖 发条鸟模式专用处理器 (Clockwork Trails Mode)
+  // ============================================================
+  /**
+   * 发条鸟模式阶段处理器
+   * @param stage 阶段号
+   * @param round 回合号
+   * @description 发条鸟模式的速通刷经验策略：
+   *              - 1-1 回合：卖掉备战席第一个棋子，然后点击右下角开始战斗按钮
+   *              - 其他回合：直接点击右下角开始战斗按钮
+   *              - 战斗阶段：什么都不做，等待死亡
+   *              - 死亡后自动退出，开始下一局
+   */
+  async handleClockworkTrailsStage(stage, round) {
+    logger.info(`[StrategyService] 发条鸟模式：阶段 ${stage}-${round}`);
+    if (stage === 1 && round === 1) {
+      logger.info("[StrategyService] 发条鸟模式 1-1：卖掉备战席第一个棋子...");
+      await tftOperator.sellUnit("SLOT_1");
+    }
+    logger.info("[StrategyService] 发条鸟模式：点击开始战斗按钮...");
+    await mouseController.clickAt(clockworkTrailsFightButtonPoint, MouseButtonType.LEFT);
+    await sleep(10);
+  }
+  // ============================================================
+  // 🎮 普通模式阶段处理器 (Normal/Ranked Mode)
+  // ============================================================
   /**
    * 处理游戏前期阶段（第一阶段 1-1 ~ 1-4）
    * @description 整个第一阶段的处理逻辑：
@@ -14735,7 +15018,7 @@ class StrategyService {
    *              及时处理可以：
    *              1. 腾出备战席空间，方便购买棋子
    *              2. 获得装备，可以立即用于后续的装备策略
-   * 
+   *
    *              策略：固定选择中间的装备，免去复杂的装备识别和评估
    */
   async handleItemForges() {
@@ -14819,7 +15102,7 @@ class StrategyService {
   /**
    * 获取当前回合的关键升级目标等级
    * @returns 目标等级，如果不是关键回合返回 null
-   * 
+   *
    * @description 标准运营节奏 (Standard Curve):
    * - 2-1: 升 4 级
    * - 2-5: 升 5 级
@@ -15050,7 +15333,7 @@ class StrategyService {
    * 3. 优先给核心英雄分配最佳装备
    * 4. 如果核心英雄不在场，给"打工仔"（非目标阵容棋子）分配装备，保住血量
    * 5. 考虑装备合成逻辑
-   * 
+   *
    * @returns 是否执行了装备策略（用于日志/调试）
    */
   async executeEquipStrategy() {
@@ -15596,6 +15879,7 @@ class StrategyService {
     this.targetChampionNames.clear();
     this.currentStage = 0;
     this.currentRound = 0;
+    this.gameMode = TFTMode.NORMAL;
     gameStateManager.reset();
     logger.info("[StrategyService] 策略服务已重置");
   }
@@ -15737,9 +16021,13 @@ class GameRunningState {
     gameStateManager.startGame();
     logger.info("[GameRunningState] 游戏已开始");
     await this.detectAndNotifyBots();
-    const initSuccess = strategyService.initialize();
+    const currentMode = settingsStore.get("tftMode") || TFTMode.NORMAL;
+    logger.info(`[GameRunningState] 当前游戏模式: ${currentMode}`);
+    const initSuccess = strategyService.initialize(currentMode);
     if (!initSuccess) {
-      logger.error("[GameRunningState] 策略服务初始化失败，请先选择阵容");
+      if (currentMode !== TFTMode.CLOCKWORK_TRAILS) {
+        logger.error("[GameRunningState] 策略服务初始化失败，请先选择阵容");
+      }
     }
     strategyService.subscribe();
     gameStageMonitor.start(1e3);
@@ -15947,7 +16235,7 @@ class LobbyState {
   lcuManager = LCUManager.getInstance();
   /**
    * 根据用户设置获取对应的队列 ID
-   * @returns TFT 队列 ID（匹配或排位）
+   * @returns TFT 队列 ID（匹配、排位或发条鸟）
    */
   getQueueId() {
     const tftMode = settingsStore.get("tftMode");
@@ -15955,6 +16243,10 @@ class LobbyState {
       case TFTMode.RANK:
         logger.info("[LobbyState] 当前模式: 排位赛");
         return Queue.TFT_RANKED;
+      case TFTMode.CLOCKWORK_TRAILS:
+        logger.info("[LobbyState] 当前模式: 发条鸟的试炼");
+        return Queue.TFT_FATIAO;
+      // 发条鸟队列ID = 1220
       case TFTMode.NORMAL:
       default:
         logger.info("[LobbyState] 当前模式: 匹配模式");
@@ -16019,7 +16311,7 @@ class LobbyState {
       };
       const onReadyCheck = (eventData) => {
         const now = Date.now();
-        if (eventData.data?.state === "InProgress" && now - lastAcceptTime >= 1e3) {
+        if (eventData.data?.state === "InProgress" && now - lastAcceptTime >= 100) {
           lastAcceptTime = now;
           logger.info("[LobbyState] 已找到对局！正在自动接受...");
           this.lcuManager?.acceptMatch().catch((reason) => {
@@ -16179,6 +16471,11 @@ class HexService {
     if (this.isRunning) {
       logger.warn("[HexService] 引擎已在运行中，无需重复启动。");
       return true;
+    }
+    const selectedLineupIds = settingsStore.get("selectedLineupIds");
+    if (!selectedLineupIds || selectedLineupIds.length === 0) {
+      logger.warn("[HexService] 未选择任何阵容，无法启动！");
+      return false;
     }
     try {
       logger.info("———————— [HexService] ————————");
@@ -16495,6 +16792,10 @@ class GlobalHotkeyManager {
 }
 const globalHotkeyManager = GlobalHotkeyManager.getInstance();
 initGlobalCrashHandler();
+app.disableHardwareAcceleration();
+app.commandLine.appendSwitch("disable-gpu");
+app.commandLine.appendSwitch("disable-software-rasterizer");
+app.commandLine.appendSwitch("disable-gpu-sandbox");
 function checkNativeModules() {
   const failedModules = [];
   try {
@@ -16733,6 +17034,7 @@ function registerHandler() {
   ipcMain.handle(IpcChannel.TFT_GET_LOOT_ORBS, async (event) => tftOperator.getLootOrbs());
   ipcMain.handle(IpcChannel.TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT, async (event) => tftOperator.saveBenchSlotSnapshots());
   ipcMain.handle(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT, async (event) => tftOperator.saveFightBoardSlotSnapshots());
+  ipcMain.handle(IpcChannel.TFT_TEST_SAVE_QUIT_BUTTON_SNAPSHOT, async (event) => tftOperator.saveQuitButtonSnapshot());
   ipcMain.handle(IpcChannel.LINEUP_GET_ALL, async () => lineupLoader.getAllLineups());
   ipcMain.handle(IpcChannel.LINEUP_GET_BY_ID, async (_event, id) => lineupLoader.getLineup(id));
   ipcMain.handle(IpcChannel.LINEUP_GET_SELECTED_IDS, async () => settingsStore.get("selectedLineupIds"));
@@ -16799,7 +17101,7 @@ function registerHandler() {
   });
   ipcMain.handle(IpcChannel.UTIL_IS_ELEVATED, async () => {
     return new Promise((resolve) => {
-      exec("net session", (error) => {
+      exec$1("net session", (error) => {
         resolve(!error);
       });
     });
