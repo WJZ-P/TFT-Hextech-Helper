@@ -11,6 +11,7 @@ import { EndState } from "../states/EndState.ts";
 import { StartState } from "../states/StartState.ts";
 import { sleep } from "../utils/HelperTools.ts";
 import GameConfigHelper from "../utils/GameConfigHelper.ts";
+import { settingsStore } from "../utils/SettingsStore.ts";
 
 /** 状态转换间隔 (ms) */
 const STATE_TRANSITION_DELAY_MS = 2000;
@@ -90,6 +91,13 @@ export class HexService {
         if (this.isRunning) {
             logger.warn("[HexService] 引擎已在运行中，无需重复启动。");
             return true;
+        }
+
+        // 检查是否选择了阵容
+        const selectedLineupIds = settingsStore.get('selectedLineupIds');
+        if (!selectedLineupIds || selectedLineupIds.length === 0) {
+            logger.warn("[HexService] 未选择任何阵容，无法启动！");
+            return false;
         }
 
         try {

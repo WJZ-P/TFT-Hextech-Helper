@@ -853,6 +853,8 @@ export const HomePage = () => {
     const [isElevated, setIsElevated] = useState<boolean | null>(null);
     // 新增："本局结束后停止"状态
     const [stopAfterGame, setStopAfterGame] = useState(false);
+    // 新增：是否有选中的阵容
+    const [hasSelectedLineup, setHasSelectedLineup] = useState(false);
 
     /**
      * 获取召唤师信息的函数
@@ -925,6 +927,10 @@ export const HomePage = () => {
             if (savedLogMode === LogMode.SIMPLE || savedLogMode === LogMode.DETAILED) {
                 setLogMode(savedLogMode as LogMode);
             }
+
+            // 检查是否有选中的阵容
+            const selectedIds = await window.lineup.getSelectedIds();
+            setHasSelectedLineup(selectedIds && selectedIds.length > 0);
             
             if (connected) {
                 // 如果已经连接了，直接获取召唤师信息
@@ -997,6 +1003,12 @@ export const HomePage = () => {
     const handleToggle = async () => {
         // 未连接客户端时禁止操作
         if (!isLcuConnected) {
+            return;
+        }
+
+        // 未选择阵容时禁止操作
+        if (!hasSelectedLineup) {
+            toast.error('请先在阵容页面选择至少一个阵容！');
             return;
         }
         
@@ -1180,12 +1192,17 @@ export const HomePage = () => {
                     <ControlButton 
                         onClick={handleToggle} 
                         $isRunning={isRunning}
-                        $disabled={!isLcuConnected}
+                        $disabled={!isLcuConnected || !hasSelectedLineup}
                     >
                         {!isLcuConnected ? (
                             <>
                                 <BlockIcon />
                                 未检测到客户端
+                            </>
+                        ) : !hasSelectedLineup ? (
+                            <>
+                                <BlockIcon />
+                                未选择阵容
                             </>
                         ) : isRunning ? (
                             <>

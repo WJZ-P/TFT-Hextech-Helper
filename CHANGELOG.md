@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - 新增启动时的环境检查功能，确保运行环境正常
 - 优化LcuConnector，不再依赖落后的WMIC服务
 - 禁用GPU加速，尝试解决兼容性问题
+- 新增不选择阵容时无法开始的交互逻辑
 
 ## [1.0.1] - 2026-01-20
 
