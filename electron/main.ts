@@ -12,6 +12,15 @@ import { writeCrashLog, initGlobalCrashHandler } from "../src-backend/utils/Cras
 initGlobalCrashHandler();
 
 // ============================================================================
+// GPU 兼容性设置
+// 解决部分用户因显卡驱动不兼容导致的启动闪退问题
+// ============================================================================
+app.disableHardwareAcceleration();
+app.commandLine.appendSwitch('disable-gpu');
+app.commandLine.appendSwitch('disable-software-rasterizer');
+app.commandLine.appendSwitch('disable-gpu-sandbox');
+
+// ============================================================================
 // 原生模块安全加载
 // 这些模块依赖 VC++ 运行库，如果用户电脑缺失会直接崩溃
 // 我们用 try-catch 包装，给出友好提示

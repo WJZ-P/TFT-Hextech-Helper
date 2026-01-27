@@ -1,13 +1,14 @@
-import {EventEmitter} from 'events'
-import os from 'os'; // 用于获取操作系统相关信息，比如当前平台
+import { EventEmitter } from 'events';
 import cp from 'child_process';
+import util from 'util';
 import path from "node:path";
 import fs from 'fs-extra';
-import {logger} from "../../utils/Logger.ts"; // 增强版的 fs 模块，用于文件系统操作，比如检查文件是否存在
+import { logger } from "../../utils/Logger.ts";
 
-//  新版已不能从lockfile读取信息，而是全部通过进程读取
-
-//  参考自https://github.com/Pupix/lcu-connector/blob/master/lib/index.js
+// 使用 util.promisify 将 exec 转换为 Promise 版本，避免回调地狱
+// 新版不能从lockfile读取信息，只能从进程里读取
+// 参考自https://github.com/junlarsen/league-connect/blob/0317262512fb1a04ff1d6ecea05969a68ccc0b61/src/authentication.ts
+const exec = util.promisify(cp.exec);
 
 /**
  * @interface LCUProcessInfo
@@ -15,6 +16,7 @@ import {logger} from "../../utils/Logger.ts"; // 增强版的 fs 模块，用于
  * @property {number} pid - 进程ID
  * @property {number} port - LCU API 的端口号
  * @property {string} token - LCU API 的认证密码
+ * @property {string} installDirectory - 游戏安装目录
  */
 export interface LCUProcessInfo {
     pid: number;
@@ -23,98 +25,174 @@ export interface LCUProcessInfo {
     installDirectory: string;
 }
 
-//  定义操作系统常量
-const IS_WIN = process.platform === 'win32'
-const IS_MAC = process.platform === 'darwin';
-const IS_WSL = process.platform === 'linux' && os.release().toLowerCase().includes('microsoft');
-
-//  定义 LCUConnector能触发的所有事件，以及每个事件对应的数据类型
+// 定义 LCUConnector 能触发的所有事件
 interface LCUConnectorEvents {
-    'connect': (data:LCUProcessInfo) => void;
-    'disconnect': ()=> void;
+    'connect': (data: LCUProcessInfo) => void;
+    'disconnect': () => void;
 }
 
 /**
- * 用于连接LOL客户端，通过监听进程和lockfile自动管理连接状态。
+ * 无法找到英雄联盟客户端进程
+ */
+export class ClientNotFoundError extends Error {
+    constructor() {
+        super('无法找到英雄联盟客户端进程！');
+    }
+}
+
+/**
+ * 软件没有以管理员模式运行
+ */
+export class ClientElevatedPermsError extends Error {
+    constructor() {
+        super('软件没有在管理员模式下运行！');
+    }
+}
+
+/**
+ * 用于连接LOL客户端，通过监听进程自动管理连接状态。
+ * 基于 league-connect 的健壮实现进行改造
  */
 class LCUConnector extends EventEmitter {
-    /** 进程监听定时器句柄（未启动时为 null） */
-    private processWatcher: NodeJS.Timeout | null = null;
-
+    private isMonitoring = false;
+    private pollInterval = 1000;
+    private checkTimer: NodeJS.Timeout | null = null;
 
     /**
-     * 声明 on 方法的类型，使其能够识别我们定义的事件和数据类型
+     * 声明 on 方法的类型
      */
     public declare on: <E extends keyof LCUConnectorEvents>(event: E, listener: LCUConnectorEvents[E]) => this;
 
     /**
-     * 声明 emit 方法的类型，使其在触发事件时也能进行类型检查
+     * 声明 emit 方法的类型
      */
     public declare emit: <E extends keyof LCUConnectorEvents>(event: E, ...args: Parameters<LCUConnectorEvents[E]>) => boolean;
 
-    
     /**
-     * @static
-     * @description 从进程命令行中获取英雄联盟客户端的有关信息
-     * @returns {Promise<LCUProcessInfo>}
+     * 启动连接器，开始轮询查找客户端进程
      */
-    static getLCUInfoFromProcess(): Promise<LCUProcessInfo | null> {
-        return new Promise(resolve => {
-            // 定义用于不同平台的正则表达式，来匹配命令行中的安装路径
-            // const INSTALL_REGEX_WIN = /"--install-directory=(.*?)"/;
-            // const INSTALL_REGEX_MAC = /--install-directory=(.*?)( --|\n|$)/;
-            // const INSTALL_REGEX = IS_WIN || IS_WSL ? INSTALL_REGEX_WIN : INSTALL_REGEX_MAC;
+    start() {
+        if (this.isMonitoring) return;
+        this.isMonitoring = true;
+        console.info('[LCUConnector] 开始监听 LOL 客户端进程...');
+        this.monitor();
+    }
 
-            // 根据操作系统构建不同的命令行命令
-            // macOS: 使用 [L] 技巧防止 grep 匹配自身，并过滤掉 Helper 子进程
-            const command = IS_WIN ?
-                `WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline` :
-                IS_WSL ?
-                    `WMIC.exe PROCESS WHERE "name='LeagueClientUx.exe'" GET commandline` :
-                    `ps x -o args | grep '[L]eagueClientUx' | grep -v 'Helper' | grep -v '/Frameworks/'`;
+    /**
+     * 停止连接器
+     */
+    stop() {
+        this.isMonitoring = false;
+        if (this.checkTimer) {
+            clearTimeout(this.checkTimer);
+            this.checkTimer = null;
+        }
+        console.info('[LCUConnector] 停止监听 LOL 客户端进程');
+    }
 
-            // 执行命令行命令
-            cp.exec(command, (err, stdout, stderr) => {
-                // 如果执行出错或没有输出，则解决 Promise 并返回空
-                if (err || !stdout || stderr) {
-                    resolve(null);
-                    return;
-                }
+    /**
+     * 轮询监控逻辑
+     */
+    private async monitor() {
+        if (!this.isMonitoring) return;
 
-                console.log(`process命令执行结果：${stdout}`)
+        try {
+            const info = await this.authenticate();
+            console.info(`[LCUConnector] 成功获取客户端信息: PID=${info.pid}, Port=${info.port}`);
+            this.emit('connect', info);
+            this.isMonitoring = false; // 连接成功后停止轮询
+        } catch (err) {
+            if (err instanceof ClientNotFoundError) {
+                // 没找到是正常的，继续轮询
+                logger.error("未检测到LOL客户端，一秒后将再次检查...");
+            } else if (err instanceof ClientElevatedPermsError) {
+                logger.warn('[LCUConnector] 检测到客户端以管理员权限运行，获取进程信息失败。请以管理员身份运行海克斯科技助手！');
+            } else {
+                logger.error(`[LCUConnector] 查找客户端时发生未知错误: ${err}`);
+            }
 
-                // macOS 上可能返回多行，取第一行有效的进程信息
-                const lines = stdout.split('\n').filter(line => line.trim() && line.includes('--app-port='));
-                const processLine = lines[0] || stdout;
+            // 继续下一轮轮询
+            if (this.isMonitoring) {
+                this.checkTimer = setTimeout(() => this.monitor(), this.pollInterval);
+            }
+        }
+    }
 
-                //  拿我们其他需要用到的数据
-                const portMatch = processLine.match(/--app-port=(\d+)/)
-                const tokenMatch = processLine.match(/--remoting-auth-token=([\w-]+)/)
-                const pidMatch = processLine.match(/--app-pid=(\d+)/)
-                
-                // 安装目录匹配：兼容 Windows（带引号）和 macOS（不带引号）
-                // Windows 格式: --install-directory=D:\path\to\game"
-                // macOS 格式: --install-directory=/Applications/League of Legends.app/Contents/LoL --next-param
-                let installDirectoryMatch = processLine.match(/--install-directory=(.*?)"/)  // Windows: 以引号结尾
-                if (!installDirectoryMatch) {
-                    // macOS: 匹配到下一个 -- 参数或行尾，处理路径中可能的空格
-                    installDirectoryMatch = processLine.match(/--install-directory=(.+?)(?=\s+--|$)/)
-                }
-                
-                // 确保所有需要的信息都找到了
-                if (portMatch && tokenMatch && pidMatch && installDirectoryMatch) {
-                    const installDir = installDirectoryMatch[1].trim();
-                    const data: LCUProcessInfo = {
-                        port: parseInt(portMatch[1]),
-                        pid: parseInt(pidMatch[1]) ,
-                        token: tokenMatch[1],
-                        installDirectory: path.dirname(installDir) //  父目录
+    /**
+     * 核心认证逻辑，参考 league-connect 实现
+     */
+    private async authenticate(): Promise<LCUProcessInfo> {
+        const name = 'LeagueClientUx';
+        const isWindows = process.platform === 'win32';
+        
+        // 更严谨的正则表达式匹配，避免误匹配
+        const portRegex = /--app-port=([0-9]+)(?= *"| --)/;
+        const passwordRegex = /--remoting-auth-token=(.+?)(?= *"| --)/;
+        const pidRegex = /--app-pid=([0-9]+)(?= *"| --)/;
+        
+        // 安装目录匹配：兼容 Windows（带引号）和 macOS（不带引号）
+        const installDirRegexWin = /--install-directory=(.*?)"/;
+        const installDirRegexMac = /--install-directory=(.+?)(?=\s+--|$)/;
+
+        let command: string;
+        let executionOptions = {};
+
+        if (!isWindows) {
+            // macOS / Linux: 使用 ps 命令
+            command = `ps x -o args | grep '${name}'`;
+        } else {
+            // Windows: 优先使用 PowerShell (Get-CimInstance)，因为它更现代且解析更准确
+            // 比老旧的 WMIC 更快、更稳定，而且能获取更完整的命令行参数
+            command = `Get-CimInstance -Query "SELECT * from Win32_Process WHERE name LIKE '${name}.exe'" | Select-Object -ExpandProperty CommandLine`;
+            executionOptions = { shell: 'powershell' };
+        }
+
+        try {
+            const { stdout: rawStdout } = await exec(command, executionOptions);
+            const stdout = rawStdout.replace(/\n|\r/g, ''); // 移除换行符
+
+            // 尝试匹配关键信息
+            const portMatch = stdout.match(portRegex);
+            const passwordMatch = stdout.match(passwordRegex);
+            const pidMatch = stdout.match(pidRegex);
+
+            if (!portMatch || !passwordMatch || !pidMatch) {
+                throw new ClientNotFoundError();
+            }
+
+            // 提取安装目录
+            let installDir = '';
+            const installDirMatch = stdout.match(installDirRegexWin) || stdout.match(installDirRegexMac);
+            if (installDirMatch) {
+                installDir = installDirMatch[1].trim();
+            }
+
+            return {
+                port: Number(portMatch[1]),
+                pid: Number(pidMatch[1]),
+                token: passwordMatch[1],
+                installDirectory: installDir ? path.dirname(installDir) : '' // 返回父目录作为安装目录
+            };
+
+        } catch (err) {
+            // 如果是 ClientNotFoundError 或者是 exec 执行出错（比如进程没找到），我们需要进一步判断
+            
+            // Windows 下检查是否是因为权限问题导致找不到进程
+            if (isWindows && executionOptions['shell'] === 'powershell') {
+                try {
+                    const checkAdminCmd = `if ((Get-Process -Name ${name} -ErrorAction SilentlyContinue | Where-Object {!$_.Handle -and !$_.Path})) {Write-Output "True"} else {Write-Output "False"}`;
+                    const { stdout: isAdmin } = await exec(checkAdminCmd, executionOptions);
+                    if (isAdmin.includes('True')) {
+                        throw new ClientElevatedPermsError();
                     }
-                    resolve(data);
+                } catch (ignore) {
+                    // 忽略检查权限时的错误
                 }
-                else resolve(null)
-            });
-        });
+            }
+            
+            // 如果上面的检查没有抛出权限错误，那就抛出未找到错误
+            throw new ClientNotFoundError();
+        }
     }
 
     /**
@@ -124,13 +202,11 @@ class LCUConnector extends EventEmitter {
      * @returns {boolean}
      */
     static isValidLCUPath(dirPath: string) {
+        if (!dirPath) return false;
 
-        if (!dirPath) {
-            return false;
-        }
-
-        // 定义不同平台下的客户端可执行文件名
+        const IS_MAC = process.platform === 'darwin';
         const lcuClientApp = IS_MAC ? 'LeagueClient.app' : 'LeagueClient.exe';
+        
         // 检查路径中是否包含通用的客户端文件和配置目录
         const common = fs.existsSync(path.join(dirPath, lcuClientApp)) && fs.existsSync(path.join(dirPath, 'Config'));
         // 检查特定区域的文件来判断版本（国际服、国服、Garena）
@@ -140,50 +216,6 @@ class LCUConnector extends EventEmitter {
 
         return isGlobal || isCN || isGarena;
     }
-
-    /**
-     * @description 启动连接器，开始监听客户端进程和 lockfile
-     */
-    start() {
-        // 开始监听客户端进程
-        this.initProcessWatcher();
-    }
-
-    stop() {
-        this.clearProcessWatcher();
-    }
-
-    /**
-     * @private
-     * @description 初始化客户端进程监听器
-     */
-    private initProcessWatcher() {
-        return LCUConnector.getLCUInfoFromProcess().then(lcuData => {
-            if (lcuData) {
-                this.emit('connect', lcuData);
-                this.clearProcessWatcher();
-                return;
-            }
-            logger.error("LOL客户端未启动，一秒后将再次检查...");
-            // 如果没找到，设置一个定时器，每秒执行一次 _initProcessWatcher 来重新查找
-            if (!this.processWatcher) {
-                this.processWatcher = setInterval(this.initProcessWatcher.bind(this), 1000);
-            }
-        });
-    }
-
-
-    /**
-     * @description 清除进程监听器
-     */
-    private clearProcessWatcher(){
-        if (this.processWatcher) {
-            clearInterval(this.processWatcher);
-            this.processWatcher = null;
-        }
-    }
-
-
 }
 
 // 导出 LCUConnector 类

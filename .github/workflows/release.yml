@@ -49,6 +49,16 @@ jobs:
       contents: write
     
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract release notes
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "Extracting release notes for version $VERSION"
+          awk "/^## \[$VERSION\]/{flag=1;next} /^## /{flag=0} flag" CHANGELOG.md > RELEASE_NOTE.md
+          cat RELEASE_NOTE.md
+
       # 1. 下载构建产物
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -63,8 +73,8 @@ jobs:
           files: |
             release/*.exe
             release/*.zip
+          body_path: RELEASE_NOTE.md
           draft: false
           prerelease: false
-          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

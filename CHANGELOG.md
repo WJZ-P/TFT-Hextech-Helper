@@ -1,0 +1,23 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+## [1.1.0] - 2026-01-27
+
+### Added
+- 新增崩溃日志提醒功能，帮助快速定位问题
+- 新增启动时的环境检查功能，确保运行环境正常
+- 优化LcuConnector，不再依赖落后的WMIC服务
+- 禁用GPU加速，尝试解决兼容性问题
+
+## [1.0.1] - 2026-01-20
+
+### Fixed
+- 丰富说明文本
+
+## [1.0.0] - 2026-01-01
+
+### Added
+- 初始版本发布
+- 海克斯科技助手-(已就绪)
+- 支持阵容搭配等，非常酷！
