@@ -14603,14 +14603,10 @@ class StrategyService {
     if (stage === 1 && round === 5) {
       logger.warn("[StrategyService] 发条鸟模式 1-5（兜底）：意外进入海克斯选择，开始处理...");
       await sleep(800);
-      const slotKeys = Object.keys(hexSlot);
-      const randomIndex = Math.floor(Math.random() * slotKeys.length);
-      const selectedSlotKey = slotKeys[randomIndex];
-      const selectedPoint = hexSlot[selectedSlotKey];
-      logger.info(`[StrategyService] 发条鸟模式 1-5：随机选择海克斯 ${selectedSlotKey}`);
-      await mouseController.clickAt(selectedPoint, MouseButtonType.LEFT);
-      await sleep(100);
-      await mouseController.clickAt(selectedPoint, MouseButtonType.LEFT);
+      logger.info("[StrategyService] 发条鸟模式 1-5：点击中间海克斯 SLOT_2");
+      await mouseController.clickAt(hexSlot.SLOT_2, MouseButtonType.LEFT);
+      await sleep(200);
+      await mouseController.clickAt(hexSlot.SLOT_2, MouseButtonType.LEFT);
       await sleep(500);
       logger.info("[StrategyService] 发条鸟模式 1-5：海克斯选择完成，点击开始战斗按钮...");
       await mouseController.clickAt(clockworkTrailsFightButtonPoint, MouseButtonType.LEFT);

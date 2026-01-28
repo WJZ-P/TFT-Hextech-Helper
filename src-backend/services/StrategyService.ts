@@ -1337,24 +1337,19 @@ export class StrategyService {
         }
 
         // 1-5 回合兜底处理：棋子没卖成功，意外打到了海克斯选择阶段
-        // 操作：随机选一个海克斯 → 等待动画 → 点击战斗按钮
+        // 操作：点击中间海克斯 → 等待动画 → 点击战斗按钮
         if (stage === 1 && round === 5) {
             logger.warn("[StrategyService] 发条鸟模式 1-5（兜底）：意外进入海克斯选择，开始处理...");
 
             // 1. 等待海克斯选项加载
             await sleep(800);
 
-            // 2. 随机选择一个海克斯槽位（SLOT_1 / SLOT_2 / SLOT_3）
-            const slotKeys = Object.keys(hexSlot) as (keyof typeof hexSlot)[];
-            const randomIndex = Math.floor(Math.random() * slotKeys.length);
-            const selectedSlotKey = slotKeys[randomIndex];
-            const selectedPoint = hexSlot[selectedSlotKey];
-
-            logger.info(`[StrategyService] 发条鸟模式 1-5：随机选择海克斯 ${selectedSlotKey}`);
-            await mouseController.clickAt(selectedPoint, MouseButtonType.LEFT);
-            await sleep(100);
-            //  点两次，怕点不上
-            await mouseController.clickAt(selectedPoint, MouseButtonType.LEFT);
+            // 2. 点击中间的海克斯槽位（SLOT_2）
+            logger.info("[StrategyService] 发条鸟模式 1-5：点击中间海克斯 SLOT_2");
+            await mouseController.clickAt(hexSlot.SLOT_2, MouseButtonType.LEFT);
+            await sleep(200);
+            // 点两次，怕点不上
+            await mouseController.clickAt(hexSlot.SLOT_2, MouseButtonType.LEFT);
 
             // 3. 等待海克斯选择动画完成
             await sleep(500);
