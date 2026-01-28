@@ -1334,6 +1334,7 @@ export class StrategyService {
             await sleep(300);
             logger.info("[StrategyService] 发条鸟模式 1-1：卖掉备战席第一个棋子...");
             await tftOperator.sellUnit('SLOT_1');
+            await sleep(100);   //  要等一段时间再下一步操作，避免棋子卖不掉
         }
 
         // 1-5 回合兜底处理：棋子没卖成功，意外打到了海克斯选择阶段

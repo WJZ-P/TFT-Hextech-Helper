@@ -14600,6 +14600,7 @@ class StrategyService {
       await sleep(300);
       logger.info("[StrategyService] 发条鸟模式 1-1：卖掉备战席第一个棋子...");
       await tftOperator.sellUnit("SLOT_1");
+      await sleep(100);
     }
     if (stage === 1 && round === 5) {
       logger.warn("[StrategyService] 发条鸟模式 1-5（兜底）：意外进入海克斯选择，开始处理...");
@@ -16244,6 +16245,8 @@ class GameLoadingState {
 const LOBBY_CREATE_DELAY_MS = 500;
 const RETRY_DELAY_MS = 1e3;
 const ABORT_CHECK_INTERVAL_MS = 500;
+const MAX_START_MATCH_RETRIES = 10;
+const START_MATCH_RETRY_DELAY_MS = 1e3;
 class LobbyState {
   /** 状态名称 */
   name = "LobbyState";
@@ -16282,8 +16285,11 @@ class LobbyState {
     logger.info("[LobbyState] 正在创建房间...");
     await this.lcuManager.createLobbyByQueueId(queueId);
     await sleep(LOBBY_CREATE_DELAY_MS);
-    logger.info("[LobbyState] 正在开始排队...");
-    await this.lcuManager.startMatch();
+    const matchStarted = await this.startMatchWithRetry(signal);
+    if (!matchStarted) {
+      logger.error("[LobbyState] 开始匹配失败，已达到最大重试次数，流程结束");
+      return new EndState();
+    }
     const isGameStarted = await this.waitForGameToStart(signal);
     if (isGameStarted) {
       logger.info("[LobbyState] 游戏已开始！流转到 GameLoadingState");
@@ -16295,6 +16301,34 @@ class LobbyState {
       await sleep(RETRY_DELAY_MS);
       return this;
     }
+  }
+  /**
+   * 开始匹配（带重试机制）
+   * @param signal AbortSignal 用于取消操作
+   * @returns true 表示成功开始匹配，false 表示重试都失败了
+   * @description 当 LCU 请求失败时（如 400 Bad Request），最多重试 10 次
+   *              每次重试前等待 1 秒，给客户端一些缓冲时间
+   */
+  async startMatchWithRetry(signal) {
+    for (let attempt = 1; attempt <= MAX_START_MATCH_RETRIES; attempt++) {
+      if (signal.aborted) {
+        logger.info("[LobbyState] 收到取消信号，停止匹配重试");
+        return false;
+      }
+      try {
+        logger.info(`[LobbyState] 正在开始排队...`);
+        await this.lcuManager.startMatch();
+        logger.info("[LobbyState] 排队成功！");
+        return true;
+      } catch (e) {
+        logger.warn(`[LobbyState] 开始匹配失败 (第 ${attempt} 次): ${e.message}`);
+        if (attempt < MAX_START_MATCH_RETRIES) {
+          logger.info(`[LobbyState] ${START_MATCH_RETRY_DELAY_MS}ms 后重试...`);
+          await sleep(START_MATCH_RETRY_DELAY_MS);
+        }
+      }
+    }
+    return false;
   }
   /**
    * 等待从"排队"到"游戏开始"的完整流程
