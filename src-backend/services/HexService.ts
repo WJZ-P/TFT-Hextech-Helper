@@ -13,8 +13,8 @@ import { sleep } from "../utils/HelperTools.ts";
 import GameConfigHelper from "../utils/GameConfigHelper.ts";
 import { settingsStore } from "../utils/SettingsStore.ts";
 
-/** 状态转换间隔 (ms) */
-const STATE_TRANSITION_DELAY_MS = 2000;
+/** 状态转换间隔 (ms) - 设置较短以提高状态切换响应速度 */
+const STATE_TRANSITION_DELAY_MS = 200;
 
 /**
  * 海克斯科技服务类

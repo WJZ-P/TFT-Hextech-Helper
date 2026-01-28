@@ -1329,14 +1329,14 @@ export class StrategyService {
 
         // 1-1 回合特殊处理：先卖掉备战席第一个棋子
         if (stage === 1 && round === 1) {
+            await sleep(200);
             logger.info("[StrategyService] 发条鸟模式 1-1：卖掉备战席第一个棋子...");
             await tftOperator.sellUnit('SLOT_1');
+            await sleep(50);
         }
         // 点击右下角的"开始战斗"按钮
         logger.info("[StrategyService] 发条鸟模式：点击开始战斗按钮...");
         await mouseController.clickAt(clockworkTrailsFightButtonPoint, MouseButtonType.LEFT);
-        // 等待按钮响应
-        await sleep(10);
     }
 
     // ============================================================

@@ -11,7 +11,7 @@ import { GameRunningState } from "./GameRunningState.ts";
 import { inGameApi, InGameApiEndpoints } from "../lcu/InGameApi.ts";
 
 /** 轮询间隔 (ms) */
-const POLL_INTERVAL_MS = 2000;
+const POLL_INTERVAL_MS = 500;
 
 /**
  * 游戏加载状态类

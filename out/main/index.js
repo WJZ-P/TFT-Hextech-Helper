@@ -14594,12 +14594,13 @@ class StrategyService {
   async handleClockworkTrailsStage(stage, round) {
     logger.info(`[StrategyService] 发条鸟模式：阶段 ${stage}-${round}`);
     if (stage === 1 && round === 1) {
+      await sleep(200);
       logger.info("[StrategyService] 发条鸟模式 1-1：卖掉备战席第一个棋子...");
       await tftOperator.sellUnit("SLOT_1");
+      await sleep(50);
     }
     logger.info("[StrategyService] 发条鸟模式：点击开始战斗按钮...");
     await mouseController.clickAt(clockworkTrailsFightButtonPoint, MouseButtonType.LEFT);
-    await sleep(10);
   }
   // ============================================================
   // 🎮 普通模式阶段处理器 (Normal/Ranked Mode)
@@ -16166,7 +16167,7 @@ class GameRunningState {
     logger.info("[GameRunningState] GameStateManager 已重置");
   }
 }
-const POLL_INTERVAL_MS = 2e3;
+const POLL_INTERVAL_MS = 500;
 class GameLoadingState {
   /** 状态名称 */
   name = "GameLoadingState";
@@ -16409,7 +16410,7 @@ class StartState {
     }
   }
 }
-const STATE_TRANSITION_DELAY_MS = 2e3;
+const STATE_TRANSITION_DELAY_MS = 200;
 class HexService {
   static instance = null;
   /** 取消控制器，用于优雅停止 */
