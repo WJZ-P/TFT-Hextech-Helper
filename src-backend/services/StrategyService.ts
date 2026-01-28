@@ -1342,7 +1342,7 @@ export class StrategyService {
             logger.warn("[StrategyService] 发条鸟模式 1-5（兜底）：意外进入海克斯选择，开始处理...");
 
             // 1. 等待海克斯选项加载
-            await sleep(500);
+            await sleep(800);
 
             // 2. 随机选择一个海克斯槽位（SLOT_1 / SLOT_2 / SLOT_3）
             const slotKeys = Object.keys(hexSlot) as (keyof typeof hexSlot)[];
