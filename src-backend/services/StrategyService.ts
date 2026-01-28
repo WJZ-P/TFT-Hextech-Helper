@@ -1352,6 +1352,9 @@ export class StrategyService {
 
             logger.info(`[StrategyService] 发条鸟模式 1-5：随机选择海克斯 ${selectedSlotKey}`);
             await mouseController.clickAt(selectedPoint, MouseButtonType.LEFT);
+            await sleep(100);
+            //  点两次，怕点不上
+            await mouseController.clickAt(selectedPoint, MouseButtonType.LEFT);
 
             // 3. 等待海克斯选择动画完成
             await sleep(500);
