@@ -61,7 +61,8 @@
     - [项目简介](#项目简介)
     - [功能特性](#功能特性)
     - [使用教程](#使用教程)
-    - [下载链接](#下载链接)
+    - [获取更新](#获取更新)
+    - [交流渠道](#交流渠道)
     - [技术栈](#技术栈)
     - [版权说明](#版权说明)
     - [鸣谢](#鸣谢)
@@ -131,6 +132,12 @@ TFT Hextech Helper 是一款基于 Electron + React + TypeScript 开发的云顶
 ## 获取更新
 
 #### [前往 Release 页面](https://github.com/WJZ-P/TFT-Hextech-Helper/releases)
+
+## 交流渠道
+
+<p align="center">
+  <img src="markdown/交流群.png" alt="软件截图" width="50%">
+</p>
 
 ## 技术栈
 
