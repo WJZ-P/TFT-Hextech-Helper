@@ -1330,10 +1330,10 @@ export class StrategyService {
 
         // 1-1 回合特殊处理：先卖掉备战席第一个棋子
         if (stage === 1 && round === 1) {
-            await sleep(200);
+            //  要等待一定时间，棋子才会显示在棋盘上
+            await sleep(300);
             logger.info("[StrategyService] 发条鸟模式 1-1：卖掉备战席第一个棋子...");
             await tftOperator.sellUnit('SLOT_1');
-            await sleep(50);
         }
 
         // 1-5 回合兜底处理：棋子没卖成功，意外打到了海克斯选择阶段

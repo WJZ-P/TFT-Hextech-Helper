@@ -23,6 +23,12 @@ const RETRY_DELAY_MS = 1000;
 /** abort 信号轮询间隔 (ms)，作为事件监听的兜底 */
 const ABORT_CHECK_INTERVAL_MS = 500;
 
+/** 开始匹配的最大重试次数 */
+const MAX_START_MATCH_RETRIES = 10;
+
+/** 开始匹配重试间隔 (ms) */
+const START_MATCH_RETRY_DELAY_MS = 1000;
+
 /**
  * 大厅状态类
  * @description 负责创建房间、开始匹配、等待游戏开始
@@ -74,9 +80,13 @@ export class LobbyState implements IState {
         await this.lcuManager.createLobbyByQueueId(queueId);
         await sleep(LOBBY_CREATE_DELAY_MS);
 
-        // 开始排队
-        logger.info("[LobbyState] 正在开始排队...");
-        await this.lcuManager.startMatch();
+        // 开始排队（带重试机制）
+        const matchStarted = await this.startMatchWithRetry(signal);
+        if (!matchStarted) {
+            // 重试都失败了，返回 EndState 结束流程
+            logger.error("[LobbyState] 开始匹配失败，已达到最大重试次数，流程结束");
+            return new EndState();
+        }
 
         // 等待游戏开始
         const isGameStarted = await this.waitForGameToStart(signal);
@@ -93,6 +103,40 @@ export class LobbyState implements IState {
             await sleep(RETRY_DELAY_MS);
             return this;
         }
+    }
+
+    /**
+     * 开始匹配（带重试机制）
+     * @param signal AbortSignal 用于取消操作
+     * @returns true 表示成功开始匹配，false 表示重试都失败了
+     * @description 当 LCU 请求失败时（如 400 Bad Request），最多重试 10 次
+     *              每次重试前等待 1 秒，给客户端一些缓冲时间
+     */
+    private async startMatchWithRetry(signal: AbortSignal): Promise<boolean> {
+        for (let attempt = 1; attempt <= MAX_START_MATCH_RETRIES; attempt++) {
+            // 检查是否已取消
+            if (signal.aborted) {
+                logger.info("[LobbyState] 收到取消信号，停止匹配重试");
+                return false;
+            }
+
+            try {
+                logger.info(`[LobbyState] 正在开始排队...`);
+                await this.lcuManager!.startMatch();
+                logger.info("[LobbyState] 排队成功！");
+                return true;
+            } catch (e: any) {
+                logger.warn(`[LobbyState] 开始匹配失败 (第 ${attempt} 次): ${e.message}`);
+
+                // 如果还有重试机会，等待一段时间后重试
+                if (attempt < MAX_START_MATCH_RETRIES) {
+                    logger.info(`[LobbyState] ${START_MATCH_RETRY_DELAY_MS}ms 后重试...`);
+                    await sleep(START_MATCH_RETRY_DELAY_MS);
+                }
+            }
+        }
+
+        return false;
     }
 
     /**

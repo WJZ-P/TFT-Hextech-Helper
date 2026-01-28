@@ -14597,10 +14597,9 @@ class StrategyService {
   async handleClockworkTrailsStage(stage, round) {
     logger.info(`[StrategyService] 发条鸟模式：阶段 ${stage}-${round}`);
     if (stage === 1 && round === 1) {
-      await sleep(200);
+      await sleep(300);
       logger.info("[StrategyService] 发条鸟模式 1-1：卖掉备战席第一个棋子...");
       await tftOperator.sellUnit("SLOT_1");
-      await sleep(50);
     }
     if (stage === 1 && round === 5) {
       logger.warn("[StrategyService] 发条鸟模式 1-5（兜底）：意外进入海克斯选择，开始处理...");
