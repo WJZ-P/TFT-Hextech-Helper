@@ -4,10 +4,14 @@
  * @author TFT-Hextech-Helper
  */
 
-import { Button, mouse, Point } from "@nut-tree-fork/nut-js";
+import { Button, mouse, Point, straightTo } from "@nut-tree-fork/nut-js";
 import { logger } from "../../utils/Logger";
 import { sleep } from "../../utils/HelperTools";
 import { SimplePoint } from "../../TFTProtocol";
+
+// 配置 nut-js 鼠标行为
+mouse.config.mouseSpeed = 2000; // 设置鼠标移动速度 (像素/秒)，模拟人类操作，避免瞬移被检测
+// mouse.config.autoDelayMs = 10; // (可选) 设置每步操作的最小间隔
 
 /**
  * 鼠标按键类型枚举
@@ -116,7 +120,13 @@ export class MouseController {
         );
 
         try {
-            await mouse.move([target]);
+            // 1. 模拟人类移动轨迹 (反作弊)
+            await mouse.move(straightTo(target));
+            
+            // 2. 强制归位 (兼容性)
+            // 某些系统可能在 move 结束后光标未完全到达目标点，这里强制设置一次
+            await mouse.setPosition(target);
+
             await sleep(MOUSE_CONFIG.MOVE_DELAY);
             await mouse.click(toNutButton(button));
             await sleep(MOUSE_CONFIG.CLICK_DELAY);
@@ -158,7 +168,11 @@ export class MouseController {
         );
 
         try {
-            await mouse.move([target]);
+            // 1. 模拟人类移动轨迹
+            await mouse.move(straightTo(target));
+            // 2. 强制归位
+            await mouse.setPosition(target);
+            
             await sleep(MOUSE_CONFIG.MOVE_DELAY);
         } catch (e: any) {
             logger.error(`[MouseController] 鼠标移动失败: ${e.message}`);
@@ -176,7 +190,12 @@ export class MouseController {
         try {
             // nut-js mouse.move expects Point[]
             const target = new Point(position.x, position.y);
-            await mouse.move([target]);
+            
+            // 1. 模拟人类移动轨迹
+            await mouse.move(straightTo(target));
+            // 2. 强制归位
+            await mouse.setPosition(target);
+
             await sleep(MOUSE_CONFIG.MOVE_DELAY);
             await mouse.click(toNutButton(button));
             await sleep(MOUSE_CONFIG.CLICK_DELAY);
@@ -226,7 +245,8 @@ export class MouseController {
 
         try {
             // 1. 移动到起点
-            await mouse.move([fromAbs]);
+            await mouse.move(straightTo(fromAbs));
+            await mouse.setPosition(fromAbs); // 强制归位
             // 等待游戏识别鼠标位置（游戏25帧，需要足够时间识别棋子悬停）
             await sleep(MOUSE_CONFIG.PRE_DRAG_DELAY);
 
@@ -235,7 +255,8 @@ export class MouseController {
             await sleep(holdDelay);
 
             // 3. 移动到终点
-            await mouse.move([toAbs]);
+            await mouse.move(straightTo(toAbs));
+            await mouse.setPosition(toAbs); // 强制归位
             await sleep(moveDelay);
 
             // 4. 释放左键

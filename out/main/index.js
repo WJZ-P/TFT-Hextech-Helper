@@ -11869,7 +11869,9 @@ const MOUSE_CONFIG = {
   /** 移动后等待时间 (ms) */
   MOVE_DELAY: 10,
   /** 点击后等待时间 (ms) */
-  CLICK_DELAY: 20
+  CLICK_DELAY: 20,
+  /** 拖拽前等待时间 (ms) - 确保游戏识别到鼠标在棋子上，游戏25帧约40ms/帧 */
+  PRE_DRAG_DELAY: 50
 };
 class MouseController {
   static instance;
@@ -12015,7 +12017,7 @@ class MouseController {
     );
     try {
       await mouse.move([fromAbs]);
-      await sleep(MOUSE_CONFIG.MOVE_DELAY);
+      await sleep(MOUSE_CONFIG.PRE_DRAG_DELAY);
       await mouse.pressButton(Button.LEFT);
       await sleep(holdDelay);
       await mouse.move([toAbs]);
