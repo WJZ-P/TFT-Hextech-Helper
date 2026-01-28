@@ -38,6 +38,8 @@ const MOUSE_CONFIG = {
     MOVE_DELAY: 10,
     /** 点击后等待时间 (ms) */
     CLICK_DELAY: 20,
+    /** 拖拽前等待时间 (ms) - 确保游戏识别到鼠标在棋子上，游戏25帧约40ms/帧 */
+    PRE_DRAG_DELAY: 50,
 } as const;
 
 /**
@@ -225,7 +227,8 @@ export class MouseController {
         try {
             // 1. 移动到起点
             await mouse.move([fromAbs]);
-            await sleep(MOUSE_CONFIG.MOVE_DELAY);
+            // 等待游戏识别鼠标位置（游戏25帧，需要足够时间识别棋子悬停）
+            await sleep(MOUSE_CONFIG.PRE_DRAG_DELAY);
 
             // 2. 按下左键（不释放）
             await mouse.pressButton(Button.LEFT);
