@@ -14587,6 +14587,7 @@ class StrategyService {
    * @param round 回合号
    * @description 发条鸟模式的速通刷经验策略：
    *              - 1-1 回合：卖掉备战席第一个棋子，然后点击右下角开始战斗按钮
+   *              - 1-5 回合（选秀兜底）：如果意外打到了选秀，随机选一个棋子后点击战斗按钮
    *              - 其他回合：直接点击右下角开始战斗按钮
    *              - 战斗阶段：什么都不做，等待死亡
    *              - 死亡后自动退出，开始下一局
@@ -14598,6 +14599,20 @@ class StrategyService {
       logger.info("[StrategyService] 发条鸟模式 1-1：卖掉备战席第一个棋子...");
       await tftOperator.sellUnit("SLOT_1");
       await sleep(50);
+    }
+    if (stage === 1 && round === 5) {
+      logger.warn("[StrategyService] 发条鸟模式 1-5（兜底）：意外进入海克斯选择，开始处理...");
+      await sleep(500);
+      const slotKeys = Object.keys(hexSlot);
+      const randomIndex = Math.floor(Math.random() * slotKeys.length);
+      const selectedSlotKey = slotKeys[randomIndex];
+      const selectedPoint = hexSlot[selectedSlotKey];
+      logger.info(`[StrategyService] 发条鸟模式 1-5：随机选择海克斯 ${selectedSlotKey}`);
+      await mouseController.clickAt(selectedPoint, MouseButtonType.LEFT);
+      await sleep(500);
+      logger.info("[StrategyService] 发条鸟模式 1-5：海克斯选择完成，点击开始战斗按钮...");
+      await mouseController.clickAt(clockworkTrailsFightButtonPoint, MouseButtonType.LEFT);
+      return;
     }
     logger.info("[StrategyService] 发条鸟模式：点击开始战斗按钮...");
     await mouseController.clickAt(clockworkTrailsFightButtonPoint, MouseButtonType.LEFT);
@@ -15565,7 +15580,7 @@ class StrategyService {
    */
   async handleAugment() {
     logger.info("[StrategyService] 海克斯阶段：等待海克斯选项加载...");
-    await sleep(1e3);
+    await sleep(800);
     const slotKeys = Object.keys(hexSlot);
     const randomIndex = Math.floor(Math.random() * slotKeys.length);
     const selectedSlotKey = slotKeys[randomIndex];

@@ -1320,6 +1320,7 @@ export class StrategyService {
      * @param round 回合号
      * @description 发条鸟模式的速通刷经验策略：
      *              - 1-1 回合：卖掉备战席第一个棋子，然后点击右下角开始战斗按钮
+     *              - 1-5 回合（选秀兜底）：如果意外打到了选秀，随机选一个棋子后点击战斗按钮
      *              - 其他回合：直接点击右下角开始战斗按钮
      *              - 战斗阶段：什么都不做，等待死亡
      *              - 死亡后自动退出，开始下一局
@@ -1334,6 +1335,33 @@ export class StrategyService {
             await tftOperator.sellUnit('SLOT_1');
             await sleep(50);
         }
+
+        // 1-5 回合兜底处理：棋子没卖成功，意外打到了海克斯选择阶段
+        // 操作：随机选一个海克斯 → 等待动画 → 点击战斗按钮
+        if (stage === 1 && round === 5) {
+            logger.warn("[StrategyService] 发条鸟模式 1-5（兜底）：意外进入海克斯选择，开始处理...");
+
+            // 1. 等待海克斯选项加载
+            await sleep(500);
+
+            // 2. 随机选择一个海克斯槽位（SLOT_1 / SLOT_2 / SLOT_3）
+            const slotKeys = Object.keys(hexSlot) as (keyof typeof hexSlot)[];
+            const randomIndex = Math.floor(Math.random() * slotKeys.length);
+            const selectedSlotKey = slotKeys[randomIndex];
+            const selectedPoint = hexSlot[selectedSlotKey];
+
+            logger.info(`[StrategyService] 发条鸟模式 1-5：随机选择海克斯 ${selectedSlotKey}`);
+            await mouseController.clickAt(selectedPoint, MouseButtonType.LEFT);
+
+            // 3. 等待海克斯选择动画完成
+            await sleep(500);
+
+            // 4. 点击战斗按钮开始下一回合
+            logger.info("[StrategyService] 发条鸟模式 1-5：海克斯选择完成，点击开始战斗按钮...");
+            await mouseController.clickAt(clockworkTrailsFightButtonPoint, MouseButtonType.LEFT);
+            return;
+        }
+
         // 点击右下角的"开始战斗"按钮
         logger.info("[StrategyService] 发条鸟模式：点击开始战斗按钮...");
         await mouseController.clickAt(clockworkTrailsFightButtonPoint, MouseButtonType.LEFT);
@@ -2768,7 +2796,7 @@ export class StrategyService {
         logger.info("[StrategyService] 海克斯阶段：等待海克斯选项加载...");
 
         // 1. 等待，让海克斯选项完全显示出来
-        await sleep(1000);
+        await sleep(800);
 
         // 2. 随机选择一个海克斯槽位
         //    hexSlot 有 SLOT_1, SLOT_2, SLOT_3 三个选项
