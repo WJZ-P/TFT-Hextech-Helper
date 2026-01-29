@@ -71,14 +71,23 @@ import LCUManager, { LcuEventUri, LCUWebSocketMessage } from "../src-backend/lcu
 import GameConfigHelper from "../src-backend/utils/GameConfigHelper.ts";
 import {IpcChannel} from "./protocol.ts";
 import {logger} from "../src-backend/utils/Logger.ts";
-import {hexService} from "../src-backend/services";
+// import {hexService} from "../src-backend/services"; // 移至动态导入
 import {settingsStore} from "../src-backend/utils/SettingsStore.ts";
 import {debounce} from "../src-backend/utils/HelperTools.ts";
-import {tftOperator} from "../src-backend/TftOperator.ts";
+// import {tftOperator} from "../src-backend/TftOperator.ts"; // 移至动态导入
 import {is, optimizer} from "@electron-toolkit/utils";
-import {lineupLoader} from "../src-backend/lineup";  // 导入阵容加载器
+// import {lineupLoader} from "../src-backend/lineup";  // 移至动态导入
 import {TFT_16_CHAMPION_DATA} from "../src-backend/TFTProtocol";  // 导入棋子数据
-import {globalHotkeyManager} from "../src-backend/utils/GlobalHotkeyManager.ts";  // 全局快捷键管理器
+// import {globalHotkeyManager} from "../src-backend/utils/GlobalHotkeyManager.ts";  // 移至动态导入
+
+// ============================================================================
+// 业务模块变量声明 (动态加载)
+// 为了防止在环境检查前加载原生模块导致崩溃，这些模块将在 app.whenReady 中动态导入
+// ============================================================================
+let hexService: any;
+let tftOperator: any;
+let lineupLoader: any;
+let globalHotkeyManager: any;
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -324,6 +333,47 @@ app.whenReady().then(async () => {
     }
     
     console.log('✅ [Main] 原生模块检查通过');
+
+    // ========================================================================
+    // 动态加载业务模块
+    // 必须在原生模块检查通过后加载，否则会因依赖缺失而崩溃
+    // ========================================================================
+    console.log('🚀 [Main] 正在加载业务模块...');
+    
+    try {
+        // 1. 加载 HexService (可能依赖 TftOperator)
+        const ServicesModule = await import("../src-backend/services");
+        hexService = ServicesModule.hexService;
+
+        // 2. 加载 TftOperator (依赖 nut.js)
+        const TftOperatorModule = await import("../src-backend/TftOperator.ts");
+        tftOperator = TftOperatorModule.tftOperator;
+
+        // 3. 加载 LineupLoader
+        const LineupModule = await import("../src-backend/lineup");
+        lineupLoader = LineupModule.lineupLoader;
+
+        // 4. 加载 GlobalHotkeyManager (依赖 uiohook-napi)
+        const GlobalHotkeyManagerModule = await import("../src-backend/utils/GlobalHotkeyManager.ts");
+        globalHotkeyManager = GlobalHotkeyManagerModule.globalHotkeyManager;
+
+        console.log('✅ [Main] 业务模块加载完成');
+    } catch (error) {
+        console.error('❌ [Main] 业务模块加载失败:', error);
+        writeCrashLog(error as Error, '业务模块动态加载失败');
+        
+        // 弹窗提示
+        await dialog.showMessageBox({
+            type: 'error',
+            title: '程序启动失败',
+            message: '加载核心业务模块时发生错误',
+            detail: `错误信息: ${error instanceof Error ? error.message : String(error)}\n\n请联系开发者。`,
+            buttons: ['退出程序']
+        });
+        
+        app.quit();
+        return;
+    }
     
     createWindow()  //  创建窗口
     init()  //  执行LCU相关函数
