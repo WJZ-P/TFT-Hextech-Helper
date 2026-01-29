@@ -12,9 +12,13 @@ import { StartState } from "../states/StartState.ts";
 import { sleep } from "../utils/HelperTools.ts";
 import GameConfigHelper from "../utils/GameConfigHelper.ts";
 import { settingsStore } from "../utils/SettingsStore.ts";
+import { TFTMode } from "../TFTProtocol.ts";
 
-/** 状态转换间隔 (ms) - 设置较短以提高状态切换响应速度 */
+/** 普通模式状态转换间隔 (ms) */
 const STATE_TRANSITION_DELAY_MS = 200;
+
+/** 发条鸟模式状态转换间隔 (ms) - 稍慢一些避免问题 */
+const CLOCKWORK_STATE_TRANSITION_DELAY_MS = 500;
 
 /**
  * 海克斯科技服务类
@@ -157,6 +161,14 @@ export class HexService {
     private async runMainLoop(signal: AbortSignal): Promise<void> {
         logger.info("[HexService-Looper] 启动事件循环。");
 
+        // 根据游戏模式选择状态转换延迟
+        const tftMode = settingsStore.get('tftMode');
+        const transitionDelay = tftMode === TFTMode.CLOCKWORK_TRAILS
+            ? CLOCKWORK_STATE_TRANSITION_DELAY_MS
+            : STATE_TRANSITION_DELAY_MS;
+        
+        //logger.info(`[HexService-Looper] 状态转换延迟: ${transitionDelay}ms (模式: ${tftMode})`);
+
         try {
             signal.throwIfAborted();
 
@@ -176,7 +188,7 @@ export class HexService {
                 }
 
                 this.currentState = nextState;
-                await sleep(STATE_TRANSITION_DELAY_MS);
+                await sleep(transitionDelay);
             }
         } catch (error: unknown) {
             if (error instanceof Error && error.name === "AbortError") {
