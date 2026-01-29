@@ -702,6 +702,15 @@ const TFT_SPECIAL_CHESS = {
         classes: [],
         attackRange: 0
     },
+    "提伯斯": {
+        displayName: "提伯斯",
+        englishId: "TFT16_AnnieTibbers",
+        price: 0,
+        traits: [UnitClass.Sorcerer],
+        origins: [],
+        classes: [UnitClass.Sorcerer],
+        attackRange: 1
+    },
 } satisfies Record<string, TFTUnit>;
 
 const _TFT_16_CHAMPION_DATA = {
@@ -709,6 +718,15 @@ const _TFT_16_CHAMPION_DATA = {
     ...TFT_SPECIAL_CHESS,
 
     // 1 费棋子
+    "泰达米尔": {
+        displayName: "泰达米尔",
+        englishId: "TFT16_Tryndamere",
+        price: 2,
+        traits: [UnitOrigin.Freljord, UnitClass.Slayer],
+        origins: [UnitOrigin.Freljord],
+        classes: [UnitClass.Slayer],
+        attackRange: 1
+    },
     "俄洛伊": {
         displayName: "俄洛伊",
         englishId: "TFT16_Illaoi",

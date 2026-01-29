@@ -1,0 +1,651 @@
+{
+  "id": "e0fae2ae691c78fb87baaeb525b72e4e",
+  "name": "巨神峰 厄斐琉斯",
+  "finalComp": {
+    "champions": [
+      {
+        "name": "厄斐琉斯",
+        "isCore": true,
+        "items": [
+          "鬼索的狂暴之刃",
+          "无尽之刃",
+          "海妖之怒"
+        ],
+        "position": "R1_C7",
+        "starTarget": 3
+      },
+      {
+        "name": "巴德",
+        "isCore": true,
+        "items": [
+          "大天使之杖",
+          "朔极之矛",
+          "虚空之杖"
+        ],
+        "position": "R1_C5",
+        "starTarget": 3
+      },
+      {
+        "name": "妮蔻",
+        "isCore": true,
+        "items": [
+          "巨龙之爪",
+          "日炎斗篷",
+          "振奋盔甲"
+        ],
+        "position": "R4_C5",
+        "starTarget": 3
+      },
+      {
+        "name": "蔚",
+        "isCore": false,
+        "position": "R4_C2",
+        "starTarget": 3
+      },
+      {
+        "name": "洛里斯",
+        "isCore": false,
+        "position": "R4_C3",
+        "starTarget": 3
+      },
+      {
+        "name": "奈德丽",
+        "isCore": false,
+        "items": [
+          "珠光护手",
+          "强袭者的链枷",
+          "正义之手"
+        ],
+        "position": "R4_C7",
+        "starTarget": 2
+      },
+      {
+        "name": "斯维因",
+        "isCore": false,
+        "position": "R4_C4",
+        "starTarget": 2
+      },
+      {
+        "name": "塔里克",
+        "isCore": false,
+        "position": "R4_C6",
+        "starTarget": 2
+      }
+    ],
+    "traits": [
+      {
+        "key": "TFT16_Caretaker",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_Huntress",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_Targon",
+        "style": 4,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT16_Piltover",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT16_Sorcerer",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT16_Defender",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT16_Warden",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_Noxus",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_Juggernaut",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_Zaun",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT16_Explorer",
+        "style": 0,
+        "numUnits": 2
+      }
+    ]
+  },
+  "stages": {
+    "level4": {
+      "champions": [
+        {
+          "name": "慎",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "厄斐琉斯",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "巴德",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "赛恩",
+          "isCore": false,
+          "position": "R4_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Targon",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Caretaker",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Brawler",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Ionia",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Noxus",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level5": {
+      "champions": [
+        {
+          "name": "厄斐琉斯",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "巴德",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "妮蔻",
+          "isCore": false,
+          "position": "R4_C2"
+        },
+        {
+          "name": "蔚",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "洛里斯",
+          "isCore": false,
+          "position": "R4_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Targon",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Caretaker",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Defender",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Piltover",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Explorer",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Sorcerer",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Zaun",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level6": {
+      "champions": [
+        {
+          "name": "厄斐琉斯",
+          "isCore": false,
+          "position": "R1_C7"
+        },
+        {
+          "name": "巴德",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "妮蔻",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "蔚",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "赵信",
+          "isCore": false,
+          "position": "R4_C2"
+        },
+        {
+          "name": "洛里斯",
+          "isCore": false,
+          "position": "R4_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Targon",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Caretaker",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Defender",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Piltover",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Explorer",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Sorcerer",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Zaun",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Demacia",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Ionia",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level7": {
+      "champions": [
+        {
+          "name": "厄斐琉斯",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "巴德",
+          "isCore": false,
+          "position": "R1_C7"
+        },
+        {
+          "name": "妮蔻",
+          "isCore": false,
+          "position": "R4_C2"
+        },
+        {
+          "name": "蔚",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "洛里斯",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "奈德丽",
+          "isCore": false,
+          "position": "R4_C7"
+        },
+        {
+          "name": "斯维因",
+          "isCore": false,
+          "position": "R4_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Targon",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Caretaker",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Huntress",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Sorcerer",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Defender",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Piltover",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Zaun",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Noxus",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Juggernaut",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Explorer",
+          "style": 0,
+          "numUnits": 2
+        }
+      ]
+    },
+    "level8": {
+      "champions": [
+        {
+          "name": "厄斐琉斯",
+          "isCore": false,
+          "position": "R1_C7"
+        },
+        {
+          "name": "巴德",
+          "isCore": false,
+          "position": "R1_C5"
+        },
+        {
+          "name": "妮蔻",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "蔚",
+          "isCore": false,
+          "position": "R4_C2"
+        },
+        {
+          "name": "洛里斯",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "奈德丽",
+          "isCore": false,
+          "position": "R4_C7"
+        },
+        {
+          "name": "斯维因",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "塔里克",
+          "isCore": false,
+          "position": "R4_C6"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Caretaker",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Huntress",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Targon",
+          "style": 4,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Sorcerer",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Defender",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Piltover",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Zaun",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Noxus",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Juggernaut",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Explorer",
+          "style": 0,
+          "numUnits": 2
+        }
+      ]
+    },
+    "level9": {
+      "champions": [
+        {
+          "name": "厄斐琉斯",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "巴德",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "妮蔻",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "蔚",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "洛里斯",
+          "isCore": false,
+          "position": "R4_C6"
+        },
+        {
+          "name": "奈德丽",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "斯维因",
+          "isCore": false,
+          "position": "R4_C7"
+        },
+        {
+          "name": "塔里克",
+          "isCore": false,
+          "position": "R4_C2"
+        },
+        {
+          "name": "希瓦娜",
+          "isCore": false,
+          "position": "R4_C1"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT16_Caretaker",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Huntress",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_ShyvanaUnique",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Targon",
+          "style": 4,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Sorcerer",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Defender",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Piltover",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Juggernaut",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT16_Zaun",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Warden",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Noxus",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT16_Explorer",
+          "style": 0,
+          "numUnits": 2
+        }
+      ]
+    }
+  }
+}

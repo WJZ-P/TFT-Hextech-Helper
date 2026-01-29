@@ -32,8 +32,10 @@ const CHAMPION_EN_TO_CN = {
     // 特殊棋子
     "TFT16_ItemForge": "基础装备锻造器",
     "TFT16_TrainingDummy": "训练假人",
+    "TFT16_AnnieTibbers": "提伯斯",
     
     // 1 费棋子
+    "TFT16_Tryndamere": "泰达米尔",
     "TFT16_Illaoi": "俄洛伊",
     "TFT16_Bellara": "贝蕾亚",
     "TFT16_Anivia": "艾尼维亚",
