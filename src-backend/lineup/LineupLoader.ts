@@ -30,7 +30,7 @@ class LineupLoader {
         if (app.isPackaged) {
             this.lineupsDir = path.join(process.resourcesPath, 'lineups');
         } else {
-            this.lineupsDir = path.join(__dirname, '../../public/lineups');
+            this.lineupsDir = path.join(__dirname, '../../../public/lineups');
         }
     }
     
