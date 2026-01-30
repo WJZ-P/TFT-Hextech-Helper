@@ -408,7 +408,7 @@ export const benchSlotRegion = {
 
 //  备战席点位
 export const benchSlotPoints = {
-    SLOT_1: { x: 135, y: 555 },
+    SLOT_1: { x: 130, y: 555 },
     SLOT_2: { x: 210, y: 555 },
     SLOT_3: { x: 295, y: 555 },
     SLOT_4: { x: 385, y: 555 },

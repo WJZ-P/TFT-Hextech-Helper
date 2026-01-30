@@ -293,6 +293,10 @@ const lcuApi = {
   /** 强制杀掉游戏进程 */
   killGameProcess: () => {
     return electron.ipcRenderer.invoke(IpcChannel.LCU_KILL_GAME_PROCESS);
+  },
+  /** 退出当前房间（离开大厅） */
+  leaveLobby: () => {
+    return electron.ipcRenderer.invoke(IpcChannel.LCU_REQUEST, "DELETE", "/lol-lobby/v2/lobby");
   }
 };
 electron.contextBridge.exposeInMainWorld("lcu", lcuApi);

@@ -11,6 +11,7 @@ import { sleep } from "../utils/HelperTools.ts";
 import { logger } from "../utils/Logger.ts";
 import { GameLoadingState } from "./GameLoadingState.ts";
 import { EndState } from "./EndState.ts";
+import { StartState } from "./StartState.ts";
 import { settingsStore } from "../utils/SettingsStore.ts";
 import { TFTMode } from "../TFTProtocol.ts";
 
@@ -28,6 +29,15 @@ const MAX_START_MATCH_RETRIES = 10;
 
 /** 开始匹配重试间隔 (ms) */
 const START_MATCH_RETRY_DELAY_MS = 1000;
+
+/** 发条鸟模式排队超时时间 (ms) - 超过此时间未进入游戏则退出房间重试 */
+const CLOCKWORK_MATCH_TIMEOUT_MS = 3000;
+
+/** 退出房间的最大重试次数 */
+const MAX_LEAVE_LOBBY_RETRIES = 10;
+
+/** 退出房间重试间隔 (ms) */
+const LEAVE_LOBBY_RETRY_DELAY_MS = 1000;
 
 /**
  * 大厅状态类
@@ -74,6 +84,8 @@ export class LobbyState implements IState {
 
         // 获取用户选择的游戏模式
         const queueId = this.getQueueId();
+        const tftMode = settingsStore.get('tftMode');
+        const isClockworkMode = tftMode === TFTMode.CLOCKWORK_TRAILS;
 
         // 创建房间
         logger.info("[LobbyState] 正在创建房间...");
@@ -88,12 +100,22 @@ export class LobbyState implements IState {
             return new EndState();
         }
 
-        // 等待游戏开始
-        const isGameStarted = await this.waitForGameToStart(signal);
+        // 等待游戏开始（发条鸟模式有超时机制）
+        const waitResult = await this.waitForGameToStart(signal, isClockworkMode);
 
-        if (isGameStarted) {
+        if (waitResult === 'started') {
             logger.info("[LobbyState] 游戏已开始！流转到 GameLoadingState");
             return new GameLoadingState();
+        } else if (waitResult === 'timeout') {
+            // 发条鸟模式超时，退出房间（带重试机制），回到 StartState 重新开始
+            logger.warn("[LobbyState] 发条鸟模式排队超时，退出房间重新开始...");
+            const leaveSuccess = await this.leaveLobbyWithRetry(signal);
+            if (!leaveSuccess) {
+                // 退出房间重试都失败了，返回 EndState 结束流程
+                logger.error("[LobbyState] 退出房间失败，已达到最大重试次数，流程结束");
+                return new EndState();
+            }
+            return new StartState();
         } else if (signal.aborted) {
             // 用户主动停止
             return new EndState();
@@ -140,20 +162,57 @@ export class LobbyState implements IState {
     }
 
     /**
+     * 退出房间（带重试机制）
+     * @param signal AbortSignal 用于取消操作
+     * @returns true 表示成功退出房间，false 表示重试都失败了
+     * @description 当 LCU 请求失败时（如 400 Bad Request），最多重试 10 次
+     *              每次重试前等待 1 秒，给客户端一些缓冲时间
+     */
+    private async leaveLobbyWithRetry(signal: AbortSignal): Promise<boolean> {
+        for (let attempt = 1; attempt <= MAX_LEAVE_LOBBY_RETRIES; attempt++) {
+            // 检查是否已取消
+            if (signal.aborted) {
+                logger.info("[LobbyState] 收到取消信号，停止退出房间重试");
+                return false;
+            }
+
+            try {
+                logger.info(`[LobbyState] 正在退出房间... (第 ${attempt} 次尝试)`);
+                await this.lcuManager!.leaveLobby();
+                await sleep(500);  // 等待房间退出完成
+                logger.info("[LobbyState] 成功退出房间！");
+                return true;
+            } catch (e: any) {
+                logger.warn(`[LobbyState] 退出房间失败 (第 ${attempt} 次): ${e.message}`);
+
+                // 如果还有重试机会，等待一段时间后重试
+                if (attempt < MAX_LEAVE_LOBBY_RETRIES) {
+                    logger.info(`[LobbyState] ${LEAVE_LOBBY_RETRY_DELAY_MS}ms 后重试...`);
+                    await sleep(LEAVE_LOBBY_RETRY_DELAY_MS);
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * 等待从"排队"到"游戏开始"的完整流程
      * @param signal AbortSignal 用于取消等待
-     * @returns true 表示游戏成功开始，false 表示流程中断
+     * @param isClockworkMode 是否为发条鸟模式（启用超时机制）
+     * @returns 'started' 表示游戏成功开始，'timeout' 表示超时，'interrupted' 表示流程中断
      */
-    private waitForGameToStart(signal: AbortSignal): Promise<boolean> {
+    private waitForGameToStart(signal: AbortSignal, isClockworkMode: boolean = false): Promise<'started' | 'timeout' | 'interrupted'> {
         return new Promise((resolve) => {
             let stopCheckInterval: NodeJS.Timeout | null = null;
+            let timeoutTimer: NodeJS.Timeout | null = null;
             let isResolved = false;
             let lastAcceptTime = 0;  // 上次接受对局的时间戳，用于节流
 
             /**
              * 安全的 resolve，防止重复调用
              */
-            const safeResolve = (value: boolean) => {
+            const safeResolve = (value: 'started' | 'timeout' | 'interrupted') => {
                 if (isResolved) return;
                 isResolved = true;
                 cleanup();
@@ -170,6 +229,10 @@ export class LobbyState implements IState {
                     clearInterval(stopCheckInterval);
                     stopCheckInterval = null;
                 }
+                if (timeoutTimer) {
+                    clearTimeout(timeoutTimer);
+                    timeoutTimer = null;
+                }
             };
 
             /**
@@ -177,7 +240,7 @@ export class LobbyState implements IState {
              */
             const onAbort = () => {
                 logger.info("[LobbyState] 收到取消信号，停止等待");
-                safeResolve(false);
+                safeResolve('interrupted');
             };
 
             /**
@@ -206,7 +269,7 @@ export class LobbyState implements IState {
 
                 if (phase === "InProgress") {
                     logger.info("[LobbyState] 监听到 GAMEFLOW 变为 InProgress");
-                    safeResolve(true);
+                    safeResolve('started');
                 }
             };
 
@@ -220,9 +283,18 @@ export class LobbyState implements IState {
             // 定期检查 signal 状态 (作为 abort 事件的兜底)
             stopCheckInterval = setInterval(() => {
                 if (signal.aborted) {
-                    safeResolve(false);
+                    safeResolve('interrupted');
                 }
             }, ABORT_CHECK_INTERVAL_MS);
+
+            // 发条鸟模式：设置超时定时器
+            if (isClockworkMode) {
+                logger.info(`[LobbyState] 发条鸟模式：${CLOCKWORK_MATCH_TIMEOUT_MS / 1000}秒内未进入游戏将退出重试`);
+                timeoutTimer = setTimeout(() => {
+                    logger.warn("[LobbyState] 发条鸟模式排队超时！");
+                    safeResolve('timeout');
+                }, CLOCKWORK_MATCH_TIMEOUT_MS);
+            }
         });
     }
 }

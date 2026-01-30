@@ -5587,6 +5587,15 @@ class LCUManager extends EventEmitter {
     logger.info("📬 [LCUManager] 正在停止匹配...");
     return this.request("DELETE", "/lol-lobby/v2/lobby/matchmaking/search");
   }
+  /**
+   * 退出当前房间
+   * @description 退出大厅房间，用于发条鸟模式下排队超时后重新开始
+   * @returns Promise<any>
+   */
+  leaveLobby() {
+    logger.info("📬 [LCUManager] 正在退出房间...");
+    return this.request("DELETE", "/lol-lobby/v2/lobby");
+  }
   async checkMatchState() {
     const result = await this.request("GET", "/lol-lobby/v2/lobby/matchmaking/search-state");
     return result.searchState;
@@ -6207,7 +6216,7 @@ const benchSlotRegion = {
   }
 };
 const benchSlotPoints = {
-  SLOT_1: { x: 135, y: 555 },
+  SLOT_1: { x: 130, y: 555 },
   SLOT_2: { x: 210, y: 555 },
   SLOT_3: { x: 295, y: 555 },
   SLOT_4: { x: 385, y: 555 },
@@ -9914,9 +9923,9 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-BMYfoHYV.js");
+    const ServicesModule = await import("./chunks/index-DtR2zkH4.js");
     hexService = ServicesModule.hexService;
-    const TftOperatorModule = await import("./chunks/TftOperator-Di1up2_v.js").then((n) => n.T);
+    const TftOperatorModule = await import("./chunks/TftOperator-BxDuytVY.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
     const LineupModule = await import("./chunks/index-BDZUJSCK.js");
     lineupLoader = LineupModule.lineupLoader;

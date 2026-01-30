@@ -294,6 +294,16 @@ class LCUManager extends EventEmitter {
         return this.request('DELETE', '/lol-lobby/v2/lobby/matchmaking/search');
     }
 
+    /**
+     * 退出当前房间
+     * @description 退出大厅房间，用于发条鸟模式下排队超时后重新开始
+     * @returns Promise<any>
+     */
+    public leaveLobby(): Promise<any> {
+        logger.info('📬 [LCUManager] 正在退出房间...');
+        return this.request('DELETE', '/lol-lobby/v2/lobby');
+    }
+
     public async checkMatchState(): Promise<MatchState> {
         const result: {
             errors: [],

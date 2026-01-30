@@ -1331,7 +1331,10 @@ export class StrategyService {
         // 1-1 回合特殊处理：先卖掉备战席第一个棋子
         if (stage === 1 && round === 1) {
             //  要等待一定时间，棋子才会显示在棋盘上
-            await sleep(300);
+            await sleep(100);
+            //  然后我们先点一下屏幕，以免LOL窗口不是焦点。
+            await mouseController.clickAt(hexSlot.SLOT_2, MouseButtonType.LEFT);
+            await sleep(10);
             logger.info("[StrategyService] 发条鸟模式 1-1：卖掉备战席第一个棋子...");
             await tftOperator.sellUnit('SLOT_1');
             await sleep(100);   //  要等一段时间再下一步操作，避免棋子卖不掉

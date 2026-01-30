@@ -43,7 +43,7 @@ const MOUSE_CONFIG = {
     /** 点击后等待时间 (ms) */
     CLICK_DELAY: 20,
     /** 拖拽前等待时间 (ms) - 确保游戏识别到鼠标在棋子上，游戏25帧约40ms/帧 */
-    PRE_DRAG_DELAY: 50,
+    PRE_DRAG_DELAY: 100,
 } as const;
 
 /**
@@ -213,7 +213,7 @@ export class MouseController {
         from: SimplePoint,
         to: SimplePoint,
         holdDelay: number = 50,
-        moveDelay: number = 50
+        moveDelay: number = 100
     ): Promise<void> {
         if (!this.gameWindowOrigin) {
             throw new Error("[MouseController] 尚未设置游戏窗口基准点，请先调用 setGameWindowOrigin()");

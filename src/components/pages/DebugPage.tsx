@@ -157,6 +157,12 @@ const DebugPage = () => {
                         console.log(await window.lcu.startMatch());
                     }}>开始匹配</DebugButton>
                     
+                    <DebugButton $variant="danger" onClick={async () => {
+                        const result = await window.lcu.leaveLobby();
+                        console.log('退出房间结果:', result);
+                        toast(result.error ? `退出失败: ${result.error}` : '已退出房间', { type: result.error ? 'error' : 'success' });
+                    }}>退出房间</DebugButton>
+                    
                     <DebugButton onClick={async () => {
                         console.log(await window.lcu.getLobby());
                     }}>获取当前房间</DebugButton>

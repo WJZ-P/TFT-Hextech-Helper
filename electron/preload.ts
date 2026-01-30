@@ -279,6 +279,10 @@ const lcuApi = {
     killGameProcess: (): Promise<boolean> => {
         return ipcRenderer.invoke(IpcChannel.LCU_KILL_GAME_PROCESS);
     },
+    /** 退出当前房间（离开大厅） */
+    leaveLobby: (): Promise<{ data?: any; error?: string }> => {
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'DELETE', '/lol-lobby/v2/lobby');
+    },
 }
 export type LcuApi = typeof lcuApi
 contextBridge.exposeInMainWorld('lcu', lcuApi)
