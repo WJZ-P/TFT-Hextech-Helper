@@ -116,7 +116,7 @@ const PageSubtitle = styled.p`
  * @param data 任意数据
  * @param maxLength 最大显示长度（超出则截断）
  */
-const formatResult = (data: any, maxLength: number = 200): string => {
+const formatResult = (data: any, maxLength: number = 2000): string => {
     if (data === null || data === undefined) return '无数据';
     if (typeof data === 'string') return data || '空字符串';
     if (typeof data === 'number' || typeof data === 'boolean') return String(data);
