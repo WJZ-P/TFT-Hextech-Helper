@@ -79,7 +79,7 @@ nsis:
 
 # macOS 配置
 mac:
-  icon: public/icon.png
+  icon: public/icon.ico
   category: public.app-category.games
   target:
     - target: dmg
@@ -101,7 +101,7 @@ dmg:
 # Linux 配置
 linux:
   executableName: tft-hextech-helper
-  icon: public/icon.png
+  icon: public/icon.ico
   category: Game
   target:
     - target: AppImage
