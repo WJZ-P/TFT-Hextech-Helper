@@ -33,10 +33,7 @@ const START_MATCH_RETRY_DELAY_MS = 1000;
 /** 发条鸟模式排队超时时间 (ms) - 超过此时间未进入游戏则退出房间重试 */
 const CLOCKWORK_MATCH_TIMEOUT_MS = 3000;
 
-/** 退出房间的最大重试次数 */
-const MAX_LEAVE_LOBBY_RETRIES = 10;
-
-/** 退出房间重试间隔 (ms) */
+/** 退出房间重试间隔 (ms) - 每秒重试一次，用于收集限频 CD 数据 */
 const LEAVE_LOBBY_RETRY_DELAY_MS = 1000;
 
 /**
@@ -162,14 +159,17 @@ export class LobbyState implements IState {
     }
 
     /**
-     * 退出房间（带重试机制）
+     * 退出房间（无限重试，每秒一次，直到成功）
      * @param signal AbortSignal 用于取消操作
-     * @returns true 表示成功退出房间，false 表示重试都失败了
-     * @description 当 LCU 请求失败时（如 400 Bad Request），最多重试 10 次
-     *              每次重试前等待 1 秒，给客户端一些缓冲时间
+     * @returns true 表示成功退出房间，false 表示被取消
+     * @description LCU API 有限频机制（约 11 秒 CD），每秒重试一次直到成功
      */
     private async leaveLobbyWithRetry(signal: AbortSignal): Promise<boolean> {
-        for (let attempt = 1; attempt <= MAX_LEAVE_LOBBY_RETRIES; attempt++) {
+        let attempt = 0;
+        
+        while (true) {
+            attempt++;
+            
             // 检查是否已取消
             if (signal.aborted) {
                 logger.info("[LobbyState] 收到取消信号，停止退出房间重试");
@@ -179,21 +179,15 @@ export class LobbyState implements IState {
             try {
                 logger.info(`[LobbyState] 正在退出房间... (第 ${attempt} 次尝试)`);
                 await this.lcuManager!.leaveLobby();
-                await sleep(500);  // 等待房间退出完成
-                logger.info("[LobbyState] 成功退出房间！");
+                await sleep(100);  // 等待房间退出完成
+                logger.info(`[LobbyState] 成功退出房间！共尝试 ${attempt} 次`);
                 return true;
             } catch (e: any) {
                 logger.warn(`[LobbyState] 退出房间失败 (第 ${attempt} 次): ${e.message}`);
-
-                // 如果还有重试机会，等待一段时间后重试
-                if (attempt < MAX_LEAVE_LOBBY_RETRIES) {
-                    logger.info(`[LobbyState] ${LEAVE_LOBBY_RETRY_DELAY_MS}ms 后重试...`);
-                    await sleep(LEAVE_LOBBY_RETRY_DELAY_MS);
-                }
+                // 等待 1 秒后重试
+                await sleep(LEAVE_LOBBY_RETRY_DELAY_MS);
             }
         }
-
-        return false;
     }
 
     /**

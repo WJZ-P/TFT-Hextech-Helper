@@ -1321,7 +1321,7 @@ export class StrategyService {
      * @description 发条鸟模式的速通刷经验策略：
      *              - 1-1 回合：卖掉备战席第一个棋子，然后点击右下角开始战斗按钮
      *              - 1-5 回合（选秀兜底）：如果意外打到了选秀，随机选一个棋子后点击战斗按钮
-     *              - 其他回合：直接点击右下角开始战斗按钮
+     *              - 其他回合：直接点击右下角开始战斗按钮（连点5次，更健壮）
      *              - 战斗阶段：什么都不做，等待死亡
      *              - 死亡后自动退出，开始下一局
      */
@@ -1358,15 +1358,13 @@ export class StrategyService {
             // 3. 等待海克斯选择动画完成
             await sleep(500);
 
-            // 4. 点击战斗按钮开始下一回合
-            logger.info("[StrategyService] 发条鸟模式 1-5：海克斯选择完成，点击开始战斗按钮...");
-            await mouseController.clickAt(clockworkTrailsFightButtonPoint, MouseButtonType.LEFT);
-            return;
         }
 
-        // 点击右下角的"开始战斗"按钮
-        logger.info("[StrategyService] 发条鸟模式：点击开始战斗按钮...");
-        await mouseController.clickAt(clockworkTrailsFightButtonPoint, MouseButtonType.LEFT);
+        // 点击右下角的"开始战斗"按钮（连点 5 次，更健壮）
+        for (let i = 1; i <= 5; i++) {
+            await mouseController.clickAt(clockworkTrailsFightButtonPoint, MouseButtonType.LEFT);
+            await sleep(100);
+        }
     }
 
     // ============================================================
