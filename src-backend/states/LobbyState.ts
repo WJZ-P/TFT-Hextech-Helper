@@ -163,7 +163,9 @@ export class LobbyState implements IState {
      * @param signal AbortSignal 用于取消操作
      * @returns true 表示成功退出房间，false 表示被取消
      * @description LCU API 有限频机制（约 11 秒 CD），每秒重试一次直到成功
-     *              注意：404 错误表示房间已不存在，视为退出成功
+     *              特殊错误码处理：
+     *              - 404：房间已不存在，视为退出成功
+     *              - 423：房间已锁定（已进入对局），视为正常状态
      */
     private async leaveLobbyWithRetry(signal: AbortSignal): Promise<boolean> {
         let attempt = 0;
@@ -189,6 +191,12 @@ export class LobbyState implements IState {
                 // 404 表示房间已不存在，视为退出成功
                 if (errorMsg.includes('404')) {
                     logger.info(`[LobbyState] 房间已不存在 (404)，视为退出成功！共尝试 ${attempt} 次`);
+                    return true;
+                }
+                
+                // 423 Locked 表示已进入对局，房间被锁定，视为正常（已经进游戏了）
+                if (errorMsg.includes('423')) {
+                    logger.info(`[LobbyState] 房间已锁定 (423)，已进入对局，视为正常！共尝试 ${attempt} 次`);
                     return true;
                 }
                 
