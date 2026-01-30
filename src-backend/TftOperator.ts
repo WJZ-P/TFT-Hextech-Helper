@@ -12,6 +12,7 @@
  */
 
 import { logger } from "./utils/Logger";
+import { windowHelper } from "./utils/WindowHelper";
 import { Region } from "@nut-tree-fork/nut-js";
 import { screen } from "electron";
 import path from "path";
@@ -92,6 +93,9 @@ import { sleep } from "./utils/HelperTools";
 // ============================================================================
 
 export { IdentifiedEquip, ShopUnit, BoardLocation, BoardUnit, BenchLocation, BenchUnit, LootOrb };
+
+// 重新导出游戏分辨率常量，供其他模块使用
+export { GAME_WIDTH, GAME_HEIGHT };
 
 /** 装备资源路径优先级 (向后兼容导出) */
 export const equipResourcePath = ["component", "special", "core", "emblem", "artifact", "radiant"];
@@ -204,11 +208,53 @@ class TftOperator {
 
     /**
      * 初始化操作器
-     * @description 计算游戏窗口位置，LOL 窗口默认居中显示
-     * @returns 是否初始化成功
+     * @description 查找游戏窗口位置，优先使用 nut-js 窗口 API 精确定位，
+     *              如果查找失败则 fallback 到"居中假设"方案
+     * @returns 初始化结果，包含成功状态和窗口信息
      */
-    public init(): boolean {
+    public async init(): Promise<{
+        success: boolean;
+        windowInfo?: { left: number; top: number; width: number; height: number };
+        usedFallback: boolean;
+    }> {
         try {
+            // ============================================================
+            // 方案 1：使用 nut-js 窗口 API 精确查找 LOL 窗口位置
+            // ============================================================
+            const windowInfo = await windowHelper.findLOLWindow();
+            
+            if (windowInfo) {
+                // 找到了 LOL 窗口，使用精确位置
+                const originX = windowInfo.left;
+                const originY = windowInfo.top;
+
+                this.gameWindowRegion = { x: originX, y: originY };
+
+                // 同步到子模块
+                screenCapture.setGameWindowOrigin(this.gameWindowRegion);
+                mouseController.setGameWindowOrigin(this.gameWindowRegion);
+
+                logger.info(`[TftOperator] ✅ 通过窗口 API 找到游戏窗口`);
+                logger.info(`[TftOperator] 窗口位置: (${originX}, ${originY})`);
+                logger.info(`[TftOperator] 窗口大小: ${windowInfo.width}x${windowInfo.height}`);
+
+                return {
+                    success: true,
+                    windowInfo: {
+                        left: windowInfo.left,
+                        top: windowInfo.top,
+                        width: windowInfo.width,
+                        height: windowInfo.height,
+                    },
+                    usedFallback: false,
+                };
+            }
+
+            // ============================================================
+            // 方案 2：Fallback - 假设窗口居中（兼容老版本行为）
+            // ============================================================
+            logger.warn(`[TftOperator] ⚠️ 未找到 LOL 窗口，使用"居中假设"方案`);
+
             const primaryDisplay = screen.getPrimaryDisplay();
             const scaleFactor = primaryDisplay.scaleFactor;
             const { width: logicalWidth, height: logicalHeight } = primaryDisplay.size;
@@ -221,7 +267,7 @@ class TftOperator {
             const screenCenterX = screenWidth / 2;
             const screenCenterY = screenHeight / 2;
 
-            // 计算游戏窗口左上角
+            // 计算游戏窗口左上角（假设居中）
             const originX = screenCenterX - GAME_WIDTH / 2;
             const originY = screenCenterY - GAME_HEIGHT / 2;
 
@@ -232,13 +278,21 @@ class TftOperator {
             mouseController.setGameWindowOrigin(this.gameWindowRegion);
 
             logger.info(`[TftOperator] 屏幕尺寸: ${screenWidth}x${screenHeight}`);
-            logger.info(`[TftOperator] 游戏基准点: (${originX}, ${originY})`);
+            logger.info(`[TftOperator] 游戏基准点 (居中假设): (${originX}, ${originY})`);
 
-            return true;
+            return {
+                success: true,
+                windowInfo: undefined,  // fallback 方案没有实际窗口信息
+                usedFallback: true,
+            };
         } catch (e: any) {
             logger.error(`[TftOperator] 初始化失败: ${e.message}`);
             this.gameWindowRegion = null;
-            return false;
+            return {
+                success: false,
+                windowInfo: undefined,
+                usedFallback: false,
+            };
         }
     }
 

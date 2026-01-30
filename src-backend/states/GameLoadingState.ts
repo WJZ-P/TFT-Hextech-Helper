@@ -9,6 +9,7 @@ import { logger } from "../utils/Logger.ts";
 import { EndState } from "./EndState.ts";
 import { GameRunningState } from "./GameRunningState.ts";
 import { inGameApi, InGameApiEndpoints } from "../lcu/InGameApi.ts";
+import { tftOperator, GAME_WIDTH, GAME_HEIGHT } from "../TftOperator.ts";
 
 /** 轮询间隔 (ms) */
 const POLL_INTERVAL_MS = 500;
@@ -34,6 +35,28 @@ export class GameLoadingState implements IState {
 
         if (isGameLoaded) {
             logger.info("[GameLoadingState] 对局已开始！");
+            
+            // ============================================================
+            // 游戏加载完成后，初始化 TftOperator（查找游戏窗口位置）
+            // 此时游戏窗口 "League of Legends (TM) Client" 已经创建且分辨率固定
+            // ============================================================
+            const initResult = await tftOperator.init();
+            
+            if (!initResult.success) {
+                // 初始化失败（可能游戏窗口未找到），记录警告但继续运行
+                logger.error("[GameLoadingState] TftOperator 初始化失败!");
+            } else if (initResult.windowInfo) {
+                // 检查窗口分辨率是否符合要求
+                const { width, height } = initResult.windowInfo;
+                if (width !== GAME_WIDTH || height !== GAME_HEIGHT) {
+                    logger.error(
+                        `[GameLoadingState] ❌ 游戏分辨率不正确！` +
+                        `当前: ${width}x${height}, 需要: ${GAME_WIDTH}x${GAME_HEIGHT}。` +
+                        `请在游戏设置中将分辨率修改为 ${GAME_WIDTH}x${GAME_HEIGHT}！`
+                    );
+                }
+            }
+            
             return new GameRunningState();
         } else {
             logger.info("[GameLoadingState] 加载被中断");

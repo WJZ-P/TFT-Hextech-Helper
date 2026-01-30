@@ -236,9 +236,14 @@ function createWindow() {
     //  监听窗口变化事件
     win.on("resize", debouncedSaveBounds)
     win.on("move", debouncedSaveBounds)
-    //  关闭窗口的时候，判断是否是全屏
+    //  关闭窗口的时候，保存窗口状态并退出应用
     win.on("close", () => {
+        // 保存窗口最大化状态
         settingsStore.set("window.isMaximized", win!.isMaximized())
+        
+        // 点击 X 关闭窗口时，直接退出整个应用
+        // （不使用 hide 隐藏到托盘的行为）
+        app.quit()
     })
 
     // Test active push message to Renderer-process.
@@ -401,8 +406,8 @@ function init() {
 
     //  启动LCUConnector
     const connector = new LCUConnector()
-    //  初始化操作器
-    tftOperator.init()
+    // 注意：TftOperator 的初始化已移至 GameLoadingState，
+    // 在游戏加载时才初始化，此时游戏窗口已创建且分辨率固定
 
     connector.on('connect', (data) => {
         console.log("LOL客户端已登录！", data);
