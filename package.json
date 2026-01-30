@@ -16,9 +16,10 @@
     "typecheck": "tsc --noEmit",
     "postinstall": "electron-builder install-app-deps",
     "pack": "npm run build && electron-builder --dir",
-    "dist": "electron-vite build && electron-builder --win --mac",
+    "dist": "electron-vite build && electron-builder --win --mac --linux",
     "dist:win": "electron-vite build && electron-builder --win",
-    "dist:mac": "electron-vite build && electron-builder --mac"
+    "dist:mac": "electron-vite build && electron-builder --mac",
+    "dist:linux": "electron-vite build && electron-builder --linux"
   },
   "dependencies": {
     "@electron-toolkit/utils": "^4.0.0",

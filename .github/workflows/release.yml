@@ -7,8 +7,38 @@ on:
       - 'v*'
 
 jobs:
+  # 多平台并行构建
   build:
-    runs-on: windows-latest
+    strategy:
+      # 即使某个平台构建失败，也继续构建其他平台
+      fail-fast: false
+      matrix:
+        include:
+          # Windows 构建
+          - os: windows-latest
+            platform: win
+            build_cmd: npm run dist:win
+            artifact_name: release-windows
+            artifact_path: |
+              release/*.exe
+              release/*.zip
+          # macOS 构建
+          - os: macos-latest
+            platform: mac
+            build_cmd: npm run dist:mac
+            artifact_name: release-macos
+            artifact_path: |
+              release/*.dmg
+          # Linux 构建
+          - os: ubuntu-latest
+            platform: linux
+            build_cmd: npm run dist:linux
+            artifact_name: release-linux
+            artifact_path: |
+              release/*.AppImage
+              release/*.deb
+
+    runs-on: ${{ matrix.os }}
     
     steps:
       # 1. 检出代码
@@ -27,21 +57,20 @@ jobs:
         run: npm ci
       
       # 4. 打包 Electron 应用
-      - name: Build Electron app
-        run: npm run dist:win
+      - name: Build Electron app for ${{ matrix.platform }}
+        run: ${{ matrix.build_cmd }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       # 5. 上传构建产物
-      - name: Upload artifacts
+      - name: Upload ${{ matrix.platform }} artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: release-files
-          path: |
-            release/*.exe
-            release/*.zip
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_path }}
           retention-days: 5
 
+  # 创建 Release 并上传所有平台的文件
   release:
     needs: build
     runs-on: ubuntu-latest
@@ -59,20 +88,44 @@ jobs:
           awk "/^## \[$VERSION\]/{flag=1;next} /^## /{flag=0} flag" CHANGELOG.md > RELEASE_NOTE.md
           cat RELEASE_NOTE.md
 
-      # 1. 下载构建产物
-      - name: Download artifacts
+      # 下载所有平台的构建产物
+      - name: Download Windows artifacts
         uses: actions/download-artifact@v4
         with:
-          name: release-files
+          name: release-windows
           path: ./release
+        continue-on-error: true
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-macos
+          path: ./release
+        continue-on-error: true
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-linux
+          path: ./release
+        continue-on-error: true
       
-      # 2. 创建 Release 并上传文件
+      # 列出所有下载的文件（调试用）
+      - name: List release files
+        run: |
+          echo "=== Release files ==="
+          ls -la ./release || echo "No release directory"
+      
+      # 创建 Release 并上传文件
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             release/*.exe
             release/*.zip
+            release/*.dmg
+            release/*.AppImage
+            release/*.deb
           body_path: RELEASE_NOTE.md
           draft: false
           prerelease: false

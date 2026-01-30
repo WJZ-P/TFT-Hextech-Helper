@@ -98,6 +98,27 @@ mac:
 dmg:
   artifactName: ${name}-${version}-${arch}.${ext}
 
+# Linux 配置
+linux:
+  executableName: tft-hextech-helper
+  icon: public/icon.png
+  category: Game
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+
+# AppImage 配置
+appImage:
+  artifactName: ${name}-${version}.${ext}
+
+# Debian 包配置
+deb:
+  artifactName: ${name}-${version}.${ext}
+
 # 重新编译原生模块（sharp、nut-js 等需要）
 npmRebuild: true
 
