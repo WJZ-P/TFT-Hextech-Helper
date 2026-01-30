@@ -45,6 +45,8 @@ extraResources:
     to: icon.png
   - from: public/icon.ico
     to: icon.ico
+  - from: public/icon512x512.png
+    to: icon512x512.png 
 
 # 不打包进 asar 的文件（原生模块需要解压才能运行）
 # 这些模块包含 .node 二进制文件，必须解压到文件系统才能被 Node.js 加载
@@ -79,7 +81,7 @@ nsis:
 
 # macOS 配置
 mac:
-  icon: public/icon.ico
+  icon: public/icon512x512.png 
   category: public.app-category.games
   target:
     - target: dmg
@@ -101,7 +103,7 @@ dmg:
 # Linux 配置
 linux:
   executableName: tft-hextech-helper
-  icon: public/icon.ico
+  icon: public/icon512x512.png
   category: Game
   target:
     - target: AppImage
