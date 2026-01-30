@@ -19,6 +19,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["TFT_GET_LEVEL_INFO"] = "tft-get-level-info";
   IpcChannel2["TFT_GET_COIN_COUNT"] = "tft-get-coin-count";
   IpcChannel2["TFT_GET_LOOT_ORBS"] = "tft-get-loot-orbs";
+  IpcChannel2["TFT_GET_STAGE_INFO"] = "tft-get-stage-info";
   IpcChannel2["TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT"] = "tft-test-save-bench-slot-snapshot";
   IpcChannel2["TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT"] = "tft-test-save-fight-board-slot-snapshot";
   IpcChannel2["TFT_TEST_SAVE_QUIT_BUTTON_SNAPSHOT"] = "tft-test-save-quit-button-snapshot";
@@ -138,6 +139,8 @@ const tftApi = {
   getLevelInfo: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_LEVEL_INFO),
   getCoinCount: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_COIN_COUNT),
   getLootOrbs: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_LOOT_ORBS),
+  /** 获取当前游戏阶段信息（如 "2-1"） */
+  getStageInfo: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_STAGE_INFO),
   saveBenchSlotSnapshots: () => electron.ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT),
   saveFightBoardSlotSnapshots: () => electron.ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT),
   saveQuitButtonSnapshot: () => electron.ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_QUIT_BUTTON_SNAPSHOT)

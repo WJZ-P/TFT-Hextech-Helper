@@ -21,6 +21,7 @@ export enum IpcChannel {
     TFT_GET_LEVEL_INFO = 'tft-get-level-info',
     TFT_GET_COIN_COUNT = 'tft-get-coin-count',
     TFT_GET_LOOT_ORBS = 'tft-get-loot-orbs',
+    TFT_GET_STAGE_INFO = 'tft-get-stage-info',  // 获取当前游戏阶段信息
     TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT = 'tft-test-save-bench-slot-snapshot',
     TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT = 'tft-test-save-fight-board-slot-snapshot',
     TFT_TEST_SAVE_QUIT_BUTTON_SNAPSHOT = 'tft-test-save-quit-button-snapshot',  // 保存发条鸟退出按钮截图
