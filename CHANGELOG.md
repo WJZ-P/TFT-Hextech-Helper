@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - 修复棋子偶尔卖不掉的问题（增加操作间隔）
 - 优化匹配重试机制与操作时序
+- 修改窗口关闭行为，优化窗口检测逻辑
 
 ## [1.1.0] - 2026-01-27
 
