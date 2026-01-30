@@ -346,6 +346,21 @@ const DebugPage = () => {
             <Card>
                 <ButtonGrid>
                     <DebugButton $variant="warning" onClick={async () => {
+                        try {
+                            const result = await window.tft.saveStageSnapshots();
+                            console.log('[阶段截图]', result);
+                            if (result.success.length > 0) {
+                                toast.success(`阶段截图已保存: ${result.success.join(', ')}`);
+                            }
+                            if (result.failed.length > 0) {
+                                toast.error(`部分截图失败: ${result.failed.join(', ')}`);
+                            }
+                        } catch (e: any) {
+                            toast.error(`保存阶段截图失败: ${e.message}`);
+                        }
+                    }}>保存阶段区域截图</DebugButton>
+                    
+                    <DebugButton $variant="warning" onClick={async () => {
                         await window.tft.saveBenchSlotSnapshots();
                         toast.success('备战席截图已保存');
                     }}>保存备战席截图</DebugButton>

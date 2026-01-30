@@ -107,6 +107,8 @@ const tftApi = {
     getLootOrbs: () => ipcRenderer.invoke(IpcChannel.TFT_GET_LOOT_ORBS),
     /** 获取当前游戏阶段信息（如 "2-1"） */
     getStageInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_STAGE_INFO),
+    /** 保存所有阶段区域截图（发条鸟/标准/第一阶段三种区域） */
+    saveStageSnapshots: () => ipcRenderer.invoke(IpcChannel.TFT_SAVE_STAGE_SNAPSHOTS),
     saveBenchSlotSnapshots : ()=> ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT),
     saveFightBoardSlotSnapshots : ()=>ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT),
     saveQuitButtonSnapshot: () => ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_QUIT_BUTTON_SNAPSHOT),  // 保存发条鸟退出按钮截图

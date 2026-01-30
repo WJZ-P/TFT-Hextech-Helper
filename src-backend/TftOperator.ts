@@ -883,6 +883,71 @@ class TftOperator {
         }
     }
 
+    /**
+     * 保存所有阶段识别区域的截图
+     * @description 用于调试阶段 OCR 识别问题，会保存三种区域的截图：
+     *              1. 发条鸟模式区域 (clockwork_stage_xxx.png)
+     *              2. 标准阶段区域 (normal_stage_xxx.png) - 用于 2-1, 3-5 等
+     *              3. 第一阶段区域 (stage1_stage_xxx.png) - 第一阶段 UI 位置不同
+     *              截图保存到 public/resources/debug/stage_snapshots 目录
+     * @returns 保存结果信息，包含成功/失败的文件名
+     */
+    public async saveStageSnapshots(): Promise<{
+        success: string[];
+        failed: string[];
+        saveDir: string;
+    }> {
+        this.ensureInitialized();
+
+        // 保存目录
+        const saveDir = path.join(process.env.VITE_PUBLIC || ".", "resources/debug/stage_snapshots");
+        fs.ensureDirSync(saveDir);
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const success: string[] = [];
+        const failed: string[] = [];
+
+        // 定义三种区域的截图任务
+        const tasks = [
+            {
+                name: "clockwork_stage",      // 发条鸟模式区域
+                getRegion: () => this.getClockworkTrialsRegion(),
+                description: "发条鸟模式",
+            },
+            {
+                name: "normal_stage",         // 标准阶段区域 (2-1, 3-5 等)
+                getRegion: () => this.getStageAbsoluteRegion(false),
+                description: "标准模式",
+            },
+            {
+                name: "stage1_stage",         // 第一阶段区域 (UI 位置略有不同)
+                getRegion: () => this.getStageAbsoluteRegion(true),
+                description: "第一阶段",
+            },
+        ];
+
+        for (const task of tasks) {
+            try {
+                const region = task.getRegion();
+                // 使用 forOCR=false，保留原始色彩（不做灰度/二值化处理）
+                const pngBuffer = await screenCapture.captureRegionAsPng(region, false);
+                const filename = `${task.name}_${timestamp}.png`;
+                const savePath = path.join(saveDir, filename);
+
+                fs.writeFileSync(savePath, pngBuffer);
+                logger.info(`[TftOperator] ${task.description}阶段截图已保存: ${filename}`);
+                success.push(filename);
+            } catch (e: any) {
+                const filename = `${task.name}_${timestamp}.png`;
+                logger.error(`[TftOperator] 保存${task.description}阶段截图失败: ${e.message}`);
+                failed.push(filename);
+            }
+        }
+
+        logger.info(`[TftOperator] 阶段截图保存完成: 成功 ${success.length} 个, 失败 ${failed.length} 个`);
+        return { success, failed, saveDir };
+    }
+
     // ============================================================================
     // 私有方法 (Private Methods)
     // ============================================================================
