@@ -105,6 +105,7 @@ linux:
   executableName: tft-hextech-helper
   icon: public/icon512x512.png
   category: Game
+  maintainer: "WJZ-P <1369727119@qq.com>"
   target:
     - target: AppImage
       arch:
