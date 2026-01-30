@@ -163,6 +163,7 @@ export class LobbyState implements IState {
      * @param signal AbortSignal 用于取消操作
      * @returns true 表示成功退出房间，false 表示被取消
      * @description LCU API 有限频机制（约 11 秒 CD），每秒重试一次直到成功
+     *              注意：404 错误表示房间已不存在，视为退出成功
      */
     private async leaveLobbyWithRetry(signal: AbortSignal): Promise<boolean> {
         let attempt = 0;
@@ -183,7 +184,15 @@ export class LobbyState implements IState {
                 logger.info(`[LobbyState] 成功退出房间！共尝试 ${attempt} 次`);
                 return true;
             } catch (e: any) {
-                logger.warn(`[LobbyState] 退出房间失败 (第 ${attempt} 次): ${e.message}`);
+                const errorMsg = e.message || '';
+                
+                // 404 表示房间已不存在，视为退出成功
+                if (errorMsg.includes('404')) {
+                    logger.info(`[LobbyState] 房间已不存在 (404)，视为退出成功！共尝试 ${attempt} 次`);
+                    return true;
+                }
+                
+                logger.warn(`[LobbyState] 退出房间失败 (第 ${attempt} 次): ${errorMsg}`);
                 // 等待 1 秒后重试
                 await sleep(LEAVE_LOBBY_RETRY_DELAY_MS);
             }
