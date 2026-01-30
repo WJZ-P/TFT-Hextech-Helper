@@ -4,6 +4,7 @@
   "version": "1.1.0",
   "description": "云顶之弈海克斯助手 TFT-Hextech-Helper",
   "author": "WJZ_P",
+  "email": "1369727119@qq.com",
   "type": "module",
   "main": "./out/main/index.js",
   "homepage": "./",
