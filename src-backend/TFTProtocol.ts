@@ -1325,7 +1325,7 @@ const _TFT_16_CHAMPION_DATA = {
         traits: [UnitOrigin.Noxus, UnitClass.Sorcerer, UnitClass.Juggernaut],
         origins: [UnitOrigin.Noxus],
         classes: [UnitClass.Sorcerer, UnitClass.Juggernaut],
-        attackRange: 4
+        attackRange: 2
     },
     "孙悟空": {
         displayName: "孙悟空",
