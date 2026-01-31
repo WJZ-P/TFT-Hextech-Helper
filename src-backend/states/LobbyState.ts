@@ -257,11 +257,20 @@ export class LobbyState implements IState {
             /**
              * 监听"找到对局"事件，自动接受
              * 使用节流：100ms内只调用一次 acceptMatch
+             * 找到对局后取消超时定时器（不再需要超时退出逻辑）
              */
             const onReadyCheck = (eventData: LCUWebSocketMessage) => {
                 const now = Date.now();
                 if (eventData.data?.state === "InProgress" && now - lastAcceptTime >= 100) {
                     lastAcceptTime = now;
+                    
+                    // 找到对局后，取消超时定时器（不再需要超时退出）
+                    if (timeoutTimer) {
+                        clearTimeout(timeoutTimer);
+                        timeoutTimer = null;
+                        logger.info("[LobbyState] 已找到对局，取消排队超时定时器");
+                    }
+                    
                     logger.info("[LobbyState] 已找到对局！正在自动接受...");
                     this.lcuManager?.acceptMatch().catch((reason) => {
                         logger.warn(`[LobbyState] 接受对局失败: ${reason}`);
@@ -300,7 +309,7 @@ export class LobbyState implements IState {
 
             // 发条鸟模式：设置超时定时器
             if (isClockworkMode) {
-                logger.info(`[LobbyState] 发条鸟模式：${CLOCKWORK_MATCH_TIMEOUT_MS / 1000}秒内未进入游戏将退出重试`);
+                logger.info(`[LobbyState] 发条鸟模式：${CLOCKWORK_MATCH_TIMEOUT_MS / 1000}秒内未找到对局将退出重试`);
                 timeoutTimer = setTimeout(() => {
                     logger.warn("[LobbyState] 发条鸟模式排队超时！");
                     safeResolve('timeout');
