@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.1] - 2026-01-31
+
+- 发条鸟模式添加阶段超时检测机制
+- 优化发条鸟情况下的判断逻辑，避免误判
+
 ## [1.2.0] - 2026-01-30
 
 ### Added
