@@ -19,9 +19,10 @@
 import { IState } from "./IState";
 import { LobbyState } from "./LobbyState";
 import { EndState } from "./EndState";
+import { StartState } from "./StartState";
 import LCUManager, { LcuEventUri, LCUWebSocketMessage } from "../lcu/LCUManager";
 import { GameFlowPhase } from "../lcu/utils/LCUProtocols";
-import { gameStageMonitor } from "../services/GameStageMonitor";
+import { gameStageMonitor, GameStageEvent } from "../services/GameStageMonitor";
 import { strategyService } from "../services/StrategyService";
 import { gameStateManager } from "../services/GameStateManager";
 import { logger } from "../utils/Logger";
@@ -34,6 +35,9 @@ import { TFTMode } from "../TFTProtocol";
 
 /** abort 信号轮询间隔 (ms)，作为事件监听的兜底 */
 const ABORT_CHECK_INTERVAL_MS = 2000;
+
+/** 发条鸟模式：阶段变化超时时间 (ms)，超过此时间未收到阶段事件则视为卡住 */
+const CLOCKWORK_STAGE_TIMEOUT_MS = 60000;  // 1 分钟
 
 /**
  * 游戏运行状态类
@@ -91,8 +95,8 @@ export class GameRunningState implements IState {
         gameStageMonitor.start(1000);
         logger.info("[GameRunningState] GameStageMonitor 已启动");
 
-        // 5. 等待游戏结束
-        const isGameEnded = await this.waitForGameToEnd(signal);
+        // 5. 等待游戏结束（发条鸟模式有超时机制）
+        const waitResult = await this.waitForGameToEnd(signal, currentMode === TFTMode.CLOCKWORK_TRAILS);
 
         // 6. 清理资源
         this.cleanup();
@@ -103,7 +107,7 @@ export class GameRunningState implements IState {
             // 用户手动停止
             logger.info("[GameRunningState] 用户手动停止，流转到 EndState");
             return new EndState();
-        } else if (isGameEnded) {
+        } else if (waitResult === 'ended') {
             // 游戏正常结束，检查是否设置了"本局结束后停止"
             if (hexService.stopAfterCurrentGame) {
                 logger.info("[GameRunningState] 游戏结束，检测到【本局结束后停止】标志，停止挂机");
@@ -123,6 +127,11 @@ export class GameRunningState implements IState {
             // 否则返回大厅开始下一局
             logger.info("[GameRunningState] 游戏结束，流转到 LobbyState 开始下一局");
             return new LobbyState();
+        } else if (waitResult === 'clockwork_timeout') {
+            // 发条鸟模式：阶段变化超时，游戏可能卡住了，返回初始状态重新开始
+            logger.warn("[GameRunningState] 发条鸟模式阶段超时，返回 StartState 重新开始");
+            showToast.warning("发条鸟模式：游戏卡住，正在重新开始...", { position: 'top-center' });
+            return new StartState();
         } else {
             // 异常情况，也返回大厅重试
             logger.warn("[GameRunningState] 异常退出，流转到 LobbyState");
@@ -133,17 +142,23 @@ export class GameRunningState implements IState {
     /**
      * 等待游戏结束
      * @param signal AbortSignal 用于取消等待
-     * @returns true 表示游戏正常结束，false 表示被中断
+     * @param isClockworkMode 是否为发条鸟模式（启用阶段超时机制）
+     * @returns 'ended' 表示游戏正常结束，'interrupted' 表示被中断，'clockwork_timeout' 表示发条鸟模式超时
      * 
      * @description 游戏结束的完整链路：
      * 1. 玩家死亡 → 触发 TFT_BATTLE_PASS 事件（此时游戏窗口还开着）
      * 2. 收到 TFT_BATTLE_PASS 后 → 调用 quitGame() 关闭游戏窗口
      * 3. 游戏窗口关闭后 → 触发 GAMEFLOW_PHASE = "WaitingForStats"
      * 4. 收到 WaitingForStats → 流转到 LobbyState
+     * 
+     * 发条鸟模式额外逻辑：
+     * - 监听 stageChange 事件，每次收到事件重置超时计时器
+     * - 如果超过 1 分钟没有收到 stageChange 事件，视为游戏卡住，返回 'clockwork_timeout'
      */
-    private waitForGameToEnd(signal: AbortSignal): Promise<boolean> {
+    private waitForGameToEnd(signal: AbortSignal, isClockworkMode: boolean = false): Promise<'ended' | 'interrupted' | 'clockwork_timeout'> {
         return new Promise((resolve) => {
             let stopCheckInterval: NodeJS.Timeout | null = null;
+            let stageTimeoutTimer: NodeJS.Timeout | null = null;
             let isResolved = false;
             /** 标记是否已经尝试过退出游戏，避免重复调用 */
             let hasTriedQuit = false;
@@ -151,7 +166,7 @@ export class GameRunningState implements IState {
             /**
              * 安全的 resolve，防止重复调用
              */
-            const safeResolve = (value: boolean) => {
+            const safeResolve = (value: 'ended' | 'interrupted' | 'clockwork_timeout') => {
                 if (isResolved) return;
                 isResolved = true;
                 cleanup();
@@ -164,11 +179,33 @@ export class GameRunningState implements IState {
             const cleanup = () => {
                 this.lcuManager?.off(LcuEventUri.GAMEFLOW_PHASE, onGameflowPhase);
                 this.lcuManager?.off(LcuEventUri.TFT_BATTLE_PASS, onBattlePass);
+                // 发条鸟模式：取消 stageChange 监听
+                if (isClockworkMode) {
+                    gameStageMonitor.off('stageChange', onStageChange);
+                }
                 signal.removeEventListener("abort", onAbort);
                 if (stopCheckInterval) {
                     clearInterval(stopCheckInterval);
                     stopCheckInterval = null;
                 }
+                if (stageTimeoutTimer) {
+                    clearTimeout(stageTimeoutTimer);
+                    stageTimeoutTimer = null;
+                }
+            };
+
+            /**
+             * 重置发条鸟模式的阶段超时计时器
+             * @description 每次收到 stageChange 事件时调用，重新开始 1 分钟倒计时
+             */
+            const resetStageTimeout = () => {
+                if (stageTimeoutTimer) {
+                    clearTimeout(stageTimeoutTimer);
+                }
+                stageTimeoutTimer = setTimeout(() => {
+                    logger.warn(`[GameRunningState] 发条鸟模式：${CLOCKWORK_STAGE_TIMEOUT_MS / 1000}秒内未收到阶段变化事件，判定为游戏卡住`);
+                    safeResolve('clockwork_timeout');
+                }, CLOCKWORK_STAGE_TIMEOUT_MS);
             };
 
             /**
@@ -176,7 +213,15 @@ export class GameRunningState implements IState {
              */
             const onAbort = () => {
                 logger.info("[GameRunningState] 收到取消信号，停止等待");
-                safeResolve(false);
+                safeResolve('interrupted');
+            };
+
+            /**
+             * 发条鸟模式：监听 stageChange 事件，用于重置超时计时器
+             */
+            const onStageChange = (_event: GameStageEvent) => {
+                logger.debug("[GameRunningState] 发条鸟模式：收到 stageChange 事件，重置超时计时器");
+                resetStageTimeout();
             };
 
             /**
@@ -234,7 +279,7 @@ export class GameRunningState implements IState {
                 // 游戏结束的两种状态都表示对局已结束
                 if (phase && (phase === "WaitingForStats" || phase === "PreEndOfGame")) {
                     logger.info(`[GameRunningState] 检测到游戏结束 (${phase})，准备流转到下一状态`);
-                    safeResolve(true);
+                    safeResolve('ended');
                 }
             };
 
@@ -245,10 +290,17 @@ export class GameRunningState implements IState {
             this.lcuManager?.on(LcuEventUri.TFT_BATTLE_PASS, onBattlePass);
             this.lcuManager?.on(LcuEventUri.GAMEFLOW_PHASE, onGameflowPhase);
 
+            // 发条鸟模式：监听 stageChange 事件并启动超时计时器
+            if (isClockworkMode) {
+                logger.info(`[GameRunningState] 发条鸟模式：启动阶段超时监控 (${CLOCKWORK_STAGE_TIMEOUT_MS / 1000}秒)`);
+                gameStageMonitor.on('stageChange', onStageChange);
+                resetStageTimeout();  // 立即启动第一个超时计时器
+            }
+
             // 定期检查 signal 状态 (作为 abort 事件的兜底)
             stopCheckInterval = setInterval(() => {
                 if (signal.aborted) {
-                    safeResolve(false);
+                    safeResolve('interrupted');
                 }
             }, ABORT_CHECK_INTERVAL_MS);
         });
