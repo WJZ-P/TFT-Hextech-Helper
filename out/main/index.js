@@ -5792,7 +5792,6 @@ class GameConfigHelper {
       return false;
     }
     try {
-      await fs.emptyDir(instance.gameConfigPath);
       await fs.copy(instance.tftConfigPath, instance.gameConfigPath);
       instance.isTFTConfig = true;
       logger.info("[GameConfigHelper] 云顶挂机游戏设置应用成功！");
@@ -5830,7 +5829,6 @@ class GameConfigHelper {
     logger.debug(`[GameConfigHelper] 从备份恢复设置，备份路径: ${backupPath}`);
     for (let attempt = 1; attempt <= retryCount; attempt++) {
       try {
-        await fs.emptyDir(instance.gameConfigPath);
         await fs.copy(backupPath, instance.gameConfigPath);
         instance.isTFTConfig = false;
         logger.info(`[GameConfigHelper] 设置恢复成功！`);

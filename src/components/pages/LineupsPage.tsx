@@ -8,7 +8,7 @@ import styled from 'styled-components';
 import {ThemeType} from '../../styles/theme';
 import {TFT_16_CHAMPION_DATA, TFTEquip, TFT_16_TRAIT_DATA, TraitData} from "../../../src-backend/TFTProtocol";
 // 导入 S16 棋子数据，用于获取英雄原画 ID
-import {TFT_16_CHESS} from "../../../public/TFTInfo/chess";
+import {TFT_16_CHESS} from "../../../public/TFTInfo/S16/chess";
 
 // ==================== 类型定义 ====================
 
