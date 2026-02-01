@@ -32,3 +32,6 @@ release
 *.sln
 *.sw?
 test
+
+# 其他
+public/GameConfig/UserConfig/*
