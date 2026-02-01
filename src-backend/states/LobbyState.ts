@@ -25,7 +25,7 @@ const RETRY_DELAY_MS = 1000;
 const ABORT_CHECK_INTERVAL_MS = 500;
 
 /** 开始匹配的最大重试次数 */
-const MAX_START_MATCH_RETRIES = 10;
+const MAX_START_MATCH_RETRIES = 300;
 
 /** 开始匹配重试间隔 (ms) */
 const START_MATCH_RETRY_DELAY_MS = 1000;
