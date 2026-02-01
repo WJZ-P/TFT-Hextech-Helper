@@ -5755,7 +5755,6 @@ class GameConfigHelper {
     }
     try {
       await fs.ensureDir(instance.primaryBackupPath);
-      await fs.emptyDir(instance.primaryBackupPath);
       await fs.copy(instance.gameConfigPath, instance.primaryBackupPath);
       instance.currentBackupPath = instance.primaryBackupPath;
       instance.isTFTConfig = false;
@@ -5766,7 +5765,6 @@ class GameConfigHelper {
     }
     try {
       await fs.ensureDir(instance.fallbackBackupPath);
-      await fs.emptyDir(instance.fallbackBackupPath);
       await fs.copy(instance.gameConfigPath, instance.fallbackBackupPath);
       instance.currentBackupPath = instance.fallbackBackupPath;
       instance.isTFTConfig = false;
@@ -5805,7 +5803,6 @@ class GameConfigHelper {
    * 从备份恢复游戏设置
    * @description 把我们备份的 Config 文件夹拷贝回游戏目录
    *              会自动检测备份文件存在于哪个路径（主路径或兜底路径）
-   * @important 必须先清空目标目录，否则 TFT 配置文件可能残留！
    * @param retryCount 重试次数，默认 3 次
    * @param retryDelay 重试间隔（毫秒），默认 1000ms
    */
@@ -5827,10 +5824,10 @@ class GameConfigHelper {
       logger.error(`恢复设置失败！找不到备份目录（已检查主路径和兜底路径）`);
       return false;
     }
-    logger.info(`[GameConfigHelper] 从备份恢复设置，备份路径: ${backupPath}`);
+    logger.debug(`[GameConfigHelper] 从备份恢复设置，备份路径: ${backupPath}`);
     for (let attempt = 1; attempt <= retryCount; attempt++) {
       try {
-        await fs.emptyDir(instance.gameConfigPath);
+        await fs.ensureDir(instance.gameConfigPath);
         await fs.copy(backupPath, instance.gameConfigPath, {
           overwrite: true,
           // 强制覆盖已存在的文件
@@ -9962,7 +9959,7 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-qcQItWkm.js");
+    const ServicesModule = await import("./chunks/index-ljAtivdF.js");
     hexService = ServicesModule.hexService;
     const TftOperatorModule = await import("./chunks/TftOperator-CcSHw4T4.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;

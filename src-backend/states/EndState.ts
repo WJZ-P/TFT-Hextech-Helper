@@ -9,10 +9,6 @@ import { IdleState } from "./IdleState.ts";
 import { logger } from "../utils/Logger.ts";
 import GameConfigHelper from "../utils/GameConfigHelper.ts";
 import { strategyService } from "../services/StrategyService.ts";
-import { sleep } from "../utils/HelperTools.ts";
-
-/** 恢复前等待时间（毫秒），等待 LOL 完成结算写入 */
-const RESTORE_DELAY_MS = 500;
 
 /**
  * 结束状态类
@@ -32,19 +28,19 @@ export class EndState implements IState {
         strategyService.reset();
 
         logger.info("[EndState] 正在恢复客户端设置...");
-        try {
-            // 带重试机制的恢复，防止文件被占用
-            const success = await GameConfigHelper.restore(3, 1500);
-            if (success) {
-                logger.info("[EndState] 客户端设置恢复完成");
-            } else {
-                logger.warn("[EndState] 设置恢复返回失败，可能需要手动恢复");
-            }
-        } catch (error) {
-            logger.error("[EndState] 恢复设置异常，可能需要手动恢复");
-            if (error instanceof Error) {
-                logger.error(error);
-            }
+        
+        // 带重试机制的恢复，防止文件被占用
+        const success = await GameConfigHelper.restore(3, 1500);
+        
+        if (success) {
+            logger.info("[EndState] 客户端设置恢复完成");
+        } else {
+            // 恢复失败，打印醒目的警告和操作指引
+            logger.error("═══════════════════════════════════════════════════════════");
+            logger.error("[EndState] ⚠️ 客户端设置恢复失败！");
+            logger.error("[EndState] 您的游戏可能仍在使用 TFT 挂机专用设置（低分辨率/低画质）");
+            logger.error("[EndState] 请手动恢复：打开本软件「设置」页面 → 点击「恢复游戏设置」按钮");
+            logger.error("═══════════════════════════════════════════════════════════");
         }
 
         logger.info("[EndState] 海克斯科技已关闭，回到空闲状态");

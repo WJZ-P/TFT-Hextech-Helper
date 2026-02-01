@@ -130,29 +130,33 @@ class GameConfigHelper {
 
     /**
      * 应用预设的云顶设置
+     * @description 用 TFTConfig 完全覆盖游戏配置目录
+     *              会先清空目标目录，确保没有残留文件
      */
     public static async applyTFTConfig(): Promise<boolean> {
         const instance = GameConfigHelper.getInstance();
         if (!instance) {
-            logger.info("[GameConfigHelper] restore错误。尚未初始化！")
+            logger.error("[GameConfigHelper] applyTFTConfig 错误：尚未初始化！")
             return false
         }
         const pathExist = await fs.pathExists(instance.tftConfigPath)
         if (!pathExist) {
             logger.error(`应用云顶设置失败！找不到设置目录：${instance.tftConfigPath}`);
-            // TODO: Toast
             return false
         }
-        //  应用设置
+        
         try {
-            await fs.copy(instance.tftConfigPath, instance.gameConfigPath)
-            logger.info('云顶挂机游戏设置应用成功！')
+            // 先清空目标目录，确保没有残留文件
+            await fs.emptyDir(instance.gameConfigPath);
+            // 再复制 TFT 配置
+            await fs.copy(instance.tftConfigPath, instance.gameConfigPath);
             instance.isTFTConfig = true;
+            logger.info('[GameConfigHelper] 云顶挂机游戏设置应用成功！');
+            return true;
         } catch (e: unknown) {
-            logger.error(`云顶设置应用失败！,${e}`)
-            return false
+            logger.error(`[GameConfigHelper] 云顶设置应用失败: ${e}`);
+            return false;
         }
-        return true
     }
 
     /**
@@ -191,14 +195,11 @@ class GameConfigHelper {
         // 带重试的恢复逻辑
         for (let attempt = 1; attempt <= retryCount; attempt++) {
             try {
-                // 🔑 关键修复：先清空游戏配置目录，再从备份恢复
-                // 如果不清空，TFT 配置的文件可能会残留（fs.copy 默认只覆盖同名文件）
-                await fs.ensureDir(instance.gameConfigPath);
-                await fs.copy(backupPath, instance.gameConfigPath, {
-                    overwrite: true,       // 强制覆盖已存在的文件
-                    errorOnExist: false,   // 文件存在时不报错
-                });
-                instance.isTFTConfig = false;  // 标记当前不是 TFT 配置
+                // 先清空游戏配置目录，确保 TFT 配置不会残留
+                await fs.emptyDir(instance.gameConfigPath);
+                // 再从备份恢复
+                await fs.copy(backupPath, instance.gameConfigPath);
+                instance.isTFTConfig = false;
                 logger.info(`[GameConfigHelper] 设置恢复成功！`);
                 return true;
             } catch (err: unknown) {
