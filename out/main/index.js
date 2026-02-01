@@ -5777,11 +5777,13 @@ class GameConfigHelper {
   }
   /**
    * 应用预设的云顶设置
+   * @description 用 TFTConfig 完全覆盖游戏配置目录
+   *              会先清空目标目录，确保没有残留文件
    */
   static async applyTFTConfig() {
     const instance = GameConfigHelper.getInstance();
     if (!instance) {
-      logger.info("[GameConfigHelper] restore错误。尚未初始化！");
+      logger.error("[GameConfigHelper] applyTFTConfig 错误：尚未初始化！");
       return false;
     }
     const pathExist = await fs.pathExists(instance.tftConfigPath);
@@ -5790,14 +5792,15 @@ class GameConfigHelper {
       return false;
     }
     try {
+      await fs.emptyDir(instance.gameConfigPath);
       await fs.copy(instance.tftConfigPath, instance.gameConfigPath);
-      logger.info("云顶挂机游戏设置应用成功！");
       instance.isTFTConfig = true;
+      logger.info("[GameConfigHelper] 云顶挂机游戏设置应用成功！");
+      return true;
     } catch (e) {
-      logger.error(`云顶设置应用失败！,${e}`);
+      logger.error(`[GameConfigHelper] 云顶设置应用失败: ${e}`);
       return false;
     }
-    return true;
   }
   /**
    * 从备份恢复游戏设置
@@ -5827,13 +5830,8 @@ class GameConfigHelper {
     logger.debug(`[GameConfigHelper] 从备份恢复设置，备份路径: ${backupPath}`);
     for (let attempt = 1; attempt <= retryCount; attempt++) {
       try {
-        await fs.ensureDir(instance.gameConfigPath);
-        await fs.copy(backupPath, instance.gameConfigPath, {
-          overwrite: true,
-          // 强制覆盖已存在的文件
-          errorOnExist: false
-          // 文件存在时不报错
-        });
+        await fs.emptyDir(instance.gameConfigPath);
+        await fs.copy(backupPath, instance.gameConfigPath);
         instance.isTFTConfig = false;
         logger.info(`[GameConfigHelper] 设置恢复成功！`);
         return true;
@@ -9959,7 +9957,7 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-ljAtivdF.js");
+    const ServicesModule = await import("./chunks/index-CvRoKDy_.js");
     hexService = ServicesModule.hexService;
     const TftOperatorModule = await import("./chunks/TftOperator-CcSHw4T4.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;

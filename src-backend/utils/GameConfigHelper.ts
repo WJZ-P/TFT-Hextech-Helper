@@ -146,9 +146,7 @@ class GameConfigHelper {
         }
         
         try {
-            // 先清空目标目录，确保没有残留文件
-            await fs.emptyDir(instance.gameConfigPath);
-            // 再复制 TFT 配置
+            // 复制 TFT 配置
             await fs.copy(instance.tftConfigPath, instance.gameConfigPath);
             instance.isTFTConfig = true;
             logger.info('[GameConfigHelper] 云顶挂机游戏设置应用成功！');
@@ -195,9 +193,7 @@ class GameConfigHelper {
         // 带重试的恢复逻辑
         for (let attempt = 1; attempt <= retryCount; attempt++) {
             try {
-                // 先清空游戏配置目录，确保 TFT 配置不会残留
-                await fs.emptyDir(instance.gameConfigPath);
-                // 再从备份恢复
+                // 从备份恢复
                 await fs.copy(backupPath, instance.gameConfigPath);
                 instance.isTFTConfig = false;
                 logger.info(`[GameConfigHelper] 设置恢复成功！`);
