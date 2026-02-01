@@ -10,7 +10,6 @@ import { IdleState } from "../states/IdleState.ts";
 import { EndState } from "../states/EndState.ts";
 import { StartState } from "../states/StartState.ts";
 import { sleep } from "../utils/HelperTools.ts";
-import GameConfigHelper from "../utils/GameConfigHelper.ts";
 import { settingsStore } from "../utils/SettingsStore.ts";
 import { TFTMode } from "../TFTProtocol.ts";
 
@@ -134,14 +133,8 @@ export class HexService {
             logger.info("———————— [HexService] ————————");
             logger.info("[HexService] 海克斯科技，关闭！");
 
-            // 触发取消信号
+            // 触发取消信号，runMainLoop 的 finally 块会执行 EndState 进行清理
             this.abortController?.abort("user stop");
-
-            // 兜底：确保配置被恢复
-            const configHelper = GameConfigHelper.getInstance();
-            if (configHelper?.isTFTConfig === true) {
-                await GameConfigHelper.restore();
-            }
 
             return true;
         } catch (e: unknown) {

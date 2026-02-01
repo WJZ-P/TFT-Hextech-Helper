@@ -105,7 +105,6 @@ class GameConfigHelper {
         // 尝试使用主备份路径（软件根目录）
         try {
             await fs.ensureDir(instance.primaryBackupPath);
-            await fs.emptyDir(instance.primaryBackupPath);
             await fs.copy(instance.gameConfigPath, instance.primaryBackupPath);
             instance.currentBackupPath = instance.primaryBackupPath;
             instance.isTFTConfig = false;
@@ -118,7 +117,6 @@ class GameConfigHelper {
         // 兜底：使用 C 盘 userData 路径
         try {
             await fs.ensureDir(instance.fallbackBackupPath);
-            await fs.emptyDir(instance.fallbackBackupPath);
             await fs.copy(instance.gameConfigPath, instance.fallbackBackupPath);
             instance.currentBackupPath = instance.fallbackBackupPath;
             instance.isTFTConfig = false;
@@ -161,7 +159,6 @@ class GameConfigHelper {
      * 从备份恢复游戏设置
      * @description 把我们备份的 Config 文件夹拷贝回游戏目录
      *              会自动检测备份文件存在于哪个路径（主路径或兜底路径）
-     * @important 必须先清空目标目录，否则 TFT 配置文件可能残留！
      * @param retryCount 重试次数，默认 3 次
      * @param retryDelay 重试间隔（毫秒），默认 1000ms
      */
@@ -189,14 +186,14 @@ class GameConfigHelper {
             return false;
         }
         
-        logger.info(`[GameConfigHelper] 从备份恢复设置，备份路径: ${backupPath}`);
+        logger.debug(`[GameConfigHelper] 从备份恢复设置，备份路径: ${backupPath}`);
         
         // 带重试的恢复逻辑
         for (let attempt = 1; attempt <= retryCount; attempt++) {
             try {
                 // 🔑 关键修复：先清空游戏配置目录，再从备份恢复
                 // 如果不清空，TFT 配置的文件可能会残留（fs.copy 默认只覆盖同名文件）
-                await fs.emptyDir(instance.gameConfigPath);
+                await fs.ensureDir(instance.gameConfigPath);
                 await fs.copy(backupPath, instance.gameConfigPath, {
                     overwrite: true,       // 强制覆盖已存在的文件
                     errorOnExist: false,   // 文件存在时不报错

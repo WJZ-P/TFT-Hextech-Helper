@@ -5681,76 +5681,19 @@ function debounce(func, delay) {
     }, delay);
   };
 }
-const TFT_GAME_CFG_OVERRIDES = {
-  "General": {
-    "WindowMode": "2",
-    // 无边框窗口
-    "Height": "768",
-    // 分辨率高度
-    "Width": "1024"
-    // 分辨率宽度
-  },
-  "Performance": {
-    "FrameCapType": "3",
-    // 帧数限制: 3 = 25帧
-    "ShadowQuality": "0",
-    // 阴影质量: 最低
-    "EnvironmentQuality": "0",
-    // 环境质量: 最低
-    "EffectsQuality": "0",
-    // 特效质量: 最低
-    "CharacterQuality": "0",
-    // 角色质量: 最低
-    "EnableHUDAnimations": "0"
-    // 禁用HUD动画
-  }
-};
-const TFT_PERSISTED_OVERRIDES = {
-  // 色彩辅助功能（亮度、对比度、伽马等）- 使用默认值
-  "Accessibility": {
-    "ColorBrightness": "0.5000",
-    "ColorContrast": "0.5000",
-    "ColorGamma": "0.5000",
-    "ColorLevel": "0.5000"
-  },
-  // 聊天框位置 - 使用默认值
-  "Chat": {
-    "EnableChatFilter": "1",
-    "NativeOffsetX": "0.0000",
-    "NativeOffsetY": "0.0000",
-    "ReplayNativeOffsetX": "0.0000",
-    "ReplayNativeOffsetY": "0.0000"
-  },
-  // 色盲模式 - 使用默认值（1=正常模式）
-  "ColorPalette": {
-    "ColorPalette": "1"
-  },
-  // TFT 聊天框位置 - 使用默认值
-  "TFTChat": {
-    "NativeOffsetX": "0.0000",
-    "NativeOffsetY": "0.0000"
-  },
-  // 性能相关 - 禁用HUD动画
-  "Performance": {
-    "EnableHUDAnimations": "0"
-  }
-};
-const SESSION_BACKUP_FILENAME = "SessionBackup.json";
 class GameConfigHelper {
   static instance;
   // 实例的属性，用来存储路径信息
   installPath;
   gameConfigPath;
-  /** 主备份路径（软件根目录下）- 用于手动全量备份 */
+  /** 主备份路径（软件根目录下） */
   primaryBackupPath;
-  /** 备用备份路径（C盘 userData，作为兜底）- 用于手动全量备份 */
+  /** 备用备份路径（C盘 userData，作为兜底） */
   fallbackBackupPath;
   /** 当前实际使用的备份路径 */
   currentBackupPath;
   tftConfigPath;
-  // 预设的云顶设置（保留兼容）
-  /** 下棋时的精细化备份文件路径 */
-  sessionBackupPath;
+  // 预设的云顶设置
   isTFTConfig = false;
   constructor(installPath) {
     if (!installPath) {
@@ -5770,12 +5713,10 @@ class GameConfigHelper {
     } else {
       this.tftConfigPath = path__default.join(app.getAppPath(), "public", "GameConfig", "TFTConfig");
     }
-    this.sessionBackupPath = path__default.join(this.tftConfigPath, SESSION_BACKUP_FILENAME);
     logger.debug(`[ConfigHelper] 游戏设置目录已设定: ${this.gameConfigPath}`);
     logger.debug(`[ConfigHelper] 主备份路径: ${this.primaryBackupPath}`);
     logger.debug(`[ConfigHelper] 兜底备份路径: ${this.fallbackBackupPath}`);
     logger.debug(`[ConfigHelper] 预设云顶之弈设置目录: ${this.tftConfigPath}`);
-    logger.debug(`[ConfigHelper] 精细化备份文件: ${this.sessionBackupPath}`);
   }
   /**
    * 喵~ ✨ 这是新的初始化方法！✨
@@ -5796,12 +5737,11 @@ class GameConfigHelper {
     }
     return GameConfigHelper.instance;
   }
-  // --- 手动全量备份/恢复方法 (用于设置页面) ---
+  // --- 核心功能方法 (Core Function Methods) ---
   /**
-   * 【手动备份】全量备份当前的游戏设置
+   * 备份当前的游戏设置
    * @description 把游戏目录的 Config 文件夹完整地拷贝到备份目录
    *              优先使用软件根目录，失败则使用 C 盘 userData 作为兜底
-   * @note 此方法用于用户在设置页面手动备份，与下棋时的精细化备份是独立的
    */
   static async backup() {
     const instance = GameConfigHelper.getInstance();
@@ -5837,195 +5777,35 @@ class GameConfigHelper {
       return false;
     }
   }
-  // -------------------------------------------------------------------
-  // 🎯 细粒度配置管理方法 - 下棋时使用
-  // 只修改必要字段，其余保持用户原有设置
-  // -------------------------------------------------------------------
   /**
-   * 细粒度应用 TFT 优化配置
-   * 仅修改帧数、分辨率、画质相关的字段，其余保持不变
-   * 同时将被修改的原始值持久化到文件，供 restore() 恢复时使用
+   * 应用预设的云顶设置
    */
   static async applyTFTConfig() {
     const instance = GameConfigHelper.getInstance();
     if (!instance) {
-      logger.error("[GameConfigHelper] 尚未初始化！");
+      logger.info("[GameConfigHelper] restore错误。尚未初始化！");
+      return false;
+    }
+    const pathExist = await fs.pathExists(instance.tftConfigPath);
+    if (!pathExist) {
+      logger.error(`应用云顶设置失败！找不到设置目录：${instance.tftConfigPath}`);
       return false;
     }
     try {
-      const gameCfgPath = path__default.join(instance.gameConfigPath, "game.cfg");
-      const gameCfgOriginal = await instance.modifyGameCfg(gameCfgPath, TFT_GAME_CFG_OVERRIDES);
-      const persistedPath = path__default.join(instance.gameConfigPath, "PersistedSettings.json");
-      const persistedOriginal = await instance.modifyPersistedSettings(
-        persistedPath,
-        TFT_PERSISTED_OVERRIDES
-      );
-      const sessionBackup = {
-        gameCfgOriginal,
-        persistedOriginal,
-        timestamp: Date.now()
-      };
-      await fs.writeFile(
-        instance.sessionBackupPath,
-        JSON.stringify(sessionBackup, null, 2),
-        "utf-8"
-      );
+      await fs.copy(instance.tftConfigPath, instance.gameConfigPath);
+      logger.info("云顶挂机游戏设置应用成功！");
       instance.isTFTConfig = true;
-      logger.info("[GameConfigHelper] TFT 优化配置已精细化应用！");
-      logger.info(`[GameConfigHelper] 已备份原始值到: ${instance.sessionBackupPath}`);
-      logger.info(`[GameConfigHelper] 备份内容: game.cfg ${Object.keys(gameCfgOriginal).length} sections, PersistedSettings ${Object.keys(persistedOriginal).length} sections`);
-      return true;
-    } catch (err) {
-      logger.error(`[GameConfigHelper] 精细化应用 TFT 配置失败: ${err}`);
+    } catch (e) {
+      logger.error(`云顶设置应用失败！,${e}`);
       return false;
     }
+    return true;
   }
   /**
-   * 精细化恢复用户原始配置
-   * 仅恢复下棋时被修改的字段，不影响用户其他设置
-   * @param retryCount 重试次数
-   * @param retryDelay 重试间隔（毫秒）
-   */
-  static async restoreMinimal(retryCount = 3, retryDelay = 1e3) {
-    const instance = GameConfigHelper.getInstance();
-    if (!instance) {
-      logger.error("[GameConfigHelper] 尚未初始化！");
-      return false;
-    }
-    logger.info(instance.sessionBackupPath + "哈哈");
-    if (!await fs.pathExists(instance.sessionBackupPath)) {
-      logger.warn("[GameConfigHelper] 没有找到下棋时的备份文件，跳过精细化恢复");
-      return false;
-    }
-    let backupData;
-    try {
-      const content = await fs.readFile(instance.sessionBackupPath, "utf-8");
-      backupData = JSON.parse(content);
-    } catch (err) {
-      logger.error(`[GameConfigHelper] 读取备份文件失败: ${err}`);
-      return false;
-    }
-    for (let attempt = 1; attempt <= retryCount; attempt++) {
-      try {
-        const gameCfgPath = path__default.join(instance.gameConfigPath, "game.cfg");
-        await instance.modifyGameCfg(gameCfgPath, backupData.gameCfgOriginal);
-        const persistedPath = path__default.join(instance.gameConfigPath, "PersistedSettings.json");
-        await instance.modifyPersistedSettings(
-          persistedPath,
-          backupData.persistedOriginal
-        );
-        await fs.remove(instance.sessionBackupPath);
-        instance.isTFTConfig = false;
-        logger.info("[GameConfigHelper] 用户配置已精细化恢复！");
-        return true;
-      } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
-        const isFileLocked = errMsg.includes("EBUSY") || errMsg.includes("EPERM") || errMsg.includes("resource busy");
-        if (attempt < retryCount && isFileLocked) {
-          logger.warn(`[GameConfigHelper] 配置文件被占用，${retryDelay}ms 后重试 (${attempt}/${retryCount})...`);
-          await sleep(retryDelay);
-        } else {
-          logger.error(`[GameConfigHelper] 精细化恢复失败 (尝试 ${attempt}/${retryCount}): ${errMsg}`);
-          if (attempt === retryCount) {
-            return false;
-          }
-        }
-      }
-    }
-    return false;
-  }
-  /**
-   * 检查是否有下棋时的备份数据（检查备份文件是否存在）
-   */
-  static async hasSessionBackup() {
-    const instance = GameConfigHelper.getInstance();
-    if (!instance) return false;
-    return await fs.pathExists(instance.sessionBackupPath);
-  }
-  // -------------------------------------------------------------------
-  // 🔧 INI/JSON 文件解析与修改工具方法
-  // -------------------------------------------------------------------
-  /**
-   * 修改 game.cfg 文件（INI 格式）
-   * @param filePath 文件路径
-   * @param overrides 要修改的值 { section: { key: value } }
-   * @returns 被修改字段的原始值（用于恢复）
-   */
-  async modifyGameCfg(filePath, overrides) {
-    const content = await fs.readFile(filePath, "utf-8");
-    const lines = content.split(/\r?\n/);
-    const originalValues = {};
-    let currentSection = "";
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      const sectionMatch = line.match(/^\[(.+)\]$/);
-      if (sectionMatch) {
-        currentSection = sectionMatch[1];
-        continue;
-      }
-      const kvMatch = line.match(/^([^=]+)=(.*)$/);
-      if (kvMatch && currentSection && overrides[currentSection]) {
-        const key = kvMatch[1].trim();
-        const oldValue = kvMatch[2].trim();
-        if (overrides[currentSection][key] !== void 0) {
-          const newValue = overrides[currentSection][key];
-          if (!originalValues[currentSection]) {
-            originalValues[currentSection] = {};
-          }
-          originalValues[currentSection][key] = oldValue;
-          const indent = lines[i].match(/^(\s*)/)?.[1] || "";
-          lines[i] = `${indent}${key}=${newValue}`;
-          logger.debug(`[game.cfg] [${currentSection}] ${key}: ${oldValue} → ${newValue}`);
-        }
-      }
-    }
-    await fs.writeFile(filePath, lines.join("\r\n"), "utf-8");
-    return originalValues;
-  }
-  /**
-   * 修改 PersistedSettings.json 中指定 section 的字段
-   * @param filePath 文件路径
-   * @param overrides 要修改的值 { section: { key: value } }
-   * @returns 被修改字段的原始值（用于恢复）
-   */
-  async modifyPersistedSettings(filePath, overrides) {
-    if (!await fs.pathExists(filePath)) {
-      logger.warn(`[GameConfigHelper] PersistedSettings.json 不存在，跳过修改`);
-      return {};
-    }
-    const content = await fs.readFile(filePath, "utf-8");
-    const data = JSON.parse(content);
-    const originalValues = {};
-    for (const file2 of data.files || []) {
-      if (file2.name !== "Game.cfg") continue;
-      for (const section of file2.sections || []) {
-        const sectionName = section.name;
-        if (overrides[sectionName]) {
-          for (const setting of section.settings || []) {
-            const key = setting.name;
-            if (overrides[sectionName][key] !== void 0) {
-              if (!originalValues[sectionName]) {
-                originalValues[sectionName] = {};
-              }
-              originalValues[sectionName][key] = setting.value;
-              const newValue = overrides[sectionName][key];
-              logger.debug(`[PersistedSettings] [${sectionName}] ${key}: ${setting.value} → ${newValue}`);
-              setting.value = newValue;
-            }
-          }
-          logger.debug(`[PersistedSettings] 已处理 section [${sectionName}]`);
-        }
-      }
-    }
-    await fs.writeFile(filePath, JSON.stringify(data, null, 4), "utf-8");
-    return originalValues;
-  }
-  /**
-   * 【手动恢复】从全量备份恢复游戏设置
+   * 从备份恢复游戏设置
    * @description 把我们备份的 Config 文件夹拷贝回游戏目录
    *              会自动检测备份文件存在于哪个路径（主路径或兜底路径）
    * @important 必须先清空目标目录，否则 TFT 配置文件可能残留！
-   * @note 此方法用于用户在设置页面手动恢复，与下棋时的精细化恢复是独立的
    * @param retryCount 重试次数，默认 3 次
    * @param retryDelay 重试间隔（毫秒），默认 1000ms
    */
@@ -10182,7 +9962,7 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-Dj59ldlh.js");
+    const ServicesModule = await import("./chunks/index-qcQItWkm.js");
     hexService = ServicesModule.hexService;
     const TftOperatorModule = await import("./chunks/TftOperator-CcSHw4T4.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
