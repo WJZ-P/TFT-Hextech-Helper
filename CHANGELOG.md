@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.1] - 2026-xx
+
+- 修复重复恢复设置的问题
+- 修复匹配重试次数过少的问题
+
 ## [1.2.1] - 2026-01-31
 
 - 发条鸟模式添加阶段超时检测机制
