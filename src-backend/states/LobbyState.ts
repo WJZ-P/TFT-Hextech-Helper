@@ -148,6 +148,19 @@ export class LobbyState implements IState {
                 logger.info("[LobbyState] 排队成功！");
                 return true;
             } catch (e: any) {
+                const errorMsg = e.message || '';
+                // 404 表示已经进入对局，视为排队成功
+                if (errorMsg.includes('404')) {
+                    logger.info(`[LobbyState] 房间已不存在 (404)，视为排队成功！共尝试 ${attempt} 次`);
+                    return true;
+                }
+
+                // 423 Locked 表示已进入对局，房间被锁定，视为正常（已经进游戏了）
+                if (errorMsg.includes('423')) {
+                    logger.info(`[LobbyState] 房间已锁定 (423)，已进入对局，视为正常！共尝试 ${attempt} 次`);
+                    return true;
+                }
+
                 logger.warn(`[LobbyState] 开始匹配失败 (第 ${attempt} 次): ${e.message}`);
 
                 // 如果还有重试机会，等待一段时间后重试
