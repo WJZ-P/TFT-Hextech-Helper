@@ -25,10 +25,10 @@ const RETRY_DELAY_MS = 1000;
 const ABORT_CHECK_INTERVAL_MS = 500;
 
 /** 开始匹配的最大重试次数 */
-const MAX_START_MATCH_RETRIES = 300;
+const MAX_START_MATCH_RETRIES = 5;
 
 /** 开始匹配重试间隔 (ms) */
-const START_MATCH_RETRY_DELAY_MS = 1000;
+const START_MATCH_RETRY_DELAY_MS = 500;
 
 /** 发条鸟模式排队超时时间 (ms) - 超过此时间未进入游戏则退出房间重试 */
 const CLOCKWORK_MATCH_TIMEOUT_MS = 3000;
@@ -93,8 +93,11 @@ export class LobbyState implements IState {
         const matchStarted = await this.startMatchWithRetry(signal);
         if (!matchStarted) {
             // 重试都失败了，返回 EndState 结束流程
-            logger.error("[LobbyState] 开始匹配失败，已达到最大重试次数，流程结束");
-            return new EndState();
+            logger.warn("[LobbyState] 开始匹配失败，已达到最大重试次数，尝试退出房间");
+            await this.leaveLobbyWithRetry(signal)
+
+            logger.error("[LobbyState] 退出房间成功，重启LobbyState");
+            return this;
         }
 
         // 等待游戏开始（发条鸟模式有超时机制）
