@@ -291,9 +291,33 @@ app.on('activate', () => {
     }
 })
 
-// 在应用退出前，停止全局快捷键管理器
-app.on('will-quit', () => {
-    globalHotkeyManager.stop();
+// 在应用退出前，停止全局快捷键管理器，并检查是否需要恢复设置
+app.on('will-quit', async (event) => {
+    // 停止快捷键监听
+    if (globalHotkeyManager) {
+        globalHotkeyManager.stop();
+    }
+
+    // 如果自动下棋服务正在运行，需要恢复用户原本的游戏设置
+    // 注意：hexService 是动态加载的，可能为 undefined
+    if (hexService && hexService.isRunning) {
+        // 阻止默认的退出行为，等待异步恢复操作完成
+        event.preventDefault();
+        console.log('🔄 [Main] 检测到程序正在运行，正在恢复游戏设置...');
+        
+        try {
+            // 恢复设置
+            await GameConfigHelper.restore();
+            console.log('✅ [Main] 游戏设置已恢复');
+        } catch (error) {
+            console.error('❌ [Main] 恢复设置失败:', error);
+        } finally {
+            // 恢复完成后（无论成功失败），强制退出应用
+            // app.exit() 不会再次触发 will-quit 事件，避免无限循环
+            console.log('👋 [Main] 正在退出程序...');
+            app.exit(0);
+        }
+    }
 })
 
 //  正式启动app
