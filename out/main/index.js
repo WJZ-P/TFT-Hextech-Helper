@@ -9068,7 +9068,7 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-p6LtdLvg.js");
+    const ServicesModule = await import("./chunks/index-gwbE5XRb.js");
     hexService = ServicesModule.hexService;
     const TftOperatorModule = await import("./chunks/TftOperator-CcSHw4T4.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
