@@ -24,6 +24,12 @@ const RETRY_DELAY_MS = 1000;
 /** abort 信号轮询间隔 (ms)，作为事件监听的兜底 */
 const ABORT_CHECK_INTERVAL_MS = 500;
 
+/** 创建房间的最大重试次数 */
+const MAX_CREATE_LOBBY_RETRIES = 3;
+
+/** 创建房间重试间隔 (ms) */
+const CREATE_LOBBY_RETRY_DELAY_MS = 1000;
+
 /** 开始匹配的最大重试次数 */
 const MAX_START_MATCH_RETRIES = 5;
 
@@ -84,9 +90,13 @@ export class LobbyState implements IState {
         const tftMode = settingsStore.get('tftMode');
         const isClockworkMode = tftMode === TFTMode.CLOCKWORK_TRAILS;
 
-        // 创建房间
-        logger.info("[LobbyState] 正在创建房间...");
-        await this.lcuManager.createLobbyByQueueId(queueId);
+        // 创建房间（带重试机制）
+        const lobbyCreated = await this.createLobbyWithRetry(queueId, signal);
+        if (!lobbyCreated) {
+            // 重试都失败了，返回 StartState 重新开始
+            logger.error("[LobbyState] 创建房间失败，已达到最大重试次数，重新开始");
+            return this;
+        }
         await sleep(LOBBY_CREATE_DELAY_MS);
 
         // 开始排队（带重试机制）
@@ -125,6 +135,43 @@ export class LobbyState implements IState {
             await sleep(RETRY_DELAY_MS);
             return this;
         }
+    }
+
+    /**
+     * 创建房间（带重试机制）
+     * @param queueId 队列 ID
+     * @param signal AbortSignal 用于取消操作
+     * @returns true 表示成功创建房间，false 表示重试都失败了
+     * @description 当 LCU 请求失败时，最多重试 3 次
+     *              每次重试前等待 1 秒，给客户端一些缓冲时间
+     */
+    private async createLobbyWithRetry(queueId: Queue, signal: AbortSignal): Promise<boolean> {
+        for (let attempt = 1; attempt <= MAX_CREATE_LOBBY_RETRIES; attempt++) {
+            // 检查是否已取消
+            if (signal.aborted) {
+                logger.info("[LobbyState] 收到取消信号，停止创建房间重试");
+                return false;
+            }
+
+            try {
+                logger.info(`[LobbyState] 正在创建房间... (第 ${attempt} 次尝试)`);
+                await this.lcuManager!.createLobbyByQueueId(queueId);
+                logger.info("[LobbyState] 创建房间成功！");
+                return true;
+            } catch (e: any) {
+                const errorMsg = e.message || '';
+                
+                logger.warn(`[LobbyState] 创建房间失败 (第 ${attempt} 次): ${errorMsg}`);
+
+                // 如果还有重试机会，等待一段时间后重试
+                if (attempt < MAX_CREATE_LOBBY_RETRIES) {
+                    logger.info(`[LobbyState] ${CREATE_LOBBY_RETRY_DELAY_MS}ms 后重试...`);
+                    await sleep(CREATE_LOBBY_RETRY_DELAY_MS);
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
