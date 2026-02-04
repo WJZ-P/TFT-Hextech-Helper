@@ -1,0 +1,610 @@
+{
+  "id": "71129f1e-7bd6-4314-be72-363eab272b61",
+  "name": "秘术师-希维尔",
+  "finalComp": {
+    "champions": [
+      {
+        "name": "希维尔",
+        "isCore": false,
+        "items": [],
+        "position": "",
+        "starTarget": 3
+      },
+      {
+        "name": "提莫",
+        "isCore": false,
+        "items": [],
+        "position": "",
+        "starTarget": 3
+      },
+      {
+        "name": "莎弥拉",
+        "isCore": false,
+        "items": [],
+        "position": "",
+        "starTarget": 3
+      },
+      {
+        "name": "基兰",
+        "isCore": false,
+        "items": [],
+        "position": "",
+        "starTarget": 3
+      },
+      {
+        "name": "慎",
+        "isCore": false,
+        "items": [],
+        "position": "",
+        "starTarget": 3
+      },
+      {
+        "name": "悠米",
+        "isCore": false,
+        "items": [],
+        "position": "",
+        "starTarget": 3
+      },
+      {
+        "name": "亚托克斯",
+        "isCore": false,
+        "items": [],
+        "position": "",
+        "starTarget": 3
+      },
+      {
+        "name": "奥恩",
+        "isCore": false,
+        "items": [],
+        "position": "",
+        "starTarget": 3
+      }
+    ],
+    "traits": [
+      {
+        "key": "秘术师",
+        "style": 2,
+        "numUnits": 3
+      },
+      {
+        "key": "腥红之月",
+        "style": 1,
+        "numUnits": 3
+      },
+      {
+        "key": "神射手",
+        "style": 1,
+        "numUnits": 3
+      },
+      {
+        "key": "灵魂莲华明昼",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "重装战士",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "主宰",
+        "style": 1,
+        "numUnits": 1
+      },
+      {
+        "key": "忍者",
+        "style": 1,
+        "numUnits": 1
+      },
+      {
+        "key": "铁匠",
+        "style": 1,
+        "numUnits": 1
+      },
+      {
+        "key": "战神",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "宗师",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "永恒之森",
+        "style": 0,
+        "numUnits": 1
+      }
+    ]
+  },
+  "stages": {
+    "level3": {
+      "champions": [
+        {
+          "name": "崔丝塔娜",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "盖伦",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "奈德丽",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        }
+      ],
+      "traits": [
+        {
+          "key": "神射手",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "三国猛将",
+          "style": 0,
+          "numUnits": 2
+        },
+        {
+          "key": "龙魂",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "重装战士",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level4": {
+      "champions": [
+        {
+          "name": "崔丝塔娜",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "盖伦",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "奈德丽",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "孙悟空",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        }
+      ],
+      "traits": [
+        {
+          "key": "神射手",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "重装战士",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "三国猛将",
+          "style": 0,
+          "numUnits": 2
+        },
+        {
+          "key": "龙魂",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "天神",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level5": {
+      "champions": [
+        {
+          "name": "希维尔",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "崔丝塔娜",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "盖伦",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "奈德丽",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "孙悟空",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        }
+      ],
+      "traits": [
+        {
+          "key": "神射手",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "重装战士",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "三国猛将",
+          "style": 0,
+          "numUnits": 2
+        },
+        {
+          "key": "腥红之月",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "龙魂",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "天神",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level6": {
+      "champions": [
+        {
+          "name": "希维尔",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "提莫",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "崔丝塔娜",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "盖伦",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "奈德丽",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "孙悟空",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        }
+      ],
+      "traits": [
+        {
+          "key": "神射手",
+          "style": 2,
+          "numUnits": 4
+        },
+        {
+          "key": "重装战士",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "三国猛将",
+          "style": 0,
+          "numUnits": 2
+        },
+        {
+          "key": "腥红之月",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "灵魂莲华明昼",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "龙魂",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "天神",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level7": {
+      "champions": [
+        {
+          "name": "奥恩",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "莎弥拉",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "亚托克斯",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "慎",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "希维尔",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "悠米",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "提莫",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        }
+      ],
+      "traits": [
+        {
+          "key": "神射手",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "重装战士",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "秘术师",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "灵魂莲华明昼",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "铁匠",
+          "style": 1,
+          "numUnits": 1
+        },
+        {
+          "key": "主宰",
+          "style": 1,
+          "numUnits": 1
+        },
+        {
+          "key": "忍者",
+          "style": 1,
+          "numUnits": 1
+        },
+        {
+          "key": "腥红之月",
+          "style": 0,
+          "numUnits": 2
+        },
+        {
+          "key": "永恒之森",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "战神",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "宗师",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level8": {
+      "champions": [
+        {
+          "name": "希维尔",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "提莫",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "莎弥拉",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "基兰",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "慎",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "悠米",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "亚托克斯",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        },
+        {
+          "name": "奥恩",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 2
+        }
+      ],
+      "traits": [
+        {
+          "key": "秘术师",
+          "style": 2,
+          "numUnits": 3
+        },
+        {
+          "key": "腥红之月",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "神射手",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "灵魂莲华明昼",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "重装战士",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "主宰",
+          "style": 1,
+          "numUnits": 1
+        },
+        {
+          "key": "忍者",
+          "style": 1,
+          "numUnits": 1
+        },
+        {
+          "key": "铁匠",
+          "style": 1,
+          "numUnits": 1
+        },
+        {
+          "key": "战神",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "宗师",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "永恒之森",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    }
+  }
+}
