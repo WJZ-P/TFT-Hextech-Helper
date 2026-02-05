@@ -2457,3 +2457,4 @@ export const _TFT_4_EQUIP_DATA: Record<string, TFTEquip> = {
         formula: ""
     },
 } satisfies  Record<string, TFTEquip>
+
