@@ -1,124 +1,101 @@
 {
-  "id": "05a42a7a-a4f2-4b91-895d-40098e75f370",
-  "name": "决斗大师-凯尔",
+  "id": "dca3c940-b114-436c-9bd1-dbd28945abcc",
+  "name": "腥红之月-卡莉丝塔",
   "finalComp": {
     "champions": [
       {
-        "name": "李青",
-        "isCore": false,
-        "items": [],
-        "position": "",
-        "starTarget": 3
-      },
-      {
-        "name": "永恩",
-        "isCore": false,
-        "items": [],
-        "position": "",
-        "starTarget": 3
-      },
-      {
-        "name": "凯尔",
+        "name": "卡莉丝塔",
         "isCore": true,
         "items": [
-          "灭世者的死亡之帽",
-          "海克斯科技枪刃",
+          "鬼索的狂暴之刃",
+          "珠光护手",
           "巨人杀手"
         ],
         "position": "",
         "starTarget": 3
       },
       {
-        "name": "慎",
+        "name": "基兰",
         "isCore": false,
         "items": [],
         "position": "",
         "starTarget": 3
       },
       {
-        "name": "泰达米尔",
-        "isCore": false,
-        "items": [],
-        "position": "",
-        "starTarget": 3
-      },
-      {
-        "name": "卡莉丝塔",
+        "name": "亚托克斯",
         "isCore": true,
         "items": [
-          "窃贼手套",
-          "最后的轻语",
-          "强袭者的链枷"
+          "日炎斗篷",
+          "石像鬼石板甲",
+          "巨龙之爪"
         ],
         "position": "",
         "starTarget": 3
       },
       {
-        "name": "艾瑞莉娅",
-        "isCore": false,
-        "items": [],
-        "position": "",
-        "starTarget": 3
-      },
-      {
-        "name": "贾克斯",
+        "name": "希维尔",
         "isCore": true,
         "items": [
-          "薄暮法袍",
-          "斯特拉克的挑战护手",
-          "饮血剑"
+          "鬼索的狂暴之刃",
+          "斯塔缇克电刃",
+          "虚空之杖"
         ],
         "position": "",
         "starTarget": 3
       },
       {
-        "name": "菲奥娜",
+        "name": "弗拉基米尔",
         "isCore": false,
         "items": [],
         "position": "",
         "starTarget": 3
       },
       {
-        "name": "亚索",
+        "name": "派克",
         "isCore": false,
         "items": [],
+        "position": "",
+        "starTarget": 3
+      },
+      {
+        "name": "崔斯特",
+        "isCore": false,
+        "items": [],
+        "position": "",
+        "starTarget": 3
+      },
+      {
+        "name": "伊莉丝",
+        "isCore": false,
+        "items": [],
+        "position": "",
+        "starTarget": 3
+      },
+      {
+        "name": "斯维因",
+        "isCore": true,
+        "items": [
+          "石像鬼石板甲",
+          "狂徒铠甲",
+          "振奋盔甲"
+        ],
         "position": "",
         "starTarget": 3
       }
     ],
     "traits": [
       {
+        "key": "腥红之月",
+        "style": 2,
+        "numUnits": 8
+      },
+      {
+        "key": "摄魂使",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
         "key": "决斗大师",
-        "style": 3,
-        "numUnits": 6
-      },
-      {
-        "key": "天神",
-        "style": 2,
-        "numUnits": 4
-      },
-      {
-        "key": "宗师",
-        "style": 2,
-        "numUnits": 3
-      },
-      {
-        "key": "浪人",
-        "style": 2,
-        "numUnits": 2
-      },
-      {
-        "key": "玉剑仙",
-        "style": 1,
-        "numUnits": 2
-      },
-      {
-        "key": "忍者",
-        "style": 1,
-        "numUnits": 1
-      },
-      {
-        "key": "裁决使",
         "style": 0,
         "numUnits": 1
       },
@@ -128,7 +105,12 @@
         "numUnits": 1
       },
       {
-        "key": "三国猛将",
+        "key": "重装战士",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "神射手",
         "style": 0,
         "numUnits": 1
       },
@@ -138,7 +120,22 @@
         "numUnits": 1
       },
       {
-        "key": "腥红之月",
+        "key": "刺客",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "魔法师",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "神盾使",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "龙魂",
         "style": 0,
         "numUnits": 1
       }
@@ -148,21 +145,21 @@
     "level3": {
       "champions": [
         {
-          "name": "贾克斯",
+          "name": "派克",
           "isCore": false,
           "items": [],
           "position": "",
           "starTarget": 3
         },
         {
-          "name": "亚索",
+          "name": "伊莉丝",
           "isCore": false,
           "items": [],
           "position": "",
           "starTarget": 3
         },
         {
-          "name": "菲奥娜",
+          "name": "崔斯特",
           "isCore": false,
           "items": [],
           "position": "",
@@ -171,22 +168,27 @@
       ],
       "traits": [
         {
-          "key": "决斗大师",
+          "key": "腥红之月",
           "style": 1,
           "numUnits": 3
         },
         {
-          "key": "浪人",
-          "style": 1,
-          "numUnits": 1
-        },
-        {
-          "key": "天神",
+          "key": "战神",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "玉剑仙",
+          "key": "刺客",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "神盾使",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "魔法师",
           "style": 0,
           "numUnits": 1
         }
@@ -195,28 +197,28 @@
     "level4": {
       "champions": [
         {
-          "name": "艾瑞莉娅",
+          "name": "弗拉基米尔",
           "isCore": false,
           "items": [],
           "position": "",
           "starTarget": 3
         },
         {
-          "name": "贾克斯",
+          "name": "派克",
           "isCore": false,
           "items": [],
           "position": "",
           "starTarget": 3
         },
         {
-          "name": "亚索",
+          "name": "伊莉丝",
           "isCore": false,
           "items": [],
           "position": "",
           "starTarget": 3
         },
         {
-          "name": "菲奥娜",
+          "name": "崔斯特",
           "isCore": false,
           "items": [],
           "position": "",
@@ -225,27 +227,32 @@
       ],
       "traits": [
         {
-          "key": "决斗大师",
+          "key": "腥红之月",
           "style": 1,
-          "numUnits": 3
+          "numUnits": 4
         },
         {
-          "key": "天神",
-          "style": 1,
-          "numUnits": 2
-        },
-        {
-          "key": "玉剑仙",
-          "style": 1,
-          "numUnits": 2
-        },
-        {
-          "key": "浪人",
-          "style": 1,
+          "key": "摄魂使",
+          "style": 0,
           "numUnits": 1
         },
         {
-          "key": "宗师",
+          "key": "战神",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "刺客",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "神盾使",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "魔法师",
           "style": 0,
           "numUnits": 1
         }
@@ -254,13 +261,6 @@
     "level5": {
       "champions": [
         {
-          "name": "艾瑞莉娅",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        },
-        {
           "name": "卡莉丝塔",
           "isCore": false,
           "items": [],
@@ -268,21 +268,28 @@
           "starTarget": 3
         },
         {
-          "name": "贾克斯",
+          "name": "弗拉基米尔",
           "isCore": false,
           "items": [],
           "position": "",
           "starTarget": 3
         },
         {
-          "name": "亚索",
+          "name": "派克",
           "isCore": false,
           "items": [],
           "position": "",
           "starTarget": 3
         },
         {
-          "name": "菲奥娜",
+          "name": "伊莉丝",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 3
+        },
+        {
+          "name": "崔斯特",
           "isCore": false,
           "items": [],
           "position": "",
@@ -291,32 +298,37 @@
       ],
       "traits": [
         {
+          "key": "腥红之月",
+          "style": 1,
+          "numUnits": 5
+        },
+        {
           "key": "决斗大师",
-          "style": 2,
-          "numUnits": 4
-        },
-        {
-          "key": "天神",
-          "style": 1,
-          "numUnits": 2
-        },
-        {
-          "key": "玉剑仙",
-          "style": 1,
-          "numUnits": 2
-        },
-        {
-          "key": "浪人",
-          "style": 1,
-          "numUnits": 1
-        },
-        {
-          "key": "宗师",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "腥红之月",
+          "key": "摄魂使",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "战神",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "刺客",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "神盾使",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "魔法师",
           "style": 0,
           "numUnits": 1
         }
@@ -325,20 +337,6 @@
     "level6": {
       "champions": [
         {
-          "name": "凯尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        },
-        {
-          "name": "艾瑞莉娅",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        },
-        {
           "name": "卡莉丝塔",
           "isCore": false,
           "items": [],
@@ -346,21 +344,35 @@
           "starTarget": 3
         },
         {
-          "name": "贾克斯",
+          "name": "希维尔",
           "isCore": false,
           "items": [],
           "position": "",
           "starTarget": 3
         },
         {
-          "name": "亚索",
+          "name": "弗拉基米尔",
           "isCore": false,
           "items": [],
           "position": "",
           "starTarget": 3
         },
         {
-          "name": "菲奥娜",
+          "name": "派克",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 3
+        },
+        {
+          "name": "伊莉丝",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 3
+        },
+        {
+          "name": "崔斯特",
           "isCore": false,
           "items": [],
           "position": "",
@@ -369,37 +381,42 @@
       ],
       "traits": [
         {
-          "key": "决斗大师",
-          "style": 2,
-          "numUnits": 4
-        },
-        {
-          "key": "天神",
-          "style": 1,
-          "numUnits": 3
-        },
-        {
-          "key": "玉剑仙",
-          "style": 1,
-          "numUnits": 2
-        },
-        {
-          "key": "浪人",
-          "style": 1,
-          "numUnits": 1
-        },
-        {
-          "key": "裁决使",
-          "style": 0,
-          "numUnits": 1
-        },
-        {
-          "key": "宗师",
-          "style": 0,
-          "numUnits": 1
-        },
-        {
           "key": "腥红之月",
+          "style": 2,
+          "numUnits": 6
+        },
+        {
+          "key": "决斗大师",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "神射手",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "摄魂使",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "战神",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "刺客",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "神盾使",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "魔法师",
           "style": 0,
           "numUnits": 1
         }
@@ -408,21 +425,7 @@
     "level7": {
       "champions": [
         {
-          "name": "凯尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        },
-        {
-          "name": "泰达米尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        },
-        {
-          "name": "艾瑞莉娅",
+          "name": "亚托克斯",
           "isCore": false,
           "items": [],
           "position": "",
@@ -436,21 +439,35 @@
           "starTarget": 3
         },
         {
-          "name": "贾克斯",
+          "name": "希维尔",
           "isCore": false,
           "items": [],
           "position": "",
           "starTarget": 3
         },
         {
-          "name": "亚索",
+          "name": "弗拉基米尔",
           "isCore": false,
           "items": [],
           "position": "",
           "starTarget": 3
         },
         {
-          "name": "菲奥娜",
+          "name": "派克",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 3
+        },
+        {
+          "name": "伊莉丝",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 3
+        },
+        {
+          "name": "崔斯特",
           "isCore": false,
           "items": [],
           "position": "",
@@ -459,32 +476,27 @@
       ],
       "traits": [
         {
-          "key": "决斗大师",
+          "key": "腥红之月",
           "style": 2,
-          "numUnits": 5
+          "numUnits": 7
         },
         {
-          "key": "天神",
-          "style": 1,
-          "numUnits": 3
-        },
-        {
-          "key": "玉剑仙",
-          "style": 1,
-          "numUnits": 2
-        },
-        {
-          "key": "浪人",
-          "style": 1,
-          "numUnits": 1
-        },
-        {
-          "key": "裁决使",
+          "key": "重装战士",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "三国猛将",
+          "key": "决斗大师",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "神射手",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "摄魂使",
           "style": 0,
           "numUnits": 1
         },
@@ -494,12 +506,17 @@
           "numUnits": 1
         },
         {
-          "key": "宗师",
+          "key": "刺客",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "腥红之月",
+          "key": "神盾使",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "魔法师",
           "style": 0,
           "numUnits": 1
         }
@@ -508,28 +525,14 @@
     "level8": {
       "champions": [
         {
-          "name": "李青",
+          "name": "基兰",
           "isCore": false,
           "items": [],
           "position": "",
           "starTarget": 3
         },
         {
-          "name": "凯尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        },
-        {
-          "name": "泰达米尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        },
-        {
-          "name": "艾瑞莉娅",
+          "name": "亚托克斯",
           "isCore": false,
           "items": [],
           "position": "",
@@ -543,21 +546,35 @@
           "starTarget": 3
         },
         {
-          "name": "贾克斯",
+          "name": "希维尔",
           "isCore": false,
           "items": [],
           "position": "",
           "starTarget": 3
         },
         {
-          "name": "亚索",
+          "name": "弗拉基米尔",
           "isCore": false,
           "items": [],
           "position": "",
           "starTarget": 3
         },
         {
-          "name": "菲奥娜",
+          "name": "派克",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 3
+        },
+        {
+          "name": "伊莉丝",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 3
+        },
+        {
+          "name": "崔斯特",
           "isCore": false,
           "items": [],
           "position": "",
@@ -566,32 +583,32 @@
       ],
       "traits": [
         {
-          "key": "决斗大师",
-          "style": 3,
-          "numUnits": 6
-        },
-        {
-          "key": "天神",
+          "key": "腥红之月",
           "style": 2,
-          "numUnits": 4
+          "numUnits": 8
         },
         {
-          "key": "玉剑仙",
-          "style": 1,
-          "numUnits": 2
-        },
-        {
-          "key": "浪人",
-          "style": 1,
-          "numUnits": 1
-        },
-        {
-          "key": "裁决使",
+          "key": "秘术师",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "三国猛将",
+          "key": "重装战士",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "决斗大师",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "神射手",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "摄魂使",
           "style": 0,
           "numUnits": 1
         },
@@ -601,12 +618,17 @@
           "numUnits": 1
         },
         {
-          "key": "宗师",
+          "key": "刺客",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "腥红之月",
+          "key": "神盾使",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "魔法师",
           "style": 0,
           "numUnits": 1
         }
@@ -615,34 +637,6 @@
     "level9": {
       "champions": [
         {
-          "name": "李青",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        },
-        {
-          "name": "凯尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        },
-        {
-          "name": "慎",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        },
-        {
-          "name": "泰达米尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        },
-        {
           "name": "卡莉丝塔",
           "isCore": false,
           "items": [],
@@ -650,28 +644,56 @@
           "starTarget": 3
         },
         {
-          "name": "艾瑞莉娅",
+          "name": "基兰",
           "isCore": false,
           "items": [],
           "position": "",
           "starTarget": 3
         },
         {
-          "name": "贾克斯",
+          "name": "亚托克斯",
           "isCore": false,
           "items": [],
           "position": "",
           "starTarget": 3
         },
         {
-          "name": "菲奥娜",
+          "name": "希维尔",
           "isCore": false,
           "items": [],
           "position": "",
           "starTarget": 3
         },
         {
-          "name": "亚索",
+          "name": "弗拉基米尔",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 3
+        },
+        {
+          "name": "派克",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 3
+        },
+        {
+          "name": "崔斯特",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 3
+        },
+        {
+          "name": "伊莉丝",
+          "isCore": false,
+          "items": [],
+          "position": "",
+          "starTarget": 3
+        },
+        {
+          "name": "斯维因",
           "isCore": false,
           "items": [],
           "position": "",
@@ -680,37 +702,17 @@
       ],
       "traits": [
         {
-          "key": "决斗大师",
-          "style": 3,
-          "numUnits": 6
-        },
-        {
-          "key": "天神",
+          "key": "腥红之月",
           "style": 2,
-          "numUnits": 4
+          "numUnits": 8
         },
         {
-          "key": "宗师",
+          "key": "摄魂使",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "玉剑仙",
-          "style": 1,
-          "numUnits": 2
-        },
-        {
-          "key": "忍者",
-          "style": 1,
-          "numUnits": 1
-        },
-        {
-          "key": "浪人",
-          "style": 1,
-          "numUnits": 1
-        },
-        {
-          "key": "裁决使",
+          "key": "决斗大师",
           "style": 0,
           "numUnits": 1
         },
@@ -720,7 +722,12 @@
           "numUnits": 1
         },
         {
-          "key": "三国猛将",
+          "key": "重装战士",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "神射手",
           "style": 0,
           "numUnits": 1
         },
@@ -730,138 +737,22 @@
           "numUnits": 1
         },
         {
-          "key": "腥红之月",
-          "style": 0,
-          "numUnits": 1
-        }
-      ]
-    },
-    "level10": {
-      "champions": [
-        {
-          "name": "李青",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        },
-        {
-          "name": "永恩",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        },
-        {
-          "name": "凯尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        },
-        {
-          "name": "慎",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        },
-        {
-          "name": "泰达米尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        },
-        {
-          "name": "卡莉丝塔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        },
-        {
-          "name": "艾瑞莉娅",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        },
-        {
-          "name": "贾克斯",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        },
-        {
-          "name": "菲奥娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        },
-        {
-          "name": "亚索",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
-        }
-      ],
-      "traits": [
-        {
-          "key": "决斗大师",
-          "style": 3,
-          "numUnits": 6
-        },
-        {
-          "key": "天神",
-          "style": 2,
-          "numUnits": 4
-        },
-        {
-          "key": "宗师",
-          "style": 2,
-          "numUnits": 3
-        },
-        {
-          "key": "浪人",
-          "style": 2,
-          "numUnits": 2
-        },
-        {
-          "key": "玉剑仙",
-          "style": 1,
-          "numUnits": 2
-        },
-        {
-          "key": "忍者",
-          "style": 1,
-          "numUnits": 1
-        },
-        {
-          "key": "裁决使",
+          "key": "刺客",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "秘术师",
+          "key": "魔法师",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "三国猛将",
+          "key": "神盾使",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "战神",
-          "style": 0,
-          "numUnits": 1
-        },
-        {
-          "key": "腥红之月",
+          "key": "龙魂",
           "style": 0,
           "numUnits": 1
         }
