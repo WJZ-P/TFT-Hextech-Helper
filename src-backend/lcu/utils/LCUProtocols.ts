@@ -34,7 +34,8 @@ export type GameFlowPhase =
     | 'InProgress' 
     | 'WaitingForStats' 
     | 'PreEndOfGame'
-    | 'EndOfGame';
+    | 'EndOfGame'
+    | 'TerminatedInError';
 
 //  创建超级参数提取器
 export type ArgsFromIpcChannel<V> = V extends (...args: unknown[]) => unknown ? Parameters<V> : [V];
