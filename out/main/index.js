@@ -9083,11 +9083,11 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-gwbE5XRb.js");
+    const ServicesModule = await import("./chunks/index-8_qkInzF.js");
     hexService = ServicesModule.hexService;
     const TftOperatorModule = await import("./chunks/TftOperator-CcSHw4T4.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
-    const LineupModule = await import("./chunks/index-BDZUJSCK.js");
+    const LineupModule = await import("./chunks/index-B_hzH1St.js");
     lineupLoader = LineupModule.lineupLoader;
     const GlobalHotkeyManagerModule = await import("./chunks/GlobalHotkeyManager-Cbcy0EP4.js");
     globalHotkeyManager = GlobalHotkeyManagerModule.globalHotkeyManager;
@@ -9184,7 +9184,12 @@ function registerHandler() {
   ipcMain.handle(IpcChannel.TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT, async (event) => tftOperator.saveBenchSlotSnapshots());
   ipcMain.handle(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT, async (event) => tftOperator.saveFightBoardSlotSnapshots());
   ipcMain.handle(IpcChannel.TFT_TEST_SAVE_QUIT_BUTTON_SNAPSHOT, async (event) => tftOperator.saveQuitButtonSnapshot());
-  ipcMain.handle(IpcChannel.LINEUP_GET_ALL, async () => lineupLoader.getAllLineups());
+  ipcMain.handle(IpcChannel.LINEUP_GET_ALL, async (_event, season) => {
+    if (season) {
+      return lineupLoader.getLineupsBySeason(season);
+    }
+    return lineupLoader.getAllLineups();
+  });
   ipcMain.handle(IpcChannel.LINEUP_GET_BY_ID, async (_event, id) => lineupLoader.getLineup(id));
   ipcMain.handle(IpcChannel.LINEUP_GET_SELECTED_IDS, async () => settingsStore.get("selectedLineupIds"));
   ipcMain.handle(IpcChannel.LINEUP_SET_SELECTED_IDS, async (_event, ids) => {
