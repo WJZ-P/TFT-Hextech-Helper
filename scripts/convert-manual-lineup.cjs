@@ -107,11 +107,23 @@ function convertChampion(champ, defaultStarTarget = 2) {
 
 /**
  * 处理单个阵容阶段（计算羁绊并转换英雄）
+ * @param {Object} stageData - 阶段数据
+ * @param {number} defaultStarTarget - 默认星级目标
+ * @param {Set<string>} finalCompNames - 最终阵容英雄名称集合（用于自动判断是否需要追3星）
  */
-function processStage(stageData, defaultStarTarget = 2) {
+function processStage(stageData, defaultStarTarget = 2, finalCompNames = null) {
     if (!stageData || !stageData.champions) return null;
 
-    const champions = stageData.champions.map(c => convertChampion(c, defaultStarTarget));
+    const champions = stageData.champions.map(c => {
+        // 如果该英雄在最终阵容中，默认目标设为3星，否则使用传入的默认值（通常是2星）
+        // 如果模板中显式指定了 starTarget，convertChampion 会优先使用模板值
+        let target = defaultStarTarget;
+        if (finalCompNames && finalCompNames.has(c.name)) {
+            target = 3;
+        }
+        return convertChampion(c, target);
+    });
+    
     const traits = calculateTraits(stageData.champions);
 
     return {
@@ -154,6 +166,12 @@ function main() {
     for (const [lineupName, lineupData] of Object.entries(templates)) {
         console.log(`\n🔄 正在处理阵容: ${lineupName}`);
 
+        // 提取最终阵容的英雄名称集合，用于后续阶段判断星级
+        const finalCompNames = new Set();
+        if (lineupData.finalComp && lineupData.finalComp.champions) {
+            lineupData.finalComp.champions.forEach(c => finalCompNames.add(c.name));
+        }
+
         // 构建输出数据结构
         const outputData = {
             id: generateUUID(),
@@ -165,7 +183,8 @@ function main() {
         // 处理各个阶段 (level4 - level10)
         if (lineupData.stages) {
             for (const [levelKey, stageData] of Object.entries(lineupData.stages)) {
-                outputData.stages[levelKey] = processStage(stageData, 2); // 过渡阶段默认 2 星
+                // 传入 finalCompNames，如果在最终阵容里，自动设为3星
+                outputData.stages[levelKey] = processStage(stageData, 2, finalCompNames); 
             }
         }
 
