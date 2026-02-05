@@ -1,5 +1,5 @@
 {
-  "id": "f9c5252b-504f-4fb1-b406-3588e1dd83f7",
+  "id": "fb2c825a-8627-4ffb-bc51-34d0d75d6e75",
   "name": "玉剑仙-泰隆",
   "finalComp": {
     "champions": [
@@ -74,52 +74,52 @@
     ],
     "traits": [
       {
-        "key": "玉剑仙",
+        "key": "TFT4_Enlightened",
         "style": 2,
         "numUnits": 4
       },
       {
-        "key": "宗师",
+        "key": "TFT4_Adept",
         "style": 2,
         "numUnits": 3
       },
       {
-        "key": "秘术师",
+        "key": "TFT4_Mystic",
         "style": 1,
         "numUnits": 2
       },
       {
-        "key": "天神",
+        "key": "TFT4_Divine",
         "style": 1,
         "numUnits": 2
       },
       {
-        "key": "决斗大师",
+        "key": "TFT4_Duelist",
         "style": 1,
         "numUnits": 2
       },
       {
-        "key": "浪人",
+        "key": "TFT4_Exile",
         "style": 1,
         "numUnits": 1
       },
       {
-        "key": "忍者",
+        "key": "TFT4_Ninja",
         "style": 1,
         "numUnits": 1
       },
       {
-        "key": "刺客",
+        "key": "TFT4_Assassin",
         "style": 0,
         "numUnits": 1
       },
       {
-        "key": "龙魂",
+        "key": "TFT4_Dragonsoul",
         "style": 0,
         "numUnits": 1
       },
       {
-        "key": "摄魂使",
+        "key": "TFT4_Syphoner",
         "style": 0,
         "numUnits": 1
       }
@@ -152,22 +152,22 @@
       ],
       "traits": [
         {
-          "key": "玉剑仙",
+          "key": "TFT4_Enlightened",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "决斗大师",
+          "key": "TFT4_Duelist",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "浪人",
+          "key": "TFT4_Exile",
           "style": 1,
           "numUnits": 1
         },
         {
-          "key": "秘术师",
+          "key": "TFT4_Mystic",
           "style": 0,
           "numUnits": 1
         }
@@ -206,27 +206,27 @@
       ],
       "traits": [
         {
-          "key": "决斗大师",
+          "key": "TFT4_Duelist",
           "style": 1,
           "numUnits": 3
         },
         {
-          "key": "玉剑仙",
+          "key": "TFT4_Enlightened",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "浪人",
+          "key": "TFT4_Exile",
           "style": 1,
           "numUnits": 1
         },
         {
-          "key": "秘术师",
+          "key": "TFT4_Mystic",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "天神",
+          "key": "TFT4_Divine",
           "style": 0,
           "numUnits": 1
         }
@@ -272,32 +272,32 @@
       ],
       "traits": [
         {
-          "key": "决斗大师",
+          "key": "TFT4_Duelist",
           "style": 2,
           "numUnits": 4
         },
         {
-          "key": "玉剑仙",
+          "key": "TFT4_Enlightened",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "浪人",
+          "key": "TFT4_Exile",
           "style": 1,
           "numUnits": 1
         },
         {
-          "key": "腥红之月",
+          "key": "TFT4_Cultist",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "秘术师",
+          "key": "TFT4_Mystic",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "天神",
+          "key": "TFT4_Divine",
           "style": 0,
           "numUnits": 1
         }
@@ -350,37 +350,37 @@
       ],
       "traits": [
         {
-          "key": "决斗大师",
+          "key": "TFT4_Duelist",
           "style": 2,
           "numUnits": 4
         },
         {
-          "key": "玉剑仙",
+          "key": "TFT4_Enlightened",
           "style": 1,
           "numUnits": 3
         },
         {
-          "key": "天神",
+          "key": "TFT4_Divine",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "浪人",
+          "key": "TFT4_Exile",
           "style": 1,
           "numUnits": 1
         },
         {
-          "key": "宗师",
+          "key": "TFT4_Adept",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "腥红之月",
+          "key": "TFT4_Cultist",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "秘术师",
+          "key": "TFT4_Mystic",
           "style": 0,
           "numUnits": 1
         }
@@ -440,42 +440,42 @@
       ],
       "traits": [
         {
-          "key": "玉剑仙",
+          "key": "TFT4_Enlightened",
           "style": 2,
           "numUnits": 5
         },
         {
-          "key": "宗师",
+          "key": "TFT4_Adept",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "秘术师",
+          "key": "TFT4_Mystic",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "天神",
+          "key": "TFT4_Divine",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "摄魂使",
+          "key": "TFT4_Syphoner",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "忍者",
+          "key": "TFT4_Ninja",
           "style": 1,
           "numUnits": 1
         },
         {
-          "key": "刺客",
+          "key": "TFT4_Assassin",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "决斗大师",
+          "key": "TFT4_Duelist",
           "style": 0,
           "numUnits": 1
         }
@@ -542,52 +542,52 @@
       ],
       "traits": [
         {
-          "key": "玉剑仙",
+          "key": "TFT4_Enlightened",
           "style": 2,
           "numUnits": 4
         },
         {
-          "key": "宗师",
+          "key": "TFT4_Adept",
           "style": 2,
           "numUnits": 3
         },
         {
-          "key": "秘术师",
+          "key": "TFT4_Mystic",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "天神",
+          "key": "TFT4_Divine",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "决斗大师",
+          "key": "TFT4_Duelist",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "浪人",
+          "key": "TFT4_Exile",
           "style": 1,
           "numUnits": 1
         },
         {
-          "key": "忍者",
+          "key": "TFT4_Ninja",
           "style": 1,
           "numUnits": 1
         },
         {
-          "key": "刺客",
+          "key": "TFT4_Assassin",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "龙魂",
+          "key": "TFT4_Dragonsoul",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "摄魂使",
+          "key": "TFT4_Syphoner",
           "style": 0,
           "numUnits": 1
         }

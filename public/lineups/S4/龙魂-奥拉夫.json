@@ -1,5 +1,5 @@
 {
-  "id": "89ae8fc4-1a13-4d72-b9cb-40f163d74baa",
+  "id": "23af8115-e525-4c64-9d3b-c84ac7485875",
   "name": "龙魂-奥拉夫",
   "finalComp": {
     "champions": [
@@ -81,52 +81,52 @@
     ],
     "traits": [
       {
-        "key": "龙魂",
+        "key": "TFT4_Dragonsoul",
         "style": 2,
         "numUnits": 7
       },
       {
-        "key": "战神",
+        "key": "TFT4_Slayer",
         "style": 1,
         "numUnits": 3
       },
       {
-        "key": "神射手",
+        "key": "TFT4_Sharpshooter",
         "style": 1,
         "numUnits": 2
       },
       {
-        "key": "主宰",
+        "key": "TFT4_Daredevil",
         "style": 1,
         "numUnits": 1
       },
       {
-        "key": "魔法师",
+        "key": "TFT4_Mage",
         "style": 0,
         "numUnits": 2
       },
       {
-        "key": "重装战士",
+        "key": "TFT4_Vanguard",
         "style": 0,
         "numUnits": 1
       },
       {
-        "key": "摄魂使",
+        "key": "TFT4_Syphoner",
         "style": 0,
         "numUnits": 1
       },
       {
-        "key": "三国猛将",
+        "key": "TFT4_Warlord",
         "style": 0,
         "numUnits": 1
       },
       {
-        "key": "决斗大师",
+        "key": "TFT4_Duelist",
         "style": 0,
         "numUnits": 1
       },
       {
-        "key": "斗士",
+        "key": "TFT4_Brawler",
         "style": 0,
         "numUnits": 1
       }
@@ -159,22 +159,22 @@
       ],
       "traits": [
         {
-          "key": "龙魂",
+          "key": "TFT4_Dragonsoul",
           "style": 1,
           "numUnits": 3
         },
         {
-          "key": "重装战士",
+          "key": "TFT4_Vanguard",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神射手",
+          "key": "TFT4_Sharpshooter",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "魔法师",
+          "key": "TFT4_Mage",
           "style": 0,
           "numUnits": 1
         }
@@ -213,27 +213,27 @@
       ],
       "traits": [
         {
-          "key": "龙魂",
+          "key": "TFT4_Dragonsoul",
           "style": 1,
           "numUnits": 3
         },
         {
-          "key": "重装战士",
+          "key": "TFT4_Vanguard",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "山海绘卷",
+          "key": "TFT4_Fabled",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神射手",
+          "key": "TFT4_Sharpshooter",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "魔法师",
+          "key": "TFT4_Mage",
           "style": 0,
           "numUnits": 1
         }
@@ -279,32 +279,32 @@
       ],
       "traits": [
         {
-          "key": "龙魂",
+          "key": "TFT4_Dragonsoul",
           "style": 1,
           "numUnits": 4
         },
         {
-          "key": "斗士",
+          "key": "TFT4_Brawler",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "重装战士",
+          "key": "TFT4_Vanguard",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神射手",
+          "key": "TFT4_Sharpshooter",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "魔法师",
+          "key": "TFT4_Mage",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "福星",
+          "key": "TFT4_Fortune",
           "style": 0,
           "numUnits": 1
         }
@@ -357,37 +357,37 @@
       ],
       "traits": [
         {
-          "key": "龙魂",
+          "key": "TFT4_Dragonsoul",
           "style": 1,
           "numUnits": 4
         },
         {
-          "key": "斗士",
+          "key": "TFT4_Brawler",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "神射手",
+          "key": "TFT4_Sharpshooter",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "灵魂莲华明昼",
+          "key": "TFT4_Spirit",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "重装战士",
+          "key": "TFT4_Vanguard",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "魔法师",
+          "key": "TFT4_Mage",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "福星",
+          "key": "TFT4_Fortune",
           "style": 0,
           "numUnits": 1
         }
@@ -447,52 +447,52 @@
       ],
       "traits": [
         {
-          "key": "龙魂",
+          "key": "TFT4_Dragonsoul",
           "style": 1,
           "numUnits": 5
         },
         {
-          "key": "战神",
+          "key": "TFT4_Slayer",
           "style": 1,
           "numUnits": 3
         },
         {
-          "key": "三国猛将",
+          "key": "TFT4_Warlord",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "决斗大师",
+          "key": "TFT4_Duelist",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "斗士",
+          "key": "TFT4_Brawler",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "腥红之月",
+          "key": "TFT4_Cultist",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "刺客",
+          "key": "TFT4_Assassin",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "重装战士",
+          "key": "TFT4_Vanguard",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神射手",
+          "key": "TFT4_Sharpshooter",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "魔法师",
+          "key": "TFT4_Mage",
           "style": 0,
           "numUnits": 1
         }
@@ -559,47 +559,47 @@
       ],
       "traits": [
         {
-          "key": "龙魂",
+          "key": "TFT4_Dragonsoul",
           "style": 2,
           "numUnits": 7
         },
         {
-          "key": "魔法师",
+          "key": "TFT4_Mage",
           "style": 0,
           "numUnits": 2
         },
         {
-          "key": "战神",
+          "key": "TFT4_Slayer",
           "style": 0,
           "numUnits": 2
         },
         {
-          "key": "摄魂使",
+          "key": "TFT4_Syphoner",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "三国猛将",
+          "key": "TFT4_Warlord",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "决斗大师",
+          "key": "TFT4_Duelist",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "斗士",
+          "key": "TFT4_Brawler",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "重装战士",
+          "key": "TFT4_Vanguard",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神射手",
+          "key": "TFT4_Sharpshooter",
           "style": 0,
           "numUnits": 1
         }
@@ -673,52 +673,52 @@
       ],
       "traits": [
         {
-          "key": "龙魂",
+          "key": "TFT4_Dragonsoul",
           "style": 2,
           "numUnits": 7
         },
         {
-          "key": "战神",
+          "key": "TFT4_Slayer",
           "style": 1,
           "numUnits": 3
         },
         {
-          "key": "神射手",
+          "key": "TFT4_Sharpshooter",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "主宰",
+          "key": "TFT4_Daredevil",
           "style": 1,
           "numUnits": 1
         },
         {
-          "key": "魔法师",
+          "key": "TFT4_Mage",
           "style": 0,
           "numUnits": 2
         },
         {
-          "key": "摄魂使",
+          "key": "TFT4_Syphoner",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "三国猛将",
+          "key": "TFT4_Warlord",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "决斗大师",
+          "key": "TFT4_Duelist",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "斗士",
+          "key": "TFT4_Brawler",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "重装战士",
+          "key": "TFT4_Vanguard",
           "style": 0,
           "numUnits": 1
         }

@@ -119,7 +119,7 @@ contextBridge.exposeInMainWorld('tft', tftApi)
 // lineupApi: 阵容配置相关操作
 const lineupApi = {
     /** 获取所有已加载的阵容配置 */
-    getAll: () => ipcRenderer.invoke(IpcChannel.LINEUP_GET_ALL),
+    getAll: (season?: string) => ipcRenderer.invoke(IpcChannel.LINEUP_GET_ALL, season),
     /** 根据 ID 获取单个阵容配置 */
     getById: (id: string) => ipcRenderer.invoke(IpcChannel.LINEUP_GET_BY_ID, id),
     /** 获取用户选中的阵容 ID 列表 */

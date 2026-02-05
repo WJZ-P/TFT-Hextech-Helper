@@ -1,5 +1,5 @@
 {
-  "id": "1c6812f9-0514-4d65-a280-36a428e8af1b",
+  "id": "382ea32f-31be-4606-8d26-819931c803ab",
   "name": "忍者-劫",
   "finalComp": {
     "champions": [
@@ -86,52 +86,52 @@
     ],
     "traits": [
       {
-        "key": "忍者",
+        "key": "TFT4_Ninja",
         "style": 2,
         "numUnits": 4
       },
       {
-        "key": "灵魂莲华明昼",
+        "key": "TFT4_Spirit",
         "style": 2,
         "numUnits": 4
       },
       {
-        "key": "刺客",
+        "key": "TFT4_Assassin",
         "style": 1,
         "numUnits": 3
       },
       {
-        "key": "秘术师",
+        "key": "TFT4_Mystic",
         "style": 1,
         "numUnits": 2
       },
       {
-        "key": "战神",
+        "key": "TFT4_Slayer",
         "style": 0,
         "numUnits": 2
       },
       {
-        "key": "宗师",
+        "key": "TFT4_Adept",
         "style": 0,
         "numUnits": 1
       },
       {
-        "key": "神盾使",
+        "key": "TFT4_Keeper",
         "style": 0,
         "numUnits": 1
       },
       {
-        "key": "裁决使",
+        "key": "TFT4_Executioner",
         "style": 0,
         "numUnits": 1
       },
       {
-        "key": "腥红之月",
+        "key": "TFT4_Cultist",
         "style": 0,
         "numUnits": 1
       },
       {
-        "key": "神射手",
+        "key": "TFT4_Sharpshooter",
         "style": 0,
         "numUnits": 1
       }
@@ -164,27 +164,27 @@
       ],
       "traits": [
         {
-          "key": "刺客",
+          "key": "TFT4_Assassin",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "忍者",
+          "key": "TFT4_Ninja",
           "style": 1,
           "numUnits": 1
         },
         {
-          "key": "战神",
+          "key": "TFT4_Slayer",
           "style": 0,
           "numUnits": 2
         },
         {
-          "key": "腥红之月",
+          "key": "TFT4_Cultist",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "灵魂莲华明昼",
+          "key": "TFT4_Spirit",
           "style": 0,
           "numUnits": 1
         }
@@ -223,32 +223,32 @@
       ],
       "traits": [
         {
-          "key": "刺客",
+          "key": "TFT4_Assassin",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "灵魂莲华明昼",
+          "key": "TFT4_Spirit",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "忍者",
+          "key": "TFT4_Ninja",
           "style": 1,
           "numUnits": 1
         },
         {
-          "key": "战神",
+          "key": "TFT4_Slayer",
           "style": 0,
           "numUnits": 2
         },
         {
-          "key": "腥红之月",
+          "key": "TFT4_Cultist",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神射手",
+          "key": "TFT4_Sharpshooter",
           "style": 0,
           "numUnits": 1
         }
@@ -294,37 +294,37 @@
       ],
       "traits": [
         {
-          "key": "灵魂莲华明昼",
+          "key": "TFT4_Spirit",
           "style": 1,
           "numUnits": 3
         },
         {
-          "key": "刺客",
+          "key": "TFT4_Assassin",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "忍者",
+          "key": "TFT4_Ninja",
           "style": 1,
           "numUnits": 1
         },
         {
-          "key": "战神",
+          "key": "TFT4_Slayer",
           "style": 0,
           "numUnits": 2
         },
         {
-          "key": "秘术师",
+          "key": "TFT4_Mystic",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "腥红之月",
+          "key": "TFT4_Cultist",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神射手",
+          "key": "TFT4_Sharpshooter",
           "style": 0,
           "numUnits": 1
         }
@@ -377,42 +377,42 @@
       ],
       "traits": [
         {
-          "key": "灵魂莲华明昼",
+          "key": "TFT4_Spirit",
           "style": 2,
           "numUnits": 4
         },
         {
-          "key": "刺客",
+          "key": "TFT4_Assassin",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "忍者",
+          "key": "TFT4_Ninja",
           "style": 1,
           "numUnits": 1
         },
         {
-          "key": "战神",
+          "key": "TFT4_Slayer",
           "style": 0,
           "numUnits": 2
         },
         {
-          "key": "裁决使",
+          "key": "TFT4_Executioner",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "秘术师",
+          "key": "TFT4_Mystic",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "腥红之月",
+          "key": "TFT4_Cultist",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神射手",
+          "key": "TFT4_Sharpshooter",
           "style": 0,
           "numUnits": 1
         }
@@ -472,47 +472,47 @@
       ],
       "traits": [
         {
-          "key": "灵魂莲华明昼",
+          "key": "TFT4_Spirit",
           "style": 2,
           "numUnits": 4
         },
         {
-          "key": "忍者",
+          "key": "TFT4_Ninja",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "刺客",
+          "key": "TFT4_Assassin",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "战神",
+          "key": "TFT4_Slayer",
           "style": 0,
           "numUnits": 2
         },
         {
-          "key": "裁决使",
+          "key": "TFT4_Executioner",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "秘术师",
+          "key": "TFT4_Mystic",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "腥红之月",
+          "key": "TFT4_Cultist",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神射手",
+          "key": "TFT4_Sharpshooter",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神盾使",
+          "key": "TFT4_Keeper",
           "style": 0,
           "numUnits": 1
         }
@@ -579,47 +579,47 @@
       ],
       "traits": [
         {
-          "key": "忍者",
+          "key": "TFT4_Ninja",
           "style": 2,
           "numUnits": 4
         },
         {
-          "key": "灵魂莲华明昼",
+          "key": "TFT4_Spirit",
           "style": 2,
           "numUnits": 4
         },
         {
-          "key": "秘术师",
+          "key": "TFT4_Mystic",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "刺客",
+          "key": "TFT4_Assassin",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "战神",
+          "key": "TFT4_Slayer",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "宗师",
+          "key": "TFT4_Adept",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神盾使",
+          "key": "TFT4_Keeper",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "裁决使",
+          "key": "TFT4_Executioner",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神射手",
+          "key": "TFT4_Sharpshooter",
           "style": 0,
           "numUnits": 1
         }
@@ -693,52 +693,52 @@
       ],
       "traits": [
         {
-          "key": "忍者",
+          "key": "TFT4_Ninja",
           "style": 2,
           "numUnits": 4
         },
         {
-          "key": "灵魂莲华明昼",
+          "key": "TFT4_Spirit",
           "style": 2,
           "numUnits": 4
         },
         {
-          "key": "刺客",
+          "key": "TFT4_Assassin",
           "style": 1,
           "numUnits": 3
         },
         {
-          "key": "秘术师",
+          "key": "TFT4_Mystic",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "战神",
+          "key": "TFT4_Slayer",
           "style": 0,
           "numUnits": 2
         },
         {
-          "key": "宗师",
+          "key": "TFT4_Adept",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神盾使",
+          "key": "TFT4_Keeper",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "裁决使",
+          "key": "TFT4_Executioner",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "腥红之月",
+          "key": "TFT4_Cultist",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神射手",
+          "key": "TFT4_Sharpshooter",
           "style": 0,
           "numUnits": 1
         }

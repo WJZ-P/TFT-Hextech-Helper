@@ -22,6 +22,55 @@ const INPUT_FILE = path.join(__dirname, 'manual-lineup-template.json');
 const OUTPUT_DIR = path.join(__dirname, '../public/lineups/S4');
 
 // ==========================================
+// 映射加载
+// ==========================================
+
+let TRAIT_NAME_MAP = {};
+
+function loadTraitMap() {
+    const map = {};
+    const files = [
+        path.join(__dirname, '../public/TFTInfo/S4/job.ts'),
+        path.join(__dirname, '../public/TFTInfo/S4/race.ts')
+    ];
+
+    files.forEach(file => {
+        if (fs.existsSync(file)) {
+            try {
+                let content = fs.readFileSync(file, 'utf8');
+                // 去掉 export const ... = 
+                content = content.replace(/export\s+const\s+\w+\s*=\s*/, '');
+                // 去掉结尾的分号
+                content = content.trim().replace(/;$/, '');
+                
+                const data = JSON.parse(content);
+                data.forEach(item => {
+                    if (item.name && item.characterid) {
+                        map[item.name] = item.characterid;
+                    }
+                });
+                console.log(`✅ 已加载羁绊映射文件: ${path.basename(file)}`);
+            } catch (e) {
+                console.warn(`⚠️ 解析文件 ${path.basename(file)} 失败，尝试使用正则提取: ${e.message}`);
+                // 正则兜底
+                let content = fs.readFileSync(file, 'utf8');
+                const regex = /"name":\s*"([^"]+)"[\s\S]*?"characterid":\s*"([^"]+)"/g;
+                let match;
+                let count = 0;
+                while ((match = regex.exec(content)) !== null) {
+                    map[match[1]] = match[2];
+                    count++;
+                }
+                console.log(`✅ 正则提取到 ${count} 个映射: ${path.basename(file)}`);
+            }
+        } else {
+            console.warn(`⚠️ 未找到文件: ${file}`);
+        }
+    });
+    return map;
+}
+
+// ==========================================
 // 工具函数
 // ==========================================
 
@@ -74,8 +123,14 @@ function calculateTraits(champions) {
             }
         }
 
+        // 尝试转换中文名为英文 ID
+        const traitKey = TRAIT_NAME_MAP[traitName] || traitName;
+        if (!TRAIT_NAME_MAP[traitName]) {
+            console.warn(`⚠️ 警告: 未找到羁绊 [${traitName}] 的英文映射，将使用中文名。`);
+        }
+
         traits.push({
-            key: traitName, // 暂时使用中文名
+            key: traitKey, 
             style: style,
             numUnits: count
         });
@@ -138,6 +193,10 @@ function processStage(stageData, defaultStarTarget = 2, finalCompNames = null) {
 
 function main() {
     console.log("🐱 猫娘老师正在启动转换程序...");
+
+    // 加载羁绊映射
+    TRAIT_NAME_MAP = loadTraitMap();
+    console.log(`📊 共加载 ${Object.keys(TRAIT_NAME_MAP).length} 个羁绊映射关系`);
 
     // 1. 检查输入文件
     if (!fs.existsSync(INPUT_FILE)) {

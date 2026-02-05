@@ -82,6 +82,9 @@ export interface LineupConfig {
     
     /** 阵容名称（显示用） */
     name: string;
+
+    /** 赛季信息 (例如: S4, S16) */
+    season?: string;
     
     /**
      * 按人口等级分阶段的阵容配置

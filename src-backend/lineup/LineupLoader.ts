@@ -46,7 +46,7 @@ class LineupLoader {
     
     /**
      * 加载所有阵容配置
-     * @description 扫描阵容目录，加载所有 JSON 文件
+     * @description 扫描阵容目录及其子目录，加载所有 JSON 文件
      * @returns 加载成功的阵容数量
      */
     public async loadAllLineups(): Promise<number> {
@@ -57,38 +57,66 @@ class LineupLoader {
             return 0;
         }
         
-        const files = fs.readdirSync(this.lineupsDir);
         let loadedCount = 0;
-        
-        for (const file of files) {
-            if (!file.endsWith('.json')) continue;
-            
-            const filePath = path.join(this.lineupsDir, file);
-            
-            try {
-                const content = fs.readFileSync(filePath, 'utf-8');
-                const config = JSON.parse(content) as LineupConfig;
+        const entries = fs.readdirSync(this.lineupsDir, { withFileTypes: true });
+
+        for (const entry of entries) {
+            if (entry.isDirectory()) {
+                // 处理子目录 (如 S4, S16)
+                const seasonDir = path.join(this.lineupsDir, entry.name);
+                const seasonFiles = fs.readdirSync(seasonDir);
                 
-                // 验证阵容配置
-                const validationResult = this.validateLineup(config);
-                if (!validationResult.valid) {
-                    logger.warn(
-                        `[LineupLoader] 阵容配置验证失败 [${file}]: ${validationResult.errors.join(', ')}`
-                    );
-                    continue;
+                for (const file of seasonFiles) {
+                    if (!file.endsWith('.json')) continue;
+                    if (await this.loadLineupFile(path.join(seasonDir, file), entry.name)) {
+                        loadedCount++;
+                    }
                 }
-                
-                this.lineups.set(config.id, config);
-                loadedCount++;
-                logger.info(`[LineupLoader] 加载阵容成功: ${config.name} (${config.id})`);
-                
-            } catch (e: any) {
-                logger.error(`[LineupLoader] 加载阵容失败 [${file}]: ${e.message}`);
+            } else if (entry.isFile() && entry.name.endsWith('.json')) {
+                // 处理根目录下的文件
+                if (await this.loadLineupFile(path.join(this.lineupsDir, entry.name))) {
+                    loadedCount++;
+                }
             }
         }
         
         logger.info(`[LineupLoader] 共加载 ${loadedCount} 个阵容配置`);
         return loadedCount;
+    }
+
+    /**
+     * 加载单个阵容文件
+     * @param filePath 文件路径
+     * @param season 赛季名称
+     * @returns 是否加载成功
+     */
+    private async loadLineupFile(filePath: string, season?: string): Promise<boolean> {
+        try {
+            const content = fs.readFileSync(filePath, 'utf-8');
+            const config = JSON.parse(content) as LineupConfig;
+            
+            // 如果传入了 season 且 config 中没有 season，则设置它
+            if (season && !config.season) {
+                config.season = season;
+            }
+
+            // 验证阵容配置
+            const validationResult = this.validateLineup(config);
+            if (!validationResult.valid) {
+                logger.warn(
+                    `[LineupLoader] 阵容配置验证失败 [${path.basename(filePath)}]: ${validationResult.errors.join(', ')}`
+                );
+                return false;
+            }
+            
+            this.lineups.set(config.id, config);
+            logger.info(`[LineupLoader] 加载阵容成功: ${config.name} (${config.id}) [Season: ${config.season || 'Unknown'}]`);
+            return true;
+            
+        } catch (e: any) {
+            logger.error(`[LineupLoader] 加载阵容失败 [${path.basename(filePath)}]: ${e.message}`);
+            return false;
+        }
     }
     
     /**
@@ -163,6 +191,15 @@ class LineupLoader {
      */
     public getAllLineups(): LineupConfig[] {
         return Array.from(this.lineups.values());
+    }
+
+    /**
+     * 根据赛季获取阵容列表
+     * @param season 赛季名称 (如 S4, S16)
+     * @returns 该赛季的阵容配置数组
+     */
+    public getLineupsBySeason(season: string): LineupConfig[] {
+        return Array.from(this.lineups.values()).filter(lineup => lineup.season === season);
     }
     
     /**

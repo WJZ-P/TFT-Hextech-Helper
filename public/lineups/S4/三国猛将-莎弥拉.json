@@ -1,5 +1,5 @@
 {
-  "id": "2c92ca06-a54e-4b4b-a5f8-9dec1afd4ff8",
+  "id": "0a06bbbf-669f-4288-b57e-5c2446df5f0c",
   "name": "三国猛将-莎弥拉",
   "finalComp": {
     "champions": [
@@ -85,62 +85,62 @@
     ],
     "traits": [
       {
-        "key": "三国猛将",
+        "key": "TFT4_Warlord",
         "style": 2,
         "numUnits": 7
       },
       {
-        "key": "神射手",
+        "key": "TFT4_Sharpshooter",
         "style": 1,
         "numUnits": 2
       },
       {
-        "key": "神盾使",
+        "key": "TFT4_Keeper",
         "style": 1,
         "numUnits": 2
       },
       {
-        "key": "斗士",
+        "key": "TFT4_Brawler",
         "style": 1,
         "numUnits": 2
       },
       {
-        "key": "主宰",
+        "key": "TFT4_Daredevil",
         "style": 1,
         "numUnits": 1
       },
       {
-        "key": "枭雄",
+        "key": "TFT4_Emperor",
         "style": 1,
         "numUnits": 1
       },
       {
-        "key": "霸王",
+        "key": "TFT4_Boss",
         "style": 1,
         "numUnits": 1
       },
       {
-        "key": "战神",
+        "key": "TFT4_Slayer",
         "style": 0,
         "numUnits": 2
       },
       {
-        "key": "决斗大师",
+        "key": "TFT4_Duelist",
         "style": 0,
         "numUnits": 1
       },
       {
-        "key": "福星",
+        "key": "TFT4_Fortune",
         "style": 0,
         "numUnits": 1
       },
       {
-        "key": "刺客",
+        "key": "TFT4_Assassin",
         "style": 0,
         "numUnits": 1
       },
       {
-        "key": "重装战士",
+        "key": "TFT4_Vanguard",
         "style": 0,
         "numUnits": 1
       }
@@ -173,22 +173,22 @@
       ],
       "traits": [
         {
-          "key": "三国猛将",
+          "key": "TFT4_Warlord",
           "style": 1,
           "numUnits": 3
         },
         {
-          "key": "神盾使",
+          "key": "TFT4_Keeper",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "重装战士",
+          "key": "TFT4_Vanguard",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神射手",
+          "key": "TFT4_Sharpshooter",
           "style": 0,
           "numUnits": 1
         }
@@ -227,27 +227,27 @@
       ],
       "traits": [
         {
-          "key": "三国猛将",
+          "key": "TFT4_Warlord",
           "style": 1,
           "numUnits": 4
         },
         {
-          "key": "斗士",
+          "key": "TFT4_Brawler",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神盾使",
+          "key": "TFT4_Keeper",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "重装战士",
+          "key": "TFT4_Vanguard",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神射手",
+          "key": "TFT4_Sharpshooter",
           "style": 0,
           "numUnits": 1
         }
@@ -293,37 +293,37 @@
       ],
       "traits": [
         {
-          "key": "三国猛将",
+          "key": "TFT4_Warlord",
           "style": 1,
           "numUnits": 5
         },
         {
-          "key": "福星",
+          "key": "TFT4_Fortune",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "刺客",
+          "key": "TFT4_Assassin",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "斗士",
+          "key": "TFT4_Brawler",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神盾使",
+          "key": "TFT4_Keeper",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "重装战士",
+          "key": "TFT4_Vanguard",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神射手",
+          "key": "TFT4_Sharpshooter",
           "style": 0,
           "numUnits": 1
         }
@@ -376,42 +376,42 @@
       ],
       "traits": [
         {
-          "key": "三国猛将",
+          "key": "TFT4_Warlord",
           "style": 1,
           "numUnits": 5
         },
         {
-          "key": "神射手",
+          "key": "TFT4_Sharpshooter",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "腥红之月",
+          "key": "TFT4_Cultist",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "福星",
+          "key": "TFT4_Fortune",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "刺客",
+          "key": "TFT4_Assassin",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "斗士",
+          "key": "TFT4_Brawler",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神盾使",
+          "key": "TFT4_Keeper",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "重装战士",
+          "key": "TFT4_Vanguard",
           "style": 0,
           "numUnits": 1
         }
@@ -471,52 +471,52 @@
       ],
       "traits": [
         {
-          "key": "三国猛将",
+          "key": "TFT4_Warlord",
           "style": 2,
           "numUnits": 6
         },
         {
-          "key": "神射手",
+          "key": "TFT4_Sharpshooter",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "主宰",
+          "key": "TFT4_Daredevil",
           "style": 1,
           "numUnits": 1
         },
         {
-          "key": "战神",
+          "key": "TFT4_Slayer",
           "style": 0,
           "numUnits": 2
         },
         {
-          "key": "决斗大师",
+          "key": "TFT4_Duelist",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "福星",
+          "key": "TFT4_Fortune",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "刺客",
+          "key": "TFT4_Assassin",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "斗士",
+          "key": "TFT4_Brawler",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "神盾使",
+          "key": "TFT4_Keeper",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "重装战士",
+          "key": "TFT4_Vanguard",
           "style": 0,
           "numUnits": 1
         }
@@ -583,57 +583,57 @@
       ],
       "traits": [
         {
-          "key": "三国猛将",
+          "key": "TFT4_Warlord",
           "style": 2,
           "numUnits": 7
         },
         {
-          "key": "神盾使",
+          "key": "TFT4_Keeper",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "神射手",
+          "key": "TFT4_Sharpshooter",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "枭雄",
+          "key": "TFT4_Emperor",
           "style": 1,
           "numUnits": 1
         },
         {
-          "key": "主宰",
+          "key": "TFT4_Daredevil",
           "style": 1,
           "numUnits": 1
         },
         {
-          "key": "战神",
+          "key": "TFT4_Slayer",
           "style": 0,
           "numUnits": 2
         },
         {
-          "key": "决斗大师",
+          "key": "TFT4_Duelist",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "福星",
+          "key": "TFT4_Fortune",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "刺客",
+          "key": "TFT4_Assassin",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "斗士",
+          "key": "TFT4_Brawler",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "重装战士",
+          "key": "TFT4_Vanguard",
           "style": 0,
           "numUnits": 1
         }
@@ -707,62 +707,62 @@
       ],
       "traits": [
         {
-          "key": "三国猛将",
+          "key": "TFT4_Warlord",
           "style": 2,
           "numUnits": 7
         },
         {
-          "key": "神盾使",
+          "key": "TFT4_Keeper",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "神射手",
+          "key": "TFT4_Sharpshooter",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "斗士",
+          "key": "TFT4_Brawler",
           "style": 1,
           "numUnits": 2
         },
         {
-          "key": "枭雄",
+          "key": "TFT4_Emperor",
           "style": 1,
           "numUnits": 1
         },
         {
-          "key": "主宰",
+          "key": "TFT4_Daredevil",
           "style": 1,
           "numUnits": 1
         },
         {
-          "key": "霸王",
+          "key": "TFT4_Boss",
           "style": 1,
           "numUnits": 1
         },
         {
-          "key": "战神",
+          "key": "TFT4_Slayer",
           "style": 0,
           "numUnits": 2
         },
         {
-          "key": "决斗大师",
+          "key": "TFT4_Duelist",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "福星",
+          "key": "TFT4_Fortune",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "刺客",
+          "key": "TFT4_Assassin",
           "style": 0,
           "numUnits": 1
         },
         {
-          "key": "重装战士",
+          "key": "TFT4_Vanguard",
           "style": 0,
           "numUnits": 1
         }
