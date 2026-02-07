@@ -6,7 +6,7 @@
 import React, {useEffect, useState} from 'react';
 import styled from 'styled-components';
 import {ThemeType} from '../../styles/theme';
-import {TFT_16_CHAMPION_DATA, TFTEquip, TraitData} from "../../../src-backend/TFTProtocol";
+import {TFT_16_CHESS_DATA, TFTEquip, TraitData} from "../../../src-backend/TFTProtocol";
 // 导入 S16 棋子数据，用于获取英雄原画 ID
 import {TFT_16_CHESS} from "../../../public/TFTInfo/S16/chess";
 import {TFT_16_TRAIT_DATA} from "../../../src-backend/TFTInfo/trait.ts";
@@ -596,7 +596,7 @@ interface ChampionAvatarProps {
  */
 const getAvatarUrl = (cnName: string): string => {
     // @ts-ignore
-    const champion = TFT_16_CHAMPION_DATA[cnName];
+    const champion = TFT_16_CHESS_DATA[cnName];
     if (!champion) {
         console.warn(`未找到英雄 "${cnName}" 的数据`);
         return '';
@@ -647,7 +647,7 @@ const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion}) => {
 
     // 获取英雄费用
     // @ts-ignore
-    const tftUnit = TFT_16_CHAMPION_DATA[champion.name];
+    const tftUnit = TFT_16_CHESS_DATA[champion.name];
     const cost = tftUnit ? tftUnit.price : 0;
 
     /**
@@ -929,7 +929,7 @@ const LineupsPage: React.FC = () => {
             uniqueChamps.add(champ.name);
 
             // @ts-ignore
-            const unitData = TFT_16_CHAMPION_DATA[champ.name];
+            const unitData = TFT_16_CHESS_DATA[champ.name];
             if (unitData) {
                 // 合并 origins 和 classes
                 const traits = [...(unitData.origins || []), ...(unitData.classes || [])];
@@ -1064,7 +1064,7 @@ const LineupsPage: React.FC = () => {
                                             <LevelChampionsList>
                                                 {levelChampions.map((champion, idx) => {
                                                     // @ts-ignore
-                                                    const tftUnit = TFT_16_CHAMPION_DATA[champion.name];
+                                                    const tftUnit = TFT_16_CHESS_DATA[champion.name];
                                                     const cost = tftUnit ? tftUnit.price : 0;
                                                     const avatarUrl = getAvatarUrl(champion.name);
                                                     

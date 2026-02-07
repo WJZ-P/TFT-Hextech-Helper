@@ -32,7 +32,7 @@ export interface ItemBuild {
  * @description 阵容中每个棋子的详细配置
  */
 export interface ChampionConfig {
-    /** 棋子名称（必须与 TFT_16_CHAMPION_DATA 中的 key 一致） */
+    /** 棋子名称（必须与 TFT_16_CHESS_DATA 中的 key 一致） */
     name: ChampionKey;
     
     /** 是否为核心棋子（核心棋子优先升星，不轻易卖掉） */

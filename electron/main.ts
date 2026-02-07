@@ -77,7 +77,7 @@ import {debounce} from "../src-backend/utils/HelperTools.ts";
 // import {tftOperator} from "../src-backend/TftOperator.ts"; // 移至动态导入
 import {is, optimizer} from "@electron-toolkit/utils";
 // import {lineupLoader} from "../src-backend/lineup";  // 移至动态导入
-import {TFT_16_CHAMPION_DATA} from "../src-backend/TFTProtocol";  // 导入棋子数据
+import {TFT_16_CHESS_DATA} from "../src-backend/TFTProtocol";  // 导入棋子数据
 // import {globalHotkeyManager} from "../src-backend/utils/GlobalHotkeyManager.ts";  // 移至动态导入
 
 // ============================================================================
@@ -559,11 +559,11 @@ function registerHandler() {
         settingsStore.set('selectedLineupIds', ids)
     })
     
-    // 棋子数据相关：从 TFT_16_CHAMPION_DATA 动态生成中英文映射表
+    // 棋子数据相关：从 TFT_16_CHESS_DATA 动态生成中英文映射表
     ipcMain.handle(IpcChannel.TFT_GET_CHAMPION_CN_TO_EN_MAP, async () => {
-        // 遍历 TFT_16_CHAMPION_DATA，生成 { 中文名: 英文ID } 的映射
+        // 遍历 TFT_16_CHESS_DATA，生成 { 中文名: 英文ID } 的映射
         const cnToEnMap: Record<string, string> = {};
-        for (const [cnName, unitData] of Object.entries(TFT_16_CHAMPION_DATA)) {
+        for (const [cnName, unitData] of Object.entries(TFT_16_CHESS_DATA)) {
             cnToEnMap[cnName] = unitData.englishId;
         }
         return cnToEnMap;

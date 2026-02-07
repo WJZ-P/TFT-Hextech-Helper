@@ -7,7 +7,7 @@
 import Tesseract, { createWorker, PSM } from "tesseract.js";
 import path from "path";
 import { logger } from "../../utils/Logger";
-import { TFT_16_CHAMPION_DATA } from "../../TFTProtocol";
+import { TFT_16_CHESS_DATA } from "../../TFTProtocol";
 
 /**
  * OCR Worker 类型枚举
@@ -145,7 +145,7 @@ export class OcrService {
         });
 
         // 构建字符白名单：所有棋子名称中出现的字符
-        const uniqueChars = [...new Set(Object.keys(TFT_16_CHAMPION_DATA).join(""))].join("");
+        const uniqueChars = [...new Set(Object.keys(TFT_16_CHESS_DATA).join(""))].join("");
 
         await worker.setParameters({
             tessedit_char_whitelist: uniqueChars,

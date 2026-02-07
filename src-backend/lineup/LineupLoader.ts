@@ -7,7 +7,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { app } from 'electron';
 import { LineupConfig, ChampionConfig, StageConfig } from './LineupTypes';
-import { TFT_16_CHAMPION_DATA, TFT_16_EQUIP_DATA } from '../TFTProtocol';
+import { TFT_16_CHESS_DATA, TFT_16_EQUIP_DATA } from '../TFTProtocol';
 import { logger } from '../utils/Logger';
 
 /**
@@ -143,7 +143,7 @@ class LineupLoader {
                 // 验证棋子名称是否存在于数据集中
                 // champion.name 已经是 ChampionKey 类型，但 JSON 解析时是 string
                 // 所以这里仍需验证实际值是否有效
-                if (!TFT_16_CHAMPION_DATA[champion.name]) {
+                if (!TFT_16_CHESS_DATA[champion.name]) {
                     errors.push(`[${stageKey}] 未知棋子: ${champion.name}`);
                 }
                 

@@ -53,7 +53,7 @@ import {
     ShopSlotIndex,
     refreshShopPoint,
     buyExpPoint,
-    TFT_16_CHAMPION_DATA,
+    TFT_16_CHESS_DATA,
     TFTEquip,
     TFTMode,
     TFTUnit,
@@ -400,7 +400,7 @@ class TftOperator {
             let cleanName = text.replace(/\s/g, "");
 
             // 尝试从 OCR 结果中找到匹配的英雄
-            let tftUnit: TFTUnit | null = TFT_16_CHAMPION_DATA[cleanName] || null;
+            let tftUnit: TFTUnit | null = TFT_16_CHESS_DATA[cleanName] || null;
 
             // OCR 失败时使用模板匹配兜底
             if (!tftUnit) {
@@ -419,7 +419,7 @@ class TftOperator {
             }
 
             // 从数据集中找到对应英雄
-            tftUnit = TFT_16_CHAMPION_DATA[cleanName] || null;
+            tftUnit = TFT_16_CHESS_DATA[cleanName] || null;
 
             if (tftUnit) {
                 logger.debug(`[商店槽位 ${i}] 识别成功 -> ${tftUnit.displayName} (${tftUnit.price}费)`);
@@ -659,7 +659,7 @@ class TftOperator {
 
 
             // 尝试从 OCR 结果中找到匹配的英雄
-            let tftUnit: TFTUnit | null = TFT_16_CHAMPION_DATA[cleanName] || null;
+            let tftUnit: TFTUnit | null = TFT_16_CHESS_DATA[cleanName] || null;
 
             // OCR 失败时使用模板匹配兜底
             if (!tftUnit) {
@@ -675,7 +675,7 @@ class TftOperator {
                 mat.delete();
             }
 
-            tftUnit = TFT_16_CHAMPION_DATA[cleanName] || null;
+            tftUnit = TFT_16_CHESS_DATA[cleanName] || null;
 
             if (tftUnit) {
                 // 识别星级
@@ -714,8 +714,8 @@ class TftOperator {
                 if (forgeType !== ItemForgeType.NONE) {
                     // 根据锻造器类型选择对应的棋子数据
                     const forgeUnit = forgeType === ItemForgeType.COMPLETED 
-                        ? TFT_16_CHAMPION_DATA.成装锻造器 
-                        : TFT_16_CHAMPION_DATA.基础装备锻造器;
+                        ? TFT_16_CHESS_DATA.成装锻造器
+                        : TFT_16_CHESS_DATA.基础装备锻造器;
                     const forgeName = forgeType === ItemForgeType.COMPLETED ? "成装锻造器" : "基础装备锻造器";
                     
                     logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别为${forgeName}`);
@@ -777,7 +777,7 @@ class TftOperator {
             let cleanName = text.replace(/\s/g, "");
 
             // 尝试从 OCR 结果中找到匹配的英雄
-            let tftUnit: TFTUnit | null = TFT_16_CHAMPION_DATA[cleanName] || null;
+            let tftUnit: TFTUnit | null = TFT_16_CHESS_DATA[cleanName] || null;
 
             // OCR 失败时使用模板匹配兜底
             if (!tftUnit) {
@@ -791,7 +791,7 @@ class TftOperator {
                 mat.delete();
             }
 
-            tftUnit = TFT_16_CHAMPION_DATA[cleanName] || null;
+            tftUnit = TFT_16_CHESS_DATA[cleanName] || null;
 
             if (tftUnit) {
                 // 识别星级
