@@ -1,4 +1,4 @@
-import {UnitClass_S16, UnitOrigin_S16} from "./trait.ts";
+import {UnitClass_S16, UnitOrigin_S16, UnitClass_S4_5, UnitOrigin_S4_5} from "./trait.ts";
 import {TFTUnit} from "../TFTProtocol.ts";
 
 export const TFT_SPECIAL_CHESS = {
@@ -941,3 +941,539 @@ export const _TFT_16_CHESS_DATA = {
     },
 } satisfies Record<string, TFTUnit>;
 
+export const _TFT_4_CHESS_DATA = {
+        //  特殊棋子
+    ...TFT_SPECIAL_CHESS,
+    
+    // 1 费棋子
+    "内瑟斯": {
+        displayName: "内瑟斯",
+        englishId: "TFT4_Nasus",
+        price: 1,
+        traits: [UnitOrigin_S4_5.Divine, UnitClass_S4_5.Syphoner],
+        origins: [UnitOrigin_S4_5.Divine],
+        classes: [UnitClass_S4_5.Syphoner],
+        attackRange: 1
+    },
+    "崔丝塔娜": {
+        displayName: "崔丝塔娜",
+        englishId: "TFT4_Tristana",
+        price: 1,
+        traits: [UnitOrigin_S4_5.Dragonsoul, UnitClass_S4_5.Sharpshooter],
+        origins: [UnitOrigin_S4_5.Dragonsoul],
+        classes: [UnitClass_S4_5.Sharpshooter],
+        attackRange: 5
+    },
+    "黛安娜": {
+        displayName: "黛安娜",
+        englishId: "TFT4b_Diana",
+        price: 1,
+        traits: [UnitOrigin_S4_5.Spirit, UnitClass_S4_5.Assassin],
+        origins: [UnitOrigin_S4_5.Spirit],
+        classes: [UnitClass_S4_5.Assassin],
+        attackRange: 1
+    },
+    "伊莉丝": {
+        displayName: "伊莉丝",
+        englishId: "TFT4_Elise",
+        price: 1,
+        traits: [UnitOrigin_S4_5.Cultist, UnitClass_S4_5.Keeper],
+        origins: [UnitOrigin_S4_5.Cultist],
+        classes: [UnitClass_S4_5.Keeper],
+        attackRange: 2
+    },
+    "盖伦": {
+        displayName: "盖伦",
+        englishId: "TFT4_Garen",
+        price: 1,
+        traits: [UnitOrigin_S4_5.Warlord, UnitClass_S4_5.Vanguard],
+        origins: [UnitOrigin_S4_5.Warlord],
+        classes: [UnitClass_S4_5.Vanguard],
+        attackRange: 1
+    },
+    "茂凯": {
+        displayName: "茂凯",
+        englishId: "TFT4_Maokai",
+        price: 1,
+        traits: [UnitOrigin_S4_5.Elderwood, UnitClass_S4_5.Brawler],
+        origins: [UnitOrigin_S4_5.Elderwood],
+        classes: [UnitClass_S4_5.Brawler],
+        attackRange: 1
+    },
+    "奈德丽": {
+        displayName: "奈德丽",
+        englishId: "TFT4_Nidalee",
+        price: 1,
+        traits: [UnitOrigin_S4_5.Warlord, UnitClass_S4_5.Sharpshooter],
+        origins: [UnitOrigin_S4_5.Warlord],
+        classes: [UnitClass_S4_5.Sharpshooter],
+        attackRange: 5
+    },
+    "崔斯特": {
+        displayName: "崔斯特",
+        englishId: "TFT4_TwistedFate",
+        price: 1,
+        traits: [UnitOrigin_S4_5.Cultist, UnitClass_S4_5.Mage],
+        origins: [UnitOrigin_S4_5.Cultist],
+        classes: [UnitClass_S4_5.Mage],
+        attackRange: 5
+    },
+    "孙悟空": {
+        displayName: "孙悟空",
+        englishId: "TFT4_Wukong",
+        price: 1,
+        traits: [UnitOrigin_S4_5.Divine, UnitClass_S4_5.Vanguard],
+        origins: [UnitOrigin_S4_5.Divine],
+        classes: [UnitClass_S4_5.Vanguard],
+        attackRange: 1
+    },
+    "亚索": {
+        displayName: "亚索",
+        englishId: "TFT4_Yasuo",
+        price: 1,
+        traits: [UnitOrigin_S4_5.Exile, UnitClass_S4_5.Duelist],
+        origins: [UnitOrigin_S4_5.Exile],
+        classes: [UnitClass_S4_5.Duelist],
+        attackRange: 1
+    },
+    "布兰德": {
+        displayName: "布兰德",
+        englishId: "TFT4_Brand",
+        price: 1,
+        traits: [UnitOrigin_S4_5.Dragonsoul, UnitClass_S4_5.Mage],
+        origins: [UnitOrigin_S4_5.Dragonsoul],
+        classes: [UnitClass_S4_5.Mage],
+        attackRange: 5
+    },
+    "菲奥娜": {
+        displayName: "菲奥娜",
+        englishId: "TFT4_Fiora",
+        price: 1,
+        traits: [UnitOrigin_S4_5.Enlightened, UnitClass_S4_5.Duelist],
+        origins: [UnitOrigin_S4_5.Enlightened],
+        classes: [UnitClass_S4_5.Duelist],
+        attackRange: 1
+    },
+    "塔姆": {
+        displayName: "塔姆",
+        englishId: "TFT4_TahmKench",
+        price: 1,
+        traits: [UnitOrigin_S4_5.Fortune, UnitClass_S4_5.Brawler],
+        origins: [UnitOrigin_S4_5.Fortune],
+        classes: [UnitClass_S4_5.Brawler],
+        attackRange: 1
+    },
+
+    // 2 费棋子
+    "安妮": {
+        displayName: "安妮",
+        englishId: "TFT4_Annie",
+        price: 2,
+        traits: [UnitOrigin_S4_5.Fortune, UnitClass_S4_5.Mage],
+        origins: [UnitOrigin_S4_5.Fortune],
+        classes: [UnitClass_S4_5.Mage],
+        attackRange: 2
+    },
+    "劫": {
+        displayName: "劫",
+        englishId: "TFT4b_Zed",
+        price: 2,
+        traits: [UnitOrigin_S4_5.Ninja, UnitClass_S4_5.Slayer],
+        origins: [UnitOrigin_S4_5.Ninja],
+        classes: [UnitClass_S4_5.Slayer],
+        attackRange: 1
+    },
+    "迦娜": {
+        displayName: "迦娜",
+        englishId: "TFT4_Janna",
+        price: 2,
+        traits: [UnitOrigin_S4_5.Enlightened, UnitClass_S4_5.Mystic],
+        origins: [UnitOrigin_S4_5.Enlightened],
+        classes: [UnitClass_S4_5.Mystic],
+        attackRange: 5
+    },
+    "弗拉基米尔": {
+        displayName: "弗拉基米尔",
+        englishId: "TFT4_Vladimir",
+        price: 2,
+        traits: [UnitOrigin_S4_5.Cultist, UnitClass_S4_5.Syphoner],
+        origins: [UnitOrigin_S4_5.Cultist],
+        classes: [UnitClass_S4_5.Syphoner],
+        attackRange: 2
+    },
+    "派克": {
+        displayName: "派克",
+        englishId: "TFT4_Pyke",
+        price: 2,
+        traits: [UnitOrigin_S4_5.Cultist, UnitClass_S4_5.Assassin, UnitClass_S4_5.Slayer],
+        origins: [UnitOrigin_S4_5.Cultist],
+        classes: [UnitClass_S4_5.Assassin, UnitClass_S4_5.Slayer],
+        attackRange: 1
+    },
+    "蔚": {
+        displayName: "蔚",
+        englishId: "TFT4_Vi",
+        price: 2,
+        traits: [UnitOrigin_S4_5.Warlord, UnitClass_S4_5.Brawler],
+        origins: [UnitOrigin_S4_5.Warlord],
+        classes: [UnitClass_S4_5.Brawler],
+        attackRange: 1
+    },
+    "提莫": {
+        displayName: "提莫",
+        englishId: "TFT4_Teemo",
+        price: 2,
+        traits: [UnitOrigin_S4_5.Spirit, UnitClass_S4_5.Sharpshooter],
+        origins: [UnitOrigin_S4_5.Spirit],
+        classes: [UnitClass_S4_5.Sharpshooter],
+        attackRange: 5
+    },
+    "诺提勒斯": {
+        displayName: "诺提勒斯",
+        englishId: "TFT4_Nautilus",
+        price: 2,
+        traits: [UnitOrigin_S4_5.Fabled, UnitClass_S4_5.Vanguard],
+        origins: [UnitOrigin_S4_5.Fabled],
+        classes: [UnitClass_S4_5.Vanguard],
+        attackRange: 1
+    },
+    "璐璐": {
+        displayName: "璐璐",
+        englishId: "TFT4_Lulu",
+        price: 2,
+        traits: [UnitOrigin_S4_5.Elderwood, UnitClass_S4_5.Mage],
+        origins: [UnitOrigin_S4_5.Elderwood],
+        classes: [UnitClass_S4_5.Mage],
+        attackRange: 5
+    },
+    "嘉文四世": {
+        displayName: "嘉文四世",
+        englishId: "TFT4_JarvanIV",
+        price: 2,
+        traits: [UnitOrigin_S4_5.Warlord, UnitClass_S4_5.Keeper],
+        origins: [UnitOrigin_S4_5.Warlord],
+        classes: [UnitClass_S4_5.Keeper],
+        attackRange: 1
+    },
+    "贾克斯": {
+        displayName: "贾克斯",
+        englishId: "TFT4_Jax",
+        price: 2,
+        traits: [UnitOrigin_S4_5.Divine, UnitClass_S4_5.Duelist],
+        origins: [UnitOrigin_S4_5.Divine],
+        classes: [UnitClass_S4_5.Duelist],
+        attackRange: 1
+    },
+    "洛": {
+        displayName: "洛",
+        englishId: "TFT4_Rakan",
+        price: 2,
+        traits: [UnitOrigin_S4_5.Elderwood, UnitClass_S4_5.Keeper],
+        origins: [UnitOrigin_S4_5.Elderwood],
+        classes: [UnitClass_S4_5.Keeper],
+        attackRange: 2
+    },
+    "布隆": {
+        displayName: "布隆",
+        englishId: "TFT4_Braum",
+        price: 2,
+        traits: [UnitOrigin_S4_5.Dragonsoul, UnitClass_S4_5.Vanguard],
+        origins: [UnitOrigin_S4_5.Dragonsoul],
+        classes: [UnitClass_S4_5.Vanguard],
+        attackRange: 1
+    },
+
+    // 3 费棋子
+    "阿卡丽": {
+        displayName: "阿卡丽",
+        englishId: "TFT4_Akali",
+        price: 3,
+        traits: [UnitOrigin_S4_5.Ninja, UnitClass_S4_5.Assassin],
+        origins: [UnitOrigin_S4_5.Ninja],
+        classes: [UnitClass_S4_5.Assassin],
+        attackRange: 1
+    },
+    "千珏": {
+        displayName: "千珏",
+        englishId: "TFT4b_Kindred",
+        price: 3,
+        traits: [UnitOrigin_S4_5.Spirit, UnitClass_S4_5.Executioner],
+        origins: [UnitOrigin_S4_5.Spirit],
+        classes: [UnitClass_S4_5.Executioner],
+        attackRange: 3
+    },
+    "艾瑞莉娅": {
+        displayName: "艾瑞莉娅",
+        englishId: "TFT4_Irelia",
+        price: 3,
+        traits: [UnitOrigin_S4_5.Enlightened, UnitOrigin_S4_5.Divine, UnitClass_S4_5.Adept],
+        origins: [UnitOrigin_S4_5.Enlightened, UnitOrigin_S4_5.Divine],
+        classes: [UnitClass_S4_5.Adept],
+        attackRange: 1
+    },
+    "希瓦娜": {
+        displayName: "希瓦娜",
+        englishId: "TFT4_Shyvana",
+        price: 3,
+        traits: [UnitOrigin_S4_5.Dragonsoul, UnitClass_S4_5.Brawler],
+        origins: [UnitOrigin_S4_5.Dragonsoul],
+        classes: [UnitClass_S4_5.Brawler],
+        attackRange: 1
+    },
+    "卡莉丝塔": {
+        displayName: "卡莉丝塔",
+        englishId: "TFT4_Kalista",
+        price: 3,
+        traits: [UnitOrigin_S4_5.Cultist, UnitClass_S4_5.Duelist],
+        origins: [UnitOrigin_S4_5.Cultist],
+        classes: [UnitClass_S4_5.Duelist],
+        attackRange: 5
+    },
+    "凯南": {
+        displayName: "凯南",
+        englishId: "TFT4_Kennen",
+        price: 3,
+        traits: [UnitOrigin_S4_5.Ninja, UnitClass_S4_5.Keeper],
+        origins: [UnitOrigin_S4_5.Ninja],
+        classes: [UnitClass_S4_5.Keeper],
+        attackRange: 2
+    },
+    "努努和威朗普": {
+        displayName: "努努和威朗普",
+        englishId: "TFT4_Nunu",
+        price: 3,
+        traits: [UnitOrigin_S4_5.Elderwood, UnitClass_S4_5.Brawler],
+        origins: [UnitOrigin_S4_5.Elderwood],
+        classes: [UnitClass_S4_5.Brawler],
+        attackRange: 1
+    },
+    "希维尔": {
+        displayName: "希维尔",
+        englishId: "TFT4_Sivir",
+        price: 3,
+        traits: [UnitOrigin_S4_5.Cultist, UnitClass_S4_5.Sharpshooter],
+        origins: [UnitOrigin_S4_5.Cultist],
+        classes: [UnitClass_S4_5.Sharpshooter],
+        attackRange: 5
+    },
+    "妮蔻": {
+        displayName: "妮蔻",
+        englishId: "TFT4_Neeko",
+        price: 3,
+        traits: [UnitOrigin_S4_5.Fabled, UnitClass_S4_5.Mystic],
+        origins: [UnitOrigin_S4_5.Fabled],
+        classes: [UnitClass_S4_5.Mystic],
+        attackRange: 5
+    },
+    "德莱厄斯": {
+        displayName: "德莱厄斯",
+        englishId: "TFT4_Darius",
+        price: 3,
+        traits: [UnitOrigin_S4_5.Fortune, UnitClass_S4_5.Slayer],
+        origins: [UnitOrigin_S4_5.Fortune],
+        classes: [UnitClass_S4_5.Slayer],
+        attackRange: 1
+    },
+    "维迦": {
+        displayName: "维迦",
+        englishId: "TFT4_Veigar",
+        price: 3,
+        traits: [UnitOrigin_S4_5.Elderwood, UnitClass_S4_5.Mage],
+        origins: [UnitOrigin_S4_5.Elderwood],
+        classes: [UnitClass_S4_5.Mage],
+        attackRange: 5
+    },
+    "悠米": {
+        displayName: "悠米",
+        englishId: "TFT4_Yuumi",
+        price: 3,
+        traits: [UnitOrigin_S4_5.Spirit, UnitClass_S4_5.Mystic],
+        origins: [UnitOrigin_S4_5.Spirit],
+        classes: [UnitClass_S4_5.Mystic],
+        attackRange: 3
+    },
+    "卡特琳娜": {
+        displayName: "卡特琳娜",
+        englishId: "TFT4_Katarina",
+        price: 3,
+        traits: [UnitOrigin_S4_5.Warlord, UnitOrigin_S4_5.Fortune, UnitClass_S4_5.Assassin],
+        origins: [UnitOrigin_S4_5.Warlord, UnitOrigin_S4_5.Fortune],
+        classes: [UnitClass_S4_5.Assassin],
+        attackRange: 1
+    },
+
+    // 4 费棋子
+    "亚托克斯": {
+        displayName: "亚托克斯",
+        englishId: "TFT4_Aatrox",
+        price: 4,
+        traits: [UnitOrigin_S4_5.Cultist, UnitClass_S4_5.Vanguard],
+        origins: [UnitOrigin_S4_5.Cultist],
+        classes: [UnitClass_S4_5.Vanguard],
+        attackRange: 1
+    },
+    "莫甘娜": {
+        displayName: "莫甘娜",
+        englishId: "TFT4b_Morgana",
+        price: 4,
+        traits: [UnitOrigin_S4_5.Enlightened, UnitClass_S4_5.Syphoner],
+        origins: [UnitOrigin_S4_5.Enlightened],
+        classes: [UnitClass_S4_5.Syphoner],
+        attackRange: 2
+    },
+    "奥瑞利安 · 索尔": {
+        displayName: "奥瑞利安 · 索尔",
+        englishId: "TFT4_AurelionSol",
+        price: 4,
+        traits: [UnitOrigin_S4_5.Dragonsoul, UnitClass_S4_5.Mage],
+        origins: [UnitOrigin_S4_5.Dragonsoul],
+        classes: [UnitClass_S4_5.Mage],
+        attackRange: 5
+    },
+    "科加斯": {
+        displayName: "科加斯",
+        englishId: "TFT4_ChoGath",
+        price: 4,
+        traits: [UnitOrigin_S4_5.Fabled, UnitClass_S4_5.Brawler],
+        origins: [UnitOrigin_S4_5.Fabled],
+        classes: [UnitClass_S4_5.Brawler],
+        attackRange: 1
+    },
+    "霞": {
+        displayName: "霞",
+        englishId: "TFT4_Xayah",
+        price: 4,
+        traits: [UnitOrigin_S4_5.Elderwood, UnitClass_S4_5.Executioner, UnitClass_S4_5.Keeper],
+        origins: [UnitOrigin_S4_5.Elderwood],
+        classes: [UnitClass_S4_5.Executioner, UnitClass_S4_5.Keeper],
+        attackRange: 5
+    },
+    "奥拉夫": {
+        displayName: "奥拉夫",
+        englishId: "TFT4_Olaf",
+        price: 4,
+        traits: [UnitOrigin_S4_5.Dragonsoul, UnitClass_S4_5.Slayer],
+        origins: [UnitOrigin_S4_5.Dragonsoul],
+        classes: [UnitClass_S4_5.Slayer],
+        attackRange: 1
+    },
+    "凯尔": {
+        displayName: "凯尔",
+        englishId: "TFT4_Kayle",
+        price: 4,
+        traits: [UnitOrigin_S4_5.Divine, UnitClass_S4_5.Executioner],
+        origins: [UnitOrigin_S4_5.Divine],
+        classes: [UnitClass_S4_5.Executioner],
+        attackRange: 5
+    },
+    "瑟庄妮": {
+        displayName: "瑟庄妮",
+        englishId: "TFT4_Sejuani",
+        price: 4,
+        traits: [UnitOrigin_S4_5.Fortune, UnitClass_S4_5.Vanguard],
+        origins: [UnitOrigin_S4_5.Fortune],
+        classes: [UnitClass_S4_5.Vanguard],
+        attackRange: 1
+    },
+    "慎": {
+        displayName: "慎",
+        englishId: "TFT4_Shen",
+        price: 4,
+        traits: [UnitOrigin_S4_5.Ninja, UnitClass_S4_5.Adept, UnitClass_S4_5.Mystic],
+        origins: [UnitOrigin_S4_5.Ninja],
+        classes: [UnitClass_S4_5.Adept, UnitClass_S4_5.Mystic],
+        attackRange: 1
+    },
+    "泰隆": {
+        displayName: "泰隆",
+        englishId: "TFT4_Talon",
+        price: 4,
+        traits: [UnitOrigin_S4_5.Enlightened, UnitClass_S4_5.Assassin],
+        origins: [UnitOrigin_S4_5.Enlightened],
+        classes: [UnitClass_S4_5.Assassin],
+        attackRange: 1
+    },
+    "泰达米尔": {
+        displayName: "泰达米尔",
+        englishId: "TFT4_Tryndamere",
+        price: 4,
+        traits: [UnitOrigin_S4_5.Warlord, UnitClass_S4_5.Slayer, UnitClass_S4_5.Duelist],
+        origins: [UnitOrigin_S4_5.Warlord],
+        classes: [UnitClass_S4_5.Slayer, UnitClass_S4_5.Duelist],
+        attackRange: 1
+    },
+
+    // 5 费棋子
+    "阿兹尔": {
+        displayName: "阿兹尔",
+        englishId: "TFT4_Azir",
+        price: 5,
+        traits: [UnitOrigin_S4_5.Warlord, UnitOrigin_S4_5.Emperor, UnitClass_S4_5.Keeper],
+        origins: [UnitOrigin_S4_5.Warlord, UnitOrigin_S4_5.Emperor],
+        classes: [UnitClass_S4_5.Keeper],
+        attackRange: 5
+    },
+    "奥恩": {
+        displayName: "奥恩",
+        englishId: "TFT4_Ornn",
+        price: 5,
+        traits: [UnitOrigin_S4_5.Elderwood, UnitOrigin_S4_5.Blacksmith, UnitClass_S4_5.Vanguard],
+        origins: [UnitOrigin_S4_5.Elderwood, UnitOrigin_S4_5.Blacksmith],
+        classes: [UnitClass_S4_5.Vanguard],
+        attackRange: 1
+    },
+    "斯维因": {
+        displayName: "斯维因",
+        englishId: "TFT4_Swain",
+        price: 5,
+        traits: [UnitOrigin_S4_5.Dragonsoul, UnitClass_S4_5.Syphoner],
+        origins: [UnitOrigin_S4_5.Dragonsoul],
+        classes: [UnitClass_S4_5.Syphoner],
+        attackRange: 2
+    },
+    "莎弥拉": {
+        displayName: "莎弥拉",
+        englishId: "TFT4_Samira",
+        price: 5,
+        traits: [UnitOrigin_S4_5.Daredevil, UnitClass_S4_5.Sharpshooter, UnitClass_S4_5.Slayer],
+        origins: [UnitOrigin_S4_5.Daredevil],
+        classes: [UnitClass_S4_5.Sharpshooter, UnitClass_S4_5.Slayer],
+        attackRange: 2
+    },
+    "李青": {
+        displayName: "李青",
+        englishId: "TFT4_LeeSin",
+        price: 5,
+        traits: [UnitOrigin_S4_5.Divine, UnitClass_S4_5.Duelist],
+        origins: [UnitOrigin_S4_5.Divine],
+        classes: [UnitClass_S4_5.Duelist],
+        attackRange: 1
+    },
+    "瑟提": {
+        displayName: "瑟提",
+        englishId: "TFT4_Sett",
+        price: 5,
+        traits: [UnitOrigin_S4_5.Boss, UnitClass_S4_5.Brawler],
+        origins: [UnitOrigin_S4_5.Boss],
+        classes: [UnitClass_S4_5.Brawler],
+        attackRange: 1
+    },
+    "永恩": {
+        displayName: "永恩",
+        englishId: "TFT4_Yone",
+        price: 5,
+        traits: [UnitOrigin_S4_5.Exile, UnitClass_S4_5.Adept],
+        origins: [UnitOrigin_S4_5.Exile],
+        classes: [UnitClass_S4_5.Adept],
+        attackRange: 1
+    },
+    "基兰": {
+        displayName: "基兰",
+        englishId: "TFT4_Zilean",
+        price: 5,
+        traits: [UnitOrigin_S4_5.Cultist, UnitClass_S4_5.Mystic],
+        origins: [UnitOrigin_S4_5.Cultist],
+        classes: [UnitClass_S4_5.Mystic],
+        attackRange: 5
+    },
+} satisfies Record<string, TFTUnit>;

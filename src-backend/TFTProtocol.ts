@@ -1,6 +1,5 @@
 //  定义一下棋子相关的一些协议，包含棋子单位信息，各种位置信息和约定各种枚举值
 
-import {UnitClass_S16, UnitOrigin_S16} from "./TFTInfo/trait.ts";
 import {_TFT_16_EQUIP_DATA} from "./TFTInfo/equip.ts";
 import {_TFT_16_CHESS_DATA} from "./TFTInfo/chess.ts";
 
@@ -472,13 +471,14 @@ export const combatPhaseTextRegion = {
 }
 
 //  棋子类型接口
+//  使用 string 联合，兼容不同赛季枚举（S16 用 UnitOrigin_S16/UnitClass_S16，S4 用 UnitOrigin_S4_5/UnitClass_S4_5）
 export interface TFTUnit {
-    displayName: ChampionKey;            //  棋子的英雄名称，用于ocr
+    displayName: string;                 //  棋子的英雄名称，用于ocr
     englishId: string;                  //  英文ID，如 "TFT16_Graves"，用于解析外部数据（如 OP.GG）
     price: number;                       //  棋子的购买花费
-    traits: (UnitOrigin_S16 | UnitClass_S16)[]; //  棋子所属羁绊，含种族和职业
-    origins: UnitOrigin_S16[];              //  棋子种族
-    classes: UnitClass_S16[];               //  棋子职业
+    traits: string[];                    //  棋子所属羁绊，含种族和职业（枚举值的中文字符串）
+    origins: string[];                   //  棋子种族
+    classes: string[];                   //  棋子职业
     /**
      * 棋子攻击射程
      * @description 从 trait.ts 中提取的 attackRange 数据
