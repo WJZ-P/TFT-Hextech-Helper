@@ -1,5 +1,5 @@
 {
-  "id": "382ea32f-31be-4606-8d26-819931c803ab",
+  "id": "5ed268a9-6e1b-4e3a-adc9-fbc78b0c0f69",
   "name": "忍者-劫",
   "finalComp": {
     "champions": [
@@ -11,7 +11,6 @@
           "水银",
           "鬼索的狂暴之刃"
         ],
-        "position": "",
         "starTarget": 3
       },
       {
@@ -22,7 +21,6 @@
           "巨龙之爪",
           "棘刺背心"
         ],
-        "position": "",
         "starTarget": 3
       },
       {
@@ -33,7 +31,6 @@
           "莫雷洛秘典",
           "离子火花"
         ],
-        "position": "",
         "starTarget": 3
       },
       {
@@ -42,7 +39,6 @@
         "items": [
           "窃贼手套"
         ],
-        "position": "",
         "starTarget": 3
       },
       {
@@ -52,35 +48,26 @@
           "基克的先驱",
           "能量圣杯"
         ],
-        "position": "",
         "starTarget": 3
       },
       {
         "name": "悠米",
         "isCore": false,
-        "items": [],
-        "position": "",
         "starTarget": 3
       },
       {
         "name": "派克",
         "isCore": false,
-        "items": [],
-        "position": "",
         "starTarget": 3
       },
       {
         "name": "提莫",
         "isCore": false,
-        "items": [],
-        "position": "",
         "starTarget": 3
       },
       {
         "name": "黛安娜",
         "isCore": false,
-        "items": [],
-        "position": "",
         "starTarget": 3
       }
     ],
@@ -142,24 +129,15 @@
       "champions": [
         {
           "name": "劫",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "派克",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "黛安娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [
@@ -194,31 +172,19 @@
       "champions": [
         {
           "name": "劫",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "派克",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "提莫",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "黛安娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [
@@ -258,38 +224,23 @@
       "champions": [
         {
           "name": "悠米",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "劫",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "派克",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "提莫",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "黛安娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [
@@ -334,45 +285,27 @@
       "champions": [
         {
           "name": "千珏",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "悠米",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "劫",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "派克",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "提莫",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "黛安娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [
@@ -422,52 +355,31 @@
       "champions": [
         {
           "name": "千珏",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "悠米",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "劫",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "派克",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "提莫",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "黛安娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "凯南",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [
@@ -522,59 +434,35 @@
       "champions": [
         {
           "name": "劫",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "慎",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "凯南",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "阿卡丽",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "千珏",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "悠米",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "提莫",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "黛安娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [
@@ -629,66 +517,39 @@
       "champions": [
         {
           "name": "劫",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "慎",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "凯南",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "阿卡丽",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "千珏",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "悠米",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "派克",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "提莫",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "黛安娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [

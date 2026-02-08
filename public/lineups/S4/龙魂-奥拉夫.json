@@ -1,5 +1,5 @@
 {
-  "id": "23af8115-e525-4c64-9d3b-c84ac7485875",
+  "id": "2007d212-8b7d-49e6-b1f1-f7807602aa6c",
   "name": "龙魂-奥拉夫",
   "finalComp": {
     "champions": [
@@ -11,7 +11,6 @@
           "斯特拉克的挑战护手",
           "饮血剑"
         ],
-        "position": "",
         "starTarget": 3
       },
       {
@@ -22,7 +21,6 @@
           "鬼索的狂暴之刃",
           "纳什之牙"
         ],
-        "position": "",
         "starTarget": 3
       },
       {
@@ -33,49 +31,36 @@
           "石像鬼石板甲",
           "日炎斗篷"
         ],
-        "position": "",
         "starTarget": 3
       },
       {
         "name": "斯维因",
         "isCore": false,
-        "items": [],
-        "position": "",
         "starTarget": 3
       },
       {
         "name": "莎弥拉",
         "isCore": false,
-        "items": [],
-        "position": "",
         "starTarget": 3
       },
       {
         "name": "泰达米尔",
         "isCore": false,
-        "items": [],
-        "position": "",
         "starTarget": 3
       },
       {
         "name": "希瓦娜",
         "isCore": false,
-        "items": [],
-        "position": "",
         "starTarget": 3
       },
       {
         "name": "崔丝塔娜",
         "isCore": false,
-        "items": [],
-        "position": "",
         "starTarget": 3
       },
       {
         "name": "布兰德",
         "isCore": false,
-        "items": [],
-        "position": "",
         "starTarget": 3
       }
     ],
@@ -137,24 +122,15 @@
       "champions": [
         {
           "name": "布隆",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "崔丝塔娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "布兰德",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [
@@ -184,31 +160,19 @@
       "champions": [
         {
           "name": "诺提勒斯",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 2
+          "isCore": false
         },
         {
           "name": "布隆",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "崔丝塔娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "布兰德",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [
@@ -243,38 +207,23 @@
       "champions": [
         {
           "name": "希瓦娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "布隆",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "崔丝塔娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "布兰德",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "塔姆",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 2
+          "isCore": false
         }
       ],
       "traits": [
@@ -314,45 +263,27 @@
       "champions": [
         {
           "name": "希瓦娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "提莫",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 2
+          "isCore": false
         },
         {
           "name": "布隆",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "崔丝塔娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "布兰德",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "塔姆",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 2
+          "isCore": false
         }
       ],
       "traits": [
@@ -397,52 +328,31 @@
       "champions": [
         {
           "name": "奥拉夫",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "泰达米尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "希瓦娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "派克",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 2
+          "isCore": false
         },
         {
           "name": "布隆",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "崔丝塔娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "布兰德",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [
@@ -502,59 +412,35 @@
       "champions": [
         {
           "name": "斯维因",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "奥瑞利安·索尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "奥拉夫",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "泰达米尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "希瓦娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "布隆",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "崔丝塔娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "布兰德",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [
@@ -609,66 +495,39 @@
       "champions": [
         {
           "name": "奥拉夫",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "斯维因",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "莎弥拉",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "奥瑞利安·索尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "泰达米尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "希瓦娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "布隆",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "崔丝塔娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "布兰德",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [

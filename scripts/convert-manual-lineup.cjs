@@ -146,37 +146,68 @@ function calculateTraits(champions) {
 }
 
 /**
- * 转换单个英雄
+ * 转换单个英雄（用于 finalComp）
+ * 
+ * 输出格式对齐 S16 标准：
+ * - 有装备时才输出 items 字段（纯字符串数组），无装备则省略
+ * - 有位置时才输出 position，无位置则省略
+ * - starTarget 在 finalComp 中始终输出
  */
-function convertChampion(champ, defaultStarTarget = 2) {
-    // 即使 s4_data 里没有数据，也允许生成，只是羁绊算不出来
-    const items = champ.items || [];
+function convertChampionForFinal(champ, defaultStarTarget = 2) {
+    const items = champ.items && champ.items.length > 0 ? champ.items : undefined;
+    
+    // 构建结果对象，undefined 的字段在 JSON.stringify 时会被自动忽略
     return {
         name: champ.name,
-        isCore: items.length > 0, // 有装备的就是核心棋子，否则就不是
-        items: items,      // 优先使用模板中的值，默认为空数组
-        position: champ.position || "", // 优先使用模板中的值，默认为空字符串
-        starTarget: champ.starTarget || defaultStarTarget  // 优先使用模板值，否则使用默认值
+        isCore: !!items,  // 有装备 = 核心棋子
+        items: items,     // 无装备时为 undefined，JSON 中不会出现该字段
+        position: champ.position || undefined,  // 无位置时省略
+        starTarget: champ.starTarget || defaultStarTarget
     };
 }
 
 /**
- * 处理单个阵容阶段（计算羁绊并转换英雄）
- * @param {Object} stageData - 阶段数据
- * @param {number} defaultStarTarget - 默认星级目标
- * @param {Set<string>} finalCompNames - 最终阵容英雄名称集合（用于自动判断是否需要追3星）
+ * 转换单个英雄（用于 stages 过渡阵容）
+ * 
+ * S16 标准：stages 中的英雄只保留 name, isCore, position 三个字段
+ * 不包含 items 和 starTarget（这些只在 finalComp 中出现）
  */
-function processStage(stageData, defaultStarTarget = 2, finalCompNames = null) {
+function convertChampionForStage(champ) {
+    return {
+        name: champ.name,
+        isCore: false,  // 过渡阶段的英雄默认都不是核心
+        position: champ.position || undefined  // 无位置时省略
+    };
+}
+
+/**
+ * 处理 finalComp（最终成型阵容）
+ * 使用 convertChampionForFinal，保留 items 和 starTarget
+ */
+function processFinalComp(stageData, defaultStarTarget = 3) {
     if (!stageData || !stageData.champions) return null;
 
     const champions = stageData.champions.map(c => {
-        // 如果该英雄在最终阵容中，默认目标设为3星，否则使用传入的默认值（通常是2星）
-        // 如果模板中显式指定了 starTarget，convertChampion 会优先使用模板值
-        let target = defaultStarTarget;
-        if (finalCompNames && finalCompNames.has(c.name)) {
-            target = 3;
-        }
-        return convertChampion(c, target);
+        return convertChampionForFinal(c, defaultStarTarget);
+    });
+    
+    const traits = calculateTraits(stageData.champions);
+
+    return {
+        champions,
+        traits
+    };
+}
+
+/**
+ * 处理 stages 中的过渡阵容
+ * S16 标准：过渡阵容只有 name, isCore, position，不含 items/starTarget
+ */
+function processStageLevel(stageData) {
+    if (!stageData || !stageData.champions) return null;
+
+    const champions = stageData.champions.map(c => {
+        return convertChampionForStage(c);
     });
     
     const traits = calculateTraits(stageData.champions);
@@ -225,25 +256,19 @@ function main() {
     for (const [lineupName, lineupData] of Object.entries(templates)) {
         console.log(`\n🔄 正在处理阵容: ${lineupName}`);
 
-        // 提取最终阵容的英雄名称集合，用于后续阶段判断星级
-        const finalCompNames = new Set();
-        if (lineupData.finalComp && lineupData.finalComp.champions) {
-            lineupData.finalComp.champions.forEach(c => finalCompNames.add(c.name));
-        }
-
         // 构建输出数据结构
         const outputData = {
             id: generateUUID(),
             name: lineupName, // 使用 Key 作为阵容名称
-            finalComp: processStage(lineupData.finalComp, 3), // finalComp 默认 3 星
+            finalComp: processFinalComp(lineupData.finalComp, 3), // finalComp 默认 3 星
             stages: {}
         };
 
-        // 处理各个阶段 (level4 - level10)
+        // 处理各个阶段 (level3 - level10)
+        // S16 标准：stages 中的英雄精简输出，不含 items/starTarget
         if (lineupData.stages) {
             for (const [levelKey, stageData] of Object.entries(lineupData.stages)) {
-                // 传入 finalCompNames，如果在最终阵容里，自动设为3星
-                outputData.stages[levelKey] = processStage(stageData, 2, finalCompNames); 
+                outputData.stages[levelKey] = processStageLevel(stageData); 
             }
         }
 

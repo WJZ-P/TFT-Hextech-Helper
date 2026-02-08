@@ -1,5 +1,5 @@
 {
-  "id": "fb2c825a-8627-4ffb-bc51-34d0d75d6e75",
+  "id": "adb3df87-7ffc-44d1-8eb0-34e0050c37dc",
   "name": "玉剑仙-泰隆",
   "finalComp": {
     "champions": [
@@ -11,14 +11,11 @@
           "正义之手",
           "巨人杀手"
         ],
-        "position": "",
         "starTarget": 3
       },
       {
         "name": "永恩",
         "isCore": false,
-        "items": [],
-        "position": "",
         "starTarget": 3
       },
       {
@@ -29,7 +26,6 @@
           "振奋盔甲",
           "薄暮法袍"
         ],
-        "position": "",
         "starTarget": 3
       },
       {
@@ -40,35 +36,26 @@
           "日炎斗篷",
           "振奋盔甲"
         ],
-        "position": "",
         "starTarget": 3
       },
       {
         "name": "迦娜",
         "isCore": false,
-        "items": [],
-        "position": "",
         "starTarget": 3
       },
       {
         "name": "菲奥娜",
         "isCore": false,
-        "items": [],
-        "position": "",
         "starTarget": 3
       },
       {
         "name": "斯维因",
         "isCore": false,
-        "items": [],
-        "position": "",
         "starTarget": 3
       },
       {
         "name": "李青",
         "isCore": false,
-        "items": [],
-        "position": "",
         "starTarget": 3
       }
     ],
@@ -130,24 +117,15 @@
       "champions": [
         {
           "name": "迦娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "亚索",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 2
+          "isCore": false
         },
         {
           "name": "菲奥娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [
@@ -177,31 +155,19 @@
       "champions": [
         {
           "name": "迦娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "贾克斯",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 2
+          "isCore": false
         },
         {
           "name": "亚索",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 2
+          "isCore": false
         },
         {
           "name": "菲奥娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [
@@ -236,38 +202,23 @@
       "champions": [
         {
           "name": "卡莉丝塔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 2
+          "isCore": false
         },
         {
           "name": "迦娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "贾克斯",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 2
+          "isCore": false
         },
         {
           "name": "亚索",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 2
+          "isCore": false
         },
         {
           "name": "菲奥娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [
@@ -307,45 +258,27 @@
       "champions": [
         {
           "name": "艾瑞莉娅",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "卡莉丝塔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 2
+          "isCore": false
         },
         {
           "name": "迦娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "贾克斯",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 2
+          "isCore": false
         },
         {
           "name": "亚索",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 2
+          "isCore": false
         },
         {
           "name": "菲奥娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [
@@ -390,52 +323,31 @@
       "champions": [
         {
           "name": "慎",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "泰隆",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "艾瑞莉娅",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "迦娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "内瑟斯",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 2
+          "isCore": false
         },
         {
           "name": "菲奥娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "莫甘娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 2
+          "isCore": false
         }
       ],
       "traits": [
@@ -485,59 +397,35 @@
       "champions": [
         {
           "name": "泰隆",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "永恩",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "慎",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "艾瑞莉娅",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "迦娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "菲奥娜",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "斯维因",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "李青",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [

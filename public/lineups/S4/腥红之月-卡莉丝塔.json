@@ -1,5 +1,5 @@
 {
-  "id": "829c4a85-8f52-4fb8-ae59-ae06ae2db662",
+  "id": "cc531094-7129-4514-ab5c-2b56033babb8",
   "name": "腥红之月-卡莉丝塔",
   "finalComp": {
     "champions": [
@@ -11,14 +11,11 @@
           "珠光护手",
           "巨人杀手"
         ],
-        "position": "",
         "starTarget": 3
       },
       {
         "name": "基兰",
         "isCore": false,
-        "items": [],
-        "position": "",
         "starTarget": 3
       },
       {
@@ -29,7 +26,6 @@
           "石像鬼石板甲",
           "巨龙之爪"
         ],
-        "position": "",
         "starTarget": 3
       },
       {
@@ -40,35 +36,26 @@
           "斯塔缇克电刃",
           "虚空之杖"
         ],
-        "position": "",
         "starTarget": 3
       },
       {
         "name": "弗拉基米尔",
         "isCore": false,
-        "items": [],
-        "position": "",
         "starTarget": 3
       },
       {
         "name": "派克",
         "isCore": false,
-        "items": [],
-        "position": "",
         "starTarget": 3
       },
       {
         "name": "崔斯特",
         "isCore": false,
-        "items": [],
-        "position": "",
         "starTarget": 3
       },
       {
         "name": "伊莉丝",
         "isCore": false,
-        "items": [],
-        "position": "",
         "starTarget": 3
       },
       {
@@ -79,7 +66,6 @@
           "狂徒铠甲",
           "振奋盔甲"
         ],
-        "position": "",
         "starTarget": 3
       }
     ],
@@ -146,24 +132,15 @@
       "champions": [
         {
           "name": "派克",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "伊莉丝",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "崔斯特",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [
@@ -198,31 +175,19 @@
       "champions": [
         {
           "name": "弗拉基米尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "派克",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "伊莉丝",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "崔斯特",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [
@@ -262,38 +227,23 @@
       "champions": [
         {
           "name": "卡莉丝塔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "弗拉基米尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "派克",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "伊莉丝",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "崔斯特",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [
@@ -338,45 +288,27 @@
       "champions": [
         {
           "name": "卡莉丝塔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "希维尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "弗拉基米尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "派克",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "伊莉丝",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "崔斯特",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [
@@ -426,52 +358,31 @@
       "champions": [
         {
           "name": "亚托克斯",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "卡莉丝塔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "希维尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "弗拉基米尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "派克",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "伊莉丝",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "崔斯特",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [
@@ -526,59 +437,35 @@
       "champions": [
         {
           "name": "基兰",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "亚托克斯",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "卡莉丝塔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "希维尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "弗拉基米尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "派克",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "伊莉丝",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "崔斯特",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [
@@ -638,66 +525,39 @@
       "champions": [
         {
           "name": "卡莉丝塔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "基兰",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "亚托克斯",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "希维尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "弗拉基米尔",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "派克",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "崔斯特",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "伊莉丝",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         },
         {
           "name": "斯维因",
-          "isCore": false,
-          "items": [],
-          "position": "",
-          "starTarget": 3
+          "isCore": false
         }
       ],
       "traits": [

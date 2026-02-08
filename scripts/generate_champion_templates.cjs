@@ -6,7 +6,12 @@ const sharp = require('sharp');
 // ==========================================
 // 配置区域
 // ==========================================
-const OUTPUT_DIR = path.join(__dirname, '../public/resources/assets/images/champion');
+
+/** 英雄模板输出根目录（各赛季有子文件夹：s16/, s4/ 等） */
+const OUTPUT_ROOT = path.join(__dirname, '../public/resources/assets/images/champion');
+
+/** 棋子数据源文件 */
+const CHESS_DATA_PATH = path.join(__dirname, '../src-backend/TFTInfo/chess.ts');
 
 // 最佳参数配置 (Golden Params)
 const FONT_FAMILY = "Microsoft YaHei";
@@ -14,84 +19,97 @@ const FONT_SIZE = 31;
 const FONT_WEIGHT = "bold";
 const LETTER_SPACING = 5;
 
-// ==========================================
-// 动态提取英雄列表
-// ==========================================
-const PROTOCOL_PATH = path.join(__dirname, '../src-backend/TFTProtocol.ts');
-
-function getChampionNames() {
-    try {
-        const content = fs.readFileSync(PROTOCOL_PATH, 'utf-8');
-        // 只读取 _TFT_16_EQUIP_DATA 之前的内容，避免读取到装备
-        // 同时只保留 const TFT_SPECIAL_CHESS 之后的内容（虽然之前也没啥，但为了保险）
-        const startIndex = content.indexOf('const TFT_SPECIAL_CHESS');
-        const endIndex = content.indexOf('const _TFT_16_EQUIP_DATA');
-        
-        if (startIndex === -1 || endIndex === -1) {
-            console.error('TFTProtocol.ts 文件结构不符合预期，无法定位数据区域');
-            return [];
-        }
-
-        const relevantContent = content.substring(startIndex, endIndex);
-        
-        const names = [];
-        // 匹配 "Name": { 格式的 Key
-        const regex = /"([^"]+)"\s*:\s*\{/g;
-        let match;
-        
-        while ((match = regex.exec(relevantContent)) !== null) {
-            names.push(match[1]);
-        }
-        
-        return [...new Set(names)];
-    } catch (error) {
-        console.error('无法读取 TFTProtocol.ts:', error);
-        return [];
-    }
-}
-
-const championNames = getChampionNames();
+/**
+ * 赛季配置表
+ * 每个赛季对应一个子文件夹和数据源变量名
+ *
+ * dataVarName: 在 chess.ts 中的变量名（用于正则定位数据区域）
+ * outputDir:   模板输出子文件夹名
+ */
+const SEASON_CONFIGS = [
+    {
+        name: 'S16 英雄联盟传奇',
+        dataVarName: '_TFT_16_CHESS_DATA',
+        outputDir: 's16',
+    },
+    {
+        name: 'S4 瑞兽闹新春',
+        dataVarName: '_TFT_4_CHESS_DATA',
+        outputDir: 's4',
+    },
+];
 
 // ==========================================
-// 主逻辑
+// 从 chess.ts 中提取英雄名称列表
 // ==========================================
-
-async function main() {
-    console.log("🐱 猫娘老师正在准备生成模板...");
-    console.log(`📝 英雄数量: ${championNames.length}`);
-    console.log(`🎨 参数配置: ${FONT_SIZE}px ${FONT_WEIGHT} ${FONT_FAMILY}, Spacing: ${LETTER_SPACING}`);
-
-    // 准备输出目录
-    if (!fs.existsSync(OUTPUT_DIR)) {
-        fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-    }
-
-    let successCount = 0;
-    
-    console.log("🚀 开始生成模板图片 (黑底白字 + 二值化)...");
-
-    for (const name of championNames) {
-        try {
-            await generateTemplate(name);
-            successCount++;
-            if (successCount % 10 === 0) {
-                process.stdout.write('.');
-            }
-        } catch (e) {
-            console.error(`\n❌ 生成失败 [${name}]:`, e);
-        }
-    }
-
-    console.log(`\n\n✨ 全部完成！共生成 ${successCount} 张模板图片。`);
-    console.log(`📂 保存路径: ${OUTPUT_DIR}`);
-}
 
 /**
- * 生成单个英雄的二值化模板
+ * 从 chess.ts 中提取某个赛季数据块的所有英雄名称
+ *
+ * 原理：
+ * 1. 用 `export const {变量名} = {` 定位数据块开始位置
+ * 2. 用 `} satisfies Record<string, TFTUnit>;` 定位数据块结束位置
+ * 3. 在这个区间内，正则匹配所有 `"英雄名": {` 格式的 key
+ * 4. 过滤掉特殊棋子（锻造器、假人等 price=0 或 price=8 的）
+ *
+ * @param {string} content - chess.ts 文件的完整内容
+ * @param {string} varName - 要提取的变量名，如 '_TFT_16_CHESS_DATA'
+ * @returns {string[]} 英雄名称数组（去重后）
  */
-async function generateTemplate(text) {
-    // 1. 预计算文字宽度
-    // 我们需要创建一个临时 canvas 来测量文字
+function extractChampionNames(content, varName) {
+    // 定位数据块的起止位置
+    const startMarker = `export const ${varName} = {`;
+    const startIdx = content.indexOf(startMarker);
+    if (startIdx === -1) {
+        console.error(`❌ 找不到 ${varName} 的定义`);
+        return [];
+    }
+
+    // 从 startMarker 后面找第一个 `} satisfies` 作为结束
+    const endMarker = '} satisfies Record<string, TFTUnit>;';
+    const endIdx = content.indexOf(endMarker, startIdx);
+    if (endIdx === -1) {
+        console.error(`❌ 找不到 ${varName} 的结束标记`);
+        return [];
+    }
+
+    const block = content.substring(startIdx, endIdx);
+
+    // 提取所有 "xxx": { 格式的 key（英雄名称）
+    const names = [];
+    const regex = /"([^"]+)"\s*:\s*\{/g;
+    let match;
+    while ((match = regex.exec(block)) !== null) {
+        const name = match[1];
+        // 过滤掉特殊棋子（锻造器、假人、提伯斯等）
+        // 它们通过 ...TFT_SPECIAL_CHESS 展开进来的
+        // 特征：名字中包含"锻造器"/"假人"/"提伯斯"
+        if (name.includes('锻造器') || name === '训练假人' || name === '提伯斯') {
+            continue;
+        }
+        names.push(name);
+    }
+
+    return [...new Set(names)];
+}
+
+// ==========================================
+// 模板生成逻辑
+// ==========================================
+
+/**
+ * 生成单个英雄的二值化文字模板
+ *
+ * 流程：
+ * 1. 用 canvas 在黑底上绘制白色中文文字（模拟游戏内的棋子名称）
+ * 2. 通过 sharp 做灰度 + 二值化处理
+ * 3. 写入指定目录
+ *
+ * @param {string} text - 英雄名称
+ * @param {string} outputDir - 输出目录路径
+ */
+async function generateTemplate(text, outputDir) {
+    // 1. 预计算文字宽度（需要临时 canvas 来测量）
     const tempCanvas = createCanvas(100, 100);
     const tempCtx = tempCanvas.getContext('2d');
     tempCtx.font = `${FONT_WEIGHT} ${FONT_SIZE}px "${FONT_FAMILY}"`;
@@ -100,52 +118,99 @@ async function generateTemplate(text) {
     for (const char of text) {
         totalWidth += tempCtx.measureText(char).width;
     }
-    // 加上字间距
     if (text.length > 1) {
         totalWidth += (text.length - 1) * LETTER_SPACING;
     }
 
-    // 2. 确定 Canvas 尺寸
-    // 宽度：文字宽度 + 左右 padding (各2px)
-    // 高度：字体大小 + 上下 padding (共4px，保持与测试脚本一致)
+    // 2. 确定 Canvas 尺寸（宽度 + 左右各 2px padding）
     const width = Math.ceil(totalWidth) + 4;
-    const height = FONT_SIZE + 4; // 约 35px
+    const height = FONT_SIZE + 4;
 
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    // 3. 绘制背景 (黑色)
-    ctx.fillStyle = '#000000'; 
+    // 3. 黑底
+    ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, width, height);
 
-    // 4. 绘制文字 (白色)
+    // 4. 白字
     ctx.fillStyle = '#FFFFFF';
     ctx.font = `${FONT_WEIGHT} ${FONT_SIZE}px "${FONT_FAMILY}"`;
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
 
-    // 绘制每个字符 (手动处理 letterSpacing)
-    let currentX = 2; // 左边距
+    // 手动处理 letterSpacing（canvas API 不支持原生 letterSpacing）
+    let currentX = 2;
     for (const char of text) {
         ctx.fillText(char, currentX, height / 2);
         currentX += ctx.measureText(char).width + LETTER_SPACING;
     }
 
-    // 5. 转为 Buffer
+    // 5. 转 Buffer
     const buffer = canvas.toBuffer('image/png');
 
-    // 6. Sharp 后处理 (模拟 OpenCV 的二值化)
-    // 之前的测试证明二值化后的骨架匹配率最高
+    // 6. sharp 后处理：灰度 + 二值化（阈值 128，与 OpenCV 处理一致）
     const processedBuffer = await sharp(buffer)
-        .grayscale() // 转灰度
-        .threshold(128) // 二值化，阈值128 (与测试脚本一致)
+        .grayscale()
+        .threshold(128)
         .toBuffer();
 
     // 7. 写入文件
-    // 文件名直接使用英雄名字 (覆盖旧文件)
-    const outputPath = path.join(OUTPUT_DIR, `${text}.png`);
+    const outputPath = path.join(outputDir, `${text}.png`);
     fs.writeFileSync(outputPath, processedBuffer);
 }
 
-// 运行
+// ==========================================
+// 主入口
+// ==========================================
+async function main() {
+    console.log("🐱 模板生成脚本 - 多赛季支持版");
+    console.log(`🎨 参数配置: ${FONT_SIZE}px ${FONT_WEIGHT} ${FONT_FAMILY}, Spacing: ${LETTER_SPACING}`);
+    console.log(`📂 输出根目录: ${OUTPUT_ROOT}\n`);
+
+    // 读取棋子数据源
+    if (!fs.existsSync(CHESS_DATA_PATH)) {
+        console.error(`❌ 找不到棋子数据文件: ${CHESS_DATA_PATH}`);
+        process.exit(1);
+    }
+    const content = fs.readFileSync(CHESS_DATA_PATH, 'utf-8');
+
+    // 遍历每个赛季配置，提取英雄名 → 生成模板
+    for (const season of SEASON_CONFIGS) {
+        console.log(`\n======== ${season.name} ========`);
+
+        // 1. 提取英雄名
+        const names = extractChampionNames(content, season.dataVarName);
+        if (names.length === 0) {
+            console.warn(`⚠️ ${season.name}: 未提取到任何英雄，跳过`);
+            continue;
+        }
+        console.log(`📝 提取到 ${names.length} 个英雄`);
+
+        // 2. 准备输出目录
+        const outputDir = path.join(OUTPUT_ROOT, season.outputDir);
+        if (!fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir, { recursive: true });
+        }
+
+        // 3. 生成模板
+        let successCount = 0;
+        for (const name of names) {
+            try {
+                await generateTemplate(name, outputDir);
+                successCount++;
+                if (successCount % 10 === 0) {
+                    process.stdout.write('.');
+                }
+            } catch (e) {
+                console.error(`\n❌ 生成失败 [${name}]:`, e);
+            }
+        }
+
+        console.log(`\n✨ ${season.name} 完成！共生成 ${successCount} 张模板 → ${outputDir}`);
+    }
+
+    console.log("\n🎉 所有赛季模板生成完毕！");
+}
+
 main().catch(err => console.error(err));

@@ -9374,8 +9374,22 @@ function getSeasonTemplateDir(mode) {
       return "s16";
   }
 }
+function getChessDataBySeason(season) {
+  switch (season) {
+    case "S4":
+      return TFT_4_CHESS_DATA;
+    case "S16":
+    default:
+      return TFT_16_CHESS_DATA;
+  }
+}
 const CHAMPION_EN_TO_CN = {};
 for (const [cnName, champion] of Object.entries(TFT_16_CHESS_DATA)) {
+  if (champion.englishId) {
+    CHAMPION_EN_TO_CN[champion.englishId] = cnName;
+  }
+}
+for (const [cnName, champion] of Object.entries(TFT_4_CHESS_DATA)) {
   if (champion.englishId) {
     CHAMPION_EN_TO_CN[champion.englishId] = cnName;
   }
@@ -9394,7 +9408,7 @@ const EQUIP_ALIASES = {
 };
 Object.assign(EQUIP_EN_TO_CN, EQUIP_ALIASES);
 function getChampionRange(championName) {
-  return TFT_16_CHESS_DATA[championName]?.attackRange;
+  return (TFT_16_CHESS_DATA[championName] ?? TFT_4_CHESS_DATA[championName])?.attackRange;
 }
 function isStandardChessMode(mode) {
   return mode === "NORMAL" || mode === "RANK" || mode === "S4_RUISHOU";
@@ -9674,11 +9688,11 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-DQcTo0zb.js");
+    const ServicesModule = await import("./chunks/index-CZYefG7u.js");
     hexService = ServicesModule.hexService;
-    const TftOperatorModule = await import("./chunks/TftOperator-CDNnv_nv.js").then((n) => n.T);
+    const TftOperatorModule = await import("./chunks/TftOperator-DecxqIA6.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
-    const LineupModule = await import("./chunks/index-CRHqtjSw.js");
+    const LineupModule = await import("./chunks/index-CZYLDNoM.js");
     lineupLoader = LineupModule.lineupLoader;
     const GlobalHotkeyManagerModule = await import("./chunks/GlobalHotkeyManager-Cbcy0EP4.js");
     globalHotkeyManager = GlobalHotkeyManagerModule.globalHotkeyManager;
@@ -9906,16 +9920,16 @@ export {
   getSeasonTemplateDir as R,
   RENDERER_DIST,
   isStandardChessMode as S,
-  TFT_4_CHESS_DATA as T,
+  TFT_16_EQUIP_DATA as T,
   LcuEventUri as U,
   VITE_DEV_SERVER_URL,
-  TFT_16_CHESS_DATA as a,
-  TFT_16_EQUIP_DATA as b,
-  TFTMode as c,
+  TFTMode as a,
+  getChessDataForMode as b,
+  TFT_16_CHESS_DATA as c,
   settingsStore as d,
   shopSlotNameRegions as e,
   fs as f,
-  getChessDataForMode as g,
+  getChessDataBySeason as g,
   equipmentRegion as h,
   detailEquipRegion as i,
   shopSlot as j,
