@@ -1,13 +1,14 @@
 import path from 'path';
 import fs from 'fs-extra';
+import * as crypto from 'crypto';
 // 从 electron 中引入 'app'，用来获取我们应用的安全数据存储路径
 import {app} from 'electron';
 import {logger} from "./Logger.ts";
 import {sleep} from "./HelperTools.ts";
 
 // -------------------------------------------------------------------
-// ✨ GameConfigHelper 类的定义 ✨
-// Definition of the GameConfigHelper class
+// GameConfigHelper 类的定义
+// 负责游戏配置文件的备份、恢复、TFT 配置覆盖以及长期守护
 // -------------------------------------------------------------------
 class GameConfigHelper {
     private static instance: GameConfigHelper;
@@ -23,6 +24,18 @@ class GameConfigHelper {
     private readonly tftConfigPath: string;  // 预设的云顶设置
 
     public isTFTConfig: boolean = false;
+
+    /** TFT 下棋配置中 game.cfg 的 MD5 哈希值（在 applyTFTConfig 时记录） */
+    private tftConfigHash: string = '';
+
+    /** 文件监听器实例，用于长期守护恢复后的配置不被 LOL 客户端覆盖 */
+    private configWatcher: fs.FSWatcher | null = null;
+    /** 防抖定时器，避免短时间内触发多次恢复 */
+    private watcherDebounceTimer: NodeJS.Timeout | null = null;
+    /** 守护期间允许的最大自动恢复次数，防止无限循环 */
+    private readonly MAX_GUARD_RESTORES = 1;
+    /** 守护期间已执行的自动恢复次数 */
+    private guardRestoreCount = 0;
 
     private constructor(installPath: string) {
         if (!installPath) {
@@ -60,11 +73,29 @@ class GameConfigHelper {
         logger.debug(`[ConfigHelper] 主备份路径: ${this.primaryBackupPath}`);
         logger.debug(`[ConfigHelper] 兜底备份路径: ${this.fallbackBackupPath}`);
         logger.debug(`[ConfigHelper] 预设云顶之弈设置目录: ${this.tftConfigPath}`);
+
+        // 预计算 TFT 下棋配置的 game.cfg 哈希值
+        // 后续备份时用于比对：如果用户当前配置哈希 === TFT 配置哈希，说明恢复失败了
+        this.initTftConfigHash();
     }
 
     /**
-     * 喵~ ✨ 这是新的初始化方法！✨
-     * 在你的应用程序启动时，调用一次这个方法来设置好一切。
+     * 预计算 TFT 下棋配置 game.cfg 的哈希值
+     * 这个哈希在整个软件生命周期内不会变化（TFT 配置是预设的固定文件）
+     */
+    private async initTftConfigHash(): Promise<void> {
+        try {
+            const tftGameCfg = path.join(this.tftConfigPath, 'game.cfg');
+            if (await fs.pathExists(tftGameCfg)) {
+                this.tftConfigHash = await this.getFileHash(tftGameCfg);
+                logger.debug(`[ConfigHelper] TFT 配置哈希: ${this.tftConfigHash}`);
+            }
+        } catch (err) {
+            logger.warn(`[ConfigHelper] 计算 TFT 配置哈希失败: ${err}`);
+        }
+    }
+
+    /**
      * @param installPath 游戏安装目录
      */
     public static init(installPath: string): void {
@@ -89,6 +120,11 @@ class GameConfigHelper {
      * 备份当前的游戏设置
      * @description 把游戏目录的 Config 文件夹完整地拷贝到备份目录
      *              优先使用软件根目录，失败则使用 C 盘 userData 作为兜底
+     * 
+     * 安全检查：备份前会检测当前游戏配置是否为 TFT 下棋配置
+     * 如果是，说明上次恢复失败了，此时不应该备份（否则会用错误配置覆盖正确备份）
+     * 
+     * @returns true 表示备份成功, false 表示备份失败或被拒绝
      */
     public static async backup(): Promise<boolean> {
         const instance = GameConfigHelper.getInstance();
@@ -102,6 +138,21 @@ class GameConfigHelper {
             return false
         }
         
+        // 安全检查：检测当前配置是否为 TFT 下棋配置
+        // 如果用户的 game.cfg 哈希和我们预设的 TFT 配置哈希一致
+        // 说明上次恢复失败了，当前配置就是我们的低分辨率挂机配置
+        // 此时绝对不能备份，否则"正确的用户备份"会被"错误的 TFT 配置"覆盖
+        const isTftConfig = await instance.isCurrentConfigTFT();
+        if (isTftConfig) {
+            logger.error(`[ConfigHelper] 备份被拒绝！当前游戏配置与 TFT 下棋配置一致，说明上次恢复失败`);
+            logger.error(`[ConfigHelper] 将使用已有的备份进行恢复...`);
+
+            // 自动尝试恢复
+            await GameConfigHelper.restore(3, 1500);
+            return false;
+        }
+        
+        // 通过安全检查，正常备份
         // 尝试使用主备份路径（软件根目录）
         try {
             await fs.ensureDir(instance.primaryBackupPath);
@@ -124,6 +175,34 @@ class GameConfigHelper {
             return true;
         } catch (fallbackErr) {
             logger.error(`备份失败！主路径和兜底路径均不可用: ${fallbackErr}`);
+            return false;
+        }
+    }
+
+    /**
+     * 检测当前游戏配置是否为 TFT 下棋配置
+     * 
+     * 通过比对当前 game.cfg 的哈希值和预设 TFT 配置的哈希值来判断
+     * 如果一致，说明当前游戏还在用我们的低分辨率挂机配置
+     * 
+     * @returns true 表示当前配置是 TFT 下棋配置
+     */
+    private async isCurrentConfigTFT(): Promise<boolean> {
+        if (!this.tftConfigHash) return false;  // 哈希还没算好，跳过检查
+        
+        try {
+            const currentGameCfg = path.join(this.gameConfigPath, 'game.cfg');
+            if (!await fs.pathExists(currentGameCfg)) return false;
+            
+            const currentHash = await this.getFileHash(currentGameCfg);
+            const isTft = currentHash === this.tftConfigHash;
+            
+            if (isTft) {
+                logger.warn(`[ConfigHelper] 当前 game.cfg 哈希 (${currentHash}) 与 TFT 配置完全一致！`);
+            }
+            return isTft;
+        } catch (err) {
+            logger.warn(`[ConfigHelper] 检测 TFT 配置失败: ${err}`);
             return false;
         }
     }
@@ -196,7 +275,21 @@ class GameConfigHelper {
                 // 从备份恢复
                 await fs.copy(backupPath, instance.gameConfigPath);
                 instance.isTFTConfig = false;
-                logger.info(`[GameConfigHelper] 设置恢复成功！`);
+                
+                // 恢复后验证关键文件是否一致
+                const verified = await instance.verifyRestore(backupPath);
+                if (verified) {
+                    logger.info(`[GameConfigHelper] 设置恢复成功，文件验证通过！`);
+                } else {
+                    logger.warn(`[GameConfigHelper] 设置恢复完成，但文件验证不一致！可能被外部程序覆盖`);
+                    // 验证不一致时再尝试一次强制恢复
+                    if (attempt < retryCount) {
+                        logger.info(`[GameConfigHelper] 将在 ${retryDelay}ms 后重试...`);
+                        await sleep(retryDelay);
+                        continue;
+                    }
+                }
+                
                 return true;
             } catch (err: unknown) {
                 const errMsg = err instanceof Error ? err.message : String(err);
@@ -215,6 +308,177 @@ class GameConfigHelper {
             }
         }
         return false;
+    }
+
+    /**
+     * 验证恢复结果：对比备份目录和游戏配置目录中的关键文件哈希值
+     * 
+     * 只对比最关键的 game.cfg 文件，因为它包含分辨率、画质等核心设置
+     * 使用 MD5 哈希快速比较文件内容是否一致
+     * 
+     * @param backupPath 备份目录路径
+     * @returns true 表示恢复后的文件与备份一致
+     */
+    private async verifyRestore(backupPath: string): Promise<boolean> {
+        // game.cfg 是最关键的配置文件，包含分辨率、画质等设置
+        const keyFile = 'game.cfg';
+        const backupFile = path.join(backupPath, keyFile);
+        const gameFile = path.join(this.gameConfigPath, keyFile);
+
+        try {
+            const [backupExists, gameExists] = await Promise.all([
+                fs.pathExists(backupFile),
+                fs.pathExists(gameFile)
+            ]);
+            
+            if (!backupExists || !gameExists) {
+                logger.warn(`[ConfigGuard] 验证跳过：文件不存在 (备份: ${backupExists}, 游戏: ${gameExists})`);
+                return true;  // 文件缺失时不算验证失败
+            }
+
+            // 读取两个文件并计算 MD5 哈希值进行比较
+            const [backupHash, gameHash] = await Promise.all([
+                this.getFileHash(backupFile),
+                this.getFileHash(gameFile)
+            ]);
+
+            const match = backupHash === gameHash;
+            if (!match) {
+                logger.warn(`[ConfigGuard] game.cfg 哈希不匹配！备份: ${backupHash}, 游戏: ${gameHash}`);
+            }
+            return match;
+        } catch (err) {
+            logger.warn(`[ConfigGuard] 验证过程出错: ${err}`);
+            return true;  // 验证出错时不阻塞流程
+        }
+    }
+
+    /**
+     * 计算文件的 MD5 哈希值
+     * 
+     * crypto.createHash('md5') 创建一个哈希计算器
+     * digest('hex') 将计算结果转为十六进制字符串（如 "d41d8cd98f00b204e9800998ecf8427e"）
+     * 
+     * @param filePath 文件路径
+     * @returns 文件的 MD5 哈希字符串
+     */
+    private async getFileHash(filePath: string): Promise<string> {
+        const content = await fs.readFile(filePath);
+        return crypto.createHash('md5').update(content).digest('hex');
+    }
+
+    /**
+     * 启动长期配置守护监听器
+     * 
+     * 在 restore 成功后调用，持续监听游戏配置目录的文件变化。
+     * 守护跟随软件生命周期运行，直到以下情况之一才停止：
+     *   1. 调用 stopConfigGuard()（下次开始挂机前、软件退出时）
+     *   2. 达到最大自动恢复次数（防止无限互相覆盖）
+     * 
+     * 守护逻辑：
+     *   检测到 game.cfg 被修改 → 计算哈希 → 如果变成了 TFT 下棋配置 → 自动恢复用户备份
+     *   这样就能应对"中途退出软件功能 → 游戏结束 → LOL 写入下棋配置"的场景
+     */
+    public static startConfigGuard(): void {
+        const instance = GameConfigHelper.getInstance();
+        if (!instance) return;
+        
+        // 先停止之前可能存在的守护
+        GameConfigHelper.stopConfigGuard();
+        instance.guardRestoreCount = 0;
+        
+        logger.info(`[ConfigGuard] 启动长期配置守护（跟随软件生命周期）`);
+        
+        try {
+            // fs.watch 监听目录变化，当目录内任何文件被修改/创建/删除时触发回调
+            // recursive: true 表示递归监听子目录（Windows 支持）
+            instance.configWatcher = fs.watch(
+                instance.gameConfigPath,
+                { recursive: true },
+                (_eventType: string, filename: string | null) => {
+                    // 只关注 game.cfg 的变化（最关键的配置文件）
+                    if (!filename || !filename.toLowerCase().includes('game.cfg')) return;
+                    
+                    // 如果当前正在使用 TFT 配置（挂机中），不需要守护
+                    if (instance.isTFTConfig) return;
+                    
+                    // 达到最大恢复次数，停止守护
+                    if (instance.guardRestoreCount >= instance.MAX_GUARD_RESTORES) {
+                        logger.warn(`[ConfigGuard] 已达最大自动恢复次数 (${instance.MAX_GUARD_RESTORES})，停止守护`);
+                        GameConfigHelper.stopConfigGuard();
+                        return;
+                    }
+                    
+                    // 防抖：1 秒内多次变化只处理一次
+                    // LOL 客户端写配置文件时可能触发多个 change 事件
+                    if (instance.watcherDebounceTimer) {
+                        clearTimeout(instance.watcherDebounceTimer);
+                    }
+                    
+                    instance.watcherDebounceTimer = setTimeout(async () => {
+                        // 核心判断：当前配置是否被改成了 TFT 下棋配置
+                        // 只有当配置"变成了我们的下棋配置"时才需要干预
+                        // 用户自己改画质、分辨率之类的操作不会匹配 TFT 哈希
+                        const isTftNow = await instance.isCurrentConfigTFT();
+                        
+                        if (isTftNow) {
+                            instance.guardRestoreCount++;
+                            logger.warn(`[ConfigGuard] 检测到配置被改为 TFT 下棋配置！自动恢复中... (第 ${instance.guardRestoreCount} 次)`);
+                            
+                            // 确定当前使用的备份路径
+                            let backupPath = instance.currentBackupPath;
+                            if (!await fs.pathExists(backupPath)) {
+                                backupPath = instance.primaryBackupPath;
+                            }
+                            if (!await fs.pathExists(backupPath)) {
+                                backupPath = instance.fallbackBackupPath;
+                            }
+                            if (!await fs.pathExists(backupPath)) {
+                                logger.error(`[ConfigGuard] 找不到备份目录，无法恢复`);
+                                return;
+                            }
+                            
+                            try {
+                                await fs.copy(backupPath, instance.gameConfigPath);
+                                const verified = await instance.verifyRestore(backupPath);
+                                if (verified) {
+                                    logger.info(`[ConfigGuard] 自动恢复成功，用户配置已还原`);
+                                } else {
+                                    logger.warn(`[ConfigGuard] 自动恢复后验证仍不一致`);
+                                }
+                            } catch (err) {
+                                logger.error(`[ConfigGuard] 自动恢复失败: ${err}`);
+                            }
+                        }
+                    }, 1000);
+                }
+            );
+            
+        } catch (err) {
+            logger.error(`[ConfigGuard] 启动监听失败: ${err}`);
+        }
+    }
+
+    /**
+     * 停止配置守护监听器
+     * 在以下时机调用：
+     *   - 下次开始挂机前（StartState）
+     *   - 软件退出时（will-quit）
+     *   - 达到最大恢复次数时（自动停止）
+     */
+    public static stopConfigGuard(): void {
+        const instance = GameConfigHelper.getInstance();
+        if (!instance) return;
+        
+        if (instance.configWatcher) {
+            instance.configWatcher.close();
+            instance.configWatcher = null;
+            logger.info(`[ConfigGuard] 配置守护已停止`);
+        }
+        if (instance.watcherDebounceTimer) {
+            clearTimeout(instance.watcherDebounceTimer);
+            instance.watcherDebounceTimer = null;
+        }
     }
 }
 

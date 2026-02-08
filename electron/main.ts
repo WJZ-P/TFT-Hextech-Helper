@@ -305,6 +305,9 @@ app.on('will-quit', async (event) => {
         event.preventDefault();
         console.log('🔄 [Main] 检测到程序正在运行，正在恢复游戏设置...');
         
+        // 停止可能正在运行的配置守护，避免与 restore 冲突
+        GameConfigHelper.stopConfigGuard();
+        
         try {
             // 恢复设置
             await GameConfigHelper.restore();

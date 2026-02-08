@@ -76,6 +76,9 @@ export class StartState implements IState {
      */
     private async applyTFTConfig(): Promise<void> {
         logger.info("[StartState] 正在应用 TFT 专用配置...");
+
+        // 先停止上一轮可能残留的配置守护监听器
+        GameConfigHelper.stopConfigGuard();
         
         const success = await GameConfigHelper.applyTFTConfig();
         

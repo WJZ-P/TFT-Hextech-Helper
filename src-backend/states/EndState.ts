@@ -34,6 +34,10 @@ export class EndState implements IState {
         
         if (success) {
             logger.info("[EndState] 客户端设置恢复完成");
+            // 启动长期配置守护：持续监听游戏配置目录
+            // 防止 LOL 客户端在游戏结束时又把配置改回下棋设置
+            // 守护会一直运行直到下次开始挂机或软件退出
+            GameConfigHelper.startConfigGuard();
         } else {
             // 恢复失败，打印醒目的警告和操作指引
             logger.error("═══════════════════════════════════════════════════════════");

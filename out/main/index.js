@@ -15,6 +15,7 @@ import require$$5 from "assert";
 import WebSocket from "ws";
 import https from "https";
 import axios from "axios";
+import * as crypto from "crypto";
 import Store from "electron-store";
 import { is, optimizer } from "@electron-toolkit/utils";
 import __cjs_mod__ from "node:module";
@@ -5695,6 +5696,16 @@ class GameConfigHelper {
   tftConfigPath;
   // 预设的云顶设置
   isTFTConfig = false;
+  /** 文件监听器实例，用于守护恢复后的配置不被 LOL 客户端覆盖 */
+  configWatcher = null;
+  /** 防抖定时器，避免短时间内触发多次恢复 */
+  watcherDebounceTimer = null;
+  /** 守护超时定时器，到期后自动停止监听 */
+  guardTimeoutTimer = null;
+  /** 守护期间允许的最大自动恢复次数，防止无限循环 */
+  MAX_GUARD_RESTORES = 5;
+  /** 守护期间已执行的自动恢复次数 */
+  guardRestoreCount = 0;
   constructor(installPath) {
     if (!installPath) {
       throw new Error("初始化失败，必须提供一个有效的游戏安装路径！");
@@ -5831,7 +5842,17 @@ class GameConfigHelper {
       try {
         await fs.copy(backupPath, instance.gameConfigPath);
         instance.isTFTConfig = false;
-        logger.info(`[GameConfigHelper] 设置恢复成功！`);
+        const verified = await instance.verifyRestore(backupPath);
+        if (verified) {
+          logger.info(`[GameConfigHelper] 设置恢复成功，文件验证通过！`);
+        } else {
+          logger.warn(`[GameConfigHelper] 设置恢复完成，但文件验证不一致！可能被外部程序覆盖`);
+          if (attempt < retryCount) {
+            logger.info(`[GameConfigHelper] 将在 ${retryDelay}ms 后重试...`);
+            await sleep(retryDelay);
+            continue;
+          }
+        }
         return true;
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : String(err);
@@ -5848,6 +5869,146 @@ class GameConfigHelper {
       }
     }
     return false;
+  }
+  /**
+   * 验证恢复结果：对比备份目录和游戏配置目录中的关键文件哈希值
+   * 
+   * 只对比最关键的 game.cfg 文件，因为它包含分辨率、画质等核心设置
+   * 使用 MD5 哈希快速比较文件内容是否一致
+   * 
+   * @param backupPath 备份目录路径
+   * @returns true 表示恢复后的文件与备份一致
+   */
+  async verifyRestore(backupPath) {
+    const keyFile = "game.cfg";
+    const backupFile = path__default.join(backupPath, keyFile);
+    const gameFile = path__default.join(this.gameConfigPath, keyFile);
+    try {
+      const [backupExists, gameExists] = await Promise.all([
+        fs.pathExists(backupFile),
+        fs.pathExists(gameFile)
+      ]);
+      if (!backupExists || !gameExists) {
+        logger.warn(`[ConfigGuard] 验证跳过：文件不存在 (备份: ${backupExists}, 游戏: ${gameExists})`);
+        return true;
+      }
+      const [backupHash, gameHash] = await Promise.all([
+        this.getFileHash(backupFile),
+        this.getFileHash(gameFile)
+      ]);
+      const match = backupHash === gameHash;
+      if (!match) {
+        logger.warn(`[ConfigGuard] game.cfg 哈希不匹配！备份: ${backupHash}, 游戏: ${gameHash}`);
+      }
+      return match;
+    } catch (err) {
+      logger.warn(`[ConfigGuard] 验证过程出错: ${err}`);
+      return true;
+    }
+  }
+  /**
+   * 计算文件的 MD5 哈希值
+   * 
+   * crypto.createHash('md5') 创建一个哈希计算器
+   * digest('hex') 将计算结果转为十六进制字符串（如 "d41d8cd98f00b204e9800998ecf8427e"）
+   * 
+   * @param filePath 文件路径
+   * @returns 文件的 MD5 哈希字符串
+   */
+  async getFileHash(filePath) {
+    const content = await fs.readFile(filePath);
+    return crypto.createHash("md5").update(content).digest("hex");
+  }
+  /**
+   * 启动配置守护监听器
+   * 
+   * 在 restore 成功后调用，监听游戏配置目录的文件变化。
+   * 如果检测到 LOL 客户端在恢复后又改写了配置文件，会自动重新恢复。
+   * 
+   * 守护机制会在指定时间后自动停止，防止长期占用资源。
+   * 同时有最大恢复次数限制，防止与 LOL 客户端无限互相覆盖。
+   * 
+   * @param guardDuration 守护持续时间（毫秒），默认 30 秒
+   */
+  static startConfigGuard(guardDuration = 3e4) {
+    const instance = GameConfigHelper.getInstance();
+    if (!instance) return;
+    GameConfigHelper.stopConfigGuard();
+    instance.guardRestoreCount = 0;
+    logger.info(`[ConfigGuard] 启动配置守护，持续 ${guardDuration / 1e3} 秒`);
+    try {
+      instance.configWatcher = fs.watch(
+        instance.gameConfigPath,
+        { recursive: true },
+        (eventType, filename) => {
+          if (!filename || !filename.toLowerCase().includes("game.cfg")) return;
+          if (instance.isTFTConfig) return;
+          if (instance.guardRestoreCount >= instance.MAX_GUARD_RESTORES) {
+            logger.warn(`[ConfigGuard] 已达最大自动恢复次数 (${instance.MAX_GUARD_RESTORES})，停止守护`);
+            GameConfigHelper.stopConfigGuard();
+            return;
+          }
+          if (instance.watcherDebounceTimer) {
+            clearTimeout(instance.watcherDebounceTimer);
+          }
+          instance.watcherDebounceTimer = setTimeout(async () => {
+            logger.info(`[ConfigGuard] 检测到 ${filename} 被外部修改，正在验证...`);
+            let backupPath = instance.currentBackupPath;
+            if (!await fs.pathExists(backupPath)) {
+              backupPath = instance.primaryBackupPath;
+            }
+            if (!await fs.pathExists(backupPath)) {
+              backupPath = instance.fallbackBackupPath;
+            }
+            const isConsistent = await instance.verifyRestore(backupPath);
+            if (!isConsistent) {
+              instance.guardRestoreCount++;
+              logger.warn(`[ConfigGuard] 配置被篡改！自动恢复中... (第 ${instance.guardRestoreCount} 次)`);
+              try {
+                await fs.copy(backupPath, instance.gameConfigPath);
+                const verified = await instance.verifyRestore(backupPath);
+                if (verified) {
+                  logger.info(`[ConfigGuard] 自动恢复成功，验证通过`);
+                } else {
+                  logger.warn(`[ConfigGuard] 自动恢复后验证仍不一致`);
+                }
+              } catch (err) {
+                logger.error(`[ConfigGuard] 自动恢复失败: ${err}`);
+              }
+            } else {
+              logger.debug(`[ConfigGuard] ${filename} 变更但内容验证一致，无需恢复`);
+            }
+          }, 500);
+        }
+      );
+      instance.guardTimeoutTimer = setTimeout(() => {
+        logger.info(`[ConfigGuard] 守护时间到，停止监听`);
+        GameConfigHelper.stopConfigGuard();
+      }, guardDuration);
+    } catch (err) {
+      logger.error(`[ConfigGuard] 启动监听失败: ${err}`);
+    }
+  }
+  /**
+   * 停止配置守护监听器
+   * 清理所有定时器和文件监听器，释放资源
+   */
+  static stopConfigGuard() {
+    const instance = GameConfigHelper.getInstance();
+    if (!instance) return;
+    if (instance.configWatcher) {
+      instance.configWatcher.close();
+      instance.configWatcher = null;
+      logger.debug(`[ConfigGuard] 文件监听器已关闭`);
+    }
+    if (instance.watcherDebounceTimer) {
+      clearTimeout(instance.watcherDebounceTimer);
+      instance.watcherDebounceTimer = null;
+    }
+    if (instance.guardTimeoutTimer) {
+      clearTimeout(instance.guardTimeoutTimer);
+      instance.guardTimeoutTimer = null;
+    }
   }
 }
 var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
@@ -10636,6 +10797,7 @@ app.on("will-quit", async (event) => {
   if (hexService && hexService.isRunning) {
     event.preventDefault();
     console.log("🔄 [Main] 检测到程序正在运行，正在恢复游戏设置...");
+    GameConfigHelper.stopConfigGuard();
     try {
       await GameConfigHelper.restore();
       console.log("✅ [Main] 游戏设置已恢复");
@@ -10679,11 +10841,11 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-B2eu_A9a.js");
+    const ServicesModule = await import("./chunks/index-BqMcWydW.js");
     hexService = ServicesModule.hexService;
     const TftOperatorModule = await import("./chunks/TftOperator-Bv5E9wfl.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
-    const LineupModule = await import("./chunks/index-DViKavGK.js");
+    const LineupModule = await import("./chunks/index-BkP-NETh.js");
     lineupLoader = LineupModule.lineupLoader;
     const GlobalHotkeyManagerModule = await import("./chunks/GlobalHotkeyManager-Cbcy0EP4.js");
     globalHotkeyManager = GlobalHotkeyManagerModule.globalHotkeyManager;
