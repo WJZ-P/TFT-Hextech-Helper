@@ -1,7 +1,7 @@
 //  定义一下棋子相关的一些协议，包含棋子单位信息，各种位置信息和约定各种枚举值
 
-import {_TFT_16_EQUIP_DATA} from "./TFTInfo/equip.ts";
-import {_TFT_16_CHESS_DATA} from "./TFTInfo/chess.ts";
+import {_TFT_16_EQUIP_DATA, _TFT_4_EQUIP_DATA} from "./TFTInfo/equip.ts";
+import {_TFT_16_CHESS_DATA, _TFT_4_CHESS_DATA} from "./TFTInfo/chess.ts";
 
 /**
  * 游戏阶段的具体类型
@@ -29,9 +29,10 @@ export interface GameStageResult {
 
 export enum TFTMode {
     CLASSIC = 'CLASSIC',    //  经典模式，包括匹配和排位。
-    NORMAL = 'NORMAL',      //  匹配模式
-    RANK = 'RANK',          //  排位模式
-    CLOCKWORK_TRAILS = 'CLOCKWORK_TRAILS',       //  PVE，发条鸟的试炼。
+    NORMAL = 'NORMAL',      //  S16 匹配模式
+    RANK = 'RANK',          //  S16 排位模式
+    CLOCKWORK_TRAILS = 'CLOCKWORK_TRAILS',       //  PVE，发条鸟的试炼
+    S4_RUISHOU = 'S4_RUISHOU',                   //  S4 回归赛季: 瑞兽闹新春（仅匹配）
 }
 
 //  左下角等级region
@@ -536,15 +537,106 @@ export enum ItemForgeType {
 
 export const TFT_16_CHESS_DATA: Record<keyof typeof _TFT_16_CHESS_DATA, TFTUnit> = _TFT_16_CHESS_DATA;
 
+/** S4 瑞兽闹新春赛季棋子数据（含特殊棋子） */
+export const TFT_4_CHESS_DATA: Record<keyof typeof _TFT_4_CHESS_DATA, TFTUnit> = _TFT_4_CHESS_DATA;
+
 export const TFT_16_EQUIP_DATA: Record<keyof typeof _TFT_16_EQUIP_DATA, TFTEquip> = _TFT_16_EQUIP_DATA;
+
+/** S4 瑞兽闹新春赛季装备数据 */
+export const TFT_4_EQUIP_DATA: Record<keyof typeof _TFT_4_EQUIP_DATA, TFTEquip> = _TFT_4_EQUIP_DATA;
+
+/**
+ * 根据当前赛季模式获取对应的棋子数据集
+ *
+ * 这是多赛季支持的核心函数：
+ * - S16（NORMAL / RANK）→ TFT_16_CHESS_DATA
+ * - S4（S4_RUISHOU）→ TFT_4_CHESS_DATA
+ * - CLOCKWORK_TRAILS（发条鸟）→ TFT_16_CHESS_DATA（发条鸟用的是当前赛季的棋子）
+ *
+ * @param mode 当前 TFT 模式
+ * @returns 对应赛季的棋子数据 Record
+ */
+export function getChessDataForMode(mode: TFTMode): Record<string, TFTUnit> {
+    switch (mode) {
+        case TFTMode.S4_RUISHOU:
+            return TFT_4_CHESS_DATA;
+        case TFTMode.NORMAL:
+        case TFTMode.RANK:
+        case TFTMode.CLOCKWORK_TRAILS:
+        default:
+            return TFT_16_CHESS_DATA;
+    }
+}
+
+/**
+ * 获取赛季模式对应的模板子目录名
+ * 用于 TemplateLoader 加载对应赛季的英雄名称模板
+ *
+ * @param mode 当前 TFT 模式
+ * @returns 子目录名，如 "s16", "s4"
+ */
+export function getSeasonTemplateDir(mode: TFTMode): string {
+    switch (mode) {
+        case TFTMode.S4_RUISHOU:
+            return 's4';
+        case TFTMode.NORMAL:
+        case TFTMode.RANK:
+        case TFTMode.CLOCKWORK_TRAILS:
+        default:
+            return 's16';
+    }
+}
+
+/**
+ * 根据阵容配置的赛季字符串获取对应的棋子数据集
+ * 
+ * 与 getChessDataForMode() 的区别：
+ * - getChessDataForMode(mode: TFTMode) —— 按游戏模式枚举查，用于运行时识别
+ * - getChessDataBySeason(season: string) —— 按赛季字符串查，用于阵容配置验证
+ * 
+ * 未来新增赛季时，只需在此处添加一个 case 即可
+ *
+ * @param season 阵容配置中的赛季标识，如 "S4", "S16"
+ * @returns 对应赛季的棋子数据 Record
+ */
+export function getChessDataBySeason(season?: string): Record<string, TFTUnit> {
+    switch (season) {
+        case 'S4':
+            return TFT_4_CHESS_DATA;
+        case 'S16':
+        default:
+            return TFT_16_CHESS_DATA;
+    }
+}
+
+/**
+ * 根据赛季字符串获取对应的装备数据集
+ * 
+ * 与 getChessDataBySeason() 配套使用，用于阵容配置中装备名称的验证
+ * 
+ * @param season 赛季标识，如 "S4", "S16"
+ * @returns 对应赛季的装备数据 Record
+ */
+export function getEquipDataBySeason(season?: string): Record<string, TFTEquip> {
+    switch (season) {
+        case 'S4':
+            return TFT_4_EQUIP_DATA;
+        case 'S16':
+        default:
+            return TFT_16_EQUIP_DATA;
+    }
+}
 
 // ==========================================
 // 策略相关的类型定义
 // ==========================================
 
-export type ChampionKey = keyof typeof TFT_16_CHESS_DATA;
-export type ChampionEnglishId = typeof _TFT_16_CHESS_DATA[keyof typeof _TFT_16_CHESS_DATA]['englishId'];
-export type EquipKey = keyof typeof TFT_16_EQUIP_DATA;
+// 合并所有赛季的棋子名称为联合类型，确保任何赛季的棋子名都能通过类型检查
+export type ChampionKey = keyof typeof TFT_16_CHESS_DATA | keyof typeof TFT_4_CHESS_DATA;
+export type ChampionEnglishId =
+    | typeof _TFT_16_CHESS_DATA[keyof typeof _TFT_16_CHESS_DATA]['englishId']
+    | typeof _TFT_4_CHESS_DATA[keyof typeof _TFT_4_CHESS_DATA]['englishId'];
+export type EquipKey = keyof typeof TFT_16_EQUIP_DATA | keyof typeof TFT_4_EQUIP_DATA;
 
 // ==========================================
 // 英文ID到中文名的映射表 (自动从数据生成，用于解析 OP.GG 等外部数据)
@@ -556,8 +648,13 @@ export type EquipKey = keyof typeof TFT_16_EQUIP_DATA;
  */
 export const CHAMPION_EN_TO_CN = {} as Record<ChampionEnglishId, ChampionKey>;
 
-// 自动从 TFT_16_CHESS_DATA 生成英文到中文的映射
+// 自动从所有赛季的棋子数据生成英文到中文的映射
 for (const [cnName, champion] of Object.entries(TFT_16_CHESS_DATA)) {
+    if (champion.englishId) {
+        CHAMPION_EN_TO_CN[champion.englishId as ChampionEnglishId] = cnName as ChampionKey;
+    }
+}
+for (const [cnName, champion] of Object.entries(TFT_4_CHESS_DATA)) {
     if (champion.englishId) {
         CHAMPION_EN_TO_CN[champion.englishId as ChampionEnglishId] = cnName as ChampionKey;
     }
@@ -600,7 +697,9 @@ export interface LineupUnit {
  * @returns true 表示近战，false 表示远程
  */
 export function isMeleeChampion(championName: ChampionKey): boolean {
-    const champion = TFT_16_CHESS_DATA[championName];
+    // 依次查找所有赛季的棋子数据，找到即返回
+    const champion = (TFT_16_CHESS_DATA as Record<string, TFTUnit>)[championName]
+        ?? (TFT_4_CHESS_DATA as Record<string, TFTUnit>)[championName];
     // 射程 <= 2 视为近战（包括格雷福斯这种短程枪手）
     return champion !== undefined && champion.attackRange <= 2;
 }
@@ -611,7 +710,8 @@ export function isMeleeChampion(championName: ChampionKey): boolean {
  * @returns true 表示远程，false 表示近战
  */
 export function isRangedChampion(championName: ChampionKey): boolean {
-    const champion = TFT_16_CHESS_DATA[championName];
+    const champion = (TFT_16_CHESS_DATA as Record<string, TFTUnit>)[championName]
+        ?? (TFT_4_CHESS_DATA as Record<string, TFTUnit>)[championName];
     // 射程 >= 4 视为远程
     return champion !== undefined && champion.attackRange >= 4;
 }
@@ -622,7 +722,18 @@ export function isRangedChampion(championName: ChampionKey): boolean {
  * @returns 射程值，未知棋子返回 undefined
  */
 export function getChampionRange(championName: ChampionKey): number | undefined {
-    return TFT_16_CHESS_DATA[championName]?.attackRange;
+    // 依次查找所有赛季的数据，确保任何赛季的棋子都能查到射程
+    return ((TFT_16_CHESS_DATA as Record<string, TFTUnit>)[championName]
+        ?? (TFT_4_CHESS_DATA as Record<string, TFTUnit>)[championName])?.attackRange;
+}
+
+/**
+ * 判断一个模式是否是"标准自动下棋"流程
+ * （需要阵容配置、正常买棋、运营的模式）
+ * 与之相对的是 CLOCKWORK_TRAILS（速通送死模式）
+ */
+export function isStandardChessMode(mode: TFTMode): boolean {
+    return mode === TFTMode.NORMAL || mode === TFTMode.RANK || mode === TFTMode.S4_RUISHOU;
 }
 
 export interface TeamComposition {

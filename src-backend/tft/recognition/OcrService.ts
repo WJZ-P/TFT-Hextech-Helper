@@ -7,7 +7,7 @@
 import Tesseract, { createWorker, PSM } from "tesseract.js";
 import path from "path";
 import { logger } from "../../utils/Logger";
-import { TFT_16_CHESS_DATA } from "../../TFTProtocol";
+import { TFTMode, getChessDataForMode } from "../../TFTProtocol";
 
 /**
  * OCR Worker 类型枚举
@@ -49,6 +49,8 @@ export class OcrService {
     /** 战斗阶段文字识别 Worker (中文"战斗环节") */
     private combatPhaseWorker: Tesseract.Worker | null = null;
 
+    /** 当前棋子 Worker 对应的赛季模式，用于判断是否需要重建 Worker */
+    private currentChessMode: TFTMode | null = null;
 
     /** Tesseract 语言包路径 */
     private get langPath(): string {
@@ -130,22 +132,46 @@ export class OcrService {
 
     /**
      * 获取棋子名称识别 Worker
-     * @description 配置为中文识别，白名单限制为所有棋子名称中的字符
+     * @description 配置为中文识别，白名单限制为当前赛季棋子名称中的字符。
+     *              首次调用时默认使用 NORMAL 模式（S16），后续可通过 switchChessWorker() 切换赛季。
      */
     private async getChessWorker(): Promise<Tesseract.Worker> {
         if (this.chessWorker) {
             return this.chessWorker;
         }
 
-        logger.info("[OcrService] 正在创建棋子名称识别 Worker...");
+        // 如果还没有指定赛季，默认使用 S16
+        await this.buildChessWorker(this.currentChessMode ?? TFTMode.NORMAL);
+
+        return this.chessWorker!;
+    }
+
+    /**
+     * 根据指定模式创建（或重建）棋子名称识别 Worker
+     * @param mode 当前 TFT 游戏模式，用于决定加载哪个赛季的棋子白名单
+     * @description 内部方法，负责：
+     *   1. 销毁旧的 chessWorker（如果存在）
+     *   2. 用 getChessDataForMode(mode) 获取该赛季的棋子数据
+     *   3. 从棋子名称中提取所有独立汉字作为白名单
+     *   4. 创建新的 Tesseract Worker 并应用白名单
+     */
+    private async buildChessWorker(mode: TFTMode): Promise<void> {
+        // 先销毁旧 Worker
+        if (this.chessWorker) {
+            await this.chessWorker.terminate();
+            this.chessWorker = null;
+        }
+
+        logger.info(`[OcrService] 正在为模式 ${mode} 创建棋子名称识别 Worker...`);
 
         const worker = await createWorker("chi_sim", 1, {
             langPath: this.langPath,
             cachePath: this.langPath,
         });
 
-        // 构建字符白名单：所有棋子名称中出现的字符
-        const uniqueChars = [...new Set(Object.keys(TFT_16_CHESS_DATA).join(""))].join("");
+        // 根据当前赛季获取对应的棋子数据集，构建精准的字符白名单
+        const chessData = getChessDataForMode(mode);
+        const uniqueChars = [...new Set(Object.keys(chessData).join(""))].join("");
 
         await worker.setParameters({
             tessedit_char_whitelist: uniqueChars,
@@ -154,9 +180,27 @@ export class OcrService {
         });
 
         this.chessWorker = worker;
-        logger.info("[OcrService] 棋子名称识别 Worker 准备就绪");
+        this.currentChessMode = mode;
+        logger.info(`[OcrService] 棋子名称识别 Worker 准备就绪 (白名单字符数: ${uniqueChars.length})`);
+    }
 
-        return this.chessWorker;
+    /**
+     * 切换棋子 OCR Worker 到指定赛季
+     * @param mode 目标 TFT 游戏模式
+     * @description 外部调用入口。如果目标赛季与当前赛季相同，则跳过重建，避免不必要的开销。
+     *              应在每局游戏开始时（GameRunningState.action）调用。
+     *
+     * 使用示例：
+     * ```ts
+     * await ocrService.switchChessWorker(TFTMode.S4_RUISHOU);
+     * ```
+     */
+    public async switchChessWorker(mode: TFTMode): Promise<void> {
+        if (this.currentChessMode === mode && this.chessWorker) {
+            logger.debug(`[OcrService] 棋子 Worker 赛季未变 (${mode})，跳过重建`);
+            return;
+        }
+        await this.buildChessWorker(mode);
     }
 
     /**

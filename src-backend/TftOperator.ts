@@ -58,6 +58,7 @@ import {
     TFTMode,
     TFTUnit,
     SimplePoint,
+    getChessDataForMode,
 } from "./TFTProtocol";
 
 
@@ -131,6 +132,23 @@ class TftOperator {
 
     /** 当前游戏模式 */
     private tftMode: TFTMode = TFTMode.CLASSIC;
+
+    /**
+     * 当前赛季对应的棋子数据集
+     * 根据 tftMode 自动切换，用于 OCR/模板匹配后查找英雄
+     */
+    private currentChessData: Record<string, TFTUnit> = TFT_16_CHESS_DATA;
+
+    /**
+     * 获取当前模式对应的棋子数据集
+     * 从 settingsStore 读取当前模式，返回对应赛季的棋子数据
+     * 同时更新内部缓存（避免每次都重新创建引用）
+     */
+    private getActiveChessData(): Record<string, TFTUnit> {
+        const mode = settingsStore.get('tftMode') as TFTMode || TFTMode.NORMAL;
+        this.currentChessData = getChessDataForMode(mode);
+        return this.currentChessData;
+    }
 
     /** 空槽匹配阈值：平均像素差值大于此值视为"有棋子占用" */
     private readonly benchEmptyDiffThreshold = 6;
@@ -389,6 +407,8 @@ class TftOperator {
     public async getShopInfo(): Promise<(TFTUnit | null)[]> {
         logger.info("[TftOperator] 正在扫描商店中的 5 个槽位...");
         const shopUnits: (TFTUnit | null)[] = [];
+        // 获取当前赛季对应的棋子数据集
+        const chessData = this.getActiveChessData();
 
         for (let i = 1; i <= 5; i++) {
             const slotKey = `SLOT_${i}` as keyof typeof shopSlotNameRegions;
@@ -400,7 +420,7 @@ class TftOperator {
             let cleanName = text.replace(/\s/g, "");
 
             // 尝试从 OCR 结果中找到匹配的英雄
-            let tftUnit: TFTUnit | null = TFT_16_CHESS_DATA[cleanName] || null;
+            let tftUnit: TFTUnit | null = chessData[cleanName] || null;
 
             // OCR 失败时使用模板匹配兜底
             if (!tftUnit) {
@@ -419,7 +439,7 @@ class TftOperator {
             }
 
             // 从数据集中找到对应英雄
-            tftUnit = TFT_16_CHESS_DATA[cleanName] || null;
+            tftUnit = chessData[cleanName] || null;
 
             if (tftUnit) {
                 logger.debug(`[商店槽位 ${i}] 识别成功 -> ${tftUnit.displayName} (${tftUnit.price}费)`);
@@ -633,6 +653,8 @@ class TftOperator {
      */
     public async getBenchInfo(): Promise<(BenchUnit | null)[]> {
         const benchUnits: (BenchUnit | null)[] = [];
+        // 获取当前赛季对应的棋子数据集
+        const chessData = this.getActiveChessData();
 
         for (const benchSlot of Object.keys(benchSlotPoints)) {
             // 右键点击槽位显示详细信息
@@ -659,12 +681,12 @@ class TftOperator {
 
 
             // 尝试从 OCR 结果中找到匹配的英雄
-            let tftUnit: TFTUnit | null = TFT_16_CHESS_DATA[cleanName] || null;
+            let tftUnit: TFTUnit | null = chessData[cleanName] || null;
 
             // OCR 失败时使用模板匹配兜底
             if (!tftUnit) {
                 logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] OCR 识别失败，尝试模板匹配...`, true);
-                // 喵~ 同样的，复用 namePng (3x 放大后的图片)
+                // 复用 namePng (3x 放大后的图片)
                 const mat = await screenCapture.pngBufferToMat(namePng);
                 // 转灰度
                 if (mat.channels() > 1) {
@@ -675,7 +697,7 @@ class TftOperator {
                 mat.delete();
             }
 
-            tftUnit = TFT_16_CHESS_DATA[cleanName] || null;
+            tftUnit = chessData[cleanName] || null;
 
             if (tftUnit) {
                 // 识别星级
@@ -714,8 +736,8 @@ class TftOperator {
                 if (forgeType !== ItemForgeType.NONE) {
                     // 根据锻造器类型选择对应的棋子数据
                     const forgeUnit = forgeType === ItemForgeType.COMPLETED 
-                        ? TFT_16_CHESS_DATA.成装锻造器
-                        : TFT_16_CHESS_DATA.基础装备锻造器;
+                        ? chessData.成装锻造器
+                        : chessData.基础装备锻造器;
                     const forgeName = forgeType === ItemForgeType.COMPLETED ? "成装锻造器" : "基础装备锻造器";
                     
                     logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别为${forgeName}`);
@@ -749,6 +771,8 @@ class TftOperator {
     public async getFightBoardInfo(): Promise<(BoardUnit | null)[]> {
         logger.info("[TftOperator] 正在扫描棋盘上的 28 个槽位...");
         const boardUnits: (BoardUnit | null)[] = [];
+        // 获取当前赛季对应的棋子数据集
+        const chessData = this.getActiveChessData();
 
         // 遍历所有棋盘槽位 (R1_C1 ~ R4_C7)
         for (const boardSlot of Object.keys(fightBoardSlotPoint)) {
@@ -777,7 +801,7 @@ class TftOperator {
             let cleanName = text.replace(/\s/g, "");
 
             // 尝试从 OCR 结果中找到匹配的英雄
-            let tftUnit: TFTUnit | null = TFT_16_CHESS_DATA[cleanName] || null;
+            let tftUnit: TFTUnit | null = chessData[cleanName] || null;
 
             // OCR 失败时使用模板匹配兜底
             if (!tftUnit) {
@@ -791,7 +815,7 @@ class TftOperator {
                 mat.delete();
             }
 
-            tftUnit = TFT_16_CHESS_DATA[cleanName] || null;
+            tftUnit = chessData[cleanName] || null;
 
             if (tftUnit) {
                 // 识别星级

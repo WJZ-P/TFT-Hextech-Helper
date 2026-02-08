@@ -67,13 +67,33 @@ export class TemplateLoader {
     /** 文件监听器防抖定时器 */
     private watcherDebounceTimer: NodeJS.Timeout | null = null;
 
+    /**
+     * 当前赛季子目录名（如 "s16", "s4"）
+     * 决定 loadChampionTemplates() 加载哪个子文件夹的模板
+     */
+    private currentSeasonDir: string = 's16';
+
+    /** 文件监听器引用（切换赛季时需要先关闭旧的监听器） */
+    private championWatcher: fs.FSWatcher | null = null;
+
     /** 模板加载完成标志 */
     private isLoaded = false;
 
     // ========== 路径 Getter ==========
 
-    private get championTemplatePath(): string {
+    /**
+     * 英雄模板根目录（champion/）
+     */
+    private get championTemplateRoot(): string {
         return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/champion");
+    }
+
+    /**
+     * 当前赛季的英雄模板目录（champion/s16/ 或 champion/s4/）
+     * 根据 currentSeasonDir 动态拼接路径
+     */
+    private get championTemplatePath(): string {
+        return path.join(this.championTemplateRoot, this.currentSeasonDir);
     }
 
     private get equipTemplatePath(): string {
@@ -159,6 +179,40 @@ export class TemplateLoader {
      */
     public getChampionTemplates(): Map<string, cv.Mat> {
         return this.championTemplates;
+    }
+
+    /**
+     * 获取当前赛季子目录名
+     */
+    public getCurrentSeasonDir(): string {
+        return this.currentSeasonDir;
+    }
+
+    /**
+     * 切换赛季模板
+     *
+     * 调用时机：用户在 UI 上切换赛季，或游戏开始时根据当前模式自动切换。
+     * 会清理旧的英雄模板缓存，重新加载新赛季子目录的模板，
+     * 并重新设置文件监听器指向新的目录。
+     *
+     * @param seasonDir 赛季子目录名（如 "s16", "s4"），对应 champion/{seasonDir}/ 下的模板文件
+     */
+    public async switchSeason(seasonDir: string): Promise<void> {
+        if (seasonDir === this.currentSeasonDir) {
+            logger.debug(`[TemplateLoader] 赛季未变化 (${seasonDir})，跳过切换`);
+            return;
+        }
+
+        logger.info(`[TemplateLoader] 切换英雄模板赛季: ${this.currentSeasonDir} → ${seasonDir}`);
+        this.currentSeasonDir = seasonDir;
+
+        // 重新加载英雄模板（内部会先清理旧缓存）
+        await this.loadChampionTemplates();
+
+        // 重新设置文件监听（指向新赛季目录）
+        this.setupChampionTemplateWatcher();
+
+        logger.info(`[TemplateLoader] 赛季模板切换完成: ${seasonDir} (${this.championTemplates.size} 个模板)`);
     }
 
     /**
@@ -643,14 +697,21 @@ export class TemplateLoader {
 
     /**
      * 设置英雄模板文件夹监听
-     * @description 监听文件变更，自动重新加载模板
+     * @description 监听当前赛季目录的文件变更，自动重新加载模板。
+     *              切换赛季时会先关闭旧的 watcher 再创建新的。
      */
     private setupChampionTemplateWatcher(): void {
+        // 关闭旧的监听器（切换赛季时需要）
+        if (this.championWatcher) {
+            this.championWatcher.close();
+            this.championWatcher = null;
+        }
+
         if (!fs.existsSync(this.championTemplatePath)) {
             fs.ensureDirSync(this.championTemplatePath);
         }
 
-        fs.watch(this.championTemplatePath, (event, filename) => {
+        this.championWatcher = fs.watch(this.championTemplatePath, (event, filename) => {
             // 防抖处理
             if (this.watcherDebounceTimer) {
                 clearTimeout(this.watcherDebounceTimer);
@@ -662,7 +723,7 @@ export class TemplateLoader {
             }, 500);
         });
 
-        logger.info("[TemplateLoader] 英雄模板文件监听已启动");
+        logger.debug(`[TemplateLoader] 英雄模板文件监听已启动 (${this.currentSeasonDir})`);
     }
 
     // ========== 清理方法 ==========
@@ -772,6 +833,12 @@ export class TemplateLoader {
 
         if (this.watcherDebounceTimer) {
             clearTimeout(this.watcherDebounceTimer);
+        }
+
+        // 关闭文件监听器
+        if (this.championWatcher) {
+            this.championWatcher.close();
+            this.championWatcher = null;
         }
 
         this.isLoaded = false;

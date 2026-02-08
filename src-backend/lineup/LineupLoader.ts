@@ -7,8 +7,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { app } from 'electron';
 import { LineupConfig, ChampionConfig, StageConfig } from './LineupTypes';
-import { TFT_16_CHESS_DATA, TFT_16_EQUIP_DATA } from '../TFTProtocol';
+import { getChessDataBySeason, getEquipDataBySeason } from '../TFTProtocol';
 import { logger } from '../utils/Logger';
+
 
 /**
  * 阵容加载器类
@@ -132,6 +133,11 @@ class LineupLoader {
         if (!config.name) errors.push('缺少阵容名称');
         if (!config.stages?.level8) errors.push('缺少 level8 阶段配置（必须）');
         
+        // 根据阵容的赛季字段选择对应的棋子数据集和装备数据集
+        // getChessDataBySeason() / getEquipDataBySeason() 集中管理赛季→数据的映射，未来加新赛季只改 TFTProtocol 一处
+        const chessData = getChessDataBySeason(config.season);
+        const equipData = getEquipDataBySeason(config.season);
+
         // 验证各阶段的棋子配置（4-10 人口，参考 OP.GG 数据范围）
         const stageKeys = ['level4', 'level5', 'level6', 'level7', 'level8', 'level9', 'level10'] as const;
         
@@ -143,20 +149,20 @@ class LineupLoader {
                 // 验证棋子名称是否存在于数据集中
                 // champion.name 已经是 ChampionKey 类型，但 JSON 解析时是 string
                 // 所以这里仍需验证实际值是否有效
-                if (!TFT_16_CHESS_DATA[champion.name]) {
+                if (!chessData[champion.name]) {
                     errors.push(`[${stageKey}] 未知棋子: ${champion.name}`);
                 }
                 
                 // 验证装备名称是否存在于数据集中
                 if (champion.items) {
                     for (const item of champion.items.core) {
-                        if (!TFT_16_EQUIP_DATA[item]) {
+                        if (!equipData[item]) {
                             errors.push(`[${stageKey}] 未知装备: ${item}`);
                         }
                     }
                     if (champion.items.alternatives) {
                         for (const item of champion.items.alternatives) {
-                            if (!TFT_16_EQUIP_DATA[item]) {
+                            if (!equipData[item]) {
                                 errors.push(`[${stageKey}] 未知替代装备: ${item}`);
                             }
                         }

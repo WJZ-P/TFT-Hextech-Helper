@@ -31,7 +31,9 @@ import { inGameApi, InGameApiEndpoints } from "../lcu/InGameApi";
 import { showToast, notifyStopAfterGameState, notifyHexRunningState } from "../utils/ToastBridge";
 import { hexService } from "../services/HexService";
 import { settingsStore } from "../utils/SettingsStore";
-import { TFTMode } from "../TFTProtocol";
+import { TFTMode, isStandardChessMode, getSeasonTemplateDir } from "../TFTProtocol";
+import { templateLoader } from "../tft";
+import { ocrService } from "../tft/recognition/OcrService";
 
 /** abort 信号轮询间隔 (ms)，作为事件监听的兜底 */
 const ABORT_CHECK_INTERVAL_MS = 2000;
@@ -78,11 +80,21 @@ export class GameRunningState implements IState {
         // 2. 获取当前游戏模式并初始化策略服务
         const currentMode = settingsStore.get('tftMode') as TFTMode || TFTMode.NORMAL;
         logger.info(`[GameRunningState] 当前游戏模式: ${currentMode}`);
+
+        // 2.5 根据当前模式切换英雄模板赛季（加载对应赛季的棋子名称模板）
+        const seasonDir = getSeasonTemplateDir(currentMode);
+        await templateLoader.switchSeason(seasonDir);
+        logger.debug(`[GameRunningState] 英雄模板已切换到赛季: ${seasonDir}`);
+
+        // 2.6 切换 OCR 棋子识别 Worker 的字符白名单到当前赛季
+        // 只包含当前赛季的棋子汉字，减少搜索空间，提升识别准确率
+        await ocrService.switchChessWorker(currentMode);
+
         
         const initSuccess = strategyService.initialize(currentMode);
         if (!initSuccess) {
-            // 发条鸟模式不需要阵容，普通模式需要
-            if (currentMode !== TFTMode.CLOCKWORK_TRAILS) {
+            // 发条鸟模式不需要阵容，标准下棋模式需要
+            if (isStandardChessMode(currentMode)) {
                 logger.error("[GameRunningState] 策略服务初始化失败，请先选择阵容");
             }
             // 即使初始化失败，也继续运行（避免卡死）

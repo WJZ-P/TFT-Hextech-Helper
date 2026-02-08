@@ -286,18 +286,22 @@ const StopAfterGameBanner = styled.div<{ theme: ThemeType }>`
 `;
 
 // ============================================
-// 游戏模式切换样式
+// 游戏模式切换样式（两级选择器）
 // ============================================
 
-/** 模式切换容器 - 相对定位，让标题可以绝对定位在上方 */
+/** 模式选择区域 - 垂直排列，上方赛季选择，下方子模式选择 */
 const ModeToggleContainer = styled.div<{ theme: ThemeType }>`
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
 `;
 
 /** 模式切换小标题 - 绝对定位浮在胶囊上方 */
 const ModeToggleTitle = styled.span<{ theme: ThemeType }>`
   position: absolute;
-  bottom: calc(100% + 4px);  /* 浮在容器上方 */
+  bottom: calc(100% + 4px);
   left: 50%;
   transform: translateX(-50%);
   font-size: 0.9rem;
@@ -307,13 +311,14 @@ const ModeToggleTitle = styled.span<{ theme: ThemeType }>`
   white-space: nowrap;
 `;
 
+/** 赛季选择行 - 相对定位，让标题能绝对定位在上方 */
+const SeasonToggleRow = styled.div<{ theme: ThemeType }>`
+  position: relative;
+`;
+
 /**
- * 模式切换容器（三选一：匹配/排位/发条鸟）
- *
- * 设计目标：
- * - 三栏分段按钮，点击对应选项切换到该模式
- * - 圆角完全裁切，解决边缘"白边没包住"的问题（关键是 overflow: hidden）
- * - 滑块指示器会根据当前选中项平滑移动
+ * 通用三选一胶囊组件
+ * 用于赛季选择：S16 / S4 / 发条鸟
  */
 const ModeTogglePill = styled.div<{ theme: ThemeType }>`
   appearance: none;
@@ -322,11 +327,11 @@ const ModeTogglePill = styled.div<{ theme: ThemeType }>`
   border-radius: 32px;
   padding: 4px;
   height: 36px;
-  width: 192px; /* 三选一需要更宽 */
+  width: 240px;
   display: inline-flex;
   align-items: center;
   position: relative;
-  overflow: hidden; /* 关键：让内部滑块与背景都被圆角裁切 */
+  overflow: hidden;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
 
@@ -337,35 +342,24 @@ const ModeTogglePill = styled.div<{ theme: ThemeType }>`
 `;
 
 /**
- * 滑块指示器（内部移动的那一块）
- * $modeIndex: 0=匹配, 1=排位, 2=发条鸟
- * 
- * 计算逻辑：
- * - 三等分，每份宽度为 (总宽度 - 4px内边距) / 3
- * - 滑块宽度 = calc(33.33% - 2px)
- * - 位置 = index * 33.33% + 2px 偏移
+ * 赛季选择滑块指示器
+ * $modeIndex: 0=S16, 1=S4, 2=发条鸟
+ * 每个选项各有不同的配色主题
  */
 const ModeToggleIndicator = styled.div<{ theme: ThemeType; $modeIndex: number }>`
   position: absolute;
   top: 2px;
-  /* 根据选中的模式索引计算 left 位置 */
-  left: ${props => {
-    // 计算每个选项的宽度百分比（三等分）
-    const percent = 33.33;
-    // 根据索引计算位置，加上初始偏移
-    return `calc(${props.$modeIndex * percent}% + 2px)`;
-  }};
-  width: calc(33.33% - 3px); /* 三等分减去间隙 */
+  left: ${props => `calc(${props.$modeIndex * 33.33}% + 2px)`};
+  width: calc(33.33% - 3px);
   height: calc(100% - 4px);
   border-radius: 999px;
-  /* 根据模式显示不同颜色：匹配=主色, 排位=警告色, 发条鸟=紫色 */
   background: ${props => {
     switch (props.$modeIndex) {
-      case 1: // 排位 - 橙色警告色
-        return `linear-gradient(135deg, ${props.theme.colors.warning} 0%, ${props.theme.colors.warning}cc 100%)`;
+      case 1: // S4 瑞兽 - 新春红金渐变
+        return 'linear-gradient(135deg, #e53935 0%, #ff8f00 100%)';
       case 2: // 发条鸟 - 紫色
-        return `linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%)`;
-      default: // 匹配 - 主色
+        return 'linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%)';
+      default: // S16 - 主色蓝
         return `linear-gradient(135deg, ${props.theme.colors.primary} 0%, ${props.theme.colors.primaryHover} 100%)`;
     }
   }};
@@ -378,7 +372,7 @@ const ModeToggleTextRow = styled.div`
   z-index: 1;
   width: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr; /* 三等分 */
+  grid-template-columns: 1fr 1fr 1fr;
   align-items: center;
 `;
 
@@ -387,7 +381,78 @@ const ModeToggleLabel = styled.button<{ theme: ThemeType; $active: boolean }>`
   background: none;
   border: none;
   padding: 0;
-  font-size: 0.75rem; /* 稍微小一点适应三栏 */
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 0.5px;
+  color: ${props => props.$active ? props.theme.colors.textOnPrimary : props.theme.colors.textSecondary};
+  transition: color 0.25s ease;
+  cursor: pointer;
+
+  &:hover {
+    color: ${props => props.$active ? props.theme.colors.textOnPrimary : props.theme.colors.text};
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+`;
+
+/**
+ * S16 子模式选择器（匹配/排位）- 二选一胶囊
+ * 仅在选择 S16 赛季时显示
+ */
+const SubModeTogglePill = styled.div<{ theme: ThemeType }>`
+  appearance: none;
+  border: 1px solid ${props => props.theme.colors.border};
+  background: ${props => props.theme.colors.elementBg};
+  border-radius: 32px;
+  padding: 4px;
+  height: 30px;
+  width: 140px;
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, opacity 0.3s ease, max-height 0.3s ease;
+
+  &:hover {
+    border-color: ${props => props.theme.colors.primary};
+    box-shadow: 0 3px 9px rgba(0, 0, 0, 0.18);
+  }
+`;
+
+/** S16 子模式滑块指示器 - 匹配=蓝色, 排位=橙色 */
+const SubModeToggleIndicator = styled.div<{ theme: ThemeType; $isRank: boolean }>`
+  position: absolute;
+  top: 2px;
+  left: ${props => props.$isRank ? 'calc(50% + 2px)' : '2px'};
+  width: calc(50% - 4px);
+  height: calc(100% - 4px);
+  border-radius: 999px;
+  background: ${props => props.$isRank
+    ? `linear-gradient(135deg, ${props.theme.colors.warning} 0%, ${props.theme.colors.warning}cc 100%)`
+    : `linear-gradient(135deg, ${props.theme.colors.primary} 0%, ${props.theme.colors.primaryHover} 100%)`};
+  transition: left 0.22s ease, background 0.22s ease;
+`;
+
+/** S16 子模式文本层 */
+const SubModeToggleTextRow = styled.div`
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+`;
+
+/** S16 子模式文本标签 */
+const SubModeToggleLabel = styled.button<{ theme: ThemeType; $active: boolean }>`
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.75rem;
   font-weight: 800;
   text-align: center;
   letter-spacing: 0.5px;
@@ -887,8 +952,40 @@ export const HomePage = () => {
     const [isElevated, setIsElevated] = useState<boolean | null>(null);
     // 新增："本局结束后停止"状态
     const [stopAfterGame, setStopAfterGame] = useState(false);
-    // 新增：是否有选中的阵容
+    // 新增：是否有选中的阵容（针对当前赛季）
     const [hasSelectedLineup, setHasSelectedLineup] = useState(false);
+
+    /**
+     * 检查指定模式对应的赛季是否有已选中的阵容
+     * @param mode 当前 TFT 模式
+     * @description 根据 mode 确定赛季（S16/S4），获取该赛季的阵容列表，
+     *              然后检查 selectedIds 与该赛季阵容 ID 是否有交集
+     */
+    const checkHasSelectedLineup = async (mode: TFTMode) => {
+        try {
+            // 根据模式确定赛季字符串
+            const season = (mode === TFTMode.S4_RUISHOU) ? 'S4' : 'S16';
+            
+            // 并行获取该赛季的阵容列表和已选中的 ID
+            const [seasonLineups, selectedIds] = await Promise.all([
+                window.lineup.getAll(season),
+                window.lineup.getSelectedIds(),
+            ]);
+            
+            if (!seasonLineups || !selectedIds || selectedIds.length === 0) {
+                setHasSelectedLineup(false);
+                return;
+            }
+            
+            // 检查是否有交集：selectedIds 中是否有属于当前赛季的阵容
+            const seasonIds = new Set(seasonLineups.map((l: any) => l.id));
+            const hasSelection = selectedIds.some((id: string) => seasonIds.has(id));
+            setHasSelectedLineup(hasSelection);
+        } catch (error) {
+            console.error('检查阵容选中状态失败:', error);
+            setHasSelectedLineup(false);
+        }
+    };
 
     /**
      * 获取召唤师信息的函数
@@ -950,11 +1047,12 @@ export const HomePage = () => {
             const running = await window.hex.getStatus();
             setIsRunning(running);
 
-            // 获取 TFT 游戏模式（匹配/排位/发条鸟）
+            // 获取 TFT 游戏模式（支持所有赛季模式）
             const mode = await window.lineup.getTftMode();
-            if (mode === TFTMode.RANK || mode === TFTMode.NORMAL || mode === TFTMode.CLOCKWORK_TRAILS) {
-                setTftMode(mode as TFTMode);
-            }
+            const currentMode = Object.values(TFTMode).includes(mode as TFTMode) 
+                ? mode as TFTMode 
+                : TFTMode.NORMAL;
+            setTftMode(currentMode);
 
             // 获取日志模式
             const savedLogMode = await window.lineup.getLogMode();
@@ -962,9 +1060,8 @@ export const HomePage = () => {
                 setLogMode(savedLogMode as LogMode);
             }
 
-            // 检查是否有选中的阵容
-            const selectedIds = await window.lineup.getSelectedIds();
-            setHasSelectedLineup(selectedIds && selectedIds.length > 0);
+            // 检查当前赛季是否有选中的阵容
+            await checkHasSelectedLineup(currentMode);
             
             if (connected) {
                 // 如果已经连接了，直接获取召唤师信息
@@ -1040,10 +1137,26 @@ export const HomePage = () => {
             return;
         }
 
-        // 未选择阵容时禁止操作
-        if (!hasSelectedLineup) {
-            toast.error('请先在阵容页面选择至少一个阵容！');
-            return;
+        // 需要阵容的模式下，实时检查当前赛季是否有选中阵容
+        if (needsLineup) {
+            await checkHasSelectedLineup(tftMode);
+            // 检查后如果仍然没有选中阵容，阻止操作
+            // 注意：这里用最新的 state 值无法直接获取（因为 setState 是异步的）
+            // 所以我们直接再做一次内联检查
+            const season = (tftMode === TFTMode.S4_RUISHOU) ? 'S4' : 'S16';
+            const [seasonLineups, selectedIds] = await Promise.all([
+                window.lineup.getAll(season),
+                window.lineup.getSelectedIds(),
+            ]);
+            const seasonIds = new Set((seasonLineups || []).map((l: any) => l.id));
+            const hasSelection = (selectedIds || []).some((id: string) => seasonIds.has(id));
+            
+            if (!hasSelection) {
+                const seasonName = tftMode === TFTMode.S4_RUISHOU ? '瑞兽闹新春' : '英雄联盟传奇';
+                toast.error(`请先在阵容页面选择至少一个【${seasonName}】阵容！`);
+                setHasSelectedLineup(false);
+                return;
+            }
         }
         
         if (!isRunning) {
@@ -1065,19 +1178,54 @@ export const HomePage = () => {
     };
 
     /**
-     * 切换 TFT 游戏模式（匹配/排位/发条鸟）
+     * 切换赛季模式（S16 / S4 瑞兽 / 发条鸟）
      *
      * 交互说明：
-     * - 点击对应的模式标签切换到该模式
-     * - 运行中禁止切换，避免队列创建与实际期望不一致
-     * 
-     * @param newMode - 要切换到的新模式
+     * - 上层胶囊：选择赛季（S16 / S4 / 发条鸟）
+     * - S16 选中时，下方显示匹配/排位子选择器
+     * - S4 和发条鸟只支持匹配，切换时自动设置对应模式
+     * - 运行中禁止切换
      */
-    const handleModeChange = async (newMode: TFTMode) => {
-        // 如果点击的是当前模式，不做任何操作
-        if (newMode === tftMode) {
+    const handleSeasonChange = async (season: 'S16' | 'S4' | 'CLOCKWORK') => {
+        if (isRunning) {
+            toast.error('运行中无法切换模式');
             return;
         }
+
+        let newMode: TFTMode;
+        let toastMsg: string;
+
+        switch (season) {
+            case 'S16':
+                // 切回 S16 时，默认用匹配模式（如果之前已经在 S16 的排位则保持）
+                newMode = (tftMode === TFTMode.RANK) ? TFTMode.RANK : TFTMode.NORMAL;
+                toastMsg = '已切换到 S16 英雄联盟传奇';
+                break;
+            case 'S4':
+                newMode = TFTMode.S4_RUISHOU;
+                toastMsg = '已切换到 S4 瑞兽闹新春';
+                break;
+            case 'CLOCKWORK':
+                newMode = TFTMode.CLOCKWORK_TRAILS;
+                toastMsg = '已切换到发条鸟的试炼';
+                break;
+        }
+
+        if (newMode === tftMode) return;
+
+        setTftMode(newMode);
+        await window.lineup.setTftMode(newMode);
+        // 切换模式后重新检查对应赛季是否有选中阵容
+        await checkHasSelectedLineup(newMode);
+        toast.success(toastMsg);
+    };
+
+    /**
+     * S16 模式下切换匹配/排位
+     */
+    const handleS16SubModeChange = async (isRank: boolean) => {
+        const newMode = isRank ? TFTMode.RANK : TFTMode.NORMAL;
+        if (newMode === tftMode) return;
 
         if (isRunning) {
             toast.error('运行中无法切换模式');
@@ -1086,33 +1234,32 @@ export const HomePage = () => {
 
         setTftMode(newMode);
         await window.lineup.setTftMode(newMode);
-        
-        // 根据模式显示不同的提示
-        const modeNames: Record<TFTMode, string> = {
-            [TFTMode.NORMAL]: '匹配模式',
-            [TFTMode.RANK]: '排位模式',
-            [TFTMode.CLOCKWORK_TRAILS]: '发条鸟的试炼',
-            [TFTMode.CLASSIC]: '经典模式', // 不会用到，但类型完整性需要
-        };
-        toast.success(`已切换到${modeNames[newMode]}`);
+        toast.success(isRank ? '已切换到排位模式' : '已切换到匹配模式');
     };
 
     /**
-     * 获取当前模式对应的索引（用于滑块位置计算）
-     * 0=匹配, 1=排位, 2=发条鸟
+     * 获取当前赛季对应的索引（用于上层胶囊滑块位置）
+     * 0=S16, 1=S4, 2=发条鸟
      */
-    const getModeIndex = (mode: TFTMode): number => {
-        switch (mode) {
+    const getSeasonIndex = (): number => {
+        switch (tftMode) {
             case TFTMode.NORMAL:
-                return 0;
             case TFTMode.RANK:
-                return 1;
+                return 0; // S16
+            case TFTMode.S4_RUISHOU:
+                return 1; // S4
             case TFTMode.CLOCKWORK_TRAILS:
-                return 2;
+                return 2; // 发条鸟
             default:
                 return 0;
         }
     };
+
+    /** 当前是否处于 S16 赛季（显示匹配/排位子选择器） */
+    const isS16Season = tftMode === TFTMode.NORMAL || tftMode === TFTMode.RANK;
+
+    /** 当前模式是否需要选择阵容（发条鸟不需要，其他都需要） */
+    const needsLineup = tftMode !== TFTMode.CLOCKWORK_TRAILS;
 
     /**
      * 切换日志模式（简略/详细）
@@ -1257,17 +1404,17 @@ export const HomePage = () => {
                     <ControlButton 
                         onClick={handleToggle} 
                         $isRunning={isRunning}
-                        $disabled={!isLcuConnected || !hasSelectedLineup}
+                        $disabled={!isLcuConnected || (needsLineup && !hasSelectedLineup)}
                     >
                         {!isLcuConnected ? (
                             <>
                                 <BlockIcon />
                                 未检测到客户端
                             </>
-                        ) : !hasSelectedLineup ? (
+                        ) : (needsLineup && !hasSelectedLineup) ? (
                             <>
                                 <BlockIcon />
-                                未选择阵容
+                                未选择{tftMode === TFTMode.S4_RUISHOU ? '瑞兽' : '云顶'}阵容
                             </>
                         ) : isRunning ? (
                             <>
@@ -1283,39 +1430,61 @@ export const HomePage = () => {
                     </ControlButton>
                 </ButtonWrapper>
 
-                {/* 游戏模式切换 - 匹配/排位/发条鸟（右侧） */}
+                {/* 游戏模式切换 - 两级选择器（右侧） */}
                 <ModeToggleContainer>
-                    <ModeToggleTitle>模式选择</ModeToggleTitle>
-                    <ModeTogglePill
-                        title={`当前模式：${tftMode === TFTMode.NORMAL ? '匹配' : tftMode === TFTMode.RANK ? '排位' : '发条鸟'}`}
-                    >
-                        {/* 滑块指示器 - 根据当前模式索引定位 */}
-                        <ModeToggleIndicator $modeIndex={getModeIndex(tftMode)} />
-                        {/* 三个可点击的模式标签 */}
-                        <ModeToggleTextRow>
-                            <ModeToggleLabel 
-                                $active={tftMode === TFTMode.NORMAL}
-                                onClick={() => handleModeChange(TFTMode.NORMAL)}
-                                title="匹配模式"
-                            >
-                                匹配
-                            </ModeToggleLabel>
-                            <ModeToggleLabel 
-                                $active={tftMode === TFTMode.RANK}
-                                onClick={() => handleModeChange(TFTMode.RANK)}
-                                title="排位模式"
-                            >
-                                排位
-                            </ModeToggleLabel>
-                            <ModeToggleLabel 
-                                $active={tftMode === TFTMode.CLOCKWORK_TRAILS}
-                                onClick={() => handleModeChange(TFTMode.CLOCKWORK_TRAILS)}
-                                title="发条鸟的试炼"
-                            >
-                                发条鸟
-                            </ModeToggleLabel>
-                        </ModeToggleTextRow>
-                    </ModeTogglePill>
+                    {/* 上层：赛季选择 S16 / S4 / 发条鸟 */}
+                    <SeasonToggleRow>
+                        <ModeToggleTitle>模式选择</ModeToggleTitle>
+                        <ModeTogglePill>
+                            <ModeToggleIndicator $modeIndex={getSeasonIndex()} />
+                            <ModeToggleTextRow>
+                                <ModeToggleLabel
+                                    $active={isS16Season}
+                                    onClick={() => handleSeasonChange('S16')}
+                                    title="S16 英雄联盟传奇"
+                                >
+                                    英雄联盟传奇
+                                </ModeToggleLabel>
+                                <ModeToggleLabel
+                                    $active={tftMode === TFTMode.S4_RUISHOU}
+                                    onClick={() => handleSeasonChange('S4')}
+                                    title="S4 回归赛季: 瑞兽闹新春"
+                                >
+                                    瑞兽闹新春
+                                </ModeToggleLabel>
+                                <ModeToggleLabel
+                                    $active={tftMode === TFTMode.CLOCKWORK_TRAILS}
+                                    onClick={() => handleSeasonChange('CLOCKWORK')}
+                                    title="发条鸟的试炼"
+                                >
+                                    发条鸟的试炼
+                                </ModeToggleLabel>
+                            </ModeToggleTextRow>
+                        </ModeTogglePill>
+                    </SeasonToggleRow>
+
+                    {/* 下层：S16 子模式选择 匹配/排位（仅 S16 赛季时显示） */}
+                    {isS16Season && (
+                        <SubModeTogglePill>
+                            <SubModeToggleIndicator $isRank={tftMode === TFTMode.RANK} />
+                            <SubModeToggleTextRow>
+                                <SubModeToggleLabel
+                                    $active={tftMode === TFTMode.NORMAL}
+                                    onClick={() => handleS16SubModeChange(false)}
+                                    title="匹配模式"
+                                >
+                                    匹配
+                                </SubModeToggleLabel>
+                                <SubModeToggleLabel
+                                    $active={tftMode === TFTMode.RANK}
+                                    onClick={() => handleS16SubModeChange(true)}
+                                    title="排位模式"
+                                >
+                                    排位
+                                </SubModeToggleLabel>
+                            </SubModeToggleTextRow>
+                        </SubModeTogglePill>
+                    )}
                 </ModeToggleContainer>
             </ControlRow>
 

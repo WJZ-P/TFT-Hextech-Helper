@@ -6,10 +6,12 @@
 import React, {useEffect, useState} from 'react';
 import styled from 'styled-components';
 import {ThemeType} from '../../styles/theme';
-import {TFT_16_CHESS_DATA, TFTEquip, TraitData} from "../../../src-backend/TFTProtocol";
-// 导入 S16 棋子数据，用于获取英雄原画 ID
+import {TFTEquip, TraitData, TFTUnit, getChessDataBySeason} from "../../../src-backend/TFTProtocol";
+// 导入两个赛季的棋子数据，用于获取英雄原画 ID
 import {TFT_16_CHESS} from "../../../public/TFTInfo/S16/chess";
+import {TFT_4_CHESS} from "../../../public/TFTInfo/S4/chess";
 import {TFT_16_TRAIT_DATA} from "../../../src-backend/TFTInfo/trait.ts";
+import {TFT_4_TRAIT_DATA} from "../../../src-backend/TFTInfo/trait.ts";
 
 // ==================== 类型定义 ====================
 
@@ -53,11 +55,21 @@ interface LineupConfig {
 
 // ==================== 常量 ====================
 
+/** 赛季选项卡类型 */
+type SeasonTab = 'S16' | 'S4';
+
+/** 赛季 Tab 配置 */
+const SEASON_TABS: { key: SeasonTab; label: string }[] = [
+    { key: 'S16', label: '英雄联盟传奇' },
+    { key: 'S4', label: '瑞兽闹新春' },
+];
+
 /**
  * OP.GG 头像 API 基础 URL
  * 将 {englishId} 替换为英雄英文ID即可获取头像
  */
-const OPGG_AVATAR_BASE = 'https://c-tft-api.op.gg/img/set/16/tft-champion/tiles/{englishId}.tft_set16.png?image=q_auto:good,f_webp&v=1765176243';
+const OPGG_AVATAR_BASE_S16 = 'https://c-tft-api.op.gg/img/set/16/tft-champion/tiles/{englishId}.tft_set16.png?image=q_auto:good,f_webp&v=1765176243';
+const OPGG_AVATAR_BASE_S4 = 'https://c-tft-api.op.gg/img/set/4.5/tft-champion/tiles/{englishId}.tft_set4.5.png?image=q_auto:good,f_webp&v=1765176243';
 
 /**
  * 羁绊图标 API 基础 URL
@@ -68,7 +80,17 @@ const TRAIT_ICON_BASE = 'https://game.gtimg.cn/images/lol/act/img/tft';
  * 英雄原画 API 基础 URL
  * 将 {chessId} 替换为英雄的 chessId 即可获取原画
  */
-const SPLASH_ART_BASE = 'https://game.gtimg.cn/images/lol/tftstore/s16/624x318/{chessId}.jpg';
+const SPLASH_ART_BASE_S16 = 'https://game.gtimg.cn/images/lol/tftstore/s16/624x318/{chessId}.jpg';
+const SPLASH_ART_BASE_S4 = 'https://game.gtimg.cn/images/lol/tftstore/s4/624x318/{chessId}.jpg';
+
+/**
+ * 兜底 URL：当 OP.GG 的 CDN 资源不可用时（如老赛季数据缺失），使用腾讯 CDN 兜底
+ * 
+ * 头像兜底：使用腾讯 TFT 棋子头像接口，URL 末尾是 chessId（如 100170.png）
+ * 原画兜底：使用 s4.5m16 路径下的原画资源
+ */
+const FALLBACK_AVATAR_BASE = 'https://game.gtimg.cn/images/lol/act/img/tft/champions/{chessId}.png';
+const FALLBACK_SPLASH_ART_BASE = 'https://game.gtimg.cn/images/lol/tftstore/s4.5m16/624x318/{chessId}.jpg';
 
 // ==================== 样式组件 ====================
 
@@ -179,6 +201,55 @@ const Checkbox = styled.div<{ $checked: boolean; theme: ThemeType }>`
     font-weight: bold;
     opacity: ${props => props.$checked ? 1 : 0};
     transition: opacity 0.2s ease;
+  }
+`;
+
+// ==================== 赛季选项卡样式 ====================
+
+/** 赛季选项卡容器 */
+const SeasonTabContainer = styled.div`
+  display: flex ;
+  flex-direction: row ;
+  margin-bottom: ${props => props.theme.spacing.medium};
+  background-color: ${props => props.theme.colors.cardBg};
+  border: 1.5px solid ${props => props.theme.colors.border};
+  border-radius: 10px;
+  overflow: hidden;
+  min-height: 45px;
+`;
+
+/** 单个赛季选项卡 */
+const SeasonTabItem = styled.button<{ $active: boolean; theme: ThemeType }>`
+  flex: 1;
+  padding: 10px 24px;
+  font-size: 17px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+  background-color: ${props => props.$active 
+    ? props.theme.colors.primary 
+    : 'transparent'};
+  color: ${props => props.$active 
+    ? '#ffffff' 
+    : props.theme.colors.textSecondary};
+
+  &:hover {
+    background-color: ${props => props.$active 
+      ? props.theme.colors.primary 
+      : props.theme.colors.elementHover};
+  }
+
+  /* 选项卡之间的分隔线 */
+  &:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 20%;
+    height: 60%;
+    width: 1px;
+    background-color: ${props => props.$active ? 'transparent' : props.theme.colors.border};
   }
 `;
 
@@ -588,36 +659,73 @@ const AvatarPlaceholder = styled.div`
  */
 interface ChampionAvatarProps {
     champion: ChampionConfig;
+    season: SeasonTab;  // 当前赛季，用于查找对应的棋子数据
 }
 
 /**
- * 根据中文名获取头像 URL
- * @param cnName 棋子中文名
+ * 根据中文名和赛季获取英雄的 chessId（数字ID）
+ * chessId 存储在 public/TFTInfo 的完整棋子数据中（如 "100170"）
+ * 用于构造腾讯 CDN 的图片 URL
  */
-const getAvatarUrl = (cnName: string): string => {
-    // @ts-ignore
-    const champion = TFT_16_CHESS_DATA[cnName];
-    if (!champion) {
-        console.warn(`未找到英雄 "${cnName}" 的数据`);
-        return '';
-    }
-    const englishId = champion.englishId;
-    return OPGG_AVATAR_BASE.replace('{englishId}', englishId);
+const getChessId = (cnName: string, season: SeasonTab): string => {
+    const chessList = season === 'S4' ? TFT_4_CHESS : TFT_16_CHESS;
+    const chessItem = chessList.find((chess: any) => chess.displayName === cnName);
+    return chessItem?.chessId || '';
 };
 
 /**
- * 根据中文名获取英雄原画 URL
- * 从 TFT_16_CHESS 数据中查找对应的 chessId
- * @param cnName 棋子中文名
+ * 获取头像的兜底 URL（当 OP.GG 主 URL 加载失败时使用）
+ * 使用腾讯 CDN：https://game.gtimg.cn/images/lol/act/img/tft/champions/{chessId}.png
  */
-const getSplashArtUrl = (cnName: string): string => {
-    // 在 TFT_16_CHESS 数组中查找匹配的英雄
-    const chessData = TFT_16_CHESS.find(chess => chess.displayName === cnName);
-    if (!chessData) {
-        console.warn(`未找到英雄 "${cnName}" 的原画数据`);
+const getFallbackAvatarUrl = (cnName: string, season: SeasonTab): string => {
+    const chessId = getChessId(cnName, season);
+    if (!chessId) return '';
+    return FALLBACK_AVATAR_BASE.replace('{chessId}', chessId);
+};
+
+/**
+ * 获取原画的兜底 URL（当主 URL 加载失败时使用）
+ * 使用腾讯 CDN 的 s4.5m16 路径作为备选
+ */
+const getFallbackSplashUrl = (cnName: string, season: SeasonTab): string => {
+    const chessId = getChessId(cnName, season);
+    if (!chessId) return '';
+    return FALLBACK_SPLASH_ART_BASE.replace('{chessId}', chessId);
+};
+
+/**
+ * 根据中文名和赛季获取头像 URL
+ * @param cnName 棋子中文名
+ * @param season 当前赛季标识
+ */
+const getAvatarUrl = (cnName: string, season: SeasonTab): string => {
+    // 根据赛季选择对应的棋子数据集
+    const chessData = getChessDataBySeason(season);
+    const champion = (chessData as Record<string, TFTUnit>)[cnName];
+    if (!champion) {
+        console.warn(`未找到英雄 "${cnName}" 的数据 (${season})`);
         return '';
     }
-    return SPLASH_ART_BASE.replace('{chessId}', chessData.chessId);
+    const englishId = champion.englishId;
+    const baseUrl = season === 'S4' ? OPGG_AVATAR_BASE_S4 : OPGG_AVATAR_BASE_S16;
+    return baseUrl.replace('{englishId}', englishId);
+};
+
+/**
+ * 根据中文名和赛季获取英雄原画 URL
+ * @param cnName 棋子中文名
+ * @param season 当前赛季标识
+ */
+const getSplashArtUrl = (cnName: string, season: SeasonTab): string => {
+    // 根据赛季选择对应的公开 chess 数据（包含 chessId）
+    const chessList = season === 'S4' ? TFT_4_CHESS : TFT_16_CHESS;
+    const chessItem = chessList.find((chess: any) => chess.displayName === cnName);
+    if (!chessItem) {
+        console.warn(`未找到英雄 "${cnName}" 的原画数据 (${season})`);
+        return '';
+    }
+    const baseUrl = season === 'S4' ? SPLASH_ART_BASE_S4 : SPLASH_ART_BASE_S16;
+    return baseUrl.replace('{chessId}', chessItem.chessId);
 };
 
 /**
@@ -626,10 +734,12 @@ const getSplashArtUrl = (cnName: string): string => {
  * 自动检测边界，当顶部空间不足时改为在下方显示，左右超出时自动偏移
  * 添加 3D 倾斜效果：鼠标 hover 时卡片会朝鼠标方向轻微倾斜
  */
-const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion}) => {
+const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion, season}) => {
     const [imgError, setImgError] = useState(false);
+    const [useFallbackAvatar, setUseFallbackAvatar] = useState(false);  // 是否已切换到兜底头像
     const [isHovered, setIsHovered] = useState(false);  // hover 状态
     const [splashError, setSplashError] = useState(false);  // 原画加载失败状态
+    const [useFallbackSplash, setUseFallbackSplash] = useState(false);  // 是否已切换到兜底原画
     const [showBelow, setShowBelow] = useState(false);  // 是否在下方显示悬浮框
     const [horizontalOffset, setHorizontalOffset] = useState(0);  // 水平偏移量
     
@@ -642,13 +752,49 @@ const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion}) => {
     // 头像元素的 ref，用于计算鼠标相对位置
     const avatarRef = React.useRef<HTMLDivElement>(null);
     
-    const avatarUrl = getAvatarUrl(champion.name);
-    const splashArtUrl = getSplashArtUrl(champion.name);  // 获取原画 URL
+    const avatarUrl = getAvatarUrl(champion.name, season);
+    const fallbackAvatarUrl = getFallbackAvatarUrl(champion.name, season);  // 兜底头像 URL
+    const splashArtUrl = getSplashArtUrl(champion.name, season);
+    const fallbackSplashUrl = getFallbackSplashUrl(champion.name, season);  // 兜底原画 URL
 
-    // 获取英雄费用
-    // @ts-ignore
-    const tftUnit = TFT_16_CHESS_DATA[champion.name];
+    // S4 赛季 OP.GG 没有对应资源，直接使用兜底 URL 避免加载失败闪烁
+    // S16 正常走：主 URL → 兜底 URL → 占位符
+    const isS4 = season === 'S4';
+    const currentAvatarUrl = (isS4 || useFallbackAvatar) ? fallbackAvatarUrl : avatarUrl;
+    const currentSplashUrl = (isS4 || useFallbackSplash) ? fallbackSplashUrl : splashArtUrl;
+
+    // 获取英雄费用（根据赛季查找对应数据集）
+    const chessData = getChessDataBySeason(season);
+    const tftUnit = (chessData as Record<string, TFTUnit>)[champion.name];
     const cost = tftUnit ? tftUnit.price : 0;
+
+    /**
+     * 头像加载失败的处理：
+     * 第一次失败 → 切换到兜底 URL
+     * 兜底也失败 → 显示文字占位符
+     */
+    const handleAvatarError = () => {
+        if (!useFallbackAvatar && fallbackAvatarUrl) {
+            // 主 URL 失败，切换到兜底
+            setUseFallbackAvatar(true);
+        } else {
+            // 兜底也失败，显示占位符
+            setImgError(true);
+        }
+    };
+
+    /**
+     * 原画加载失败的处理：
+     * 第一次失败 → 切换到兜底 URL
+     * 兜底也失败 → 隐藏原画悬浮框
+     */
+    const handleSplashError = () => {
+        if (!useFallbackSplash && fallbackSplashUrl) {
+            setUseFallbackSplash(true);
+        } else {
+            setSplashError(true);
+        }
+    };
 
     /**
      * 鼠标进入时检测边界并显示原画
@@ -742,13 +888,13 @@ const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion}) => {
             onMouseMove={handleMouseMove}     // 鼠标移动时更新倾斜角度
         >
             {/* 原画悬浮框 - 只有在有原画 URL 且未加载失败时才显示 */}
-            {splashArtUrl && !splashError && (
+            {currentSplashUrl && !splashError && (
                 <SplashArtTooltip $visible={isHovered} $showBelow={showBelow} $horizontalOffset={horizontalOffset}>
                     <SplashArtContainer>
                         <SplashArtImg
-                            src={splashArtUrl}
+                            src={currentSplashUrl}
                             alt={`${champion.name} 原画`}
-                            onError={() => setSplashError(true)}
+                            onError={handleSplashError}
                         />
                         {/* 底部渐变蒙版 + 英雄名字 */}
                         <SplashArtOverlay>
@@ -765,11 +911,11 @@ const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion}) => {
                 $rotateX={rotateX}
                 $rotateY={rotateY}
             >
-                {!imgError && avatarUrl ? (
+                {!imgError && currentAvatarUrl ? (
                     <AvatarImg
-                        src={avatarUrl}
+                        src={currentAvatarUrl}
                         alt={champion.name}
-                        onError={() => setImgError(true)}
+                        onError={handleAvatarError}
                         loading="lazy"  // 懒加载优化性能
                     />
                 ) : (
@@ -781,17 +927,75 @@ const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion}) => {
     );
 };
 
+/**
+ * 小头像组件（用于 stages 展开面板）
+ * 支持图片加载失败时自动切换到兜底 URL
+ */
+const SmallChampionAvatarComponent: React.FC<{
+    champion: ChampionConfig;
+    season: SeasonTab;
+    lineupId: string;
+    level: string;
+    idx: number;
+}> = ({ champion, season, lineupId, level, idx }) => {
+    const [useFallback, setUseFallback] = useState(false);
+    const [imgError, setImgError] = useState(false);
+
+    const chessData = getChessDataBySeason(season);
+    const tftUnit = (chessData as Record<string, TFTUnit>)[champion.name];
+    const cost = tftUnit ? tftUnit.price : 0;
+
+    const avatarUrl = getAvatarUrl(champion.name, season);
+    const fallbackUrl = getFallbackAvatarUrl(champion.name, season);
+    // S4 赛季直接用兜底 URL，避免 OP.GG 加载失败导致闪烁
+    const isS4 = season === 'S4';
+    const currentUrl = (isS4 || useFallback) ? fallbackUrl : avatarUrl;
+
+    const handleError = () => {
+        if (!useFallback && fallbackUrl) {
+            setUseFallback(true);
+        } else {
+            setImgError(true);
+        }
+    };
+
+    return (
+        <SmallChampionAvatar
+            key={`${lineupId}-lv${level}-${champion.name}-${idx}`}
+            $cost={cost}
+            title={champion.name}
+        >
+            {!imgError && currentUrl && (
+                <SmallAvatarImg
+                    src={currentUrl}
+                    alt={champion.name}
+                    loading="lazy"
+                    onError={handleError}
+                />
+            )}
+        </SmallChampionAvatar>
+    );
+};
+
 // ==================== 主组件 ====================
 
 const LineupsPage: React.FC = () => {
-    // 阵容列表状态
-    const [lineups, setLineups] = useState<LineupConfig[]>([]);
+    // 阵容列表状态（所有赛季的完整列表）
+    const [allLineups, setAllLineups] = useState<LineupConfig[]>([]);
     // 加载状态
     const [loading, setLoading] = useState(true);
+    // 当前选中的赛季 Tab
+    const [activeTab, setActiveTab] = useState<SeasonTab>('S16');
     // 展开状态：记录每个阵容的展开状态，key 是阵容 id
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-    // 已选中的阵容 ID 集合
+    // 已选中的阵容 ID 集合（所有赛季统一存储）
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+    // 根据当前 Tab 过滤出对应赛季的阵容
+    const lineups = allLineups.filter(l => (l as any).season === activeTab);
+
+    // 当前 Tab 下已选中的阵容数量
+    const currentTabSelectedCount = lineups.filter(l => selectedIds.has(l.id)).length;
 
     // 切换某个阵容的展开/收起状态
     const toggleExpand = (id: string) => {
@@ -821,41 +1025,49 @@ const LineupsPage: React.FC = () => {
         });
     };
 
-    // 获取选中的阵容名称（用于单选时显示）
+    // 获取当前 Tab 下选中的阵容名称（用于单选时显示）
     const getSelectedLineupName = (): string => {
-        if (selectedIds.size !== 1) return '';
-        const selectedId = Array.from(selectedIds)[0];
-        const lineup = lineups.find(l => l.id === selectedId);
-        return lineup?.name || '';
+        if (currentTabSelectedCount !== 1) return '';
+        const selected = lineups.find(l => selectedIds.has(l.id));
+        return selected?.name || '';
     };
 
-    // 全选所有阵容
+    // 全选当前 Tab 的所有阵容
     const selectAll = () => {
-        setSelectedIds(new Set(lineups.map(l => l.id)));
+        setSelectedIds(prev => {
+            const newSet = new Set(prev);
+            lineups.forEach(l => newSet.add(l.id));
+            return newSet;
+        });
     };
 
-    // 取消全部选择
+    // 取消当前 Tab 的所有选择（不影响其他赛季的选中状态）
     const clearAll = () => {
-        setSelectedIds(new Set());
+        const currentTabIds = new Set(lineups.map(l => l.id));
+        setSelectedIds(prev => {
+            const newSet = new Set(prev);
+            currentTabIds.forEach(id => newSet.delete(id));
+            return newSet;
+        });
     };
 
-    // 组件挂载时从后端加载阵容数据
+    // 组件挂载时从后端加载所有赛季的阵容数据
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // 并行获取阵容数据和选中状态
+                // 并行获取所有阵容数据和选中状态
                 const [lineupsData, savedSelectedIds] = await Promise.all([
-                    window.lineup.getAll(),
+                    window.lineup.getAll(),    // 不传 season，获取全部
                     window.lineup.getSelectedIds(),
                 ]);
-                setLineups(lineupsData || []);
+                setAllLineups(lineupsData || []);
                 // 恢复之前保存的选中状态
                 if (savedSelectedIds && savedSelectedIds.length > 0) {
                     setSelectedIds(new Set(savedSelectedIds));
                 }
             } catch (error) {
                 console.error('加载数据失败:', error);
-                setLineups([]);
+                setAllLineups([]);
             } finally {
                 setLoading(false);
             }
@@ -918,18 +1130,24 @@ const LineupsPage: React.FC = () => {
 
     /**
      * 计算当前阵容的激活羁绊
+     * @param champions 棋子列表
+     * @param season 当前赛季，用于查找对应的棋子和羁绊数据
      */
-    const calculateTraits = (champions: ChampionConfig[]) => {
+    const calculateTraits = (champions: ChampionConfig[], season: SeasonTab) => {
         const traitCounts: Record<string, number> = {};
         const uniqueChamps = new Set<string>();
+
+        // 根据赛季选择对应的棋子数据集
+        const chessData = getChessDataBySeason(season);
+        // 根据赛季选择对应的羁绊数据集
+        const traitData = season === 'S4' ? TFT_4_TRAIT_DATA : TFT_16_TRAIT_DATA;
 
         champions.forEach(champ => {
             // 同名英雄去重，不重复计算羁绊
             if (uniqueChamps.has(champ.name)) return;
             uniqueChamps.add(champ.name);
 
-            // @ts-ignore
-            const unitData = TFT_16_CHESS_DATA[champ.name];
+            const unitData = (chessData as Record<string, TFTUnit>)[champ.name];
             if (unitData) {
                 // 合并 origins 和 classes
                 const traits = [...(unitData.origins || []), ...(unitData.classes || [])];
@@ -942,7 +1160,7 @@ const LineupsPage: React.FC = () => {
         // 转换为数组并排序
         return Object.entries(traitCounts)
             .map(([name, count]) => {
-                const data = TFT_16_TRAIT_DATA[name];
+                const data = traitData[name];
                 return { name, count, data };
             })
             .filter(item => item.data) // 过滤掉无效羁绊
@@ -978,20 +1196,33 @@ const LineupsPage: React.FC = () => {
 
     return (
         <PageWrapper data-page-wrapper>
-            {/* 状态提示栏（常驻） */}
-            <SelectionInfo $hasSelection={selectedIds.size > 0}>
-                <SelectionText $hasSelection={selectedIds.size > 0}>
-                    {selectedIds.size === 0 ? (
+            {/* 赛季选项卡 */}
+            <SeasonTabContainer>
+                {SEASON_TABS.map(tab => (
+                    <SeasonTabItem
+                        key={tab.key}
+                        $active={activeTab === tab.key}
+                        onClick={() => setActiveTab(tab.key)}
+                    >
+                        {tab.label}
+                    </SeasonTabItem>
+                ))}
+            </SeasonTabContainer>
+
+            {/* 状态提示栏（只展示当前 Tab 的选中情况） */}
+            <SelectionInfo $hasSelection={currentTabSelectedCount > 0}>
+                <SelectionText $hasSelection={currentTabSelectedCount > 0}>
+                    {currentTabSelectedCount === 0 ? (
                         <>未选择阵容</>
-                    ) : selectedIds.size === 1 ? (
+                    ) : currentTabSelectedCount === 1 ? (
                         <>当前阵容：<LineupName>{getSelectedLineupName()}</LineupName></>
                     ) : (
-                        <>已勾选 <strong>{selectedIds.size}</strong> 个阵容，将根据开局情况智能选择最终阵容</>
+                        <>已勾选 <strong>{currentTabSelectedCount}</strong> 个阵容，将根据开局情况智能选择最终阵容</>
                     )}
                 </SelectionText>
-                {/* 全选/取消按钮（智能切换） */}
+                {/* 全选/取消按钮（智能切换，只针对当前 Tab） */}
                 <SelectionActions>
-                    {selectedIds.size === lineups.length ? (
+                    {currentTabSelectedCount === lineups.length && lineups.length > 0 ? (
                         <ActionButton onClick={clearAll}>全部取消</ActionButton>
                     ) : (
                         <ActionButton onClick={selectAll}>全部勾选</ActionButton>
@@ -1006,7 +1237,7 @@ const LineupsPage: React.FC = () => {
                         const availableLevels = getAvailableLevels(lineup);
                         const isExpanded = expandedIds.has(lineup.id);
                         const isSelected = selectedIds.has(lineup.id);
-                        const activeTraits = calculateTraits(champions);
+                        const activeTraits = calculateTraits(champions, activeTab);
                         
                         return (
                             <LineupCardWrapper key={lineup.id} $expanded={isExpanded}>
@@ -1025,10 +1256,6 @@ const LineupsPage: React.FC = () => {
                                         <TraitsListContainer>
                                             {activeTraits.map((trait, idx) => {
                                                 const isActive = trait.count >= trait.data.levels[0];
-                                                // 只显示激活的羁绊，或者显示所有？
-                                                // 用户说“每个羁绊列出单独的Item表示”，这里我们显示所有存在的羁绊，用样式区分激活状态
-                                                // 或者只显示激活的会让界面更干净？通常阵容网只显示激活的。
-                                                // 这里我们稍微宽容一点，只要有1个单位就显示，通过透明度区分
                                                 
                                                 return (
                                                     <TraitItem key={`${lineup.id}-trait-${idx}`} $active={isActive}>
@@ -1045,6 +1272,7 @@ const LineupsPage: React.FC = () => {
                                                 <ChampionAvatarComponent
                                                     key={`${lineup.id}-${champion.name}-${index}`}
                                                     champion={champion}
+                                                    season={activeTab}
                                                 />
                                             ))}
                                         </ChampionsList>
@@ -1062,28 +1290,16 @@ const LineupsPage: React.FC = () => {
                                         <LevelRow key={`${lineup.id}-level-${level}`}>
                                             <LevelLabel>Lv.{level}</LevelLabel>
                                             <LevelChampionsList>
-                                                {levelChampions.map((champion, idx) => {
-                                                    // @ts-ignore
-                                                    const tftUnit = TFT_16_CHESS_DATA[champion.name];
-                                                    const cost = tftUnit ? tftUnit.price : 0;
-                                                    const avatarUrl = getAvatarUrl(champion.name);
-                                                    
-                                                    return (
-                                                        <SmallChampionAvatar 
-                                                            key={`${lineup.id}-lv${level}-${champion.name}-${idx}`}
-                                                            $cost={cost}
-                                                            title={champion.name}
-                                                        >
-                                                            {avatarUrl && (
-                                                                <SmallAvatarImg 
-                                                                    src={avatarUrl} 
-                                                                    alt={champion.name}
-                                                                    loading="lazy"
-                                                                />
-                                                            )}
-                                                        </SmallChampionAvatar>
-                                                    );
-                                                })}
+                                                {levelChampions.map((champion, idx) => (
+                                                    <SmallChampionAvatarComponent
+                                                        key={`${lineup.id}-lv${level}-${champion.name}-${idx}`}
+                                                        champion={champion}
+                                                        season={activeTab}
+                                                        lineupId={lineup.id}
+                                                        level={level.toString(10)}
+                                                        idx={idx}
+                                                    />
+                                                ))}
                                             </LevelChampionsList>
                                         </LevelRow>
                                     ))}
@@ -1095,7 +1311,7 @@ const LineupsPage: React.FC = () => {
             ) : (
                 <EmptyState>
                     <p>暂无阵容配置</p>
-                    <p>请在 public/lineups 目录下添加阵容 JSON 文件</p>
+                    <p>请在 public/lineups/{activeTab} 目录下添加阵容 JSON 文件</p>
                 </EmptyState>
             )}
         </PageWrapper>
