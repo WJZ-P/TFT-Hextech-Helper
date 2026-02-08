@@ -5901,63 +5901,6 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["APP_CHECK_UPDATE"] = "app-check-update";
   return IpcChannel2;
 })(IpcChannel || {});
-var UnitOrigin_S16 = /* @__PURE__ */ ((UnitOrigin_S162) => {
-  UnitOrigin_S162["Bilgewater"] = "比尔吉沃特";
-  UnitOrigin_S162["Darkin"] = "暗裔";
-  UnitOrigin_S162["Demacia"] = "德玛西亚";
-  UnitOrigin_S162["Freljord"] = "弗雷尔卓德";
-  UnitOrigin_S162["Ionia"] = "艾欧尼亚";
-  UnitOrigin_S162["Ixtal"] = "以绪塔尔";
-  UnitOrigin_S162["Noxus"] = "诺克萨斯";
-  UnitOrigin_S162["Piltover"] = "皮尔特沃夫";
-  UnitOrigin_S162["ShadowIsles"] = "暗影岛";
-  UnitOrigin_S162["Shurima"] = "恕瑞玛";
-  UnitOrigin_S162["Targon"] = "巨神峰";
-  UnitOrigin_S162["Void"] = "虚空";
-  UnitOrigin_S162["Yordle"] = "约德尔人";
-  UnitOrigin_S162["Zaun"] = "祖安";
-  UnitOrigin_S162["Starforger"] = "铸星龙王";
-  UnitOrigin_S162["Baron"] = "纳什男爵";
-  UnitOrigin_S162["Blacksmith"] = "山隐之焰";
-  UnitOrigin_S162["Caretaker"] = "星界游神";
-  UnitOrigin_S162["Chronokeeper"] = "时光守护者";
-  UnitOrigin_S162["DarkChild"] = "黑暗之女";
-  UnitOrigin_S162["Emperor"] = "沙漠皇帝";
-  UnitOrigin_S162["Glutton"] = "河流之王";
-  UnitOrigin_S162["Harvester"] = "远古恐惧";
-  UnitOrigin_S162["Heroic"] = "正义巨像";
-  UnitOrigin_S162["HexMech"] = "海克斯机甲";
-  UnitOrigin_S162["Huntress"] = "狂野女猎手";
-  UnitOrigin_S162["Assimilator"] = "虚空之女";
-  UnitOrigin_S162["Kindred"] = "永猎双子";
-  UnitOrigin_S162["RuneMage"] = "符文法师";
-  UnitOrigin_S162["Dragonborn"] = "龙血武姬";
-  UnitOrigin_S162["Soulbound"] = "系魂圣枪";
-  UnitOrigin_S162["Chainbreaker"] = "解脱者";
-  UnitOrigin_S162["TheBoss"] = "腕豪";
-  UnitOrigin_S162["Ascendant"] = "远古巫灵";
-  UnitOrigin_S162["Immortal"] = "不落魔锋";
-  UnitOrigin_S162["TeamupJarvanShyvana"] = "巨龙卫士";
-  UnitOrigin_S162["TeamupLucianVayne"] = "光明哨兵";
-  UnitOrigin_S162["TeamupSingedTeemo"] = "绝命毒师";
-  UnitOrigin_S162["TeamupAmbessaKindred"] = "与狼共舞";
-  return UnitOrigin_S162;
-})(UnitOrigin_S16 || {});
-var UnitClass_S16 = /* @__PURE__ */ ((UnitClass_S162) => {
-  UnitClass_S162["Bruiser"] = "斗士";
-  UnitClass_S162["Defender"] = "护卫";
-  UnitClass_S162["Gunslinger"] = "枪手";
-  UnitClass_S162["Invoker"] = "神谕者";
-  UnitClass_S162["Juggernaut"] = "主宰";
-  UnitClass_S162["Longshot"] = "狙神";
-  UnitClass_S162["Magus"] = "耀光使";
-  UnitClass_S162["Rapidfire"] = "迅击战士";
-  UnitClass_S162["Slayer"] = "裁决战士";
-  UnitClass_S162["Sorcerer"] = "法师";
-  UnitClass_S162["Vanquisher"] = "征服者";
-  UnitClass_S162["Warden"] = "神盾使";
-  return UnitClass_S162;
-})(UnitClass_S16 || {});
 const specialEquip = {
   //  特殊类型的装备，比如装备拆卸器，强化果实等
   "强化果实": {
@@ -7444,405 +7387,96 @@ const _TFT_16_EQUIP_DATA = {
     formula: "508,507"
   }
 };
-var GameStageType = /* @__PURE__ */ ((GameStageType2) => {
-  GameStageType2["EARLY_PVE"] = "EARLY_PVE";
-  GameStageType2["PVE"] = "PVE";
-  GameStageType2["CAROUSEL"] = "CAROUSEL";
-  GameStageType2["AUGMENT"] = "AUGMENT";
-  GameStageType2["PVP"] = "PVP";
-  GameStageType2["UNKNOWN"] = "UNKNOWN";
-  return GameStageType2;
-})(GameStageType || {});
-var TFTMode = /* @__PURE__ */ ((TFTMode2) => {
-  TFTMode2["CLASSIC"] = "CLASSIC";
-  TFTMode2["NORMAL"] = "NORMAL";
-  TFTMode2["RANK"] = "RANK";
-  TFTMode2["CLOCKWORK_TRAILS"] = "CLOCKWORK_TRAILS";
-  return TFTMode2;
-})(TFTMode || {});
-const levelRegion = {
-  leftTop: { x: 25, y: 625 },
-  rightBottom: { x: 145, y: 645 }
-};
-const lootRegion = {
-  leftTop: { x: 200, y: 125 },
-  rightBottom: { x: 855, y: 585 }
-};
-const littleLegendDefaultPoint = { x: 120, y: 430 };
-const selfWalkAroundPoints = {
-  left: [{ x: 156, y: 400 }, { x: 165, y: 355 }, { x: 175, y: 315 }, { x: 185, y: 185 }, { x: 195, y: 150 }],
-  right: [{ x: 840, y: 495 }, { x: 830, y: 450 }, { x: 830, y: 420 }, { x: 800, y: 280 }, { x: 805, y: 295 }, { x: 790, y: 215 }, { x: 790, y: 215 }, { x: 785, y: 180 }, { x: 785, y: 150 }]
-};
-const coinRegion = {
-  leftTop: { x: 505, y: 626 },
-  rightBottom: { x: 545, y: 642 }
-};
-const shopSlot = {
-  SHOP_SLOT_1: { x: 240, y: 700 },
-  SHOP_SLOT_2: { x: 380, y: 700 },
-  SHOP_SLOT_3: { x: 520, y: 700 },
-  SHOP_SLOT_4: { x: 660, y: 700 },
-  SHOP_SLOT_5: { x: 800, y: 700 }
-};
-const shopSlotNameRegions = {
-  SLOT_1: {
-    // width: 108 height:18
-    leftTop: { x: 173, y: 740 },
-    rightBottom: { x: 281, y: 758 }
-  },
-  SLOT_2: {
-    leftTop: { x: 315, y: 740 },
-    rightBottom: { x: 423, y: 758 }
-  },
-  SLOT_3: {
-    leftTop: { x: 459, y: 740 },
-    rightBottom: { x: 567, y: 758 }
-  },
-  SLOT_4: {
-    leftTop: { x: 602, y: 740 },
-    rightBottom: { x: 710, y: 758 }
-  },
-  SLOT_5: {
-    leftTop: { x: 746, y: 740 },
-    rightBottom: { x: 854, y: 758 }
-  }
-};
-const detailChampionNameRegion = {
-  leftTop: { x: 870, y: 226 },
-  rightBottom: { x: 978, y: 244 }
-};
-const detailEquipRegion = {
-  SLOT_1: {
-    leftTop: { x: 881, y: 347 },
-    rightBottom: { x: 919, y: 385 }
-  },
-  SLOT_2: {
-    leftTop: { x: 927, y: 347 },
-    rightBottom: { x: 965, y: 385 }
-  },
-  SLOT_3: {
-    leftTop: { x: 973, y: 347 },
-    rightBottom: { x: 1011, y: 385 }
-  }
-};
-const itemForgeTooltipRegion = {
-  leftTop: { x: 56, y: 7 },
-  rightBottom: { x: 176, y: 27 }
-};
-const itemForgeTooltipRegionEdge = {
-  leftTop: { x: 585, y: 7 },
-  rightBottom: { x: 695, y: 27 }
-};
-const detailChampionStarRegion = {
-  leftTop: { x: 919, y: 122 },
-  rightBottom: { x: 974, y: 132 }
-};
-const refreshShopPoint = { x: 135, y: 730 };
-const buyExpPoint = { x: 135, y: 680 };
-const equipmentSlot = {
-  EQ_SLOT_1: { x: 20, y: 210 },
-  //+35
-  EQ_SLOT_2: { x: 20, y: 245 },
-  EQ_SLOT_3: { x: 20, y: 280 },
-  EQ_SLOT_4: { x: 20, y: 315 },
-  EQ_SLOT_5: { x: 20, y: 350 },
-  EQ_SLOT_6: { x: 20, y: 385 },
-  EQ_SLOT_7: { x: 20, y: 430 },
-  //   这里重置下准确位置
-  EQ_SLOT_8: { x: 20, y: 465 },
-  EQ_SLOT_9: { x: 20, y: 500 },
-  EQ_SLOT_10: { x: 20, y: 535 }
-};
-const equipmentRegion = {
-  //  宽24，高25
-  SLOT_1: {
-    //  y+=36
-    leftTop: { x: 9, y: 198 },
-    rightBottom: { x: 32, y: 222 }
-  },
-  SLOT_2: {
-    leftTop: { x: 9, y: 234 },
-    rightBottom: { x: 32, y: 258 }
-  },
-  SLOT_3: {
-    leftTop: { x: 9, y: 271 },
-    rightBottom: { x: 32, y: 295 }
-  },
-  SLOT_4: {
-    leftTop: { x: 9, y: 307 },
-    rightBottom: { x: 32, y: 331 }
-  },
-  SLOT_5: {
-    leftTop: { x: 9, y: 344 },
-    rightBottom: { x: 32, y: 368 }
-  },
-  SLOT_6: {
-    leftTop: { x: 9, y: 380 },
-    rightBottom: { x: 32, y: 404 }
-  },
-  SLOT_7: {
-    leftTop: { x: 9, y: 417 },
-    rightBottom: { x: 32, y: 441 }
-  },
-  SLOT_8: {
-    leftTop: { x: 9, y: 453 },
-    rightBottom: { x: 32, y: 477 }
-  },
-  SLOT_9: {
-    leftTop: { x: 9, y: 490 },
-    rightBottom: { x: 32, y: 514 }
-  },
-  SLOT_10: {
-    leftTop: { x: 9, y: 526 },
-    rightBottom: { x: 32, y: 550 }
-  }
-};
-const fightBoardSlotPoint = {
-  // x+=80
-  //  第一行的棋子位置
-  R1_C1: { x: 230, y: 300 },
-  R1_C2: { x: 310, y: 300 },
-  R1_C3: { x: 390, y: 300 },
-  R1_C4: { x: 470, y: 300 },
-  R1_C5: { x: 550, y: 300 },
-  R1_C6: { x: 630, y: 300 },
-  R1_C7: { x: 710, y: 300 },
-  //  第二行的棋子位置        //  x+=85
-  R2_C1: { x: 260, y: 355 },
-  R2_C2: { x: 345, y: 355 },
-  R2_C3: { x: 430, y: 355 },
-  R2_C4: { x: 515, y: 355 },
-  R2_C5: { x: 600, y: 355 },
-  R2_C6: { x: 685, y: 355 },
-  R2_C7: { x: 770, y: 355 },
-  //  第三行棋子的位置        //  x+=90
-  R3_C1: { x: 200, y: 405 },
-  R3_C2: { x: 290, y: 405 },
-  R3_C3: { x: 380, y: 405 },
-  R3_C4: { x: 470, y: 405 },
-  R3_C5: { x: 560, y: 405 },
-  R3_C6: { x: 650, y: 405 },
-  R3_C7: { x: 740, y: 405 },
-  //  第四行棋子的位置        //  x+=90
-  R4_C1: { x: 240, y: 460 },
-  R4_C2: { x: 330, y: 460 },
-  R4_C3: { x: 420, y: 460 },
-  R4_C4: { x: 510, y: 460 },
-  R4_C5: { x: 600, y: 460 },
-  R4_C6: { x: 690, y: 460 },
-  R4_C7: { x: 780, y: 460 }
-};
-const fightBoardSlotRegion = {
-  // x+=80
-  //  第一行的棋子位置
-  R1_C1: {
-    leftTop: { x: 210 + 5, y: 300 - 10 },
-    rightBottom: { x: 255 - 5, y: 330 }
-  },
-  R1_C2: {
-    leftTop: { x: 290 + 5, y: 300 - 10 },
-    rightBottom: { x: 340 - 5, y: 330 }
-  },
-  R1_C3: {
-    leftTop: { x: 370 + 5, y: 300 - 10 },
-    rightBottom: { x: 420 - 5, y: 330 }
-  },
-  R1_C4: {
-    leftTop: { x: 450 + 5, y: 300 - 10 },
-    rightBottom: { x: 500 - 5, y: 330 }
-  },
-  R1_C5: {
-    leftTop: { x: 530 + 5, y: 300 - 10 },
-    rightBottom: { x: 585 - 5, y: 330 }
-  },
-  R1_C6: {
-    leftTop: { x: 615 + 5, y: 300 - 10 },
-    rightBottom: { x: 665 - 5, y: 330 }
-  },
-  R1_C7: {
-    leftTop: { x: 695 + 5, y: 300 - 10 },
-    rightBottom: { x: 750 - 5, y: 330 }
-  },
-  //  第二行的棋子位置        //  x+=85
-  R2_C1: {
-    leftTop: { x: 240 + 5, y: 350 - 10 },
-    rightBottom: { x: 285 - 5, y: 385 }
-  },
-  R2_C2: {
-    leftTop: { x: 325 + 5, y: 350 - 10 },
-    rightBottom: { x: 370 - 5, y: 385 }
-  },
-  R2_C3: {
-    leftTop: { x: 410 + 5, y: 350 - 10 },
-    rightBottom: { x: 455 - 5, y: 385 }
-  },
-  R2_C4: {
-    leftTop: { x: 495 + 5, y: 350 - 10 },
-    rightBottom: { x: 540 - 5, y: 385 }
-  },
-  R2_C5: {
-    leftTop: { x: 575 + 5, y: 350 - 10 },
-    rightBottom: { x: 625 - 5, y: 385 }
-  },
-  R2_C6: {
-    leftTop: { x: 660 + 5, y: 350 - 10 },
-    rightBottom: { x: 710 - 5, y: 385 }
-  },
-  R2_C7: {
-    leftTop: { x: 745 + 5, y: 350 - 10 },
-    rightBottom: { x: 795 - 5, y: 385 }
-  },
-  //  第三行棋子的位置        //  x+=90
-  R3_C1: {
-    leftTop: { x: 185 + 5, y: 405 - 10 },
-    rightBottom: { x: 230 - 5, y: 440 }
-  },
-  R3_C2: {
-    leftTop: { x: 275 + 5, y: 405 - 10 },
-    rightBottom: { x: 320 - 5, y: 440 }
-  },
-  R3_C3: {
-    leftTop: { x: 360 + 5, y: 405 - 10 },
-    rightBottom: { x: 410 - 5, y: 440 }
-  },
-  R3_C4: {
-    leftTop: { x: 445 + 5, y: 405 - 10 },
-    rightBottom: { x: 495 - 5, y: 440 }
-  },
-  R3_C5: {
-    leftTop: { x: 535 + 5, y: 405 - 10 },
-    rightBottom: { x: 585 - 5, y: 440 }
-  },
-  R3_C6: {
-    leftTop: { x: 620 + 5, y: 405 - 10 },
-    rightBottom: { x: 675 - 5, y: 440 }
-  },
-  R3_C7: {
-    leftTop: { x: 705 + 5, y: 405 - 10 },
-    rightBottom: { x: 760 - 5, y: 440 }
-  },
-  //  第四行棋子的位置        //  x+=90
-  R4_C1: {
-    leftTop: { x: 215 + 5, y: 465 - 10 },
-    rightBottom: { x: 265 - 5, y: 500 }
-  },
-  R4_C2: {
-    leftTop: { x: 310 + 5, y: 465 - 10 },
-    rightBottom: { x: 355 - 5, y: 500 }
-  },
-  R4_C3: {
-    leftTop: { x: 395 + 5, y: 465 - 10 },
-    rightBottom: { x: 450 - 5, y: 500 }
-  },
-  R4_C4: {
-    leftTop: { x: 490 + 5, y: 465 - 10 },
-    rightBottom: { x: 540 - 5, y: 500 }
-  },
-  R4_C5: {
-    leftTop: { x: 580 + 5, y: 465 - 10 },
-    rightBottom: { x: 635 - 5, y: 500 }
-  },
-  R4_C6: {
-    leftTop: { x: 670 + 5, y: 465 - 10 },
-    rightBottom: { x: 725 - 5, y: 500 }
-  },
-  R4_C7: {
-    leftTop: { x: 760 + 5, y: 465 - 10 },
-    rightBottom: { x: 815 - 5, y: 500 }
-  }
-};
-const benchSlotRegion = {
-  SLOT_1: {
-    leftTop: { x: 105 + 5, y: 530 - 15 },
-    rightBottom: { x: 155 - 5, y: 585 }
-  },
-  SLOT_2: {
-    leftTop: { x: 190 + 5, y: 530 - 15 },
-    rightBottom: { x: 245 - 5, y: 585 }
-  },
-  SLOT_3: {
-    leftTop: { x: 270 + 5, y: 530 - 15 },
-    rightBottom: { x: 325 - 5, y: 585 }
-  },
-  SLOT_4: {
-    leftTop: { x: 355 + 5, y: 530 - 15 },
-    rightBottom: { x: 410 - 5, y: 585 }
-  },
-  SLOT_5: {
-    leftTop: { x: 435 + 5, y: 530 - 15 },
-    rightBottom: { x: 495 - 5, y: 585 }
-  },
-  SLOT_6: {
-    leftTop: { x: 520 + 5, y: 530 - 15 },
-    rightBottom: { x: 580 - 5, y: 585 }
-  },
-  SLOT_7: {
-    leftTop: { x: 600 + 5, y: 530 - 15 },
-    rightBottom: { x: 665 - 5, y: 585 }
-  },
-  SLOT_8: {
-    leftTop: { x: 680 + 5, y: 530 - 15 },
-    rightBottom: { x: 750 - 5, y: 585 }
-  },
-  SLOT_9: {
-    leftTop: { x: 765 + 5, y: 530 - 15 },
-    rightBottom: { x: 830 - 5, y: 585 }
-  }
-};
-const benchSlotPoints = {
-  SLOT_1: { x: 130, y: 555 },
-  SLOT_2: { x: 210, y: 555 },
-  SLOT_3: { x: 295, y: 555 },
-  SLOT_4: { x: 385, y: 555 },
-  SLOT_5: { x: 465, y: 555 },
-  SLOT_6: { x: 550, y: 555 },
-  SLOT_7: { x: 630, y: 555 },
-  SLOT_8: { x: 720, y: 555 },
-  SLOT_9: { x: 800, y: 555 }
-};
-const hexSlot = {
-  //  x+=295
-  SLOT_1: { x: 215, y: 410 },
-  SLOT_2: { x: 510, y: 410 },
-  SLOT_3: { x: 805, y: 410 }
-};
-const sharedDraftPoint = { x: 530, y: 400 };
-const gameStageDisplayStageOne = {
-  leftTop: { x: 411, y: 6 },
-  rightBottom: { x: 442, y: 22 }
-};
-const gameStageDisplayNormal = {
-  leftTop: { x: 374, y: 6 },
-  rightBottom: { x: 403, y: 22 }
-};
-const gameStageDisplayTheClockworkTrails = {
-  leftTop: { x: 337, y: 6 },
-  rightBottom: { x: 366, y: 22 }
-};
-const clockworkTrailsFightButtonPoint = {
-  x: 955,
-  y: 705
-};
-const clockworkTrailsQuitNowButtonRegion = {
-  leftTop: { x: 780, y: 555 },
-  rightBottom: { x: 845, y: 570 }
-};
-const clockworkTrailsQuitNowButtonPoint = {
-  x: 815,
-  y: 560
-};
-const combatPhaseTextRegion = {
-  leftTop: { x: 465, y: 110 },
-  rightBottom: { x: 560, y: 135 }
-};
-var ItemForgeType = /* @__PURE__ */ ((ItemForgeType2) => {
-  ItemForgeType2["NONE"] = "NONE";
-  ItemForgeType2["BASIC"] = "BASIC";
-  ItemForgeType2["COMPLETED"] = "COMPLETED";
-  ItemForgeType2["ARTIFACT"] = "ARTIFACT";
-  ItemForgeType2["SUPPORT"] = "SUPPORT";
-  return ItemForgeType2;
-})(ItemForgeType || {});
+var UnitOrigin_S16 = /* @__PURE__ */ ((UnitOrigin_S162) => {
+  UnitOrigin_S162["Bilgewater"] = "比尔吉沃特";
+  UnitOrigin_S162["Darkin"] = "暗裔";
+  UnitOrigin_S162["Demacia"] = "德玛西亚";
+  UnitOrigin_S162["Freljord"] = "弗雷尔卓德";
+  UnitOrigin_S162["Ionia"] = "艾欧尼亚";
+  UnitOrigin_S162["Ixtal"] = "以绪塔尔";
+  UnitOrigin_S162["Noxus"] = "诺克萨斯";
+  UnitOrigin_S162["Piltover"] = "皮尔特沃夫";
+  UnitOrigin_S162["ShadowIsles"] = "暗影岛";
+  UnitOrigin_S162["Shurima"] = "恕瑞玛";
+  UnitOrigin_S162["Targon"] = "巨神峰";
+  UnitOrigin_S162["Void"] = "虚空";
+  UnitOrigin_S162["Yordle"] = "约德尔人";
+  UnitOrigin_S162["Zaun"] = "祖安";
+  UnitOrigin_S162["Starforger"] = "铸星龙王";
+  UnitOrigin_S162["Baron"] = "纳什男爵";
+  UnitOrigin_S162["Blacksmith"] = "山隐之焰";
+  UnitOrigin_S162["Caretaker"] = "星界游神";
+  UnitOrigin_S162["Chronokeeper"] = "时光守护者";
+  UnitOrigin_S162["DarkChild"] = "黑暗之女";
+  UnitOrigin_S162["Emperor"] = "沙漠皇帝";
+  UnitOrigin_S162["Glutton"] = "河流之王";
+  UnitOrigin_S162["Harvester"] = "远古恐惧";
+  UnitOrigin_S162["Heroic"] = "正义巨像";
+  UnitOrigin_S162["HexMech"] = "海克斯机甲";
+  UnitOrigin_S162["Huntress"] = "狂野女猎手";
+  UnitOrigin_S162["Assimilator"] = "虚空之女";
+  UnitOrigin_S162["Kindred"] = "永猎双子";
+  UnitOrigin_S162["RuneMage"] = "符文法师";
+  UnitOrigin_S162["Dragonborn"] = "龙血武姬";
+  UnitOrigin_S162["Soulbound"] = "系魂圣枪";
+  UnitOrigin_S162["Chainbreaker"] = "解脱者";
+  UnitOrigin_S162["TheBoss"] = "腕豪";
+  UnitOrigin_S162["Ascendant"] = "远古巫灵";
+  UnitOrigin_S162["Immortal"] = "不落魔锋";
+  UnitOrigin_S162["TeamupJarvanShyvana"] = "巨龙卫士";
+  UnitOrigin_S162["TeamupLucianVayne"] = "光明哨兵";
+  UnitOrigin_S162["TeamupSingedTeemo"] = "绝命毒师";
+  UnitOrigin_S162["TeamupAmbessaKindred"] = "与狼共舞";
+  return UnitOrigin_S162;
+})(UnitOrigin_S16 || {});
+var UnitClass_S16 = /* @__PURE__ */ ((UnitClass_S162) => {
+  UnitClass_S162["Bruiser"] = "斗士";
+  UnitClass_S162["Defender"] = "护卫";
+  UnitClass_S162["Gunslinger"] = "枪手";
+  UnitClass_S162["Invoker"] = "神谕者";
+  UnitClass_S162["Juggernaut"] = "主宰";
+  UnitClass_S162["Longshot"] = "狙神";
+  UnitClass_S162["Magus"] = "耀光使";
+  UnitClass_S162["Rapidfire"] = "迅击战士";
+  UnitClass_S162["Slayer"] = "裁决战士";
+  UnitClass_S162["Sorcerer"] = "法师";
+  UnitClass_S162["Vanquisher"] = "征服者";
+  UnitClass_S162["Warden"] = "神盾使";
+  return UnitClass_S162;
+})(UnitClass_S16 || {});
+var UnitOrigin_S4_5 = /* @__PURE__ */ ((UnitOrigin_S4_52) => {
+  UnitOrigin_S4_52["Cultist"] = "腥红之月";
+  UnitOrigin_S4_52["Divine"] = "天神";
+  UnitOrigin_S4_52["Dragonsoul"] = "龙魂";
+  UnitOrigin_S4_52["Elderwood"] = "永恒之森";
+  UnitOrigin_S4_52["Enlightened"] = "玉剑仙";
+  UnitOrigin_S4_52["Fortune"] = "福星";
+  UnitOrigin_S4_52["Spirit"] = "灵魂莲华明昼";
+  UnitOrigin_S4_52["Warlord"] = "三国猛将";
+  UnitOrigin_S4_52["Exile"] = "浪人";
+  UnitOrigin_S4_52["Fabled"] = "山海绘卷";
+  UnitOrigin_S4_52["Ninja"] = "忍者";
+  UnitOrigin_S4_52["Blacksmith"] = "铁匠";
+  UnitOrigin_S4_52["Boss"] = "霸王";
+  UnitOrigin_S4_52["Daredevil"] = "主宰";
+  UnitOrigin_S4_52["Emperor"] = "枭雄";
+  return UnitOrigin_S4_52;
+})(UnitOrigin_S4_5 || {});
+var UnitClass_S4_5 = /* @__PURE__ */ ((UnitClass_S4_52) => {
+  UnitClass_S4_52["Adept"] = "宗师";
+  UnitClass_S4_52["Assassin"] = "刺客";
+  UnitClass_S4_52["Brawler"] = "斗士";
+  UnitClass_S4_52["Duelist"] = "决斗大师";
+  UnitClass_S4_52["Executioner"] = "裁决使";
+  UnitClass_S4_52["Keeper"] = "神盾使";
+  UnitClass_S4_52["Mage"] = "魔法师";
+  UnitClass_S4_52["Mystic"] = "秘术师";
+  UnitClass_S4_52["Sharpshooter"] = "神射手";
+  UnitClass_S4_52["Slayer"] = "战神";
+  UnitClass_S4_52["Syphoner"] = "摄魂使";
+  UnitClass_S4_52["Vanguard"] = "重装战士";
+  return UnitClass_S4_52;
+})(UnitClass_S4_5 || {});
 const TFT_SPECIAL_CHESS = {
   //  特殊的棋子，比如基础装备锻造器，这种不属于英雄
   "基础装备锻造器": {
@@ -7905,7 +7539,7 @@ const TFT_SPECIAL_CHESS = {
     attackRange: 1
   }
 };
-const _TFT_16_CHAMPION_DATA = {
+const _TFT_16_CHESS_DATA = {
   //  特殊棋子
   ...TFT_SPECIAL_CHESS,
   // 1 费棋子
@@ -8784,10 +8418,964 @@ const _TFT_16_CHAMPION_DATA = {
     attackRange: 1
   }
 };
-const TFT_16_CHAMPION_DATA = _TFT_16_CHAMPION_DATA;
+const _TFT_4_CHESS_DATA = {
+  //  特殊棋子
+  ...TFT_SPECIAL_CHESS,
+  // 1 费棋子
+  "内瑟斯": {
+    displayName: "内瑟斯",
+    englishId: "TFT4_Nasus",
+    price: 1,
+    traits: [UnitOrigin_S4_5.Divine, UnitClass_S4_5.Syphoner],
+    origins: [UnitOrigin_S4_5.Divine],
+    classes: [UnitClass_S4_5.Syphoner],
+    attackRange: 1
+  },
+  "崔丝塔娜": {
+    displayName: "崔丝塔娜",
+    englishId: "TFT4_Tristana",
+    price: 1,
+    traits: [UnitOrigin_S4_5.Dragonsoul, UnitClass_S4_5.Sharpshooter],
+    origins: [UnitOrigin_S4_5.Dragonsoul],
+    classes: [UnitClass_S4_5.Sharpshooter],
+    attackRange: 5
+  },
+  "黛安娜": {
+    displayName: "黛安娜",
+    englishId: "TFT4b_Diana",
+    price: 1,
+    traits: [UnitOrigin_S4_5.Spirit, UnitClass_S4_5.Assassin],
+    origins: [UnitOrigin_S4_5.Spirit],
+    classes: [UnitClass_S4_5.Assassin],
+    attackRange: 1
+  },
+  "伊莉丝": {
+    displayName: "伊莉丝",
+    englishId: "TFT4_Elise",
+    price: 1,
+    traits: [UnitOrigin_S4_5.Cultist, UnitClass_S4_5.Keeper],
+    origins: [UnitOrigin_S4_5.Cultist],
+    classes: [UnitClass_S4_5.Keeper],
+    attackRange: 2
+  },
+  "盖伦": {
+    displayName: "盖伦",
+    englishId: "TFT4_Garen",
+    price: 1,
+    traits: [UnitOrigin_S4_5.Warlord, UnitClass_S4_5.Vanguard],
+    origins: [UnitOrigin_S4_5.Warlord],
+    classes: [UnitClass_S4_5.Vanguard],
+    attackRange: 1
+  },
+  "茂凯": {
+    displayName: "茂凯",
+    englishId: "TFT4_Maokai",
+    price: 1,
+    traits: [UnitOrigin_S4_5.Elderwood, UnitClass_S4_5.Brawler],
+    origins: [UnitOrigin_S4_5.Elderwood],
+    classes: [UnitClass_S4_5.Brawler],
+    attackRange: 1
+  },
+  "奈德丽": {
+    displayName: "奈德丽",
+    englishId: "TFT4_Nidalee",
+    price: 1,
+    traits: [UnitOrigin_S4_5.Warlord, UnitClass_S4_5.Sharpshooter],
+    origins: [UnitOrigin_S4_5.Warlord],
+    classes: [UnitClass_S4_5.Sharpshooter],
+    attackRange: 5
+  },
+  "崔斯特": {
+    displayName: "崔斯特",
+    englishId: "TFT4_TwistedFate",
+    price: 1,
+    traits: [UnitOrigin_S4_5.Cultist, UnitClass_S4_5.Mage],
+    origins: [UnitOrigin_S4_5.Cultist],
+    classes: [UnitClass_S4_5.Mage],
+    attackRange: 5
+  },
+  "孙悟空": {
+    displayName: "孙悟空",
+    englishId: "TFT4_Wukong",
+    price: 1,
+    traits: [UnitOrigin_S4_5.Divine, UnitClass_S4_5.Vanguard],
+    origins: [UnitOrigin_S4_5.Divine],
+    classes: [UnitClass_S4_5.Vanguard],
+    attackRange: 1
+  },
+  "亚索": {
+    displayName: "亚索",
+    englishId: "TFT4_Yasuo",
+    price: 1,
+    traits: [UnitOrigin_S4_5.Exile, UnitClass_S4_5.Duelist],
+    origins: [UnitOrigin_S4_5.Exile],
+    classes: [UnitClass_S4_5.Duelist],
+    attackRange: 1
+  },
+  "布兰德": {
+    displayName: "布兰德",
+    englishId: "TFT4_Brand",
+    price: 1,
+    traits: [UnitOrigin_S4_5.Dragonsoul, UnitClass_S4_5.Mage],
+    origins: [UnitOrigin_S4_5.Dragonsoul],
+    classes: [UnitClass_S4_5.Mage],
+    attackRange: 5
+  },
+  "菲奥娜": {
+    displayName: "菲奥娜",
+    englishId: "TFT4_Fiora",
+    price: 1,
+    traits: [UnitOrigin_S4_5.Enlightened, UnitClass_S4_5.Duelist],
+    origins: [UnitOrigin_S4_5.Enlightened],
+    classes: [UnitClass_S4_5.Duelist],
+    attackRange: 1
+  },
+  "塔姆": {
+    displayName: "塔姆",
+    englishId: "TFT4_TahmKench",
+    price: 1,
+    traits: [UnitOrigin_S4_5.Fortune, UnitClass_S4_5.Brawler],
+    origins: [UnitOrigin_S4_5.Fortune],
+    classes: [UnitClass_S4_5.Brawler],
+    attackRange: 1
+  },
+  // 2 费棋子
+  "安妮": {
+    displayName: "安妮",
+    englishId: "TFT4_Annie",
+    price: 2,
+    traits: [UnitOrigin_S4_5.Fortune, UnitClass_S4_5.Mage],
+    origins: [UnitOrigin_S4_5.Fortune],
+    classes: [UnitClass_S4_5.Mage],
+    attackRange: 2
+  },
+  "劫": {
+    displayName: "劫",
+    englishId: "TFT4b_Zed",
+    price: 2,
+    traits: [UnitOrigin_S4_5.Ninja, UnitClass_S4_5.Slayer],
+    origins: [UnitOrigin_S4_5.Ninja],
+    classes: [UnitClass_S4_5.Slayer],
+    attackRange: 1
+  },
+  "迦娜": {
+    displayName: "迦娜",
+    englishId: "TFT4_Janna",
+    price: 2,
+    traits: [UnitOrigin_S4_5.Enlightened, UnitClass_S4_5.Mystic],
+    origins: [UnitOrigin_S4_5.Enlightened],
+    classes: [UnitClass_S4_5.Mystic],
+    attackRange: 5
+  },
+  "弗拉基米尔": {
+    displayName: "弗拉基米尔",
+    englishId: "TFT4_Vladimir",
+    price: 2,
+    traits: [UnitOrigin_S4_5.Cultist, UnitClass_S4_5.Syphoner],
+    origins: [UnitOrigin_S4_5.Cultist],
+    classes: [UnitClass_S4_5.Syphoner],
+    attackRange: 2
+  },
+  "派克": {
+    displayName: "派克",
+    englishId: "TFT4_Pyke",
+    price: 2,
+    traits: [UnitOrigin_S4_5.Cultist, UnitClass_S4_5.Assassin, UnitClass_S4_5.Slayer],
+    origins: [UnitOrigin_S4_5.Cultist],
+    classes: [UnitClass_S4_5.Assassin, UnitClass_S4_5.Slayer],
+    attackRange: 1
+  },
+  "蔚": {
+    displayName: "蔚",
+    englishId: "TFT4_Vi",
+    price: 2,
+    traits: [UnitOrigin_S4_5.Warlord, UnitClass_S4_5.Brawler],
+    origins: [UnitOrigin_S4_5.Warlord],
+    classes: [UnitClass_S4_5.Brawler],
+    attackRange: 1
+  },
+  "提莫": {
+    displayName: "提莫",
+    englishId: "TFT4_Teemo",
+    price: 2,
+    traits: [UnitOrigin_S4_5.Spirit, UnitClass_S4_5.Sharpshooter],
+    origins: [UnitOrigin_S4_5.Spirit],
+    classes: [UnitClass_S4_5.Sharpshooter],
+    attackRange: 5
+  },
+  "诺提勒斯": {
+    displayName: "诺提勒斯",
+    englishId: "TFT4_Nautilus",
+    price: 2,
+    traits: [UnitOrigin_S4_5.Fabled, UnitClass_S4_5.Vanguard],
+    origins: [UnitOrigin_S4_5.Fabled],
+    classes: [UnitClass_S4_5.Vanguard],
+    attackRange: 1
+  },
+  "璐璐": {
+    displayName: "璐璐",
+    englishId: "TFT4_Lulu",
+    price: 2,
+    traits: [UnitOrigin_S4_5.Elderwood, UnitClass_S4_5.Mage],
+    origins: [UnitOrigin_S4_5.Elderwood],
+    classes: [UnitClass_S4_5.Mage],
+    attackRange: 5
+  },
+  "嘉文四世": {
+    displayName: "嘉文四世",
+    englishId: "TFT4_JarvanIV",
+    price: 2,
+    traits: [UnitOrigin_S4_5.Warlord, UnitClass_S4_5.Keeper],
+    origins: [UnitOrigin_S4_5.Warlord],
+    classes: [UnitClass_S4_5.Keeper],
+    attackRange: 1
+  },
+  "贾克斯": {
+    displayName: "贾克斯",
+    englishId: "TFT4_Jax",
+    price: 2,
+    traits: [UnitOrigin_S4_5.Divine, UnitClass_S4_5.Duelist],
+    origins: [UnitOrigin_S4_5.Divine],
+    classes: [UnitClass_S4_5.Duelist],
+    attackRange: 1
+  },
+  "洛": {
+    displayName: "洛",
+    englishId: "TFT4_Rakan",
+    price: 2,
+    traits: [UnitOrigin_S4_5.Elderwood, UnitClass_S4_5.Keeper],
+    origins: [UnitOrigin_S4_5.Elderwood],
+    classes: [UnitClass_S4_5.Keeper],
+    attackRange: 2
+  },
+  "布隆": {
+    displayName: "布隆",
+    englishId: "TFT4_Braum",
+    price: 2,
+    traits: [UnitOrigin_S4_5.Dragonsoul, UnitClass_S4_5.Vanguard],
+    origins: [UnitOrigin_S4_5.Dragonsoul],
+    classes: [UnitClass_S4_5.Vanguard],
+    attackRange: 1
+  },
+  // 3 费棋子
+  "阿卡丽": {
+    displayName: "阿卡丽",
+    englishId: "TFT4_Akali",
+    price: 3,
+    traits: [UnitOrigin_S4_5.Ninja, UnitClass_S4_5.Assassin],
+    origins: [UnitOrigin_S4_5.Ninja],
+    classes: [UnitClass_S4_5.Assassin],
+    attackRange: 1
+  },
+  "千珏": {
+    displayName: "千珏",
+    englishId: "TFT4b_Kindred",
+    price: 3,
+    traits: [UnitOrigin_S4_5.Spirit, UnitClass_S4_5.Executioner],
+    origins: [UnitOrigin_S4_5.Spirit],
+    classes: [UnitClass_S4_5.Executioner],
+    attackRange: 3
+  },
+  "艾瑞莉娅": {
+    displayName: "艾瑞莉娅",
+    englishId: "TFT4_Irelia",
+    price: 3,
+    traits: [UnitOrigin_S4_5.Enlightened, UnitOrigin_S4_5.Divine, UnitClass_S4_5.Adept],
+    origins: [UnitOrigin_S4_5.Enlightened, UnitOrigin_S4_5.Divine],
+    classes: [UnitClass_S4_5.Adept],
+    attackRange: 1
+  },
+  "希瓦娜": {
+    displayName: "希瓦娜",
+    englishId: "TFT4_Shyvana",
+    price: 3,
+    traits: [UnitOrigin_S4_5.Dragonsoul, UnitClass_S4_5.Brawler],
+    origins: [UnitOrigin_S4_5.Dragonsoul],
+    classes: [UnitClass_S4_5.Brawler],
+    attackRange: 1
+  },
+  "卡莉丝塔": {
+    displayName: "卡莉丝塔",
+    englishId: "TFT4_Kalista",
+    price: 3,
+    traits: [UnitOrigin_S4_5.Cultist, UnitClass_S4_5.Duelist],
+    origins: [UnitOrigin_S4_5.Cultist],
+    classes: [UnitClass_S4_5.Duelist],
+    attackRange: 5
+  },
+  "凯南": {
+    displayName: "凯南",
+    englishId: "TFT4_Kennen",
+    price: 3,
+    traits: [UnitOrigin_S4_5.Ninja, UnitClass_S4_5.Keeper],
+    origins: [UnitOrigin_S4_5.Ninja],
+    classes: [UnitClass_S4_5.Keeper],
+    attackRange: 2
+  },
+  "努努和威朗普": {
+    displayName: "努努和威朗普",
+    englishId: "TFT4_Nunu",
+    price: 3,
+    traits: [UnitOrigin_S4_5.Elderwood, UnitClass_S4_5.Brawler],
+    origins: [UnitOrigin_S4_5.Elderwood],
+    classes: [UnitClass_S4_5.Brawler],
+    attackRange: 1
+  },
+  "希维尔": {
+    displayName: "希维尔",
+    englishId: "TFT4_Sivir",
+    price: 3,
+    traits: [UnitOrigin_S4_5.Cultist, UnitClass_S4_5.Sharpshooter],
+    origins: [UnitOrigin_S4_5.Cultist],
+    classes: [UnitClass_S4_5.Sharpshooter],
+    attackRange: 5
+  },
+  "妮蔻": {
+    displayName: "妮蔻",
+    englishId: "TFT4_Neeko",
+    price: 3,
+    traits: [UnitOrigin_S4_5.Fabled, UnitClass_S4_5.Mystic],
+    origins: [UnitOrigin_S4_5.Fabled],
+    classes: [UnitClass_S4_5.Mystic],
+    attackRange: 5
+  },
+  "德莱厄斯": {
+    displayName: "德莱厄斯",
+    englishId: "TFT4_Darius",
+    price: 3,
+    traits: [UnitOrigin_S4_5.Fortune, UnitClass_S4_5.Slayer],
+    origins: [UnitOrigin_S4_5.Fortune],
+    classes: [UnitClass_S4_5.Slayer],
+    attackRange: 1
+  },
+  "维迦": {
+    displayName: "维迦",
+    englishId: "TFT4_Veigar",
+    price: 3,
+    traits: [UnitOrigin_S4_5.Elderwood, UnitClass_S4_5.Mage],
+    origins: [UnitOrigin_S4_5.Elderwood],
+    classes: [UnitClass_S4_5.Mage],
+    attackRange: 5
+  },
+  "悠米": {
+    displayName: "悠米",
+    englishId: "TFT4_Yuumi",
+    price: 3,
+    traits: [UnitOrigin_S4_5.Spirit, UnitClass_S4_5.Mystic],
+    origins: [UnitOrigin_S4_5.Spirit],
+    classes: [UnitClass_S4_5.Mystic],
+    attackRange: 3
+  },
+  "卡特琳娜": {
+    displayName: "卡特琳娜",
+    englishId: "TFT4_Katarina",
+    price: 3,
+    traits: [UnitOrigin_S4_5.Warlord, UnitOrigin_S4_5.Fortune, UnitClass_S4_5.Assassin],
+    origins: [UnitOrigin_S4_5.Warlord, UnitOrigin_S4_5.Fortune],
+    classes: [UnitClass_S4_5.Assassin],
+    attackRange: 1
+  },
+  // 4 费棋子
+  "亚托克斯": {
+    displayName: "亚托克斯",
+    englishId: "TFT4_Aatrox",
+    price: 4,
+    traits: [UnitOrigin_S4_5.Cultist, UnitClass_S4_5.Vanguard],
+    origins: [UnitOrigin_S4_5.Cultist],
+    classes: [UnitClass_S4_5.Vanguard],
+    attackRange: 1
+  },
+  "莫甘娜": {
+    displayName: "莫甘娜",
+    englishId: "TFT4b_Morgana",
+    price: 4,
+    traits: [UnitOrigin_S4_5.Enlightened, UnitClass_S4_5.Syphoner],
+    origins: [UnitOrigin_S4_5.Enlightened],
+    classes: [UnitClass_S4_5.Syphoner],
+    attackRange: 2
+  },
+  "奥瑞利安 · 索尔": {
+    displayName: "奥瑞利安 · 索尔",
+    englishId: "TFT4_AurelionSol",
+    price: 4,
+    traits: [UnitOrigin_S4_5.Dragonsoul, UnitClass_S4_5.Mage],
+    origins: [UnitOrigin_S4_5.Dragonsoul],
+    classes: [UnitClass_S4_5.Mage],
+    attackRange: 5
+  },
+  "科加斯": {
+    displayName: "科加斯",
+    englishId: "TFT4_ChoGath",
+    price: 4,
+    traits: [UnitOrigin_S4_5.Fabled, UnitClass_S4_5.Brawler],
+    origins: [UnitOrigin_S4_5.Fabled],
+    classes: [UnitClass_S4_5.Brawler],
+    attackRange: 1
+  },
+  "霞": {
+    displayName: "霞",
+    englishId: "TFT4_Xayah",
+    price: 4,
+    traits: [UnitOrigin_S4_5.Elderwood, UnitClass_S4_5.Executioner, UnitClass_S4_5.Keeper],
+    origins: [UnitOrigin_S4_5.Elderwood],
+    classes: [UnitClass_S4_5.Executioner, UnitClass_S4_5.Keeper],
+    attackRange: 5
+  },
+  "奥拉夫": {
+    displayName: "奥拉夫",
+    englishId: "TFT4_Olaf",
+    price: 4,
+    traits: [UnitOrigin_S4_5.Dragonsoul, UnitClass_S4_5.Slayer],
+    origins: [UnitOrigin_S4_5.Dragonsoul],
+    classes: [UnitClass_S4_5.Slayer],
+    attackRange: 1
+  },
+  "凯尔": {
+    displayName: "凯尔",
+    englishId: "TFT4_Kayle",
+    price: 4,
+    traits: [UnitOrigin_S4_5.Divine, UnitClass_S4_5.Executioner],
+    origins: [UnitOrigin_S4_5.Divine],
+    classes: [UnitClass_S4_5.Executioner],
+    attackRange: 5
+  },
+  "瑟庄妮": {
+    displayName: "瑟庄妮",
+    englishId: "TFT4_Sejuani",
+    price: 4,
+    traits: [UnitOrigin_S4_5.Fortune, UnitClass_S4_5.Vanguard],
+    origins: [UnitOrigin_S4_5.Fortune],
+    classes: [UnitClass_S4_5.Vanguard],
+    attackRange: 1
+  },
+  "慎": {
+    displayName: "慎",
+    englishId: "TFT4_Shen",
+    price: 4,
+    traits: [UnitOrigin_S4_5.Ninja, UnitClass_S4_5.Adept, UnitClass_S4_5.Mystic],
+    origins: [UnitOrigin_S4_5.Ninja],
+    classes: [UnitClass_S4_5.Adept, UnitClass_S4_5.Mystic],
+    attackRange: 1
+  },
+  "泰隆": {
+    displayName: "泰隆",
+    englishId: "TFT4_Talon",
+    price: 4,
+    traits: [UnitOrigin_S4_5.Enlightened, UnitClass_S4_5.Assassin],
+    origins: [UnitOrigin_S4_5.Enlightened],
+    classes: [UnitClass_S4_5.Assassin],
+    attackRange: 1
+  },
+  "泰达米尔": {
+    displayName: "泰达米尔",
+    englishId: "TFT4_Tryndamere",
+    price: 4,
+    traits: [UnitOrigin_S4_5.Warlord, UnitClass_S4_5.Slayer, UnitClass_S4_5.Duelist],
+    origins: [UnitOrigin_S4_5.Warlord],
+    classes: [UnitClass_S4_5.Slayer, UnitClass_S4_5.Duelist],
+    attackRange: 1
+  },
+  // 5 费棋子
+  "阿兹尔": {
+    displayName: "阿兹尔",
+    englishId: "TFT4_Azir",
+    price: 5,
+    traits: [UnitOrigin_S4_5.Warlord, UnitOrigin_S4_5.Emperor, UnitClass_S4_5.Keeper],
+    origins: [UnitOrigin_S4_5.Warlord, UnitOrigin_S4_5.Emperor],
+    classes: [UnitClass_S4_5.Keeper],
+    attackRange: 5
+  },
+  "奥恩": {
+    displayName: "奥恩",
+    englishId: "TFT4_Ornn",
+    price: 5,
+    traits: [UnitOrigin_S4_5.Elderwood, UnitOrigin_S4_5.Blacksmith, UnitClass_S4_5.Vanguard],
+    origins: [UnitOrigin_S4_5.Elderwood, UnitOrigin_S4_5.Blacksmith],
+    classes: [UnitClass_S4_5.Vanguard],
+    attackRange: 1
+  },
+  "斯维因": {
+    displayName: "斯维因",
+    englishId: "TFT4_Swain",
+    price: 5,
+    traits: [UnitOrigin_S4_5.Dragonsoul, UnitClass_S4_5.Syphoner],
+    origins: [UnitOrigin_S4_5.Dragonsoul],
+    classes: [UnitClass_S4_5.Syphoner],
+    attackRange: 2
+  },
+  "莎弥拉": {
+    displayName: "莎弥拉",
+    englishId: "TFT4_Samira",
+    price: 5,
+    traits: [UnitOrigin_S4_5.Daredevil, UnitClass_S4_5.Sharpshooter, UnitClass_S4_5.Slayer],
+    origins: [UnitOrigin_S4_5.Daredevil],
+    classes: [UnitClass_S4_5.Sharpshooter, UnitClass_S4_5.Slayer],
+    attackRange: 2
+  },
+  "李青": {
+    displayName: "李青",
+    englishId: "TFT4_LeeSin",
+    price: 5,
+    traits: [UnitOrigin_S4_5.Divine, UnitClass_S4_5.Duelist],
+    origins: [UnitOrigin_S4_5.Divine],
+    classes: [UnitClass_S4_5.Duelist],
+    attackRange: 1
+  },
+  "瑟提": {
+    displayName: "瑟提",
+    englishId: "TFT4_Sett",
+    price: 5,
+    traits: [UnitOrigin_S4_5.Boss, UnitClass_S4_5.Brawler],
+    origins: [UnitOrigin_S4_5.Boss],
+    classes: [UnitClass_S4_5.Brawler],
+    attackRange: 1
+  },
+  "永恩": {
+    displayName: "永恩",
+    englishId: "TFT4_Yone",
+    price: 5,
+    traits: [UnitOrigin_S4_5.Exile, UnitClass_S4_5.Adept],
+    origins: [UnitOrigin_S4_5.Exile],
+    classes: [UnitClass_S4_5.Adept],
+    attackRange: 1
+  },
+  "基兰": {
+    displayName: "基兰",
+    englishId: "TFT4_Zilean",
+    price: 5,
+    traits: [UnitOrigin_S4_5.Cultist, UnitClass_S4_5.Mystic],
+    origins: [UnitOrigin_S4_5.Cultist],
+    classes: [UnitClass_S4_5.Mystic],
+    attackRange: 5
+  }
+};
+var GameStageType = /* @__PURE__ */ ((GameStageType2) => {
+  GameStageType2["EARLY_PVE"] = "EARLY_PVE";
+  GameStageType2["PVE"] = "PVE";
+  GameStageType2["CAROUSEL"] = "CAROUSEL";
+  GameStageType2["AUGMENT"] = "AUGMENT";
+  GameStageType2["PVP"] = "PVP";
+  GameStageType2["UNKNOWN"] = "UNKNOWN";
+  return GameStageType2;
+})(GameStageType || {});
+var TFTMode = /* @__PURE__ */ ((TFTMode2) => {
+  TFTMode2["CLASSIC"] = "CLASSIC";
+  TFTMode2["NORMAL"] = "NORMAL";
+  TFTMode2["RANK"] = "RANK";
+  TFTMode2["CLOCKWORK_TRAILS"] = "CLOCKWORK_TRAILS";
+  TFTMode2["S4_RUISHOU"] = "S4_RUISHOU";
+  return TFTMode2;
+})(TFTMode || {});
+const levelRegion = {
+  leftTop: { x: 25, y: 625 },
+  rightBottom: { x: 145, y: 645 }
+};
+const lootRegion = {
+  leftTop: { x: 200, y: 125 },
+  rightBottom: { x: 855, y: 585 }
+};
+const littleLegendDefaultPoint = { x: 120, y: 430 };
+const selfWalkAroundPoints = {
+  left: [{ x: 156, y: 400 }, { x: 165, y: 355 }, { x: 175, y: 315 }, { x: 185, y: 185 }, { x: 195, y: 150 }],
+  right: [{ x: 840, y: 495 }, { x: 830, y: 450 }, { x: 830, y: 420 }, { x: 800, y: 280 }, { x: 805, y: 295 }, { x: 790, y: 215 }, { x: 790, y: 215 }, { x: 785, y: 180 }, { x: 785, y: 150 }]
+};
+const coinRegion = {
+  leftTop: { x: 505, y: 626 },
+  rightBottom: { x: 545, y: 642 }
+};
+const shopSlot = {
+  SHOP_SLOT_1: { x: 240, y: 700 },
+  SHOP_SLOT_2: { x: 380, y: 700 },
+  SHOP_SLOT_3: { x: 520, y: 700 },
+  SHOP_SLOT_4: { x: 660, y: 700 },
+  SHOP_SLOT_5: { x: 800, y: 700 }
+};
+const shopSlotNameRegions = {
+  SLOT_1: {
+    // width: 108 height:18
+    leftTop: { x: 173, y: 740 },
+    rightBottom: { x: 281, y: 758 }
+  },
+  SLOT_2: {
+    leftTop: { x: 315, y: 740 },
+    rightBottom: { x: 423, y: 758 }
+  },
+  SLOT_3: {
+    leftTop: { x: 459, y: 740 },
+    rightBottom: { x: 567, y: 758 }
+  },
+  SLOT_4: {
+    leftTop: { x: 602, y: 740 },
+    rightBottom: { x: 710, y: 758 }
+  },
+  SLOT_5: {
+    leftTop: { x: 746, y: 740 },
+    rightBottom: { x: 854, y: 758 }
+  }
+};
+const detailChampionNameRegion = {
+  leftTop: { x: 870, y: 226 },
+  rightBottom: { x: 978, y: 244 }
+};
+const detailEquipRegion = {
+  SLOT_1: {
+    leftTop: { x: 881, y: 347 },
+    rightBottom: { x: 919, y: 385 }
+  },
+  SLOT_2: {
+    leftTop: { x: 927, y: 347 },
+    rightBottom: { x: 965, y: 385 }
+  },
+  SLOT_3: {
+    leftTop: { x: 973, y: 347 },
+    rightBottom: { x: 1011, y: 385 }
+  }
+};
+const itemForgeTooltipRegion = {
+  leftTop: { x: 56, y: 7 },
+  rightBottom: { x: 176, y: 27 }
+};
+const itemForgeTooltipRegionEdge = {
+  leftTop: { x: 585, y: 7 },
+  rightBottom: { x: 695, y: 27 }
+};
+const detailChampionStarRegion = {
+  leftTop: { x: 919, y: 122 },
+  rightBottom: { x: 974, y: 132 }
+};
+const refreshShopPoint = { x: 135, y: 730 };
+const buyExpPoint = { x: 135, y: 680 };
+const equipmentSlot = {
+  EQ_SLOT_1: { x: 20, y: 210 },
+  //+35
+  EQ_SLOT_2: { x: 20, y: 245 },
+  EQ_SLOT_3: { x: 20, y: 280 },
+  EQ_SLOT_4: { x: 20, y: 315 },
+  EQ_SLOT_5: { x: 20, y: 350 },
+  EQ_SLOT_6: { x: 20, y: 385 },
+  EQ_SLOT_7: { x: 20, y: 430 },
+  //   这里重置下准确位置
+  EQ_SLOT_8: { x: 20, y: 465 },
+  EQ_SLOT_9: { x: 20, y: 500 },
+  EQ_SLOT_10: { x: 20, y: 535 }
+};
+const equipmentRegion = {
+  //  宽24，高25
+  SLOT_1: {
+    //  y+=36
+    leftTop: { x: 9, y: 198 },
+    rightBottom: { x: 32, y: 222 }
+  },
+  SLOT_2: {
+    leftTop: { x: 9, y: 234 },
+    rightBottom: { x: 32, y: 258 }
+  },
+  SLOT_3: {
+    leftTop: { x: 9, y: 271 },
+    rightBottom: { x: 32, y: 295 }
+  },
+  SLOT_4: {
+    leftTop: { x: 9, y: 307 },
+    rightBottom: { x: 32, y: 331 }
+  },
+  SLOT_5: {
+    leftTop: { x: 9, y: 344 },
+    rightBottom: { x: 32, y: 368 }
+  },
+  SLOT_6: {
+    leftTop: { x: 9, y: 380 },
+    rightBottom: { x: 32, y: 404 }
+  },
+  SLOT_7: {
+    leftTop: { x: 9, y: 417 },
+    rightBottom: { x: 32, y: 441 }
+  },
+  SLOT_8: {
+    leftTop: { x: 9, y: 453 },
+    rightBottom: { x: 32, y: 477 }
+  },
+  SLOT_9: {
+    leftTop: { x: 9, y: 490 },
+    rightBottom: { x: 32, y: 514 }
+  },
+  SLOT_10: {
+    leftTop: { x: 9, y: 526 },
+    rightBottom: { x: 32, y: 550 }
+  }
+};
+const fightBoardSlotPoint = {
+  // x+=80
+  //  第一行的棋子位置
+  R1_C1: { x: 230, y: 300 },
+  R1_C2: { x: 310, y: 300 },
+  R1_C3: { x: 390, y: 300 },
+  R1_C4: { x: 470, y: 300 },
+  R1_C5: { x: 550, y: 300 },
+  R1_C6: { x: 630, y: 300 },
+  R1_C7: { x: 710, y: 300 },
+  //  第二行的棋子位置        //  x+=85
+  R2_C1: { x: 260, y: 355 },
+  R2_C2: { x: 345, y: 355 },
+  R2_C3: { x: 430, y: 355 },
+  R2_C4: { x: 515, y: 355 },
+  R2_C5: { x: 600, y: 355 },
+  R2_C6: { x: 685, y: 355 },
+  R2_C7: { x: 770, y: 355 },
+  //  第三行棋子的位置        //  x+=90
+  R3_C1: { x: 200, y: 405 },
+  R3_C2: { x: 290, y: 405 },
+  R3_C3: { x: 380, y: 405 },
+  R3_C4: { x: 470, y: 405 },
+  R3_C5: { x: 560, y: 405 },
+  R3_C6: { x: 650, y: 405 },
+  R3_C7: { x: 740, y: 405 },
+  //  第四行棋子的位置        //  x+=90
+  R4_C1: { x: 240, y: 460 },
+  R4_C2: { x: 330, y: 460 },
+  R4_C3: { x: 420, y: 460 },
+  R4_C4: { x: 510, y: 460 },
+  R4_C5: { x: 600, y: 460 },
+  R4_C6: { x: 690, y: 460 },
+  R4_C7: { x: 780, y: 460 }
+};
+const fightBoardSlotRegion = {
+  // x+=80
+  //  第一行的棋子位置
+  R1_C1: {
+    leftTop: { x: 210 + 5, y: 300 - 10 },
+    rightBottom: { x: 255 - 5, y: 330 }
+  },
+  R1_C2: {
+    leftTop: { x: 290 + 5, y: 300 - 10 },
+    rightBottom: { x: 340 - 5, y: 330 }
+  },
+  R1_C3: {
+    leftTop: { x: 370 + 5, y: 300 - 10 },
+    rightBottom: { x: 420 - 5, y: 330 }
+  },
+  R1_C4: {
+    leftTop: { x: 450 + 5, y: 300 - 10 },
+    rightBottom: { x: 500 - 5, y: 330 }
+  },
+  R1_C5: {
+    leftTop: { x: 530 + 5, y: 300 - 10 },
+    rightBottom: { x: 585 - 5, y: 330 }
+  },
+  R1_C6: {
+    leftTop: { x: 615 + 5, y: 300 - 10 },
+    rightBottom: { x: 665 - 5, y: 330 }
+  },
+  R1_C7: {
+    leftTop: { x: 695 + 5, y: 300 - 10 },
+    rightBottom: { x: 750 - 5, y: 330 }
+  },
+  //  第二行的棋子位置        //  x+=85
+  R2_C1: {
+    leftTop: { x: 240 + 5, y: 350 - 10 },
+    rightBottom: { x: 285 - 5, y: 385 }
+  },
+  R2_C2: {
+    leftTop: { x: 325 + 5, y: 350 - 10 },
+    rightBottom: { x: 370 - 5, y: 385 }
+  },
+  R2_C3: {
+    leftTop: { x: 410 + 5, y: 350 - 10 },
+    rightBottom: { x: 455 - 5, y: 385 }
+  },
+  R2_C4: {
+    leftTop: { x: 495 + 5, y: 350 - 10 },
+    rightBottom: { x: 540 - 5, y: 385 }
+  },
+  R2_C5: {
+    leftTop: { x: 575 + 5, y: 350 - 10 },
+    rightBottom: { x: 625 - 5, y: 385 }
+  },
+  R2_C6: {
+    leftTop: { x: 660 + 5, y: 350 - 10 },
+    rightBottom: { x: 710 - 5, y: 385 }
+  },
+  R2_C7: {
+    leftTop: { x: 745 + 5, y: 350 - 10 },
+    rightBottom: { x: 795 - 5, y: 385 }
+  },
+  //  第三行棋子的位置        //  x+=90
+  R3_C1: {
+    leftTop: { x: 185 + 5, y: 405 - 10 },
+    rightBottom: { x: 230 - 5, y: 440 }
+  },
+  R3_C2: {
+    leftTop: { x: 275 + 5, y: 405 - 10 },
+    rightBottom: { x: 320 - 5, y: 440 }
+  },
+  R3_C3: {
+    leftTop: { x: 360 + 5, y: 405 - 10 },
+    rightBottom: { x: 410 - 5, y: 440 }
+  },
+  R3_C4: {
+    leftTop: { x: 445 + 5, y: 405 - 10 },
+    rightBottom: { x: 495 - 5, y: 440 }
+  },
+  R3_C5: {
+    leftTop: { x: 535 + 5, y: 405 - 10 },
+    rightBottom: { x: 585 - 5, y: 440 }
+  },
+  R3_C6: {
+    leftTop: { x: 620 + 5, y: 405 - 10 },
+    rightBottom: { x: 675 - 5, y: 440 }
+  },
+  R3_C7: {
+    leftTop: { x: 705 + 5, y: 405 - 10 },
+    rightBottom: { x: 760 - 5, y: 440 }
+  },
+  //  第四行棋子的位置        //  x+=90
+  R4_C1: {
+    leftTop: { x: 215 + 5, y: 465 - 10 },
+    rightBottom: { x: 265 - 5, y: 500 }
+  },
+  R4_C2: {
+    leftTop: { x: 310 + 5, y: 465 - 10 },
+    rightBottom: { x: 355 - 5, y: 500 }
+  },
+  R4_C3: {
+    leftTop: { x: 395 + 5, y: 465 - 10 },
+    rightBottom: { x: 450 - 5, y: 500 }
+  },
+  R4_C4: {
+    leftTop: { x: 490 + 5, y: 465 - 10 },
+    rightBottom: { x: 540 - 5, y: 500 }
+  },
+  R4_C5: {
+    leftTop: { x: 580 + 5, y: 465 - 10 },
+    rightBottom: { x: 635 - 5, y: 500 }
+  },
+  R4_C6: {
+    leftTop: { x: 670 + 5, y: 465 - 10 },
+    rightBottom: { x: 725 - 5, y: 500 }
+  },
+  R4_C7: {
+    leftTop: { x: 760 + 5, y: 465 - 10 },
+    rightBottom: { x: 815 - 5, y: 500 }
+  }
+};
+const benchSlotRegion = {
+  SLOT_1: {
+    leftTop: { x: 105 + 5, y: 530 - 15 },
+    rightBottom: { x: 155 - 5, y: 585 }
+  },
+  SLOT_2: {
+    leftTop: { x: 190 + 5, y: 530 - 15 },
+    rightBottom: { x: 245 - 5, y: 585 }
+  },
+  SLOT_3: {
+    leftTop: { x: 270 + 5, y: 530 - 15 },
+    rightBottom: { x: 325 - 5, y: 585 }
+  },
+  SLOT_4: {
+    leftTop: { x: 355 + 5, y: 530 - 15 },
+    rightBottom: { x: 410 - 5, y: 585 }
+  },
+  SLOT_5: {
+    leftTop: { x: 435 + 5, y: 530 - 15 },
+    rightBottom: { x: 495 - 5, y: 585 }
+  },
+  SLOT_6: {
+    leftTop: { x: 520 + 5, y: 530 - 15 },
+    rightBottom: { x: 580 - 5, y: 585 }
+  },
+  SLOT_7: {
+    leftTop: { x: 600 + 5, y: 530 - 15 },
+    rightBottom: { x: 665 - 5, y: 585 }
+  },
+  SLOT_8: {
+    leftTop: { x: 680 + 5, y: 530 - 15 },
+    rightBottom: { x: 750 - 5, y: 585 }
+  },
+  SLOT_9: {
+    leftTop: { x: 765 + 5, y: 530 - 15 },
+    rightBottom: { x: 830 - 5, y: 585 }
+  }
+};
+const benchSlotPoints = {
+  SLOT_1: { x: 130, y: 555 },
+  SLOT_2: { x: 210, y: 555 },
+  SLOT_3: { x: 295, y: 555 },
+  SLOT_4: { x: 385, y: 555 },
+  SLOT_5: { x: 465, y: 555 },
+  SLOT_6: { x: 550, y: 555 },
+  SLOT_7: { x: 630, y: 555 },
+  SLOT_8: { x: 720, y: 555 },
+  SLOT_9: { x: 800, y: 555 }
+};
+const hexSlot = {
+  //  x+=295
+  SLOT_1: { x: 215, y: 410 },
+  SLOT_2: { x: 510, y: 410 },
+  SLOT_3: { x: 805, y: 410 }
+};
+const sharedDraftPoint = { x: 530, y: 400 };
+const gameStageDisplayStageOne = {
+  leftTop: { x: 411, y: 6 },
+  rightBottom: { x: 442, y: 22 }
+};
+const gameStageDisplayNormal = {
+  leftTop: { x: 374, y: 6 },
+  rightBottom: { x: 403, y: 22 }
+};
+const gameStageDisplayTheClockworkTrails = {
+  leftTop: { x: 337, y: 6 },
+  rightBottom: { x: 366, y: 22 }
+};
+const clockworkTrailsFightButtonPoint = {
+  x: 955,
+  y: 705
+};
+const clockworkTrailsQuitNowButtonRegion = {
+  leftTop: { x: 780, y: 555 },
+  rightBottom: { x: 845, y: 570 }
+};
+const clockworkTrailsQuitNowButtonPoint = {
+  x: 815,
+  y: 560
+};
+const combatPhaseTextRegion = {
+  leftTop: { x: 465, y: 110 },
+  rightBottom: { x: 560, y: 135 }
+};
+var ItemForgeType = /* @__PURE__ */ ((ItemForgeType2) => {
+  ItemForgeType2["NONE"] = "NONE";
+  ItemForgeType2["BASIC"] = "BASIC";
+  ItemForgeType2["COMPLETED"] = "COMPLETED";
+  ItemForgeType2["ARTIFACT"] = "ARTIFACT";
+  ItemForgeType2["SUPPORT"] = "SUPPORT";
+  return ItemForgeType2;
+})(ItemForgeType || {});
+const TFT_16_CHESS_DATA = _TFT_16_CHESS_DATA;
+const TFT_4_CHESS_DATA = _TFT_4_CHESS_DATA;
 const TFT_16_EQUIP_DATA = _TFT_16_EQUIP_DATA;
+function getChessDataForMode(mode) {
+  switch (mode) {
+    case "S4_RUISHOU":
+      return TFT_4_CHESS_DATA;
+    case "NORMAL":
+    case "RANK":
+    case "CLOCKWORK_TRAILS":
+    default:
+      return TFT_16_CHESS_DATA;
+  }
+}
+function getSeasonTemplateDir(mode) {
+  switch (mode) {
+    case "S4_RUISHOU":
+      return "s4";
+    case "NORMAL":
+    case "RANK":
+    case "CLOCKWORK_TRAILS":
+    default:
+      return "s16";
+  }
+}
 const CHAMPION_EN_TO_CN = {};
-for (const [cnName, champion] of Object.entries(TFT_16_CHAMPION_DATA)) {
+for (const [cnName, champion] of Object.entries(TFT_16_CHESS_DATA)) {
   if (champion.englishId) {
     CHAMPION_EN_TO_CN[champion.englishId] = cnName;
   }
@@ -8806,7 +9394,10 @@ const EQUIP_ALIASES = {
 };
 Object.assign(EQUIP_EN_TO_CN, EQUIP_ALIASES);
 function getChampionRange(championName) {
-  return TFT_16_CHAMPION_DATA[championName]?.attackRange;
+  return TFT_16_CHESS_DATA[championName]?.attackRange;
+}
+function isStandardChessMode(mode) {
+  return mode === "NORMAL" || mode === "RANK" || mode === "S4_RUISHOU";
 }
 var LogMode = /* @__PURE__ */ ((LogMode2) => {
   LogMode2["SIMPLE"] = "SIMPLE";
@@ -9083,11 +9674,11 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-8_qkInzF.js");
+    const ServicesModule = await import("./chunks/index-DQcTo0zb.js");
     hexService = ServicesModule.hexService;
-    const TftOperatorModule = await import("./chunks/TftOperator-CcSHw4T4.js").then((n) => n.T);
+    const TftOperatorModule = await import("./chunks/TftOperator-CDNnv_nv.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
-    const LineupModule = await import("./chunks/index-B_hzH1St.js");
+    const LineupModule = await import("./chunks/index-CRHqtjSw.js");
     lineupLoader = LineupModule.lineupLoader;
     const GlobalHotkeyManagerModule = await import("./chunks/GlobalHotkeyManager-Cbcy0EP4.js");
     globalHotkeyManager = GlobalHotkeyManagerModule.globalHotkeyManager;
@@ -9197,7 +9788,7 @@ function registerHandler() {
   });
   ipcMain.handle(IpcChannel.TFT_GET_CHAMPION_CN_TO_EN_MAP, async () => {
     const cnToEnMap = {};
-    for (const [cnName, unitData] of Object.entries(TFT_16_CHAMPION_DATA)) {
+    for (const [cnName, unitData] of Object.entries(TFT_16_CHESS_DATA)) {
       cnToEnMap[cnName] = unitData.englishId;
     }
     return cnToEnMap;
@@ -9294,50 +9885,54 @@ function registerHandler() {
   });
 }
 export {
-  coinRegion as A,
-  hexSlot as B,
-  lootRegion as C,
-  littleLegendDefaultPoint as D,
-  selfWalkAroundPoints as E,
-  equipmentSlot as F,
+  clockworkTrailsQuitNowButtonPoint as A,
+  levelRegion as B,
+  coinRegion as C,
+  hexSlot as D,
+  lootRegion as E,
+  littleLegendDefaultPoint as F,
   GameStageType as G,
-  combatPhaseTextRegion as H,
+  selfWalkAroundPoints as H,
   ItemForgeType as I,
-  getChampionRange as J,
-  clockworkTrailsFightButtonPoint as K,
-  sharedDraftPoint as L,
-  GameConfigHelper as M,
+  equipmentSlot as J,
+  combatPhaseTextRegion as K,
+  getChampionRange as L,
+  clockworkTrailsFightButtonPoint as M,
   MAIN_DIST,
-  IpcChannel as N,
-  LCUManager as O,
-  LcuEventUri as P,
+  sharedDraftPoint as N,
+  GameConfigHelper as O,
+  IpcChannel as P,
+  LCUManager as Q,
+  getSeasonTemplateDir as R,
   RENDERER_DIST,
-  TFT_16_CHAMPION_DATA as T,
+  isStandardChessMode as S,
+  TFT_4_CHESS_DATA as T,
+  LcuEventUri as U,
   VITE_DEV_SERVER_URL,
-  TFT_16_EQUIP_DATA as a,
-  TFTMode as b,
-  settingsStore as c,
-  shopSlotNameRegions as d,
-  equipmentRegion as e,
+  TFT_16_CHESS_DATA as a,
+  TFT_16_EQUIP_DATA as b,
+  TFTMode as c,
+  settingsStore as d,
+  shopSlotNameRegions as e,
   fs as f,
-  detailEquipRegion as g,
-  shopSlot as h,
-  buyExpPoint as i,
-  benchSlotPoints as j,
-  benchSlotRegion as k,
+  getChessDataForMode as g,
+  equipmentRegion as h,
+  detailEquipRegion as i,
+  shopSlot as j,
+  buyExpPoint as k,
   logger as l,
-  detailChampionNameRegion as m,
-  detailChampionStarRegion as n,
-  fightBoardSlotPoint as o,
-  fightBoardSlotRegion as p,
-  clockworkTrailsQuitNowButtonRegion as q,
+  benchSlotPoints as m,
+  benchSlotRegion as n,
+  detailChampionNameRegion as o,
+  detailChampionStarRegion as p,
+  fightBoardSlotPoint as q,
   refreshShopPoint as r,
   sleep as s,
-  itemForgeTooltipRegionEdge as t,
-  itemForgeTooltipRegion as u,
-  gameStageDisplayStageOne as v,
-  gameStageDisplayNormal as w,
-  gameStageDisplayTheClockworkTrails as x,
-  clockworkTrailsQuitNowButtonPoint as y,
-  levelRegion as z
+  fightBoardSlotRegion as t,
+  clockworkTrailsQuitNowButtonRegion as u,
+  itemForgeTooltipRegionEdge as v,
+  itemForgeTooltipRegion as w,
+  gameStageDisplayStageOne as x,
+  gameStageDisplayNormal as y,
+  gameStageDisplayTheClockworkTrails as z
 };
