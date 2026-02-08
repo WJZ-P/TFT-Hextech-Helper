@@ -5696,14 +5696,14 @@ class GameConfigHelper {
   tftConfigPath;
   // 预设的云顶设置
   isTFTConfig = false;
-  /** 文件监听器实例，用于守护恢复后的配置不被 LOL 客户端覆盖 */
+  /** TFT 下棋配置中 game.cfg 的 MD5 哈希值（在 applyTFTConfig 时记录） */
+  tftConfigHash = "";
+  /** 文件监听器实例，用于长期守护恢复后的配置不被 LOL 客户端覆盖 */
   configWatcher = null;
   /** 防抖定时器，避免短时间内触发多次恢复 */
   watcherDebounceTimer = null;
-  /** 守护超时定时器，到期后自动停止监听 */
-  guardTimeoutTimer = null;
   /** 守护期间允许的最大自动恢复次数，防止无限循环 */
-  MAX_GUARD_RESTORES = 5;
+  MAX_GUARD_RESTORES = 1;
   /** 守护期间已执行的自动恢复次数 */
   guardRestoreCount = 0;
   constructor(installPath) {
@@ -5728,10 +5728,24 @@ class GameConfigHelper {
     logger.debug(`[ConfigHelper] 主备份路径: ${this.primaryBackupPath}`);
     logger.debug(`[ConfigHelper] 兜底备份路径: ${this.fallbackBackupPath}`);
     logger.debug(`[ConfigHelper] 预设云顶之弈设置目录: ${this.tftConfigPath}`);
+    this.initTftConfigHash();
   }
   /**
-   * 喵~ ✨ 这是新的初始化方法！✨
-   * 在你的应用程序启动时，调用一次这个方法来设置好一切。
+   * 预计算 TFT 下棋配置 game.cfg 的哈希值
+   * 这个哈希在整个软件生命周期内不会变化（TFT 配置是预设的固定文件）
+   */
+  async initTftConfigHash() {
+    try {
+      const tftGameCfg = path__default.join(this.tftConfigPath, "game.cfg");
+      if (await fs.pathExists(tftGameCfg)) {
+        this.tftConfigHash = await this.getFileHash(tftGameCfg);
+        logger.debug(`[ConfigHelper] TFT 配置哈希: ${this.tftConfigHash}`);
+      }
+    } catch (err) {
+      logger.warn(`[ConfigHelper] 计算 TFT 配置哈希失败: ${err}`);
+    }
+  }
+  /**
    * @param installPath 游戏安装目录
    */
   static init(installPath) {
@@ -5753,6 +5767,11 @@ class GameConfigHelper {
    * 备份当前的游戏设置
    * @description 把游戏目录的 Config 文件夹完整地拷贝到备份目录
    *              优先使用软件根目录，失败则使用 C 盘 userData 作为兜底
+   * 
+   * 安全检查：备份前会检测当前游戏配置是否为 TFT 下棋配置
+   * 如果是，说明上次恢复失败了，此时不应该备份（否则会用错误配置覆盖正确备份）
+   * 
+   * @returns true 表示备份成功, false 表示备份失败或被拒绝
    */
   static async backup() {
     const instance = GameConfigHelper.getInstance();
@@ -5762,6 +5781,13 @@ class GameConfigHelper {
     const sourceExists = await fs.pathExists(instance.gameConfigPath);
     if (!sourceExists) {
       logger.error(`备份失败！找不到游戏设置目录：${instance.gameConfigPath}`);
+      return false;
+    }
+    const isTftConfig = await instance.isCurrentConfigTFT();
+    if (isTftConfig) {
+      logger.error(`[ConfigHelper] 备份被拒绝！当前游戏配置与 TFT 下棋配置一致，说明上次恢复失败`);
+      logger.error(`[ConfigHelper] 将使用已有的备份进行恢复...`);
+      await GameConfigHelper.restore(3, 1500);
       return false;
     }
     try {
@@ -5783,6 +5809,30 @@ class GameConfigHelper {
       return true;
     } catch (fallbackErr) {
       logger.error(`备份失败！主路径和兜底路径均不可用: ${fallbackErr}`);
+      return false;
+    }
+  }
+  /**
+   * 检测当前游戏配置是否为 TFT 下棋配置
+   * 
+   * 通过比对当前 game.cfg 的哈希值和预设 TFT 配置的哈希值来判断
+   * 如果一致，说明当前游戏还在用我们的低分辨率挂机配置
+   * 
+   * @returns true 表示当前配置是 TFT 下棋配置
+   */
+  async isCurrentConfigTFT() {
+    if (!this.tftConfigHash) return false;
+    try {
+      const currentGameCfg = path__default.join(this.gameConfigPath, "game.cfg");
+      if (!await fs.pathExists(currentGameCfg)) return false;
+      const currentHash = await this.getFileHash(currentGameCfg);
+      const isTft = currentHash === this.tftConfigHash;
+      if (isTft) {
+        logger.warn(`[ConfigHelper] 当前 game.cfg 哈希 (${currentHash}) 与 TFT 配置完全一致！`);
+      }
+      return isTft;
+    } catch (err) {
+      logger.warn(`[ConfigHelper] 检测 TFT 配置失败: ${err}`);
       return false;
     }
   }
@@ -5920,27 +5970,28 @@ class GameConfigHelper {
     return crypto.createHash("md5").update(content).digest("hex");
   }
   /**
-   * 启动配置守护监听器
+   * 启动长期配置守护监听器
    * 
-   * 在 restore 成功后调用，监听游戏配置目录的文件变化。
-   * 如果检测到 LOL 客户端在恢复后又改写了配置文件，会自动重新恢复。
+   * 在 restore 成功后调用，持续监听游戏配置目录的文件变化。
+   * 守护跟随软件生命周期运行，直到以下情况之一才停止：
+   *   1. 调用 stopConfigGuard()（下次开始挂机前、软件退出时）
+   *   2. 达到最大自动恢复次数（防止无限互相覆盖）
    * 
-   * 守护机制会在指定时间后自动停止，防止长期占用资源。
-   * 同时有最大恢复次数限制，防止与 LOL 客户端无限互相覆盖。
-   * 
-   * @param guardDuration 守护持续时间（毫秒），默认 30 秒
+   * 守护逻辑：
+   *   检测到 game.cfg 被修改 → 计算哈希 → 如果变成了 TFT 下棋配置 → 自动恢复用户备份
+   *   这样就能应对"中途退出软件功能 → 游戏结束 → LOL 写入下棋配置"的场景
    */
-  static startConfigGuard(guardDuration = 3e4) {
+  static startConfigGuard() {
     const instance = GameConfigHelper.getInstance();
     if (!instance) return;
     GameConfigHelper.stopConfigGuard();
     instance.guardRestoreCount = 0;
-    logger.info(`[ConfigGuard] 启动配置守护，持续 ${guardDuration / 1e3} 秒`);
+    logger.info(`[ConfigGuard] 启动长期配置守护（跟随软件生命周期）`);
     try {
       instance.configWatcher = fs.watch(
         instance.gameConfigPath,
         { recursive: true },
-        (eventType, filename) => {
+        (_eventType, filename) => {
           if (!filename || !filename.toLowerCase().includes("game.cfg")) return;
           if (instance.isTFTConfig) return;
           if (instance.guardRestoreCount >= instance.MAX_GUARD_RESTORES) {
@@ -5952,46 +6003,46 @@ class GameConfigHelper {
             clearTimeout(instance.watcherDebounceTimer);
           }
           instance.watcherDebounceTimer = setTimeout(async () => {
-            logger.info(`[ConfigGuard] 检测到 ${filename} 被外部修改，正在验证...`);
-            let backupPath = instance.currentBackupPath;
-            if (!await fs.pathExists(backupPath)) {
-              backupPath = instance.primaryBackupPath;
-            }
-            if (!await fs.pathExists(backupPath)) {
-              backupPath = instance.fallbackBackupPath;
-            }
-            const isConsistent = await instance.verifyRestore(backupPath);
-            if (!isConsistent) {
+            const isTftNow = await instance.isCurrentConfigTFT();
+            if (isTftNow) {
               instance.guardRestoreCount++;
-              logger.warn(`[ConfigGuard] 配置被篡改！自动恢复中... (第 ${instance.guardRestoreCount} 次)`);
+              logger.warn(`[ConfigGuard] 检测到配置被改为 TFT 下棋配置！自动恢复中... (第 ${instance.guardRestoreCount} 次)`);
+              let backupPath = instance.currentBackupPath;
+              if (!await fs.pathExists(backupPath)) {
+                backupPath = instance.primaryBackupPath;
+              }
+              if (!await fs.pathExists(backupPath)) {
+                backupPath = instance.fallbackBackupPath;
+              }
+              if (!await fs.pathExists(backupPath)) {
+                logger.error(`[ConfigGuard] 找不到备份目录，无法恢复`);
+                return;
+              }
               try {
                 await fs.copy(backupPath, instance.gameConfigPath);
                 const verified = await instance.verifyRestore(backupPath);
                 if (verified) {
-                  logger.info(`[ConfigGuard] 自动恢复成功，验证通过`);
+                  logger.info(`[ConfigGuard] 自动恢复成功，用户配置已还原`);
                 } else {
                   logger.warn(`[ConfigGuard] 自动恢复后验证仍不一致`);
                 }
               } catch (err) {
                 logger.error(`[ConfigGuard] 自动恢复失败: ${err}`);
               }
-            } else {
-              logger.debug(`[ConfigGuard] ${filename} 变更但内容验证一致，无需恢复`);
             }
-          }, 500);
+          }, 1e3);
         }
       );
-      instance.guardTimeoutTimer = setTimeout(() => {
-        logger.info(`[ConfigGuard] 守护时间到，停止监听`);
-        GameConfigHelper.stopConfigGuard();
-      }, guardDuration);
     } catch (err) {
       logger.error(`[ConfigGuard] 启动监听失败: ${err}`);
     }
   }
   /**
    * 停止配置守护监听器
-   * 清理所有定时器和文件监听器，释放资源
+   * 在以下时机调用：
+   *   - 下次开始挂机前（StartState）
+   *   - 软件退出时（will-quit）
+   *   - 达到最大恢复次数时（自动停止）
    */
   static stopConfigGuard() {
     const instance = GameConfigHelper.getInstance();
@@ -5999,15 +6050,11 @@ class GameConfigHelper {
     if (instance.configWatcher) {
       instance.configWatcher.close();
       instance.configWatcher = null;
-      logger.debug(`[ConfigGuard] 文件监听器已关闭`);
+      logger.info(`[ConfigGuard] 配置守护已停止`);
     }
     if (instance.watcherDebounceTimer) {
       clearTimeout(instance.watcherDebounceTimer);
       instance.watcherDebounceTimer = null;
-    }
-    if (instance.guardTimeoutTimer) {
-      clearTimeout(instance.guardTimeoutTimer);
-      instance.guardTimeoutTimer = null;
     }
   }
 }
@@ -10841,7 +10888,7 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-BqMcWydW.js");
+    const ServicesModule = await import("./chunks/index-Cg_xp1P9.js");
     hexService = ServicesModule.hexService;
     const TftOperatorModule = await import("./chunks/TftOperator-Bv5E9wfl.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
