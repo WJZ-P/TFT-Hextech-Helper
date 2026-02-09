@@ -246,6 +246,7 @@ const LoadingPlaceholder = styled.div<{ theme: ThemeType }>`
   color: ${props => props.theme.colors.textSecondary};
   font-size: 0.9rem;
   padding: ${props => props.theme.spacing.small};
+  grid-column: 1 / -1;        /* 横跨 grid 所有列，确保在整个区域中居中 */
 `;
 
 /** 管理员权限提示横幅 */
@@ -377,8 +378,8 @@ const ModeToggleLabel = styled.button<{ theme: ThemeType; $active: boolean }>`
   background: none;
   border: none;
   padding: 6px 0;
-  font-size: 0.75rem;
-  font-weight: 800;
+  font-size: 0.85rem;
+  font-weight: 600;
   text-align: center;
   letter-spacing: 0.5px;
   color: ${props => props.$active ? props.theme.colors.textOnPrimary : props.theme.colors.textSecondary};
@@ -448,8 +449,8 @@ const SubModeToggleLabel = styled.button<{ theme: ThemeType; $active: boolean }>
   background: none;
   border: none;
   padding: 0;
-  font-size: 0.75rem;
-  font-weight: 800;
+  font-size: 0.85rem;
+  font-weight: 600;
   text-align: center;
   letter-spacing: 0.5px;
   color: ${props => props.$active ? props.theme.colors.textOnPrimary : props.theme.colors.textSecondary};
@@ -475,6 +476,7 @@ const LeftControlPanel = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  align-self: start;           /* 在 grid 中顶部对齐，让标题和右侧 StatsPanel 对齐 */
   gap: 10px;
   min-width: 200px;
   justify-self: start;
@@ -548,8 +550,8 @@ const LogModeToggleTextRow = styled.div`
 
 /** 日志模式单个文本 */
 const LogModeToggleLabel = styled.span<{ theme: ThemeType; $active: boolean }>`
-  font-size: 0.75rem;
-  font-weight: 800;
+  font-size: 0.85rem;
+  font-weight: 600;
   text-align: center;
   letter-spacing: 1px;
   color: ${props => props.$active ? props.theme.colors.textOnPrimary : props.theme.colors.textSecondary};
@@ -565,6 +567,7 @@ const StatsPanel = styled.div<{ theme: ThemeType }>`
   display: flex;
   flex-direction: column;
   align-items: center;
+  align-self: start;           /* 在 grid 中顶部对齐，让标题和左侧 LeftControlPanel 对齐 */
   gap: 8px;
   min-width: 200px;
   justify-self: end;
@@ -623,7 +626,7 @@ const StatsTextGroup = styled.div`
 
 /** 统计标签 */
 const StatsLabel = styled.span<{ theme: ThemeType }>`
-  font-size: 0.68rem;
+  font-size: 0.80rem;
   font-weight: 600;
   color: ${props => props.theme.colors.statsLabelColor};
   letter-spacing: 0.5px;
@@ -1187,32 +1190,35 @@ export const HomePage = () => {
     }, []);
 
     /**
-     * 格式化运行时长为 HH:MM:SS
-     * @param startTime 开始时间戳（ms），0 表示未开始
+     * 将秒数格式化为 HH:MM:SS
+     * @param totalSeconds 总秒数
      */
-    const formatElapsed = useCallback((startTime: number): string => {
-        if (startTime === 0) return '00:00:00';
-        const diff = Math.max(0, Math.floor((Date.now() - startTime) / 1000));
-        const h = String(Math.floor(diff / 3600)).padStart(2, '0');
-        const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
-        const s = String(diff % 60).padStart(2, '0');
+    const formatElapsed = useCallback((totalSeconds: number): string => {
+        const h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+        const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+        const s = String(totalSeconds % 60).padStart(2, '0');
         return `${h}:${m}:${s}`;
     }, []);
 
     // 每秒更新运行时长显示
     useEffect(() => {
-        // 立即更新一次
-        setElapsedTime(formatElapsed(statistics.sessionStartTime));
+        // 立即用 store 中的快照更新一次
+        setElapsedTime(formatElapsed(statistics.sessionElapsedSeconds));
 
-        // 只有正在运行时才启动计时器
-        if (statistics.sessionStartTime === 0) return;
+        // 只有正在运行时才启动计时器（轮询后端获取实时秒数）
+        if (!isRunning) return;
 
-        const timer = setInterval(() => {
-            setElapsedTime(formatElapsed(statistics.sessionStartTime));
+        const timer = setInterval(async () => {
+            try {
+                const stats = await window.stats.getStatistics();
+                setElapsedTime(formatElapsed(stats.sessionElapsedSeconds));
+            } catch {
+                // 忽略，下次再试
+            }
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [statistics.sessionStartTime, formatElapsed]);
+    }, [isRunning, statistics.sessionElapsedSeconds, formatElapsed]);
     
     // 监听快捷键触发的挂机切换事件（主进程已完成 start/stop，这里只同步 UI 状态）
     useEffect(() => {

@@ -18,8 +18,8 @@ export interface GameStatistics {
     sessionGamesPlayed: number;
     /** 历史累计挂机局数 */
     totalGamesPlayed: number;
-    /** 本次会话开始时间（时间戳 ms），0 表示尚未开始 */
-    sessionStartTime: number;
+    /** 本次会话已运行总时长（秒），后端计算好的，前端直接显示 */
+    sessionElapsedSeconds: number;
 }
 
 // 设置状态接口（前端关心的设置项）
@@ -33,7 +33,7 @@ interface SettingsState {
 const DEFAULT_STATISTICS: GameStatistics = {
     sessionGamesPlayed: 0,
     totalGamesPlayed: 0,
-    sessionStartTime: 0,
+    sessionElapsedSeconds: 0,
 };
 
 class SettingsStore {

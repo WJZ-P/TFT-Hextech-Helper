@@ -99,7 +99,7 @@ export function notifyHexRunningState(isRunning: boolean): void {
 export function notifyStatsUpdated(stats: {
     sessionGamesPlayed: number;
     totalGamesPlayed: number;
-    sessionStartTime: number;
+    sessionElapsedSeconds: number;
 }): void {
     const windows = BrowserWindow.getAllWindows();
     for (const win of windows) {

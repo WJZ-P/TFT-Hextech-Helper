@@ -183,7 +183,7 @@ const statsApi = {
     getStatistics: (): Promise<{
         sessionGamesPlayed: number;
         totalGamesPlayed: number;
-        sessionStartTime: number;
+        sessionElapsedSeconds: number;
     }> => ipcRenderer.invoke(IpcChannel.STATS_GET),
     /**
      * 监听统计数据更新事件
@@ -193,7 +193,7 @@ const statsApi = {
     onStatsUpdated: (callback: (stats: {
         sessionGamesPlayed: number;
         totalGamesPlayed: number;
-        sessionStartTime: number;
+        sessionElapsedSeconds: number;
     }) => void): (() => void) => {
         const listener = (_event: IpcRendererEvent, stats: any) => callback(stats);
         ipcRenderer.on(IpcChannel.STATS_UPDATED, listener);

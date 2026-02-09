@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.1] - 2026-02-08
+- 优化发条鸟游戏结束判断逻辑，现在从LCU接口读取isDead信息，更加健壮。
+- UI样式优化，新增统计功能.
+
 ## [1.3.0] - 2026-02-08
 
 - 修复发条鸟模式偶尔卡住的问题

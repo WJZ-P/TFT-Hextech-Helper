@@ -33,11 +33,14 @@ export class HexService {
     /** 本局结束后自动停止的标志 */
     private _stopAfterCurrentGame: boolean = false;
 
-    /** 本次会话已挂机局数（每次 start() 时重置） */
+    /** 本次会话已挂机局数（应用重启才重置） */
     private _sessionGamesPlayed: number = 0;
 
-    /** 本次会话的开始时间（每次 start() 时记录） */
-    private _sessionStartTime: number = 0;
+    /** 当前运行段的起始时间戳（ms），0 表示当前未运行 */
+    private _currentSegmentStart: number = 0;
+
+    /** 已累计的运行时长（ms），stop() 时把当前段累加进来 */
+    private _accumulatedMs: number = 0;
 
     /**
      * 私有构造函数，确保单例
@@ -98,10 +101,14 @@ export class HexService {
     }
 
     /**
-     * 获取本次会话开始时间的时间戳（毫秒）
+     * 获取本次会话已运行的总时长（秒）
+     * @description 累计时长 + 当前运行段时长（如果正在运行）
      */
-    public get sessionStartTime(): number {
-        return this._sessionStartTime;
+    public get sessionElapsedSeconds(): number {
+        const currentSegment = this._currentSegmentStart > 0
+            ? Date.now() - this._currentSegmentStart
+            : 0;
+        return Math.floor((this._accumulatedMs + currentSegment) / 1000);
     }
 
     /**
@@ -130,13 +137,13 @@ export class HexService {
     public getStatistics(): {
         sessionGamesPlayed: number;
         totalGamesPlayed: number;
-        sessionStartTime: number;
+        sessionElapsedSeconds: number;
     } {
         const stats = settingsStore.get('statistics');
         return {
             sessionGamesPlayed: this._sessionGamesPlayed,
             totalGamesPlayed: stats.totalGamesPlayed,
-            sessionStartTime: this._sessionStartTime,
+            sessionElapsedSeconds: this.sessionElapsedSeconds,
         };
     }
 
@@ -164,8 +171,7 @@ export class HexService {
             this.abortController = new AbortController();
             this.currentState = new StartState();
             this._stopAfterCurrentGame = false;  // 重置"本局结束后停止"标志
-            this._sessionGamesPlayed = 0;  // 重置本次会话局数
-            this._sessionStartTime = Date.now();  // 记录本次会话开始时间
+            this._currentSegmentStart = Date.now();  // 记录本段开始时间（不重置累计时长和局数）
 
             // 启动主循环 (异步，不阻塞)
             this.runMainLoop(this.abortController.signal);
@@ -191,6 +197,12 @@ export class HexService {
         try {
             logger.info("———————— [HexService] ————————");
             logger.info("[HexService] 海克斯科技，关闭！");
+
+            // 把当前运行段的时长累加到总计，然后清零段起始
+            if (this._currentSegmentStart > 0) {
+                this._accumulatedMs += Date.now() - this._currentSegmentStart;
+                this._currentSegmentStart = 0;
+            }
 
             // 触发取消信号，runMainLoop 的 finally 块会执行 EndState 进行清理
             this.abortController?.abort("user stop");
