@@ -389,7 +389,7 @@ class TftOperator {
                 // logger.info(`[TftOperator] 识别阶段: [${stageText}] -> ${stageType}`);
                 this.tftMode = TFTMode.CLASSIC;
             } else {
-                logger.warn(`[TftOperator] 无法识别当前阶段: "${stageText ?? "null"}，请确保游戏最小分辨率无边框居中，且不能被其他窗口遮挡"`);
+                logger.warn(`[TftOperator] 无法识别当前阶段: "${stageText ?? "null"}。请检查：1. 系统屏幕缩放是否为100%；2. 游戏分辨率是否为1024x768；3. 游戏窗口是否无边框居中且未被遮挡。"`);
             }
 
             return { type: stageType, stageText: stageText || "" };

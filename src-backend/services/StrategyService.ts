@@ -1346,7 +1346,7 @@ export class StrategyService {
             logger.warn("[StrategyService] 发条鸟模式 1-5（兜底）：意外进入海克斯选择，开始处理...");
 
             // 1. 等待海克斯选项加载
-            await sleep(800);
+            await sleep(1500);
 
             // 2. 点击中间的海克斯槽位（SLOT_2）
             logger.info("[StrategyService] 发条鸟模式 1-5：点击中间海克斯 SLOT_2");
