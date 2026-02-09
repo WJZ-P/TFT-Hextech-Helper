@@ -177,6 +177,10 @@ const DebugPage = () => {
                         toast(result ? '游戏进程已终止' : '终止失败', { type: result ? 'success' : 'error' });
                     }}>强制杀掉游戏进程</DebugButton>
                     
+                    <DebugButton $variant="danger" onClick={() => handleDebugClick('退出游戏', window.lcu.quitGame)}>
+                        退出游戏 (LCU)
+                    </DebugButton>
+                    
                     <DebugButton onClick={() => handleDebugClick('召唤师信息', window.lcu.getSummonerInfo)}>
                         获取召唤师信息
                     </DebugButton>

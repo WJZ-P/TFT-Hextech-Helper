@@ -313,6 +313,10 @@ const lcuApi = {
     leaveLobby: (): Promise<{ data?: any; error?: string }> => {
         return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'DELETE', '/lol-lobby/v2/lobby');
     },
+    /** 退出当前游戏（关闭游戏窗口，触发 early-exit） */
+    quitGame: (): Promise<{ data?: any; error?: string }> => {
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'POST', '/lol-gameflow/v1/early-exit');
+    },
 }
 export type LcuApi = typeof lcuApi
 contextBridge.exposeInMainWorld('lcu', lcuApi)

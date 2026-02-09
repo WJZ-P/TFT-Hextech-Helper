@@ -27,6 +27,7 @@ import { tftOperator } from '../TftOperator';
 import { GameStageType, GameStageResult, combatPhaseTextRegion } from '../TFTProtocol';
 import { logger } from '../utils/Logger';
 import { ocrService, OcrWorkerType, screenCapture } from '../tft';
+import { inGameApi, InGameApiEndpoints } from '../lcu/InGameApi';
 
 
 // ============================================================================
@@ -59,6 +60,8 @@ export interface GameStageEvents {
     stageChange: [GameStageEvent];
     /** 战斗阶段开始事件（检测到"战斗环节"文字） */
     fightingStart: [];
+    /** 发条鸟模式：InGame API 检测到玩家死亡 (isDead=true) */
+    clockworkDead: [];
 }
 
 // ============================================================================
@@ -96,6 +99,12 @@ export class GameStageMonitor extends EventEmitter {
 
     /** 当前阶段类型（如 PVE、PVP、CAROUSEL 等） */
     public currentStageType: GameStageType = GameStageType.UNKNOWN;
+
+    /** 发条鸟模式：isDead 轮询定时器 */
+    private deadPollTimer: NodeJS.Timeout | null = null;
+
+    /** 发条鸟模式：isDead 轮询间隔 (ms) */
+    private static readonly DEAD_POLL_INTERVAL_MS = 1000;
 
     private constructor() {
         super();
@@ -157,6 +166,9 @@ export class GameStageMonitor extends EventEmitter {
             this.pollTimer = null;
         }
 
+        // 同时停止发条鸟 isDead 轮询
+        this.stopClockworkDeadPoll();
+
         this.isRunning = false;
         logger.info('[GameStageMonitor] 阶段轮询已停止');
     }
@@ -172,6 +184,71 @@ export class GameStageMonitor extends EventEmitter {
         this.isFighting = false;
         this.currentStageType = GameStageType.UNKNOWN;
         logger.info('[GameStageMonitor] 状态已重置');
+    }
+
+    // ============================================================================
+    // 发条鸟模式：isDead 轮询
+    // ============================================================================
+
+    /**
+     * 启动发条鸟模式的 isDead 轮询
+     * @description 每秒通过 InGame API 检测玩家是否死亡。
+     *              检测到 isDead=true 时发出 'clockworkDead' 事件，
+     *              由 GameRunningState 监听后执行点击退出按钮操作。
+     *              
+     *              相比模板匹配"现在退出"按钮来判断死亡：
+     *              - 不依赖屏幕截图和图像识别，更稳定可靠
+     *              - 不受分辨率、画质、UI 缩放等影响
+     *              - 响应更快（1秒内检测到死亡）
+     */
+    public startClockworkDeadPoll(): void {
+        if (this.deadPollTimer) {
+            logger.warn('[GameStageMonitor] isDead 轮询已在运行中，忽略重复启动');
+            return;
+        }
+
+        logger.info(`[GameStageMonitor] 发条鸟模式：启动 isDead 轮询 (${GameStageMonitor.DEAD_POLL_INTERVAL_MS}ms)`);
+
+        this.deadPollTimer = setInterval(() => {
+            this.checkClockworkDead();
+        }, GameStageMonitor.DEAD_POLL_INTERVAL_MS);
+    }
+
+    /**
+     * 停止发条鸟模式的 isDead 轮询
+     */
+    public stopClockworkDeadPoll(): void {
+        if (this.deadPollTimer) {
+            clearInterval(this.deadPollTimer);
+            this.deadPollTimer = null;
+            logger.info('[GameStageMonitor] 发条鸟模式：isDead 轮询已停止');
+        }
+    }
+
+    /**
+     * 轮询 InGame API 检测发条鸟模式下玩家是否死亡
+     * @description 请求 /liveclientdata/allgamedata，
+     *              从 allPlayers 中找到非 Bot 玩家，检查 isDead 字段。
+     *              isDead=true 时每次都发出 'clockworkDead' 事件（不做去重），
+     *              因为刚死亡时退出按钮可能还没出现，需要反复点击直到游戏真正退出。
+     *              请求失败时静默忽略（游戏可能已关闭，会有 GAMEFLOW_PHASE 兜底）。
+     */
+    private async checkClockworkDead(): Promise<void> {
+        try {
+            const response = await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);
+            const allPlayers = response.data?.allPlayers || [];
+            
+            // 找到当前玩家（非 Bot 的第一个玩家，发条鸟模式只有一个真人）
+            const me = allPlayers.find((p: any) => !p.isBot);
+            
+            if (me && me.isDead === true) {
+                logger.info('[GameStageMonitor] 发条鸟模式：InGame API 检测到玩家已死亡 (isDead=true)，发出 clockworkDead 事件');
+                this.emit('clockworkDead');
+            }
+        } catch (_error) {
+            // InGame API 请求失败是正常的（游戏可能已经关闭）
+            // 不做任何处理，等待 GAMEFLOW_PHASE 事件通知游戏结束
+        }
     }
 
     // ============================================================================

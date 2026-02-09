@@ -320,6 +320,10 @@ const lcuApi = {
   /** 退出当前房间（离开大厅） */
   leaveLobby: () => {
     return electron.ipcRenderer.invoke(IpcChannel.LCU_REQUEST, "DELETE", "/lol-lobby/v2/lobby");
+  },
+  /** 退出当前游戏（关闭游戏窗口，触发 early-exit） */
+  quitGame: () => {
+    return electron.ipcRenderer.invoke(IpcChannel.LCU_REQUEST, "POST", "/lol-gameflow/v1/early-exit");
   }
 };
 electron.contextBridge.exposeInMainWorld("lcu", lcuApi);

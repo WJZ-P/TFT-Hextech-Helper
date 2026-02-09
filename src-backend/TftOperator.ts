@@ -353,15 +353,8 @@ class TftOperator {
                     return { type: GameStageType.PVP, stageText: clockText };
                 }
 
-                // 发条鸟区域识别失败，尝试检测"现在退出"按钮
-                // 可能是玩家已死亡，屏幕上显示了退出按钮
-                const quitButtonClicked = await this.checkAndClickClockworkQuitButton();
-                if (quitButtonClicked) {
-                    // 点击了退出按钮，返回特殊状态让上层知道游戏即将结束
-                    return { type: GameStageType.UNKNOWN, stageText: "quit_clicked" };
-                }
-
-                // 既没有识别到阶段，也没有退出按钮，返回未知状态
+                // 发条鸟区域 OCR 识别失败，可能是过渡帧等临时情况
+                // 玩家死亡检测已由 GameStageMonitor 的 isDead 轮询负责，这里不做处理
                 logger.warn(`[TftOperator] 发条鸟模式阶段识别失败: "${clockText ?? "null"}"`);
                 return { type: GameStageType.UNKNOWN, stageText: "" };
             }
@@ -1300,54 +1293,20 @@ class TftOperator {
     }
 
     /**
-     * 检测并点击发条鸟模式的"现在退出"按钮
-     * @description 当玩家在发条鸟模式中死亡后，屏幕右侧会出现"现在退出"按钮
-     *              此方法通过模板匹配检测该按钮，如果存在则点击它
-     * @returns 是否成功点击了退出按钮
+     * 点击发条鸟模式的退出游戏按钮（固定坐标）
+     * @description 由 GameStageMonitor 的 clockworkDead 事件触发，
+     *              当 InGame API 检测到玩家 isDead=true 时，
+     *              直接点击固定区域退出按钮，无需模板匹配。
      */
-    private async checkAndClickClockworkQuitButton(): Promise<boolean> {
+    public async clickClockworkQuitButton(): Promise<void> {
         this.ensureInitialized();
 
-        // 检查模板是否已加载
-        if (!templateLoader.isReady()) {
-            logger.warn("[TftOperator] 模板未加载完成，跳过退出按钮检测");
-            return false;
-        }
-
         try {
-            // 截取退出按钮区域的图像
-            const buttonRegion = screenCapture.toAbsoluteRegion(clockworkTrailsQuitNowButtonRegion);
-            const targetMat = await screenCapture.captureRegionAsMat(buttonRegion);
+            logger.info("[TftOperator] 发条鸟模式：玩家已死亡，点击退出按钮坐标");
+            await mouseController.clickAt(clockworkTrailsQuitNowButtonPoint, MouseButtonType.LEFT);
 
-            // 确保图像是 RGB 3 通道（模板匹配要求通道一致）
-            let rgbMat = targetMat;
-            if (targetMat.channels() === 4) {
-                rgbMat = new cv.Mat();
-                cv.cvtColor(targetMat, rgbMat, cv.COLOR_RGBA2RGB);
-                targetMat.delete();
-            }
-
-            // 使用模板匹配检测退出按钮
-            const matchResult = templateMatcher.matchButton(rgbMat, "clockwork_quit_button");
-            rgbMat.delete();
-
-            if (matchResult.matched) {
-                logger.info(
-                    `[TftOperator] 检测到发条鸟"现在退出"按钮 ` +
-                    `(置信度: ${(matchResult.confidence * 100).toFixed(1)}%)，正在点击...`
-                );
-
-                // 点击按钮
-                await mouseController.clickAt(clockworkTrailsQuitNowButtonPoint, MouseButtonType.LEFT);
-                await sleep(100);  // 等待点击响应
-
-                return true;
-            }
-
-            return false;
         } catch (e: any) {
-            logger.error(`[TftOperator] 检测发条鸟退出按钮异常: ${e.message}`);
-            return false;
+            logger.error(`[TftOperator] 点击发条鸟退出按钮异常: ${e.message}`);
         }
     }
 

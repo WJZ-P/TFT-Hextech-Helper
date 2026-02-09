@@ -34,6 +34,7 @@ import { settingsStore } from "../utils/SettingsStore";
 import { TFTMode, isStandardChessMode, getSeasonTemplateDir } from "../TFTProtocol";
 import { templateLoader } from "../tft";
 import { ocrService } from "../tft/recognition/OcrService";
+import { tftOperator } from "../TftOperator";
 
 /** abort 信号轮询间隔 (ms)，作为事件监听的兜底 */
 const ABORT_CHECK_INTERVAL_MS = 2000;
@@ -157,16 +158,25 @@ export class GameRunningState implements IState {
     /**
      * 等待游戏结束
      * @param signal AbortSignal 用于取消等待
-     * @param isClockworkMode 是否为发条鸟模式（启用阶段超时机制）
+     * @param isClockworkMode 是否为发条鸟模式（启用阶段超时机制 + isDead 轮询）
      * @returns 'ended' 表示游戏正常结束，'interrupted' 表示被中断，'clockwork_timeout' 表示发条鸟模式超时
      * 
      * @description 游戏结束的完整链路：
+     * 
+     * 【普通下棋模式】
      * 1. 玩家死亡 → 触发 TFT_BATTLE_PASS 事件（此时游戏窗口还开着）
-     * 2. 收到 TFT_BATTLE_PASS 后 → 调用 quitGame() 关闭游戏窗口
+     * 2. 收到 TFT_BATTLE_PASS 后 → 杀进程 + LCU API 关闭游戏窗口
      * 3. 游戏窗口关闭后 → 触发 GAMEFLOW_PHASE = "WaitingForStats"
      * 4. 收到 WaitingForStats → 流转到 LobbyState
      * 
-     * 发条鸟模式额外逻辑：
+     * 【发条鸟模式】
+     * 1. GameStageMonitor 每秒轮询 InGame API，检测 isDead 字段
+     * 2. isDead=true → Monitor 发出 'clockworkDead' 事件
+     * 3. 本方法监听事件 → 调用 tftOperator.clickClockworkQuitButton() 点击退出按钮
+     * 4. 游戏窗口关闭后 → 触发 GAMEFLOW_PHASE = "WaitingForStats"
+     * 5. 收到 WaitingForStats → 流转到 LobbyState
+     * 
+     * 发条鸟额外机制：
      * - 监听 stageChange 事件，每次收到事件重置超时计时器
      * - 如果超过 1 分钟没有收到 stageChange 事件，视为游戏卡住，返回 'clockwork_timeout'
      */
@@ -194,9 +204,10 @@ export class GameRunningState implements IState {
             const cleanup = () => {
                 this.lcuManager?.off(LcuEventUri.GAMEFLOW_PHASE, onGameflowPhase);
                 this.lcuManager?.off(LcuEventUri.TFT_BATTLE_PASS, onBattlePass);
-                // 发条鸟模式：取消 stageChange 监听
+                // 发条鸟模式：取消 stageChange 和 clockworkDead 监听
                 if (isClockworkMode) {
                     gameStageMonitor.off('stageChange', onStageChange);
+                    gameStageMonitor.off('clockworkDead', onClockworkDead);
                 }
                 signal.removeEventListener("abort", onAbort);
                 if (stopCheckInterval) {
@@ -240,13 +251,33 @@ export class GameRunningState implements IState {
             };
 
             /**
+             * 发条鸟模式：监听 clockworkDead 事件
+             * @description GameStageMonitor 通过 InGame API 检测到 isDead=true 后发出此事件。
+             *              每次收到事件都调用点击退出按钮，因为刚死亡时退出按钮可能还没出现，
+             *              需要反复点击直到游戏真正退出。
+             */
+            const onClockworkDead = async () => {
+                if (isResolved) return;
+                hasTriedQuit = true;
+
+                logger.info("[GameRunningState] 发条鸟模式：收到 clockworkDead 事件，点击退出按钮");
+                
+                // 标记游戏已结束，阻止 StrategyService 响应后续阶段事件
+                strategyService.setGameEnded();
+
+                // 点击发条鸟退出按钮（固定坐标）
+                await tftOperator.clickClockworkQuitButton();
+            };
+
+            /**
              * 监听 TFT_BATTLE_PASS 事件（玩家死亡/对局结束）
-             * @description 此时游戏窗口还开着，需要主动退出游戏
+             * @description 普通下棋模式专用退出流程：
+             *              1. 标记游戏结束，阻止 StrategyService 响应后续阶段事件
+             *              2. 等待 3s 让玩家看到结算画面
+             *              3. 直接杀掉游戏进程
+             *              4. 调用 LCU API quitGame() 作为兜底
              *              
-             *              退出策略：
-             *              1. 等待 3s 让玩家看到结算画面
-             *              2. 直接杀掉游戏进程
-             *              3. 调用 LCU API quitGame() 作为兜底
+             *              发条鸟模式不走这条路，发条鸟靠 clockworkDead 事件 + 点击退出按钮
              */
             const onBattlePass = async (_eventData: LCUWebSocketMessage) => {
                 if (hasTriedQuit) return; // 避免重复调用
@@ -255,7 +286,6 @@ export class GameRunningState implements IState {
                 logger.info("[GameRunningState] 收到 TFT_BATTLE_PASS 事件，玩家已死亡/对局结束");
                 
                 // 标记游戏已结束，阻止 StrategyService 响应后续阶段事件
-                // 因为其他玩家可能还在游戏，会触发新阶段，但我们已经无法操作
                 strategyService.setGameEnded();
 
                 // 等待 3s 让玩家看到结算画面
@@ -305,11 +335,15 @@ export class GameRunningState implements IState {
             this.lcuManager?.on(LcuEventUri.TFT_BATTLE_PASS, onBattlePass);
             this.lcuManager?.on(LcuEventUri.GAMEFLOW_PHASE, onGameflowPhase);
 
-            // 发条鸟模式：监听 stageChange 事件并启动超时计时器
+            // 发条鸟模式：监听 stageChange + clockworkDead 事件，启动超时计时器 + isDead 轮询
             if (isClockworkMode) {
                 logger.info(`[GameRunningState] 发条鸟模式：启动阶段超时监控 (${CLOCKWORK_STAGE_TIMEOUT_MS / 1000}秒)`);
                 gameStageMonitor.on('stageChange', onStageChange);
+                gameStageMonitor.on('clockworkDead', onClockworkDead);
                 resetStageTimeout();  // 立即启动第一个超时计时器
+
+                // 启动 isDead 轮询（由 GameStageMonitor 管理）
+                gameStageMonitor.startClockworkDeadPoll();
             }
 
             // 定期检查 signal 状态 (作为 abort 事件的兜底)
