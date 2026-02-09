@@ -48,7 +48,6 @@ const SummonerSection = styled.div<{ theme: ThemeType }>`
   align-items: center;
   width: 100%;
   padding: 0 20px;
-  margin-bottom: ${props => props.theme.spacing.medium};
 `;
 
 /** 中间头像列 - 保持头像垂直居中 */
@@ -764,7 +763,7 @@ const buttonAnimations = `
 
 const ControlButton = styled.button<{ $isRunning: boolean; $disabled: boolean; theme: ThemeType }>`
   ${buttonAnimations}
-  
+  margin-top: -1.5rem;  /* 简单起见先这么改吧，不是很规范 */
   position: relative;
   display: inline-flex;
   align-items: center;
