@@ -41,12 +41,11 @@ const PageWrapper = styled.div<{ theme: ThemeType }>`
 
 /** 召唤师信息容器 */
 /** 召唤师信息区域 - 三列布局：左侧控制 | 中间头像 | 右侧统计 */
+/** 使用 CSS Grid 三列布局，中间列固定居中，左右列各自贴边 */
 const SummonerSection = styled.div<{ theme: ThemeType }>`
-  display: flex;
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: center;
-  gap: 32px;
   width: 100%;
   padding: 0 20px;
   margin-bottom: ${props => props.theme.spacing.medium};
@@ -315,19 +314,18 @@ const ModeToggleContainer = styled.div`
 `;
 
 /**
- * 通用三选一胶囊组件
+ * 通用三选一胶囊组件（竖向）
  * 用于赛季选择：S16 / S4 / 发条鸟
  */
 const ModeTogglePill = styled.div<{ theme: ThemeType }>`
   appearance: none;
   border: 1px solid ${props => props.theme.colors.border};
   background: ${props => props.theme.colors.elementBg};
-  border-radius: 32px;
+  border-radius: 20px;
   padding: 4px;
-  height: 36px;
-  width: 240px;
-  display: inline-flex;
-  align-items: center;
+  width: 150px;
+  display: flex;
+  flex-direction: column;
   position: relative;
   overflow: hidden;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
@@ -340,16 +338,16 @@ const ModeTogglePill = styled.div<{ theme: ThemeType }>`
 `;
 
 /**
- * 赛季选择滑块指示器
+ * 赛季选择滑块指示器（竖向滑动）
  * $modeIndex: 0=S16, 1=S4, 2=发条鸟
- * 每个选项各有不同的配色主题
+ * 通过 top 值变化实现上下滑动
  */
 const ModeToggleIndicator = styled.div<{ theme: ThemeType; $modeIndex: number }>`
   position: absolute;
-  top: 2px;
-  left: ${props => `calc(${props.$modeIndex * 33.33}% + 2px)`};
-  width: calc(33.33% - 3px);
-  height: calc(100% - 4px);
+  left: 2px;
+  top: ${props => `calc(${props.$modeIndex * 33.33}% + 2px)`};
+  width: calc(100% - 4px);
+  height: calc(33.33% - 3px);
   border-radius: 999px;
   background: ${props => {
     switch (props.$modeIndex) {
@@ -361,16 +359,16 @@ const ModeToggleIndicator = styled.div<{ theme: ThemeType; $modeIndex: number }>
         return `linear-gradient(135deg, ${props.theme.colors.primary} 0%, ${props.theme.colors.primaryHover} 100%)`;
     }
   }};
-  transition: left 0.22s ease, background 0.22s ease;
+  transition: top 0.22s ease, background 0.22s ease;
 `;
 
-/** 文本层（在滑块之上），三栏 grid 布局 */
+/** 文本层（在滑块之上），竖向三行 grid 布局 */
 const ModeToggleTextRow = styled.div`
   position: relative;
   z-index: 1;
   width: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
   align-items: center;
 `;
 
@@ -378,8 +376,8 @@ const ModeToggleTextRow = styled.div`
 const ModeToggleLabel = styled.button<{ theme: ThemeType; $active: boolean }>`
   background: none;
   border: none;
-  padding: 0;
-  font-size: 0.72rem;
+  padding: 6px 0;
+  font-size: 0.75rem;
   font-weight: 800;
   text-align: center;
   letter-spacing: 0.5px;
@@ -472,17 +470,19 @@ const SubModeToggleLabel = styled.button<{ theme: ThemeType; $active: boolean }>
 // ============================================
 
 /** 左侧控制面板 - 垂直排列模式选择和日志模式 */
+/** 左侧控制面板 - 贴左边，内部内容居中对齐 */
 const LeftControlPanel = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
   min-width: 200px;
+  justify-self: start;
 `;
 
 /** 控制面板小节标题 */
 const PanelSectionTitle = styled.span<{ theme: ThemeType }>`
-  font-size: 0.75rem;
+  font-size: 1rem;
   font-weight: 700;
   color: ${props => props.theme.colors.textSecondary};
   letter-spacing: 2px;
@@ -560,13 +560,14 @@ const LogModeToggleLabel = styled.span<{ theme: ThemeType; $active: boolean }>`
 // 右侧统计面板样式
 // ============================================
 
-/** 右侧统计面板容器 */
+/** 右侧统计面板容器 - 贴右边 */
 const StatsPanel = styled.div<{ theme: ThemeType }>`
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   min-width: 200px;
+  justify-self: end;
 `;
 
 /** 统计卡片 - 精致的数据展示卡 */
