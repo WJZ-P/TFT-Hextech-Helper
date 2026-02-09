@@ -12,6 +12,7 @@ import { StartState } from "../states/StartState.ts";
 import { sleep } from "../utils/HelperTools.ts";
 import { settingsStore } from "../utils/SettingsStore.ts";
 import { TFTMode } from "../TFTProtocol.ts";
+import { notifyStatsUpdated } from "../utils/ToastBridge.ts";
 
 /** 状态转换间隔 (ms) - 设置较短以提高状态切换响应速度 */
 const STATE_TRANSITION_DELAY_MS = 200;
@@ -31,6 +32,12 @@ export class HexService {
     
     /** 本局结束后自动停止的标志 */
     private _stopAfterCurrentGame: boolean = false;
+
+    /** 本次会话已挂机局数（每次 start() 时重置） */
+    private _sessionGamesPlayed: number = 0;
+
+    /** 本次会话的开始时间（每次 start() 时记录） */
+    private _sessionStartTime: number = 0;
 
     /**
      * 私有构造函数，确保单例
@@ -84,6 +91,56 @@ export class HexService {
     }
 
     /**
+     * 获取本次会话已挂机局数
+     */
+    public get sessionGamesPlayed(): number {
+        return this._sessionGamesPlayed;
+    }
+
+    /**
+     * 获取本次会话开始时间的时间戳（毫秒）
+     */
+    public get sessionStartTime(): number {
+        return this._sessionStartTime;
+    }
+
+    /**
+     * 记录一局游戏完成
+     * @description 在 GameRunningState 游戏正常结束时调用
+     *              同时更新运行时统计（会话局数）和持久化统计（历史总局数）
+     */
+    public recordGameCompleted(): void {
+        // 1. 运行时统计：本次会话局数 +1
+        this._sessionGamesPlayed++;
+
+        // 2. 持久化统计：历史总局数 +1
+        const currentTotal = settingsStore.get('statistics.totalGamesPlayed') as number;
+        settingsStore.set('statistics.totalGamesPlayed' as any, currentTotal + 1);
+
+        logger.info(`[HexService] 📊 本局完成！本次会话: ${this._sessionGamesPlayed} 局, 历史总计: ${currentTotal + 1} 局`);
+
+        // 3. 通知前端统计数据已更新（实时刷新统计面板）
+        notifyStatsUpdated(this.getStatistics());
+    }
+
+    /**
+     * 获取完整的统计数据快照
+     * @returns 包含运行时 + 持久化的统计数据
+     */
+    public getStatistics(): {
+        sessionGamesPlayed: number;
+        totalGamesPlayed: number;
+        sessionStartTime: number;
+    } {
+        const stats = settingsStore.get('statistics');
+        return {
+            sessionGamesPlayed: this._sessionGamesPlayed,
+            totalGamesPlayed: stats.totalGamesPlayed,
+            sessionStartTime: this._sessionStartTime,
+        };
+    }
+
+    /**
      * 启动海克斯科技
      * @returns true 表示启动成功
      */
@@ -107,6 +164,8 @@ export class HexService {
             this.abortController = new AbortController();
             this.currentState = new StartState();
             this._stopAfterCurrentGame = false;  // 重置"本局结束后停止"标志
+            this._sessionGamesPlayed = 0;  // 重置本次会话局数
+            this._sessionStartTime = Date.now();  // 记录本次会话开始时间
 
             // 启动主循环 (异步，不阻塞)
             this.runMainLoop(this.abortController.signal);

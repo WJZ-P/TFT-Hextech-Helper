@@ -6105,6 +6105,8 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["SETTINGS_GET"] = "settings-get";
   IpcChannel2["SETTINGS_SET"] = "settings-set";
   IpcChannel2["UTIL_IS_ELEVATED"] = "util-is-elevated";
+  IpcChannel2["STATS_GET"] = "stats-get";
+  IpcChannel2["STATS_UPDATED"] = "stats-updated";
   IpcChannel2["APP_GET_VERSION"] = "app-get-version";
   IpcChannel2["APP_CHECK_UPDATE"] = "app-check-update";
   return IpcChannel2;
@@ -10648,8 +10650,12 @@ class SettingsStore {
         isMaximized: false
         //  默认不最大化窗口
       },
-      selectedLineupIds: []
+      selectedLineupIds: [],
       //  默认没有选中任何阵容
+      statistics: {
+        totalGamesPlayed: 0
+        //  默认历史总局数为 0
+      }
     };
     this.store = new Store({ defaults });
   }
@@ -10888,9 +10894,9 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-Cg_xp1P9.js");
+    const ServicesModule = await import("./chunks/index-CpBovlL6.js");
     hexService = ServicesModule.hexService;
-    const TftOperatorModule = await import("./chunks/TftOperator-Bv5E9wfl.js").then((n) => n.T);
+    const TftOperatorModule = await import("./chunks/TftOperator-C5eZTDYo.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
     const LineupModule = await import("./chunks/index-BkP-NETh.js");
     lineupLoader = LineupModule.lineupLoader;
@@ -11057,6 +11063,9 @@ function registerHandler() {
   });
   ipcMain.handle(IpcChannel.SETTINGS_SET, async (_event, key, value) => {
     settingsStore.set(key, value);
+  });
+  ipcMain.handle(IpcChannel.STATS_GET, async () => {
+    return hexService.getStatistics();
   });
   ipcMain.handle(IpcChannel.UTIL_IS_ELEVATED, async () => {
     return new Promise((resolve) => {

@@ -25,6 +25,12 @@ const lightPalette = {
     traitActiveFull: '#1890FF',      // 100% 不透明 - 激活态
     traitActiveHover: '#1890FF99',   // 60% 不透明 (0x99 ≈ 153/255 ≈ 60%) - Hover 未激活态
     traitActiveInactive: '#1890FF66', // 40% 不透明 (0x66 ≈ 102/255 ≈ 40%) - 未激活态
+    // 统计面板相关颜色
+    statsCardBg: '#f0f4f8',         // 统计卡片背景
+    statsCardBorder: '#e2e8f0',     // 统计卡片边框
+    statsValueColor: '#2d3748',     // 统计数值颜色
+    statsLabelColor: '#718096',     // 统计标签颜色
+    statsIconColor: '#66ccff',      // 统计图标颜色
     championCost: {
         1: 'rgb(154, 164, 175)',
         2: 'rgb(0, 174, 10)',
@@ -62,6 +68,12 @@ const darkPalette = {
     traitActiveFull: '#B46414',      // 100% 不透明 - 激活态
     traitActiveHover: '#B4641499',   // 60% 不透明 (0x99 ≈ 153/255 ≈ 60%) - Hover 未激活态
     traitActiveInactive: '#B4641466', // 40% 不透明 (0x66 ≈ 102/255 ≈ 40%) - 未激活态
+    // 统计面板相关颜色
+    statsCardBg: '#1a2332',         // 统计卡片背景（比深色背景稍亮）
+    statsCardBorder: '#2d3a4a',     // 统计卡片边框
+    statsValueColor: '#e2e8f0',     // 统计数值颜色
+    statsLabelColor: '#8899aa',     // 统计标签颜色
+    statsIconColor: '#66ccff',      // 统计图标颜色
     championCost: {
         1: 'rgb(154, 164, 175)',
         2: 'rgb(0, 174, 10)',
@@ -73,7 +85,7 @@ const darkPalette = {
     }
 };
 
-// 喵~ 3. 这是两套主题共享的“设计规范”
+// 喵~ 3. 这是两套主题共享的"设计规范"
 const baseTheme = {
     spacing: {
         small: '0.5rem',

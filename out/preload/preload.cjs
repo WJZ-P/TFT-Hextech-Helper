@@ -47,6 +47,8 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["SETTINGS_GET"] = "settings-get";
   IpcChannel2["SETTINGS_SET"] = "settings-set";
   IpcChannel2["UTIL_IS_ELEVATED"] = "util-is-elevated";
+  IpcChannel2["STATS_GET"] = "stats-get";
+  IpcChannel2["STATS_UPDATED"] = "stats-updated";
   IpcChannel2["APP_GET_VERSION"] = "app-get-version";
   IpcChannel2["APP_CHECK_UPDATE"] = "app-check-update";
   return IpcChannel2;
@@ -197,6 +199,21 @@ const utilApi = {
   checkUpdate: () => electron.ipcRenderer.invoke(IpcChannel.APP_CHECK_UPDATE)
 };
 electron.contextBridge.exposeInMainWorld("util", utilApi);
+const statsApi = {
+  /** 获取完整的统计数据快照（包含运行时 + 持久化数据） */
+  getStatistics: () => electron.ipcRenderer.invoke(IpcChannel.STATS_GET),
+  /**
+   * 监听统计数据更新事件
+   * @param callback 回调函数，每当一局游戏完成时触发
+   * @returns 清理函数，用于取消监听
+   */
+  onStatsUpdated: (callback) => {
+    const listener = (_event, stats) => callback(stats);
+    electron.ipcRenderer.on(IpcChannel.STATS_UPDATED, listener);
+    return () => electron.ipcRenderer.removeListener(IpcChannel.STATS_UPDATED, listener);
+  }
+};
+electron.contextBridge.exposeInMainWorld("stats", statsApi);
 const settingsApi = {
   /** 
    * 读取设置项（支持点号路径）

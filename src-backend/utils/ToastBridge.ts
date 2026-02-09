@@ -89,3 +89,20 @@ export function notifyHexRunningState(isRunning: boolean): void {
         win.webContents.send(IpcChannel.HEX_TOGGLE_TRIGGERED, isRunning);
     }
 }
+
+/**
+ * 通知前端统计数据已更新
+ * @param stats 最新的统计数据快照
+ * 
+ * @description 在每局游戏完成时调用，通知前端实时刷新统计面板
+ */
+export function notifyStatsUpdated(stats: {
+    sessionGamesPlayed: number;
+    totalGamesPlayed: number;
+    sessionStartTime: number;
+}): void {
+    const windows = BrowserWindow.getAllWindows();
+    for (const win of windows) {
+        win.webContents.send(IpcChannel.STATS_UPDATED, stats);
+    }
+}

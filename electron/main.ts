@@ -642,6 +642,11 @@ function registerHandler() {
     ipcMain.handle(IpcChannel.SETTINGS_SET, async (_event, key: string, value: any) => {
         settingsStore.set(key as any, value);
     })
+
+    // 统计数据
+    ipcMain.handle(IpcChannel.STATS_GET, async () => {
+        return hexService.getStatistics();
+    })
     
     // 系统工具：检测管理员权限
     // 原理：执行 `net session` 命令，该命令只有在管理员权限下才能成功执行

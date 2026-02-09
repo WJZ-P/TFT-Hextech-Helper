@@ -120,7 +120,10 @@ export class GameRunningState implements IState {
             logger.info("[GameRunningState] 用户手动停止，流转到 EndState");
             return new EndState();
         } else if (waitResult === 'ended') {
-            // 游戏正常结束，检查是否设置了"本局结束后停止"
+            // 游戏正常结束，记录统计数据
+            hexService.recordGameCompleted();
+
+            // 检查是否设置了"本局结束后停止"
             if (hexService.stopAfterCurrentGame) {
                 logger.info("[GameRunningState] 游戏结束，检测到【本局结束后停止】标志，停止挂机");
                 showToast.success("本局已结束，自动停止挂机", { position: 'top-center' });

@@ -72,6 +72,10 @@ interface AppSettings {
         isMaximized: boolean,   //  上次关闭是否最大化
     },
     selectedLineupIds: string[],  // 用户选中的阵容 ID 列表
+    // 统计数据（持久化到磁盘，跨会话保留）
+    statistics: {
+        totalGamesPlayed: number,   // 历史累计挂机局数
+    },
 }
 
 class SettingsStore {
@@ -99,7 +103,10 @@ class SettingsStore {
                 bounds: null,           //  第一次启动，默认为null
                 isMaximized: false     //  默认不最大化窗口
             },
-            selectedLineupIds: []       //  默认没有选中任何阵容
+            selectedLineupIds: [],       //  默认没有选中任何阵容
+            statistics: {
+                totalGamesPlayed: 0,    //  默认历史总局数为 0
+            },
         }
         this.store = new Store<AppSettings>({defaults})
     }

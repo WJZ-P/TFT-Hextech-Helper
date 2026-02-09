@@ -1,16 +1,20 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import styled, { keyframes } from 'styled-components';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import StopCircleOutlinedIcon from '@mui/icons-material/StopCircleOutlined';
 import BlockIcon from '@mui/icons-material/Block';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import TimerOffIcon from '@mui/icons-material/TimerOff';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import {ThemeType} from "../../styles/theme.ts";
 import {LogPanel} from "../LogPanel.tsx";
 import {toast} from "../toast/toast-core.ts";
 import {SummonerInfo} from "../../../src-backend/lcu/utils/LCUProtocols.ts";
 import {TFTMode} from "../../../src-backend/TFTProtocol.ts";
 import {LogMode} from "../../../src-backend/types/AppTypes.ts";
+import {settingsStore, GameStatistics} from "../../stores/settingsStore.ts";
 
 // 导入 APP 图标（让 Vite 正确处理资源路径）
 import appIconUrl from '../../../public/icon.png';
@@ -36,11 +40,24 @@ const PageWrapper = styled.div<{ theme: ThemeType }>`
 // ============================================
 
 /** 召唤师信息容器 */
+/** 召唤师信息区域 - 三列布局：左侧控制 | 中间头像 | 右侧统计 */
 const SummonerSection = styled.div<{ theme: ThemeType }>`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  width: 100%;
+  padding: 0 20px;
+  margin-bottom: ${props => props.theme.spacing.medium};
+`;
+
+/** 中间头像列 - 保持头像垂直居中 */
+const AvatarColumn = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: ${props => props.theme.spacing.large};
+  flex-shrink: 0;
 `;
 
 /** 详情浮窗容器 - hover 时显示在右侧（必须在 AvatarContainer 之前定义） */
@@ -290,30 +307,11 @@ const StopAfterGameBanner = styled.div<{ theme: ThemeType }>`
 // ============================================
 
 /** 模式选择区域 - 垂直排列，上方赛季选择，下方子模式选择 */
-const ModeToggleContainer = styled.div<{ theme: ThemeType }>`
-  position: relative;
+const ModeToggleContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-`;
-
-/** 模式切换小标题 - 绝对定位浮在胶囊上方 */
-const ModeToggleTitle = styled.span<{ theme: ThemeType }>`
-  position: absolute;
-  bottom: calc(100% + 4px);
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: ${props => props.theme.colors.textSecondary};
-  letter-spacing: 2.5px;
-  white-space: nowrap;
-`;
-
-/** 赛季选择行 - 相对定位，让标题能绝对定位在上方 */
-const SeasonToggleRow = styled.div<{ theme: ThemeType }>`
-  position: relative;
 `;
 
 /**
@@ -470,47 +468,48 @@ const SubModeToggleLabel = styled.button<{ theme: ThemeType; $active: boolean }>
 `;
 
 // ============================================
-// 日志模式切换样式（左侧）
+// 左侧控制面板样式（模式选择 + 日志模式）
 // ============================================
 
-/** 日志模式切换容器 - 相对定位，让标题可以绝对定位在上方 */
-const LogModeToggleContainer = styled.div<{ theme: ThemeType }>`
-  position: relative;
+/** 左侧控制面板 - 垂直排列模式选择和日志模式 */
+const LeftControlPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 200px;
 `;
 
-/** 日志模式切换小标题 - 绝对定位浮在胶囊上方 */
-const LogModeToggleTitle = styled.span<{ theme: ThemeType }>`
-  position: absolute;
-  bottom: calc(100% + 4px);  /* 浮在容器上方 */
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 0.9rem;
-  font-weight: 600;
+/** 控制面板小节标题 */
+const PanelSectionTitle = styled.span<{ theme: ThemeType }>`
+  font-size: 0.75rem;
+  font-weight: 700;
   color: ${props => props.theme.colors.textSecondary};
-  letter-spacing: 2.5px;
-  white-space: nowrap;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: -4px;
 `;
 
-/** 日志模式切换开关 */
+/** 日志模式切换开关 - 紧凑版 */
 const LogModeTogglePill = styled.button<{ theme: ThemeType; $isDetailed: boolean }>`
   appearance: none;
   border: 1px solid ${props => props.theme.colors.border};
   background: ${props => props.theme.colors.elementBg};
   border-radius: 32px;
   padding: 4px;
-  height: 36px;
-  width: 128px;
+  height: 30px;
+  width: 120px;
   display: inline-flex;
   align-items: center;
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
 
   &:hover {
     border-color: ${props => props.theme.colors.primary};
-    box-shadow: 0 5px 11px rgba(0, 0, 0, 0.22);
+    box-shadow: 0 3px 9px rgba(0, 0, 0, 0.18);
   }
 
   &:active {
@@ -523,7 +522,7 @@ const LogModeTogglePill = styled.button<{ theme: ThemeType; $isDetailed: boolean
   }
 `;
 
-/** 日志模式滑块指示器 - 配色与模式选择统一 */
+/** 日志模式滑块指示器 */
 const LogModeToggleIndicator = styled.div<{ theme: ThemeType; $isDetailed: boolean }>`
   position: absolute;
   top: 2px;
@@ -531,7 +530,6 @@ const LogModeToggleIndicator = styled.div<{ theme: ThemeType; $isDetailed: boole
   width: calc(50% - 4px);
   height: calc(100% - 4px);
   border-radius: 999px;
-  /* 简略用蓝色，详细用橙色（与模式选择的匹配/排位配色一致） */
   background: ${props => props.$isDetailed
     ? `linear-gradient(135deg, ${props.theme.colors.warning} 0%, ${props.theme.colors.warning}cc 100%)`
     : `linear-gradient(135deg, ${props.theme.colors.primary} 0%, ${props.theme.colors.primaryHover} 100%)`};
@@ -550,12 +548,92 @@ const LogModeToggleTextRow = styled.div`
 
 /** 日志模式单个文本 */
 const LogModeToggleLabel = styled.span<{ theme: ThemeType; $active: boolean }>`
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 800;
   text-align: center;
   letter-spacing: 1px;
   color: ${props => props.$active ? props.theme.colors.textOnPrimary : props.theme.colors.textSecondary};
   transition: color 0.25s ease;
+`;
+
+// ============================================
+// 右侧统计面板样式
+// ============================================
+
+/** 右侧统计面板容器 */
+const StatsPanel = styled.div<{ theme: ThemeType }>`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 200px;
+`;
+
+/** 统计卡片 - 精致的数据展示卡 */
+const StatsCard = styled.div<{ theme: ThemeType }>`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 16px;
+  background: ${props => props.theme.colors.statsCardBg};
+  border: 1px solid ${props => props.theme.colors.statsCardBorder};
+  border-radius: ${props => props.theme.borderRadius};
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+
+  &:hover {
+    border-color: ${props => props.theme.colors.primary}40;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+`;
+
+/** 统计项 - 单行数据 */
+const StatsItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+/** 统计图标容器 */
+const StatsIcon = styled.div<{ theme: ThemeType; $color?: string }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: ${props => (props.$color || props.theme.colors.statsIconColor) + '18'};
+  color: ${props => props.$color || props.theme.colors.statsIconColor};
+  flex-shrink: 0;
+
+  .MuiSvgIcon-root {
+    font-size: 1rem;
+  }
+`;
+
+/** 统计文本容器 */
+const StatsTextGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+`;
+
+/** 统计标签 */
+const StatsLabel = styled.span<{ theme: ThemeType }>`
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: ${props => props.theme.colors.statsLabelColor};
+  letter-spacing: 0.5px;
+`;
+
+/** 统计数值 */
+const StatsValue = styled.span<{ theme: ThemeType }>`
+  font-size: 1rem;
+  font-weight: 800;
+  color: ${props => props.theme.colors.statsValueColor};
+  letter-spacing: 0.5px;
 `;
 
 
@@ -802,25 +880,19 @@ const ControlButton = styled.button<{ $isRunning: boolean; $disabled: boolean; t
  * 
  * 布局策略：
  * - 中间按钮使用绝对定位，始终保持水平居中
- * - 左右两侧使用 space-between 分布在两端
- * - 这样无论左右组件宽度如何，中间按钮始终居中
+ * - 仅包含中间的控制按钮
  */
 const ControlRow = styled.div`
   display: flex;
-  align-items: center;  /* 垂直居中对齐 */
-  justify-content: space-between;  /* 左右两端分布 */
-  position: relative;  /* 为中间按钮的绝对定位提供参照 */
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  padding: 0 20px;  /* 左右留白 */
-  min-height: 60px;  /* 最小高度，确保绝对定位的按钮有空间 */
+  padding: 0 20px;
 `;
 
-/** 按钮水纹外层容器 - 绝对定位保持居中 */
+/** 按钮水纹外层容器 - 居中显示 */
 const ButtonWrapper = styled.div`
-  /* 绝对定位，始终保持水平居中 */
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
   
   /* 外围水纹 - 始终显示 */
   &::before {
@@ -954,6 +1026,10 @@ export const HomePage = () => {
     const [stopAfterGame, setStopAfterGame] = useState(false);
     // 新增：是否有选中的阵容（针对当前赛季）
     const [hasSelectedLineup, setHasSelectedLineup] = useState(false);
+    // 新增：统计数据（本次会话局数、历史总局数、运行时长）
+    const [statistics, setStatistics] = useState<GameStatistics>(settingsStore.getStatistics());
+    // 新增：格式化后的运行时长文本
+    const [elapsedTime, setElapsedTime] = useState('00:00:00');
 
     /**
      * 检查指定模式对应的赛季是否有已选中的阵容
@@ -1062,6 +1138,10 @@ export const HomePage = () => {
 
             // 检查当前赛季是否有选中的阵容
             await checkHasSelectedLineup(currentMode);
+
+            // 初始化统计数据
+            await settingsStore.refreshStatistics();
+            setStatistics(settingsStore.getStatistics());
             
             if (connected) {
                 // 如果已经连接了，直接获取召唤师信息
@@ -1094,6 +1174,44 @@ export const HomePage = () => {
             cleanupDisconnect();
         };
     }, []);
+
+    // 订阅统计数据变化 + 运行时长计时器
+    useEffect(() => {
+        // 订阅 settingsStore 的变化，实时更新统计数据
+        const unsubscribe = settingsStore.subscribe(() => {
+            setStatistics(settingsStore.getStatistics());
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    /**
+     * 格式化运行时长为 HH:MM:SS
+     * @param startTime 开始时间戳（ms），0 表示未开始
+     */
+    const formatElapsed = useCallback((startTime: number): string => {
+        if (startTime === 0) return '00:00:00';
+        const diff = Math.max(0, Math.floor((Date.now() - startTime) / 1000));
+        const h = String(Math.floor(diff / 3600)).padStart(2, '0');
+        const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+        const s = String(diff % 60).padStart(2, '0');
+        return `${h}:${m}:${s}`;
+    }, []);
+
+    // 每秒更新运行时长显示
+    useEffect(() => {
+        // 立即更新一次
+        setElapsedTime(formatElapsed(statistics.sessionStartTime));
+
+        // 只有正在运行时才启动计时器
+        if (statistics.sessionStartTime === 0) return;
+
+        const timer = setInterval(() => {
+            setElapsedTime(formatElapsed(statistics.sessionStartTime));
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [statistics.sessionStartTime, formatElapsed]);
     
     // 监听快捷键触发的挂机切换事件（主进程已完成 start/stop，这里只同步 UI 状态）
     useEffect(() => {
@@ -1285,14 +1403,14 @@ export const HomePage = () => {
 
     return (
         <PageWrapper>
-            {/* 召唤师信息区域 */}
+            {/* 召唤师信息区域 - 三列布局：左侧控制 | 中间头像 | 右侧统计 */}
             <SummonerSection>
                 {isLoading ? (
                     <LoadingPlaceholder>
                         <span>正在获取召唤师信息...</span>
                     </LoadingPlaceholder>
                 ) : !isLcuConnected ? (
-                    // 新增：未连接 LOL 客户端时的提示 - 海克斯科技风格
+                    // 未连接 LOL 客户端时的提示 - 海克斯科技风格
                     <LoadingPlaceholder>
                         <ProjectTitle>TFT-Hextech-Helper</ProjectTitle>
                         
@@ -1312,57 +1430,150 @@ export const HomePage = () => {
                     </LoadingPlaceholder>
                 ) : summonerInfo ? (
                     <>
-                        {/* 头像 + 经验条环 */}
-                        <AvatarContainer>
-                            {/* SVG 经验条环 */}
-                            <ExpRing viewBox="0 0 100 100">
-                                {/* 背景圆环 */}
-                                <ExpRingBackground
-                                    cx="50"
-                                    cy="50"
-                                    r="46"
-                                />
-                                {/* 进度圆环 - 使用 percentCompleteForNextLevel 作为进度 */}
-                                <ExpRingProgress
-                                    cx="50"
-                                    cy="50"
-                                    r="46"
-                                    $percent={summonerInfo.percentCompleteForNextLevel}
-                                />
-                            </ExpRing>
-                            {/* 头像图片 */}
-                            <AvatarWrapper>
-                                <AvatarImage
-                                    src={getAvatarUrl(summonerInfo.profileIconId)}
-                                    alt="召唤师头像"
-                                    onError={(e) => {
-                                        // 图片加载失败时使用默认头像
-                                        (e.target as HTMLImageElement).src = getAvatarUrl(29);
-                                    }}
-                                />
-                            </AvatarWrapper>
-                            {/* 等级徽章 */}
-                            <LevelBadge>Lv.{summonerInfo.summonerLevel}</LevelBadge>
-                            {/* hover 时显示的详情浮窗 */}
-                            <InfoTooltip>
-                                <InfoItem>
-                                    <InfoLabel>游戏ID</InfoLabel>
-                                    <InfoValue>{summonerInfo.gameName}#{summonerInfo.tagLine}</InfoValue>
-                                </InfoItem>
-                                <InfoItem>
-                                    <InfoLabel>等级</InfoLabel>
-                                    <InfoValue>Lv.{summonerInfo.summonerLevel}</InfoValue>
-                                </InfoItem>
-                                <InfoItem>
-                                    <InfoLabel>经验进度</InfoLabel>
-                                    <InfoValue>{summonerInfo.xpSinceLastLevel} / {summonerInfo.xpUntilNextLevel}</InfoValue>
-                                </InfoItem>
-                            </InfoTooltip>
-                        </AvatarContainer>
-                        {/* 召唤师名称（不显示 tagLine） */}
-                        <SummonerNameContainer>
-                            <SummonerName>{summonerInfo.gameName}</SummonerName>
-                        </SummonerNameContainer>
+                        {/* ===== 左侧：控制面板（模式选择 + 日志等级） ===== */}
+                        <LeftControlPanel>
+                            <PanelSectionTitle>模式选择</PanelSectionTitle>
+                            <ModeToggleContainer>
+                                <ModeTogglePill>
+                                    <ModeToggleIndicator $modeIndex={getSeasonIndex()} />
+                                    <ModeToggleTextRow>
+                                        <ModeToggleLabel
+                                            $active={isS16Season}
+                                            onClick={() => handleSeasonChange('S16')}
+                                            title="S16 英雄联盟传奇"
+                                        >
+                                            英雄联盟传奇
+                                        </ModeToggleLabel>
+                                        <ModeToggleLabel
+                                            $active={tftMode === TFTMode.S4_RUISHOU}
+                                            onClick={() => handleSeasonChange('S4')}
+                                            title="S4 回归赛季: 瑞兽闹新春"
+                                        >
+                                            瑞兽闹新春
+                                        </ModeToggleLabel>
+                                        <ModeToggleLabel
+                                            $active={tftMode === TFTMode.CLOCKWORK_TRAILS}
+                                            onClick={() => handleSeasonChange('CLOCKWORK')}
+                                            title="发条鸟的试炼"
+                                        >
+                                            发条鸟的试炼
+                                        </ModeToggleLabel>
+                                    </ModeToggleTextRow>
+                                </ModeTogglePill>
+
+                                {/* S16 子模式选择 匹配/排位（仅 S16 赛季时显示） */}
+                                {isS16Season && (
+                                    <SubModeTogglePill>
+                                        <SubModeToggleIndicator $isRank={tftMode === TFTMode.RANK} />
+                                        <SubModeToggleTextRow>
+                                            <SubModeToggleLabel
+                                                $active={tftMode === TFTMode.NORMAL}
+                                                onClick={() => handleS16SubModeChange(false)}
+                                                title="匹配模式"
+                                            >
+                                                匹配
+                                            </SubModeToggleLabel>
+                                            <SubModeToggleLabel
+                                                $active={tftMode === TFTMode.RANK}
+                                                onClick={() => handleS16SubModeChange(true)}
+                                                title="排位模式"
+                                            >
+                                                排位
+                                            </SubModeToggleLabel>
+                                        </SubModeToggleTextRow>
+                                    </SubModeTogglePill>
+                                )}
+                            </ModeToggleContainer>
+
+                            <PanelSectionTitle>日志等级</PanelSectionTitle>
+                            <LogModeTogglePill
+                                type="button"
+                                $isDetailed={logMode === LogMode.DETAILED}
+                                onClick={handleLogModeToggle}
+                                title={logMode === LogMode.DETAILED ? '当前：详细（点击切换到简略）' : '当前：简略（点击切换到详细）'}
+                            >
+                                <LogModeToggleIndicator $isDetailed={logMode === LogMode.DETAILED} />
+                                <LogModeToggleTextRow>
+                                    <LogModeToggleLabel $active={logMode === LogMode.SIMPLE}>简略</LogModeToggleLabel>
+                                    <LogModeToggleLabel $active={logMode === LogMode.DETAILED}>详细</LogModeToggleLabel>
+                                </LogModeToggleTextRow>
+                            </LogModeTogglePill>
+                        </LeftControlPanel>
+
+                        {/* ===== 中间：头像 + 名字 ===== */}
+                        <AvatarColumn>
+                            <AvatarContainer>
+                                {/* SVG 经验条环 */}
+                                <ExpRing viewBox="0 0 100 100">
+                                    <ExpRingBackground cx="50" cy="50" r="46" />
+                                    <ExpRingProgress cx="50" cy="50" r="46" $percent={summonerInfo.percentCompleteForNextLevel} />
+                                </ExpRing>
+                                {/* 头像图片 */}
+                                <AvatarWrapper>
+                                    <AvatarImage
+                                        src={getAvatarUrl(summonerInfo.profileIconId)}
+                                        alt="召唤师头像"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).src = getAvatarUrl(29);
+                                        }}
+                                    />
+                                </AvatarWrapper>
+                                {/* 等级徽章 */}
+                                <LevelBadge>Lv.{summonerInfo.summonerLevel}</LevelBadge>
+                                {/* hover 详情浮窗 */}
+                                <InfoTooltip>
+                                    <InfoItem>
+                                        <InfoLabel>游戏ID</InfoLabel>
+                                        <InfoValue>{summonerInfo.gameName}#{summonerInfo.tagLine}</InfoValue>
+                                    </InfoItem>
+                                    <InfoItem>
+                                        <InfoLabel>等级</InfoLabel>
+                                        <InfoValue>Lv.{summonerInfo.summonerLevel}</InfoValue>
+                                    </InfoItem>
+                                    <InfoItem>
+                                        <InfoLabel>经验进度</InfoLabel>
+                                        <InfoValue>{summonerInfo.xpSinceLastLevel} / {summonerInfo.xpUntilNextLevel}</InfoValue>
+                                    </InfoItem>
+                                </InfoTooltip>
+                            </AvatarContainer>
+                            <SummonerNameContainer>
+                                <SummonerName>{summonerInfo.gameName}</SummonerName>
+                            </SummonerNameContainer>
+                        </AvatarColumn>
+
+                        {/* ===== 右侧：统计面板 ===== */}
+                        <StatsPanel>
+                            <PanelSectionTitle>挂机统计</PanelSectionTitle>
+                            <StatsCard>
+                                <StatsItem>
+                                    <StatsIcon>
+                                        <SportsEsportsIcon />
+                                    </StatsIcon>
+                                    <StatsTextGroup>
+                                        <StatsLabel>本次挂机</StatsLabel>
+                                        <StatsValue>{statistics.sessionGamesPlayed} 局</StatsValue>
+                                    </StatsTextGroup>
+                                </StatsItem>
+                                <StatsItem>
+                                    <StatsIcon $color="#10B981">
+                                        <EmojiEventsIcon />
+                                    </StatsIcon>
+                                    <StatsTextGroup>
+                                        <StatsLabel>累计挂机</StatsLabel>
+                                        <StatsValue>{statistics.totalGamesPlayed} 局</StatsValue>
+                                    </StatsTextGroup>
+                                </StatsItem>
+                                <StatsItem>
+                                    <StatsIcon $color="#F59E0B">
+                                        <AccessTimeIcon />
+                                    </StatsIcon>
+                                    <StatsTextGroup>
+                                        <StatsLabel>运行时长</StatsLabel>
+                                        <StatsValue>{elapsedTime}</StatsValue>
+                                    </StatsTextGroup>
+                                </StatsItem>
+                            </StatsCard>
+                        </StatsPanel>
                     </>
                 ) : (
                     <LoadingPlaceholder>
@@ -1372,7 +1583,7 @@ export const HomePage = () => {
                 )}
             </SummonerSection>
             
-            {/* "本局结束后停止"状态提示 - 在召唤师区域下方显示 */}
+            {/* "本局结束后停止"状态提示 */}
             {stopAfterGame && (
                 <StopAfterGameBanner>
                     <TimerOffIcon style={{ fontSize: '1rem' }} />
@@ -1380,26 +1591,8 @@ export const HomePage = () => {
                 </StopAfterGameBanner>
             )}
 
-            {/* 控制区域 - Flexbox 水平排列 */}
+            {/* 控制按钮区域 - 仅包含开始/停止按钮 */}
             <ControlRow>
-                {/* 日志模式切换 - 简略/详细（左侧） */}
-                <LogModeToggleContainer>
-                    <LogModeToggleTitle>日志模式</LogModeToggleTitle>
-                    <LogModeTogglePill
-                        type="button"
-                        $isDetailed={logMode === LogMode.DETAILED}
-                        onClick={handleLogModeToggle}
-                        title={logMode === LogMode.DETAILED ? '当前：详细（点击切换到简略）' : '当前：简略（点击切换到详细）'}
-                    >
-                        <LogModeToggleIndicator $isDetailed={logMode === LogMode.DETAILED} />
-                        <LogModeToggleTextRow>
-                            <LogModeToggleLabel $active={logMode === LogMode.SIMPLE}>简略</LogModeToggleLabel>
-                            <LogModeToggleLabel $active={logMode === LogMode.DETAILED}>详细</LogModeToggleLabel>
-                        </LogModeToggleTextRow>
-                    </LogModeTogglePill>
-                </LogModeToggleContainer>
-
-                {/* 控制按钮 - 带水纹效果 */}
                 <ButtonWrapper>
                     <ControlButton 
                         onClick={handleToggle} 
@@ -1429,63 +1622,6 @@ export const HomePage = () => {
                         )}
                     </ControlButton>
                 </ButtonWrapper>
-
-                {/* 游戏模式切换 - 两级选择器（右侧） */}
-                <ModeToggleContainer>
-                    {/* 上层：赛季选择 S16 / S4 / 发条鸟 */}
-                    <SeasonToggleRow>
-                        <ModeToggleTitle>模式选择</ModeToggleTitle>
-                        <ModeTogglePill>
-                            <ModeToggleIndicator $modeIndex={getSeasonIndex()} />
-                            <ModeToggleTextRow>
-                                <ModeToggleLabel
-                                    $active={isS16Season}
-                                    onClick={() => handleSeasonChange('S16')}
-                                    title="S16 英雄联盟传奇"
-                                >
-                                    英雄联盟传奇
-                                </ModeToggleLabel>
-                                <ModeToggleLabel
-                                    $active={tftMode === TFTMode.S4_RUISHOU}
-                                    onClick={() => handleSeasonChange('S4')}
-                                    title="S4 回归赛季: 瑞兽闹新春"
-                                >
-                                    瑞兽闹新春
-                                </ModeToggleLabel>
-                                <ModeToggleLabel
-                                    $active={tftMode === TFTMode.CLOCKWORK_TRAILS}
-                                    onClick={() => handleSeasonChange('CLOCKWORK')}
-                                    title="发条鸟的试炼"
-                                >
-                                    发条鸟的试炼
-                                </ModeToggleLabel>
-                            </ModeToggleTextRow>
-                        </ModeTogglePill>
-                    </SeasonToggleRow>
-
-                    {/* 下层：S16 子模式选择 匹配/排位（仅 S16 赛季时显示） */}
-                    {isS16Season && (
-                        <SubModeTogglePill>
-                            <SubModeToggleIndicator $isRank={tftMode === TFTMode.RANK} />
-                            <SubModeToggleTextRow>
-                                <SubModeToggleLabel
-                                    $active={tftMode === TFTMode.NORMAL}
-                                    onClick={() => handleS16SubModeChange(false)}
-                                    title="匹配模式"
-                                >
-                                    匹配
-                                </SubModeToggleLabel>
-                                <SubModeToggleLabel
-                                    $active={tftMode === TFTMode.RANK}
-                                    onClick={() => handleS16SubModeChange(true)}
-                                    title="排位模式"
-                                >
-                                    排位
-                                </SubModeToggleLabel>
-                            </SubModeToggleTextRow>
-                        </SubModeTogglePill>
-                    )}
-                </ModeToggleContainer>
             </ControlRow>
 
             {/* 日志面板 */}

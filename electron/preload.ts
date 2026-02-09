@@ -177,6 +177,32 @@ const utilApi = {
 export type UtilApi = typeof utilApi
 contextBridge.exposeInMainWorld('util', utilApi)
 
+// statsApi: 统计数据 API（读取挂机统计信息）
+const statsApi = {
+    /** 获取完整的统计数据快照（包含运行时 + 持久化数据） */
+    getStatistics: (): Promise<{
+        sessionGamesPlayed: number;
+        totalGamesPlayed: number;
+        sessionStartTime: number;
+    }> => ipcRenderer.invoke(IpcChannel.STATS_GET),
+    /**
+     * 监听统计数据更新事件
+     * @param callback 回调函数，每当一局游戏完成时触发
+     * @returns 清理函数，用于取消监听
+     */
+    onStatsUpdated: (callback: (stats: {
+        sessionGamesPlayed: number;
+        totalGamesPlayed: number;
+        sessionStartTime: number;
+    }) => void): (() => void) => {
+        const listener = (_event: IpcRendererEvent, stats: any) => callback(stats);
+        ipcRenderer.on(IpcChannel.STATS_UPDATED, listener);
+        return () => ipcRenderer.removeListener(IpcChannel.STATS_UPDATED, listener);
+    },
+}
+export type StatsApi = typeof statsApi
+contextBridge.exposeInMainWorld('stats', statsApi)
+
 // settingsApi: 通用设置读写 API（与后端 SettingsStore 对接）
 const settingsApi = {
     /** 
