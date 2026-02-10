@@ -19,7 +19,6 @@
 import { IState } from "./IState";
 import { LobbyState } from "./LobbyState";
 import { EndState } from "./EndState";
-import { StartState } from "./StartState";
 import LCUManager, { LcuEventUri, LCUWebSocketMessage } from "../lcu/LCUManager";
 import { GameFlowPhase } from "../lcu/utils/LCUProtocols";
 import { gameStageMonitor, GameStageEvent } from "../services/GameStageMonitor";
@@ -144,10 +143,31 @@ export class GameRunningState implements IState {
             logger.info("[GameRunningState] 游戏结束，流转到 LobbyState 开始下一局");
             return new LobbyState();
         } else if (waitResult === 'clockwork_timeout') {
-            // 发条鸟模式：阶段变化超时，游戏可能卡住了，返回初始状态重新开始
-            logger.warn("[GameRunningState] 发条鸟模式阶段超时，返回 StartState 重新开始");
-            showToast.warning("发条鸟模式：游戏卡住，正在重新开始...", { position: 'top-center' });
-            return new StartState();
+            // 发条鸟模式：阶段变化超时，游戏可能卡住/无响应
+            // 直接杀掉游戏进程，然后回到 LobbyState 重新开始排队
+            logger.warn("[GameRunningState] 发条鸟模式阶段超时，强制杀掉游戏进程并重新排队");
+            showToast.warning("发条鸟模式：游戏无响应，正在强制退出...", { position: 'top-center' });
+
+            // 步骤 1：杀掉游戏进程（taskkill）
+            try {
+                await this.lcuManager?.killGameProcess();
+                logger.info("[GameRunningState] 超时：游戏进程已被杀掉");
+            } catch (error) {
+                logger.warn(`[GameRunningState] 超时：杀掉游戏进程失败: ${error}`);
+            }
+
+            // 步骤 2：调用 LCU API 退出游戏作为兜底
+            try {
+                await this.lcuManager?.quitGame();
+                logger.info("[GameRunningState] 超时：LCU 退出游戏请求已发送");
+            } catch (error) {
+                logger.warn(`[GameRunningState] 超时：LCU 退出游戏请求失败: ${error}`);
+            }
+
+            // 等待客户端回到大厅
+            await sleep(3000);
+
+            return new LobbyState();
         } else {
             // 异常情况，也返回大厅重试
             logger.warn("[GameRunningState] 异常退出，流转到 LobbyState");
