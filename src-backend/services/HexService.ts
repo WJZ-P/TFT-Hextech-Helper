@@ -30,7 +30,7 @@ export class HexService {
 
     /** 当前状态 */
     private currentState: IState;
-    
+
     /** 本局结束后自动停止的标志 */
     private _stopAfterCurrentGame: boolean = false;
 
@@ -72,14 +72,14 @@ export class HexService {
     public get isRunning(): boolean {
         return this.abortController !== null;
     }
-    
+
     /**
      * 获取"本局结束后自动停止"状态
      */
     public get stopAfterCurrentGame(): boolean {
         return this._stopAfterCurrentGame;
     }
-    
+
     /**
      * 切换"本局结束后自动停止"状态
      * @returns 切换后的状态值
@@ -89,7 +89,7 @@ export class HexService {
         logger.info(`[HexService] 本局结束后自动停止: ${this._stopAfterCurrentGame ? '已开启' : '已关闭'}`);
         return this._stopAfterCurrentGame;
     }
-    
+
     /**
      * 设置"本局结束后自动停止"状态
      * @param value 要设置的值
@@ -241,11 +241,13 @@ export class HexService {
             return true;
         }
 
-        // 检查是否选择了阵容
-        const selectedLineupIds = settingsStore.get('selectedLineupIds');
-        if (!selectedLineupIds || selectedLineupIds.length === 0) {
-            logger.warn("[HexService] 未选择任何阵容，无法启动！");
-            return false;
+        // 如果不是发条鸟模式，检查是否选择了阵容
+        if (settingsStore.get('tftMode') != TFTMode.CLOCKWORK_TRAILS) {
+            const selectedLineupIds = settingsStore.get('selectedLineupIds');
+            if (!selectedLineupIds || selectedLineupIds.length === 0) {
+                logger.warn("[HexService] 未选择任何阵容，无法启动！");
+                return false;
+            }
         }
 
         try {
@@ -337,7 +339,7 @@ export class HexService {
             }
         } catch (error: unknown) {
             if (error instanceof Error && error.name === "AbortError") {
-            logger.info("[HexService-Looper] -> 用户手动退出，挂机流程结束");
+                logger.info("[HexService-Looper] -> 用户手动退出，挂机流程结束");
                 // 上报停止挂机事件
                 analyticsManager.trackEvent(AnalyticsEvent.HEX_STOP, {
                     session_games: this._sessionGamesPlayed,
