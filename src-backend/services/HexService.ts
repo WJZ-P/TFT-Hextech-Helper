@@ -12,7 +12,7 @@ import { StartState } from "../states/StartState.ts";
 import { sleep } from "../utils/HelperTools.ts";
 import { settingsStore } from "../utils/SettingsStore.ts";
 import { TFTMode } from "../TFTProtocol.ts";
-import { notifyStatsUpdated } from "../utils/ToastBridge.ts";
+import { notifyStatsUpdated, notifyStopAfterGameState, notifyScheduledStopTriggered, showToast } from "../utils/ToastBridge.ts";
 import { analyticsManager, AnalyticsEvent } from "../utils/AnalyticsManager.ts";
 
 /** 状态转换间隔 (ms) - 设置较短以提高状态切换响应速度 */
@@ -42,6 +42,11 @@ export class HexService {
 
     /** 已累计的运行时长（ms），stop() 时把当前段累加进来 */
     private _accumulatedMs: number = 0;
+
+    /** 定时停止的定时器 ID，null 表示未设置 */
+    private _scheduledStopTimer: NodeJS.Timeout | null = null;
+    /** 定时停止的目标时间（ISO 字符串），用于 UI 展示和持久化 */
+    private _scheduledStopTime: string | null = null;
 
     /**
      * 私有构造函数，确保单例
@@ -92,6 +97,77 @@ export class HexService {
     public setStopAfterCurrentGame(value: boolean): void {
         this._stopAfterCurrentGame = value;
         logger.info(`[HexService] 本局结束后自动停止: ${value ? '已开启' : '已关闭'}`);
+    }
+
+    // ========================================================================
+    // 定时停止功能
+    // ========================================================================
+
+    /**
+     * 获取当前设置的定时停止时间
+     * @returns ISO 时间字符串 或 null（未设置）
+     */
+    public get scheduledStopTime(): string | null {
+        return this._scheduledStopTime;
+    }
+
+    /**
+     * 设置定时停止
+     * @param timeStr 目标时间，格式为 "HH:mm"（如 "23:00"）
+     * @returns 实际的目标时间戳（ISO 字符串），供 UI 展示
+     * 
+     * @description 计算逻辑：
+     *   1. 将 "HH:mm" 解析为今天的时间点
+     *   2. 如果该时间已过，则自动推到明天
+     *   3. 设置一个 setTimeout，到点后自动启用 stopAfterCurrentGame
+     */
+    public setScheduledStop(timeStr: string): string {
+        // 先清理旧定时器
+        this.clearScheduledStop();
+
+        // 解析 "HH:mm" 格式
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        const now = new Date();
+        const target = new Date();
+        target.setHours(hours, minutes, 0, 0);
+
+        // 如果目标时间已过，推到明天
+        if (target.getTime() <= now.getTime()) {
+            target.setDate(target.getDate() + 1);
+        }
+
+        const delayMs = target.getTime() - now.getTime();
+        this._scheduledStopTime = target.toISOString();
+
+        logger.info(`[HexService] ⏰ 定时停止已设置: ${timeStr}（${Math.round(delayMs / 60000)} 分钟后）`);
+
+        // 设置定时器，到点后自动启用"本局结束后停止"
+        this._scheduledStopTimer = setTimeout(() => {
+            logger.info('[HexService] ⏰ 定时停止时间到！自动启用"本局结束后停止"');
+            this._stopAfterCurrentGame = true;
+            this._scheduledStopTime = null;
+            this._scheduledStopTimer = null;
+
+            // 通知前端更新 UI（触发 stopAfterGame 状态变化）
+            notifyStopAfterGameState(true);
+            // 通知前端设置页面关闭定时开关（一次性触发后自动关闭）
+            notifyScheduledStopTriggered();
+            showToast.info('⏰ 定时停止已触发，本局结束后将自动停止挂机', { position: 'top-center' });
+        }, delayMs);
+
+        return this._scheduledStopTime;
+    }
+
+    /**
+     * 取消定时停止
+     */
+    public clearScheduledStop(): void {
+        if (this._scheduledStopTimer) {
+            clearTimeout(this._scheduledStopTimer);
+            this._scheduledStopTimer = null;
+            logger.info('[HexService] ⏰ 定时停止已取消');
+        }
+        this._scheduledStopTime = null;
     }
 
     /**
@@ -216,6 +292,9 @@ export class HexService {
                 this._accumulatedMs += Date.now() - this._currentSegmentStart;
                 this._currentSegmentStart = 0;
             }
+
+            // 清理定时停止的定时器（用户已主动停止，不再需要定时触发）
+            this.clearScheduledStop();
 
             // 触发取消信号，runMainLoop 的 finally 块会执行 EndState 进行清理
             this.abortController?.abort("user stop");

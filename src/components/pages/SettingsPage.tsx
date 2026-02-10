@@ -263,6 +263,54 @@ const AuthorBanner = styled.div<{ theme: ThemeType }>`
   }
 `;
 
+/** 定时停止操作区域 - 包含时间输入和开关 */
+const ScheduledStopRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+/** 时间选择输入框 */
+const TimeInput = styled.input<{ theme: ThemeType; disabled?: boolean }>`
+  background-color: ${props => props.theme.colors.elementBg};
+  color: ${props => props.disabled ? props.theme.colors.textDisabled : props.theme.colors.text};
+  border: 1px solid ${props => props.theme.colors.border};
+  border-radius: ${props => props.theme.borderRadius};
+  padding: 0.5rem 0.8rem;
+  font-size: ${props => props.theme.fontSizes.small};
+  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+  opacity: ${props => props.disabled ? 0.6 : 1};
+  transition: all 0.2s ease-in-out;
+  min-width: 100px;
+  text-align: center;
+
+  &:hover:not(:disabled) {
+    border-color: ${props => props.theme.colors.primary};
+  }
+
+  &:focus {
+    outline: none;
+    border-color: ${props => props.theme.colors.primary};
+    box-shadow: 0 0 0 2px ${props => props.theme.colors.primary}30;
+  }
+
+  /* 让时间选择器的点击区域覆盖整个输入框 */
+  /* 原理：将原本只在右侧的小时钟图标通过绝对定位铺满整个 input，
+     并设为透明，这样用户点击数字区域也能弹出时间选择器 */
+  position: relative;
+  &::-webkit-calendar-picker-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+    opacity: 0;  /* 隐藏图标本身，但保留点击区域 */
+  }
+`;
+
 /** 使用提示卡片 - 现代玻璃拟态风格 */
 const TipsCard = styled.div<{ theme: ThemeType }>`
   position: relative;
@@ -413,6 +461,10 @@ const SettingsPage = () => {
     // 版本与更新
     const [currentVersion, setCurrentVersion] = useState<string>('');
     const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+    
+    // 定时停止设置
+    const [scheduledStopTime, setScheduledStopTime] = useState<string>('');  // "HH:mm" 格式
+    const [scheduledStopIso, setScheduledStopIso] = useState<string | null>(null);  // 已设定的目标时间 ISO
 
     // 初始化时从后端获取设置
     useEffect(() => {
@@ -436,6 +488,17 @@ const SettingsPage = () => {
             // 加载当前版本号
             const version = await window.util.getAppVersion();
             setCurrentVersion(version);
+            
+            // 加载定时停止状态
+            const savedScheduledStop = await window.hex.getScheduledStop();
+            if (savedScheduledStop) {
+                setScheduledStopIso(savedScheduledStop);
+                // 从 ISO 字符串还原 "HH:mm" 显示
+                const d = new Date(savedScheduledStop);
+                setScheduledStopTime(
+                    `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+                );
+            }
         };
         loadSettings();
         
@@ -443,8 +506,16 @@ const SettingsPage = () => {
         const unsubscribe = settingsStore.subscribe((settings) => {
             setShowDebugPage(settings.showDebugPage);
         });
+
+        // 监听定时停止触发事件：后端定时器到点后通知前端自动关闭开关
+        const cleanupScheduledStop = window.hex.onScheduledStopTriggered(() => {
+            setScheduledStopIso(null);  // 关闭开关（一次性触发后自动关闭）
+        });
         
-        return unsubscribe;
+        return () => {
+            unsubscribe();
+            cleanupScheduledStop();
+        };
     }, []);
     
     // 快捷键录入处理
@@ -606,6 +677,42 @@ const SettingsPage = () => {
         toast.success(newValue ? '调试页面已显示' : '调试页面已隐藏');
     };
     
+    /**
+     * 切换定时停止开关
+     * - 开启时：校验时间 → 调用后端设置定时 → 更新状态
+     * - 关闭时：调用后端取消定时 → 清除状态
+     */
+    const handleToggleScheduledStop = async () => {
+        if (scheduledStopIso) {
+            // 当前已开启 → 关闭
+            await window.hex.clearScheduledStop();
+            setScheduledStopIso(null);
+            toast.success('⏰ 定时停止已取消');
+        } else {
+            // 当前已关闭 → 开启
+            if (!scheduledStopTime) {
+                toast.error('请先选择一个时间');
+                return;
+            }
+            try {
+                const isoTime = await window.hex.setScheduledStop(scheduledStopTime);
+                setScheduledStopIso(isoTime);
+                
+                // 计算友好的提示信息
+                const target = new Date(isoTime);
+                const now = new Date();
+                const diffMinutes = Math.round((target.getTime() - now.getTime()) / 60000);
+                const hours = Math.floor(diffMinutes / 60);
+                const mins = diffMinutes % 60;
+                const timeDesc = hours > 0 ? `${hours}小时${mins}分钟` : `${mins}分钟`;
+                
+                toast.success(`⏰ 定时停止已设置：${timeDesc}后本局结束将自动停止`);
+            } catch (error: any) {
+                toast.error(`设置失败: ${error.message || '未知错误'}`);
+            }
+        }
+    };
+
     // 检查更新
     const handleCheckUpdate = async () => {
         setIsCheckingUpdate(true);
@@ -676,6 +783,32 @@ const SettingsPage = () => {
                     >
                         {isRecordingStopAfterGameHotkey ? '请按下快捷键' : (stopAfterGameHotkey || '未绑定')}
                     </HotkeyInput>
+                </SettingItem>
+            </SettingsCard>
+
+            {/* 定时停止设置 */}
+            <SettingsHeader>
+                智能定时
+            </SettingsHeader>
+            <SettingsCard>
+                <SettingItem>
+                    <SettingInfo>
+                        <SettingText>
+                            <h3>定时停止挂机</h3>
+                            <p>到达指定时间后，自动在本局结束时停止挂机，方便控制挂机时长。</p>
+                        </SettingText>
+                    </SettingInfo>
+                    <ScheduledStopRow>
+                        <TimeInput
+                            type="time"
+                            value={scheduledStopTime}
+                            onChange={(e) => setScheduledStopTime(e.target.value)}
+                            disabled={!!scheduledStopIso}
+                        />
+                        <ToggleSwitch onClick={handleToggleScheduledStop}>
+                            <ToggleSlider $isOn={!!scheduledStopIso} />
+                        </ToggleSwitch>
+                    </ScheduledStopRow>
                 </SettingItem>
             </SettingsCard>
         

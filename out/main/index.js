@@ -6107,6 +6107,10 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["UTIL_IS_ELEVATED"] = "util-is-elevated";
   IpcChannel2["STATS_GET"] = "stats-get";
   IpcChannel2["STATS_UPDATED"] = "stats-updated";
+  IpcChannel2["HEX_SET_SCHEDULED_STOP"] = "hex-set-scheduled-stop";
+  IpcChannel2["HEX_CLEAR_SCHEDULED_STOP"] = "hex-clear-scheduled-stop";
+  IpcChannel2["HEX_GET_SCHEDULED_STOP"] = "hex-get-scheduled-stop";
+  IpcChannel2["HEX_SCHEDULED_STOP_TRIGGERED"] = "hex-scheduled-stop-triggered";
   IpcChannel2["APP_GET_VERSION"] = "app-get-version";
   IpcChannel2["APP_CHECK_UPDATE"] = "app-check-update";
   return IpcChannel2;
@@ -11080,7 +11084,7 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-DG2B3LjU.js");
+    const ServicesModule = await import("./chunks/index-CRgr4hsv.js");
     hexService = ServicesModule.hexService;
     const TftOperatorModule = await import("./chunks/TftOperator-Bunmsfw0.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
@@ -11244,6 +11248,15 @@ function registerHandler() {
     const newState = hexService.toggleStopAfterCurrentGame();
     win?.webContents.send(IpcChannel.HEX_STOP_AFTER_GAME_TRIGGERED, newState);
     return newState;
+  });
+  ipcMain.handle(IpcChannel.HEX_SET_SCHEDULED_STOP, async (_event, timeStr) => {
+    return hexService.setScheduledStop(timeStr);
+  });
+  ipcMain.handle(IpcChannel.HEX_CLEAR_SCHEDULED_STOP, async () => {
+    hexService.clearScheduledStop();
+  });
+  ipcMain.handle(IpcChannel.HEX_GET_SCHEDULED_STOP, async () => {
+    return hexService.scheduledStopTime;
   });
   ipcMain.handle(IpcChannel.SETTINGS_GET, async (_event, key) => {
     return settingsStore.get(key);

@@ -91,6 +91,24 @@ const hexApi = {
         ipcRenderer.on(IpcChannel.HEX_STOP_AFTER_GAME_TRIGGERED, listener);
         return () => ipcRenderer.removeListener(IpcChannel.HEX_STOP_AFTER_GAME_TRIGGERED, listener);
     },
+    /** 设置定时停止时间，格式 "HH:mm"  */
+    setScheduledStop: (timeStr: string): Promise<string> => {
+        return ipcRenderer.invoke(IpcChannel.HEX_SET_SCHEDULED_STOP, timeStr);
+    },
+    /** 取消定时停止 */
+    clearScheduledStop: (): Promise<void> => {
+        return ipcRenderer.invoke(IpcChannel.HEX_CLEAR_SCHEDULED_STOP);
+    },
+    /** 获取当前定时停止时间（ISO 字符串 或 null） */
+    getScheduledStop: (): Promise<string | null> => {
+        return ipcRenderer.invoke(IpcChannel.HEX_GET_SCHEDULED_STOP);
+    },
+    /** 监听定时停止触发事件（时间到后通知前端） */
+    onScheduledStopTriggered: (callback: () => void): (() => void) => {
+        const listener = () => callback();
+        ipcRenderer.on(IpcChannel.HEX_SCHEDULED_STOP_TRIGGERED, listener);
+        return () => ipcRenderer.removeListener(IpcChannel.HEX_SCHEDULED_STOP_TRIGGERED, listener);
+    },
 }
 export type HexApi = typeof hexApi
 contextBridge.exposeInMainWorld('hex', hexApi)

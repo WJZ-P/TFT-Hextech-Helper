@@ -640,6 +640,17 @@ function registerHandler() {
         return newState;
     })
     
+    // 定时停止功能
+    ipcMain.handle(IpcChannel.HEX_SET_SCHEDULED_STOP, async (_event, timeStr: string) => {
+        return hexService.setScheduledStop(timeStr);
+    })
+    ipcMain.handle(IpcChannel.HEX_CLEAR_SCHEDULED_STOP, async () => {
+        hexService.clearScheduledStop();
+    })
+    ipcMain.handle(IpcChannel.HEX_GET_SCHEDULED_STOP, async () => {
+        return hexService.scheduledStopTime;
+    })
+    
     // 通用设置读写（支持点号路径，如 'window.bounds'）
     ipcMain.handle(IpcChannel.SETTINGS_GET, async (_event, key: string) => {
         return settingsStore.get(key as any);

@@ -64,6 +64,12 @@ export enum IpcChannel {
     // 统计数据
     STATS_GET = 'stats-get',                      // 获取完整统计数据快照
     STATS_UPDATED = 'stats-updated',              // 统计数据更新事件（主进程 -> 渲染进程）
+    // 定时停止功能
+    HEX_SET_SCHEDULED_STOP = 'hex-set-scheduled-stop',        // 设置定时停止时间
+    HEX_CLEAR_SCHEDULED_STOP = 'hex-clear-scheduled-stop',    // 取消定时停止
+    HEX_GET_SCHEDULED_STOP = 'hex-get-scheduled-stop',        // 获取定时停止时间
+    // 定时停止触发事件（主进程 -> 渲染进程）
+    HEX_SCHEDULED_STOP_TRIGGERED = 'hex-scheduled-stop-triggered',  // 定时停止触发时通知前端
     // 版本与更新
     APP_GET_VERSION = 'app-get-version',          // 获取当前应用版本
     APP_CHECK_UPDATE = 'app-check-update',        // 检查更新（返回最新版本信息）

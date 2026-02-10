@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.3.1] - 2026-02-08
+## [1.3.2] - 2026-02-010
+- 修复UI问题。
+- 增加定时功能，支持到某个时间点后，该局结束后停止挂机。
+
+## [1.3.1] - 2026-02-09
 - 优化发条鸟游戏结束判断逻辑，现在从LCU接口读取isDead信息，更加健壮。
 - UI样式优化，新增统计功能.
 

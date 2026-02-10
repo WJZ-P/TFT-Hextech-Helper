@@ -106,3 +106,16 @@ export function notifyStatsUpdated(stats: {
         win.webContents.send(IpcChannel.STATS_UPDATED, stats);
     }
 }
+
+/**
+ * 通知前端定时停止已触发
+ * 
+ * @description 定时器到点后调用，通知 SettingsPage 自动关闭开关
+ *              避免定时功能已经生效但 UI 开关仍然是打开状态
+ */
+export function notifyScheduledStopTriggered(): void {
+    const windows = BrowserWindow.getAllWindows();
+    for (const win of windows) {
+        win.webContents.send(IpcChannel.HEX_SCHEDULED_STOP_TRIGGERED);
+    }
+}

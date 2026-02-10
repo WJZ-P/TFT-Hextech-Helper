@@ -49,6 +49,10 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["UTIL_IS_ELEVATED"] = "util-is-elevated";
   IpcChannel2["STATS_GET"] = "stats-get";
   IpcChannel2["STATS_UPDATED"] = "stats-updated";
+  IpcChannel2["HEX_SET_SCHEDULED_STOP"] = "hex-set-scheduled-stop";
+  IpcChannel2["HEX_CLEAR_SCHEDULED_STOP"] = "hex-clear-scheduled-stop";
+  IpcChannel2["HEX_GET_SCHEDULED_STOP"] = "hex-get-scheduled-stop";
+  IpcChannel2["HEX_SCHEDULED_STOP_TRIGGERED"] = "hex-scheduled-stop-triggered";
   IpcChannel2["APP_GET_VERSION"] = "app-get-version";
   IpcChannel2["APP_CHECK_UPDATE"] = "app-check-update";
   return IpcChannel2;
@@ -130,6 +134,24 @@ const hexApi = {
     const listener = (_event, isEnabled) => callback(isEnabled);
     electron.ipcRenderer.on(IpcChannel.HEX_STOP_AFTER_GAME_TRIGGERED, listener);
     return () => electron.ipcRenderer.removeListener(IpcChannel.HEX_STOP_AFTER_GAME_TRIGGERED, listener);
+  },
+  /** 设置定时停止时间，格式 "HH:mm"  */
+  setScheduledStop: (timeStr) => {
+    return electron.ipcRenderer.invoke(IpcChannel.HEX_SET_SCHEDULED_STOP, timeStr);
+  },
+  /** 取消定时停止 */
+  clearScheduledStop: () => {
+    return electron.ipcRenderer.invoke(IpcChannel.HEX_CLEAR_SCHEDULED_STOP);
+  },
+  /** 获取当前定时停止时间（ISO 字符串 或 null） */
+  getScheduledStop: () => {
+    return electron.ipcRenderer.invoke(IpcChannel.HEX_GET_SCHEDULED_STOP);
+  },
+  /** 监听定时停止触发事件（时间到后通知前端） */
+  onScheduledStopTriggered: (callback) => {
+    const listener = () => callback();
+    electron.ipcRenderer.on(IpcChannel.HEX_SCHEDULED_STOP_TRIGGERED, listener);
+    return () => electron.ipcRenderer.removeListener(IpcChannel.HEX_SCHEDULED_STOP_TRIGGERED, listener);
   }
 };
 electron.contextBridge.exposeInMainWorld("hex", hexApi);
