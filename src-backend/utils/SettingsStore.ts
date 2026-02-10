@@ -76,6 +76,8 @@ interface AppSettings {
     statistics: {
         totalGamesPlayed: number,   // 历史累计挂机局数
     },
+    // Google Analytics 数据统计
+    analyticsClientId: string,      // GA4 设备唯一标识（随机 UUID，不含个人隐私信息）
 }
 
 class SettingsStore {
@@ -107,6 +109,7 @@ class SettingsStore {
             statistics: {
                 totalGamesPlayed: 0,    //  默认历史总局数为 0
             },
+            analyticsClientId: '',       //  默认为空，首次启动时由 AnalyticsManager 生成
         }
         this.store = new Store<AppSettings>({defaults})
     }

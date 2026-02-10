@@ -13,6 +13,7 @@ import { sleep } from "../utils/HelperTools.ts";
 import { settingsStore } from "../utils/SettingsStore.ts";
 import { TFTMode } from "../TFTProtocol.ts";
 import { notifyStatsUpdated } from "../utils/ToastBridge.ts";
+import { analyticsManager, AnalyticsEvent } from "../utils/AnalyticsManager.ts";
 
 /** 状态转换间隔 (ms) - 设置较短以提高状态切换响应速度 */
 const STATE_TRANSITION_DELAY_MS = 200;
@@ -128,6 +129,13 @@ export class HexService {
 
         // 3. 通知前端统计数据已更新（实时刷新统计面板）
         notifyStatsUpdated(this.getStatistics());
+
+        // 4. 上报游戏完成事件到 Google Analytics
+        analyticsManager.trackEvent(AnalyticsEvent.GAME_COMPLETED, {
+            session_games: this._sessionGamesPlayed,
+            total_games: currentTotal + 1,
+            tft_mode: settingsStore.get('tftMode'),
+        });
     }
 
     /**
@@ -170,9 +178,14 @@ export class HexService {
 
             this.abortController = new AbortController();
             this.currentState = new StartState();
-            this._stopAfterCurrentGame = false;  // 重置"本局结束后停止"标志
+            this._stopAfterCurrentGame = false;  // 重置“本局结束后停止”标志
             this._currentSegmentStart = Date.now();  // 记录本段开始时间（不重置累计时长和局数）
 
+            // 上报开始挂机事件
+            const tftMode = settingsStore.get('tftMode');
+            analyticsManager.trackEvent(AnalyticsEvent.HEX_START, {
+                tft_mode: tftMode,
+            });
             // 启动主循环 (异步，不阻塞)
             this.runMainLoop(this.abortController.signal);
 
@@ -245,7 +258,12 @@ export class HexService {
             }
         } catch (error: unknown) {
             if (error instanceof Error && error.name === "AbortError") {
-                logger.info("[HexService-Looper] -> 用户手动退出，挂机流程结束");
+            logger.info("[HexService-Looper] -> 用户手动退出，挂机流程结束");
+                // 上报停止挂机事件
+                analyticsManager.trackEvent(AnalyticsEvent.HEX_STOP, {
+                    session_games: this._sessionGamesPlayed,
+                    session_elapsed_seconds: this.sessionElapsedSeconds,
+                });
             } else if (error instanceof Error) {
                 logger.error(
                     `[HexService-Looper] 状态机在 [${this.currentState.name}] 状态下发生严重错误: ${error.message}`

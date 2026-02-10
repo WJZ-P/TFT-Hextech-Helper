@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, shell, ipcMain, net } from "electron";
+import { app, net, BrowserWindow, dialog, shell, ipcMain } from "electron";
 import * as path from "path";
 import path__default from "path";
 import cp, { exec as exec$1 } from "child_process";
@@ -10655,7 +10655,9 @@ class SettingsStore {
       statistics: {
         totalGamesPlayed: 0
         //  默认历史总局数为 0
-      }
+      },
+      analyticsClientId: ""
+      //  默认为空，首次启动时由 AnalyticsManager 生成
     };
     this.store = new Store({ defaults });
   }
@@ -10703,6 +10705,190 @@ class SettingsStore {
   }
 }
 const settingsStore = SettingsStore.getInstance();
+const GA_MEASUREMENT_ID = "G-NBEKXB38M4";
+const GA_API_SECRET = "OIxU8BZSTYKfCOo9YNLzqg";
+const GA_ENDPOINT = `https://www.google-analytics.com/mp/collect?measurement_id=${GA_MEASUREMENT_ID}&api_secret=${GA_API_SECRET}`;
+const GA_DEBUG_ENDPOINT = `https://www.google-analytics.com/debug/mp/collect?measurement_id=${GA_MEASUREMENT_ID}&api_secret=${GA_API_SECRET}`;
+var AnalyticsEvent = /* @__PURE__ */ ((AnalyticsEvent2) => {
+  AnalyticsEvent2["APP_START"] = "app_start";
+  AnalyticsEvent2["HEX_START"] = "hex_start";
+  AnalyticsEvent2["HEX_STOP"] = "hex_stop";
+  AnalyticsEvent2["GAME_COMPLETED"] = "game_completed";
+  AnalyticsEvent2["MODE_CHANGED"] = "mode_changed";
+  AnalyticsEvent2["LINEUP_SELECTED"] = "lineup_selected";
+  return AnalyticsEvent2;
+})(AnalyticsEvent || {});
+class AnalyticsManager {
+  static instance;
+  /** 当前设备的唯一标识（持久化到 SettingsStore） */
+  clientId = "";
+  /** 是否已完成初始化 */
+  initialized = false;
+  /** 是否启用调试模式（发送到调试端点，不记录真实数据） */
+  debugMode = false;
+  constructor() {
+  }
+  /**
+   * 获取 AnalyticsManager 单例
+   */
+  static getInstance() {
+    if (!AnalyticsManager.instance) {
+      AnalyticsManager.instance = new AnalyticsManager();
+    }
+    return AnalyticsManager.instance;
+  }
+  /**
+   * 初始化分析管理器
+   * @param debug 是否启用调试模式（默认 false）
+   * 
+   * @description 必须在 app.whenReady() 之后调用，因为需要：
+   *   1. 读取 SettingsStore 获取/生成 client_id
+   *   2. 使用 app.getVersion() 获取应用版本
+   */
+  init(debug = false) {
+    if (this.initialized) {
+      console.log("📊 [Analytics] 已经初始化过了，跳过");
+      return;
+    }
+    this.debugMode = debug;
+    let clientId = settingsStore.get("analyticsClientId");
+    if (!clientId) {
+      clientId = this.generateUUID();
+      settingsStore.set("analyticsClientId", clientId);
+      console.log("📊 [Analytics] 生成新的 client_id:", clientId);
+    }
+    this.clientId = clientId;
+    this.initialized = true;
+    console.log(`📊 [Analytics] 初始化完成 (debug=${debug}, clientId=${this.clientId})`);
+    console.log("📊 [Analytics] 正在发送 app_start 事件...");
+    this.trackEvent("app_start", {
+      app_version: app.getVersion()
+    });
+  }
+  /**
+   * 上报自定义事件
+   * @param eventName 事件名称（推荐使用 AnalyticsEvent 枚举）
+   * @param params 事件参数（可选，键值对形式）
+   * 
+   * @description
+   * 这是一个 fire-and-forget 方法：
+   * - 不会阻塞调用方
+   * - 发送失败只会打印警告日志，不会抛出异常
+   * - 适合在业务逻辑中随意插入，不影响主流程
+   * 
+   * @example
+   * // 上报简单事件
+   * analyticsManager.trackEvent(AnalyticsEvent.HEX_START);
+   * 
+   * // 上报带参数的事件
+   * analyticsManager.trackEvent(AnalyticsEvent.GAME_COMPLETED, {
+   *     session_games: 5,
+   *     total_games: 100,
+   *     tft_mode: 'NORMAL'
+   * });
+   */
+  trackEvent(eventName, params = {}) {
+    if (!this.initialized) {
+      console.warn("📊 [Analytics] 尚未初始化，跳过事件:", eventName);
+      return;
+    }
+    const payload = {
+      // client_id: 必须字段，用于标识用户/设备
+      client_id: this.clientId,
+      // events: 事件数组，每次请求可以发送多个事件（这里只发一个）
+      events: [
+        {
+          name: eventName,
+          params: {
+            // 把自定义参数展开到 params 里
+            ...params,
+            // engagement_time_msec: GA4 要求的参数，
+            // 表示用户参与时长（毫秒），至少 1ms 才会被 GA 统计
+            engagement_time_msec: "100",
+            // session_id: 用当前时间戳作为简易的 session 标识
+            // （GA4 自动 session 在 MP 中不可用，需要手动提供）
+            session_id: this.getSessionId()
+          }
+        }
+      ]
+    };
+    this.sendToGA(payload).catch((error) => {
+      console.warn("📊 [Analytics] 发送事件失败:", eventName, error.message);
+    });
+  }
+  // ========================================================================
+  // 私有方法
+  // ========================================================================
+  /**
+   * 发送数据到 GA4 Measurement Protocol 端点
+   * @param payload 请求体（JSON 格式）
+   * 
+   * @description 使用 Electron 的 net.fetch 发送请求
+   *              net.fetch 的优势：会自动使用系统代理设置
+   */
+  async sendToGA(payload) {
+    const endpoint = this.debugMode ? GA_DEBUG_ENDPOINT : GA_ENDPOINT;
+    if (this.debugMode) {
+      const events = payload.events;
+      const eventNames = events?.map((e) => e.name).join(", ") ?? "未知";
+      console.log(`📊 [Analytics] 正在发送到: ${this.debugMode ? "调试端点" : "正式端点"}`);
+      console.log(`📊 [Analytics] 事件: ${eventNames}`);
+    }
+    try {
+      const response = await net.fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+      console.log(`📊 [Analytics] 请求完成, HTTP 状态码: ${response.status}`);
+      if (this.debugMode) {
+        const debugResult = await response.json();
+        console.log("📊 [Analytics] 调试响应:", JSON.stringify(debugResult, null, 2));
+      }
+      if (!response.ok && response.status !== 204) {
+        console.warn(`📊 [Analytics] 请求返回非成功状态: ${response.status}`);
+      }
+    } catch (error) {
+      console.warn("📊 [Analytics] 网络请求失败:", error);
+    }
+  }
+  /**
+   * 生成一个随机 UUID (v4 格式)
+   * @returns 形如 "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx" 的字符串
+   * 
+   * @description 用于生成 client_id，不依赖外部库
+   *              使用 crypto.randomUUID() 如果可用，否则手动生成
+   */
+  generateUUID() {
+    try {
+      return require2("crypto").randomUUID();
+    } catch {
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0;
+        const v = c === "x" ? r : r & 3 | 8;
+        return v.toString(16);
+      });
+    }
+  }
+  /**
+   * 获取当前会话 ID
+   * @returns 基于应用启动时间的会话标识字符串
+   * 
+   * @description GA4 的 Measurement Protocol 不支持自动 session 管理
+   *              我们用一个简单的时间戳作为 session_id
+   *              同一次应用生命周期内的所有事件共享同一个 session_id
+   */
+  sessionId = null;
+  getSessionId() {
+    if (!this.sessionId) {
+      this.sessionId = Math.floor(Date.now() / 1e3).toString();
+    }
+    return this.sessionId;
+  }
+}
+const analyticsManager = AnalyticsManager.getInstance();
 initGlobalCrashHandler();
 app.disableHardwareAcceleration();
 app.commandLine.appendSwitch("disable-gpu");
@@ -10894,9 +11080,9 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-bojCyC-9.js");
+    const ServicesModule = await import("./chunks/index-DG2B3LjU.js");
     hexService = ServicesModule.hexService;
-    const TftOperatorModule = await import("./chunks/TftOperator-BjUf9jUM.js").then((n) => n.T);
+    const TftOperatorModule = await import("./chunks/TftOperator-Bunmsfw0.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
     const LineupModule = await import("./chunks/index-BkP-NETh.js");
     lineupLoader = LineupModule.lineupLoader;
@@ -10918,6 +11104,7 @@ app.whenReady().then(async () => {
     app.quit();
     return;
   }
+  analyticsManager.init(is.dev);
   createWindow();
   init();
   registerHandler();
@@ -11133,6 +11320,8 @@ export {
   isStandardChessMode as U,
   LcuEventUri as V,
   VITE_DEV_SERVER_URL,
+  analyticsManager as W,
+  AnalyticsEvent as X,
   getEquipDataBySeason as a,
   getChessDataForMode as b,
   TFT_16_EQUIP_DATA as c,

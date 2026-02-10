@@ -78,6 +78,7 @@ import {debounce} from "../src-backend/utils/HelperTools.ts";
 import {is, optimizer} from "@electron-toolkit/utils";
 // import {lineupLoader} from "../src-backend/lineup";  // 移至动态导入
 import {TFT_16_CHESS_DATA} from "../src-backend/TFTProtocol";  // 导入棋子数据
+import {analyticsManager} from "../src-backend/utils/AnalyticsManager";  // Google Analytics 数据统计
 // import {globalHotkeyManager} from "../src-backend/utils/GlobalHotkeyManager.ts";  // 移至动态导入
 
 // ============================================================================
@@ -407,6 +408,10 @@ app.whenReady().then(async () => {
         return;
     }
     
+    // 初始化 Google Analytics 数据统计
+    // debug 参数：开发模式下发送到调试端点，不记录真实数据
+    analyticsManager.init(is.dev);
+
     createWindow()  //  创建窗口
     init()  //  执行LCU相关函数
     registerHandler()

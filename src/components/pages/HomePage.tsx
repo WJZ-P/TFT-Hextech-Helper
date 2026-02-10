@@ -761,9 +761,10 @@ const buttonAnimations = `
   }
 `;
 
-const ControlButton = styled.button<{ $isRunning: boolean; $disabled: boolean; theme: ThemeType }>`
+const ControlButton = styled.button<{ $isRunning: boolean; $disabled: boolean; $isConnected: boolean; theme: ThemeType }>`
   ${buttonAnimations}
-  margin-top: -1.5rem;  /* 简单起见先这么改吧，不是很规范 */
+  /* 已连接时上方内容较多，用负 margin 收紧间距；未连接时内容少，保持默认间距 */
+  margin-top: ${props => props.$isConnected ? '-1.5rem' : '0'};
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -1604,6 +1605,7 @@ export const HomePage = () => {
                         onClick={handleToggle} 
                         $isRunning={isRunning}
                         $disabled={!isLcuConnected || (needsLineup && !hasSelectedLineup)}
+                        $isConnected={isLcuConnected}
                     >
                         {!isLcuConnected ? (
                             <>
