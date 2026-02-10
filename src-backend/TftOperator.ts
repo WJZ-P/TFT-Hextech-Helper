@@ -355,7 +355,7 @@ class TftOperator {
 
                 // 发条鸟区域 OCR 识别失败，可能是过渡帧等临时情况
                 // 玩家死亡检测已由 GameStageMonitor 的 isDead 轮询负责，这里不做处理
-                logger.warn(`[TftOperator] 发条鸟模式阶段识别失败: "${clockText ?? "null"}"`);
+                logger.warn(`[TftOperator] 发条鸟模式阶段识别失败: "${clockText ?? "null"}"。请检查：1. 系统屏幕缩放是否为100%；2. 游戏分辨率是否为1024x768；3. 游戏窗口是否无边框居中且未被遮挡。`);
                 return { type: GameStageType.UNKNOWN, stageText: "" };
             }
 
