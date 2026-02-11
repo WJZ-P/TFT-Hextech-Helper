@@ -30,12 +30,15 @@ import {
     hexSlot,
     TFTMode,
     clockworkTrailsFightButtonPoint,
+    getChessDataForMode,
 } from "../TFTProtocol";
 import {gameStateManager} from "./GameStateManager";
 import {gameStageMonitor, GameStageEvent} from "./GameStageMonitor";
 import {settingsStore} from "../utils/SettingsStore";
 import {lineupLoader} from "../lineup";
 import {LineupConfig, StageConfig, ChampionConfig} from "../lineup/LineupTypes";
+import {TFT_16_TRAIT_DATA} from "../TFTInfo/trait";
+import {TFT_4_TRAIT_DATA} from "../TFTInfo/trait";
 import {mouseController, MouseButtonType, BenchUnit, BenchLocation, BoardUnit, BoardLocation} from "../tft";
 import {sleep} from "../utils/HelperTools";
 
@@ -1551,6 +1554,10 @@ export class StrategyService {
      * - 满员：用备战席的强力棋子替换场上的弱棋子
      */
     private async optimizeBoard(targetChampions: Set<ChampionKey>): Promise<void> {
+        // ====== 步骤 0：先清理场上的同名重复棋子 ======
+        // 如果场上有同名棋子（例如两个 2★ 安妮），保留战斗力最强的，把弱的移回备战席或卖掉
+        await this.removeDuplicatesFromBoard(targetChampions);
+
         const availableSlots = gameStateManager.getAvailableBoardSlots();
 
         if (availableSlots > 0) {
@@ -1571,46 +1578,46 @@ export class StrategyService {
         // 获取备战席上的棋子
         const benchUnits = gameStateManager.getBenchUnits().filter((u): u is BenchUnit => u !== null);
 
-        if (benchUnits.length === 0) {
-            logger.debug("[StrategyService] 备战席没有棋子，跳过摆放");
-            return;
-        }
+        // 筛选并排序需要上场的棋子（严格不允许与场上同名）
+        const unitsToPlace = benchUnits.length > 0
+            ? this.selectUnitsToPlace(benchUnits, targetChampions, availableSlots)
+            : [];
 
-        // 筛选并排序需要上场的棋子
-        const unitsToPlace = this.selectUnitsToPlace(benchUnits, targetChampions, availableSlots);
-
-        if (unitsToPlace.length === 0) {
-            logger.debug("[StrategyService] 备战席没有可以上场的棋子");
-            return;
-        }
-
-        logger.info(
-            `[StrategyService] 开始摆放棋子，当前等级: ${gameStateManager.getLevel()}，` +
-            `可上场数量: ${availableSlots}，待上场: ${unitsToPlace.length}`
-        );
-
-        // 依次摆放棋子
-        for (const unit of unitsToPlace) {
-            const championName = unit.tftUnit.displayName;
-            const targetLocation = this.findBestPositionForUnit(unit);
-
-            if (!targetLocation) {
-                logger.warn(`[StrategyService] 找不到合适的位置放置 ${championName}`);
-                continue;
-            }
-
+        if (unitsToPlace.length > 0) {
             logger.info(
-                `[StrategyService] 摆放棋子: ${championName} ` +
-                `(射程: ${getChampionRange(championName as any) ?? '未知'}) -> ${targetLocation}`
+                `[StrategyService] 开始摆放棋子，当前等级: ${gameStateManager.getLevel()}，` +
+                `可上场数量: ${availableSlots}，待上场: ${unitsToPlace.length}`
             );
 
-            await tftOperator.moveBenchToBoard(unit.location, targetLocation);
-            // 同步更新 GameStateManager 状态
-            gameStateManager.moveBenchToBoard(unit.location, targetLocation);
-            await sleep(200);
+            // 依次摆放棋子
+            for (const unit of unitsToPlace) {
+                const championName = unit.tftUnit.displayName;
+                const targetLocation = this.findBestPositionForUnit(unit);
+
+                if (!targetLocation) {
+                    logger.warn(`[StrategyService] 找不到合适的位置放置 ${championName}`);
+                    continue;
+                }
+
+                logger.info(
+                    `[StrategyService] 摆放棋子: ${championName} ` +
+                    `(射程: ${getChampionRange(championName as any) ?? '未知'}) -> ${targetLocation}`
+                );
+
+                await tftOperator.moveBenchToBoard(unit.location, targetLocation);
+                // 同步更新 GameStateManager 状态
+                gameStateManager.moveBenchToBoard(unit.location, targetLocation);
+                await sleep(200);
+            }
+
+            logger.info(`[StrategyService] 棋子摆放完成，共摆放 ${unitsToPlace.length} 个棋子`);
         }
 
-        logger.info(`[StrategyService] 棋子摆放完成，共摆放 ${unitsToPlace.length} 个棋子`);
+        // ====== 备战席不够凑满空位时，尝试从商店购买能凑羁绊的棋子补充 ======
+        const remainingSlots = gameStateManager.getAvailableBoardSlots();
+        if (remainingSlots > 0 && gameStateManager.getEmptyBenchSlotCount() > 0) {
+            await this.tryBuySynergyUnitsFromShop(targetChampions, remainingSlots);
+        }
     }
 
     /**
@@ -1631,17 +1638,16 @@ export class StrategyService {
         const worstBoard = this.findWorstBoardUnit(targetChampions);
         if (!worstBoard) return;
 
-        // 多样性优化：优先用"场上没有的棋子"去替换（避免重复上同名棋子）
-        // 注意：如果把 `worstBoard` 位置的棋子换下去，那么它的名字可以从"禁止名单"里移除。
+        // 严格去重：场上已有的同名棋子绝对不能被选上场
+        // 由于要换下 worstBoard，它的名字可以从禁止名单里移除
         const avoidChampionNames = new Set<ChampionKey>(
             gameStateManager.getBoardUnitsWithLocation().map(u => u.tftUnit.displayName as ChampionKey)
         );
         avoidChampionNames.delete(worstBoard.unit.tftUnit.displayName as ChampionKey);
 
-        // 找备战席最好的棋子（优先避开场上已有的同名棋子；如果避开后一个都没有，再退化到原逻辑）
+        // 找备战席最好的棋子（严格禁止同名，找不到就不替换）
         const bestBench = this.findBestBenchUnit(benchUnits, targetChampions, avoidChampionNames);
         if (!bestBench) return;
-
         // 备战席棋子价值更高才替换
         if (bestBench.score > worstBoard.score) {
             const worstName = worstBoard.unit.tftUnit.displayName;
@@ -1712,7 +1718,8 @@ export class StrategyService {
 
     /**
      * 找备战席中价值最高的棋子
-     * @param avoidChampionNames 可选：避免选择"同名棋子"（例如场上已经有的棋子名）
+     * @param avoidChampionNames 可选：避免选择“同名棋子”（例如场上已经有的棋子名）
+     * @description 严格模式：如果 avoidChampionNames 中的棋子全被过滤了，返回 null（不再退化允许同名上场）
      */
     private findBestBenchUnit(
         benchUnits: BenchUnit[],
@@ -1728,17 +1735,17 @@ export class StrategyService {
         const filtered = benchUnits.filter(isNormalUnit);
         if (filtered.length === 0) return null;
 
-        // 1) 优先挑选"避开同名"的候选集
+        // 严格过滤同名棋子，不再退化
         const candidates = avoidChampionNames
             ? filtered.filter(u => !avoidChampionNames.has(u.tftUnit.displayName as ChampionKey))
             : filtered;
 
-        // 2) 如果避开后没有候选，则退化回"不过滤同名"的候选集（避免无子可换）
-        const finalCandidates = candidates.length > 0 ? candidates : filtered;
+        // 没有候选则返回 null（不允许同名棋子上场）
+        if (candidates.length === 0) return null;
 
         let best: { unit: BenchUnit; score: number } | null = null;
 
-        for (const unit of finalCandidates) {
+        for (const unit of candidates) {
             const score = this.calculateUnitScore(unit.tftUnit, unit.starLevel, targetChampions);
             if (!best || score > best.score) {
                 best = {unit, score};
@@ -1747,7 +1754,6 @@ export class StrategyService {
 
         return best;
     }
-
     /**
      * 找棋盘上价值最低的棋子
      */
@@ -1777,12 +1783,9 @@ export class StrategyService {
      * @description 评分规则（优先级从高到低）：
      *              1. 目标阵容中的核心棋子 → +10000
      *              2. 目标阵容中的普通棋子 → +1000
-     *              3. 棋子费用 → 每费 +100（高费棋子战斗力更强）
-     *              4. 棋子星级 → 每星 +10（最低优先级）
-     *
-     * 分数设计说明：
-     * - 使用不同数量级确保优先级不会被低优先级的高数值覆盖
-     * - 例如：1费核心棋子 (10000+100+10=10110) > 5费非目标棋子 (500+10=510)
+     *              3. 能凑羁绊的棋子 → +500（上场后能让羁绊达到/接近激活门槛）
+     *              4. 棋子费用 → 每费 +100（高费棋子战斗力更强）
+     *              5. 棋子星级 → 每星 +10（最低优先级）
      */
     private calculateUnitScore(unit: TFTUnit, starLevel: number, targetChampions: Set<ChampionKey>): number {
         let score = 0;
@@ -1801,14 +1804,318 @@ export class StrategyService {
         else if (targetChampions.has(championName)) {
             score += 1000;
         }
+        // 优先级 3: 能凑羁绊的棋子（上场后能增加羁绊计数）
+        else {
+            const synergyBonus = this.calculateSynergyScore(championName);
+            score += synergyBonus;
+        }
 
-        // 优先级 3: 棋子费用（高费棋子战斗力更强）
+        // 优先级 4: 棋子费用（高费棋子战斗力更强）
         score += unit.price * 100;
 
-        // 优先级 4: 棋子星级（最低优先级）
+        // 优先级 5: 棋子星级（最低优先级）
         score += starLevel * 10;
 
         return score;
+    }
+
+    /**
+     * 获取棋子的羁绊列表（种族 + 职业）
+     * @param championName 棋子名称
+     * @returns 羁绊名称数组，找不到返回空数组
+     *
+     * @description 从当前游戏模式对应的棋子数据集中查找。
+     *              TFTUnit 的 traits 字段合并了 origins 和 classes，直接使用即可。
+     */
+    private getChampionTraits(championName: string): string[] {
+        const chessData = getChessDataForMode(this.gameMode);
+        const unitData = chessData[championName];
+        if (!unitData) return [];
+        // traits 已经是 origins + classes 的合并
+        return unitData.traits ?? [];
+    }
+
+    /**
+     * 根据当前游戏模式获取羁绊激活阈值数据
+     * @returns 羁绊名 → TraitData 的映射表
+     */
+    private getTraitDataForMode(): Record<string, import("../TFTProtocol").TraitData> {
+        // S16(标准模式) 和 S4.5(发条迷城等) 使用不同的羁绊数据
+        if (this.gameMode === TFTMode.CLOCKWORK_TRAILS) {
+            return TFT_4_TRAIT_DATA;
+        }
+        return TFT_16_TRAIT_DATA;
+    }
+
+    /**
+     * 计算一个棋子上场后能带来的羁绊收益分
+     * @param championName 候选上场的棋子名称
+     * @returns 羁绊收益分（0-500），分数越高表示越能凑成有效羁绊
+     *
+     * @description 评分逻辑（结合 trait.ts 中的 levels 激活阈值）：
+     *
+     *   1. 获取当前场上所有棋子的羁绊计数（traitCounts）
+     *   2. 获取候选棋子的羁绊列表
+     *   3. 对每个羁绊，查找 levels 阈值数据：
+     *      - 如果 levels[0] === 1（自激活羁绊，如铸星龙王），棋子自己上场就能激活 → 250 分
+     *      - 如果 currentCount + 1 恰好达到某个 level 阈值 → 250 分（触发激活！）
+     *      - 如果 currentCount + 1 距离最近的 level 阈值只差 1 → 150 分（临门一脚）
+     *      - 如果 currentCount >= 1 但离阈值还远 → 50 分（在凑羁绊路上，不算白搭）
+     *      - 如果 currentCount === 0 且 levels[0] > 2 → 0 分（孤立且很难凑，没意义）
+     *      - 如果 currentCount === 0 且 levels[0] === 2 → 30 分（离激活只差1个，给一点鼓励分）
+     *
+     *   上限 500（避免非目标棋子分数超过目标棋子的 1000）
+     */
+    private calculateSynergyScore(championName: ChampionKey): number {
+        const traits = this.getChampionTraits(championName);
+        if (traits.length === 0) return 0;
+
+        // 统计场上棋子的羁绊计数
+        const boardUnits = gameStateManager.getBoardUnitsWithLocation();
+        const traitCounts = new Map<string, number>();
+
+        for (const unit of boardUnits) {
+            const unitTraits = this.getChampionTraits(unit.tftUnit.displayName);
+            for (const trait of unitTraits) {
+                traitCounts.set(trait, (traitCounts.get(trait) || 0) + 1);
+            }
+        }
+
+        // 获取羁绊激活阈值数据
+        const traitDataMap = this.getTraitDataForMode();
+
+        let synergyScore = 0;
+
+        for (const trait of traits) {
+            const currentCount = traitCounts.get(trait) || 0;
+            const afterCount = currentCount + 1; // 该棋子上场后的计数
+
+            // 查找该羁绊的 levels 激活阈值
+            const traitData = traitDataMap[trait];
+            if (!traitData) {
+                // 没有找到羁绊数据（理论上不应该发生），用简单逻辑兜底
+                if (currentCount >= 1) synergyScore += 50;
+                continue;
+            }
+
+            const levels = traitData.levels;
+            const minLevel = levels[0]; // 最低激活阈值
+
+            // 情况 1：自激活羁绊（levels[0] === 1），如铸星龙王、山隐之焰
+            // 这个棋子自己上场就能满足羁绊，无需场上有其他同羁绊棋子
+            if (minLevel === 1 && afterCount >= 1) {
+                synergyScore += 250;
+                continue;
+            }
+
+            // 情况 2：检查上场后是否能恰好达到某个激活阈值
+            if (levels.includes(afterCount)) {
+                // 上场后正好激活！高分
+                synergyScore += 250;
+                continue;
+            }
+
+            // 情况 3：检查离最近的激活阈值有多远
+            // 找到第一个 >= afterCount 的阈值
+            const nextLevel = levels.find(l => l >= afterCount);
+            if (nextLevel !== undefined) {
+                const gap = nextLevel - afterCount; // 还差多少个棋子才能激活
+
+                if (gap === 1) {
+                    // 只差 1 个就能激活 → 临门一脚，较高分
+                    synergyScore += 150;
+                } else if (gap === 2) {
+                    // 差 2 个，有一定价值
+                    synergyScore += 80;
+                } else if (currentCount >= 1) {
+                    // 已经有同羁绊棋子在场上，说明在凑的路上
+                    synergyScore += 50;
+                } else if (minLevel === 2) {
+                    // 场上 0 个但最低阈值只要 2，上场后就差 1 个了
+                    synergyScore += 30;
+                }
+                // 其他情况（场上0个且阈值很高）→ 不加分
+            }
+        }
+
+        // 上限 500（避免非目标棋子分数超过目标棋子的 1000）
+        return Math.min(500, synergyScore);
+    }
+
+    /**
+     * 清理场上的同名重复棋子
+     * @param targetChampions 目标棋子集合
+     * @description 遍历场上棋子，如果有同名的，保留战斗力最强的，
+     *              其余的移回备战席或卖掉。
+     *
+     * 例如：场上有两个 2★ 安妮，保留分数高的那个，另一个移回备战席
+     */
+    private async removeDuplicatesFromBoard(targetChampions: Set<ChampionKey>): Promise<void> {
+        const boardUnits = gameStateManager.getBoardUnitsWithLocation();
+        if (boardUnits.length <= 1) return;
+
+        // 按棋子名称分组
+        const nameGroups = new Map<string, typeof boardUnits>();
+        for (const unit of boardUnits) {
+            const name = unit.tftUnit.displayName;
+            if (!nameGroups.has(name)) {
+                nameGroups.set(name, []);
+            }
+            nameGroups.get(name)!.push(unit);
+        }
+
+        // 找出有重复的组
+        for (const [name, units] of nameGroups) {
+            if (units.length <= 1) continue;
+
+            logger.info(`[StrategyService] 发现场上重复棋子: ${name} x${units.length}，开始清理...`);
+
+            // 按分数排序，保留最强的
+            const sorted = [...units].sort((a, b) => {
+                const aScore = this.calculateUnitScore(a.tftUnit, a.starLevel, targetChampions);
+                const bScore = this.calculateUnitScore(b.tftUnit, b.starLevel, targetChampions);
+                return bScore - aScore;
+            });
+
+            // 从第二个开始，都是需要移除的
+            for (let i = 1; i < sorted.length; i++) {
+                const duplicate = sorted[i];
+                const hasEquips = duplicate.equips && duplicate.equips.length > 0;
+                const emptyBenchSlot = gameStateManager.getFirstEmptyBenchSlotIndex();
+
+                if (hasEquips) {
+                    // 带装备的卖掉，回收装备
+                    logger.info(
+                        `[StrategyService] 去重(卖出回收装备): ${name} (${duplicate.location}) ` +
+                        `[装备: ${duplicate.equips!.map(e => e.name).join(', ')}]`
+                    );
+                    await tftOperator.sellUnit(duplicate.location);
+                    await sleep(500);
+                    await this.updateEquipStateFromScreen();
+                    gameStateManager.clearBoardLocation(duplicate.location);
+                } else if (emptyBenchSlot !== -1) {
+                    // 无装备且备战席有空位，移回备战席
+                    logger.info(`[StrategyService] 去重(移回备战席): ${name} (${duplicate.location})`);
+                    await tftOperator.moveBoardToBench(duplicate.location, emptyBenchSlot);
+                    gameStateManager.moveBoardToBench(duplicate.location, emptyBenchSlot);
+                    await sleep(100);
+                } else {
+                    // 无装备但备战席满了，只能卖掉
+                    logger.info(`[StrategyService] 去重(卖出): ${name} (${duplicate.location})`);
+                    await tftOperator.sellUnit(duplicate.location);
+                    gameStateManager.clearBoardLocation(duplicate.location);
+                    gameStateManager.updateGold(gameStateManager.getGold() + duplicate.tftUnit.price);
+                    await sleep(100);
+                }
+            }
+        }
+    }
+
+    /**
+     * 尝试从商店购买能凑羁绊的棋子来填补场上空位
+     * @param targetChampions 目标棋子集合
+     * @param slotsToFill 需要填补的空位数量
+     *
+     * @description 当备战席没有不重复的棋子可上场时，
+     *              扫描商店中"能凑羁绊"的棋子，优先购买并上场。
+     *              这比上重复棋子要好得多——至少能贡献羁绊加成。
+     *
+     * 购买条件：
+     * 1. 棋子名不能和场上已有的重复
+     * 2. 优先买能凑羁绊的（calculateSynergyScore > 0）
+     * 3. 有足够金币
+     * 4. 备战席有空位（用于暂存购买的棋子）
+     */
+    private async tryBuySynergyUnitsFromShop(targetChampions: Set<ChampionKey>, slotsToFill: number): Promise<void> {
+        const shopUnits = gameStateManager.getShopUnits();
+        const currentGold = gameStateManager.getGold();
+
+        // 收集场上 + 已选定要上场的棋子名
+        const boardChampionNames = new Set<ChampionKey>(
+            gameStateManager.getBoardUnitsWithLocation().map(u => u.tftUnit.displayName as ChampionKey)
+        );
+
+        // 评估商店每个棋子的羁绊收益
+        const candidates: { index: ShopSlotIndex; unit: TFTUnit; synergyScore: number }[] = [];
+
+        for (let i = 0; i < shopUnits.length; i++) {
+            const unit = shopUnits[i];
+            if (!unit) continue;
+
+            const name = unit.displayName as ChampionKey;
+
+            // 跳过场上已有的同名棋子
+            if (boardChampionNames.has(name)) continue;
+
+            // 跳过买不起的
+            if (unit.price > currentGold) continue;
+
+            // 跳过已有3星的
+            if (this.hasThreeStarCopy(name)) continue;
+
+            // 计算羁绊收益
+            const synergyScore = this.calculateSynergyScore(name);
+
+            // 只购买能凑羁绊的棋子（synergyScore > 0），否则不值得花钱
+            if (synergyScore > 0) {
+                candidates.push({
+                    index: i as ShopSlotIndex,
+                    unit,
+                    synergyScore,
+                });
+            }
+        }
+
+        if (candidates.length === 0) {
+            logger.debug("[StrategyService] 商店没有能凑羁绊的不重复棋子，跳过补充购买");
+            return;
+        }
+
+        // 按羁绊收益分从高到低排序
+        candidates.sort((a, b) => b.synergyScore - a.synergyScore);
+
+        let boughtCount = 0;
+        const boughtNames = new Set<ChampionKey>();
+
+        for (const candidate of candidates) {
+            if (boughtCount >= slotsToFill) break;
+            if (gameStateManager.getEmptyBenchSlotCount() <= 0) break;
+            if (gameStateManager.getGold() < candidate.unit.price) continue;
+
+            const name = candidate.unit.displayName as ChampionKey;
+
+            // 确保本次购买中也不重复
+            if (boughtNames.has(name) || boardChampionNames.has(name)) continue;
+
+            logger.info(
+                `[StrategyService] 补充购买(凑羁绊): ${name} (￥${candidate.unit.price}, ` +
+                `羁绊分: ${candidate.synergyScore}, 羁绊: ${this.getChampionTraits(name).join('/')})`
+            );
+
+            const result = await this.buyAndUpdateState(candidate.index);
+            if (result === SingleBuyResult.SUCCESS) {
+                boughtCount++;
+                boughtNames.add(name);
+                boardChampionNames.add(name);
+
+                // 购买后立刻上场
+                const benchUnits = gameStateManager.getBenchUnits().filter((u): u is BenchUnit => u !== null);
+                const justBought = benchUnits.find(u => u.tftUnit.displayName === name);
+                if (justBought) {
+                    const targetLocation = this.findBestPositionForUnit(justBought);
+                    if (targetLocation) {
+                        await tftOperator.moveBenchToBoard(justBought.location, targetLocation);
+                        gameStateManager.moveBenchToBoard(justBought.location, targetLocation);
+                        await sleep(200);
+                        logger.info(`[StrategyService] 补充上场: ${name} -> ${targetLocation}`);
+                    }
+                }
+            }
+        }
+
+        if (boughtCount > 0) {
+            logger.info(`[StrategyService] 补充购买完成，共购买并上场 ${boughtCount} 个凑羁绊的棋子`);
+        }
     }
 
     /**
@@ -2983,31 +3290,29 @@ export class StrategyService {
     // ============================================================
 
     /**
-     * 选择需要上场的棋子
+     * 选择需要上场的棋子（严格不允许同名棋子上场）
      * @param benchUnits 备战席上的棋子列表
      * @param targetChampions 目标棋子集合
      * @param maxCount 最多可以上场的数量
-     * @returns 需要上场的棋子列表（已排序）
+     * @returns 需要上场的棋子列表（已排序、已去重）
      *
      * @description 选择逻辑：
-     *              场上有空位必须填满！不能因为不是目标棋子就空着不放。
-     *              复用 calculateUnitScore 计算分数，按分数从高到低排序。
-     *
-     *              非目标棋子作为"打工仔"，虽然没有羁绊加成，但也能提供战斗力。
+     *              1. 过滤掉场上已有的同名棋子（严格禁止重复）
+     *              2. 如果有重复名的棋子，只保留战斗力最强的那个
+     *              3. 按评分从高到低排序（目标>羁绊>费用>星级）
+     *              4. 严格保证上场的棋子之间也不重名
      */
     private selectUnitsToPlace(benchUnits: BenchUnit[], targetChampions: Set<ChampionKey>, maxCount: number): BenchUnit[] {
         if (benchUnits.length === 0 || maxCount <= 0) {
             return [];
         }
 
-        // 多样性优化：优先不上场"场上已经存在"的同名棋子
-        // 说明：同名棋子重复上场往往带来较低的收益，但会占用人口。
-        //      因此这里优先让场面更"多样"，把人口用在不同棋子上；如果备战席全是重复棋子，会自动兜底。
+        // 收集场上已有的棋子名称（严格禁止重复）
         const boardChampionNames = new Set<ChampionKey>(
             gameStateManager.getBoardUnitsWithLocation().map(u => u.tftUnit.displayName as ChampionKey)
         );
 
-        // 先过滤掉特殊单位（例如锻造器）
+        // 过滤掉特殊单位（锻造器等）
         const filtered = benchUnits.filter(u => {
             if (u.starLevel === -1) return false;
             return !u.tftUnit.displayName.includes('锻造器');
@@ -3017,42 +3322,37 @@ export class StrategyService {
             return [];
         }
 
-        // 多样性候选：优先选择"场上没有的同名棋子"
-        // 兜底：如果备战席全是重复棋子，仍然允许上场（否则会亏人口）
+        // 严格过滤：排除场上已有的同名棋子（不再允许同名上场）
         const candidates = filtered.filter(u => !boardChampionNames.has(u.tftUnit.displayName as ChampionKey));
-        const finalCandidates = candidates.length > 0 ? candidates : filtered;
+
+        if (candidates.length === 0) {
+            logger.debug("[StrategyService] 备战席全是场上已有的同名棋子，不上场（避免重复）");
+            return [];
+        }
 
         // 复用 calculateUnitScore 计算分数，按分数从高到低排序
-        const sortedUnits = [...finalCandidates].sort((a, b) => {
+        const sortedUnits = [...candidates].sort((a, b) => {
             const aScore = this.calculateUnitScore(a.tftUnit, a.starLevel, targetChampions);
             const bScore = this.calculateUnitScore(b.tftUnit, b.starLevel, targetChampions);
-            return bScore - aScore; // 分数高的排前面
+            return bScore - aScore;
         });
 
-        // 第一轮：尽量保证"上场棋子也不重复"（同一回合优先上不同英雄）
+        // 严格去重：同名棋子只保留分数最高的那一个
         const result: BenchUnit[] = [];
         const pickedChampionNames = new Set<ChampionKey>();
 
         for (const u of sortedUnits) {
             const name = u.tftUnit.displayName as ChampionKey;
+            // 已经选了同名的，跳过
             if (pickedChampionNames.has(name)) continue;
             pickedChampionNames.add(name);
             result.push(u);
             if (result.length >= maxCount) break;
         }
 
-        // 第二轮兜底：如果仍然没凑满人口（备战席大多是重复棋子），用剩余高分棋子补齐
-        if (result.length < maxCount) {
-            for (const u of sortedUnits) {
-                if (result.includes(u)) continue;
-                result.push(u);
-                if (result.length >= maxCount) break;
-            }
-        }
-
+        // 不再有“兆底”逻辑：宁可空位也不上重复棋子
         return result;
     }
-
     /**
      * 为棋子找到最佳摆放位置
      * @param unit 棋子对象 (需要包含 tftUnit 信息)
