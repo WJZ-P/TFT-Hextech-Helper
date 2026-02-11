@@ -374,6 +374,17 @@ class LCUManager extends EventEmitter {
     }
 
     /**
+     * 投降（提前结束对局）
+     * @description 调用 LCU 隐藏接口，触发投降逻辑
+     *              效果类似于在游戏内点击投降按钮
+     * @returns Promise<any>
+     */
+    public surrender(): Promise<any> {
+        logger.info('🏳️ [LCUManager] 正在发起投降...');
+        return this.request("POST", '/lol-gameflow/v1/surrender');
+    }
+
+    /**
      * 强制杀掉游戏进程
      * @description 直接通过 taskkill 命令杀掉 "League of Legends.exe" 进程
      *              比调用 LCU API 或点击 UI 更快更可靠

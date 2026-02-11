@@ -335,6 +335,10 @@ const lcuApi = {
     quitGame: (): Promise<{ data?: any; error?: string }> => {
         return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'POST', '/lol-gameflow/v1/early-exit');
     },
+    /** 投降（LCU 隐藏接口，触发游戏内投降） */
+    surrender: (): Promise<{ data?: any; error?: string }> => {
+        return ipcRenderer.invoke(IpcChannel.LCU_REQUEST, 'POST', '/lol-gameflow/v1/surrender');
+    },
 }
 export type LcuApi = typeof lcuApi
 contextBridge.exposeInMainWorld('lcu', lcuApi)

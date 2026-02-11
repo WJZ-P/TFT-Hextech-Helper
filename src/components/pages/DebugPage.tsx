@@ -181,6 +181,10 @@ const DebugPage = () => {
                         退出游戏 (LCU)
                     </DebugButton>
                     
+                    <DebugButton $variant="danger" onClick={() => handleDebugClick('投降', window.lcu.surrender)}>
+                        投降 (LCU)
+                    </DebugButton>
+                    
                     <DebugButton onClick={() => handleDebugClick('召唤师信息', window.lcu.getSummonerInfo)}>
                         获取召唤师信息
                     </DebugButton>
