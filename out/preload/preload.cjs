@@ -55,6 +55,9 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["HEX_SCHEDULED_STOP_TRIGGERED"] = "hex-scheduled-stop-triggered";
   IpcChannel2["APP_GET_VERSION"] = "app-get-version";
   IpcChannel2["APP_CHECK_UPDATE"] = "app-check-update";
+  IpcChannel2["OVERLAY_SHOW"] = "overlay-show";
+  IpcChannel2["OVERLAY_CLOSE"] = "overlay-close";
+  IpcChannel2["OVERLAY_UPDATE_PLAYERS"] = "overlay-update-players";
   return IpcChannel2;
 })(IpcChannel || {});
 electron.contextBridge.exposeInMainWorld("ipcRenderer", {
@@ -346,6 +349,10 @@ const lcuApi = {
   /** 退出当前游戏（关闭游戏窗口，触发 early-exit） */
   quitGame: () => {
     return electron.ipcRenderer.invoke(IpcChannel.LCU_REQUEST, "POST", "/lol-gameflow/v1/early-exit");
+  },
+  /** 投降（LCU 隐藏接口，触发游戏内投降） */
+  surrender: () => {
+    return electron.ipcRenderer.invoke(IpcChannel.LCU_REQUEST, "POST", "/lol-gameflow/v1/surrender");
   }
 };
 electron.contextBridge.exposeInMainWorld("lcu", lcuApi);

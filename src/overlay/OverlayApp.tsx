@@ -26,6 +26,8 @@ interface PlayerInfo {
 export const OverlayApp: React.FC = () => {
     // 玩家列表状态
     const [players, setPlayers] = useState<PlayerInfo[]>([]);
+    // 关闭按钮 hover 状态（内联样式不支持 :hover 伪类，用 state 模拟）
+    const [closeHover, setCloseHover] = useState(false);
 
     useEffect(() => {
         // 监听主进程发送的玩家数据更新
@@ -37,6 +39,15 @@ export const OverlayApp: React.FC = () => {
         return () => cleanup?.();
     }, []);
 
+    /**
+     * 关闭浮窗
+     * 通过 preload 暴露的 ipcRenderer.invoke 调用主进程的 OVERLAY_CLOSE handler
+     * 注意：浮窗是独立的渲染进程，使用的是 preload 暴露的 window.ipcRenderer
+     */
+    const handleClose = () => {
+        (window as any).ipcRenderer?.invoke('overlay-close');
+    };
+
     // 统计真人和人机数量
     const realPlayers = players.filter(p => !p.isBot);
     const botPlayers = players.filter(p => p.isBot);
@@ -47,6 +58,18 @@ export const OverlayApp: React.FC = () => {
             <div style={styles.header}>
                 <span style={styles.headerIcon}>🎮</span>
                 <span style={styles.headerText}>对局信息</span>
+                {/* 右上角关闭按钮 */}
+                <span
+                    style={{
+                        ...styles.closeButton,
+                        // hover 时变亮 + 加背景
+                        ...(closeHover ? { color: '#e2e8f0', backgroundColor: 'rgba(255,255,255,0.1)' } : {}),
+                    }}
+                    onClick={handleClose}
+                    onMouseEnter={() => setCloseHover(true)}
+                    onMouseLeave={() => setCloseHover(false)}
+                    title="关闭浮窗"
+                >✕</span>
             </div>
 
             {/* 玩家统计摘要 */}
@@ -137,6 +160,17 @@ const styles: Record<string, React.CSSProperties> = {
         fontWeight: 600,
         color: '#66ccff',  // 主题色
         letterSpacing: '0.5px',
+        flex: 1,           // 占满剩余空间，把关闭按钮推到右边
+    },
+    closeButton: {
+        fontSize: '12px',
+        color: '#64748b',
+        cursor: 'pointer',
+        padding: '2px 4px',
+        borderRadius: '3px',
+        lineHeight: 1,
+        transition: 'color 0.15s, background-color 0.15s',
+        flexShrink: 0,
     },
     summary: {
         display: 'flex',

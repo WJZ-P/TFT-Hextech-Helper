@@ -66,6 +66,7 @@ interface AppSettings {
     logAutoCleanThreshold: LogAutoCleanThreshold,  //  日志自动清理阈值
     toggleHotkeyAccelerator: string,  //  挂机开关快捷键（Electron Accelerator 格式，如 "F1", "Ctrl+Shift+F1"）
     stopAfterGameHotkeyAccelerator: string,  //  "本局结束后停止"快捷键
+    showOverlay: boolean,    //  对局中是否显示游戏浮窗（真人/人机信息）
     showDebugPage: boolean,  //  是否显示调试页面
     window: {
         bounds: WindowBounds | null, // 上次关闭时的窗口信息
@@ -100,6 +101,7 @@ class SettingsStore {
             logAutoCleanThreshold: 500, //  默认超过 500 条时自动清理
             toggleHotkeyAccelerator: 'F1',  //  默认快捷键是 F1
             stopAfterGameHotkeyAccelerator: 'F2',  //  默认快捷键是 F2
+            showOverlay: true,              //  默认显示游戏浮窗
             showDebugPage: false,       //  默认隐藏调试页面
             window: {
                 bounds: null,           //  第一次启动，默认为null

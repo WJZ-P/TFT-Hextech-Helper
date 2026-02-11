@@ -406,33 +406,37 @@ export class GameRunningState implements IState {
             }
             
             // ============================================================
-            // 打开游戏浮窗并发送玩家数据
+            // 打开游戏浮窗并发送玩家数据（需要先检查用户是否开启了浮窗功能）
             // ============================================================
             
-            // 获取游戏窗口信息（由 TftOperator.init() 在 GameLoadingState 中已初始化）
-            const windowInfo = await windowHelper.findLOLWindow();
+            // 从持久化设置中读取浮窗开关状态
+            const overlayEnabled = settingsStore.get('showOverlay');
+            if (!overlayEnabled) {
+                logger.debug('[GameRunningState] 用户已关闭游戏浮窗，跳过浮窗显示');
+            } else {
+                // 获取游戏窗口信息（由 TftOperator.init() 在 GameLoadingState 中已初始化）
+                const windowInfo = await windowHelper.findLOLWindow();
             
-            if (windowInfo) {
-                // 打开浮窗（传入游戏窗口的物理像素坐标）
-                showOverlay({
-                    left: windowInfo.left,
-                    top: windowInfo.top,
-                    width: windowInfo.width,
-                    height: windowInfo.height,
-                });
-                
-                // 等待浮窗创建完成后发送玩家数据
-                // 给浮窗窗口 500ms 加载时间
-                setTimeout(() => {
+                if (windowInfo) {
+                    // 打开浮窗（传入游戏窗口的物理像素坐标）
+                    showOverlay({
+                        left: windowInfo.left,
+                        top: windowInfo.top,
+                        width: windowInfo.width,
+                        height: windowInfo.height,
+                    });
+                    
+                    // 发送玩家数据到浮窗
+                    // sendOverlayPlayers 内部会等待浮窗 webContents 加载完成后再发送，无需硬编码延迟
                     const playerData = allPlayers.map((player: any) => ({
                         name: player.riotIdGameName || player.summonerName || '未知玩家',
                         isBot: player.isBot === true,
                     }));
                     sendOverlayPlayers(playerData);
-                    logger.debug(`[GameRunningState] 已发送 ${playerData.length} 个玩家数据到浮窗`);
-                }, 500);
-            } else {
-                logger.warn('[GameRunningState] 未找到游戏窗口，跳过浮窗显示');
+                    logger.debug(`[GameRunningState] 已请求发送 ${playerData.length} 个玩家数据到浮窗`);
+                } else {
+                    logger.warn('[GameRunningState] 未找到游戏窗口，跳过浮窗显示');
+                }
             }
         } catch (error: any) {
             logger.warn(`[GameRunningState] 检测人机玩家失败: ${error.message}`);

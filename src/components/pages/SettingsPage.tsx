@@ -458,6 +458,9 @@ const SettingsPage = () => {
     // 调试页面显示设置
     const [showDebugPage, setShowDebugPage] = useState(false);
     
+    // 游戏浮窗显示设置
+    const [showOverlay, setShowOverlay] = useState(true);
+    
     // 版本与更新
     const [currentVersion, setCurrentVersion] = useState<string>('');
     const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
@@ -484,6 +487,10 @@ const SettingsPage = () => {
             // 加载调试页面显示设置（通过 settingsStore）
             await settingsStore.init();
             setShowDebugPage(settingsStore.getShowDebugPage());
+            
+            // 加载游戏浮窗显示设置
+            const overlayEnabled = await window.settings.get<boolean>('showOverlay');
+            setShowOverlay(overlayEnabled);
             
             // 加载当前版本号
             const version = await window.util.getAppVersion();
@@ -677,6 +684,15 @@ const SettingsPage = () => {
         toast.success(newValue ? '调试页面已显示' : '调试页面已隐藏');
     };
     
+    // 切换游戏浮窗显示
+    const handleToggleOverlay = async () => {
+        const newValue = !showOverlay;
+        setShowOverlay(newValue);
+        // 通过通用 settings API 持久化到后端 SettingsStore
+        await window.settings.set('showOverlay', newValue);
+        //toast.success(newValue ? '游戏浮窗已开启' : '游戏浮窗已关闭');
+    };
+    
     /**
      * 切换定时停止开关
      * - 开启时：校验时间 → 调用后端设置定时 → 更新状态
@@ -783,6 +799,24 @@ const SettingsPage = () => {
                     >
                         {isRecordingStopAfterGameHotkey ? '请按下快捷键' : (stopAfterGameHotkey || '未绑定')}
                     </HotkeyInput>
+                </SettingItem>
+            </SettingsCard>
+
+            {/* 对局设置 */}
+            <SettingsHeader>
+                对局
+            </SettingsHeader>
+            <SettingsCard>
+                <SettingItem>
+                    <SettingInfo>
+                        <SettingText>
+                            <h3>显示游戏浮窗</h3>
+                            <p>对局中在游戏窗口旁显示浮窗，展示真人/人机玩家信息。</p>
+                        </SettingText>
+                    </SettingInfo>
+                    <ToggleSwitch onClick={handleToggleOverlay}>
+                        <ToggleSlider $isOn={showOverlay} />
+                    </ToggleSwitch>
                 </SettingItem>
             </SettingsCard>
 

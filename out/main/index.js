@@ -5644,6 +5644,16 @@ class LCUManager extends EventEmitter {
     return this.request("POST", "/lol-gameflow/v1/early-exit");
   }
   /**
+   * 投降（提前结束对局）
+   * @description 调用 LCU 隐藏接口，触发投降逻辑
+   *              效果类似于在游戏内点击投降按钮
+   * @returns Promise<any>
+   */
+  surrender() {
+    logger.info("🏳️ [LCUManager] 正在发起投降...");
+    return this.request("POST", "/lol-gameflow/v1/surrender");
+  }
+  /**
    * 强制杀掉游戏进程
    * @description 直接通过 taskkill 命令杀掉 "League of Legends.exe" 进程
    *              比调用 LCU API 或点击 UI 更快更可靠
@@ -6113,6 +6123,9 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["HEX_SCHEDULED_STOP_TRIGGERED"] = "hex-scheduled-stop-triggered";
   IpcChannel2["APP_GET_VERSION"] = "app-get-version";
   IpcChannel2["APP_CHECK_UPDATE"] = "app-check-update";
+  IpcChannel2["OVERLAY_SHOW"] = "overlay-show";
+  IpcChannel2["OVERLAY_CLOSE"] = "overlay-close";
+  IpcChannel2["OVERLAY_UPDATE_PLAYERS"] = "overlay-update-players";
   return IpcChannel2;
 })(IpcChannel || {});
 const specialEquip = {
@@ -8639,6 +8652,61 @@ var UnitClass_S16 = /* @__PURE__ */ ((UnitClass_S162) => {
   UnitClass_S162["Warden"] = "神盾使";
   return UnitClass_S162;
 })(UnitClass_S16 || {});
+const TFT_16_TRAIT_DATA = {
+  // === Origins (origins) ===
+  "铸星龙王": { id: "10216", name: "铸星龙王", type: "origins", levels: [1] },
+  "纳什男爵": { id: "10217", name: "纳什男爵", type: "origins", levels: [1] },
+  "比尔吉沃特": { id: "10218", name: "比尔吉沃特", type: "origins", levels: [3, 5, 7, 10] },
+  "山隐之焰": { id: "10219", name: "山隐之焰", type: "origins", levels: [1] },
+  "星界游神": { id: "10221", name: "星界游神", type: "origins", levels: [1] },
+  "时光守护者": { id: "10222", name: "时光守护者", type: "origins", levels: [1] },
+  "黑暗之女": { id: "10223", name: "黑暗之女", type: "origins", levels: [1] },
+  "暗裔": { id: "10224", name: "暗裔", type: "origins", levels: [1, 2, 3] },
+  "德玛西亚": { id: "10226", name: "德玛西亚", type: "origins", levels: [3, 5, 7, 11] },
+  "沙漠皇帝": { id: "10227", name: "沙漠皇帝", type: "origins", levels: [1] },
+  "以绪塔尔": { id: "10228", name: "以绪塔尔", type: "origins", levels: [3, 5, 7] },
+  "弗雷尔卓德": { id: "10229", name: "弗雷尔卓德", type: "origins", levels: [3, 5, 7] },
+  "河流之王": { id: "10230", name: "河流之王", type: "origins", levels: [1] },
+  "远古恐惧": { id: "10232", name: "远古恐惧", type: "origins", levels: [1] },
+  "正义巨像": { id: "10233", name: "正义巨像", type: "origins", levels: [1] },
+  "海克斯机甲": { id: "10234", name: "海克斯机甲", type: "origins", levels: [1] },
+  "狂野女猎手": { id: "10235", name: "狂野女猎手", type: "origins", levels: [1] },
+  "艾欧尼亚": { id: "10237", name: "艾欧尼亚", type: "origins", levels: [3, 5, 7] },
+  "虚空之女": { id: "10239", name: "虚空之女", type: "origins", levels: [1] },
+  "永猎双子": { id: "10240", name: "永猎双子", type: "origins", levels: [1] },
+  "诺克萨斯": { id: "10243", name: "诺克萨斯", type: "origins", levels: [3, 5, 7, 10] },
+  "皮尔特沃夫": { id: "10244", name: "皮尔特沃夫", type: "origins", levels: [2, 4, 6] },
+  "符文法师": { id: "10246", name: "符文法师", type: "origins", levels: [1] },
+  "暗影岛": { id: "10247", name: "暗影岛", type: "origins", levels: [2, 3, 4, 5] },
+  "恕瑞玛": { id: "10248", name: "恕瑞玛", type: "origins", levels: [2, 3, 4] },
+  "龙血武姬": { id: "10249", name: "龙血武姬", type: "origins", levels: [1] },
+  "系魂圣枪": { id: "10252", name: "系魂圣枪", type: "origins", levels: [1] },
+  "解脱者": { id: "10253", name: "解脱者", type: "origins", levels: [1] },
+  "巨神峰": { id: "10254", name: "巨神峰", type: "origins", levels: [1, 2, 3, 4, 5, 6] },
+  "巨龙卫士": { id: "10255", name: "巨龙卫士", type: "origins", levels: [2] },
+  "光明哨兵": { id: "10256", name: "光明哨兵", type: "origins", levels: [2] },
+  "绝命毒师": { id: "10257", name: "绝命毒师", type: "origins", levels: [2] },
+  "腕豪": { id: "10258", name: "腕豪", type: "origins", levels: [1] },
+  "虚空": { id: "10260", name: "虚空", type: "origins", levels: [2, 4, 6, 9] },
+  "远古巫灵": { id: "10262", name: "远古巫灵", type: "origins", levels: [1] },
+  "约德尔人": { id: "10263", name: "约德尔人", type: "origins", levels: [2, 4, 6, 8] },
+  "不落魔锋": { id: "10264", name: "不落魔锋", type: "origins", levels: [1] },
+  "祖安": { id: "10265", name: "祖安", type: "origins", levels: [3, 5, 7] },
+  "与狼共舞": { id: "10266", name: "与狼共舞", type: "origins", levels: [2] },
+  // === Classes (classes) ===
+  "斗士": { id: "10220", name: "斗士", type: "classes", levels: [2, 4, 6] },
+  "护卫": { id: "10225", name: "护卫", type: "classes", levels: [2, 4, 6] },
+  "枪手": { id: "10231", name: "枪手", type: "classes", levels: [2, 4] },
+  "神谕者": { id: "10236", name: "神谕者", type: "classes", levels: [2, 4] },
+  "主宰": { id: "10238", name: "主宰", type: "classes", levels: [2, 4, 6] },
+  "狙神": { id: "10241", name: "狙神", type: "classes", levels: [2, 3, 4, 5] },
+  "耀光使": { id: "10242", name: "耀光使", type: "classes", levels: [2, 4] },
+  "迅击战士": { id: "10245", name: "迅击战士", type: "classes", levels: [2, 3, 4, 5] },
+  "裁决战士": { id: "10250", name: "裁决战士", type: "classes", levels: [2, 4, 6] },
+  "法师": { id: "10251", name: "法师", type: "classes", levels: [2, 4, 6] },
+  "征服者": { id: "10259", name: "征服者", type: "classes", levels: [2, 3, 4, 5] },
+  "神盾使": { id: "10261", name: "神盾使", type: "classes", levels: [2, 3, 4, 5] }
+};
 var UnitOrigin_S4_5 = /* @__PURE__ */ ((UnitOrigin_S4_52) => {
   UnitOrigin_S4_52["Cultist"] = "腥红之月";
   UnitOrigin_S4_52["Divine"] = "天神";
@@ -8672,6 +8740,37 @@ var UnitClass_S4_5 = /* @__PURE__ */ ((UnitClass_S4_52) => {
   UnitClass_S4_52["Vanguard"] = "重装战士";
   return UnitClass_S4_52;
 })(UnitClass_S4_5 || {});
+const TFT_4_TRAIT_DATA = {
+  // === Origins (origins) ===
+  "铁匠": { id: "10270", name: "铁匠", type: "origins", levels: [1] },
+  "霸王": { id: "10271", name: "霸王", type: "origins", levels: [1] },
+  "腥红之月": { id: "10273", name: "腥红之月", type: "origins", levels: [3, 6, 9, 11] },
+  "主宰": { id: "10274", name: "主宰", type: "origins", levels: [1] },
+  "天神": { id: "10276", name: "天神", type: "origins", levels: [2, 4, 6, 8] },
+  "龙魂": { id: "10277", name: "龙魂", type: "origins", levels: [3, 6, 9] },
+  "永恒之森": { id: "10279", name: "永恒之森", type: "origins", levels: [3, 6, 9] },
+  "枭雄": { id: "10280", name: "枭雄", type: "origins", levels: [1] },
+  "玉剑仙": { id: "10281", name: "玉剑仙", type: "origins", levels: [2, 4, 6, 8] },
+  "浪人": { id: "10283", name: "浪人", type: "origins", levels: [1, 2] },
+  "山海绘卷": { id: "10284", name: "山海绘卷", type: "origins", levels: [3] },
+  "福星": { id: "10285", name: "福星", type: "origins", levels: [3, 6, 10] },
+  "忍者": { id: "10289", name: "忍者", type: "origins", levels: [1, 4] },
+  "灵魂莲华明昼": { id: "10292", name: "灵魂莲华明昼", type: "origins", levels: [2, 4, 6] },
+  "三国猛将": { id: "10295", name: "三国猛将", type: "origins", levels: [3, 6, 9, 11] },
+  // === Classes (classes) ===
+  "宗师": { id: "10268", name: "宗师", type: "classes", levels: [2, 3, 4] },
+  "刺客": { id: "10269", name: "刺客", type: "classes", levels: [2, 4, 6] },
+  "斗士": { id: "10272", name: "斗士", type: "classes", levels: [2, 4, 6, 8] },
+  "决斗大师": { id: "10278", name: "决斗大师", type: "classes", levels: [2, 4, 6, 8] },
+  "裁决使": { id: "10282", name: "裁决使", type: "classes", levels: [2, 3, 4] },
+  "神盾使": { id: "10286", name: "神盾使", type: "classes", levels: [2, 4, 6, 8] },
+  "魔法师": { id: "10287", name: "魔法师", type: "classes", levels: [3, 5, 7, 10] },
+  "秘术师": { id: "10288", name: "秘术师", type: "classes", levels: [2, 3, 4, 5] },
+  "神射手": { id: "10290", name: "神射手", type: "classes", levels: [2, 4, 6] },
+  "战神": { id: "10291", name: "战神", type: "classes", levels: [3, 6, 9] },
+  "摄魂使": { id: "10293", name: "摄魂使", type: "classes", levels: [2, 4, 6] },
+  "重装战士": { id: "10294", name: "重装战士", type: "classes", levels: [2, 4, 6, 8] }
+};
 const TFT_SPECIAL_CHESS = {
   //  特殊的棋子，比如基础装备锻造器，这种不属于英雄
   "基础装备锻造器": {
@@ -10646,6 +10745,8 @@ class SettingsStore {
       //  默认快捷键是 F1
       stopAfterGameHotkeyAccelerator: "F2",
       //  默认快捷键是 F2
+      showOverlay: true,
+      //  默认显示游戏浮窗
       showDebugPage: false,
       //  默认隐藏调试页面
       window: {
@@ -10893,6 +10994,42 @@ class AnalyticsManager {
   }
 }
 const analyticsManager = AnalyticsManager.getInstance();
+let callbacks = null;
+function registerOverlayCallbacks(cbs) {
+  callbacks = cbs;
+  logger.debug("[OverlayBridge] 浮窗回调已注册");
+}
+function showOverlay(gameWindowInfo) {
+  if (!callbacks) {
+    logger.warn("[OverlayBridge] 浮窗回调未注册，无法打开浮窗");
+    return;
+  }
+  callbacks.create(gameWindowInfo);
+}
+function closeOverlay() {
+  if (!callbacks) {
+    logger.warn("[OverlayBridge] 浮窗回调未注册，无法关闭浮窗");
+    return;
+  }
+  callbacks.close();
+}
+function sendOverlayPlayers(players) {
+  const win2 = callbacks?.getWindow();
+  if (!win2 || win2.isDestroyed()) return;
+  const doSend = () => {
+    if (win2.isDestroyed()) return;
+    win2.webContents.send(IpcChannel.OVERLAY_UPDATE_PLAYERS, players);
+    logger.debug(`[OverlayBridge] 已发送 ${players.length} 个玩家数据到浮窗`);
+  };
+  if (!win2.webContents.isLoading()) {
+    doSend();
+  } else {
+    logger.debug("[OverlayBridge] 浮窗尚未加载完成，等待 did-finish-load...");
+    win2.webContents.once("did-finish-load", () => {
+      doSend();
+    });
+  }
+}
 initGlobalCrashHandler();
 app.disableHardwareAcceleration();
 app.commandLine.appendSwitch("disable-gpu");
@@ -10933,6 +11070,7 @@ const MAIN_DIST = path__default.join(process.env.APP_ROOT, "dist-electron");
 const RENDERER_DIST = path__default.join(process.env.APP_ROOT);
 process.env.VITE_PUBLIC = is.dev ? path__default.join(process.env.APP_ROOT, "../public") : process.resourcesPath;
 let win;
+let overlayWindow = null;
 let currentToggleHotkey = null;
 let currentStopAfterGameHotkey = null;
 function registerToggleHotkey(accelerator) {
@@ -10978,6 +11116,74 @@ function registerStopAfterGameHotkey(accelerator) {
     currentStopAfterGameHotkey = accelerator;
   }
   return success;
+}
+const OVERLAY_WIDTH = 160;
+function createOverlayWindow(gameWindowInfo) {
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.close();
+    overlayWindow = null;
+  }
+  const { screen: electronScreen } = require2("electron");
+  const primaryDisplay = electronScreen.getPrimaryDisplay();
+  const scaleFactor = primaryDisplay.scaleFactor;
+  const logicalLeft = Math.round(gameWindowInfo.left / scaleFactor);
+  const logicalTop = Math.round(gameWindowInfo.top / scaleFactor);
+  const logicalGameWidth = Math.round(gameWindowInfo.width / scaleFactor);
+  const logicalGameHeight = Math.round(gameWindowInfo.height / scaleFactor);
+  const overlayX = logicalLeft + logicalGameWidth;
+  const overlayY = logicalTop;
+  console.log(
+    `🪟 [Overlay] 创建浮窗: 游戏窗口(${logicalLeft}, ${logicalTop}, ${logicalGameWidth}x${logicalGameHeight}) → 浮窗(${overlayX}, ${overlayY}, ${OVERLAY_WIDTH}x${logicalGameHeight}) scaleFactor=${scaleFactor}`
+  );
+  overlayWindow = new BrowserWindow({
+    x: overlayX,
+    y: overlayY,
+    width: OVERLAY_WIDTH,
+    height: logicalGameHeight,
+    frame: false,
+    // 无边框
+    transparent: true,
+    // 背景透明
+    alwaysOnTop: false,
+    // 始终置顶
+    resizable: false,
+    // 不可拉伸
+    focusable: false,
+    // 不可聚焦（不会抢走游戏的焦点）
+    skipTaskbar: true,
+    // 不在任务栏显示
+    show: false,
+    // 先不显示，等内容加载完再显示
+    webPreferences: {
+      preload: path__default.join(__dirname, "../preload/preload.cjs"),
+      sandbox: false
+    }
+  });
+  if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
+    overlayWindow.loadURL(`${process.env["ELECTRON_RENDERER_URL"]}/overlay/overlay.html`);
+  } else {
+    overlayWindow.loadFile(path__default.join(__dirname, "../renderer/overlay/overlay.html"));
+  }
+  overlayWindow.once("ready-to-show", () => {
+    overlayWindow?.show();
+    console.log("🪟 [Overlay] 浮窗已显示");
+  });
+  overlayWindow.on("closed", () => {
+    overlayWindow = null;
+    console.log("🪟 [Overlay] 浮窗已关闭");
+  });
+}
+function closeOverlayWindow() {
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.close();
+    overlayWindow = null;
+    console.log("🪟 [Overlay] 浮窗已主动关闭");
+  }
+}
+function sendOverlayPlayerData(players) {
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.webContents.send(IpcChannel.OVERLAY_UPDATE_PLAYERS, players);
+  }
 }
 function createWindow() {
   const savedWindowInfo = settingsStore.get("window");
@@ -11037,6 +11243,7 @@ app.on("will-quit", async (event) => {
   if (globalHotkeyManager) {
     globalHotkeyManager.stop();
   }
+  closeOverlayWindow();
   if (hexService && hexService.isRunning) {
     event.preventDefault();
     console.log("🔄 [Main] 检测到程序正在运行，正在恢复游戏设置...");
@@ -11084,9 +11291,9 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-CRgr4hsv.js");
+    const ServicesModule = await import("./chunks/index-CBApMG8E.js");
     hexService = ServicesModule.hexService;
-    const TftOperatorModule = await import("./chunks/TftOperator-Bunmsfw0.js").then((n) => n.T);
+    const TftOperatorModule = await import("./chunks/TftOperator-CHK7LIbj.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
     const LineupModule = await import("./chunks/index-BkP-NETh.js");
     lineupLoader = LineupModule.lineupLoader;
@@ -11112,6 +11319,11 @@ app.whenReady().then(async () => {
   createWindow();
   init();
   registerHandler();
+  registerOverlayCallbacks({
+    create: createOverlayWindow,
+    close: closeOverlayWindow,
+    getWindow: () => overlayWindow
+  });
   const lineupCount = await lineupLoader.loadAllLineups();
   console.log(`📦 [Main] 已加载 ${lineupCount} 个阵容配置`);
   const savedHotkey = settingsStore.get("toggleHotkeyAccelerator");
@@ -11267,6 +11479,18 @@ function registerHandler() {
   ipcMain.handle(IpcChannel.STATS_GET, async () => {
     return hexService.getStatistics();
   });
+  ipcMain.handle(IpcChannel.OVERLAY_SHOW, async (_event, gameWindowInfo) => {
+    createOverlayWindow(gameWindowInfo);
+    return true;
+  });
+  ipcMain.handle(IpcChannel.OVERLAY_CLOSE, async () => {
+    closeOverlayWindow();
+    return true;
+  });
+  ipcMain.handle(IpcChannel.OVERLAY_UPDATE_PLAYERS, async (_event, players) => {
+    sendOverlayPlayerData(players);
+    return true;
+  });
   ipcMain.handle(IpcChannel.UTIL_IS_ELEVATED, async () => {
     return new Promise((resolve) => {
       exec$1("net session", (error) => {
@@ -11308,6 +11532,7 @@ function registerHandler() {
   });
 }
 export {
+  analyticsManager as $,
   gameStageDisplayTheClockworkTrails as A,
   clockworkTrailsQuitNowButtonPoint as B,
   levelRegion as C,
@@ -11323,19 +11548,23 @@ export {
   getChampionRange as M,
   MAIN_DIST,
   clockworkTrailsFightButtonPoint as N,
-  sharedDraftPoint as O,
-  GameConfigHelper as P,
-  IpcChannel as Q,
-  LCUManager as R,
+  TFT_4_TRAIT_DATA as O,
+  TFT_16_TRAIT_DATA as P,
+  sharedDraftPoint as Q,
+  GameConfigHelper as R,
   RENDERER_DIST,
-  getSeasonTemplateDir as S,
+  IpcChannel as S,
   TFTMode as T,
-  isStandardChessMode as U,
-  LcuEventUri as V,
+  LCUManager as U,
+  getSeasonTemplateDir as V,
   VITE_DEV_SERVER_URL,
-  analyticsManager as W,
-  AnalyticsEvent as X,
+  isStandardChessMode as W,
+  LcuEventUri as X,
+  showOverlay as Y,
+  sendOverlayPlayers as Z,
+  closeOverlay as _,
   getEquipDataBySeason as a,
+  AnalyticsEvent as a0,
   getChessDataForMode as b,
   TFT_16_EQUIP_DATA as c,
   TFT_16_CHESS_DATA as d,

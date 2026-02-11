@@ -277,8 +277,8 @@ const slideInFromTop = keyframes`
     transform: translateY(0);
     max-height: 50px;
     padding: 6px 12px;
-    margin-bottom: 12px;
-    margin-top: -12px;
+    margin-bottom: 32px;
+    margin-top: -16px;
   }
 `;
 
@@ -288,8 +288,8 @@ const StopAfterGameBanner = styled.div<{ theme: ThemeType }>`
   border: 1px solid ${props => props.theme.colors.primary}60;
   border-radius: ${props => props.theme.borderRadius};
   padding: 6px 12px;
-  margin-bottom: 12px;
-  margin-top: -12px;
+  margin-bottom: 32px;
+  margin-top: -16px;
   font-size: 1rem;
   color: ${props => props.theme.colors.primary};
   display: flex;
@@ -764,7 +764,7 @@ const buttonAnimations = `
 const ControlButton = styled.button<{ $isRunning: boolean; $disabled: boolean; $isConnected: boolean; theme: ThemeType }>`
   ${buttonAnimations}
   /* 已连接时上方内容较多，用负 margin 收紧间距；未连接时内容少，保持默认间距 */
-  margin-top: ${props => props.$isConnected ? '-1.5rem' : '0'};
+  margin-top: ${props => props.$isConnected ? '-0.8rem' : '0'};
   position: relative;
   display: inline-flex;
   align-items: center;
