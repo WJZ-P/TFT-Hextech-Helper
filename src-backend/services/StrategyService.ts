@@ -1453,13 +1453,13 @@ export class StrategyService {
     private async sellSingleTrashUnit(targetChampions: Set<ChampionKey>): Promise<boolean> {
         const benchUnits = gameStateManager.getBenchUnitsWithIndex();
 
-        // 筛选可卖棋子：非目标、非对子、非核心
+        // 筛选可卖棋子：非目标棋子可卖
+        // 注意：非目标棋子即使是对子也可以卖（已不在目标阵容中，三连无意义）
+        //       只有目标棋子的对子才需要保护
         const candidates = benchUnits.filter(({unit}) => {
             const name = unit.tftUnit.displayName as ChampionKey;
             // 目标棋子不卖
             if (targetChampions.has(name)) return false;
-            // 对子不卖（除非迫不得已，这里先保守一点）
-            if (gameStateManager.getOneStarChampionCount(name) >= 2) return false;
             return true;
         });
 
@@ -1631,25 +1631,32 @@ export class StrategyService {
      *              3. 备战席没空位 → 卖掉场上棋子 → 新棋子上场
      */
     private async autoReplaceWeakestUnit(targetChampions: Set<ChampionKey>): Promise<void> {
-        const benchUnits = gameStateManager.getBenchUnits().filter((u): u is BenchUnit => u !== null);
-        if (benchUnits.length === 0) return;
+        // 最多替换的轮次上限（防御性限制，避免死循环）
+        const MAX_REPLACE_ROUNDS = 5;
 
-        // 找棋盘最差的棋子
-        const worstBoard = this.findWorstBoardUnit(targetChampions);
-        if (!worstBoard) return;
+        for (let round = 0; round < MAX_REPLACE_ROUNDS; round++) {
+            // 每轮重新获取备战席数据（因为上一轮替换可能改变了备战席状态）
+            const benchUnits = gameStateManager.getBenchUnits().filter((u): u is BenchUnit => u !== null);
+            if (benchUnits.length === 0) return;
 
-        // 严格去重：场上已有的同名棋子绝对不能被选上场
-        // 由于要换下 worstBoard，它的名字可以从禁止名单里移除
-        const avoidChampionNames = new Set<ChampionKey>(
-            gameStateManager.getBoardUnitsWithLocation().map(u => u.tftUnit.displayName as ChampionKey)
-        );
-        avoidChampionNames.delete(worstBoard.unit.tftUnit.displayName as ChampionKey);
+            // 找棋盘最差的棋子
+            const worstBoard = this.findWorstBoardUnit(targetChampions);
+            if (!worstBoard) return;
 
-        // 找备战席最好的棋子（严格禁止同名，找不到就不替换）
-        const bestBench = this.findBestBenchUnit(benchUnits, targetChampions, avoidChampionNames);
-        if (!bestBench) return;
-        // 备战席棋子价值更高才替换
-        if (bestBench.score > worstBoard.score) {
+            // 严格去重：场上已有的同名棋子绝对不能被选上场
+            // 由于要换下 worstBoard，它的名字可以从禁止名单里移除
+            const avoidChampionNames = new Set<ChampionKey>(
+                gameStateManager.getBoardUnitsWithLocation().map(u => u.tftUnit.displayName as ChampionKey)
+            );
+            avoidChampionNames.delete(worstBoard.unit.tftUnit.displayName as ChampionKey);
+
+            // 找备战席最好的棋子（严格禁止同名，找不到就不替换）
+            const bestBench = this.findBestBenchUnit(benchUnits, targetChampions, avoidChampionNames);
+            if (!bestBench) return;
+
+            // 备战席棋子价值不高于场上最差棋子，没有替换意义了，退出循环
+            if (bestBench.score <= worstBoard.score) return;
+ 
             const worstName = worstBoard.unit.tftUnit.displayName;
             const bestName = bestBench.unit.tftUnit.displayName;
 
@@ -1666,7 +1673,7 @@ export class StrategyService {
                 // 棋子带装备，卖掉回收装备
                 const equipNames = worstBoard.unit.equips!.map(e => e.name).join(', ');
                 logger.info(
-                    `[StrategyService] 替换(卖出回收装备): ${worstName}(${worstBoard.score}分) ` +
+                    `[StrategyService] 替换(卖出回收装备)[第${round + 1}轮]: ${worstName}(${worstBoard.score}分) ` +
                     `[装备: ${equipNames}] -> ${bestName}(${bestBench.score}分) 上场`
                 );
 
@@ -1680,7 +1687,7 @@ export class StrategyService {
             } else if (hasEmptyBenchSlot) {
                 // 方案 A：棋子无装备且备战席有空位，把场上棋子移回备战席（保护目标阵容棋子）
                 logger.info(
-                    `[StrategyService] 替换(保留): ${worstName}(${worstBoard.score}分) 移回备战席，` +
+                    `[StrategyService] 替换(保留)[第${round + 1}轮]: ${worstName}(${worstBoard.score}分) 移回备战席，` +
                     `${bestName}(${bestBench.score}分) 上场`
                 );
 
@@ -1692,7 +1699,7 @@ export class StrategyService {
             } else {
                 // 方案 B：备战席没空位，只能卖掉
                 logger.info(
-                    `[StrategyService] 替换(卖出): ${worstName}(${worstBoard.score}分) ` +
+                    `[StrategyService] 替换(卖出)[第${round + 1}轮]: ${worstName}(${worstBoard.score}分) ` +
                     `-> ${bestName}(${bestBench.score}分)`
                 );
 
@@ -1713,6 +1720,8 @@ export class StrategyService {
             } else {
                 logger.warn(`[StrategyService] 找不到合适位置放置 ${bestName}`);
             }
+
+            logger.info(`[StrategyService] 替换第 ${round + 1} 轮完成`);
         }
     }
 
@@ -1782,10 +1791,18 @@ export class StrategyService {
      * 计算棋子价值分数
      * @description 评分规则（优先级从高到低）：
      *              1. 目标阵容中的核心棋子 → +10000
-     *              2. 目标阵容中的普通棋子 → +1000
-     *              3. 能凑羁绊的棋子 → +500（上场后能让羁绊达到/接近激活门槛）
-     *              4. 棋子费用 → 每费 +100（高费棋子战斗力更强）
-     *              5. 棋子星级 → 每星 +10（最低优先级）
+     *              2. 当前等级配置中的目标棋子 → +3000（优先摆放本等级的最优组合）
+     *              3. 更高等级配置中的目标棋子（不在当前等级配置里） → +1000
+     *              4. 能凑羁绊的棋子 → +500（上场后能让羁绊达到/接近激活门槛）
+     *              5. 棋子费用 → 每费 +100（高费棋子战斗力更强）
+     *              6. 棋子星级 → 每星 +10（最低优先级）
+     *
+     *  为什么区分"当前等级"和"更高等级"的目标棋子？
+     *  - 每个等级的阶段配置（level4、level7、level10 等）定义了该等级下的最优棋子组合
+     *  - 当人口位有限时，应该优先放置当前等级配置中的棋子（它们组成的羁绊最强）
+     *  - 更高等级的棋子只有在当前等级的棋子不够用时才需要上场补位
+     *  - 例如：8 级时，level8 配置有 8 个棋子，应该优先上这 8 个；
+     *         如果备战席有 level10 才需要的基兰，分数低于 level8 的璐璐
      */
     private calculateUnitScore(unit: TFTUnit, starLevel: number, targetChampions: Set<ChampionKey>): number {
         let score = 0;
@@ -1796,24 +1813,36 @@ export class StrategyService {
             this.getCoreChampions().map(c => c.name as ChampionKey)
         );
 
-        // 优先级 1: 目标阵容中的核心棋子
+        // 获取"当前等级配置"中的棋子名称集合
+        // getStageConfigForLevel 会返回当前等级（精确/向下/向上查找）对应的阶段配置
+        const currentLevelChampionNames = new Set<ChampionKey>(
+            (this.getStageConfigForLevel(gameStateManager.getLevel())?.champions ?? [])
+                .map(c => c.name as ChampionKey)
+        );
+
+        // 优先级 1: 目标阵容中的核心棋子（不管在不在当前等级配置中，核心永远最高）
         if (targetChampions.has(championName) && coreChampionNames.has(championName)) {
             score += 10000;
         }
-        // 优先级 2: 目标阵容中的普通棋子（非核心）
+        // 优先级 2: 当前等级配置中的目标棋子（本等级最优组合，优先上场）
+        else if (targetChampions.has(championName) && currentLevelChampionNames.has(championName)) {
+            score += 3000;
+        }
+        // 优先级 3: 更高等级的目标棋子（不在本等级配置中，但在 targetChampionNames 里）
+        //           这些棋子是未来升级后才需要的，当前等级优先级较低
         else if (targetChampions.has(championName)) {
             score += 1000;
         }
-        // 优先级 3: 能凑羁绊的棋子（上场后能增加羁绊计数）
+        // 优先级 4: 能凑羁绊的棋子（上场后能增加羁绊计数）
         else {
             const synergyBonus = this.calculateSynergyScore(championName);
             score += synergyBonus;
         }
 
-        // 优先级 4: 棋子费用（高费棋子战斗力更强）
+        // 优先级 5: 棋子费用（高费棋子战斗力更强）
         score += unit.price * 100;
 
-        // 优先级 5: 棋子星级（最低优先级）
+        // 优先级 6: 棋子星级（最低优先级）
         score += starLevel * 10;
 
         return score;
@@ -2658,14 +2687,13 @@ export class StrategyService {
         // 获取所有备战席棋子
         const benchUnits = gameStateManager.getBenchUnitsWithIndex();
 
-        // 筛选可卖棋子：非目标阵容、非核心、非对子
+        // 筛选可卖棋子：非目标阵容的棋子可卖，目标棋子绝不卖
         const candidates = benchUnits.filter(({unit}) => {
             const name = unit.tftUnit.displayName as ChampionKey;
-            // 如果是目标棋子，绝对不卖
+            // 如果是目标棋子，绝对不卖（还需要）
             if (this.targetChampionNames.has(name)) return false;
-            // 如果是对子（已有2个1星），尽量不卖（可能合2星打工）
-            return gameStateManager.getOneStarChampionCount(name) < 2;
-
+            // 非目标棋子 → 可以卖（即使是对子也行，因为已不在目标阵容中了）
+            return true;
         });
 
         // 排序优先级：
@@ -2698,22 +2726,29 @@ export class StrategyService {
 
     /**
      * 清理备战席的杂鱼
+     * @description 卖掉备战席中不需要的棋子：
+     *              - 目标棋子 → 保留（除非场上已有更高星的同名棋子）
+     *              - 目标棋子的对子 → 保留（还能三连升星）
+     *              - 非目标棋子 → 直接卖掉（即使是对子也卖，因为已不在目标阵容中）
+     *
+     *              随着等级提升，targetChampionNames 会缩小（低等级打工仔被剔除），
+     *              因此之前的打工棋子会变成"杂鱼"被清理掉。
      */
     private async trySellTrashUnits(): Promise<void> {
         const benchUnits = gameStateManager.getBenchUnitsWithIndex();
 
         for (const {index, unit} of benchUnits) {
             const name = unit.tftUnit.displayName as ChampionKey;
-            // 目标棋子不卖
-            if (this.targetChampionNames.has(name)) continue;
 
-            // 对子保留 (可能三连)
-            if (gameStateManager.getOneStarChampionCount(name) >= 2) continue;
+            // 目标棋子的判断
+            if (this.targetChampionNames.has(name)) {
+                continue;
+            }
 
-            // 高费卡 (4,5费) 如果不是目标也不是对子，也直接卖掉，腾位置要紧
-            // if (unit.tftUnit.price >= 4) continue;
-
-            logger.info(`[StrategyService] 清理杂鱼: ${name}`);
+            // 非目标棋子 → 直接卖掉（不管是不是对子，因为已不在目标阵容中了）
+            // 例如：4 级时提莫是目标打工仔，到了 7 级提莫已不在目标里，
+            // 即使备战席有 2 个 1★ 提莫，三连成 2★ 也没什么用，应该卖掉腾位置
+            logger.info(`[StrategyService] 清理杂鱼: ${name} (非目标棋子)`);
             await tftOperator.sellUnit(`SLOT_${index + 1}`);
             gameStateManager.setBenchSlotEmpty(index);
             gameStateManager.updateGold(gameStateManager.getGold() + unit.tftUnit.price);

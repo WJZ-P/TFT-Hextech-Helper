@@ -690,7 +690,7 @@ const SettingsPage = () => {
         setShowOverlay(newValue);
         // 通过通用 settings API 持久化到后端 SettingsStore
         await window.settings.set('showOverlay', newValue);
-        //toast.success(newValue ? '游戏浮窗已开启' : '游戏浮窗已关闭');
+        toast.success(newValue ? '游戏浮窗已开启' : '游戏浮窗已关闭');
     };
     
     /**
