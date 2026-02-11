@@ -41,9 +41,12 @@ export default defineConfig({
         },
         build: {
             rollupOptions: {
-                // 告诉它 React App 的入口 HTML 是
-                // src 目录下的 "index.html" 文件！
-                input: resolve(__dirname, 'src/index.html'),
+                // 告诉它 React App 的入口 HTML
+                // 多页面构建：主应用 + 游戏浮窗
+                input: {
+                    index: resolve(__dirname, 'src/index.html'),
+                    overlay: resolve(__dirname, 'src/overlay/overlay.html'),
+                },
             }
         },
         plugins: [react({

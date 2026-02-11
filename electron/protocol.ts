@@ -73,4 +73,8 @@ export enum IpcChannel {
     // 版本与更新
     APP_GET_VERSION = 'app-get-version',          // 获取当前应用版本
     APP_CHECK_UPDATE = 'app-check-update',        // 检查更新（返回最新版本信息）
+    // 游戏浮窗（Overlay）
+    OVERLAY_SHOW = 'overlay-show',                        // 显示浮窗（传入游戏窗口坐标）
+    OVERLAY_CLOSE = 'overlay-close',                      // 关闭浮窗
+    OVERLAY_UPDATE_PLAYERS = 'overlay-update-players',    // 更新玩家列表数据（主进程 -> 浮窗渲染进程）
 }

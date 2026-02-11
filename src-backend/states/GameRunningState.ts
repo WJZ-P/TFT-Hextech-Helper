@@ -34,6 +34,8 @@ import { TFTMode, isStandardChessMode, getSeasonTemplateDir } from "../TFTProtoc
 import { templateLoader } from "../tft";
 import { ocrService } from "../tft/recognition/OcrService";
 import { tftOperator } from "../TftOperator";
+import { showOverlay, closeOverlay, sendOverlayPlayers } from "../utils/OverlayBridge";
+import { windowHelper } from "../utils/WindowHelper";
 
 /** abort 信号轮询间隔 (ms)，作为事件监听的兜底 */
 const ABORT_CHECK_INTERVAL_MS = 2000;
@@ -74,7 +76,7 @@ export class GameRunningState implements IState {
         gameStateManager.startGame();
         logger.info("[GameRunningState] 游戏已开始");
 
-        // 1.5 检测对局中的人机玩家并发送 Toast 通知
+        // 1.5 检测对局中的人机玩家并发送 Toast 通知 + 打开浮窗
         await this.detectAndNotifyBots();
 
         // 2. 获取当前游戏模式并初始化策略服务
@@ -402,6 +404,36 @@ export class GameRunningState implements IState {
                 showToast.info("对局已开始！本局全是真人玩家", { position: 'top-center' });
                 logger.info("[GameRunningState] 对局已开始，本局全是真人玩家");
             }
+            
+            // ============================================================
+            // 打开游戏浮窗并发送玩家数据
+            // ============================================================
+            
+            // 获取游戏窗口信息（由 TftOperator.init() 在 GameLoadingState 中已初始化）
+            const windowInfo = await windowHelper.findLOLWindow();
+            
+            if (windowInfo) {
+                // 打开浮窗（传入游戏窗口的物理像素坐标）
+                showOverlay({
+                    left: windowInfo.left,
+                    top: windowInfo.top,
+                    width: windowInfo.width,
+                    height: windowInfo.height,
+                });
+                
+                // 等待浮窗创建完成后发送玩家数据
+                // 给浮窗窗口 500ms 加载时间
+                setTimeout(() => {
+                    const playerData = allPlayers.map((player: any) => ({
+                        name: player.riotIdGameName || player.summonerName || '未知玩家',
+                        isBot: player.isBot === true,
+                    }));
+                    sendOverlayPlayers(playerData);
+                    logger.debug(`[GameRunningState] 已发送 ${playerData.length} 个玩家数据到浮窗`);
+                }, 500);
+            } else {
+                logger.warn('[GameRunningState] 未找到游戏窗口，跳过浮窗显示');
+            }
         } catch (error: any) {
             logger.warn(`[GameRunningState] 检测人机玩家失败: ${error.message}`);
             // 即使检测失败也发送对局开始通知
@@ -414,6 +446,10 @@ export class GameRunningState implements IState {
      * @description 游戏结束时调用，停止 Monitor 并重置相关服务
      */
     private cleanup(): void {
+        // 0. 关闭游戏浮窗
+        closeOverlay();
+        logger.debug("[GameRunningState] 游戏浮窗已关闭");
+        
         // 1. 停止 GameStageMonitor
         gameStageMonitor.stop();
         gameStageMonitor.reset();

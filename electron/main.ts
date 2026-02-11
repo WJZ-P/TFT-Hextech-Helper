@@ -79,6 +79,7 @@ import {is, optimizer} from "@electron-toolkit/utils";
 // import {lineupLoader} from "../src-backend/lineup";  // 移至动态导入
 import {TFT_16_CHESS_DATA} from "../src-backend/TFTProtocol";  // 导入棋子数据
 import {analyticsManager} from "../src-backend/utils/AnalyticsManager";  // Google Analytics 数据统计
+import {registerOverlayCallbacks} from "../src-backend/utils/OverlayBridge";  // 浮窗桥接（后端 → 主进程）
 // import {globalHotkeyManager} from "../src-backend/utils/GlobalHotkeyManager.ts";  // 移至动态导入
 
 // ============================================================================
@@ -128,6 +129,8 @@ process.env.VITE_PUBLIC = is.dev
     : process.resourcesPath
 
 let win: BrowserWindow | null
+/** 游戏浮窗窗口实例（游戏运行时在右侧显示对局信息） */
+let overlayWindow: BrowserWindow | null = null
 
 // 当前注册的挂机切换快捷键（用于更新时先注销旧的）
 let currentToggleHotkey: string | null = null;
@@ -207,6 +210,112 @@ function registerStopAfterGameHotkey(accelerator: string): boolean {
         currentStopAfterGameHotkey = accelerator;
     }
     return success;
+}
+
+// ============================================================================
+// 游戏浮窗窗口管理
+// ============================================================================
+
+/** 浮窗宽度 (px) */
+const OVERLAY_WIDTH = 160;
+
+/**
+ * 创建游戏浮窗
+ * @param gameWindowInfo 游戏窗口的位置和尺寸（物理像素）
+ * @description 在游戏窗口右侧创建一个无边框、置顶、不可聚焦的透明窗口
+ *              用于显示对局中的玩家信息
+ * 
+ * 注意：nut-js 的 findLOLWindow 返回的是物理像素坐标，
+ *       而 BrowserWindow 的 x/y 使用逻辑像素（会受 DPI 缩放影响）。
+ *       因此需要除以 scaleFactor 进行转换。
+ */
+function createOverlayWindow(gameWindowInfo: { left: number; top: number; width: number; height: number }): void {
+    // 如果浮窗已存在，先关闭旧的
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+        overlayWindow.close();
+        overlayWindow = null;
+    }
+
+    // 获取 DPI 缩放因子（物理像素 → 逻辑像素的转换）
+    const { screen: electronScreen } = require('electron');
+    const primaryDisplay = electronScreen.getPrimaryDisplay();
+    const scaleFactor = primaryDisplay.scaleFactor;
+
+    // 物理像素转逻辑像素
+    const logicalLeft = Math.round(gameWindowInfo.left / scaleFactor);
+    const logicalTop = Math.round(gameWindowInfo.top / scaleFactor);
+    const logicalGameWidth = Math.round(gameWindowInfo.width / scaleFactor);
+    const logicalGameHeight = Math.round(gameWindowInfo.height / scaleFactor);
+
+    // 浮窗位置：紧贴游戏窗口右侧
+    const overlayX = logicalLeft + logicalGameWidth;
+    const overlayY = logicalTop;
+
+    console.log(
+        `🪟 [Overlay] 创建浮窗: 游戏窗口(${logicalLeft}, ${logicalTop}, ${logicalGameWidth}x${logicalGameHeight}) ` +
+        `→ 浮窗(${overlayX}, ${overlayY}, ${OVERLAY_WIDTH}x${logicalGameHeight}) scaleFactor=${scaleFactor}`
+    );
+
+    overlayWindow = new BrowserWindow({
+        x: overlayX,
+        y: overlayY,
+        width: OVERLAY_WIDTH,
+        height: logicalGameHeight,
+        frame: false,           // 无边框
+        transparent: true,      // 背景透明
+        alwaysOnTop: false,      // 始终置顶
+        resizable: false,       // 不可拉伸
+        focusable: false,       // 不可聚焦（不会抢走游戏的焦点）
+        skipTaskbar: true,      // 不在任务栏显示
+        show: false,            // 先不显示，等内容加载完再显示
+        webPreferences: {
+            preload: path.join(__dirname, '../preload/preload.cjs'),
+            sandbox: false,
+        },
+    });
+
+    // 加载浮窗页面
+    if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+        // 开发模式：使用 dev server 的 overlay 页面路径
+        overlayWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/overlay/overlay.html`);
+    } else {
+        // 生产模式：加载打包后的 overlay.html
+        overlayWindow.loadFile(path.join(__dirname, '../renderer/overlay/overlay.html'));
+    }
+
+    // 页面加载完成后显示窗口
+    overlayWindow.once('ready-to-show', () => {
+        overlayWindow?.show();
+        console.log('🪟 [Overlay] 浮窗已显示');
+    });
+
+    // 监听窗口关闭事件，清除引用
+    overlayWindow.on('closed', () => {
+        overlayWindow = null;
+        console.log('🪟 [Overlay] 浮窗已关闭');
+    });
+}
+
+/**
+ * 关闭游戏浮窗
+ * @description 游戏结束时调用，安全地关闭浮窗窗口
+ */
+function closeOverlayWindow(): void {
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+        overlayWindow.close();
+        overlayWindow = null;
+        console.log('🪟 [Overlay] 浮窗已主动关闭');
+    }
+}
+
+/**
+ * 向浮窗发送玩家数据
+ * @param players 玩家信息数组
+ */
+function sendOverlayPlayerData(players: { name: string; isBot: boolean }[]): void {
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+        overlayWindow.webContents.send(IpcChannel.OVERLAY_UPDATE_PLAYERS, players);
+    }
 }
 
 function createWindow() {
@@ -298,6 +407,9 @@ app.on('will-quit', async (event) => {
     if (globalHotkeyManager) {
         globalHotkeyManager.stop();
     }
+    
+    // 关闭浮窗
+    closeOverlayWindow();
 
     // 如果自动下棋服务正在运行，需要恢复用户原本的游戏设置
     // 注意：hexService 是动态加载的，可能为 undefined
@@ -415,6 +527,13 @@ app.whenReady().then(async () => {
     createWindow()  //  创建窗口
     init()  //  执行LCU相关函数
     registerHandler()
+    
+    // 注册浮窗回调（让后端状态机代码可以通过 OverlayBridge 控制浮窗）
+    registerOverlayCallbacks({
+        create: createOverlayWindow,
+        close: closeOverlayWindow,
+        getWindow: () => overlayWindow,
+    });
     
     // 加载阵容配置
     const lineupCount = await lineupLoader.loadAllLineups()
@@ -663,6 +782,34 @@ function registerHandler() {
     ipcMain.handle(IpcChannel.STATS_GET, async () => {
         return hexService.getStatistics();
     })
+    
+    // ========================================================================
+    // 游戏浮窗相关
+    // ========================================================================
+    
+    // 显示浮窗（传入游戏窗口坐标信息）
+    ipcMain.handle(IpcChannel.OVERLAY_SHOW, async (
+        _event,
+        gameWindowInfo: { left: number; top: number; width: number; height: number }
+    ) => {
+        createOverlayWindow(gameWindowInfo);
+        return true;
+    });
+    
+    // 关闭浮窗
+    ipcMain.handle(IpcChannel.OVERLAY_CLOSE, async () => {
+        closeOverlayWindow();
+        return true;
+    });
+    
+    // 更新浮窗玩家数据
+    ipcMain.handle(IpcChannel.OVERLAY_UPDATE_PLAYERS, async (
+        _event,
+        players: { name: string; isBot: boolean }[]
+    ) => {
+        sendOverlayPlayerData(players);
+        return true;
+    });
     
     // 系统工具：检测管理员权限
     // 原理：执行 `net session` 命令，该命令只有在管理员权限下才能成功执行

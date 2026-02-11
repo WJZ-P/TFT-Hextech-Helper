@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TFT Overlay</title>
+    <style>
+      /* 全局重置：浮窗背景透明，无滚动条 */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { 
+        overflow: hidden; 
+        background: transparent; 
+        width: 100%; 
+        height: 100%; 
+      }
+      #overlay-root { width: 100%; height: 100%; }
+    </style>
+  </head>
+  <body>
+    <div id="overlay-root"></div>
+    <script type="module" src="overlay.tsx"></script>
+  </body>
+</html>
