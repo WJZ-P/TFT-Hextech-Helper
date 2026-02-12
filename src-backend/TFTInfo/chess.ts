@@ -48,6 +48,15 @@ export const TFT_SPECIAL_CHESS = {
         classes: [],
         attackRange: 0
     },
+    "魔像": {
+        displayName: "魔像",
+        englishId: "TFT16_Golem",
+        price: 0,
+        traits: [],
+        origins: [],
+        classes: [],
+        attackRange: 1
+    },
     "提伯斯": {
         displayName: "提伯斯",
         englishId: "TFT16_AnnieTibbers",
@@ -58,6 +67,18 @@ export const TFT_SPECIAL_CHESS = {
         attackRange: 1
     },
 } satisfies Record<string, TFTUnit>;
+
+/**
+ * 不可售卖但能上场的棋子名称集合
+ * @description 这些棋子会出现在备战席或场上，但无法通过卖出操作移除。
+ *              如果尝试对它们执行 sellUnit，不会有任何效果，反而浪费操作时间并干扰后续逻辑。
+ *              - 训练假人：系统赠送的 1 费假人，不可售卖
+ *              - 魔像：某些海克斯科技效果生成的单位，不可售卖
+ */
+export const UNSELLABLE_BOARD_UNITS: ReadonlySet<string> = new Set([
+    "训练假人",
+    "魔像",
+]);
 export const _TFT_16_CHESS_DATA = {
     //  特殊棋子
     ...TFT_SPECIAL_CHESS,

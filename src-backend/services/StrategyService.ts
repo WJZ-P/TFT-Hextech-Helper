@@ -39,6 +39,7 @@ import {lineupLoader} from "../lineup";
 import {LineupConfig, StageConfig, ChampionConfig} from "../lineup/LineupTypes";
 import {TFT_16_TRAIT_DATA} from "../TFTInfo/trait";
 import {TFT_4_TRAIT_DATA} from "../TFTInfo/trait";
+import {UNSELLABLE_BOARD_UNITS} from "../TFTInfo/chess";
 import {mouseController, MouseButtonType, BenchUnit, BenchLocation, BoardUnit, BoardLocation} from "../tft";
 import {sleep} from "../utils/HelperTools";
 
@@ -1458,6 +1459,8 @@ export class StrategyService {
         //       只有目标棋子的对子才需要保护
         const candidates = benchUnits.filter(({unit}) => {
             const name = unit.tftUnit.displayName as ChampionKey;
+            // 不可售卖的棋子（训练假人、魔像等）排除
+            if (UNSELLABLE_BOARD_UNITS.has(name)) return false;
             // 目标棋子不卖
             if (targetChampions.has(name)) return false;
             return true;
@@ -1738,7 +1741,10 @@ export class StrategyService {
         const isNormalUnit = (u: BenchUnit): boolean => {
             // 锻造器/特殊单位：不参与上场选择
             if (u.starLevel === -1) return false;
-            return !u.tftUnit.displayName.includes('锻造器');
+            if (u.tftUnit.displayName.includes('锻造器')) return false;
+            // 不可售卖的棋子（训练假人、魔像等）也排除：它们不应被选为"最佳备战席棋子"
+            if (UNSELLABLE_BOARD_UNITS.has(u.tftUnit.displayName)) return false;
+            return true;
         };
 
         const filtered = benchUnits.filter(isNormalUnit);
@@ -1777,6 +1783,9 @@ export class StrategyService {
         for (let i = 0; i < boardUnits.length; i++) {
             const unit = boardUnits[i];
             if (!unit) continue;
+
+            // 不可售卖的棋子（训练假人、魔像等）不参与替换，跳过
+            if (UNSELLABLE_BOARD_UNITS.has(unit.tftUnit.displayName)) continue;
 
             const score = this.calculateUnitScore(unit.tftUnit, unit.starLevel, targetChampions);
             if (!worst || score < worst.score) {
@@ -1996,6 +2005,9 @@ export class StrategyService {
         // 找出有重复的组
         for (const [name, units] of nameGroups) {
             if (units.length <= 1) continue;
+
+            // 不可售卖的棋子（训练假人、魔像等）跳过去重，卖不掉也移不掉
+            if (UNSELLABLE_BOARD_UNITS.has(name)) continue;
 
             logger.info(`[StrategyService] 发现场上重复棋子: ${name} x${units.length}，开始清理...`);
 
@@ -2690,6 +2702,8 @@ export class StrategyService {
         // 筛选可卖棋子：非目标阵容的棋子可卖，目标棋子绝不卖
         const candidates = benchUnits.filter(({unit}) => {
             const name = unit.tftUnit.displayName as ChampionKey;
+            // 不可售卖的棋子（训练假人、魔像等）排除
+            if (UNSELLABLE_BOARD_UNITS.has(name)) return false;
             // 如果是目标棋子，绝对不卖（还需要）
             if (this.targetChampionNames.has(name)) return false;
             // 非目标棋子 → 可以卖（即使是对子也行，因为已不在目标阵容中了）
@@ -2739,6 +2753,9 @@ export class StrategyService {
 
         for (const {index, unit} of benchUnits) {
             const name = unit.tftUnit.displayName as ChampionKey;
+
+            // 不可售卖的棋子（训练假人、魔像等）直接跳过，卖了也没用
+            if (UNSELLABLE_BOARD_UNITS.has(name)) continue;
 
             // 目标棋子的判断
             if (this.targetChampionNames.has(name)) {
@@ -3347,10 +3364,13 @@ export class StrategyService {
             gameStateManager.getBoardUnitsWithLocation().map(u => u.tftUnit.displayName as ChampionKey)
         );
 
-        // 过滤掉特殊单位（锻造器等）
+        // 过滤掉特殊单位（锻造器、不可售卖棋子等）
         const filtered = benchUnits.filter(u => {
             if (u.starLevel === -1) return false;
-            return !u.tftUnit.displayName.includes('锻造器');
+            if (u.tftUnit.displayName.includes('锻造器')) return false;
+            // 不可售卖的棋子（训练假人、魔像等）不参与上场选择
+            if (UNSELLABLE_BOARD_UNITS.has(u.tftUnit.displayName)) return false;
+            return true;
         });
 
         if (filtered.length === 0) {
