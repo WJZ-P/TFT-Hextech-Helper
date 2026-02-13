@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 - 优化了上重复棋子的问题。
 - 现在会优先上场本等级的目标棋子。
 - 新增了人机提示悬浮窗，并配置设置开关。
+- 新增不可售卖的棋子类型，如魔像，训练假人不再尝试被售卖。
 
 ## [1.3.2] - 2026-02-10
 - 修复UI问题。
