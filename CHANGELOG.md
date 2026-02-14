@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.4.0] - 2026-02-14
+## [1.4.0] - 2026-02-15
 - 优化了上重复棋子的问题。
 - 现在会优先上场本等级的目标棋子。
 - 新增了人机提示悬浮窗，并配置设置开关。
