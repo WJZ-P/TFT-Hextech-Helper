@@ -102,6 +102,21 @@ export class LobbyState implements IState {
         }
         await sleep(LOBBY_CREATE_DELAY_MS);
 
+        // ── 排队随机间隔：如果用户开启了该功能，在排队前等待随机秒数 ──
+        const delayConfig = settingsStore.get('queueRandomDelay');
+        if (delayConfig.enabled && delayConfig.maxSeconds > 0) {
+            // 在 [minSeconds, maxSeconds] 范围内取一个随机整数
+            const min = Math.max(0, Math.floor(delayConfig.minSeconds));
+            const max = Math.max(min, Math.floor(delayConfig.maxSeconds));
+            const randomSeconds = min + Math.floor(Math.random() * (max - min + 1));
+            if (randomSeconds > 0) {
+                logger.info(`[LobbyState] 排队随机间隔：等待 ${randomSeconds} 秒后开始排队...`);
+                await sleep(randomSeconds * 1000);
+                // 等待期间可能被取消，检查一下
+                signal.throwIfAborted();
+            }
+        }
+
         // 开始排队（带重试机制）
         const matchStarted = await this.startMatchWithRetry(signal);
         if (!matchStarted) {

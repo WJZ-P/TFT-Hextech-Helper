@@ -139,7 +139,7 @@ const CHAMPION_EN_TO_CN = {
     "TFT16_AurelionSol": "奥瑞利安·索尔",
     "TFT16_BaronNashor": "纳什男爵",
     "TFT16_Ryze": "瑞兹",
-    "TFT16_Xayah": "亚恒",
+    "tft16_Zaahen": "亚恒",
     
     // 特殊棋子 - 海克斯霸龙
     "TFT16_THex": "海克斯霸龙",

@@ -6195,6 +6195,8 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["LINEUP_GET_BY_ID"] = "lineup-get-by-id";
   IpcChannel2["LINEUP_GET_SELECTED_IDS"] = "lineup-get-selected-ids";
   IpcChannel2["LINEUP_SET_SELECTED_IDS"] = "lineup-set-selected-ids";
+  IpcChannel2["LINEUP_SAVE"] = "lineup-save";
+  IpcChannel2["LINEUP_DELETE"] = "lineup-delete";
   IpcChannel2["TFT_GET_CHAMPION_CN_TO_EN_MAP"] = "tft-get-champion-cn-to-en-map";
   IpcChannel2["TFT_GET_MODE"] = "tft-get-mode";
   IpcChannel2["TFT_SET_MODE"] = "tft-set-mode";
@@ -9784,7 +9786,7 @@ const _TFT_16_CHESS_DATA = {
   },
   "亚恒": {
     displayName: "亚恒",
-    englishId: "TFT16_Xayah",
+    englishId: "tft16_Zaahen",
     price: 7,
     traits: [UnitOrigin_S16.Darkin, UnitOrigin_S16.Immortal],
     origins: [UnitOrigin_S16.Darkin, UnitOrigin_S16.Immortal],
@@ -11403,11 +11405,11 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-DpBIytN5.js");
+    const ServicesModule = await import("./chunks/index-2juj_m9q.js");
     hexService = ServicesModule.hexService;
     const TftOperatorModule = await import("./chunks/TftOperator-CHK7LIbj.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
-    const LineupModule = await import("./chunks/index-BkP-NETh.js");
+    const LineupModule = await import("./chunks/index-CyE3uzlh.js");
     lineupLoader = LineupModule.lineupLoader;
     const GlobalHotkeyManagerModule = await import("./chunks/GlobalHotkeyManager-Cbcy0EP4.js");
     globalHotkeyManager = GlobalHotkeyManagerModule.globalHotkeyManager;
@@ -11520,6 +11522,12 @@ function registerHandler() {
   ipcMain.handle(IpcChannel.LINEUP_GET_SELECTED_IDS, async () => settingsStore.get("selectedLineupIds"));
   ipcMain.handle(IpcChannel.LINEUP_SET_SELECTED_IDS, async (_event, ids) => {
     settingsStore.set("selectedLineupIds", ids);
+  });
+  ipcMain.handle(IpcChannel.LINEUP_SAVE, async (_event, config) => {
+    return lineupLoader.saveLineup(config);
+  });
+  ipcMain.handle(IpcChannel.LINEUP_DELETE, async (_event, id) => {
+    return lineupLoader.deleteLineup(id);
   });
   ipcMain.handle(IpcChannel.TFT_GET_CHAMPION_CN_TO_EN_MAP, async () => {
     const cnToEnMap = {};

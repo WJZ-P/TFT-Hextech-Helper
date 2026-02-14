@@ -144,6 +144,10 @@ const lineupApi = {
     getSelectedIds: (): Promise<string[]> => ipcRenderer.invoke(IpcChannel.LINEUP_GET_SELECTED_IDS),
     /** 保存用户选中的阵容 ID 列表 */
     setSelectedIds: (ids: string[]): Promise<void> => ipcRenderer.invoke(IpcChannel.LINEUP_SET_SELECTED_IDS, ids),
+    /** 保存玩家自建阵容，返回阵容 ID */
+    save: (config: any): Promise<string> => ipcRenderer.invoke(IpcChannel.LINEUP_SAVE, config),
+    /** 删除玩家自建阵容，返回是否成功 */
+    delete: (id: string): Promise<boolean> => ipcRenderer.invoke(IpcChannel.LINEUP_DELETE, id),
     /** 获取当前 TFT 游戏模式（匹配/排位） */
     getTftMode: (): Promise<string> => ipcRenderer.invoke(IpcChannel.TFT_GET_MODE),
     /** 设置 TFT 游戏模式 */

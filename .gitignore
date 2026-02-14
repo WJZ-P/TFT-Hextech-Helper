@@ -35,3 +35,4 @@ test
 
 # 其他
 public/GameConfig/UserConfig/*
+public/GameConfig/TempConfig/*

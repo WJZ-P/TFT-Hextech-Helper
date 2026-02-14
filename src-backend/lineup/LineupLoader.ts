@@ -5,6 +5,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import * as crypto from 'crypto';
 import { app } from 'electron';
 import { LineupConfig, ChampionConfig, StageConfig } from './LineupTypes';
 import { getChessDataBySeason, getEquipDataBySeason } from '../TFTProtocol';
@@ -273,6 +274,71 @@ class LineupLoader {
                 if (!a.isCore && b.isCore) return 1;
                 return 0;
             });
+    }
+
+    /**
+     * 保存玩家自建阵容到文件系统并加入内存 Map
+     * @param config 完整的阵容配置（前端已组装好，包含 id、name、season、stages 等）
+     * @returns 保存成功返回阵容 ID，失败抛出异常
+     */
+    public saveLineup(config: LineupConfig): string {
+        // 确保有唯一 ID
+        if (!config.id) {
+            config.id = crypto.randomUUID();
+        }
+        // 标记为玩家创建
+        config.isUserCreated = true;
+
+        // 确定存储目录：按赛季分子目录
+        const season = config.season || 'S16';
+        const seasonDir = path.join(this.lineupsDir, season);
+        if (!fs.existsSync(seasonDir)) {
+            fs.mkdirSync(seasonDir, { recursive: true });
+        }
+
+        // 文件名：用阵容名，去掉非法字符
+        const safeName = config.name.replace(/[/\\?%*:|"<>]/g, '-');
+        const filePath = path.join(seasonDir, `${safeName}.json`);
+
+        // 写入 JSON 文件
+        fs.writeFileSync(filePath, JSON.stringify(config, null, 2), 'utf-8');
+        logger.info(`[LineupLoader] 保存玩家阵容成功: ${config.name} -> ${filePath}`);
+
+        // 加入内存 Map
+        this.lineups.set(config.id, config);
+        return config.id;
+    }
+
+    /**
+     * 删除玩家自建阵容（仅允许删除 isUserCreated=true 的阵容）
+     * @param lineupId 阵容 ID
+     * @returns 是否删除成功
+     */
+    public deleteLineup(lineupId: string): boolean {
+        const config = this.lineups.get(lineupId);
+        if (!config) {
+            logger.warn(`[LineupLoader] 删除失败：未找到阵容 ID=${lineupId}`);
+            return false;
+        }
+        if (!config.isUserCreated) {
+            logger.warn(`[LineupLoader] 删除失败：阵容 [${config.name}] 非玩家创建，禁止删除`);
+            return false;
+        }
+
+        // 查找并删除对应的 JSON 文件
+        const season = config.season || 'S16';
+        const seasonDir = path.join(this.lineupsDir, season);
+        const safeName = config.name.replace(/[/\\?%*:|"<>]/g, '-');
+        const filePath = path.join(seasonDir, `${safeName}.json`);
+
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            logger.info(`[LineupLoader] 已删除阵容文件: ${filePath}`);
+        }
+
+        // 从内存 Map 中移除
+        this.lineups.delete(lineupId);
+        return true;
     }
 }
 

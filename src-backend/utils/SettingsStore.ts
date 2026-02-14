@@ -77,6 +77,12 @@ interface AppSettings {
     statistics: {
         totalGamesPlayed: number,   // 历史累计挂机局数
     },
+    // 排队随机间隔（每局进入大厅后随机等待一段时间再排队）
+    queueRandomDelay: {
+        enabled: boolean,       // 是否启用
+        minSeconds: number,     // 最小等待秒数
+        maxSeconds: number,     // 最大等待秒数
+    },
     // Google Analytics 数据统计
     analyticsClientId: string,      // GA4 设备唯一标识（随机 UUID，不含个人隐私信息）
 }
@@ -110,6 +116,11 @@ class SettingsStore {
             selectedLineupIds: [],       //  默认没有选中任何阵容
             statistics: {
                 totalGamesPlayed: 0,    //  默认历史总局数为 0
+            },
+            queueRandomDelay: {
+                enabled: false,         //  默认关闭排队随机间隔
+                minSeconds: 0,          //  默认最小 0 秒
+                maxSeconds: 0,          //  默认最大 0 秒
             },
             analyticsClientId: '',       //  默认为空，首次启动时由 AnalyticsManager 生成
         }

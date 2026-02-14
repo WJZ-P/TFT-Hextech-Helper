@@ -1,7 +1,7 @@
 //  定义一下棋子相关的一些协议，包含棋子单位信息，各种位置信息和约定各种枚举值
 
 import {_TFT_16_EQUIP_DATA, _TFT_4_EQUIP_DATA} from "./TFTInfo/equip.ts";
-import {_TFT_16_CHESS_DATA, _TFT_4_CHESS_DATA} from "./TFTInfo/chess.ts";
+import {_TFT_16_CHESS_DATA, _TFT_4_CHESS_DATA, UNPURCHASABLE_CHESS} from "./TFTInfo/chess.ts";
 
 /**
  * 游戏阶段的具体类型
@@ -539,6 +539,12 @@ export const TFT_16_CHESS_DATA: Record<keyof typeof _TFT_16_CHESS_DATA, TFTUnit>
 
 /** S4 瑞兽闹新春赛季棋子数据（含特殊棋子） */
 export const TFT_4_CHESS_DATA: Record<keyof typeof _TFT_4_CHESS_DATA, TFTUnit> = _TFT_4_CHESS_DATA;
+
+/**
+ * 不可购买的棋子名称集合（从 chess.ts 中 re-export）
+ * 前端使用此集合过滤棋子池中不应展示的非商店单位
+ */
+export { UNPURCHASABLE_CHESS };
 
 export const TFT_16_EQUIP_DATA: Record<keyof typeof _TFT_16_EQUIP_DATA, TFTEquip> = _TFT_16_EQUIP_DATA;
 

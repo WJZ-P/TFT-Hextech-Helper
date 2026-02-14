@@ -79,6 +79,25 @@ export const UNSELLABLE_BOARD_UNITS: ReadonlySet<string> = new Set([
     "训练假人",
     "魔像",
 ]);
+
+/**
+ * 不可购买的棋子名称集合
+ * @description 这些棋子无法在商店中购买，它们是由海克斯科技、技能召唤或系统机制生成的单位。
+ *              前端在展示棋子池（如自定义阵容的拖拽选择器）时，应过滤掉这些棋子。
+ *              - 基础/成装/神器/辅助装锻造器：海克斯科技奖励的装备选择器，不是真正的棋子
+ *              - 训练假人：系统赠送的假人单位
+ *              - 魔像：海克斯科技"魔像化"生成的单位
+ *              - 提伯斯：安妮技能召唤的熊，不可购买
+ */
+export const UNPURCHASABLE_CHESS: ReadonlySet<string> = new Set([
+    "基础装备锻造器",
+    "成装锻造器",
+    "神器装备锻造器",
+    "辅助装锻造器",
+    "训练假人",
+    "魔像",
+    "提伯斯",
+]);
 export const _TFT_16_CHESS_DATA = {
     //  特殊棋子
     ...TFT_SPECIAL_CHESS,
@@ -924,7 +943,7 @@ export const _TFT_16_CHESS_DATA = {
     },
     "亚恒": {
         displayName: "亚恒",
-        englishId: "TFT16_Xayah",
+        englishId: "tft16_Zaahen",
         price: 7,
         traits: [UnitOrigin_S16.Darkin, UnitOrigin_S16.Immortal],
         origins: [UnitOrigin_S16.Darkin, UnitOrigin_S16.Immortal],

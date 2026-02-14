@@ -85,6 +85,12 @@ export interface LineupConfig {
 
     /** 赛季信息 (例如: S4, S16) */
     season?: string;
+
+    /** 是否为玩家自建阵容（true 时允许删除） */
+    isUserCreated?: boolean;
+
+    /** 最终成型阵容（finalComp），用于阵容卡片展示 */
+    finalComp?: StageConfig;
     
     /**
      * 按人口等级分阶段的阵容配置

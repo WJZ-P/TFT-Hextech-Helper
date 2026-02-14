@@ -270,6 +270,49 @@ const ScheduledStopRow = styled.div`
   gap: 12px;
 `;
 
+/** 数字输入框 - 用于排队随机间隔等场景 */
+const NumberInput = styled.input<{ theme: ThemeType; disabled?: boolean }>`
+  background-color: ${props => props.theme.colors.elementBg};
+  color: ${props => props.disabled ? props.theme.colors.textDisabled : props.theme.colors.text};
+  border: 1px solid ${props => props.theme.colors.border};
+  border-radius: ${props => props.theme.borderRadius};
+  padding: 0.4rem 0.6rem;
+  font-size: ${props => props.theme.fontSizes.small};
+  cursor: ${props => props.disabled ? 'not-allowed' : 'text'};
+  opacity: ${props => props.disabled ? 0.6 : 1};
+  transition: all 0.2s ease-in-out;
+  width: 56px;
+  text-align: center;
+
+  &:hover:not(:disabled) {
+    border-color: ${props => props.theme.colors.primary};
+  }
+
+  &:focus {
+    outline: none;
+    border-color: ${props => props.theme.colors.primary};
+    box-shadow: 0 0 0 2px ${props => props.theme.colors.primary}30;
+  }
+
+  /* 隐藏数字输入框的上下箭头 */
+  -moz-appearance: textfield;
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+`;
+
+/** 排队随机间隔操作区域 - 包含两个数字输入和开关 */
+const DelayRangeRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: ${props => props.theme.fontSizes.small};
+  color: ${props => props.theme.colors.textSecondary};
+  flex-shrink: 0;
+`;
+
 /** 时间选择输入框 */
 const TimeInput = styled.input<{ theme: ThemeType; disabled?: boolean }>`
   background-color: ${props => props.theme.colors.elementBg};
@@ -469,6 +512,11 @@ const SettingsPage = () => {
     const [scheduledStopTime, setScheduledStopTime] = useState<string>('');  // "HH:mm" 格式
     const [scheduledStopIso, setScheduledStopIso] = useState<string | null>(null);  // 已设定的目标时间 ISO
 
+    // 排队随机间隔设置
+    const [queueDelayEnabled, setQueueDelayEnabled] = useState(false);
+    const [queueDelayMin, setQueueDelayMin] = useState(0);
+    const [queueDelayMax, setQueueDelayMax] = useState(0);
+
     // 初始化时从后端获取设置
     useEffect(() => {
         const loadSettings = async () => {
@@ -505,6 +553,14 @@ const SettingsPage = () => {
                 setScheduledStopTime(
                     `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
                 );
+            }
+            
+            // 加载排队随机间隔设置
+            const delayConfig = await window.settings.get<{enabled: boolean, minSeconds: number, maxSeconds: number}>('queueRandomDelay');
+            if (delayConfig) {
+                setQueueDelayEnabled(delayConfig.enabled);
+                setQueueDelayMin(delayConfig.minSeconds);
+                setQueueDelayMax(delayConfig.maxSeconds);
             }
         };
         loadSettings();
@@ -729,6 +785,61 @@ const SettingsPage = () => {
         }
     };
 
+    /**
+     * 切换排队随机间隔开关
+     * - 开启时：校验范围 → 持久化到后端
+     * - 关闭时：关闭并持久化
+     */
+    const handleToggleQueueDelay = async () => {
+        const newEnabled = !queueDelayEnabled;
+        
+        if (newEnabled) {
+            // 开启前校验：最大值必须 >= 最小值
+            if (queueDelayMax < queueDelayMin) {
+                toast.error('最大秒数不能小于最小秒数');
+                return;
+            }
+            if (queueDelayMax <= 0) {
+                toast.error('请先填写有效的间隔范围');
+                return;
+            }
+        }
+        
+        setQueueDelayEnabled(newEnabled);
+        await window.settings.set('queueRandomDelay', {
+            enabled: newEnabled,
+            minSeconds: queueDelayMin,
+            maxSeconds: queueDelayMax,
+        });
+        toast.success(newEnabled 
+            ? `排队随机间隔已开启：${queueDelayMin}~${queueDelayMax}秒` 
+            : '排队随机间隔已关闭');
+    };
+    
+    /**
+     * 修改排队随机间隔的范围值
+     * 如果当前已开启，修改后自动同步到后端
+     */
+    const handleQueueDelayChange = async (field: 'min' | 'max', value: number) => {
+        // 限制范围 0~9999，取整
+        const clamped = Math.max(0, Math.min(9999, Math.floor(value) || 0));
+        
+        const newMin = field === 'min' ? clamped : queueDelayMin;
+        const newMax = field === 'max' ? clamped : queueDelayMax;
+        
+        if (field === 'min') setQueueDelayMin(clamped);
+        else setQueueDelayMax(clamped);
+        
+        // 如果已开启，实时同步到后端
+        if (queueDelayEnabled) {
+            await window.settings.set('queueRandomDelay', {
+                enabled: true,
+                minSeconds: newMin,
+                maxSeconds: newMax,
+            });
+        }
+    };
+
     // 检查更新
     const handleCheckUpdate = async () => {
         setIsCheckingUpdate(true);
@@ -843,6 +954,41 @@ const SettingsPage = () => {
                             <ToggleSlider $isOn={!!scheduledStopIso} />
                         </ToggleSwitch>
                     </ScheduledStopRow>
+                </SettingItem>
+                
+                {/* 排队随机间隔 */}
+                <SettingItem>
+                    <SettingInfo>
+                        <SettingText>
+                            <h3>排队随机间隔</h3>
+                            <p>每局进入大厅后，随机等待指定范围内的秒数再开始排队，模拟真人行为。</p>
+                        </SettingText>
+                    </SettingInfo>
+                    <DelayRangeRow>
+                        <NumberInput
+                            type="number"
+                            min={0}
+                            max={9999}
+                            value={queueDelayMin}
+                            onChange={(e) => handleQueueDelayChange('min', Number(e.target.value))}
+                            disabled={queueDelayEnabled}
+                            placeholder="0"
+                        />
+                        <span>~</span>
+                        <NumberInput
+                            type="number"
+                            min={0}
+                            max={9999}
+                            value={queueDelayMax}
+                            onChange={(e) => handleQueueDelayChange('max', Number(e.target.value))}
+                            disabled={queueDelayEnabled}
+                            placeholder="30"
+                        />
+                        <span>秒</span>
+                        <ToggleSwitch onClick={handleToggleQueueDelay}>
+                            <ToggleSlider $isOn={queueDelayEnabled} />
+                        </ToggleSwitch>
+                    </DelayRangeRow>
                 </SettingItem>
             </SettingsCard>
         

@@ -685,6 +685,14 @@ function registerHandler() {
     ipcMain.handle(IpcChannel.LINEUP_SET_SELECTED_IDS, async (_event, ids: string[]) => {
         settingsStore.set('selectedLineupIds', ids)
     })
+    // 保存玩家自建阵容
+    ipcMain.handle(IpcChannel.LINEUP_SAVE, async (_event, config: any) => {
+        return lineupLoader.saveLineup(config);
+    })
+    // 删除玩家自建阵容
+    ipcMain.handle(IpcChannel.LINEUP_DELETE, async (_event, id: string) => {
+        return lineupLoader.deleteLineup(id);
+    })
     
     // 棋子数据相关：从 TFT_16_CHESS_DATA 动态生成中英文映射表
     ipcMain.handle(IpcChannel.TFT_GET_CHAMPION_CN_TO_EN_MAP, async () => {
