@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useState, useEffect, useCallback, useRef} from 'react';
 import styled, { keyframes } from 'styled-components';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import StopCircleOutlinedIcon from '@mui/icons-material/StopCircleOutlined';
@@ -327,7 +327,7 @@ const ModeTogglePill = styled.div<{ theme: ThemeType }>`
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden;
+  /* 不用 overflow:hidden，否则模式详情浮窗会被裁切 */
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
 
@@ -392,6 +392,87 @@ const ModeToggleLabel = styled.button<{ theme: ThemeType; $active: boolean }>`
   &:focus-visible {
     outline: none;
   }
+`;
+
+// ============================================
+// 模式详情浮窗样式（hover 时向右弹出）
+// ============================================
+
+/**
+ * 模式详情浮窗 —— 通过 JS 动态定位，支持边界检测
+ * 使用 fixed 定位（相对于视口），避免被父元素 overflow 裁切
+ * $visible: 控制显示/隐藏
+ * $arrowTop: 箭头在浮窗上的 Y 位置（百分比字符串，如 "50%"）
+ */
+const ModeTooltip = styled.div<{ theme: ThemeType; $visible: boolean; $arrowTop?: string }>`
+  position: fixed;
+  padding: 12px 14px;
+  background-color: ${props => props.theme.colors.elementBg};
+  border: 1px solid ${props => props.theme.colors.border};
+  border-radius: ${props => props.theme.borderRadius};
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  opacity: ${props => props.$visible ? 1 : 0};
+  visibility: ${props => props.$visible ? 'visible' : 'hidden'};
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  z-index: 100;
+  white-space: nowrap;
+  pointer-events: none;
+
+  /* 左侧小三角箭头，top 由 JS 通过 $arrowTop 动态控制 */
+  &::before {
+    content: '';
+    position: absolute;
+    top: ${props => props.$arrowTop || '50%'};
+    left: -6px;
+    transform: translateY(-50%);
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-right: 6px solid ${props => props.theme.colors.border};
+  }
+  &::after {
+    content: '';
+    position: absolute;
+    top: ${props => props.$arrowTop || '50%'};
+    left: -5px;
+    transform: translateY(-50%);
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-right: 5px solid ${props => props.theme.colors.elementBg};
+  }
+`;
+
+/** 模式标签外层容器 —— 包裹每个 ModeToggleLabel，hover 通过 JS 事件控制 */
+const ModeLabelWrapper = styled.div`
+  position: relative;
+`;
+
+/** 浮窗标题（模式名称） */
+const ModeTooltipTitle = styled.div<{ theme: ThemeType; $color?: string }>`
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: ${props => props.$color || props.theme.colors.primary};
+  margin-bottom: 6px;
+`;
+
+/** 浮窗描述文本 */
+const ModeTooltipDesc = styled.div<{ theme: ThemeType }>`
+  font-size: 0.78rem;
+  color: ${props => props.theme.colors.textSecondary};
+  line-height: 1.5;
+  white-space: normal;  /* 描述文本允许换行 */
+  max-width: 200px;
+`;
+
+/** 浮窗标签行（如"赛季: S16"） */
+const ModeTooltipTag = styled.div<{ theme: ThemeType }>`
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: ${props => props.theme.colors.textOnPrimary};
+  background: ${props => props.theme.colors.primary}90;
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-bottom: 6px;
 `;
 
 /**
@@ -1363,6 +1444,111 @@ export const HomePage = () => {
     };
 
     /**
+     * 三个游戏模式的详情描述（hover 浮窗内容）
+     * 每个模式包含：标签（赛季信息）、标题颜色、简短描述
+     */
+    const modeDescriptions = {
+        S16: {
+            tag: '赛季 S16',
+            title: '英雄联盟传奇',
+            titleColor: undefined,  // 使用默认主色（蓝色）
+            desc: '当前主赛季，支持匹配和排位两种模式。包含完整的自动下棋、阵容推荐和海克斯选择功能。用于刷峡谷和云顶的宝典，云顶通行证。',
+        },
+        S4: {
+            tag: '回归赛季 S4',
+            title: '瑞兽闹新春',
+            titleColor: '#e53935',  // 新春红色
+            desc: '经典回归赛季，仅支持匹配模式。棋子和羁绊与 S16 不同，需要选择对应的瑞兽阵容。用于刷回归赛季奖励。',
+        },
+        CLOCKWORK: {
+            tag: '特殊玩法',
+            title: '发条鸟的试炼',
+            titleColor: '#9c27b0',  // 紫色
+            desc: '无需选择阵容的特殊模式。开局卖掉所有棋子三回合速死，用于刷峡谷通行证。但国服已ban，无法再获取通行证经验，非常不建议该模式。',
+        },
+    };
+
+    // ============================================
+    // 模式浮窗：JS 动态定位 + 边界检测
+    // ============================================
+
+    /** 当前 hover 的模式 key（null 表示没有 hover） */
+    const [hoveredMode, setHoveredMode] = useState<string | null>(null);
+    /** 浮窗的 fixed 定位坐标 */
+    const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 });
+    /** 箭头在浮窗上的 Y 位置（百分比），默认 50% 居中 */
+    const [arrowTop, setArrowTop] = useState('50%');
+    /** 浮窗 DOM 引用，用于获取浮窗实际尺寸 */
+    const tooltipRef = useRef<HTMLDivElement>(null);
+
+    /**
+     * 鼠标进入模式标签时：计算浮窗位置并做边界检测
+     * @param modeKey - 模式标识（'S16' | 'S4' | 'CLOCKWORK'）
+     * @param e - 鼠标事件，用于获取触发元素的位置
+     * 
+     * 实现细节：
+     * 1. 通过 getBoundingClientRect() 获取 label 在视口中的位置
+     * 2. 浮窗默认出现在 label 右侧 8px 处，垂直居中对齐
+     * 3. 如果浮窗超出视口底部 → 上移浮窗，箭头下移以保持指向 label
+     * 4. 如果浮窗超出视口顶部 → 下移浮窗，箭头上移以保持指向 label
+     * 5. 如果浮窗超出视口右侧 → 目前不会发生（左侧面板），但预留了处理
+     */
+    const handleModeMouseEnter = useCallback((modeKey: string, e: React.MouseEvent<HTMLDivElement>) => {
+        // currentTarget 是绑定事件的 ModeLabelWrapper 元素
+        const labelRect = e.currentTarget.getBoundingClientRect();
+
+        // 浮窗默认位置：label 右侧 8px，垂直居中
+        let tooltipLeft = labelRect.right + 8;
+        // 预估浮窗尺寸（首次渲染前没有 ref，用经验值）
+        const estimatedWidth = 230;
+        const estimatedHeight = 100;
+
+        // 浮窗顶部 = label 垂直中心 - 浮窗高度的一半
+        let tooltipTop = labelRect.top + labelRect.height / 2 - estimatedHeight / 2;
+
+        // 用于记录箭头应该指向的 Y 百分比
+        let newArrowTop = '50%';
+
+        const padding = 8; // 距离视口边缘的安全距离
+
+        // === 右边界检测 ===
+        // 如果浮窗右边缘超出视口宽度，改为出现在 label 左侧
+        if (tooltipLeft + estimatedWidth > window.innerWidth - padding) {
+            tooltipLeft = labelRect.left - estimatedWidth - 8;
+        }
+
+        // === 下边界检测 ===
+        // 如果浮窗底部超出视口高度，往上移
+        if (tooltipTop + estimatedHeight > window.innerHeight - padding) {
+            const overflow = (tooltipTop + estimatedHeight) - (window.innerHeight - padding);
+            tooltipTop -= overflow;
+            // 箭头要跟着 label 中心走：计算 label 中心相对于浮窗新位置的百分比
+            const labelCenterY = labelRect.top + labelRect.height / 2;
+            const arrowPercent = ((labelCenterY - tooltipTop) / estimatedHeight) * 100;
+            // clamp 到 10%~90%，避免箭头跑到浮窗边缘外
+            newArrowTop = `${Math.min(90, Math.max(10, arrowPercent))}%`;
+        }
+
+        // === 上边界检测 ===
+        // 如果浮窗顶部超出视口顶部，往下移
+        if (tooltipTop < padding) {
+            tooltipTop = padding;
+            const labelCenterY = labelRect.top + labelRect.height / 2;
+            const arrowPercent = ((labelCenterY - tooltipTop) / estimatedHeight) * 100;
+            newArrowTop = `${Math.min(90, Math.max(10, arrowPercent))}%`;
+        }
+
+        setTooltipPos({ top: tooltipTop, left: tooltipLeft });
+        setArrowTop(newArrowTop);
+        setHoveredMode(modeKey);
+    }, []);
+
+    /** 鼠标离开模式标签时：隐藏浮窗 */
+    const handleModeMouseLeave = useCallback(() => {
+        setHoveredMode(null);
+    }, []);
+
+    /**
      * 获取当前赛季对应的索引（用于上层胶囊滑块位置）
      * 0=S16, 1=S4, 2=发条鸟
      */
@@ -1444,29 +1630,66 @@ export const HomePage = () => {
                                 <ModeTogglePill>
                                     <ModeToggleIndicator $modeIndex={getSeasonIndex()} />
                                     <ModeToggleTextRow>
-                                        <ModeToggleLabel
-                                            $active={isS16Season}
-                                            onClick={() => handleSeasonChange('S16')}
-                                            title="S16 英雄联盟传奇"
+                                        {/* S16 英雄联盟传奇 */}
+                                        <ModeLabelWrapper
+                                            onMouseEnter={(e) => handleModeMouseEnter('S16', e)}
+                                            onMouseLeave={handleModeMouseLeave}
                                         >
-                                            英雄联盟传奇
-                                        </ModeToggleLabel>
-                                        <ModeToggleLabel
-                                            $active={tftMode === TFTMode.S4_RUISHOU}
-                                            onClick={() => handleSeasonChange('S4')}
-                                            title="S4 回归赛季: 瑞兽闹新春"
+                                            <ModeToggleLabel
+                                                $active={isS16Season}
+                                                onClick={() => handleSeasonChange('S16')}
+                                            >
+                                                英雄联盟传奇
+                                            </ModeToggleLabel>
+                                        </ModeLabelWrapper>
+                                        {/* S4 瑞兽闹新春 */}
+                                        <ModeLabelWrapper
+                                            onMouseEnter={(e) => handleModeMouseEnter('S4', e)}
+                                            onMouseLeave={handleModeMouseLeave}
                                         >
-                                            瑞兽闹新春
-                                        </ModeToggleLabel>
-                                        <ModeToggleLabel
-                                            $active={tftMode === TFTMode.CLOCKWORK_TRAILS}
-                                            onClick={() => handleSeasonChange('CLOCKWORK')}
-                                            title="发条鸟的试炼"
+                                            <ModeToggleLabel
+                                                $active={tftMode === TFTMode.S4_RUISHOU}
+                                                onClick={() => handleSeasonChange('S4')}
+                                            >
+                                                瑞兽闹新春
+                                            </ModeToggleLabel>
+                                        </ModeLabelWrapper>
+                                        {/* 发条鸟的试炼 */}
+                                        <ModeLabelWrapper
+                                            onMouseEnter={(e) => handleModeMouseEnter('CLOCKWORK', e)}
+                                            onMouseLeave={handleModeMouseLeave}
                                         >
-                                            发条鸟的试炼
-                                        </ModeToggleLabel>
+                                            <ModeToggleLabel
+                                                $active={tftMode === TFTMode.CLOCKWORK_TRAILS}
+                                                onClick={() => handleSeasonChange('CLOCKWORK')}
+                                            >
+                                                发条鸟的试炼
+                                            </ModeToggleLabel>
+                                        </ModeLabelWrapper>
                                     </ModeToggleTextRow>
                                 </ModeTogglePill>
+
+                                {/* 模式详情浮窗 —— 使用 fixed 定位，渲染在胶囊外部避免被裁切 */}
+                                {hoveredMode && (
+                                    <ModeTooltip
+                                        ref={tooltipRef}
+                                        $visible={!!hoveredMode}
+                                        $arrowTop={arrowTop}
+                                        style={{ top: tooltipPos.top, left: tooltipPos.left }}
+                                    >
+                                        <ModeTooltipTag>
+                                            {modeDescriptions[hoveredMode as keyof typeof modeDescriptions].tag}
+                                        </ModeTooltipTag>
+                                        <ModeTooltipTitle
+                                            $color={modeDescriptions[hoveredMode as keyof typeof modeDescriptions].titleColor}
+                                        >
+                                            {modeDescriptions[hoveredMode as keyof typeof modeDescriptions].title}
+                                        </ModeTooltipTitle>
+                                        <ModeTooltipDesc>
+                                            {modeDescriptions[hoveredMode as keyof typeof modeDescriptions].desc}
+                                        </ModeTooltipDesc>
+                                    </ModeTooltip>
+                                )}
 
                                 {/* S16 子模式选择 匹配/排位（仅 S16 赛季时显示） */}
                                 {isS16Season && (

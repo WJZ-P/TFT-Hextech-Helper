@@ -27,10 +27,10 @@ export class EndState implements IState {
         // 重置策略服务状态（如果 GameRunningState 没有正常清理的话，这里兜底）
         strategyService.reset();
 
-        logger.info("[EndState] 正在恢复客户端设置...");
+        logger.info("[EndState] 正在从临时备份恢复客户端设置...");
         
-        // 带重试机制的恢复，防止文件被占用
-        const success = await GameConfigHelper.restore(3, 1500);
+        // 使用临时恢复（从 TempConfig 目录），不影响用户手动备份（UserConfig）
+        const success = await GameConfigHelper.tempRestore(3, 1500);
         
         if (success) {
             logger.info("[EndState] 客户端设置恢复完成");

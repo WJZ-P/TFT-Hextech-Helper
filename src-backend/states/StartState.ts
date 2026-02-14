@@ -52,16 +52,17 @@ export class StartState implements IState {
     }
 
     /**
-     * 备份游戏配置
-     * @description 在修改游戏设置前先备份，以便结束时恢复
+     * 备份游戏配置（临时备份）
+     * @description 使用临时备份目录（TempConfig），与用户手动备份（UserConfig）完全隔离。
+     *              每次挂机启动都会覆盖上一次的临时备份，确保恢复的是最新的用户配置。
      */
     private async backupGameConfig(): Promise<void> {
         try {
-            logger.info("[StartState] 正在备份游戏配置...");
-            await GameConfigHelper.backup();
-            logger.info("[StartState] 游戏配置备份完成");
+            logger.info("[StartState] 正在临时备份游戏配置...");
+            await GameConfigHelper.tempBackup();
+            logger.info("[StartState] 游戏配置临时备份完成");
         } catch (error) {
-            logger.warn("[StartState] 游戏配置备份失败，继续执行");
+            logger.warn("[StartState] 游戏配置临时备份失败，继续执行");
             if (error instanceof Error) {
                 logger.debug(error.message);
             }

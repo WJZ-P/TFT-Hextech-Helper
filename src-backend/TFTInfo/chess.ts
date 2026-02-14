@@ -37,7 +37,7 @@ export const TFT_SPECIAL_CHESS = {
         traits: [],
         origins: [],
         classes: [],
-        attackRange: 0
+        attackRange: 0  
     },
     "训练假人": {
         displayName: "训练假人",

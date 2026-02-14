@@ -15,12 +15,14 @@ class GameConfigHelper {
     // 实例的属性，用来存储路径信息
     private readonly installPath: string;
     private readonly gameConfigPath: string;
-    /** 主备份路径（软件根目录下） */
+    /** 主备份路径（软件根目录下）—— 用于用户手动备份/恢复 */
     private readonly primaryBackupPath: string;
-    /** 备用备份路径（C盘 userData，作为兜底） */
+    /** 备用备份路径（C盘 userData，作为兜底）—— 用于用户手动备份/恢复 */
     private readonly fallbackBackupPath: string;
-    /** 当前实际使用的备份路径 */
+    /** 当前实际使用的手动备份路径 */
     private currentBackupPath: string;
+    /** 临时备份路径 —— 仅用于挂机启动/结束时的自动备份恢复，与用户手动备份完全隔离 */
+    private readonly tempBackupPath: string;
     private readonly tftConfigPath: string;  // 预设的云顶设置
 
     public isTFTConfig: boolean = false;
@@ -59,6 +61,14 @@ class GameConfigHelper {
         
         // 默认使用主路径
         this.currentBackupPath = this.primaryBackupPath;
+
+        // 临时备份路径：用于挂机启动/结束的自动备份恢复
+        // 与用户手动备份（UserConfig）完全隔离，互不覆盖
+        if (app.isPackaged) {
+            this.tempBackupPath = path.join(process.resourcesPath, 'GameConfig', 'TempConfig');
+        } else {
+            this.tempBackupPath = path.join(app.getAppPath(), 'public', 'GameConfig', 'TempConfig');
+        }
         
         // 预设云顶配置路径
         // 开发环境：项目根目录/public/GameConfig/TFTConfig
@@ -70,8 +80,9 @@ class GameConfigHelper {
         }
 
         logger.debug(`[ConfigHelper] 游戏设置目录已设定: ${this.gameConfigPath}`);
-        logger.debug(`[ConfigHelper] 主备份路径: ${this.primaryBackupPath}`);
-        logger.debug(`[ConfigHelper] 兜底备份路径: ${this.fallbackBackupPath}`);
+        logger.debug(`[ConfigHelper] 手动备份主路径: ${this.primaryBackupPath}`);
+        logger.debug(`[ConfigHelper] 手动备份兜底路径: ${this.fallbackBackupPath}`);
+        logger.debug(`[ConfigHelper] 临时备份路径: ${this.tempBackupPath}`);
         logger.debug(`[ConfigHelper] 预设云顶之弈设置目录: ${this.tftConfigPath}`);
 
         // 预计算 TFT 下棋配置的 game.cfg 哈希值
@@ -311,6 +322,109 @@ class GameConfigHelper {
     }
 
     /**
+     * 临时备份当前游戏配置（挂机启动时调用）
+     * @description 与用户手动备份完全隔离，写入 TempConfig/ 目录。
+     *              每次挂机启动都会覆盖上一次的临时备份，保证恢复的是最新状态。
+     *              即使临时备份失败也不影响用户手动备份的数据安全。
+     * 
+     * 安全检查逻辑与 backup() 一致：如果当前配置就是 TFT 挂机配置，
+     * 说明上次恢复失败，拒绝备份并尝试从临时备份恢复。
+     * 
+     * @returns true 表示备份成功
+     */
+    public static async tempBackup(): Promise<boolean> {
+        const instance = GameConfigHelper.getInstance();
+        if (!instance) return false;
+
+        const sourceExists = await fs.pathExists(instance.gameConfigPath);
+        if (!sourceExists) {
+            logger.error(`[ConfigHelper] 临时备份失败！找不到游戏设置目录：${instance.gameConfigPath}`);
+            return false;
+        }
+
+        // 安全检查：如果当前配置已经是 TFT 挂机配置，说明上次恢复失败
+        const isTftConfig = await instance.isCurrentConfigTFT();
+        if (isTftConfig) {
+            logger.error(`[ConfigHelper] 临时备份被拒绝！当前配置是 TFT 挂机配置，上次恢复可能失败`);
+            logger.error(`[ConfigHelper] 尝试从临时备份恢复...`);
+            await GameConfigHelper.tempRestore(3, 1500);
+            return false;
+        }
+
+        try {
+            await fs.ensureDir(instance.tempBackupPath);
+            await fs.copy(instance.gameConfigPath, instance.tempBackupPath);
+            instance.isTFTConfig = false;
+            logger.info(`[ConfigHelper] 临时备份成功！路径: ${instance.tempBackupPath}`);
+            return true;
+        } catch (err) {
+            logger.error(`[ConfigHelper] 临时备份失败: ${err}`);
+            return false;
+        }
+    }
+
+    /**
+     * 从临时备份恢复游戏配置（挂机结束时调用）
+     * @description 只从 TempConfig/ 目录读取，不会影响 UserConfig/ 中的用户手动备份。
+     *              带重试机制，防止 LOL 客户端占用文件。
+     * 
+     * @param retryCount 重试次数，默认 3 次
+     * @param retryDelay 重试间隔（毫秒），默认 1000ms
+     * @returns true 表示恢复成功
+     */
+    public static async tempRestore(retryCount: number = 3, retryDelay: number = 1000): Promise<boolean> {
+        const instance = GameConfigHelper.getInstance();
+        if (!instance) {
+            logger.error("[ConfigHelper] tempRestore 错误：尚未初始化！");
+            return false;
+        }
+
+        // 临时备份只有一个目录，不需要多路径查找
+        if (!await fs.pathExists(instance.tempBackupPath)) {
+            logger.error(`[ConfigHelper] 临时恢复失败！找不到临时备份目录: ${instance.tempBackupPath}`);
+            // 临时备份不存在时，降级尝试从用户手动备份恢复
+            logger.warn(`[ConfigHelper] 降级：尝试从用户手动备份恢复...`);
+            return GameConfigHelper.restore(retryCount, retryDelay);
+        }
+
+        logger.debug(`[ConfigHelper] 从临时备份恢复设置，路径: ${instance.tempBackupPath}`);
+
+        // 带重试的恢复逻辑（与 restore 一致）
+        for (let attempt = 1; attempt <= retryCount; attempt++) {
+            try {
+                await fs.copy(instance.tempBackupPath, instance.gameConfigPath);
+                instance.isTFTConfig = false;
+
+                // 验证恢复结果
+                const verified = await instance.verifyRestore(instance.tempBackupPath);
+                if (verified) {
+                    logger.info(`[ConfigHelper] 临时恢复成功，文件验证通过！`);
+                } else {
+                    logger.warn(`[ConfigHelper] 临时恢复完成，但文件验证不一致！`);
+                    if (attempt < retryCount) {
+                        logger.info(`[ConfigHelper] 将在 ${retryDelay}ms 后重试...`);
+                        await sleep(retryDelay);
+                        continue;
+                    }
+                }
+                return true;
+            } catch (err: unknown) {
+                const errMsg = err instanceof Error ? err.message : String(err);
+                const isFileLocked = errMsg.includes('EBUSY') || errMsg.includes('EPERM') || errMsg.includes('resource busy');
+
+                if (attempt < retryCount && isFileLocked) {
+                    logger.warn(`[ConfigHelper] 文件被占用，${retryDelay}ms 后重试 (${attempt}/${retryCount})...`);
+                    await sleep(retryDelay);
+                } else {
+                    logger.error(`[ConfigHelper] 临时恢复失败 (${attempt}/${retryCount}): ${errMsg}`);
+                    if (attempt === retryCount) return false;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * 验证恢复结果：对比备份目录和游戏配置目录中的关键文件哈希值
      * 
      * 只对比最关键的 game.cfg 文件，因为它包含分辨率、画质等核心设置
@@ -376,7 +490,7 @@ class GameConfigHelper {
      *   2. 达到最大自动恢复次数（防止无限互相覆盖）
      * 
      * 守护逻辑：
-     *   检测到 game.cfg 被修改 → 计算哈希 → 如果变成了 TFT 下棋配置 → 自动恢复用户备份
+     *   检测到 game.cfg 被修改 → 计算哈希 → 如果变成了 TFT 下棋配置 → 自动从临时备份恢复
      *   这样就能应对"中途退出软件功能 → 游戏结束 → LOL 写入下棋配置"的场景
      */
     public static startConfigGuard(): void {
@@ -425,16 +539,20 @@ class GameConfigHelper {
                             instance.guardRestoreCount++;
                             logger.warn(`[ConfigGuard] 检测到配置被改为 TFT 下棋配置！自动恢复中... (第 ${instance.guardRestoreCount} 次)`);
                             
-                            // 确定当前使用的备份路径
-                            let backupPath = instance.currentBackupPath;
-                            if (!await fs.pathExists(backupPath)) {
+                            // 优先从临时备份恢复，临时备份不存在则依次降级
+                            let backupPath: string | null = null;
+                            if (await fs.pathExists(instance.tempBackupPath)) {
+                                backupPath = instance.tempBackupPath;
+                            } else if (await fs.pathExists(instance.currentBackupPath)) {
+                                backupPath = instance.currentBackupPath;
+                            } else if (await fs.pathExists(instance.primaryBackupPath)) {
                                 backupPath = instance.primaryBackupPath;
-                            }
-                            if (!await fs.pathExists(backupPath)) {
+                            } else if (await fs.pathExists(instance.fallbackBackupPath)) {
                                 backupPath = instance.fallbackBackupPath;
                             }
-                            if (!await fs.pathExists(backupPath)) {
-                                logger.error(`[ConfigGuard] 找不到备份目录，无法恢复`);
+                            
+                            if (!backupPath) {
+                                logger.error(`[ConfigGuard] 找不到任何备份目录，无法恢复`);
                                 return;
                             }
                             
