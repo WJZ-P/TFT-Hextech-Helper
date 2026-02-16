@@ -70,7 +70,7 @@
 
 ## 项目简介
 
-TFT Hextech Helper 是一款基于 Electron + React + TypeScript 开发的云顶之弈自动下棋助手。它可以帮助你在云顶之弈中自动进行对局，解放你的双手，让你可以边挂机边做其他事情。（当然挂机的时候你就不能玩电脑了，因为软件会使用你的鼠标！）
+TFT Hextech Helper 是一款基于 Electron + React + TypeScript 开发的云顶之弈自动下棋助手。它可以帮助你在云顶之弈(包括S16英雄联盟传奇、S4.5瑞兽闹新春、发条鸟的试炼)中自动进行对局，解放你的双手，让你可以边挂机边做其他事情。（当然挂机的时候你就不能玩电脑了，因为软件会使用你的鼠标！）
 
 <p align="center">
   <img src="markdown/项目示意图.png" alt="软件截图" width="80%">
