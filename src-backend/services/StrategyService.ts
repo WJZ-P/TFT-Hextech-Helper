@@ -586,7 +586,7 @@ export class StrategyService {
      * @returns 是否存在核心棋子
      *
      * @description
-     * - "核心棋子"来自阵容配置（`ChampionConfig.items.core` 的那批）。
+     * - "核心棋子"来自阵容配置（`ChampionConfig.items` 有装备的那批）。
      * - 这个判断用于装备策略的触发门槛：
      *   - 有核心在场 → 可以更积极给核心做神装
      *   - 核心不在场 → 默认选择"捏装备"等核心，除非装备快满
@@ -681,13 +681,10 @@ export class StrategyService {
             // 装备已满（3件）就不考虑
             if (targetWrapper.unit.equips.length >= 3) continue;
 
-            // 取推荐装备列表
+            // 取推荐装备列表（items 是纯字符串数组）
             const desiredItems: string[] = [];
             if (config.items) {
-                desiredItems.push(...config.items.core);
-                if (config.items.alternatives) {
-                    desiredItems.push(...config.items.alternatives);
-                }
+                desiredItems.push(...config.items);
             }
             if (desiredItems.length === 0) continue;
 
@@ -2862,10 +2859,7 @@ export class StrategyService {
             for (const config of coreChampions) {
                 const desiredItems: string[] = [];
                 if (config.items) {
-                    desiredItems.push(...config.items.core);
-                    if (config.items.alternatives) {
-                        desiredItems.push(...config.items.alternatives);
-                    }
+                    desiredItems.push(...config.items);
                 }
                 if (desiredItems.length === 0) continue;
 

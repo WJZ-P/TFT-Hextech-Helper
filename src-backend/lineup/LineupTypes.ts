@@ -17,17 +17,6 @@ export type BoardPosition =
     | 'R4_C1' | 'R4_C2' | 'R4_C3' | 'R4_C4' | 'R4_C5' | 'R4_C6' | 'R4_C7';
 
 /**
- * 装备配置
- * @description 定义棋子的装备需求，包含核心装备和替代装备
- */
-export interface ItemBuild {
-    /** 核心装备（最佳选择，优先合成） */
-    core: EquipKey[];
-    /** 替代装备（核心装备凑不齐时的备选） */
-    alternatives?: EquipKey[];
-}
-
-/**
  * 单个棋子配置
  * @description 阵容中每个棋子的详细配置
  */
@@ -41,8 +30,8 @@ export interface ChampionConfig {
     /** 目标星级（1-3 星） */
     starTarget: 1 | 2 | 3;
     
-    /** 装备配置（可选，没有则表示不需要装备） */
-    items?: ItemBuild;
+    /** 推荐装备列表（可选，没有则表示不需要装备；纯字符串数组，如 ["无尽之刃", "鬼索的狂暴之刃"]） */
+    items?: EquipKey[];
     
     /** 推荐站位（可选，用于自动布阵） */
     position?: BoardPosition;

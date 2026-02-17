@@ -2219,7 +2219,8 @@ const LineupsPage: React.FC = () => {
                     starTarget: hasEquips ? 3 : 2,
                 };
                 if (hasEquips) {
-                    result.items = slot.equips;  // 字符串数组，与现有 JSON 格式一致
+                    // items 是纯字符串数组，如 ["无尽之刃", "鬼索的狂暴之刃"]
+                    result.items = slot.equips;
                 }
                 return result;
             };

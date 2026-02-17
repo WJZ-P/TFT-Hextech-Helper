@@ -155,17 +155,11 @@ class LineupLoader {
                 }
                 
                 // 验证装备名称是否存在于数据集中
+                // items 是纯字符串数组，如 ["无尽之刃", "鬼索的狂暴之刃"]
                 if (champion.items) {
-                    for (const item of champion.items.core) {
+                    for (const item of champion.items) {
                         if (!equipData[item]) {
                             errors.push(`[${stageKey}] 未知装备: ${item}`);
-                        }
-                    }
-                    if (champion.items.alternatives) {
-                        for (const item of champion.items.alternatives) {
-                            if (!equipData[item]) {
-                                errors.push(`[${stageKey}] 未知替代装备: ${item}`);
-                            }
                         }
                     }
                 }
@@ -267,7 +261,7 @@ class LineupLoader {
         if (!stage) return [];
         
         return stage.champions
-            .filter(c => c.items && c.items.core.length > 0)
+            .filter(c => c.items && c.items.length > 0)
             .sort((a, b) => {
                 // 核心棋子优先
                 if (a.isCore && !b.isCore) return -1;
