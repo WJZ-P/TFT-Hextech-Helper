@@ -176,6 +176,8 @@ TFT Hextech Helper 是一款基于 Electron + React + TypeScript 开发的云顶
 
 - [x] **更多阵容配置**
 
+- [x] **支持自定义阵容**
+
 - [ ] **战绩统计**
 
 ## 如果您喜欢本项目，请给我点个⭐吧(๑>◡<๑)！
