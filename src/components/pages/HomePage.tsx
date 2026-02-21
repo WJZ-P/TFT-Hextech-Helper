@@ -1700,6 +1700,7 @@ export const HomePage = () => {
                                                 $active={tftMode === TFTMode.NORMAL}
                                                 onClick={() => handleS16SubModeChange(false)}
                                                 title="匹配模式"
+                                                style= { {paddingRight: 4} }
                                             >
                                                 匹配
                                             </SubModeToggleLabel>
@@ -1707,6 +1708,7 @@ export const HomePage = () => {
                                                 $active={tftMode === TFTMode.RANK}
                                                 onClick={() => handleS16SubModeChange(true)}
                                                 title="排位模式"
+                                                style= { {paddingLeft: 4} }
                                             >
                                                 排位
                                             </SubModeToggleLabel>
@@ -1724,8 +1726,8 @@ export const HomePage = () => {
                             >
                                 <LogModeToggleIndicator $isDetailed={logMode === LogMode.DETAILED} />
                                 <LogModeToggleTextRow>
-                                    <LogModeToggleLabel $active={logMode === LogMode.SIMPLE}>简略</LogModeToggleLabel>
-                                    <LogModeToggleLabel $active={logMode === LogMode.DETAILED}>详细</LogModeToggleLabel>
+                                    <LogModeToggleLabel $active={logMode === LogMode.SIMPLE} style={{ paddingRight: 4 }}>简略</LogModeToggleLabel>
+                                    <LogModeToggleLabel $active={logMode === LogMode.DETAILED} style={{ paddingLeft: 4 }}>详细</LogModeToggleLabel>
                                 </LogModeToggleTextRow>
                             </LogModeTogglePill>
                         </LeftControlPanel>

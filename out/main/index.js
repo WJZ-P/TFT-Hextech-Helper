@@ -10875,6 +10875,14 @@ class SettingsStore {
         totalGamesPlayed: 0
         //  默认历史总局数为 0
       },
+      queueRandomDelay: {
+        enabled: false,
+        //  默认关闭排队随机间隔
+        minSeconds: 0,
+        //  默认最小 0 秒
+        maxSeconds: 0
+        //  默认最大 0 秒
+      },
       analyticsClientId: ""
       //  默认为空，首次启动时由 AnalyticsManager 生成
     };
@@ -11405,11 +11413,11 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-2juj_m9q.js");
+    const ServicesModule = await import("./chunks/index-CDV3gpPS.js");
     hexService = ServicesModule.hexService;
     const TftOperatorModule = await import("./chunks/TftOperator-CHK7LIbj.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
-    const LineupModule = await import("./chunks/index-CyE3uzlh.js");
+    const LineupModule = await import("./chunks/index-BZspSCi7.js");
     lineupLoader = LineupModule.lineupLoader;
     const GlobalHotkeyManagerModule = await import("./chunks/GlobalHotkeyManager-Cbcy0EP4.js");
     globalHotkeyManager = GlobalHotkeyManagerModule.globalHotkeyManager;
