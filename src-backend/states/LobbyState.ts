@@ -128,18 +128,31 @@ export class LobbyState implements IState {
             return this;
         }
 
-        // 等待游戏开始（发条鸟模式有超时机制）
-        const waitResult = await this.waitForGameToStart(signal, isClockworkMode);
+        // ── 计算排队超时时间 ──
+        // 发条鸟模式：硬编码 3 秒超时
+        // 普通模式：读取用户配置的超时分钟数（0 = 不超时）
+        let timeoutMs = 0;
+        if (isClockworkMode) {
+            timeoutMs = CLOCKWORK_MATCH_TIMEOUT_MS;
+        } else {
+            const timeoutConfig = settingsStore.get('queueTimeout');
+            if (timeoutConfig.enabled && timeoutConfig.minutes > 0) {
+                timeoutMs = timeoutConfig.minutes * 60 * 1000;
+                logger.info(`[LobbyState] 排队超时已开启：${timeoutConfig.minutes} 分钟后将自动退出重排`);
+            }
+        }
+
+        // 等待游戏开始（支持超时机制）
+        const waitResult = await this.waitForGameToStart(signal, timeoutMs);
 
         if (waitResult === 'started') {
             logger.info("[LobbyState] 游戏已开始！流转到 GameLoadingState");
             return new GameLoadingState();
         } else if (waitResult === 'timeout') {
-            // 发条鸟模式超时，退出房间（带重试机制），回到 StartState 重新开始
-            logger.warn("[LobbyState] 发条鸟模式排队超时，退出房间重新开始...");
+            // 排队超时，退出房间（带重试机制），回到 StartState 重新开始
+            logger.warn("[LobbyState] 排队超时，退出房间重新开始...");
             const leaveSuccess = await this.leaveLobbyWithRetry(signal);
             if (!leaveSuccess) {
-                // 退出房间重试都失败了，返回 EndState 结束流程
                 logger.error("[LobbyState] 退出房间失败，已达到最大重试次数，流程结束");
                 return new EndState();
             }
@@ -294,10 +307,10 @@ export class LobbyState implements IState {
     /**
      * 等待从"排队"到"游戏开始"的完整流程
      * @param signal AbortSignal 用于取消等待
-     * @param isClockworkMode 是否为发条鸟模式（启用超时机制）
+     * @param timeoutMs 超时毫秒数，0 表示不超时
      * @returns 'started' 表示游戏成功开始，'timeout' 表示超时，'interrupted' 表示流程中断，'error' 表示发生错误
      */
-    private waitForGameToStart(signal: AbortSignal, isClockworkMode: boolean = false): Promise<'started' | 'timeout' | 'interrupted' | 'error'> {
+    private waitForGameToStart(signal: AbortSignal, timeoutMs: number = 0): Promise<'started' | 'timeout' | 'interrupted' | 'error'> {
         return new Promise((resolve) => {
             let stopCheckInterval: NodeJS.Timeout | null = null;
             let timeoutTimer: NodeJS.Timeout | null = null;
@@ -394,13 +407,13 @@ export class LobbyState implements IState {
                 }
             }, ABORT_CHECK_INTERVAL_MS);
 
-            // 发条鸟模式：设置超时定时器
-            if (isClockworkMode) {
-                logger.info(`[LobbyState] 发条鸟模式：${CLOCKWORK_MATCH_TIMEOUT_MS / 1000}秒内未找到对局将退出重试`);
+            // 如果设置了超时时间，启动超时定时器
+            if (timeoutMs > 0) {
+                logger.info(`[LobbyState] 排队超时机制：${timeoutMs / 1000}秒内未找到对局将退出重试`);
                 timeoutTimer = setTimeout(() => {
-                    logger.warn("[LobbyState] 发条鸟模式排队超时！");
+                    logger.warn("[LobbyState] 排队超时！");
                     safeResolve('timeout');
-                }, CLOCKWORK_MATCH_TIMEOUT_MS);
+                }, timeoutMs);
             }
         });
     }

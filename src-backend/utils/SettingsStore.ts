@@ -83,6 +83,11 @@ interface AppSettings {
         minSeconds: number,     // 最小等待秒数
         maxSeconds: number,     // 最大等待秒数
     },
+    // 排队超时（普通模式下，排队超过指定分钟数自动退出房间重排）
+    queueTimeout: {
+        enabled: boolean,       // 是否启用
+        minutes: number,        // 超时分钟数
+    },
     // Google Analytics 数据统计
     analyticsClientId: string,      // GA4 设备唯一标识（随机 UUID，不含个人隐私信息）
 }
@@ -121,6 +126,10 @@ class SettingsStore {
                 enabled: false,         //  默认关闭排队随机间隔
                 minSeconds: 0,          //  默认最小 0 秒
                 maxSeconds: 0,          //  默认最大 0 秒
+            },
+            queueTimeout: {
+                enabled: false,         //  默认关闭排队超时
+                minutes: 5,             //  默认 5 分钟
             },
             analyticsClientId: '',       //  默认为空，首次启动时由 AnalyticsManager 生成
         }

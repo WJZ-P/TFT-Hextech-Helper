@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - 2026-02-21
+- 新增排队超时自动重排功能：普通模式下排队超过指定分钟数未匹配成功时，自动退出房间并重新排队，避免长时间卡在排队状态。
+
 ## [1.4.1] - 2026-02-21
 - 修复自定义阵容装备格式 bug：统一 items 为纯字符串数组，删除多余的 ItemBuild 套娃结构，解决加载阵容时 `.core is not iterable` 崩溃问题。
 - 简化装备配置数据结构，移除冗余的嵌套层级。

@@ -517,6 +517,10 @@ const SettingsPage = () => {
     const [queueDelayMin, setQueueDelayMin] = useState(0);
     const [queueDelayMax, setQueueDelayMax] = useState(0);
 
+    // 排队超时设置（普通模式下，排队超过指定分钟数自动退出房间重排）
+    const [queueTimeoutEnabled, setQueueTimeoutEnabled] = useState(false);
+    const [queueTimeoutMinutes, setQueueTimeoutMinutes] = useState(5);
+
     // 初始化时从后端获取设置
     useEffect(() => {
         const loadSettings = async () => {
@@ -561,6 +565,13 @@ const SettingsPage = () => {
                 setQueueDelayEnabled(delayConfig.enabled);
                 setQueueDelayMin(delayConfig.minSeconds);
                 setQueueDelayMax(delayConfig.maxSeconds);
+            }
+
+            // 加载排队超时设置
+            const timeoutConfig = await window.settings.get<{enabled: boolean, minutes: number}>('queueTimeout');
+            if (timeoutConfig) {
+                setQueueTimeoutEnabled(timeoutConfig.enabled);
+                setQueueTimeoutMinutes(timeoutConfig.minutes);
             }
         };
         loadSettings();
@@ -840,6 +851,47 @@ const SettingsPage = () => {
         }
     };
 
+    /**
+     * 切换排队超时开关
+     * - 开启时：校验分钟数 → 持久化到后端
+     * - 关闭时：关闭并持久化
+     */
+    const handleToggleQueueTimeout = async () => {
+        const newEnabled = !queueTimeoutEnabled;
+
+        if (newEnabled && queueTimeoutMinutes <= 0) {
+            toast.error('请先填写有效的超时分钟数');
+            return;
+        }
+
+        setQueueTimeoutEnabled(newEnabled);
+        await window.settings.set('queueTimeout', {
+            enabled: newEnabled,
+            minutes: queueTimeoutMinutes,
+        });
+        toast.success(newEnabled
+            ? `排队超时已开启：超过 ${queueTimeoutMinutes} 分钟未匹配将自动重排`
+            : '排队超时已关闭');
+    };
+
+    /**
+     * 修改排队超时的分钟数
+     * 如果当前已开启，修改后自动同步到后端
+     */
+    const handleQueueTimeoutChange = async (value: number) => {
+        // 限制范围 1~60 分钟，取整
+        const clamped = Math.max(1, Math.min(60, Math.floor(value) || 1));
+        setQueueTimeoutMinutes(clamped);
+
+        // 如果已开启，实时同步到后端
+        if (queueTimeoutEnabled) {
+            await window.settings.set('queueTimeout', {
+                enabled: true,
+                minutes: clamped,
+            });
+        }
+    };
+
     // 检查更新
     const handleCheckUpdate = async () => {
         setIsCheckingUpdate(true);
@@ -987,6 +1039,31 @@ const SettingsPage = () => {
                         <span>秒</span>
                         <ToggleSwitch onClick={handleToggleQueueDelay}>
                             <ToggleSlider $isOn={queueDelayEnabled} />
+                        </ToggleSwitch>
+                    </DelayRangeRow>
+                </SettingItem>
+
+                {/* 排队超时自动重排 */}
+                <SettingItem>
+                    <SettingInfo>
+                        <SettingText>
+                            <h3>排队超时自动重排</h3>
+                            <p>排队超过指定分钟数未匹配成功时，自动退出房间并重新排队（发条鸟模式为固定3秒）。</p>
+                        </SettingText>
+                    </SettingInfo>
+                    <DelayRangeRow>
+                        <NumberInput
+                            type="number"
+                            min={1}
+                            max={60}
+                            value={queueTimeoutMinutes}
+                            onChange={(e) => handleQueueTimeoutChange(Number(e.target.value))}
+                            disabled={queueTimeoutEnabled}
+                            placeholder="5"
+                        />
+                        <span>分钟</span>
+                        <ToggleSwitch onClick={handleToggleQueueTimeout}>
+                            <ToggleSlider $isOn={queueTimeoutEnabled} />
                         </ToggleSwitch>
                     </DelayRangeRow>
                 </SettingItem>

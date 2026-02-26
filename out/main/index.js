@@ -10883,6 +10883,12 @@ class SettingsStore {
         maxSeconds: 0
         //  默认最大 0 秒
       },
+      queueTimeout: {
+        enabled: false,
+        //  默认关闭排队超时
+        minutes: 5
+        //  默认 5 分钟
+      },
       analyticsClientId: ""
       //  默认为空，首次启动时由 AnalyticsManager 生成
     };
@@ -11413,7 +11419,7 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-CDV3gpPS.js");
+    const ServicesModule = await import("./chunks/index-CDKHLTda.js");
     hexService = ServicesModule.hexService;
     const TftOperatorModule = await import("./chunks/TftOperator-CHK7LIbj.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
