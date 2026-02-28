@@ -3,6 +3,16 @@ import Store from 'electron-store';
 import {TFTMode} from "../TFTProtocol";
 import {LogMode} from "../types/AppTypes";
 
+export enum GameRegion {
+    CN = 'CN',
+    NA = 'NA',
+}
+
+export enum GameClient {
+    ANDROID = 'ANDROID',
+    RIOT_PC = 'RIOT_PC',
+}
+
 type WindowBounds = Pick<Rectangle, 'x' | 'y' | 'width' | 'height'>;
 
 // 日志自动清理阈值的可选值，0 表示"从不"自动清理
@@ -90,6 +100,8 @@ interface AppSettings {
     },
     // Google Analytics 数据统计
     analyticsClientId: string,      // GA4 设备唯一标识（随机 UUID，不含个人隐私信息）
+    gameRegion: GameRegion,         // 游戏区服（国服/美服）
+    gameClient: GameClient,         // 客户端类型（安卓端/电脑 Riot 端）
 }
 
 class SettingsStore {
@@ -132,6 +144,8 @@ class SettingsStore {
                 minutes: 5,             //  默认 5 分钟
             },
             analyticsClientId: '',       //  默认为空，首次启动时由 AnalyticsManager 生成
+            gameRegion: GameRegion.CN,   // 默认国服
+            gameClient: GameClient.RIOT_PC, // 默认电脑 Riot 客户端
         }
         this.store = new Store<AppSettings>({defaults})
     }

@@ -32,8 +32,18 @@ export interface WindowInfo {
  *              - 某些情况下可能带有 "(TM) Client" 后缀
  */
 const LOL_WINDOW_TITLES = [
-    //"League of Legends",           // 这个是UX
-    "League of Legends (TM) Client", // 带有商标后缀
+    // Riot PC（美服/国际服常见）
+    "League of Legends (TM) Client",
+    "League of Legends",
+    // 兼容部分客户端窗口命名
+    "League of Legends Client",
+    // 安卓模拟器里运行金铲铲时常见标题关键字
+    "MuMu",
+    "BlueStacks",
+    "LDPlayer",
+    "雷电模拟器",
+    "腾讯手游助手",
+    "金铲铲之战",
 ];
 
 /**
@@ -108,7 +118,7 @@ class WindowHelper {
             }
 
             // 没有找到匹配的窗口
-            logger.warn("[WindowHelper] 未找到 LOL 游戏窗口，检测名称为League of Legends (TM) Client，若外服客户端不为此标题，请联系开发者处理。");
+            logger.warn("[WindowHelper] 未找到可识别的游戏窗口（Riot PC / 安卓模拟器）。请确认客户端已进入对局且窗口未最小化。");
             return null;
 
         } catch (error: any) {

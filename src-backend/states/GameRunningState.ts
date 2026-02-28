@@ -29,7 +29,7 @@ import { sleep } from "../utils/HelperTools";
 import { inGameApi, InGameApiEndpoints } from "../lcu/InGameApi";
 import { showToast, notifyStopAfterGameState, notifyHexRunningState } from "../utils/ToastBridge";
 import { hexService } from "../services/HexService";
-import { settingsStore } from "../utils/SettingsStore";
+import { GameClient, settingsStore } from "../utils/SettingsStore";
 import { TFTMode, isStandardChessMode, getSeasonTemplateDir } from "../TFTProtocol";
 import { templateLoader } from "../tft";
 import { ocrService } from "../tft/recognition/OcrService";
@@ -140,6 +140,11 @@ export class GameRunningState implements IState {
                 await hexService.stop();
                 
                 return new EndState();
+            }
+            const gameClient = settingsStore.get('gameClient');
+            if (gameClient === GameClient.ANDROID) {
+                logger.info("[GameRunningState] 安卓端模式：回到 GameLoadingState，等待用户手动开启下一局");
+                return new GameLoadingState();
             }
             // 否则返回大厅开始下一局
             logger.info("[GameRunningState] 游戏结束，流转到 LobbyState 开始下一局");
@@ -369,9 +374,19 @@ export class GameRunningState implements IState {
             }
 
             // 定期检查 signal 状态 (作为 abort 事件的兜底)
-            stopCheckInterval = setInterval(() => {
+            stopCheckInterval = setInterval(async () => {
                 if (signal.aborted) {
                     safeResolve('interrupted');
+                    return;
+                }
+
+                // 安卓端模式没有 LCU gameflow 事件，使用窗口存在性作为结束兜底
+                if (settingsStore.get('gameClient') === GameClient.ANDROID) {
+                    const win = await windowHelper.findLOLWindow();
+                    if (!win) {
+                        logger.info("[GameRunningState] 安卓端检测到游戏窗口已关闭，判定本局结束");
+                        safeResolve('ended');
+                    }
                 }
             }, ABORT_CHECK_INTERVAL_MS);
         });

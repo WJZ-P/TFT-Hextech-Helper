@@ -10,6 +10,8 @@ import { EndState } from "./EndState.ts";
 import { GameRunningState } from "./GameRunningState.ts";
 import { inGameApi, InGameApiEndpoints } from "../lcu/InGameApi.ts";
 import { tftOperator, GAME_WIDTH, GAME_HEIGHT } from "../TftOperator.ts";
+import { GameClient, settingsStore } from "../utils/SettingsStore.ts";
+import { windowHelper } from "../utils/WindowHelper.ts";
 
 /** 轮询间隔 (ms) */
 const POLL_INTERVAL_MS = 500;
@@ -106,13 +108,24 @@ export class GameLoadingState implements IState {
                 }
 
                 try {
-                    await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);
-                    // 请求成功，游戏已加载
-                    signal.removeEventListener("abort", onAbort);
-                    cleanup();
-                    resolve(true);
+                    const gameClient = settingsStore.get('gameClient');
+                    if (gameClient === GameClient.ANDROID) {
+                        const windowInfo = await windowHelper.findLOLWindow();
+                        if (windowInfo) {
+                            signal.removeEventListener("abort", onAbort);
+                            cleanup();
+                            resolve(true);
+                            return;
+                        }
+                    } else {
+                        await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);
+                        signal.removeEventListener("abort", onAbort);
+                        cleanup();
+                        resolve(true);
+                        return;
+                    }
+                    logger.debug("[GameLoadingState] 游戏仍在加载中...");
                 } catch {
-                    // 请求失败，游戏仍在加载中
                     logger.debug("[GameLoadingState] 游戏仍在加载中...");
                 }
             };
