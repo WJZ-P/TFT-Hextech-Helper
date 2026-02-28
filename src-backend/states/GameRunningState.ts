@@ -355,6 +355,17 @@ export class GameRunningState implements IState {
                 }
             };
 
+            const checkAndroidGameEnded = async () => {
+                if (settingsStore.get('gameClient') !== GameClient.ANDROID) return;
+
+                try {
+                    await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);
+                } catch {
+                    logger.info("[GameRunningState] 安卓端检测到 InGame API 不可用，判定本局结束");
+                    safeResolve('ended');
+                }
+            };
+
             // 监听 abort 事件
             signal.addEventListener("abort", onAbort, { once: true });
 
@@ -380,15 +391,12 @@ export class GameRunningState implements IState {
                     return;
                 }
 
-                // 安卓端模式没有 LCU gameflow 事件，使用窗口存在性作为结束兜底
-                if (settingsStore.get('gameClient') === GameClient.ANDROID) {
-                    const win = await windowHelper.findLOLWindow();
-                    if (!win) {
-                        logger.info("[GameRunningState] 安卓端检测到游戏窗口已关闭，判定本局结束");
-                        safeResolve('ended');
-                    }
-                }
+                // 安卓端模式没有 LCU gameflow 事件，使用 InGame API 可用性作为结束信号
+                await checkAndroidGameEnded();
             }, ABORT_CHECK_INTERVAL_MS);
+
+            // 立即检查一次，避免结束后必须等待一个轮询周期
+            void checkAndroidGameEnded();
         });
     }
 
