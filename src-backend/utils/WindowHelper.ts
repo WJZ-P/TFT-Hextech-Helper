@@ -29,7 +29,9 @@ export interface WindowInfo {
  * Riot PC 客户端的游戏窗口标题
  * @description 覆盖国服、美服及全球客户端常见窗口标题
  */
-const PC_WINDOW_TITLES = [
+export type WindowSearchScope = 'ANY' | 'RIOT_PC_ONLY' | 'ANDROID_ONLY';
+
+const RIOT_PC_WINDOW_TITLES = [
     "League of Legends (TM) Client",
     "League of Legends",
     "League of Legends Client",
@@ -89,7 +91,7 @@ class WindowHelper {
                         lolTitle => title && title.includes(lolTitle)
                     );
 
-                    if (!isLOLWindow) continue;
+                    if (!isTargetWindow) continue;
 
                     // 获取窗口区域（物理像素）
                     const region = await window.region;
