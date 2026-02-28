@@ -37,10 +37,15 @@ const PC_WINDOW_TITLES = [
 
 /**
  * 安卓模拟器中金铲铲之战的窗口标题
- * @description 仅匹配含有"金铲铲之战"的模拟器窗口，避免使用通用模拟器名称导致误判
+ * @description 覆盖常见的游戏窗口标题与模拟器主窗口标题。
+ *              某些模拟器（如 MuMu / BlueStacks / LDPlayer）在对局时可见标题
+ *              仍是模拟器名称，因此需要作为兜底关键字。
  */
 const ANDROID_WINDOW_TITLES = [
     "金铲铲之战",
+    "MuMu",
+    "BlueStacks",
+    "LDPlayer",
 ];
 
 /**
@@ -60,7 +65,7 @@ class WindowHelper {
      * 查找 LOL 游戏窗口
      * @description 遍历所有窗口，查找标题包含指定关键字且尺寸足够大的窗口。
      *              PC 客户端匹配 League of Legends 窗口标题；
-     *              安卓客户端仅匹配含有"金铲铲之战"的窗口，避免误判通用模拟器主窗口。
+     *              安卓客户端匹配游戏标题与常见模拟器标题，并结合窗口尺寸过滤降低误判。
      * @param clientType 客户端类型，用于选择匹配的标题列表
      * @returns 找到的游戏窗口信息，如果没找到则返回 null
      */
