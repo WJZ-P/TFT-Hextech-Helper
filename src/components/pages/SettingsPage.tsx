@@ -5,6 +5,10 @@ import {toast} from "../toast/toast-core.ts";
 import { logStore, LogAutoCleanThreshold } from "../../stores/logStore.ts";
 import { settingsStore } from "../../stores/settingsStore.ts"; // 全局设置状态
 
+
+type GameRegion = 'CN' | 'NA';
+type GameClient = 'ANDROID' | 'RIOT_PC';
+
 // -------------------------------------------------------------------
 // ✨ 样式组件定义 (Styled Components Definitions) ✨
 // -------------------------------------------------------------------
@@ -504,6 +508,10 @@ const SettingsPage = () => {
     // 游戏浮窗显示设置
     const [showOverlay, setShowOverlay] = useState(true);
     
+    // 区服 / 客户端
+    const [gameRegion, setGameRegion] = useState<GameRegion>('CN');
+    const [gameClient, setGameClient] = useState<GameClient>('RIOT_PC');
+
     // 版本与更新
     const [currentVersion, setCurrentVersion] = useState<string>('');
     const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
@@ -543,6 +551,12 @@ const SettingsPage = () => {
             // 加载游戏浮窗显示设置
             const overlayEnabled = await window.settings.get<boolean>('showOverlay');
             setShowOverlay(overlayEnabled);
+
+            // 加载区服与客户端设置
+            const loadedRegion = await window.settings.get<GameRegion>('gameRegion');
+            const loadedClient = await window.settings.get<GameClient>('gameClient');
+            if (loadedRegion) setGameRegion(loadedRegion);
+            if (loadedClient) setGameClient(loadedClient);
             
             // 加载当前版本号
             const version = await window.util.getAppVersion();
@@ -892,6 +906,21 @@ const SettingsPage = () => {
         }
     };
 
+
+    const handleRegionChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = e.target.value as GameRegion;
+        setGameRegion(value);
+        await window.settings.set('gameRegion', value);
+        toast.success(value === 'NA' ? '已切换到美服配置' : '已切换到国服配置');
+    };
+
+    const handleClientChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = e.target.value as GameClient;
+        setGameClient(value);
+        await window.settings.set('gameClient', value);
+        toast.success(value === 'ANDROID' ? '已切换到安卓端模式（手动开局）' : '已切换到电脑 Riot 客户端模式');
+    };
+
     // 检查更新
     const handleCheckUpdate = async () => {
         setIsCheckingUpdate(true);
@@ -922,10 +951,43 @@ const SettingsPage = () => {
             {/* 使用提示 */}
             <TipsCard>
                 <ul>
-                    <li><strong>游戏语言必须设置为中文</strong>，否则无法正确识别棋子</li>
+                    <li><strong>国服推荐简体中文；美服建议英文客户端</strong>，请与所选区服保持一致以提高识别成功率</li>
                     <li><strong>推荐使用默认棋盘皮肤</strong>，已针对默认棋盘优化，能加快棋子识别速度</li>
                 </ul>
             </TipsCard>
+
+
+            {/* 区域与客户端设置 */}
+            <SettingsHeader>
+                区域与客户端
+            </SettingsHeader>
+            <SettingsCard>
+                <SettingItem>
+                    <SettingInfo>
+                        <SettingText>
+                            <h3>游戏区服</h3>
+                            <p>选择当前账号所在区服，现支持国服与美服（NA）。</p>
+                        </SettingText>
+                    </SettingInfo>
+                    <SelectWrapper value={gameRegion} onChange={handleRegionChange}>
+                        <option value="CN">国服（CN）</option>
+                        <option value="NA">美服（NA）</option>
+                    </SelectWrapper>
+                </SettingItem>
+
+                <SettingItem>
+                    <SettingInfo>
+                        <SettingText>
+                            <h3>客户端类型</h3>
+                            <p>安卓端为手动开局模式；电脑 Riot 端支持自动创建房间与排队。</p>
+                        </SettingText>
+                    </SettingInfo>
+                    <SelectWrapper value={gameClient} onChange={handleClientChange}>
+                        <option value="ANDROID">安卓端（模拟器/投屏）</option>
+                        <option value="RIOT_PC">电脑端（Riot Client）</option>
+                    </SelectWrapper>
+                </SettingItem>
+            </SettingsCard>
 
             {/* 快捷键设置 */}
             <SettingsHeader>

@@ -29,8 +29,8 @@ import { sleep } from "../utils/HelperTools";
 import { inGameApi, InGameApiEndpoints } from "../lcu/InGameApi";
 import { showToast, notifyStopAfterGameState, notifyHexRunningState } from "../utils/ToastBridge";
 import { hexService } from "../services/HexService";
-import { settingsStore } from "../utils/SettingsStore";
-import { TFTMode, isStandardChessMode, getSeasonTemplateDir } from "../TFTProtocol";
+import { GameClient, settingsStore } from "../utils/SettingsStore";
+import { TFTMode, isStandardChessMode, getSeasonTemplateDir, GameStageType } from "../TFTProtocol";
 import { templateLoader } from "../tft";
 import { ocrService } from "../tft/recognition/OcrService";
 import { tftOperator } from "../TftOperator";
@@ -39,6 +39,9 @@ import { windowHelper } from "../utils/WindowHelper";
 
 /** abort 信号轮询间隔 (ms)，作为事件监听的兜底 */
 const ABORT_CHECK_INTERVAL_MS = 2000;
+
+/** 安卓端：连续识别不到有效阶段的阈值（达到后判定本局已结束） */
+const ANDROID_UNKNOWN_STAGE_THRESHOLD = 12;
 
 /** 发条鸟模式：阶段变化超时时间 (ms)，超过此时间未收到阶段事件则视为卡住 */
 const CLOCKWORK_STAGE_TIMEOUT_MS = 60000;  // 1 分钟
@@ -141,6 +144,11 @@ export class GameRunningState implements IState {
                 
                 return new EndState();
             }
+            const gameClient = settingsStore.get('gameClient');
+            if (gameClient === GameClient.ANDROID) {
+                logger.info("[GameRunningState] 安卓端模式：回到 GameLoadingState，等待用户手动开启下一局");
+                return new GameLoadingState();
+            }
             // 否则返回大厅开始下一局
             logger.info("[GameRunningState] 游戏结束，流转到 LobbyState 开始下一局");
             return new LobbyState();
@@ -209,6 +217,7 @@ export class GameRunningState implements IState {
             let isResolved = false;
             /** 标记是否已经尝试过退出游戏，避免重复调用 */
             let hasTriedQuit = false;
+            let androidUnknownStageCount = 0;
 
             /**
              * 安全的 resolve，防止重复调用
@@ -369,9 +378,35 @@ export class GameRunningState implements IState {
             }
 
             // 定期检查 signal 状态 (作为 abort 事件的兜底)
-            stopCheckInterval = setInterval(() => {
+            stopCheckInterval = setInterval(async () => {
                 if (signal.aborted) {
                     safeResolve('interrupted');
+                    return;
+                }
+
+                // 安卓端模式没有 LCU gameflow 事件，采用“阶段识别连续失败”作为结束判定
+                if (settingsStore.get('gameClient') === GameClient.ANDROID) {
+                    const win = await windowHelper.findLOLWindow('ANDROID_ONLY');
+                    if (!win) {
+                        logger.info("[GameRunningState] 安卓端检测到模拟器窗口已关闭，判定本局结束");
+                        safeResolve('ended');
+                        return;
+                    }
+
+                    const stageResult = await tftOperator.getGameStage();
+                    const hasValidStage = Boolean(stageResult.stageText) && stageResult.type !== GameStageType.UNKNOWN;
+
+                    if (hasValidStage) {
+                        androidUnknownStageCount = 0;
+                        return;
+                    }
+
+                    androidUnknownStageCount += 1;
+                    logger.debug(`[GameRunningState] 安卓端阶段识别失败计数: ${androidUnknownStageCount}/${ANDROID_UNKNOWN_STAGE_THRESHOLD}`);
+                    if (androidUnknownStageCount >= ANDROID_UNKNOWN_STAGE_THRESHOLD) {
+                        logger.info("[GameRunningState] 安卓端连续识别不到有效阶段，判定本局已结束");
+                        safeResolve('ended');
+                    }
                 }
             }, ABORT_CHECK_INTERVAL_MS);
         });

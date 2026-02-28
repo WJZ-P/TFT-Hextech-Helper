@@ -10,6 +10,7 @@ import { LobbyState } from "./LobbyState.ts";
 import { inGameApi, InGameApiEndpoints } from "../lcu/InGameApi.ts";
 import { GameLoadingState } from "./GameLoadingState.ts";
 import GameConfigHelper from "../utils/GameConfigHelper.ts";
+import { GameClient, settingsStore } from "../utils/SettingsStore.ts";
 
 /**
  * 启动状态类
@@ -32,6 +33,12 @@ export class StartState implements IState {
         signal.throwIfAborted();
 
         logger.info("[StartState] 正在初始化...");
+
+        const gameClient = settingsStore.get('gameClient');
+        if (gameClient === GameClient.ANDROID) {
+            logger.info("[StartState] 当前为安卓端模式：跳过 LCU 大厅流程，请手动在模拟器中进入对局");
+            return new GameLoadingState();
+        }
 
         // 备份当前游戏配置（必须在应用 TFT 配置之前！）
         await this.backupGameConfig();

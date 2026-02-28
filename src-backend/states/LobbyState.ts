@@ -12,7 +12,7 @@ import { logger } from "../utils/Logger.ts";
 import { GameLoadingState } from "./GameLoadingState.ts";
 import { EndState } from "./EndState.ts";
 import { StartState } from "./StartState.ts";
-import { settingsStore } from "../utils/SettingsStore.ts";
+import { GameClient, GameRegion, settingsStore } from "../utils/SettingsStore.ts";
 import { TFTMode } from "../TFTProtocol.ts";
 
 /** 创建房间后的等待时间 (ms) */
@@ -58,7 +58,11 @@ export class LobbyState implements IState {
      */
     private getQueueId(): Queue {
         const tftMode = settingsStore.get('tftMode');
-        
+        const gameRegion = settingsStore.get('gameRegion');
+        const gameClient = settingsStore.get('gameClient');
+
+        logger.info(`[LobbyState] 区域: ${gameRegion}，客户端: ${gameClient}`);
+
         switch (tftMode) {
             case TFTMode.RANK:
                 logger.info("[LobbyState] 当前模式: S16 排位赛");
@@ -71,7 +75,7 @@ export class LobbyState implements IState {
                 return Queue.TFT_RUISHOU; // 瑞兽队列ID = 6110
             case TFTMode.NORMAL:
             default:
-                logger.info("[LobbyState] 当前模式: S16 匹配模式");
+                logger.info(`[LobbyState] 当前模式: S16 匹配模式 (${gameRegion === GameRegion.NA ? "美服" : "国服"})`);
                 return Queue.TFT_NORMAL;
         }
     }
@@ -86,6 +90,11 @@ export class LobbyState implements IState {
 
         if (!this.lcuManager) {
             throw Error("[LobbyState] 检测到客户端未启动！");
+        }
+
+        if (settingsStore.get('gameClient') === GameClient.ANDROID) {
+            logger.info("[LobbyState] 安卓端模式不走 LCU 排队，回到游戏加载等待状态");
+            return new GameLoadingState();
         }
 
         // 获取用户选择的游戏模式
