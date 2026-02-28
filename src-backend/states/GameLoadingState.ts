@@ -110,7 +110,7 @@ export class GameLoadingState implements IState {
                 try {
                     const gameClient = settingsStore.get('gameClient');
                     if (gameClient === GameClient.ANDROID) {
-                        const windowInfo = await windowHelper.findLOLWindow();
+                        const windowInfo = await windowHelper.findLOLWindow(GameClient.ANDROID);
                         if (windowInfo && await this.hasInGameSignal()) {
                             signal.removeEventListener("abort", onAbort);
                             cleanup();
