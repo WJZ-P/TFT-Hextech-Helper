@@ -10,6 +10,8 @@ import { EndState } from "./EndState.ts";
 import { GameRunningState } from "./GameRunningState.ts";
 import { inGameApi, InGameApiEndpoints } from "../lcu/InGameApi.ts";
 import { tftOperator, GAME_WIDTH, GAME_HEIGHT } from "../TftOperator.ts";
+import { GameClient, settingsStore } from "../utils/SettingsStore.ts";
+import { windowHelper } from "../utils/WindowHelper.ts";
 
 /** 轮询间隔 (ms) */
 const POLL_INTERVAL_MS = 500;
@@ -106,13 +108,24 @@ export class GameLoadingState implements IState {
                 }
 
                 try {
-                    await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);
-                    // 请求成功，游戏已加载
-                    signal.removeEventListener("abort", onAbort);
-                    cleanup();
-                    resolve(true);
+                    const gameClient = settingsStore.get('gameClient');
+                    if (gameClient === GameClient.ANDROID) {
+                        const windowInfo = await windowHelper.findLOLWindow(GameClient.ANDROID);
+                        if (windowInfo && await this.hasInGameSignal()) {
+                            signal.removeEventListener("abort", onAbort);
+                            cleanup();
+                            resolve(true);
+                            return;
+                        }
+                    } else {
+                        await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);
+                        signal.removeEventListener("abort", onAbort);
+                        cleanup();
+                        resolve(true);
+                        return;
+                    }
+                    logger.debug("[GameLoadingState] 游戏仍在加载中...");
                 } catch {
-                    // 请求失败，游戏仍在加载中
                     logger.debug("[GameLoadingState] 游戏仍在加载中...");
                 }
             };
@@ -123,5 +136,24 @@ export class GameLoadingState implements IState {
             // 立即执行一次检测，不用等第一个间隔
             checkIfGameStart();
         });
+    }
+
+    /**
+     * 检测是否存在真实的“已进入对局”信号
+     * @description 避免安卓模式仅凭模拟器窗口存在就误判为已进游戏。
+     *              使用 InGame API 的 allGameData 作为实际在局指标。
+     */
+    private async hasInGameSignal(): Promise<boolean> {
+        try {
+            const response = await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);
+            const gameData = response?.data;
+
+            const hasPlayers = Array.isArray(gameData?.allPlayers) && gameData.allPlayers.length > 0;
+            const hasActivePlayer = Boolean(gameData?.activePlayer);
+
+            return hasPlayers && hasActivePlayer;
+        } catch {
+            return false;
+        }
     }
 }
