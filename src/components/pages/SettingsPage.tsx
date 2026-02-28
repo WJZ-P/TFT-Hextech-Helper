@@ -4,6 +4,7 @@ import {ThemeType} from "../../styles/theme.ts";
 import {toast} from "../toast/toast-core.ts";
 import { logStore, LogAutoCleanThreshold } from "../../stores/logStore.ts";
 import { settingsStore } from "../../stores/settingsStore.ts"; // 全局设置状态
+import type { GameRegion, GameClient } from "../../types/GameTypes.ts";
 
 
 type GameRegion = 'CN' | 'NA';
@@ -552,11 +553,9 @@ const SettingsPage = () => {
             const overlayEnabled = await window.settings.get<boolean>('showOverlay');
             setShowOverlay(overlayEnabled);
 
-            // 加载区服与客户端设置
-            const loadedRegion = await window.settings.get<GameRegion>('gameRegion');
-            const loadedClient = await window.settings.get<GameClient>('gameClient');
-            if (loadedRegion) setGameRegion(loadedRegion);
-            if (loadedClient) setGameClient(loadedClient);
+            // 加载区服与客户端设置（通过 settingsStore）
+            setGameRegion(settingsStore.getGameRegion());
+            setGameClient(settingsStore.getGameClient());
             
             // 加载当前版本号
             const version = await window.util.getAppVersion();
@@ -593,6 +592,8 @@ const SettingsPage = () => {
         // 订阅 settingsStore 变化（其他组件修改时同步更新）
         const unsubscribe = settingsStore.subscribe((settings) => {
             setShowDebugPage(settings.showDebugPage);
+            setGameRegion(settings.gameRegion);
+            setGameClient(settings.gameClient);
         });
 
         // 监听定时停止触发事件：后端定时器到点后通知前端自动关闭开关
@@ -910,14 +911,14 @@ const SettingsPage = () => {
     const handleRegionChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
         const value = e.target.value as GameRegion;
         setGameRegion(value);
-        await window.settings.set('gameRegion', value);
+        await settingsStore.setGameRegion(value);
         toast.success(value === 'NA' ? '已切换到美服配置' : '已切换到国服配置');
     };
 
     const handleClientChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
         const value = e.target.value as GameClient;
         setGameClient(value);
-        await window.settings.set('gameClient', value);
+        await settingsStore.setGameClient(value);
         toast.success(value === 'ANDROID' ? '已切换到安卓端模式（手动开局）' : '已切换到电脑 Riot 客户端模式');
     };
 
