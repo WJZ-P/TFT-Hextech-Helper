@@ -77,7 +77,7 @@ import {
     parseStageStringToEnum,
     isValidStageFormat,
 } from "./tft";
-import { settingsStore } from "./utils/SettingsStore";
+import { settingsStore, GameClient } from "./utils/SettingsStore";
 import type {
     IdentifiedEquip,
     BenchUnit,
@@ -239,7 +239,7 @@ class TftOperator {
             // ============================================================
             // 方案 1：使用 nut-js 窗口 API 精确查找 LOL 窗口位置
             // ============================================================
-            const windowInfo = await windowHelper.findLOLWindow();
+            const windowInfo = await windowHelper.findLOLWindow(settingsStore.get('gameClient') as GameClient);
             
             if (windowInfo) {
                 // 找到了 LOL 窗口，使用精确位置

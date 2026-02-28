@@ -359,6 +359,17 @@ export class GameRunningState implements IState {
                 }
             };
 
+            const checkAndroidGameEnded = async () => {
+                if (settingsStore.get('gameClient') !== GameClient.ANDROID) return;
+
+                try {
+                    await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);
+                } catch {
+                    logger.info("[GameRunningState] 安卓端检测到 InGame API 不可用，判定本局结束");
+                    safeResolve('ended');
+                }
+            };
+
             // 监听 abort 事件
             signal.addEventListener("abort", onAbort, { once: true });
 
@@ -409,6 +420,9 @@ export class GameRunningState implements IState {
                     }
                 }
             }, ABORT_CHECK_INTERVAL_MS);
+
+            // 立即检查一次，避免结束后必须等待一个轮询周期
+            void checkAndroidGameEnded();
         });
     }
 
@@ -450,7 +464,7 @@ export class GameRunningState implements IState {
                 logger.debug('[GameRunningState] 用户已关闭游戏浮窗，跳过浮窗显示');
             } else {
                 // 获取游戏窗口信息（由 TftOperator.init() 在 GameLoadingState 中已初始化）
-                const windowInfo = await windowHelper.findLOLWindow();
+                const windowInfo = await windowHelper.findLOLWindow(settingsStore.get('gameClient') as GameClient);
             
                 if (windowInfo) {
                     // 打开浮窗（传入游戏窗口的物理像素坐标）

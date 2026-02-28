@@ -7,6 +7,7 @@
 
 import { getWindows } from "@nut-tree-fork/nut-js";
 import { logger } from "./Logger";
+import { GameClient } from "./SettingsStore";
 
 /**
  * 窗口信息接口
@@ -25,11 +26,8 @@ export interface WindowInfo {
 }
 
 /**
- * LOL 游戏窗口的可能标题
- * @description LOL 游戏窗口的标题会因客户端语言而不同：
- *              - 中文客户端："League of Legends"
- *              - 英文客户端："League of Legends"
- *              - 某些情况下可能带有 "(TM) Client" 后缀
+ * Riot PC 客户端的游戏窗口标题
+ * @description 覆盖国服、美服及全球客户端常见窗口标题
  */
 export type WindowSearchScope = 'ANY' | 'RIOT_PC_ONLY' | 'ANDROID_ONLY';
 
@@ -39,13 +37,20 @@ const RIOT_PC_WINDOW_TITLES = [
     "League of Legends Client",
 ];
 
+/**
+ * 安卓模拟器中的 TFT 窗口标题
+ * @description 同时兼容国服(金铲铲/云顶)与国际服(TFT/Teamfight Tactics)的可见标题。
+ *              某些模拟器（如 MuMu / BlueStacks / LDPlayer）在对局时可见标题
+ *              仍是模拟器名称，因此保留这些关键字作为兜底。
+ */
 const ANDROID_WINDOW_TITLES = [
+    "金铲铲之战",
+    "云顶之弈",
+    "TFT",
+    "Teamfight Tactics",
     "MuMu",
     "BlueStacks",
     "LDPlayer",
-    "雷电模拟器",
-    "腾讯手游助手",
-    "金铲铲之战",
 ];
 
 /**
@@ -63,11 +68,14 @@ const MIN_GAME_WINDOW_HEIGHT = 600;
 class WindowHelper {
     /**
      * 查找 LOL 游戏窗口
-     * @description 遍历所有窗口，查找标题包含 "League of Legends" 且尺寸足够大的窗口
-     *              nut-js 的 getWindows() 返回的是物理像素坐标，不需要额外的 DPI 转换
+     * @description 遍历所有窗口，查找标题包含指定关键字且尺寸足够大的窗口。
+     *              PC 客户端匹配 League of Legends 窗口标题；
+     *              安卓客户端匹配国服与国际服游戏标题，并支持常见模拟器标题兜底。
+     * @param clientType 客户端类型，用于选择匹配的标题列表
      * @returns 找到的游戏窗口信息，如果没找到则返回 null
      */
-    public async findLOLWindow(scope: WindowSearchScope = 'ANY'): Promise<WindowInfo | null> {
+    public async findLOLWindow(clientType: GameClient = GameClient.RIOT_PC): Promise<WindowInfo | null> {
+        const titleList = clientType === GameClient.ANDROID ? ANDROID_WINDOW_TITLES : PC_WINDOW_TITLES;
         try {
             // 获取所有窗口
             const windows = await getWindows();
@@ -78,14 +86,9 @@ class WindowHelper {
                 try {
                     const title = await window.title;
                     
-                    const titleCandidates = scope === 'RIOT_PC_ONLY'
-                        ? RIOT_PC_WINDOW_TITLES
-                        : scope === 'ANDROID_ONLY'
-                            ? ANDROID_WINDOW_TITLES
-                            : [...RIOT_PC_WINDOW_TITLES, ...ANDROID_WINDOW_TITLES];
-
-                    const isTargetWindow = titleCandidates.some(
-                        candidate => title && title.includes(candidate)
+                    // 检查窗口标题是否匹配
+                    const isLOLWindow = titleList.some(
+                        lolTitle => title && title.includes(lolTitle)
                     );
 
                     if (!isTargetWindow) continue;
@@ -125,7 +128,7 @@ class WindowHelper {
             }
 
             // 没有找到匹配的窗口
-            logger.warn(`[WindowHelper] 未找到可识别的游戏窗口（scope=${scope}）。请确认客户端已进入对局且窗口未最小化。`);
+            logger.warn("[WindowHelper] 未找到可识别的游戏窗口。请确认客户端已进入对局且窗口未最小化。");
             return null;
 
         } catch (error: any) {
@@ -137,10 +140,11 @@ class WindowHelper {
     /**
      * 查找 LOL 游戏窗口并返回游戏区域的左上角坐标
      * @description 便捷方法，直接返回可用于截图计算的坐标
+     * @param clientType 客户端类型，用于选择匹配的标题列表
      * @returns { x, y } 坐标对象，如果没找到则返回 null
      */
-    public async findLOLWindowOrigin(scope: WindowSearchScope = 'ANY'): Promise<{ x: number; y: number } | null> {
-        const windowInfo = await this.findLOLWindow(scope);
+    public async findLOLWindowOrigin(clientType: GameClient = GameClient.RIOT_PC): Promise<{ x: number; y: number } | null> {
+        const windowInfo = await this.findLOLWindow(clientType);
         if (windowInfo) {
             return { x: windowInfo.left, y: windowInfo.top };
         }
