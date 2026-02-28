@@ -385,14 +385,25 @@ export class GameRunningState implements IState {
             }
 
             // 定期检查 signal 状态 (作为 abort 事件的兜底)
-            stopCheckInterval = setInterval(async () => {
-                if (signal.aborted) {
-                    safeResolve('interrupted');
-                    return;
-                }
-
-                // 安卓端模式没有 LCU gameflow 事件，使用 InGame API 可用性作为结束信号
-                await checkAndroidGameEnded();
+            // abortCheckInFlight 在闭包中持久存在，跨轮询周期防止 async 重叠执行
+            let abortCheckInFlight = false;
+            stopCheckInterval = setInterval(() => {
+                if (abortCheckInFlight) return;
+                abortCheckInFlight = true;
+                (async () => {
+                    try {
+                        if (signal.aborted) {
+                            safeResolve('interrupted');
+                            return;
+                        }
+                        // 安卓端模式没有 LCU gameflow 事件，使用 InGame API 可用性作为结束信号
+                        await checkAndroidGameEnded();
+                    } catch (error) {
+                        logger.error("[GameRunningState] 定期停止检查时发生错误", error);
+                    } finally {
+                        abortCheckInFlight = false;
+                    }
+                })();
             }, ABORT_CHECK_INTERVAL_MS);
 
             // 立即检查一次，避免结束后必须等待一个轮询周期
@@ -438,7 +449,7 @@ export class GameRunningState implements IState {
                 logger.debug('[GameRunningState] 用户已关闭游戏浮窗，跳过浮窗显示');
             } else {
                 // 获取游戏窗口信息（由 TftOperator.init() 在 GameLoadingState 中已初始化）
-                const windowInfo = await windowHelper.findLOLWindow();
+                const windowInfo = await windowHelper.findLOLWindow(settingsStore.get('gameClient') as GameClient);
             
                 if (windowInfo) {
                     // 打开浮窗（传入游戏窗口的物理像素坐标）

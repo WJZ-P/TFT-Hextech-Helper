@@ -55,6 +55,8 @@ export class LobbyState implements IState {
     /**
      * 根据用户设置获取对应的队列 ID
      * @returns TFT 队列 ID（匹配、排位或发条鸟）
+     * @note gameRegion 目前仅用于日志记录（国服/美服使用相同的队列 ID），
+     *       如需支持区服专属队列，可在此处根据 gameRegion 返回不同 ID。
      */
     private getQueueId(): Queue {
         const tftMode = settingsStore.get('tftMode');

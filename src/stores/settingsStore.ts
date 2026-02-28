@@ -9,6 +9,8 @@
  * 注意：其他组件不应该直接调用 window.settings，应该通过本 store 访问
  */
 
+import type { GameRegion, GameClient } from '../types/GameTypes';
+
 // 设置变化监听器类型
 type SettingsListener = (settings: SettingsState) => void;
 
@@ -27,6 +29,10 @@ interface SettingsState {
     showDebugPage: boolean;
     /** 统计数据（运行时 + 持久化的聚合） */
     statistics: GameStatistics;
+    /** 游戏区服 */
+    gameRegion: GameRegion;
+    /** 客户端类型 */
+    gameClient: GameClient;
 }
 
 /** 默认的统计数据 */
@@ -41,6 +47,8 @@ class SettingsStore {
     private state: SettingsState = {
         showDebugPage: false,
         statistics: { ...DEFAULT_STATISTICS },
+        gameRegion: 'CN',
+        gameClient: 'RIOT_PC',
     };
     
     // 订阅者列表
@@ -63,6 +71,12 @@ class SettingsStore {
             // 通过通用 settings API 读取后端设置
             const showDebugPage = await window.settings.get<boolean>('showDebugPage');
             this.state.showDebugPage = showDebugPage;
+
+            // 读取区服与客户端类型
+            const gameRegion = await window.settings.get<GameRegion>('gameRegion');
+            if (gameRegion) this.state.gameRegion = gameRegion;
+            const gameClient = await window.settings.get<GameClient>('gameClient');
+            if (gameClient) this.state.gameClient = gameClient;
 
             // 读取统计数据
             const stats = await window.stats.getStatistics();
@@ -96,6 +110,20 @@ class SettingsStore {
     }
 
     /**
+     * 获取游戏区服
+     */
+    getGameRegion(): GameRegion {
+        return this.state.gameRegion;
+    }
+
+    /**
+     * 获取客户端类型
+     */
+    getGameClient(): GameClient {
+        return this.state.gameClient;
+    }
+
+    /**
      * 获取统计数据（返回副本）
      */
     getStatistics(): GameStatistics {
@@ -120,6 +148,34 @@ class SettingsStore {
         }
         
         // 通知所有订阅者
+        this.notifyListeners();
+    }
+
+    /**
+     * 设置游戏区服并通知所有订阅者
+     * @param value 新的区服值
+     */
+    async setGameRegion(value: GameRegion): Promise<void> {
+        this.state.gameRegion = value;
+        try {
+            await window.settings.set('gameRegion', value);
+        } catch (error) {
+            console.error('[SettingsStore] 保存 gameRegion 失败:', error);
+        }
+        this.notifyListeners();
+    }
+
+    /**
+     * 设置客户端类型并通知所有订阅者
+     * @param value 新的客户端类型值
+     */
+    async setGameClient(value: GameClient): Promise<void> {
+        this.state.gameClient = value;
+        try {
+            await window.settings.set('gameClient', value);
+        } catch (error) {
+            console.error('[SettingsStore] 保存 gameClient 失败:', error);
+        }
         this.notifyListeners();
     }
 
