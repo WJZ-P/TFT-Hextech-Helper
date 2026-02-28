@@ -6,6 +6,10 @@ import { logStore, LogAutoCleanThreshold } from "../../stores/logStore.ts";
 import { settingsStore } from "../../stores/settingsStore.ts"; // 全局设置状态
 import type { GameRegion, GameClient } from "../../types/GameTypes.ts";
 
+
+type GameRegion = 'CN' | 'NA';
+type GameClient = 'ANDROID' | 'RIOT_PC';
+
 // -------------------------------------------------------------------
 // ✨ 样式组件定义 (Styled Components Definitions) ✨
 // -------------------------------------------------------------------

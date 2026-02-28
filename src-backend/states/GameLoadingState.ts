@@ -12,6 +12,7 @@ import { inGameApi, InGameApiEndpoints } from "../lcu/InGameApi.ts";
 import { tftOperator, GAME_WIDTH, GAME_HEIGHT } from "../TftOperator.ts";
 import { GameClient, settingsStore } from "../utils/SettingsStore.ts";
 import { windowHelper } from "../utils/WindowHelper.ts";
+import { GameStageType } from "../TFTProtocol.ts";
 
 /** 轮询间隔 (ms) */
 const POLL_INTERVAL_MS = 500;
@@ -110,8 +111,23 @@ export class GameLoadingState implements IState {
                 try {
                     const gameClient = settingsStore.get('gameClient');
                     if (gameClient === GameClient.ANDROID) {
-                        const windowInfo = await windowHelper.findLOLWindow(GameClient.ANDROID);
-                        if (windowInfo && await this.hasInGameSignal()) {
+                        const windowInfo = await windowHelper.findLOLWindow('ANDROID_ONLY');
+                        if (windowInfo) {
+                            // 安卓模式下，模拟器窗口常驻，不能只靠窗口存在判定进局。
+                            // 这里增加一次阶段识别：只有能识别到有效阶段（如 2-1）才算真正进入对局。
+                            const initResult = await tftOperator.init();
+                            if (!initResult.success) {
+                                logger.debug("[GameLoadingState] 安卓端窗口已找到，但截图初始化失败，继续等待...");
+                                return;
+                            }
+
+                            const stageResult = await tftOperator.getGameStage();
+                            if (stageResult.type === GameStageType.UNKNOWN || !stageResult.stageText) {
+                                logger.debug("[GameLoadingState] 安卓端窗口已找到，但尚未识别到有效对局阶段，继续等待...");
+                                return;
+                            }
+
+                            logger.info(`[GameLoadingState] 安卓端检测到有效阶段: ${stageResult.stageText}`);
                             signal.removeEventListener("abort", onAbort);
                             cleanup();
                             resolve(true);
