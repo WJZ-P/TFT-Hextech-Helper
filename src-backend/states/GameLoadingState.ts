@@ -111,7 +111,7 @@ export class GameLoadingState implements IState {
                 try {
                     const gameClient = settingsStore.get('gameClient');
                     if (gameClient === GameClient.ANDROID) {
-                        const windowInfo = await windowHelper.findLOLWindow('ANDROID_ONLY');
+                        const windowInfo = await windowHelper.findLOLWindow(GameClient.ANDROID);
                         if (windowInfo) {
                             // 安卓模式下，模拟器窗口常驻，不能只靠窗口存在判定进局。
                             // 这里增加一次阶段识别：只有能识别到有效阶段（如 2-1）才算真正进入对局。

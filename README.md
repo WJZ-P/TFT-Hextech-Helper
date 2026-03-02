@@ -173,6 +173,15 @@ TFT Hextech Helper 是一款基于 Electron + React + TypeScript 开发的云顶
 - **图像识别**: OpenCV.js + Tesseract.js
 - **自动化**: nut-js (鼠标键盘控制)
 
+## 迁移开发辅助（US Android / PC Logic）
+
+为双端迁移新增了以下开发脚本（优先服务安卓模拟器与 PC 纯逻辑阶段）：
+
+- `npm run data:refresh`：拉取官方 TFT 数据（英雄/装备/羁绊/阵容）并刷新本地快照
+- `npm run pc:logic -- <state-json-path>`：对离线局面运行 PC 逻辑引擎，输出动作计划
+- `npm run test:unit`：执行迁移新增核心单元测试（决策引擎 + 数据管线）
+- `npm run typecheck:migration`：仅检查迁移新增模块的 TypeScript 类型
+
 ## 版权说明
 
 本项目采用 **CC BY-NC-ND 4.0** 协议，这意味着：

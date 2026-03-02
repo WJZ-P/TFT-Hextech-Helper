@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": [
+    "src-backend/core/**/*.ts",
+    "src-backend/data/**/*.ts",
+    "src-backend/services/PcLogicRunner.ts",
+    "src-backend/services/TftDataService.ts",
+    "scripts/run-pc-logic.ts",
+    "scripts/refresh-tft-data.ts",
+    "tests/backend/**/*.ts"
+  ]
+}
