@@ -46,6 +46,8 @@ export interface ObservedState {
     currentXp: number;
     totalXp: number;
     gold: number;
+    hp?: number;
+    streak?: number;
     bench: ObservedUnit[];
     board: ObservedUnit[];
     shop: ShopOffer[];
@@ -65,6 +67,8 @@ export interface ActionPlan {
 export interface DecisionContext {
     targetChampionNames?: string[];
     conservativeEconomyFloor?: number;
+    strategyPreset?: "STANDARD" | "FAST8" | "REROLL";
+    stabilizeHpThreshold?: number;
 }
 
 export interface DecisionEngine {

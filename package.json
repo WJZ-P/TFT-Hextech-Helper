@@ -19,6 +19,7 @@
     "test:unit": "node --import tsx --test tests/backend/**/*.test.ts",
     "pc:logic": "tsx scripts/run-pc-logic.ts",
     "data:refresh": "tsx scripts/refresh-tft-data.ts",
+    "state:convert": "tsx scripts/convert-liveclient-to-observed.ts",
     "postinstall": "electron-builder install-app-deps",
     "pack": "npm run build && electron-builder --dir",
     "dist": "electron-vite build && electron-builder --win --mac --linux",

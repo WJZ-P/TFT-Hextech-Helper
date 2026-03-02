@@ -68,7 +68,7 @@ test("RuleBasedDecisionEngine generates buy/move/level actions for standard PVP 
 
     assert.ok(plans.some((plan) => plan.type === "BUY" && plan.payload.champion === "安妮"));
     assert.ok(plans.some((plan) => plan.type === "MOVE"));
-    assert.ok(plans.some((plan) => plan.type === "LEVEL_UP"));
+    assert.ok(plans.some((plan) => plan.type === "LEVEL_UP" || plan.type === "ROLL"));
     assert.ok(plans.some((plan) => plan.type === "EQUIP"));
 });
 
@@ -92,4 +92,68 @@ test("RuleBasedDecisionEngine emits NOOP when no profitable action exists", () =
     const plans = engine.generatePlan(state);
     assert.equal(plans.length, 1);
     assert.equal(plans[0].type, "NOOP");
+});
+
+test("RuleBasedDecisionEngine follows key tempo level-up on 2-1", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const state: ObservedState = {
+        ...buildBaseState(),
+        stageText: "2-1",
+        level: 3,
+        gold: 12,
+        board: [
+            {
+                id: "TFT_KSante",
+                name: "奎桑提",
+                star: 1,
+                cost: 1,
+                location: "R4_C4",
+                items: [],
+                traits: ["护卫"],
+            },
+        ],
+    };
+
+    const plans = engine.generatePlan(state, {
+        targetChampionNames: ["安妮"],
+    });
+    assert.ok(plans.some((plan) => plan.type === "LEVEL_UP"));
+});
+
+test("RuleBasedDecisionEngine triggers stabilize roll when hp is low", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const state: ObservedState = {
+        ...buildBaseState(),
+        stageText: "4-2",
+        level: 8,
+        gold: 40,
+        hp: 28,
+        board: [
+            {
+                id: "TFT_One",
+                name: "过渡前排",
+                star: 1,
+                cost: 1,
+                location: "R4_C4",
+                items: [],
+                traits: ["护卫"],
+            },
+            {
+                id: "TFT_Two",
+                name: "过渡后排",
+                star: 1,
+                cost: 1,
+                location: "R3_C3",
+                items: [],
+                traits: ["狙神"],
+            },
+        ],
+    };
+
+    const plans = engine.generatePlan(state, {
+        targetChampionNames: ["安妮"],
+    });
+    const rollPlan = plans.find((plan) => plan.type === "ROLL");
+    assert.ok(rollPlan);
+    assert.ok(Number((rollPlan?.payload.count ?? 0)) >= 2);
 });

@@ -18,6 +18,7 @@
     "src-backend/services/TftDataService.ts",
     "scripts/run-pc-logic.ts",
     "scripts/refresh-tft-data.ts",
+    "scripts/convert-liveclient-to-observed.ts",
     "tests/backend/**/*.ts"
   ]
 }
