@@ -15,6 +15,11 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit",
+    "typecheck:migration": "tsc -p tsconfig.migration.json --noEmit",
+    "test:unit": "node --import tsx --test tests/backend/**/*.test.ts",
+    "pc:logic": "tsx scripts/run-pc-logic.ts",
+    "data:refresh": "tsx scripts/refresh-tft-data.ts",
+    "state:convert": "tsx scripts/convert-liveclient-to-observed.ts",
     "postinstall": "electron-builder install-app-deps",
     "pack": "npm run build && electron-builder --dir",
     "dist": "electron-vite build && electron-builder --win --mac --linux",
@@ -67,6 +72,7 @@
     "react-router-dom": "^7.9.3",
     "source-map-support": "^0.5.21",
     "styled-components": "^6.1.19",
+    "tsx": "^4.21.0",
     "typescript": "^5.6.3",
     "vite": "^7.2.2"
   }

@@ -36,6 +36,8 @@ import { ocrService } from "../tft/recognition/OcrService";
 import { tftOperator } from "../TftOperator";
 import { showOverlay, closeOverlay, sendOverlayPlayers } from "../utils/OverlayBridge";
 import { windowHelper } from "../utils/WindowHelper";
+import { GameLoadingState } from "./GameLoadingState";
+import { getAdapterByClient } from "../adapters/AdapterFactory";
 
 /** abort 信号轮询间隔 (ms)，作为事件监听的兜底 */
 const ABORT_CHECK_INTERVAL_MS = 2000;
@@ -85,6 +87,15 @@ export class GameRunningState implements IState {
         // 2. 获取当前游戏模式并初始化策略服务
         const currentMode = settingsStore.get('tftMode') as TFTMode || TFTMode.NORMAL;
         logger.info(`[GameRunningState] 当前游戏模式: ${currentMode}`);
+        const gameClient = settingsStore.get('gameClient') as GameClient;
+
+        // 记录当前平台适配器健康状态（便于后续迁移期定位问题）
+        const adapterHealth = await getAdapterByClient(gameClient).healthCheck();
+        if (!adapterHealth.ok) {
+            logger.warn(`[GameRunningState] 平台适配器健康检查失败: ${adapterHealth.detail ?? "unknown"}`);
+        } else {
+            logger.debug(`[GameRunningState] 平台适配器健康检查通过: ${adapterHealth.detail ?? "ok"}`);
+        }
 
         // 2.5 根据当前模式切换英雄模板赛季（加载对应赛季的棋子名称模板）
         const seasonDir = getSeasonTemplateDir(currentMode);
@@ -144,7 +155,6 @@ export class GameRunningState implements IState {
                 
                 return new EndState();
             }
-            const gameClient = settingsStore.get('gameClient');
             if (gameClient === GameClient.ANDROID) {
                 logger.info("[GameRunningState] 安卓端模式：回到 GameLoadingState，等待用户手动开启下一局");
                 return new GameLoadingState();
@@ -397,7 +407,7 @@ export class GameRunningState implements IState {
 
                 // 安卓端模式没有 LCU gameflow 事件，采用“阶段识别连续失败”作为结束判定
                 if (settingsStore.get('gameClient') === GameClient.ANDROID) {
-                    const win = await windowHelper.findLOLWindow('ANDROID_ONLY');
+                    const win = await windowHelper.findLOLWindow(GameClient.ANDROID);
                     if (!win) {
                         logger.info("[GameRunningState] 安卓端检测到模拟器窗口已关闭，判定本局结束");
                         safeResolve('ended');

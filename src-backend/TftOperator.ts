@@ -130,6 +130,13 @@ class TftOperator {
     /** 游戏窗口左上角坐标 */
     private gameWindowRegion: SimplePoint | null = null;
 
+    /** init() 进行中的 Promise，避免并发重复初始化 */
+    private initInFlight: Promise<{
+        success: boolean;
+        windowInfo?: { left: number; top: number; width: number; height: number };
+        usedFallback: boolean;
+    }> | null = null;
+
     /** 当前游戏模式 */
     private tftMode: TFTMode = TFTMode.CLASSIC;
 
@@ -321,6 +328,7 @@ class TftOperator {
      * @returns 游戏阶段结果，包含阶段类型和原始文本
      */
     public async getGameStage(): Promise<GameStageResult> {
+        await this.ensureInitialized();
         try {
             /**
              * 阶段识别统一使用 `forOCR=false`（原图，不做二值化/灰度等预处理）。
@@ -622,7 +630,7 @@ class TftOperator {
      * 刷新商店 (D牌)
      */
     public async refreshShop(): Promise<void> {
-        this.ensureInitialized();
+        await this.ensureInitialized();
         logger.info("[TftOperator] 刷新商店");
         await mouseController.clickAt(refreshShopPoint, MouseButtonType.LEFT);
         // 刷新后需要一点时间让新棋子出现
@@ -633,7 +641,7 @@ class TftOperator {
      * 购买经验值 (F键)
      */
     public async buyExperience(): Promise<void> {
-        this.ensureInitialized();
+        await this.ensureInitialized();
         logger.info("[TftOperator] 购买经验值");
         await mouseController.clickAt(buyExpPoint, MouseButtonType.LEFT);
         await sleep(10);
@@ -649,7 +657,7 @@ class TftOperator {
         // 获取当前赛季对应的棋子数据集
         const chessData = this.getActiveChessData();
 
-        for (const benchSlot of Object.keys(benchSlotPoints)) {
+        for (const benchSlot of Object.keys(benchSlotPoints) as BenchLocation[]) {
             // 右键点击槽位显示详细信息
             // 先检测该槽位是否为空：对比空槽模板
             const benchRegion = screenCapture.toAbsoluteRegion(benchSlotRegion[benchSlot as keyof typeof benchSlotRegion]);
@@ -768,7 +776,7 @@ class TftOperator {
         const chessData = this.getActiveChessData();
 
         // 遍历所有棋盘槽位 (R1_C1 ~ R4_C7)
-        for (const boardSlot of Object.keys(fightBoardSlotPoint)) {
+        for (const boardSlot of Object.keys(fightBoardSlotPoint) as BoardLocation[]) {
             // 先检测该槽位是否为空：对比空槽模板
             const boardRegion = screenCapture.toAbsoluteRegion(
                 fightBoardSlotRegion[boardSlot as keyof typeof fightBoardSlotRegion]
@@ -881,7 +889,7 @@ class TftOperator {
      * 用于采集空槽/有子样本，帮助后续做占用检测或模板生成
      */
     public async saveBenchSlotSnapshots(): Promise<void> {
-        this.ensureInitialized();
+        await this.ensureInitialized();
         const saveDir = this.benchSlotSnapshotPath;
         fs.ensureDirSync(saveDir);
 
@@ -904,7 +912,7 @@ class TftOperator {
      * 文件名直接使用对象 key (如 R1_C1.png)
      */
     public async saveFightBoardSlotSnapshots(): Promise<void> {
-        this.ensureInitialized();
+        await this.ensureInitialized();
         const saveDir = this.fightBoardSlotSnapshotPath;
         fs.ensureDirSync(saveDir);
 
@@ -929,7 +937,7 @@ class TftOperator {
      *              使用原图（不做 OCR 预处理），保留完整色彩信息
      */
     public async saveQuitButtonSnapshot(): Promise<void> {
-        this.ensureInitialized();
+        await this.ensureInitialized();
 
         // 保存目录：public/resources/assets/images/button
         const saveDir = path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/button");
@@ -968,7 +976,7 @@ class TftOperator {
         failed: string[];
         saveDir: string;
     }> {
-        this.ensureInitialized();
+        await this.ensureInitialized();
 
         // 保存目录
         const saveDir = path.join(process.env.VITE_PUBLIC || ".", "resources/debug/stage_snapshots");
@@ -1104,7 +1112,7 @@ class TftOperator {
      * @returns 锻造器类型 (NONE 表示不是锻造器)
      */
     private async checkItemForgeTooltip(clickPoint: SimplePoint, slotIndex: number): Promise<ItemForgeType> {
-        this.ensureInitialized();
+        await this.ensureInitialized();
 
         // 判断是否为边缘情况 (槽位 6-9 靠近屏幕右边缘，浮窗会向左弹出)
         const isEdgeCase = slotIndex >= 6;
@@ -1225,7 +1233,7 @@ class TftOperator {
      * 4. 返回识别结果数组
      */
     public async identifyForgeEquipments(slotNum: number = 4): Promise<TFTEquip[]> {
-        this.ensureInitialized();
+        await this.ensureInitialized();
 
         logger.info(`[TftOperator] 识别锻造器装备选择界面 (${slotNum} 槽位)...`);
 
@@ -1268,8 +1276,6 @@ class TftOperator {
      */
 
     private getStageAbsoluteRegion(isStageOne: boolean = false): Region {
-        this.ensureInitialized();
-
         const display = isStageOne ? gameStageDisplayStageOne : gameStageDisplayNormal;
 
         return new Region(
@@ -1299,7 +1305,7 @@ class TftOperator {
      *              直接点击固定区域退出按钮，无需模板匹配。
      */
     public async clickClockworkQuitButton(): Promise<void> {
-        this.ensureInitialized();
+        await this.ensureInitialized();
 
         try {
             logger.info("[TftOperator] 发条鸟模式：玩家已死亡，点击退出按钮坐标");
@@ -1314,12 +1320,22 @@ class TftOperator {
      * 确保操作器已初始化
      * @throws 如果未初始化
      */
-    private ensureInitialized(): void {
-        if (!this.gameWindowRegion) {
-            logger.error("[TftOperator] 尝试在 init() 之前操作");
-            if (!this.init()) {
-                throw new Error("[TftOperator] 未初始化，请先调用 init()");
-            }
+    private async ensureInitialized(): Promise<void> {
+        if (this.gameWindowRegion) {
+            return;
+        }
+
+        logger.warn("[TftOperator] 检测到未初始化，正在自动执行 init()");
+
+        if (!this.initInFlight) {
+            this.initInFlight = this.init().finally(() => {
+                this.initInFlight = null;
+            });
+        }
+
+        const initResult = await this.initInFlight;
+        if (!initResult.success || !this.gameWindowRegion) {
+            throw new Error("[TftOperator] 初始化失败，请确认游戏窗口可见且未最小化");
         }
     }
 
@@ -1392,7 +1408,7 @@ class TftOperator {
      * // 返回: { level: 4, currentXp: 4, totalXp: 6 }
      */
     public async getLevelInfo(): Promise<{ level: number; currentXp: number; totalXp: number } | null> {
-        this.ensureInitialized();
+        await this.ensureInitialized();
 
         try {
             // 1. 计算等级区域的绝对坐标
@@ -1526,7 +1542,7 @@ class TftOperator {
      * // 返回: 50 (当前持有 50 金币)
      */
     public async getCoinCount(): Promise<number | null> {
-        this.ensureInitialized();
+        await this.ensureInitialized();
 
         try {
             // 1. 计算金币区域的绝对坐标
@@ -1592,7 +1608,7 @@ class TftOperator {
      * // 返回: [{ x: 450, y: 300, type: 'gold', confidence: 0.92 }, ...]
      */
     public async getLootOrbs(): Promise<LootOrb[]> {
-        this.ensureInitialized();
+        await this.ensureInitialized();
 
         if (!templateLoader.isReady()) {
             logger.warn("[TftOperator] 模板未加载完成，跳过战利品球检测");
@@ -1659,7 +1675,7 @@ class TftOperator {
      * await tftOperator.selfResetPosition();
      */
     public async selfResetPosition(): Promise<void> {
-        this.ensureInitialized();
+        await this.ensureInitialized();
 
         logger.info(`[TftOperator] 小小英雄归位中... 目标坐标: (${littleLegendDefaultPoint.x}, ${littleLegendDefaultPoint.y})`);
 
@@ -1684,7 +1700,7 @@ class TftOperator {
      * await tftOperator.selfWalkAround();
      */
     public async selfWalkAround(): Promise<void> {
-        this.ensureInitialized();
+        await this.ensureInitialized();
 
         // 决定这次走哪边（与上次相反）
         const targetSide: 'left' | 'right' = this.lastWalkSide === 'left' ? 'right' : 'left';
@@ -1722,7 +1738,7 @@ class TftOperator {
      *              4. 释放左键（卖出）
      */
     public async sellUnit(location: string): Promise<void> {
-        this.ensureInitialized();
+        await this.ensureInitialized();
 
         let fromPoint: SimplePoint | undefined;
 
@@ -1764,7 +1780,7 @@ class TftOperator {
         benchLocation: BenchLocation,
         boardLocation: BoardLocation
     ): Promise<void> {
-        this.ensureInitialized();
+        await this.ensureInitialized();
 
         // 获取备战席槽位坐标
         const fromPoint = benchSlotPoints[benchLocation];
@@ -1802,7 +1818,7 @@ class TftOperator {
         fromLocation: keyof typeof fightBoardSlotPoint,
         toLocation: keyof typeof fightBoardSlotPoint
     ): Promise<void> {
-        this.ensureInitialized();
+        await this.ensureInitialized();
 
         const fromPoint = fightBoardSlotPoint[fromLocation];
         const toPoint = fightBoardSlotPoint[toLocation];
@@ -1832,7 +1848,7 @@ class TftOperator {
         boardLocation: keyof typeof fightBoardSlotPoint,
         benchSlotIndex: number = 0
     ): Promise<void> {
-        this.ensureInitialized();
+        await this.ensureInitialized();
 
         const fromPoint = fightBoardSlotPoint[boardLocation];
         const benchSlotKey = `SLOT_${benchSlotIndex + 1}` as keyof typeof benchSlotPoints;
@@ -1878,7 +1894,7 @@ class TftOperator {
      * TODO: 识别装备并精准选择（根据阵容需求选择最优装备）
      */
     public async openItemForge(benchUnit: BenchUnit): Promise<void> {
-        this.ensureInitialized();
+        await this.ensureInitialized();
 
         // 1. 校验是否为锻造器
         const unitName = benchUnit.tftUnit.displayName;
@@ -1919,7 +1935,7 @@ class TftOperator {
         equipSlotIndex: number,
         boardLocation: BoardLocation
     ): Promise<void> {
-        this.ensureInitialized();
+        await this.ensureInitialized();
 
         // 1. 获取装备槽位坐标
         // 装备索引 0-9 -> EQ_SLOT_1 ~ EQ_SLOT_10
@@ -1958,3 +1974,4 @@ class TftOperator {
 
 /** TftOperator 单例实例 */
 export const tftOperator = TftOperator.getInstance();
+

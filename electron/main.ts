@@ -87,6 +87,8 @@ import {registerOverlayCallbacks} from "../src-backend/utils/OverlayBridge";  //
 // 为了防止在环境检查前加载原生模块导致崩溃，这些模块将在 app.whenReady 中动态导入
 // ============================================================================
 let hexService: any;
+let pcLogicRunner: any;
+let tftDataService: any;
 let tftOperator: any;
 let lineupLoader: any;
 let globalHotkeyManager: any;
@@ -489,6 +491,8 @@ app.whenReady().then(async () => {
         // 1. 加载 HexService (可能依赖 TftOperator)
         const ServicesModule = await import("../src-backend/services");
         hexService = ServicesModule.hexService;
+        pcLogicRunner = ServicesModule.pcLogicRunner;
+        tftDataService = ServicesModule.tftDataService;
 
         // 2. 加载 TftOperator (依赖 nut.js)
         const TftOperatorModule = await import("../src-backend/TftOperator.ts");
@@ -538,6 +542,11 @@ app.whenReady().then(async () => {
     // 加载阵容配置
     const lineupCount = await lineupLoader.loadAllLineups()
     console.log(`📦 [Main] 已加载 ${lineupCount} 个阵容配置`)
+
+    // 预热官方 TFT 数据快照（失败时自动回落到本地快照，不阻塞启动）
+    void tftDataService.refresh(false).catch((error: any) => {
+        console.warn(`⚠️ [Main] TFT 数据预热失败，将使用本地快照: ${error?.message ?? error}`);
+    });
     
     // 注册挂机开关快捷键（从设置中读取）
     const savedHotkey = settingsStore.get('toggleHotkeyAccelerator');
@@ -702,6 +711,16 @@ function registerHandler() {
             cnToEnMap[cnName] = unitData.englishId;
         }
         return cnToEnMap;
+    })
+    ipcMain.handle(IpcChannel.TFT_DATA_REFRESH, async () => {
+        await tftDataService.refresh(true);
+        return tftDataService.getSnapshot();
+    })
+    ipcMain.handle(IpcChannel.TFT_DATA_GET_SNAPSHOT, async () => {
+        return tftDataService.getSnapshot();
+    })
+    ipcMain.handle(IpcChannel.PC_LOGIC_PLAN_ONCE, async (_event, state: any, context?: any) => {
+        return pcLogicRunner.planOnce(state, context);
     })
 
     // TFT 游戏模式相关

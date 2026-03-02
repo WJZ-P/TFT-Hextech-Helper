@@ -35,6 +35,9 @@ export enum IpcChannel {
     LINEUP_DELETE = 'lineup-delete',            // 删除玩家自建阵容
     // 棋子数据相关
     TFT_GET_CHAMPION_CN_TO_EN_MAP = 'tft-get-champion-cn-to-en-map',  // 获取棋子中英文映射表
+    TFT_DATA_REFRESH = 'tft-data-refresh',      // 强制刷新官方 TFT 数据快照
+    TFT_DATA_GET_SNAPSHOT = 'tft-data-get-snapshot', // 读取当前 TFT 数据快照
+    PC_LOGIC_PLAN_ONCE = 'pc-logic-plan-once',  // 运行一次 PC 纯逻辑决策（不执行输入）
     // 游戏模式相关
     TFT_GET_MODE = 'tft-get-mode',              // 获取当前 TFT 模式（匹配/排位）
     TFT_SET_MODE = 'tft-set-mode',              // 设置 TFT 模式

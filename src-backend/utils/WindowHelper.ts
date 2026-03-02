@@ -25,12 +25,6 @@ export interface WindowInfo {
     height: number;
 }
 
-/**
- * Riot PC 客户端的游戏窗口标题
- * @description 覆盖国服、美服及全球客户端常见窗口标题
- */
-export type WindowSearchScope = 'ANY' | 'RIOT_PC_ONLY' | 'ANDROID_ONLY';
-
 const RIOT_PC_WINDOW_TITLES = [
     "League of Legends (TM) Client",
     "League of Legends",
@@ -75,7 +69,8 @@ class WindowHelper {
      * @returns 找到的游戏窗口信息，如果没找到则返回 null
      */
     public async findLOLWindow(clientType: GameClient = GameClient.RIOT_PC): Promise<WindowInfo | null> {
-        const titleList = clientType === GameClient.ANDROID ? ANDROID_WINDOW_TITLES : PC_WINDOW_TITLES;
+        const titleList = clientType === GameClient.ANDROID ? ANDROID_WINDOW_TITLES : RIOT_PC_WINDOW_TITLES;
+        const normalizedTitles = titleList.map((title) => title.toLowerCase());
         try {
             // 获取所有窗口
             const windows = await getWindows();
@@ -85,10 +80,14 @@ class WindowHelper {
             for (const window of windows) {
                 try {
                     const title = await window.title;
+                    if (!title) {
+                        continue;
+                    }
+                    const normalizedWindowTitle = title.toLowerCase();
                     
                     // 检查窗口标题是否匹配
-                    const isLOLWindow = titleList.some(
-                        lolTitle => title && title.includes(lolTitle)
+                    const isTargetWindow = normalizedTitles.some(
+                        lolTitle => normalizedWindowTitle.includes(lolTitle)
                     );
 
                     if (!isTargetWindow) continue;

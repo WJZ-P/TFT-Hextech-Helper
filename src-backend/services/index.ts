@@ -16,3 +16,9 @@ export { StrategyService, strategyService } from "./StrategyService";
 
 // 海克斯服务
 export { HexService, hexService } from "./HexService";
+
+// 美服 PC 纯逻辑 runner（不执行输入）
+export { pcLogicRunner } from "./PcLogicRunner";
+
+// TFT 数据服务（官方接口 + 本地兜底）
+export { tftDataService } from "./TftDataService";
