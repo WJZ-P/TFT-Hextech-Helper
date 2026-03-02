@@ -38,6 +38,15 @@ function parseBenchIndex(value: unknown): number | null {
     return parseSlotIndex(value);
 }
 
+function normalizeBuySlotIndex(rawSlot: number): number {
+    // normalizeRuntimeState currently emits shop slot as zero-based (0..4),
+    // while tftOperator.buyAtSlot expects one-based (1..5).
+    if (rawSlot >= 0 && rawSlot <= 4) {
+        return rawSlot + 1;
+    }
+    return rawSlot;
+}
+
 export class AndroidEmulatorAdapter implements GameAdapter {
     public readonly target: PlatformTarget = "ANDROID_EMULATOR";
     private attached = false;
@@ -101,7 +110,7 @@ export class AndroidEmulatorAdapter implements GameAdapter {
                     if (rawSlot === null) {
                         break;
                     }
-                    const slot = rawSlot >= 1 ? rawSlot : rawSlot + 1;
+                    const slot = normalizeBuySlotIndex(rawSlot);
                     if (slot >= 1 && slot <= 5) {
                         await tftOperator.buyAtSlot(slot);
                     }
