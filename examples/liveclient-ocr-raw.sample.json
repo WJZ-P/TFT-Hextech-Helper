@@ -1,0 +1,115 @@
+{
+  "metadata": {
+    "description": "Realistic mixed payload: Riot LiveClient allgamedata + OCR extraction",
+    "references": [
+      "https://juejin.cn/post/7370244444282667034",
+      "https://github.com/jfd02/TFT-OCR-BOT"
+    ]
+  },
+  "liveclient": {
+    "activePlayer": {
+      "level": 6,
+      "currentGold": 38,
+      "championStats": {
+        "currentHealth": 64
+      }
+    }
+  },
+  "ocr": {
+    "stageText": "3-2",
+    "stageType": "PVP",
+    "bench": [
+      {
+        "id": "TFT16_Aphelios",
+        "name": "厄斐琉斯",
+        "star": 2,
+        "cost": 2,
+        "location": "SLOT_1",
+        "items": [],
+        "traits": ["巨神峰", "狙神"]
+      },
+      {
+        "id": "TFT16_Bard",
+        "name": "巴德",
+        "star": 1,
+        "cost": 3,
+        "location": "SLOT_2",
+        "items": [],
+        "traits": ["星界游神", "神谕者"]
+      },
+      {
+        "id": "TFT16_DrMundo",
+        "name": "蒙多医生",
+        "star": 1,
+        "cost": 3,
+        "location": "SLOT_3",
+        "items": [],
+        "traits": ["祖安", "斗士"]
+      }
+    ],
+    "board": [
+      {
+        "id": "TFT16_Sion",
+        "name": "赛恩",
+        "star": 2,
+        "cost": 2,
+        "location": "R4_C4",
+        "items": ["日炎斗篷"],
+        "traits": ["诺克萨斯", "斗士"]
+      },
+      {
+        "id": "TFT16_Shen",
+        "name": "慎",
+        "star": 2,
+        "cost": 1,
+        "location": "R4_C3",
+        "items": [],
+        "traits": ["艾欧尼亚", "护卫"]
+      },
+      {
+        "id": "TFT16_Illaoi",
+        "name": "俄洛伊",
+        "star": 1,
+        "cost": 1,
+        "location": "R4_C2",
+        "items": [],
+        "traits": ["比尔吉沃特", "斗士"]
+      },
+      {
+        "id": "TFT16_Aphelios",
+        "name": "厄斐琉斯",
+        "star": 1,
+        "cost": 2,
+        "location": "R1_C6",
+        "items": ["鬼索的狂暴之刃"],
+        "traits": ["巨神峰", "狙神"]
+      },
+      {
+        "id": "TFT16_Bard",
+        "name": "巴德",
+        "star": 1,
+        "cost": 3,
+        "location": "R1_C2",
+        "items": [],
+        "traits": ["星界游神", "神谕者"]
+      },
+      {
+        "id": "TFT16_Warwick",
+        "name": "沃里克",
+        "star": 1,
+        "cost": 4,
+        "location": "R3_C1",
+        "items": [],
+        "traits": ["祖安", "裁决战士"]
+      }
+    ],
+    "shop": [
+      { "slot": 0, "name": "厄斐琉斯", "cost": 2 },
+      { "slot": 1, "name": "巴德", "cost": 3 },
+      { "slot": 2, "name": "沃利贝尔", "cost": 5 },
+      { "slot": 3, "name": "慎", "cost": 1 },
+      { "slot": 4, "name": "赛恩", "cost": 2 }
+    ],
+    "items": ["无尽之刃", "锁子甲", "女神之泪"]
+  }
+}

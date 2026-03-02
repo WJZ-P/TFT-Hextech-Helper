@@ -1,0 +1,203 @@
+{
+  "timestamp": 1772419318704,
+  "client": "RIOT_PC",
+  "target": "PC_LOGIC",
+  "stageText": "3-2",
+  "stageType": "PVP",
+  "level": 6,
+  "currentXp": 0,
+  "totalXp": 0,
+  "gold": 38,
+  "hp": 64,
+  "bench": [
+    {
+      "id": "TFT16_Aphelios",
+      "name": "厄斐琉斯",
+      "star": 2,
+      "cost": 2,
+      "location": "SLOT_1",
+      "items": [],
+      "traits": [
+        "巨神峰",
+        "狙神"
+      ]
+    },
+    {
+      "id": "TFT16_Bard",
+      "name": "巴德",
+      "star": 1,
+      "cost": 3,
+      "location": "SLOT_2",
+      "items": [],
+      "traits": [
+        "星界游神",
+        "神谕者"
+      ]
+    },
+    {
+      "id": "TFT16_DrMundo",
+      "name": "蒙多医生",
+      "star": 1,
+      "cost": 3,
+      "location": "SLOT_3",
+      "items": [],
+      "traits": [
+        "祖安",
+        "斗士"
+      ]
+    }
+  ],
+  "board": [
+    {
+      "id": "TFT16_Sion",
+      "name": "赛恩",
+      "star": 2,
+      "cost": 2,
+      "location": "R4_C4",
+      "items": [
+        "日炎斗篷"
+      ],
+      "traits": [
+        "诺克萨斯",
+        "斗士"
+      ]
+    },
+    {
+      "id": "TFT16_Shen",
+      "name": "慎",
+      "star": 2,
+      "cost": 1,
+      "location": "R4_C3",
+      "items": [],
+      "traits": [
+        "艾欧尼亚",
+        "护卫"
+      ]
+    },
+    {
+      "id": "TFT16_Illaoi",
+      "name": "俄洛伊",
+      "star": 1,
+      "cost": 1,
+      "location": "R4_C2",
+      "items": [],
+      "traits": [
+        "比尔吉沃特",
+        "斗士"
+      ]
+    },
+    {
+      "id": "TFT16_Aphelios",
+      "name": "厄斐琉斯",
+      "star": 1,
+      "cost": 2,
+      "location": "R1_C6",
+      "items": [
+        "鬼索的狂暴之刃"
+      ],
+      "traits": [
+        "巨神峰",
+        "狙神"
+      ]
+    },
+    {
+      "id": "TFT16_Bard",
+      "name": "巴德",
+      "star": 1,
+      "cost": 3,
+      "location": "R1_C2",
+      "items": [],
+      "traits": [
+        "星界游神",
+        "神谕者"
+      ]
+    },
+    {
+      "id": "TFT16_Warwick",
+      "name": "沃里克",
+      "star": 1,
+      "cost": 4,
+      "location": "R3_C1",
+      "items": [],
+      "traits": [
+        "祖安",
+        "裁决战士"
+      ]
+    }
+  ],
+  "shop": [
+    {
+      "slot": 0,
+      "cost": 2,
+      "unit": {
+        "id": "厄斐琉斯",
+        "name": "厄斐琉斯",
+        "star": 1,
+        "cost": 2,
+        "items": [],
+        "traits": []
+      }
+    },
+    {
+      "slot": 1,
+      "cost": 3,
+      "unit": {
+        "id": "巴德",
+        "name": "巴德",
+        "star": 1,
+        "cost": 3,
+        "items": [],
+        "traits": []
+      }
+    },
+    {
+      "slot": 2,
+      "cost": 5,
+      "unit": {
+        "id": "沃利贝尔",
+        "name": "沃利贝尔",
+        "star": 1,
+        "cost": 5,
+        "items": [],
+        "traits": []
+      }
+    },
+    {
+      "slot": 3,
+      "cost": 1,
+      "unit": {
+        "id": "慎",
+        "name": "慎",
+        "star": 1,
+        "cost": 1,
+        "items": [],
+        "traits": []
+      }
+    },
+    {
+      "slot": 4,
+      "cost": 2,
+      "unit": {
+        "id": "赛恩",
+        "name": "赛恩",
+        "star": 1,
+        "cost": 2,
+        "items": [],
+        "traits": []
+      }
+    }
+  ],
+  "items": [
+    "无尽之刃",
+    "锁子甲",
+    "女神之泪"
+  ],
+  "metadata": {
+    "description": "Realistic mixed payload: Riot LiveClient allgamedata + OCR extraction",
+    "references": [
+      "https://juejin.cn/post/7370244444282667034",
+      "https://github.com/jfd02/TFT-OCR-BOT"
+    ],
+    "source": "liveclient+ocr"
+  }
+}

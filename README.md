@@ -179,8 +179,13 @@ TFT Hextech Helper 是一款基于 Electron + React + TypeScript 开发的云顶
 
 - `npm run data:refresh`：拉取官方 TFT 数据（英雄/装备/羁绊/阵容）并刷新本地快照
 - `npm run pc:logic -- <state-json-path>`：对离线局面运行 PC 逻辑引擎，输出动作计划
+- `npm run state:convert -- <liveclient+ocr.json> <observed-state.json>`：将原始对局抓取数据转换为逻辑引擎输入
 - `npm run test:unit`：执行迁移新增核心单元测试（决策引擎 + 数据管线）
 - `npm run typecheck:migration`：仅检查迁移新增模块的 TypeScript 类型
+
+示例输入/输出：
+- 原始抓取样例：`examples/liveclient-ocr-raw.sample.json`
+- 可直接用于 `pc:logic` 的样例：`examples/pc-observed-state.real-match.json`
 
 ## 版权说明
 
