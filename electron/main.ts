@@ -72,7 +72,7 @@ import GameConfigHelper from "../src-backend/utils/GameConfigHelper.ts";
 import {IpcChannel} from "./protocol.ts";
 import {logger} from "../src-backend/utils/Logger.ts";
 // import {hexService} from "../src-backend/services"; // 移至动态导入
-import {settingsStore} from "../src-backend/utils/SettingsStore.ts";
+import {GameClient, settingsStore} from "../src-backend/utils/SettingsStore.ts";
 import {debounce} from "../src-backend/utils/HelperTools.ts";
 // import {tftOperator} from "../src-backend/TftOperator.ts"; // 移至动态导入
 import {is, optimizer} from "@electron-toolkit/utils";
@@ -138,6 +138,8 @@ let overlayWindow: BrowserWindow | null = null
 let currentToggleHotkey: string | null = null;
 // 当前注册的"本局结束后停止"快捷键
 let currentStopAfterGameHotkey: string | null = null;
+// LCU 连接器实例（根据客户端类型动态启停）
+let lcuConnector: LCUConnector | null = null;
 
 /**
  * 注册挂机开关的全局快捷键
@@ -409,6 +411,11 @@ app.on('will-quit', async (event) => {
     if (globalHotkeyManager) {
         globalHotkeyManager.stop();
     }
+
+    // 停止 LCU 监听轮询
+    if (lcuConnector) {
+        lcuConnector.stop();
+    }
     
     // 关闭浮窗
     closeOverlayWindow();
@@ -564,8 +571,9 @@ function init() {
     const logMode = settingsStore.get('logMode')
     logger.setMinLevel(logMode === 'DETAILED' ? 'debug' : 'info')
 
-    //  启动LCUConnector
+    //  初始化 LCUConnector（是否启动取决于客户端类型）
     const connector = new LCUConnector()
+    lcuConnector = connector
     // 注意：TftOperator 的初始化已移至 GameLoadingState，
     // 在游戏加载时才初始化，此时游戏窗口已创建且分辨率固定
 
@@ -598,7 +606,9 @@ function init() {
             win?.webContents.send(IpcChannel.LCU_DISCONNECT);
             // 重新启动 connector 轮询，等待客户端重新连接
             console.log('🔄 [Main] 重新启动 LCU 连接监听...');
-            connector.start();
+            if (settingsStore.get('gameClient') === GameClient.RIOT_PC) {
+                connector.start();
+            }
         });
 
         // 喵~ 这里是 LCU WebSocket 的"总事件"入口：所有 OnJsonApiEvent 都会从这里过。
@@ -621,7 +631,27 @@ function init() {
         win?.webContents.send(IpcChannel.LCU_DISCONNECT);
     })
 
-    connector.start()
+    const syncLcuMonitorWithClientType = (clientType: GameClient) => {
+        if (clientType === GameClient.ANDROID) {
+            connector.stop();
+            // 安卓模式不依赖 LCU，主动同步前端为"未连接"避免误导
+            win?.webContents.send(IpcChannel.LCU_DISCONNECT);
+            logger.info("[Main] 安卓端模式：已停用 LCU 客户端轮询");
+            return;
+        }
+
+        logger.info("[Main] 电脑 Riot 模式：启动 LCU 客户端轮询");
+        connector.start();
+    };
+
+    // 启动时按当前客户端类型决定是否监听 LCU
+    syncLcuMonitorWithClientType(settingsStore.get('gameClient'));
+
+    // 运行中切换客户端类型时，动态启停 LCU 轮询
+    settingsStore.onDidChange('gameClient', (newClient) => {
+        logger.info(`[Main] 客户端类型变更: ${newClient}`);
+        syncLcuMonitorWithClientType(newClient);
+    });
 
 }
 

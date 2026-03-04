@@ -43,7 +43,7 @@ import { getAdapterByClient } from "../adapters/AdapterFactory";
 const ABORT_CHECK_INTERVAL_MS = 2000;
 
 /** 安卓端：连续识别不到有效阶段的阈值（达到后判定本局已结束） */
-const ANDROID_UNKNOWN_STAGE_THRESHOLD = 12;
+const ANDROID_UNKNOWN_STAGE_THRESHOLD = 40;
 
 /** 发条鸟模式：阶段变化超时时间 (ms)，超过此时间未收到阶段事件则视为卡住 */
 const CLOCKWORK_STAGE_TIMEOUT_MS = 60000;  // 1 分钟
@@ -57,7 +57,7 @@ export class GameRunningState implements IState {
     public readonly name = "GameRunningState";
 
     /** LCU 管理器实例 */
-    private lcuManager = LCUManager.getInstance();
+    private lcuManager: LCUManager | null = null;
 
     /**
      * 执行游戏运行状态逻辑
@@ -88,6 +88,7 @@ export class GameRunningState implements IState {
         const currentMode = settingsStore.get('tftMode') as TFTMode || TFTMode.NORMAL;
         logger.info(`[GameRunningState] 当前游戏模式: ${currentMode}`);
         const gameClient = settingsStore.get('gameClient') as GameClient;
+        this.lcuManager = gameClient === GameClient.ANDROID ? null : LCUManager.getInstance();
 
         // 记录当前平台适配器健康状态（便于后续迁移期定位问题）
         const adapterHealth = await getAdapterByClient(gameClient).healthCheck();
@@ -228,6 +229,7 @@ export class GameRunningState implements IState {
             /** 标记是否已经尝试过退出游戏，避免重复调用 */
             let hasTriedQuit = false;
             let androidUnknownStageCount = 0;
+            let androidCheckInFlight = false;
 
             /**
              * 安全的 resolve，防止重复调用
@@ -369,17 +371,6 @@ export class GameRunningState implements IState {
                 }
             };
 
-            const checkAndroidGameEnded = async () => {
-                if (settingsStore.get('gameClient') !== GameClient.ANDROID) return;
-
-                try {
-                    await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);
-                } catch {
-                    logger.info("[GameRunningState] 安卓端检测到 InGame API 不可用，判定本局结束");
-                    safeResolve('ended');
-                }
-            };
-
             // 监听 abort 事件
             signal.addEventListener("abort", onAbort, { once: true });
 
@@ -407,32 +398,38 @@ export class GameRunningState implements IState {
 
                 // 安卓端模式没有 LCU gameflow 事件，采用“阶段识别连续失败”作为结束判定
                 if (settingsStore.get('gameClient') === GameClient.ANDROID) {
-                    const win = await windowHelper.findLOLWindow(GameClient.ANDROID);
-                    if (!win) {
-                        logger.info("[GameRunningState] 安卓端检测到模拟器窗口已关闭，判定本局结束");
-                        safeResolve('ended');
+                    if (androidCheckInFlight) {
                         return;
                     }
+                    androidCheckInFlight = true;
 
-                    const stageResult = await tftOperator.getGameStage();
-                    const hasValidStage = Boolean(stageResult.stageText) && stageResult.type !== GameStageType.UNKNOWN;
+                    try {
+                        const win = await windowHelper.findLOLWindow(GameClient.ANDROID);
+                        if (!win) {
+                            logger.info("[GameRunningState] 安卓端检测到模拟器窗口已关闭，判定本局结束");
+                            safeResolve('ended');
+                            return;
+                        }
 
-                    if (hasValidStage) {
-                        androidUnknownStageCount = 0;
-                        return;
-                    }
+                        const stageResult = await tftOperator.getGameStage();
+                        const hasValidStage = Boolean(stageResult.stageText) && stageResult.type !== GameStageType.UNKNOWN;
 
-                    androidUnknownStageCount += 1;
-                    logger.debug(`[GameRunningState] 安卓端阶段识别失败计数: ${androidUnknownStageCount}/${ANDROID_UNKNOWN_STAGE_THRESHOLD}`);
-                    if (androidUnknownStageCount >= ANDROID_UNKNOWN_STAGE_THRESHOLD) {
-                        logger.info("[GameRunningState] 安卓端连续识别不到有效阶段，判定本局已结束");
-                        safeResolve('ended');
+                        if (hasValidStage) {
+                            androidUnknownStageCount = 0;
+                            return;
+                        }
+
+                        androidUnknownStageCount += 1;
+                        logger.debug(`[GameRunningState] 安卓端阶段识别失败计数: ${androidUnknownStageCount}/${ANDROID_UNKNOWN_STAGE_THRESHOLD}`);
+                        if (androidUnknownStageCount >= ANDROID_UNKNOWN_STAGE_THRESHOLD) {
+                            logger.info("[GameRunningState] 安卓端连续识别不到有效阶段，判定本局已结束");
+                            safeResolve('ended');
+                        }
+                    } finally {
+                        androidCheckInFlight = false;
                     }
                 }
             }, ABORT_CHECK_INTERVAL_MS);
-
-            // 立即检查一次，避免结束后必须等待一个轮询周期
-            void checkAndroidGameEnded();
         });
     }
 
@@ -442,6 +439,13 @@ export class GameRunningState implements IState {
      *              并发送 Toast 通知告知用户本局有多少人机
      */
     private async detectAndNotifyBots(): Promise<void> {
+        if (settingsStore.get('gameClient') === GameClient.ANDROID) {
+            // 安卓端（模拟器）通常无法访问 127.0.0.1:2999，跳过 InGame API 人机检测
+            showToast.info("对局已开始（安卓模式）", { position: 'top-center' });
+            logger.info("[GameRunningState] 安卓端模式：跳过 InGame API 人机检测");
+            return;
+        }
+
         try {
             // 获取所有游戏数据
             const response = await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);

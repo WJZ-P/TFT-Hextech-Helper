@@ -5,7 +5,7 @@
  * @author TFT-Hextech-Helper
  */
 
-import { getWindows } from "@nut-tree-fork/nut-js";
+import { getActiveWindow, getWindows } from "@nut-tree-fork/nut-js";
 import { logger } from "./Logger";
 import { GameClient } from "./SettingsStore";
 
@@ -40,11 +40,47 @@ const RIOT_PC_WINDOW_TITLES = [
 const ANDROID_WINDOW_TITLES = [
     "金铲铲之战",
     "云顶之弈",
-    "TFT",
     "Teamfight Tactics",
     "MuMu",
     "BlueStacks",
     "LDPlayer",
+    "Nox",
+    "雷电",
+    "夜神",
+];
+
+/**
+ * 安卓窗口识别排除关键词
+ * @description 避免把本工具窗口（标题里包含 TFT）误识别成游戏窗口。
+ */
+const ANDROID_WINDOW_EXCLUDE_TITLES = [
+    "tft-hextech-helper",
+    "hextech helper",
+    "keymap overlay",
+    "overlay",
+    "notificationareaiconwindowclass",
+];
+
+/**
+ * 安卓弱候选关键词
+ * @description services/helper 等窗口通常不是用户可见主窗口，降级为兜底候选。
+ */
+const ANDROID_WEAK_WINDOW_TITLES = [
+    "services",
+    "service",
+    "helper",
+];
+
+const ANDROID_ACTIVE_WINDOW_HINT_TITLES = [
+    "bluestacks",
+    "app player",
+    "mumu",
+    "ldplayer",
+    "nox",
+    "teamfight",
+    "tft",
+    "金铲",
+    "云顶",
 ];
 
 /**
@@ -61,6 +97,209 @@ const MIN_GAME_WINDOW_HEIGHT = 600;
  */
 class WindowHelper {
     /**
+     * 为候选窗口打分（分数越高越优先）
+     */
+    private scoreWindow(windowInfo: WindowInfo, clientType: GameClient): number {
+        const title = windowInfo.title.toLowerCase();
+        const area = windowInfo.width * windowInfo.height;
+        let score = 0;
+
+        if (clientType === GameClient.RIOT_PC) {
+            if (title === "league of legends (tm) client".toLowerCase()) score += 300;
+            if (title.includes("league of legends")) score += 200;
+            score += area / 100000;
+            return score;
+        }
+
+        // 安卓端：优先真实游戏标题和 4:3 比例窗口
+        if (title.includes("金铲铲") || title.includes("云顶")) score += 260;
+        if (title.includes("teamfight tactics")) score += 260;
+        if (title.includes("app player")) score += 240;
+        if (title.includes("bluestacks")) score += 80;
+        if (title.includes("bluestacks-services")) score -= 160;
+        if (title.includes("helper") || title.includes("service")) score -= 20;
+
+        const ratio = windowInfo.width / Math.max(1, windowInfo.height);
+        const ratioDiff = Math.abs(ratio - 4 / 3);
+        if (ratioDiff < 0.02) score += 220;
+        else if (ratioDiff < 0.05) score += 150;
+        else if (ratioDiff < 0.10) score += 80;
+        else score -= 60;
+
+        score += area / 80000;
+        return score;
+    }
+
+    /**
+     * 查找所有候选窗口（按优先级排序）
+     */
+    public async findLOLWindows(clientType: GameClient = GameClient.RIOT_PC): Promise<WindowInfo[]> {
+        const titleList = clientType === GameClient.ANDROID ? ANDROID_WINDOW_TITLES : RIOT_PC_WINDOW_TITLES;
+        const normalizedTitles = titleList.map((title) => title.toLowerCase());
+        const isAndroidClient = clientType === GameClient.ANDROID;
+        try {
+            const windows = await getWindows();
+            logger.debug(`[WindowHelper] 找到 ${windows.length} 个窗口`);
+            let activeWindowTitle = "";
+            let activeWindowRegion: { left: number; top: number; width: number; height: number } | null = null;
+            try {
+                const activeWindow = await getActiveWindow();
+                activeWindowTitle = ((await activeWindow.title) || "").toLowerCase();
+                const region = await activeWindow.region;
+                activeWindowRegion = {
+                    left: region.left,
+                    top: region.top,
+                    width: region.width,
+                    height: region.height,
+                };
+            } catch {
+                activeWindowTitle = "";
+                activeWindowRegion = null;
+            }
+            if (isAndroidClient && activeWindowTitle) {
+                logger.debug(
+                    `[WindowHelper] 当前激活窗口: "${activeWindowTitle}" ` +
+                    `${activeWindowRegion ? `(${activeWindowRegion.width}x${activeWindowRegion.height})` : ""}`
+                );
+            }
+
+            const candidates: Array<{ info: WindowInfo; score: number }> = [];
+            const weakCandidates: Array<{ info: WindowInfo; score: number }> = [];
+            const minWidth = isAndroidClient ? 500 : MIN_GAME_WINDOW_WIDTH;
+            const minHeight = isAndroidClient ? 300 : MIN_GAME_WINDOW_HEIGHT;
+
+            for (const window of windows) {
+                try {
+                    const title = await window.title;
+                    if (!title) continue;
+
+                    const normalizedWindowTitle = title.toLowerCase();
+
+                    if (
+                        isAndroidClient &&
+                        ANDROID_WINDOW_EXCLUDE_TITLES.some((kw) => normalizedWindowTitle.includes(kw))
+                    ) {
+                        continue;
+                    }
+
+                    const isTargetWindow = normalizedTitles.some(
+                        (candidateTitle) => normalizedWindowTitle.includes(candidateTitle)
+                    );
+                    if (!isTargetWindow) continue;
+
+                    const region = await window.region;
+                    if (
+                        region.width < minWidth ||
+                        region.height < minHeight ||
+                        region.width <= 0 ||
+                        region.height <= 0
+                    ) {
+                        logger.debug(
+                            `[WindowHelper] 跳过小窗口: ${title} (${region.width}x${region.height})`
+                        );
+                        continue;
+                    }
+
+                    const info: WindowInfo = {
+                        title,
+                        left: region.left,
+                        top: region.top,
+                        width: region.width,
+                        height: region.height,
+                    };
+
+                    const score = this.scoreWindow(info, clientType);
+                    const isWeakAndroidCandidate =
+                        isAndroidClient &&
+                        ANDROID_WEAK_WINDOW_TITLES.some((kw) => normalizedWindowTitle.includes(kw));
+
+                    let withActiveBonus = score;
+                    if (activeWindowTitle && normalizedWindowTitle === activeWindowTitle) {
+                        withActiveBonus += 600;
+                        if (activeWindowRegion) {
+                            // 同名窗口（如 BlueStacks 子窗口）可能有多个，优先坐标/尺寸最接近当前激活窗口的候选
+                            const delta =
+                                Math.abs(region.left - activeWindowRegion.left) +
+                                Math.abs(region.top - activeWindowRegion.top) +
+                                Math.abs(region.width - activeWindowRegion.width) +
+                                Math.abs(region.height - activeWindowRegion.height);
+
+                            withActiveBonus += Math.max(0, 500 - delta * 0.5);
+                            if (delta === 0) {
+                                withActiveBonus += 400;
+                            }
+                        }
+                    }
+
+                    if (isWeakAndroidCandidate) {
+                        weakCandidates.push({ info, score: withActiveBonus });
+                    } else {
+                        candidates.push({ info, score: withActiveBonus });
+                    }
+                } catch {
+                    continue;
+                }
+            }
+
+            // 安卓端额外兜底：把当前激活窗口强制纳入候选（即便标题未命中关键词）
+            if (
+                isAndroidClient &&
+                activeWindowTitle &&
+                activeWindowRegion &&
+                activeWindowRegion.width >= minWidth &&
+                activeWindowRegion.height >= minHeight &&
+                ANDROID_ACTIVE_WINDOW_HINT_TITLES.some((kw) => activeWindowTitle.includes(kw)) &&
+                !ANDROID_WINDOW_EXCLUDE_TITLES.some((kw) => activeWindowTitle.includes(kw))
+            ) {
+                const alreadyIncluded = [...candidates, ...weakCandidates].some(
+                    (c) =>
+                        c.info.title.toLowerCase() === activeWindowTitle &&
+                        c.info.left === activeWindowRegion.left &&
+                        c.info.top === activeWindowRegion.top
+                );
+
+                if (!alreadyIncluded) {
+                    const activeInfo: WindowInfo = {
+                        title: activeWindowTitle,
+                        left: activeWindowRegion.left,
+                        top: activeWindowRegion.top,
+                        width: activeWindowRegion.width,
+                        height: activeWindowRegion.height,
+                    };
+                    const activeScore = this.scoreWindow(activeInfo, clientType) + 1200;
+                    candidates.push({ info: activeInfo, score: activeScore });
+                }
+            }
+
+            if (candidates.length === 0 && weakCandidates.length === 0) {
+                logger.warn("[WindowHelper] 未找到可识别的游戏窗口。请确认客户端已进入对局且窗口未最小化。");
+                return [];
+            }
+
+            const finalCandidates = candidates.length > 0 ? candidates : weakCandidates;
+            if (candidates.length === 0 && weakCandidates.length > 0 && isAndroidClient) {
+                logger.warn("[WindowHelper] 安卓端仅找到弱候选窗口（services/helper），可能导致识别不稳定");
+            }
+
+            finalCandidates.sort((a, b) => b.score - a.score);
+            const sorted = finalCandidates.map((item) => item.info);
+
+            if (isAndroidClient) {
+                const preview = finalCandidates
+                    .slice(0, 5)
+                    .map((c) => `"${c.info.title}"(${c.info.width}x${c.info.height}, score=${c.score.toFixed(1)})`)
+                    .join(" | ");
+                logger.info(`[WindowHelper] 安卓候选窗口: ${preview}`);
+            }
+
+            return sorted;
+        } catch (error: any) {
+            logger.error(`[WindowHelper] 查找窗口失败: ${error.message}`);
+            return [];
+        }
+    }
+
+    /**
      * 查找 LOL 游戏窗口
      * @description 遍历所有窗口，查找标题包含指定关键字且尺寸足够大的窗口。
      *              PC 客户端匹配 League of Legends 窗口标题；
@@ -69,71 +308,16 @@ class WindowHelper {
      * @returns 找到的游戏窗口信息，如果没找到则返回 null
      */
     public async findLOLWindow(clientType: GameClient = GameClient.RIOT_PC): Promise<WindowInfo | null> {
-        const titleList = clientType === GameClient.ANDROID ? ANDROID_WINDOW_TITLES : RIOT_PC_WINDOW_TITLES;
-        const normalizedTitles = titleList.map((title) => title.toLowerCase());
-        try {
-            // 获取所有窗口
-            const windows = await getWindows();
-            logger.debug(`[WindowHelper] 找到 ${windows.length} 个窗口`);
-
-            // 遍历查找 LOL 窗口
-            for (const window of windows) {
-                try {
-                    const title = await window.title;
-                    if (!title) {
-                        continue;
-                    }
-                    const normalizedWindowTitle = title.toLowerCase();
-                    
-                    // 检查窗口标题是否匹配
-                    const isTargetWindow = normalizedTitles.some(
-                        lolTitle => normalizedWindowTitle.includes(lolTitle)
-                    );
-
-                    if (!isTargetWindow) continue;
-
-                    // 获取窗口区域（物理像素）
-                    const region = await window.region;
-                    
-                    // 过滤掉太小的窗口（如任务栏图标）
-                    if (region.width < MIN_GAME_WINDOW_WIDTH || 
-                        region.height < MIN_GAME_WINDOW_HEIGHT) {
-                        logger.debug(
-                            `[WindowHelper] 跳过小窗口: ${title} (${region.width}x${region.height})`
-                        );
-                        continue;
-                    }
-
-                    // 找到了有效的游戏窗口！
-                    const windowInfo: WindowInfo = {
-                        title: title,
-                        left: region.left,
-                        top: region.top,
-                        width: region.width,
-                        height: region.height,
-                    };
-
-                    logger.info(
-                        `[WindowHelper] 找到 LOL 窗口: "${title}" ` +
-                        `位置: (${region.left}, ${region.top}) ` +
-                        `尺寸: ${region.width}x${region.height}`
-                    );
-
-                    return windowInfo;
-                } catch (innerError: any) {
-                    // 某些窗口可能无法获取标题或区域，跳过
-                    continue;
-                }
-            }
-
-            // 没有找到匹配的窗口
-            logger.warn("[WindowHelper] 未找到可识别的游戏窗口。请确认客户端已进入对局且窗口未最小化。");
-            return null;
-
-        } catch (error: any) {
-            logger.error(`[WindowHelper] 查找窗口失败: ${error.message}`);
-            return null;
+        const windows = await this.findLOLWindows(clientType);
+        const selected = windows[0] ?? null;
+        if (selected) {
+            logger.info(
+                `[WindowHelper] 找到 LOL 窗口: "${selected.title}" ` +
+                `位置: (${selected.left}, ${selected.top}) ` +
+                `尺寸: ${selected.width}x${selected.height}`
+            );
         }
+        return selected;
     }
 
     /**

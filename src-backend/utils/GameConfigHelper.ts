@@ -125,6 +125,13 @@ class GameConfigHelper {
         return GameConfigHelper.instance;
     }
 
+    /**
+     * 判断是否已初始化（无副作用，不打印日志）
+     */
+    public static isInitialized(): boolean {
+        return Boolean(GameConfigHelper.instance);
+    }
+
     // --- 核心功能方法 (Core Function Methods) ---
 
     /**

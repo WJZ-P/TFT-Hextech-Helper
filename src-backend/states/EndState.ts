@@ -9,6 +9,7 @@ import { IdleState } from "./IdleState.ts";
 import { logger } from "../utils/Logger.ts";
 import GameConfigHelper from "../utils/GameConfigHelper.ts";
 import { strategyService } from "../services/StrategyService.ts";
+import { GameClient, settingsStore } from "../utils/SettingsStore.ts";
 
 /**
  * 结束状态类
@@ -26,6 +27,19 @@ export class EndState implements IState {
     async action(_signal: AbortSignal): Promise<IdleState> {
         // 重置策略服务状态（如果 GameRunningState 没有正常清理的话，这里兜底）
         strategyService.reset();
+
+        const gameClient = settingsStore.get('gameClient');
+        if (gameClient === GameClient.ANDROID) {
+            logger.info("[EndState] 安卓端模式：无需恢复客户端配置，跳过设置恢复");
+            logger.info("[EndState] 海克斯科技已关闭，回到空闲状态");
+            return new IdleState();
+        }
+
+        if (!GameConfigHelper.isInitialized()) {
+            logger.warn("[EndState] 配置助手尚未初始化，跳过客户端设置恢复");
+            logger.info("[EndState] 海克斯科技已关闭，回到空闲状态");
+            return new IdleState();
+        }
 
         logger.info("[EndState] 正在从临时备份恢复客户端设置...");
         

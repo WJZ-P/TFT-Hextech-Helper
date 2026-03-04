@@ -12,7 +12,7 @@
  */
 
 import { logger } from "./utils/Logger";
-import { windowHelper } from "./utils/WindowHelper";
+import { windowHelper, type WindowInfo } from "./utils/WindowHelper";
 import { Region } from "@nut-tree-fork/nut-js";
 import { screen } from "electron";
 import path from "path";
@@ -37,6 +37,7 @@ import {
     fightBoardSlotRegion,
     gameStageDisplayNormal,
     gameStageDisplayStageOne,
+    gameStageDisplayShopOpen,
     gameStageDisplayTheClockworkTrails,
     GameStageResult,
     GameStageType,
@@ -129,6 +130,8 @@ class TftOperator {
 
     /** 游戏窗口左上角坐标 */
     private gameWindowRegion: SimplePoint | null = null;
+    /** 最近一次初始化时的窗口边界信息（用于安卓端动态 OCR 兜底区域） */
+    private gameWindowBounds: { left: number; top: number; width: number; height: number } | null = null;
 
     /** init() 进行中的 Promise，避免并发重复初始化 */
     private initInFlight: Promise<{
@@ -139,6 +142,15 @@ class TftOperator {
 
     /** 当前游戏模式 */
     private tftMode: TFTMode = TFTMode.CLASSIC;
+
+    /** 阶段识别的历史结果缓存（用于连续确认机制） */
+    private stageRecognitionHistory: string[] = [];
+
+    /** 需要连续识别相同的次数才认为有效（防止误读） - 提高到4次确保稳定性 */
+    private readonly STAGE_CONFIRM_THRESHOLD = 4;
+
+    /** 历史记录最大长度 */
+    private readonly MAX_HISTORY_LENGTH = 8;
 
     /**
      * 当前赛季对应的棋子数据集
@@ -237,7 +249,7 @@ class TftOperator {
      *              如果查找失败则 fallback 到"居中假设"方案
      * @returns 初始化结果，包含成功状态和窗口信息
      */
-    public async init(): Promise<{
+    public async init(windowInfoOverride?: WindowInfo): Promise<{
         success: boolean;
         windowInfo?: { left: number; top: number; width: number; height: number };
         usedFallback: boolean;
@@ -246,22 +258,11 @@ class TftOperator {
             // ============================================================
             // 方案 1：使用 nut-js 窗口 API 精确查找 LOL 窗口位置
             // ============================================================
-            const windowInfo = await windowHelper.findLOLWindow(settingsStore.get('gameClient') as GameClient);
+            const gameClient = settingsStore.get('gameClient') as GameClient;
+            const windowInfo = windowInfoOverride ?? await windowHelper.findLOLWindow(gameClient);
             
             if (windowInfo) {
-                // 找到了 LOL 窗口，使用精确位置
-                const originX = windowInfo.left;
-                const originY = windowInfo.top;
-
-                this.gameWindowRegion = { x: originX, y: originY };
-
-                // 同步到子模块
-                screenCapture.setGameWindowOrigin(this.gameWindowRegion);
-                mouseController.setGameWindowOrigin(this.gameWindowRegion);
-
-                logger.info(`[TftOperator] ✅ 通过窗口 API 找到游戏窗口`);
-                logger.info(`[TftOperator] 窗口位置: (${originX}, ${originY})`);
-                logger.info(`[TftOperator] 窗口大小: ${windowInfo.width}x${windowInfo.height}`);
+                this.applyWindowInfo(windowInfo, gameClient);
 
                 return {
                     success: true,
@@ -297,10 +298,11 @@ class TftOperator {
             const originY = screenCenterY - GAME_HEIGHT / 2;
 
             this.gameWindowRegion = { x: originX, y: originY };
+            this.gameWindowBounds = { left: originX, top: originY, width: GAME_WIDTH, height: GAME_HEIGHT };
 
             // 同步到子模块
-            screenCapture.setGameWindowOrigin(this.gameWindowRegion);
-            mouseController.setGameWindowOrigin(this.gameWindowRegion);
+            screenCapture.setGameWindowOrigin(this.gameWindowRegion, { width: GAME_WIDTH, height: GAME_HEIGHT }, false);
+            mouseController.setGameWindowOrigin(this.gameWindowRegion, { width: GAME_WIDTH, height: GAME_HEIGHT }, false);
 
             logger.info(`[TftOperator] 屏幕尺寸: ${screenWidth}x${screenHeight}`);
             logger.info(`[TftOperator] 游戏基准点 (居中假设): (${originX}, ${originY})`);
@@ -313,6 +315,7 @@ class TftOperator {
         } catch (e: any) {
             logger.error(`[TftOperator] 初始化失败: ${e.message}`);
             this.gameWindowRegion = null;
+            this.gameWindowBounds = null;
             return {
                 success: false,
                 windowInfo: undefined,
@@ -322,23 +325,75 @@ class TftOperator {
     }
 
     /**
+     * 应用窗口信息并同步到截图/鼠标子模块
+     */
+    private applyWindowInfo(windowInfo: WindowInfo, gameClient: GameClient): void {
+        const originX = windowInfo.left;
+        const originY = windowInfo.top;
+        const useScale = gameClient === GameClient.ANDROID;
+
+        this.gameWindowRegion = { x: originX, y: originY };
+        this.gameWindowBounds = {
+            left: windowInfo.left,
+            top: windowInfo.top,
+            width: windowInfo.width,
+            height: windowInfo.height,
+        };
+
+        screenCapture.setGameWindowOrigin(
+            this.gameWindowRegion,
+            { width: windowInfo.width, height: windowInfo.height },
+            useScale
+        );
+        mouseController.setGameWindowOrigin(
+            this.gameWindowRegion,
+            { width: windowInfo.width, height: windowInfo.height },
+            useScale
+        );
+
+        const scale = screenCapture.getWindowScale();
+        logger.info(`[TftOperator] ✅ 通过窗口 API 找到游戏窗口`);
+        logger.info(`[TftOperator] 窗口标题: ${windowInfo.title}`);
+        logger.info(`[TftOperator] 窗口位置: (${originX}, ${originY})`);
+        logger.info(`[TftOperator] 窗口大小: ${windowInfo.width}x${windowInfo.height}`);
+        if (useScale) {
+            logger.info(`[TftOperator] 安卓坐标缩放: (${scale.x.toFixed(3)}, ${scale.y.toFixed(3)})`);
+        }
+    }
+
+    /**
      * 获取当前游戏阶段
      * @description 通过 OCR 识别游戏阶段 (如 "2-1", "3-5")
      *              根据用户设置的游戏模式，直接读取对应区域，避免逐个试错
+     *              增加连续确认机制防止OCR误读
      * @returns 游戏阶段结果，包含阶段类型和原始文本
      */
     public async getGameStage(): Promise<GameStageResult> {
         await this.ensureInitialized();
         try {
+            const gameClient = settingsStore.get('gameClient') as GameClient;
+            const stageTroubleshootHint =
+                gameClient === GameClient.ANDROID
+                    ? "请检查：1. 模拟器窗口不要被遮挡；2. 保持模拟器横屏；3. 建议使用接近 4:3 的窗口比例并关闭侧边工具栏。"
+                    : "请检查：1. 系统屏幕缩放是否为100%；2. 游戏分辨率是否为1024x768；3. 游戏窗口是否无边框居中且未被遮挡。";
+
             /**
              * 阶段识别统一使用 `forOCR=false`（原图，不做二值化/灰度等预处理）。
              *
              * 原因：海克斯出现时背景会整体变暗，二值化(threshold)会丢失大量细节，
              * 直接导致 "2-1" 这类阶段文字被"吃掉"。用原图 OCR 能保留色彩/对比信息。
              */
-            const recognizeStageText = async (region: Region): Promise<string> => {
-                const rawPng = await screenCapture.captureRegionAsPng(region, false);
-                return await ocrService.recognize(rawPng, OcrWorkerType.GAME_STAGE);
+            const recognizeStageText = async (region: Region, forOCR: boolean = false): Promise<string> => {
+                const rawPng = await screenCapture.captureRegionAsPng(region, forOCR);
+                const rawText = await ocrService.recognize(rawPng, OcrWorkerType.GAME_STAGE);
+                const extracted = this.extractLikelyStageText(rawText);
+                
+                // 调试时打印原OCR结果
+                if (rawText !== extracted) {
+                    logger.debug(`[TftOperator] OCR原始: "${rawText}" -> 提取: "${extracted}"`);
+                }
+                
+                return extracted;
             };
 
             // 从设置中获取当前游戏模式，根据模式选择识别策略
@@ -349,7 +404,7 @@ class TftOperator {
             // ============================================================
             if (currentMode === TFTMode.CLOCKWORK_TRAILS) {
                 const clockworkRegion = this.getClockworkTrialsRegion();
-                const clockText = await recognizeStageText(clockworkRegion);
+                const clockText = await recognizeStageText(clockworkRegion, false);
 
                 if (clockText && clockText.length > 0) {
                     this.tftMode = TFTMode.CLOCKWORK_TRAILS;
@@ -363,7 +418,7 @@ class TftOperator {
 
                 // 发条鸟区域 OCR 识别失败，可能是过渡帧等临时情况
                 // 玩家死亡检测已由 GameStageMonitor 的 isDead 轮询负责，这里不做处理
-                logger.warn(`[TftOperator] 发条鸟模式阶段识别失败: "${clockText ?? "null"}"。请检查：1. 系统屏幕缩放是否为100%；2. 游戏分辨率是否为1024x768；3. 游戏窗口是否无边框居中且未被遮挡。`);
+                logger.warn(`[TftOperator] 发条鸟模式阶段识别失败: "${clockText ?? "null"}"。${stageTroubleshootHint}`);
                 return { type: GameStageType.UNKNOWN, stageText: "" };
             }
 
@@ -372,25 +427,66 @@ class TftOperator {
             // ============================================================
             let stageText = "";
 
-            // 1. 先尝试标准区域 (2-1, 3-5, 4-2 等)
-            const normalRegion = this.getStageAbsoluteRegion(false);
-            stageText = await recognizeStageText(normalRegion);
+            // 1. 先在精确小区域做多次尝试：
+            //    - normal raw / preprocessed
+            //    - stage1 raw / preprocessed
+            //    - shopOpen raw / preprocessed (新增：处理商店遮挡）
+            const normalRegion = this.getStageAbsoluteRegion(false, false);
+            const stageOneRegion = this.getStageAbsoluteRegion(true, false);
+            const shopOpenRegion = this.getStageAbsoluteRegion(false, true);
 
-            // 2. 如果标准区域识别失败，尝试 Stage 1 区域
-            //    （第一阶段的 UI 位置略有不同）
-            if (!isValidStageFormat(stageText)) {
-                const stageOneRegion = this.getStageAbsoluteRegion(true);
-                stageText = await recognizeStageText(stageOneRegion);
+            const preciseAttempts: Array<{
+                name: string;
+                region: Region;
+                forOCR: boolean;
+            }> = [
+                { name: "normal/raw", region: normalRegion, forOCR: false },
+                { name: "shopOpen/raw", region: shopOpenRegion, forOCR: false },
+                { name: "stage1/raw", region: stageOneRegion, forOCR: false },
+                { name: "normal/preprocessed", region: normalRegion, forOCR: true },
+                { name: "shopOpen/preprocessed", region: shopOpenRegion, forOCR: true },
+                { name: "stage1/preprocessed", region: stageOneRegion, forOCR: true },
+            ];
+
+            for (const attempt of preciseAttempts) {
+                stageText = await recognizeStageText(attempt.region, attempt.forOCR);
+                if (isValidStageFormat(stageText) && this.isReasonableStage(stageText)) {
+                    logger.debug(`[TftOperator] 阶段精确识别命中: ${attempt.name} -> "${stageText}"`);
+                    break;
+                } else if (stageText) {
+                    logger.debug(`[TftOperator] 阶段识别结果不合理: ${attempt.name} -> "${stageText}"`);
+                    stageText = ""; // 清空不合理的结果
+                }
             }
 
-            // 3. 解析阶段字符串
+            // 2. 安卓端兜底：窗口存在标题栏/侧边栏时，固定坐标可能失配。
+            //    这里在顶部区域做多候选扫描，并同时尝试原图/预处理两种 OCR。
+            if (!isValidStageFormat(stageText) && gameClient === GameClient.ANDROID) {
+                stageText = await this.tryRecognizeAndroidStageWithFallback(recognizeStageText);
+            }
+
+            // 3. 连续确认机制：防止OCR误读（1-1误识别怇2-1/3-1）
+            if (isValidStageFormat(stageText)) {
+                logger.debug(`[TftOperator] 进入阶段确认流程，候选: ${stageText}`);
+                const confirmedStage = this.confirmStageWithHistory(stageText);
+                if (!confirmedStage) {
+                    // 识别结果不稳定，返回UNKNOWN但不报错
+                    logger.debug(`[TftOperator] 阶段确认未通过，返回UNKNOWN`);
+                    return { type: GameStageType.UNKNOWN, stageText: "" };
+                }
+                stageText = confirmedStage;
+            } else if (stageText) {
+                logger.debug(`[TftOperator] 阶段格式无效，跳过确认: "${stageText}"`);
+            }
+
+            // 4. 解析阶段字符串
             const stageType = parseStageStringToEnum(stageText);
 
             if (stageType !== GameStageType.UNKNOWN) {
                 // logger.info(`[TftOperator] 识别阶段: [${stageText}] -> ${stageType}`);
                 this.tftMode = TFTMode.CLASSIC;
             } else {
-                logger.warn(`[TftOperator] 无法识别当前阶段: "${stageText ?? "null"}。请检查：1. 系统屏幕缩放是否为100%；2. 游戏分辨率是否为1024x768；3. 游戏窗口是否无边框居中且未被遮挡。"`);
+                logger.warn(`[TftOperator] 无法识别当前阶段: "${stageText ?? "null"}"。${stageTroubleshootHint}`);
             }
 
             return { type: stageType, stageText: stageText || "" };
@@ -474,12 +570,7 @@ class TftOperator {
         logger.info("[TftOperator] 开始扫描装备栏...");
 
         for (const [slotName, regionDef] of Object.entries(equipmentRegion)) {
-            const targetRegion = new Region(
-                this.gameWindowRegion.x + regionDef.leftTop.x,
-                this.gameWindowRegion.y + regionDef.leftTop.y,
-                regionDef.rightBottom.x - regionDef.leftTop.x + 1,
-                regionDef.rightBottom.y - regionDef.leftTop.y + 1
-            );
+            const targetRegion = screenCapture.toAbsoluteRegion(regionDef);
 
             let targetMat: cv.Mat | null = null;
 
@@ -1124,20 +1215,36 @@ class TftOperator {
             // 边缘情况（槽位 6-9）：
             // - X 坐标：基于游戏窗口的绝对坐标（tooltipRegion.leftTop.x 已经是相对游戏窗口的）
             // - Y 坐标：基于鼠标点击位置的偏移量（需要加上 clickPoint.y）
+            const leftTop = screenCapture.toAbsolutePoint({
+                x: tooltipRegion.leftTop.x,
+                y: clickPoint.y + tooltipRegion.leftTop.y,
+            });
+            const rightBottom = screenCapture.toAbsolutePoint({
+                x: tooltipRegion.rightBottom.x,
+                y: clickPoint.y + tooltipRegion.rightBottom.y,
+            });
             absoluteRegion = new Region(
-                Math.round(this.gameWindowRegion!.x + tooltipRegion.leftTop.x),
-                Math.round(this.gameWindowRegion!.y + clickPoint.y + tooltipRegion.leftTop.y),
-                Math.round(tooltipRegion.rightBottom.x - tooltipRegion.leftTop.x),
-                Math.round(tooltipRegion.rightBottom.y - tooltipRegion.leftTop.y)
+                leftTop.x,
+                leftTop.y,
+                Math.max(1, rightBottom.x - leftTop.x),
+                Math.max(1, rightBottom.y - leftTop.y)
             );
             logger.debug(`[TftOperator] 边缘槽位 ${slotIndex}，X坐标固定=${tooltipRegion.leftTop.x}，Y偏移=${tooltipRegion.leftTop.y}`);
         } else {
             // 正常情况（槽位 1-5）：X、Y 坐标都相对于鼠标点击位置计算
+            const leftTop = screenCapture.toAbsolutePoint({
+                x: clickPoint.x + tooltipRegion.leftTop.x,
+                y: clickPoint.y + tooltipRegion.leftTop.y,
+            });
+            const rightBottom = screenCapture.toAbsolutePoint({
+                x: clickPoint.x + tooltipRegion.rightBottom.x,
+                y: clickPoint.y + tooltipRegion.rightBottom.y,
+            });
             absoluteRegion = new Region(
-                Math.round(this.gameWindowRegion!.x + clickPoint.x + tooltipRegion.leftTop.x),
-                Math.round(this.gameWindowRegion!.y + clickPoint.y + tooltipRegion.leftTop.y),
-                Math.round(tooltipRegion.rightBottom.x - tooltipRegion.leftTop.x),
-                Math.round(tooltipRegion.rightBottom.y - tooltipRegion.leftTop.y)
+                leftTop.x,
+                leftTop.y,
+                Math.max(1, rightBottom.x - leftTop.x),
+                Math.max(1, rightBottom.y - leftTop.y)
             );
         }
 
@@ -1273,29 +1380,218 @@ class TftOperator {
     /**
      * 获取游戏阶段显示区域
      * @param isStageOne 是否为第一阶段 (UI 位置不同)
+     * @param isShopOpen 是否为商店打开状态
      */
-
-    private getStageAbsoluteRegion(isStageOne: boolean = false): Region {
-        const display = isStageOne ? gameStageDisplayStageOne : gameStageDisplayNormal;
-
-        return new Region(
-            Math.round(this.gameWindowRegion!.x + display.leftTop.x),
-            Math.round(this.gameWindowRegion!.y + display.leftTop.y),
-            Math.round(display.rightBottom.x - display.leftTop.x),
-            Math.round(display.rightBottom.y - display.leftTop.y)
-        );
+    private getStageAbsoluteRegion(isStageOne: boolean = false, isShopOpen: boolean = false): Region {
+        let display;
+        if (isShopOpen) {
+            display = gameStageDisplayShopOpen;
+        } else if (isStageOne) {
+            display = gameStageDisplayStageOne;
+        } else {
+            display = gameStageDisplayNormal;
+        }
+        return screenCapture.toAbsoluteRegion(display);
     }
 
     /**
      * 获取发条鸟试炼模式的阶段显示区域
      */
     private getClockworkTrialsRegion(): Region {
-        return new Region(
-            this.gameWindowRegion!.x + gameStageDisplayTheClockworkTrails.leftTop.x,
-            this.gameWindowRegion!.y + gameStageDisplayTheClockworkTrails.leftTop.y,
-            gameStageDisplayTheClockworkTrails.rightBottom.x - gameStageDisplayTheClockworkTrails.leftTop.x,
-            gameStageDisplayTheClockworkTrails.rightBottom.y - gameStageDisplayTheClockworkTrails.leftTop.y
+        return screenCapture.toAbsoluteRegion(gameStageDisplayTheClockworkTrails);
+    }
+
+    /**
+     * 从 OCR 原始结果中提取最可能的阶段文本（如 "2-1"）
+     * @description 安卓端有时会识别出多余字符、不同 dash 符号或空白，这里统一归一化。
+     */
+    private extractLikelyStageText(rawText: string): string {
+        if (!rawText) return "";
+
+        const normalized = rawText
+            .replace(/[—–－]/g, "-")
+            .replace(/\s+/g, "")
+            .replace(/[^0-9-]/g, "");
+
+        if (!normalized) return "";
+
+        const candidates = normalized.match(/\d{1,2}-\d{1,2}/g) ?? [];
+        for (const token of candidates) {
+            const [stageText, roundText] = token.split("-");
+            const stage = parseInt(stageText, 10);
+            const round = parseInt(roundText, 10);
+            if (this.isLikelyStagePair(stage, round)) {
+                return `${stage}-${round}`;
+            }
+        }
+
+        // OCR 丢失连字符时的兜底（例如 "21" 代表 "2-1"）
+        const compactDigits = normalized.replace(/-/g, "");
+        const twoDigitPairs = compactDigits.match(/\d{2}/g) ?? [];
+        for (const pair of twoDigitPairs) {
+            const stage = parseInt(pair[0], 10);
+            const round = parseInt(pair[1], 10);
+            if (this.isLikelyStagePair(stage, round)) {
+                return `${stage}-${round}`;
+            }
+        }
+
+        // ❌ FIX: 如果所有合理性检查都失败，返回空字符串而非垃圾值！
+        logger.debug(`[TftOperator] 阶段文本提取失败（所有候选都不合理）: rawText="${rawText}" normalized="${normalized}"`);
+        return "";
+    }
+
+    /**
+     * 判断阶段数字对是否在 TFT 合理范围内
+     */
+    private isLikelyStagePair(stage: number, round: number): boolean {
+        if (!Number.isFinite(stage) || !Number.isFinite(round)) {
+            return false;
+        }
+        if (stage < 1 || stage > 7) {
+            return false;
+        }
+        if (round < 1 || round > 7) {
+            return false;
+        }
+        // 第一阶段只有 1-1 ~ 1-4
+        if (stage === 1 && round > 4) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 安卓端阶段识别兜底：在顶部区域做多窗口扫描，适配模拟器标题栏/侧边栏导致的坐标漂移
+     */
+    private async tryRecognizeAndroidStageWithFallback(
+        recognizeStageText: (region: Region, forOCR?: boolean) => Promise<string>
+    ): Promise<string> {
+        const fallbackRegions = this.getAndroidStageFallbackRegions();
+        for (const [index, region] of fallbackRegions.entries()) {
+            const rawText = await recognizeStageText(region, false);
+            if (isValidStageFormat(rawText) && this.isReasonableStage(rawText)) {
+                logger.info(`[TftOperator] 安卓阶段兜底识别命中(raw): ${rawText}`);
+                return rawText;
+            } else if (rawText && isValidStageFormat(rawText)) {
+                logger.debug(`[TftOperator] 安卓阶段兜底识别格式正确但不合理(raw): ${rawText}`);
+            }
+
+            const processedText = await recognizeStageText(region, true);
+            if (isValidStageFormat(processedText) && this.isReasonableStage(processedText)) {
+                logger.info(`[TftOperator] 安卓阶段兜底识别命中(preprocessed): ${processedText}`);
+                return processedText;
+            } else if (processedText && isValidStageFormat(processedText)) {
+                logger.debug(`[TftOperator] 安卓阶段兜底识别格式正确但不合理(preprocessed): ${processedText}`);
+            }
+
+            logger.debug(
+                `[TftOperator] 安卓阶段兜底区域#${index + 1} ` +
+                `(${region.left},${region.top},${region.width}x${region.height}) ` +
+                `raw="${rawText}" preprocessed="${processedText}"`
+            );
+        }
+        return "";
+    }
+
+    /**
+     * 安卓阶段 OCR 兜底区域（按窗口百分比定义）
+     * @description 兼容 4:3 窗口、16:9 模拟器画布、带顶部标题栏/左侧广告栏等场景。
+     */
+    private getAndroidStageFallbackRegions(): Region[] {
+        if (!this.gameWindowBounds) {
+            return [];
+        }
+
+        const { left, top, width, height } = this.gameWindowBounds;
+        const defs: Array<{ x: number; y: number; w: number; h: number }> = [
+            // 商店展开时，阶段文本通常位于顶部中间偏左的小区域
+            { x: 0.36, y: 0.00, w: 0.12, h: 0.06 },
+            { x: 0.34, y: 0.00, w: 0.16, h: 0.08 },
+            // 贴近原 1024x768 坐标映射
+            { x: 0.30, y: 0.00, w: 0.18, h: 0.08 },
+            // 顶部有标题栏时，阶段会整体下移
+            { x: 0.28, y: 0.05, w: 0.22, h: 0.10 },
+            { x: 0.26, y: 0.10, w: 0.24, h: 0.10 },
+            // 宽一些，覆盖模拟器侧边栏偏移
+            { x: 0.22, y: 0.04, w: 0.34, h: 0.14 },
+            // 最后兜底：大范围顶部扫描
+            { x: 0.18, y: 0.00, w: 0.44, h: 0.20 },
+        ];
+
+        return defs.map((def) =>
+            new Region(
+                Math.max(0, Math.round(left + width * def.x)),
+                Math.max(0, Math.round(top + height * def.y)),
+                Math.max(1, Math.round(width * def.w)),
+                Math.max(1, Math.round(height * def.h))
+            )
         );
+    }
+
+    /**
+     * 连续确认机制：防止OCR误读（例如把1-1误识别怇2-1/3-1）
+     * @param stageText 识别到的阶段文本
+     * @returns 确认后的阶段文本，如果不稳定则返回null
+     */
+    private confirmStageWithHistory(stageText: string): string | null {
+        // 添加到历史
+        this.stageRecognitionHistory.push(stageText);
+
+        // 保持历史长度
+        if (this.stageRecognitionHistory.length > this.MAX_HISTORY_LENGTH) {
+            this.stageRecognitionHistory.shift();
+        }
+
+        // 检查最近 STAGE_CONFIRM_THRESHOLD 次识别是否相同
+        if (this.stageRecognitionHistory.length < this.STAGE_CONFIRM_THRESHOLD) {
+            logger.debug(`[TftOperator] 阶段确认中... (剩余${this.STAGE_CONFIRM_THRESHOLD - this.stageRecognitionHistory.length}次)`);
+            return null; // 数据不足，暂不确认
+        }
+
+        const recentResults = this.stageRecognitionHistory.slice(-this.STAGE_CONFIRM_THRESHOLD);
+        const allSame = recentResults.every(s => s === recentResults[0]);
+
+        if (allSame) {
+            logger.info(`[TftOperator] ✅ 阶段确认成功: ${recentResults[0]}`);
+            return recentResults[0];
+        }
+
+        // 识别结果不稳定
+        logger.debug(`[TftOperator] 阶段识别结果不稳定: ${recentResults.join(', ')}`);
+        return null;
+    }
+
+    /**
+     * 检查阶段是否合理（防止OCR完全误读）
+     * @param stageText 阶段文本如 "1-8"
+     * @returns true 表示合理
+     */
+    private isReasonableStage(stageText: string): boolean {
+        const match = stageText.match(/^(\d+)-(\d+)$/);
+        if (!match) return false;
+
+        const stage = parseInt(match[1]);
+        const round = parseInt(match[2]);
+
+        // TFT最多7个大阶段，每个阶段最多7个回合
+        if (stage < 1 || stage > 7) {
+            logger.warn(`[TftOperator] 阶段不合理: stage=${stage} 超出范围 [1-7]`);
+            return false;
+        }
+
+        if (round < 1 || round > 7) {
+            logger.warn(`[TftOperator] 阶段不合理: round=${round} 超出范围 [1-7]`);
+            return false;
+        }
+
+        // 特殊校验：第一阶段只有4个回合
+        if (stage === 1 && round > 4) {
+            logger.warn(`[TftOperator] 阶段不合理: 1-${round} (第一阶段只有4个回合)`);
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -1326,6 +1622,9 @@ class TftOperator {
         }
 
         logger.warn("[TftOperator] 检测到未初始化，正在自动执行 init()");
+
+        // 初始化时清空阶段识别历史
+        this.stageRecognitionHistory = [];
 
         if (!this.initInFlight) {
             this.initInFlight = this.init().finally(() => {
@@ -1412,12 +1711,7 @@ class TftOperator {
 
         try {
             // 1. 计算等级区域的绝对坐标
-            const absoluteRegion = new Region(
-                Math.round(this.gameWindowRegion!.x + levelRegion.leftTop.x),
-                Math.round(this.gameWindowRegion!.y + levelRegion.leftTop.y),
-                Math.round(levelRegion.rightBottom.x - levelRegion.leftTop.x),
-                Math.round(levelRegion.rightBottom.y - levelRegion.leftTop.y)
-            );
+            const absoluteRegion = screenCapture.toAbsoluteRegion(levelRegion);
 
             // 2. 截图并 OCR 识别
             const pngBuffer = await screenCapture.captureRegionAsPng(absoluteRegion);
@@ -1546,12 +1840,7 @@ class TftOperator {
 
         try {
             // 1. 计算金币区域的绝对坐标
-            const absoluteRegion = new Region(
-                Math.round(this.gameWindowRegion!.x + coinRegion.leftTop.x),
-                Math.round(this.gameWindowRegion!.y + coinRegion.leftTop.y),
-                Math.round(coinRegion.rightBottom.x - coinRegion.leftTop.x),
-                Math.round(coinRegion.rightBottom.y - coinRegion.leftTop.y)
-            );
+            const absoluteRegion = screenCapture.toAbsoluteRegion(coinRegion);
 
             // 2. 截图并 OCR 识别
             // 复用 GAME_STAGE worker，因为金币只会是 0-9 的数字
@@ -1617,12 +1906,7 @@ class TftOperator {
 
         try {
             // 1. 计算战利品掉落区域的绝对坐标
-            const absoluteRegion = new Region(
-                Math.round(this.gameWindowRegion!.x + lootRegion.leftTop.x),
-                Math.round(this.gameWindowRegion!.y + lootRegion.leftTop.y),
-                Math.round(lootRegion.rightBottom.x - lootRegion.leftTop.x),
-                Math.round(lootRegion.rightBottom.y - lootRegion.leftTop.y)
-            );
+            const absoluteRegion = screenCapture.toAbsoluteRegion(lootRegion);
 
             // 2. 截取区域图像 (captureRegionAsMat 返回 RGB 3 通道，正好用于模板匹配)
             const targetMat = await screenCapture.captureRegionAsMat(absoluteRegion);
