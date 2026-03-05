@@ -26,6 +26,12 @@ export class ScreenCapture {
 
     /** 游戏窗口基准点 (左上角坐标) */
     private gameWindowOrigin: SimplePoint | null = null;
+    /** 坐标缩放（用于安卓模拟器非 1024x768 窗口） */
+    private scaleX = 1;
+    private scaleY = 1;
+
+    private static readonly BASE_WIDTH = 1024;
+    private static readonly BASE_HEIGHT = 768;
 
     private constructor() {}
 
@@ -43,8 +49,19 @@ export class ScreenCapture {
      * 设置游戏窗口基准点
      * @param origin 游戏窗口左上角坐标
      */
-    public setGameWindowOrigin(origin: SimplePoint): void {
+    public setGameWindowOrigin(
+        origin: SimplePoint,
+        windowSize?: { width: number; height: number },
+        useScale: boolean = false
+    ): void {
         this.gameWindowOrigin = origin;
+        if (useScale && windowSize && windowSize.width > 0 && windowSize.height > 0) {
+            this.scaleX = windowSize.width / ScreenCapture.BASE_WIDTH;
+            this.scaleY = windowSize.height / ScreenCapture.BASE_HEIGHT;
+        } else {
+            this.scaleX = 1;
+            this.scaleY = 1;
+        }
     }
 
     /**
@@ -52,6 +69,13 @@ export class ScreenCapture {
      */
     public getGameWindowOrigin(): SimplePoint | null {
         return this.gameWindowOrigin;
+    }
+
+    /**
+     * 获取当前缩放比例
+     */
+    public getWindowScale(): { x: number; y: number } {
+        return { x: this.scaleX, y: this.scaleY };
     }
 
     /**
@@ -74,12 +98,79 @@ export class ScreenCapture {
             throw new Error("[ScreenCapture] 尚未设置游戏窗口基准点");
         }
 
+        // 检查是否为百分比坐标（0-1范围）
+        const isPercentage = (val: number) => val >= 0 && val <= 1;
+        
+        // 当启用缩放时（安卓模式），在gameWindowBounds中获取窗口实际尺寸
+        let actualWidth = ScreenCapture.BASE_WIDTH;
+        let actualHeight = ScreenCapture.BASE_HEIGHT;
+        
+        // ⚠️ 注意：这里无法直接获取窗口尺寸，需要通过 scaleX/scaleY 反推
+        // scaleX = actualWidth / BASE_WIDTH，所以 actualWidth = scaleX * BASE_WIDTH
+        if (this.scaleX !== 1 || this.scaleY !== 1) {
+            actualWidth = Math.round(ScreenCapture.BASE_WIDTH * this.scaleX);
+            actualHeight = Math.round(ScreenCapture.BASE_HEIGHT * this.scaleY);
+        }
+
+        // 坐标转换逻辑
+        let left, top, right, bottom;
+        
+        if (isPercentage(simpleRegion.leftTop.x) && isPercentage(simpleRegion.leftTop.y)) {
+            // 百分比坐标：直接用窗口尺寸计算
+            left = Math.round(this.gameWindowOrigin.x + simpleRegion.leftTop.x * actualWidth);
+            top = Math.round(this.gameWindowOrigin.y + simpleRegion.leftTop.y * actualHeight);
+            right = Math.round(this.gameWindowOrigin.x + simpleRegion.rightBottom.x * actualWidth);
+            bottom = Math.round(this.gameWindowOrigin.y + simpleRegion.rightBottom.y * actualHeight);
+        } else {
+            // 绝对坐标：保留原有的缩放逻辑（向后兼容）
+            left = Math.round(this.gameWindowOrigin.x + simpleRegion.leftTop.x * this.scaleX);
+            top = Math.round(this.gameWindowOrigin.y + simpleRegion.leftTop.y * this.scaleY);
+            right = Math.round(this.gameWindowOrigin.x + simpleRegion.rightBottom.x * this.scaleX);
+            bottom = Math.round(this.gameWindowOrigin.y + simpleRegion.rightBottom.y * this.scaleY);
+        }
+
         return new Region(
-            this.gameWindowOrigin.x + simpleRegion.leftTop.x,
-            this.gameWindowOrigin.y + simpleRegion.leftTop.y,
-            simpleRegion.rightBottom.x - simpleRegion.leftTop.x,
-            simpleRegion.rightBottom.y - simpleRegion.leftTop.y
+            left,
+            top,
+            Math.max(1, right - left),
+            Math.max(1, bottom - top)
         );
+    }
+
+    /**
+     * 将游戏内相对坐标点转换为屏幕绝对坐标点
+     */
+    public toAbsolutePoint(simplePoint: SimplePoint): SimplePoint {
+        if (!this.gameWindowOrigin) {
+            throw new Error("[ScreenCapture] 尚未设置游戏窗口基准点");
+        }
+
+        // 检查是否为百分比坐标（0-1范围）
+        const isPercentage = (val: number) => val >= 0 && val <= 1;
+        
+        // 当启用缩放时（安卓模式），计算实际窗口尺寸
+        let actualWidth = ScreenCapture.BASE_WIDTH;
+        let actualHeight = ScreenCapture.BASE_HEIGHT;
+        
+        if (this.scaleX !== 1 || this.scaleY !== 1) {
+            actualWidth = Math.round(ScreenCapture.BASE_WIDTH * this.scaleX);
+            actualHeight = Math.round(ScreenCapture.BASE_HEIGHT * this.scaleY);
+        }
+
+        // 坐标转换逻辑
+        if (isPercentage(simplePoint.x) && isPercentage(simplePoint.y)) {
+            // 百分比坐标：直接用窗口尺寸计算
+            return {
+                x: Math.round(this.gameWindowOrigin.x + simplePoint.x * actualWidth),
+                y: Math.round(this.gameWindowOrigin.y + simplePoint.y * actualHeight),
+            };
+        } else {
+            // 绝对坐标：保留原有的缩放逻辑（向后兼容）
+            return {
+                x: Math.round(this.gameWindowOrigin.x + simplePoint.x * this.scaleX),
+                y: Math.round(this.gameWindowOrigin.y + simplePoint.y * this.scaleY),
+            };
+        }
     }
 
     // ========== 截图方法 ==========

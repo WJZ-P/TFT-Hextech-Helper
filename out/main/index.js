@@ -5128,6 +5128,16 @@ class Logger {
   minLevel = "debug";
   /** 是否启用时间戳 */
   enableTimestamp = true;
+  /** 是否启用文件日志 */
+  enableFileLogging = true;
+  /** 日志文件路径 */
+  logFilePath = "";
+  /** 当前日志文件日期（用于判断是否需要切换文件） */
+  currentLogDate = "";
+  /** 最近的日志缓存（用于去重），格式：{message: timestamp} */
+  recentLogs = /* @__PURE__ */ new Map();
+  /** 日志去重时间窗口（毫秒），相同日志在此时间内只输出一次 */
+  DEDUP_WINDOW_MS = 2e3;
   /**
    * 获取 Logger 单例
    */
@@ -5138,6 +5148,7 @@ class Logger {
     return Logger.instance;
   }
   constructor() {
+    this.initFileLogging();
   }
   /**
    * 初始化 Logger
@@ -5159,6 +5170,102 @@ class Logger {
    */
   setTimestampEnabled(enable) {
     this.enableTimestamp = enable;
+  }
+  /**
+   * 初始化文件日志
+   */
+  initFileLogging() {
+    try {
+      const userDataDir = path__default.join(os__default.homedir(), process.platform === "win32" ? "AppData/Roaming" : ".config", "tft-hextech-helper");
+      const logsDir = path__default.join(userDataDir, "logs");
+      fs.ensureDirSync(logsDir);
+      this.updateLogFilePath(logsDir);
+      console.log(`[Logger] 日志文件路径: ${this.logFilePath}`);
+      this.cleanOldLogs(logsDir, 7);
+    } catch (error) {
+      console.error("[Logger] 初始化文件日志失败:", error);
+      this.enableFileLogging = false;
+    }
+  }
+  /**
+   * 更新日志文件路径（按日期切分）
+   */
+  updateLogFilePath(logsDir) {
+    const today = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
+    if (today !== this.currentLogDate) {
+      this.currentLogDate = today;
+      this.logFilePath = path__default.join(logsDir, `tft-${today}.log`);
+    }
+  }
+  /**
+   * 清理旧日志文件
+   * @param logsDir 日志目录
+   * @param daysToKeep 保留天数
+   */
+  cleanOldLogs(logsDir, daysToKeep) {
+    try {
+      const files = fs.readdirSync(logsDir);
+      const now = Date.now();
+      const maxAge = daysToKeep * 24 * 60 * 60 * 1e3;
+      files.forEach((file2) => {
+        const filePath = path__default.join(logsDir, file2);
+        const stat2 = fs.statSync(filePath);
+        if (now - stat2.mtime.getTime() > maxAge) {
+          fs.removeSync(filePath);
+          console.log(`[Logger] 清理旧日志: ${file2}`);
+        }
+      });
+    } catch (error) {
+      console.error("[Logger] 清理旧日志失败:", error);
+    }
+  }
+  /**
+   * 检查是否为重复日志
+   * @param message 日志消息
+   * @param level 日志级别
+   * @returns true 表示是重复日志，应该跳过
+   */
+  isDuplicateLog(message, level) {
+    if (level === "error") {
+      return false;
+    }
+    const key = `${level}:${message}`;
+    const lastTime = this.recentLogs.get(key);
+    const now = Date.now();
+    if (lastTime && now - lastTime < this.DEDUP_WINDOW_MS) {
+      return true;
+    }
+    this.recentLogs.set(key, now);
+    if (this.recentLogs.size > 100) {
+      const expiredKeys = [];
+      this.recentLogs.forEach((time, k) => {
+        if (now - time > this.DEDUP_WINDOW_MS) {
+          expiredKeys.push(k);
+        }
+      });
+      expiredKeys.forEach((k) => this.recentLogs.delete(k));
+    }
+    return false;
+  }
+  /**
+   * 写入日志到文件
+   * @param message 日志消息
+   */
+  writeToFile(message) {
+    if (!this.enableFileLogging || !this.logFilePath) {
+      return;
+    }
+    try {
+      const logsDir = path__default.dirname(this.logFilePath);
+      this.updateLogFilePath(logsDir);
+      fs.appendFile(this.logFilePath, message + "\n", (err) => {
+        if (err && this.enableFileLogging) {
+          console.error("[Logger] 写入日志文件失败:", err);
+          this.enableFileLogging = false;
+        }
+      });
+    } catch (error) {
+    }
   }
   /**
    * 格式化时间戳
@@ -5225,11 +5332,16 @@ class Logger {
    */
   log(message, level) {
     if (!this.shouldLog(level)) return;
+    if (this.isDuplicateLog(message, level)) {
+      return;
+    }
     const timestamp = this.getTimestamp();
     const color = LOG_LEVEL_COLORS[level];
     const levelTag = `[${level.toUpperCase()}]`.padEnd(7);
-    console.log(`${color}${timestamp}${levelTag}${COLOR_RESET} ${message}`);
-    this.sendLogToFrontend(`${timestamp}${levelTag} ${message}`, level);
+    const fullMessage = `${timestamp}${levelTag} ${message}`;
+    console.log(`${color}${fullMessage}${COLOR_RESET}`);
+    this.writeToFile(fullMessage);
+    this.sendLogToFrontend(fullMessage, level);
   }
   /**
    * 向前端发送日志
@@ -5780,6 +5892,12 @@ class GameConfigHelper {
     }
     return GameConfigHelper.instance;
   }
+  /**
+   * 判断是否已初始化（无副作用，不打印日志）
+   */
+  static isInitialized() {
+    return Boolean(GameConfigHelper.instance);
+  }
   // --- 核心功能方法 (Core Function Methods) ---
   /**
    * 备份当前的游戏设置
@@ -6198,6 +6316,9 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["LINEUP_SAVE"] = "lineup-save";
   IpcChannel2["LINEUP_DELETE"] = "lineup-delete";
   IpcChannel2["TFT_GET_CHAMPION_CN_TO_EN_MAP"] = "tft-get-champion-cn-to-en-map";
+  IpcChannel2["TFT_DATA_REFRESH"] = "tft-data-refresh";
+  IpcChannel2["TFT_DATA_GET_SNAPSHOT"] = "tft-data-get-snapshot";
+  IpcChannel2["PC_LOGIC_PLAN_ONCE"] = "pc-logic-plan-once";
   IpcChannel2["TFT_GET_MODE"] = "tft-get-mode";
   IpcChannel2["TFT_SET_MODE"] = "tft-set-mode";
   IpcChannel2["LOG_GET_MODE"] = "log-get-mode";
@@ -10729,6 +10850,10 @@ const gameStageDisplayNormal = {
   leftTop: { x: 374, y: 6 },
   rightBottom: { x: 403, y: 22 }
 };
+const gameStageDisplayShopOpen = {
+  leftTop: { x: 365, y: 4 },
+  rightBottom: { x: 410, y: 24 }
+};
 const gameStageDisplayTheClockworkTrails = {
   leftTop: { x: 337, y: 6 },
   rightBottom: { x: 366, y: 22 }
@@ -10836,6 +10961,16 @@ var LogMode = /* @__PURE__ */ ((LogMode2) => {
   LogMode2["DETAILED"] = "DETAILED";
   return LogMode2;
 })(LogMode || {});
+var GameRegion = /* @__PURE__ */ ((GameRegion2) => {
+  GameRegion2["CN"] = "CN";
+  GameRegion2["NA"] = "NA";
+  return GameRegion2;
+})(GameRegion || {});
+var GameClient = /* @__PURE__ */ ((GameClient2) => {
+  GameClient2["ANDROID"] = "ANDROID";
+  GameClient2["RIOT_PC"] = "RIOT_PC";
+  return GameClient2;
+})(GameClient || {});
 class SettingsStore {
   static instance;
   store;
@@ -10889,8 +11024,13 @@ class SettingsStore {
         minutes: 5
         //  默认 5 分钟
       },
-      analyticsClientId: ""
+      analyticsClientId: "",
       //  默认为空，首次启动时由 AnalyticsManager 生成
+      gameRegion: "CN",
+      // 默认国服
+      gameClient: "RIOT_PC"
+      /* RIOT_PC */
+      // 默认电脑 Riot 客户端
     };
     this.store = new Store({ defaults });
   }
@@ -11189,6 +11329,8 @@ function checkNativeModules() {
   };
 }
 let hexService;
+let pcLogicRunner;
+let tftDataService;
 let tftOperator;
 let lineupLoader;
 let globalHotkeyManager;
@@ -11201,6 +11343,7 @@ let win;
 let overlayWindow = null;
 let currentToggleHotkey = null;
 let currentStopAfterGameHotkey = null;
+let lcuConnector = null;
 function registerToggleHotkey(accelerator) {
   if (currentToggleHotkey) {
     globalHotkeyManager.unregister(currentToggleHotkey);
@@ -11371,6 +11514,9 @@ app.on("will-quit", async (event) => {
   if (globalHotkeyManager) {
     globalHotkeyManager.stop();
   }
+  if (lcuConnector) {
+    lcuConnector.stop();
+  }
   closeOverlayWindow();
   if (hexService && hexService.isRunning) {
     event.preventDefault();
@@ -11419,9 +11565,11 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-CDKHLTda.js");
+    const ServicesModule = await import("./chunks/index-EeZbVVM2.js");
     hexService = ServicesModule.hexService;
-    const TftOperatorModule = await import("./chunks/TftOperator-CHK7LIbj.js").then((n) => n.T);
+    pcLogicRunner = ServicesModule.pcLogicRunner;
+    tftDataService = ServicesModule.tftDataService;
+    const TftOperatorModule = await import("./chunks/TftOperator-BT9Sj3jw.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
     const LineupModule = await import("./chunks/index-BZspSCi7.js");
     lineupLoader = LineupModule.lineupLoader;
@@ -11454,6 +11602,9 @@ app.whenReady().then(async () => {
   });
   const lineupCount = await lineupLoader.loadAllLineups();
   console.log(`📦 [Main] 已加载 ${lineupCount} 个阵容配置`);
+  void tftDataService.refresh(false).catch((error) => {
+    console.warn(`⚠️ [Main] TFT 数据预热失败，将使用本地快照: ${error?.message ?? error}`);
+  });
   const savedHotkey = settingsStore.get("toggleHotkeyAccelerator");
   registerToggleHotkey(savedHotkey);
   const savedStopAfterGameHotkey = settingsStore.get("stopAfterGameHotkeyAccelerator");
@@ -11464,6 +11615,7 @@ function init() {
   const logMode = settingsStore.get("logMode");
   logger.setMinLevel(logMode === "DETAILED" ? "debug" : "info");
   const connector = new LCUConnector();
+  lcuConnector = connector;
   connector.on("connect", (data) => {
     console.log("LOL客户端已登录！", data);
     const lcuManager = LCUManager.init(data);
@@ -11476,7 +11628,9 @@ function init() {
       console.log("LCUManager 已断开");
       win?.webContents.send(IpcChannel.LCU_DISCONNECT);
       console.log("🔄 [Main] 重新启动 LCU 连接监听...");
-      connector.start();
+      if (settingsStore.get("gameClient") === GameClient.RIOT_PC) {
+        connector.start();
+      }
     });
     lcuManager.on("lcu-event", (event) => {
       console.log("收到LCU事件:", event.uri, event.eventType);
@@ -11486,7 +11640,21 @@ function init() {
     console.log("LOL客户端登出！");
     win?.webContents.send(IpcChannel.LCU_DISCONNECT);
   });
-  connector.start();
+  const syncLcuMonitorWithClientType = (clientType) => {
+    if (clientType === GameClient.ANDROID) {
+      connector.stop();
+      win?.webContents.send(IpcChannel.LCU_DISCONNECT);
+      logger.info("[Main] 安卓端模式：已停用 LCU 客户端轮询");
+      return;
+    }
+    logger.info("[Main] 电脑 Riot 模式：启动 LCU 客户端轮询");
+    connector.start();
+  };
+  syncLcuMonitorWithClientType(settingsStore.get("gameClient"));
+  settingsStore.onDidChange("gameClient", (newClient) => {
+    logger.info(`[Main] 客户端类型变更: ${newClient}`);
+    syncLcuMonitorWithClientType(newClient);
+  });
 }
 function registerHandler() {
   ipcMain.handle(IpcChannel.LCU_GET_CONNECTION_STATUS, async () => {
@@ -11549,6 +11717,16 @@ function registerHandler() {
       cnToEnMap[cnName] = unitData.englishId;
     }
     return cnToEnMap;
+  });
+  ipcMain.handle(IpcChannel.TFT_DATA_REFRESH, async () => {
+    await tftDataService.refresh(true);
+    return tftDataService.getSnapshot();
+  });
+  ipcMain.handle(IpcChannel.TFT_DATA_GET_SNAPSHOT, async () => {
+    return tftDataService.getSnapshot();
+  });
+  ipcMain.handle(IpcChannel.PC_LOGIC_PLAN_ONCE, async (_event, state, context) => {
+    return pcLogicRunner.planOnce(state, context);
   });
   ipcMain.handle(IpcChannel.TFT_GET_MODE, async () => settingsStore.get("tftMode"));
   ipcMain.handle(IpcChannel.TFT_SET_MODE, async (_event, mode) => {
@@ -11666,63 +11844,68 @@ function registerHandler() {
   });
 }
 export {
-  closeOverlay as $,
-  gameStageDisplayTheClockworkTrails as A,
-  clockworkTrailsQuitNowButtonPoint as B,
-  levelRegion as C,
-  coinRegion as D,
-  hexSlot as E,
-  lootRegion as F,
-  GameStageType as G,
-  littleLegendDefaultPoint as H,
+  showOverlay as $,
+  clockworkTrailsQuitNowButtonPoint as A,
+  levelRegion as B,
+  coinRegion as C,
+  hexSlot as D,
+  lootRegion as E,
+  littleLegendDefaultPoint as F,
+  GameClient as G,
+  selfWalkAroundPoints as H,
   ItemForgeType as I,
-  selfWalkAroundPoints as J,
-  equipmentSlot as K,
-  combatPhaseTextRegion as L,
-  getChampionRange as M,
+  equipmentSlot as J,
+  gameStageDisplayShopOpen as K,
+  gameStageDisplayStageOne as L,
+  gameStageDisplayNormal as M,
   MAIN_DIST,
-  clockworkTrailsFightButtonPoint as N,
-  TFT_4_TRAIT_DATA as O,
-  TFT_16_TRAIT_DATA as P,
-  sharedDraftPoint as Q,
-  GameConfigHelper as R,
+  combatPhaseTextRegion as N,
+  getChampionRange as O,
+  clockworkTrailsFightButtonPoint as P,
+  TFT_4_TRAIT_DATA as Q,
+  TFT_16_TRAIT_DATA as R,
   RENDERER_DIST,
-  IpcChannel as S,
+  sharedDraftPoint as S,
   TFTMode as T,
   UNSELLABLE_BOARD_UNITS as U,
-  LCUManager as V,
+  GameConfigHelper as V,
   VITE_DEV_SERVER_URL,
-  getSeasonTemplateDir as W,
-  isStandardChessMode as X,
-  LcuEventUri as Y,
-  showOverlay as Z,
-  sendOverlayPlayers as _,
+  IpcChannel as W,
+  LCUManager as X,
+  getSeasonTemplateDir as Y,
+  isStandardChessMode as Z,
+  LcuEventUri as _,
   getEquipDataBySeason as a,
-  analyticsManager as a0,
-  AnalyticsEvent as a1,
+  sendOverlayPlayers as a0,
+  closeOverlay as a1,
+  GameRegion as a2,
+  TFT_4_CHESS_DATA as a3,
+  TFT_4_EQUIP_DATA as a4,
+  analyticsManager as a5,
+  AnalyticsEvent as a6,
   getChessDataForMode as b,
   TFT_16_EQUIP_DATA as c,
-  TFT_16_CHESS_DATA as d,
-  settingsStore as e,
+  GameStageType as d,
+  TFT_16_CHESS_DATA as e,
   fs as f,
   getChessDataBySeason as g,
-  shopSlotNameRegions as h,
-  equipmentRegion as i,
-  detailEquipRegion as j,
-  shopSlot as k,
+  settingsStore as h,
+  shopSlotNameRegions as i,
+  equipmentRegion as j,
+  detailEquipRegion as k,
   logger as l,
-  buyExpPoint as m,
-  benchSlotPoints as n,
-  benchSlotRegion as o,
-  detailChampionNameRegion as p,
-  detailChampionStarRegion as q,
+  shopSlot as m,
+  buyExpPoint as n,
+  benchSlotPoints as o,
+  benchSlotRegion as p,
+  detailChampionNameRegion as q,
   refreshShopPoint as r,
   sleep as s,
-  fightBoardSlotPoint as t,
-  fightBoardSlotRegion as u,
-  clockworkTrailsQuitNowButtonRegion as v,
-  itemForgeTooltipRegionEdge as w,
-  itemForgeTooltipRegion as x,
-  gameStageDisplayStageOne as y,
-  gameStageDisplayNormal as z
+  detailChampionStarRegion as t,
+  fightBoardSlotPoint as u,
+  fightBoardSlotRegion as v,
+  clockworkTrailsQuitNowButtonRegion as w,
+  itemForgeTooltipRegionEdge as x,
+  itemForgeTooltipRegion as y,
+  gameStageDisplayTheClockworkTrails as z
 };

@@ -11,7 +11,7 @@ import { GameRunningState } from "./GameRunningState.ts";
 import { inGameApi, InGameApiEndpoints } from "../lcu/InGameApi.ts";
 import { tftOperator, GAME_WIDTH, GAME_HEIGHT } from "../TftOperator.ts";
 import { GameClient, settingsStore } from "../utils/SettingsStore.ts";
-import { windowHelper } from "../utils/WindowHelper.ts";
+import { windowHelper, type WindowInfo } from "../utils/WindowHelper.ts";
 import { GameStageType } from "../TFTProtocol.ts";
 
 /** 轮询间隔 (ms) */
@@ -49,13 +49,18 @@ export class GameLoadingState implements IState {
                 // 初始化失败（可能游戏窗口未找到），记录警告但继续运行
                 logger.error("[GameLoadingState] TftOperator 初始化失败!");
             } else if (initResult.windowInfo) {
-                // 检查窗口分辨率是否符合要求
+                const gameClient = settingsStore.get('gameClient');
+                // PC 客户端强制要求 1024x768；安卓端允许任意窗口尺寸（由缩放适配）
                 const { width, height } = initResult.windowInfo;
-                if (width !== GAME_WIDTH || height !== GAME_HEIGHT) {
+                if (gameClient !== GameClient.ANDROID && (width !== GAME_WIDTH || height !== GAME_HEIGHT)) {
                     logger.error(
                         `[GameLoadingState] ❌ 游戏分辨率不正确！` +
                         `当前: ${width}x${height}, 需要: ${GAME_WIDTH}x${GAME_HEIGHT}。` +
                         `请在游戏设置中将分辨率修改为 ${GAME_WIDTH}x${GAME_HEIGHT}！`
+                    );
+                } else if (gameClient === GameClient.ANDROID) {
+                    logger.info(
+                        `[GameLoadingState] 安卓端窗口尺寸: ${width}x${height}，已启用动态缩放坐标适配`
                     );
                 }
             }
@@ -75,6 +80,10 @@ export class GameLoadingState implements IState {
     private waitForGameToLoad(signal: AbortSignal): Promise<boolean> {
         return new Promise((resolve) => {
             let intervalId: NodeJS.Timeout | null = null;
+            let preferredAndroidWindow: WindowInfo | null = null;
+            let checking = false;
+            let androidValidStageStreak = 0;
+            let lastValidWindowKey = "";
 
             /**
              * 清理函数：确保定时器被正确清除
@@ -107,31 +116,85 @@ export class GameLoadingState implements IState {
                     cleanup();
                     return;
                 }
+                if (checking) {
+                    return;
+                }
+                checking = true;
 
                 try {
                     const gameClient = settingsStore.get('gameClient');
                     if (gameClient === GameClient.ANDROID) {
-                        const windowInfo = await windowHelper.findLOLWindow(GameClient.ANDROID);
-                        if (windowInfo) {
+                        const candidates = await windowHelper.findLOLWindows(GameClient.ANDROID);
+                        if (candidates.length > 0) {
+                            const orderedCandidates = [...candidates];
+                            if (preferredAndroidWindow) {
+                                orderedCandidates.sort((a, b) => {
+                                    const score = (candidate: WindowInfo): number => {
+                                        const sameTitle = candidate.title === preferredAndroidWindow!.title ? 1 : 0;
+                                        const delta =
+                                            Math.abs(candidate.left - preferredAndroidWindow!.left) +
+                                            Math.abs(candidate.top - preferredAndroidWindow!.top) +
+                                            Math.abs(candidate.width - preferredAndroidWindow!.width) +
+                                            Math.abs(candidate.height - preferredAndroidWindow!.height);
+                                        return sameTitle * 10000 - delta;
+                                    };
+                                    return score(b) - score(a);
+                                });
+                            }
+
                             // 安卓模式下，模拟器窗口常驻，不能只靠窗口存在判定进局。
-                            // 这里增加一次阶段识别：只有能识别到有效阶段（如 2-1）才算真正进入对局。
-                            const initResult = await tftOperator.init();
-                            if (!initResult.success) {
-                                logger.debug("[GameLoadingState] 安卓端窗口已找到，但截图初始化失败，继续等待...");
+                            // 这里对前几个候选窗口逐个尝试阶段识别，避免命中 bluestacks-services 等错误窗口。
+                            const topCandidates = orderedCandidates.slice(0, 3);
+                            for (const candidate of topCandidates) {
+                                const initResult = await tftOperator.init(candidate);
+                                if (!initResult.success) {
+                                    logger.debug(`[GameLoadingState] 安卓候选窗口初始化失败: ${candidate.title}`);
+                                    continue;
+                                }
+
+                                preferredAndroidWindow = candidate;
+
+                                const stageResult = await tftOperator.getGameStage();
+                                if (stageResult.type === GameStageType.UNKNOWN || !stageResult.stageText) {
+                                    logger.debug(
+                                        `[GameLoadingState] 安卓候选窗口未识别到有效阶段: ${candidate.title} ` +
+                                        `(${candidate.width}x${candidate.height})`
+                                    );
+                                    continue;
+                                }
+
+                                logger.info(
+                                    `[GameLoadingState] 安卓端检测到有效阶段: ${stageResult.stageText} ` +
+                                    `(窗口: ${candidate.title})`
+                                );
+                                const windowKey = `${candidate.title}|${candidate.left}|${candidate.top}|${candidate.width}|${candidate.height}`;
+                                if (windowKey === lastValidWindowKey) {
+                                    androidValidStageStreak += 1;
+                                } else {
+                                    androidValidStageStreak = 1;
+                                    lastValidWindowKey = windowKey;
+                                }
+
+                                if (androidValidStageStreak >= 2) {
+                                    logger.info(
+                                        `[GameLoadingState] 安卓端阶段确认通过（连续 ${androidValidStageStreak} 次有效识别）`
+                                    );
+                                    signal.removeEventListener("abort", onAbort);
+                                    cleanup();
+                                    resolve(true);
+                                    return;
+                                }
+
+                                logger.debug(
+                                    `[GameLoadingState] 安卓端阶段确认中: ${androidValidStageStreak}/2 ` +
+                                    `(窗口: ${candidate.title}, 阶段: ${stageResult.stageText})`
+                                );
                                 return;
                             }
 
-                            const stageResult = await tftOperator.getGameStage();
-                            if (stageResult.type === GameStageType.UNKNOWN || !stageResult.stageText) {
-                                logger.debug("[GameLoadingState] 安卓端窗口已找到，但尚未识别到有效对局阶段，继续等待...");
-                                return;
-                            }
-
-                            logger.info(`[GameLoadingState] 安卓端检测到有效阶段: ${stageResult.stageText}`);
-                            signal.removeEventListener("abort", onAbort);
-                            cleanup();
-                            resolve(true);
-                            return;
+                            androidValidStageStreak = 0;
+                            lastValidWindowKey = "";
+                            logger.debug("[GameLoadingState] 安卓端候选窗口均未识别到有效阶段，继续等待...");
                         }
                     } else {
                         await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);
@@ -143,6 +206,8 @@ export class GameLoadingState implements IState {
                     logger.debug("[GameLoadingState] 游戏仍在加载中...");
                 } catch {
                     logger.debug("[GameLoadingState] 游戏仍在加载中...");
+                } finally {
+                    checking = false;
                 }
             };
 

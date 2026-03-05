@@ -60,6 +60,12 @@ export class MouseController {
 
     /** 游戏窗口基准点 (左上角坐标) */
     private gameWindowOrigin: SimplePoint | null = null;
+    /** 坐标缩放（用于安卓模拟器非 1024x768 窗口） */
+    private scaleX = 1;
+    private scaleY = 1;
+
+    private static readonly BASE_WIDTH = 1024;
+    private static readonly BASE_HEIGHT = 768;
 
     private constructor() {}
 
@@ -77,9 +83,24 @@ export class MouseController {
      * 设置游戏窗口基准点
      * @param origin 游戏窗口左上角坐标
      */
-    public setGameWindowOrigin(origin: SimplePoint): void {
+    public setGameWindowOrigin(
+        origin: SimplePoint,
+        windowSize?: { width: number; height: number },
+        useScale: boolean = false
+    ): void {
         this.gameWindowOrigin = origin;
-        logger.info(`[MouseController] 游戏窗口基准点已设置: (${origin.x}, ${origin.y})`);
+        if (useScale && windowSize && windowSize.width > 0 && windowSize.height > 0) {
+            this.scaleX = windowSize.width / MouseController.BASE_WIDTH;
+            this.scaleY = windowSize.height / MouseController.BASE_HEIGHT;
+        } else {
+            this.scaleX = 1;
+            this.scaleY = 1;
+        }
+
+        logger.info(
+            `[MouseController] 游戏窗口基准点已设置: (${origin.x}, ${origin.y}), ` +
+            `缩放: (${this.scaleX.toFixed(3)}, ${this.scaleY.toFixed(3)})`
+        );
     }
 
     /**
@@ -87,6 +108,26 @@ export class MouseController {
      */
     public getGameWindowOrigin(): SimplePoint | null {
         return this.gameWindowOrigin;
+    }
+
+    private toAbsolutePoint(offset: SimplePoint): Point {
+        if (!this.gameWindowOrigin) {
+            throw new Error("[MouseController] 尚未设置游戏窗口基准点，请先调用 setGameWindowOrigin()");
+        }
+
+        const isPercentage = (value: number) => value >= 0 && value <= 1;
+        const isPercentageOffset = isPercentage(offset.x) && isPercentage(offset.y);
+
+        // 与 ScreenCapture 保持一致：百分比坐标使用实际窗口宽高；像素坐标沿用缩放逻辑。
+        const actualWidth = Math.round(MouseController.BASE_WIDTH * this.scaleX);
+        const actualHeight = Math.round(MouseController.BASE_HEIGHT * this.scaleY);
+        const offsetX = isPercentageOffset ? offset.x * actualWidth : offset.x * this.scaleX;
+        const offsetY = isPercentageOffset ? offset.y * actualHeight : offset.y * this.scaleY;
+
+        return new Point(
+            Math.round(this.gameWindowOrigin.x + offsetX),
+            Math.round(this.gameWindowOrigin.y + offsetY)
+        );
     }
 
     /**
@@ -104,18 +145,11 @@ export class MouseController {
      * @throws 如果未初始化游戏窗口基准点
      */
     public async clickAt(offset: SimplePoint, button: MouseButtonType = MouseButtonType.LEFT): Promise<void> {
-        if (!this.gameWindowOrigin) {
-            throw new Error("[MouseController] 尚未设置游戏窗口基准点，请先调用 setGameWindowOrigin()");
-        }
-
-        // 计算屏幕绝对坐标
-        const target = new Point(
-            this.gameWindowOrigin.x + offset.x,
-            this.gameWindowOrigin.y + offset.y
-        );
+        const target = this.toAbsolutePoint(offset);
+        const origin = this.gameWindowOrigin ?? { x: 0, y: 0 };
 
         logger.debug(
-            `[MouseController] 点击: (Origin: ${this.gameWindowOrigin.x},${this.gameWindowOrigin.y}) + ` +
+            `[MouseController] 点击: (Origin: ${origin.x},${origin.y}) + ` +
             `(Offset: ${offset.x},${offset.y}) -> (Target: ${target.x},${target.y})`
         );
 
@@ -154,14 +188,7 @@ export class MouseController {
      * @param offset 相对于游戏窗口左上角的偏移坐标
      */
     public async moveTo(offset: SimplePoint): Promise<void> {
-        if (!this.gameWindowOrigin) {
-            throw new Error("[MouseController] 尚未设置游戏窗口基准点");
-        }
-
-        const target = new Point(
-            this.gameWindowOrigin.x + offset.x,
-            this.gameWindowOrigin.y + offset.y
-        );
+        const target = this.toAbsolutePoint(offset);
 
         try {
             await mouse.move([target]);
@@ -215,19 +242,8 @@ export class MouseController {
         holdDelay: number = 50,
         moveDelay: number = 100
     ): Promise<void> {
-        if (!this.gameWindowOrigin) {
-            throw new Error("[MouseController] 尚未设置游戏窗口基准点，请先调用 setGameWindowOrigin()");
-        }
-
-        // 计算屏幕绝对坐标
-        const fromAbs = new Point(
-            this.gameWindowOrigin.x + from.x,
-            this.gameWindowOrigin.y + from.y
-        );
-        const toAbs = new Point(
-            this.gameWindowOrigin.x + to.x,
-            this.gameWindowOrigin.y + to.y
-        );
+        const fromAbs = this.toAbsolutePoint(from);
+        const toAbs = this.toAbsolutePoint(to);
 
         logger.info(
             `[MouseController] 拖拽: (${from.x},${from.y}) -> (${to.x},${to.y})`

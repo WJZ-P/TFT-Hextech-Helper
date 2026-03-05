@@ -35,21 +35,21 @@ export enum TFTMode {
     S4_RUISHOU = 'S4_RUISHOU',                   //  S4 回归赛季: 瑞兽闹新春（仅匹配）
 }
 
-//  左下角等级region
+//  左下角等级region（百分比形式，留30%误差容限）
 export const levelRegion = {
-    leftTop: { x: 25, y: 625 },
-    rightBottom: { x: 145, y: 645 }
+    leftTop: { x: 0.016, y: 0.796 },    // 原 25, 625 → 0.024, 0.813 -30%
+    rightBottom: { x: 0.160, y: 0.856 } // 原 145, 645 → 0.142, 0.839 +30%
 }
 
-//  战利品掉落region，可能的掉落区域
+//  战利品掉落region，可能的掉落区域（百分比形式，留25%误差容限）
 export const lootRegion = {
-    leftTop: { x: 200, y: 125 },
-    rightBottom: { x: 855, y: 585 }
+    leftTop: { x: 0.150, y: 0.130 },    // 原 200, 125 → 0.195, 0.163 -25%
+    rightBottom: { x: 0.880, y: 0.800 } // 原 855, 585 → 0.835, 0.761 +25%
 }
 
-//  小小英雄默认站位（棋盘左下角）
+//  小小英雄默认站位（棋盘左下角）（百分比形式）
 //  用于战斗结束后让小小英雄回到初始位置，或作为路径规划的起点
-export const littleLegendDefaultPoint = { x: 120, y: 430 };
+export const littleLegendDefaultPoint = { x: 0.100, y: 0.550 };  // 原 120, 430 → 0.117, 0.560
 
 //  英雄购买槽坐标
 export interface SimplePoint {
@@ -57,24 +57,41 @@ export interface SimplePoint {
     y: number;
 }
 
-//  小小英雄随机走位Point(防挂机检测)
+//  小小英雄随机走位Point(防挂机检测) - 百分比形式
 export const selfWalkAroundPoints = {
-    left: [{ x: 156, y: 400 }, { x: 165, y: 355 }, { x: 175, y: 315 }, { x: 185, y: 185 }, { x: 195, y: 150 }],
-    right: [{ x: 840, y: 495 }, { x: 830, y: 450 }, { x: 830, y: 420 }, { x: 800, y: 280 }, { x: 805, y: 295 }, { x: 790, y: 215 }, { x: 790, y: 215 }, { x: 785, y: 180 }, { x: 785, y: 150 }],
+    left: [
+        { x: 0.135, y: 0.520 },   // 原 156, 400
+        { x: 0.145, y: 0.462 },   // 原 165, 355
+        { x: 0.160, y: 0.410 },   // 原 175, 315
+        { x: 0.175, y: 0.240 },   // 原 185, 185
+        { x: 0.190, y: 0.195 }    // 原 195, 150
+    ],
+    right: [
+        { x: 0.820, y: 0.644 },   // 原 840, 495
+        { x: 0.810, y: 0.586 },   // 原 830, 450
+        { x: 0.810, y: 0.547 },   // 原 830, 420
+        { x: 0.780, y: 0.365 },   // 原 800, 280
+        { x: 0.790, y: 0.384 },   // 原 805, 295
+        { x: 0.770, y: 0.280 },   // 原 790, 215
+        { x: 0.770, y: 0.280 },   // 原 790, 215
+        { x: 0.765, y: 0.234 },   // 原 785, 180
+        { x: 0.765, y: 0.195 }    // 原 785, 150
+    ],
 }
 
-//  持有金币region
+//  持有金币region（百分比形式，留25%误差容限）
 export const coinRegion = {
-    leftTop: { x: 505, y: 626 },
-    rightBottom: { x: 545, y: 642 }
+    leftTop: { x: 0.470, y: 0.796 },    // 原 505, 626 → 0.493, 0.815 -25%
+    rightBottom: { x: 0.560, y: 0.856 } // 原 545, 642 → 0.532, 0.836 +25%
 }
 
+//  商店槽位（百分比形式）
 export const shopSlot = {
-    SHOP_SLOT_1: { x: 240, y: 700 },
-    SHOP_SLOT_2: { x: 380, y: 700 },
-    SHOP_SLOT_3: { x: 520, y: 700 },
-    SHOP_SLOT_4: { x: 660, y: 700 },
-    SHOP_SLOT_5: { x: 800, y: 700 },
+    SHOP_SLOT_1: { x: 0.234, y: 0.911 },  // 原 240, 700
+    SHOP_SLOT_2: { x: 0.371, y: 0.911 },  // 原 380, 700
+    SHOP_SLOT_3: { x: 0.508, y: 0.911 },  // 原 520, 700
+    SHOP_SLOT_4: { x: 0.645, y: 0.911 },  // 原 660, 700
+    SHOP_SLOT_5: { x: 0.781, y: 0.911 },  // 原 800, 700
 }
 
 /**
@@ -83,392 +100,411 @@ export const shopSlot = {
  *              比 number 更严谨，避免传入无效索引
  */
 export type ShopSlotIndex = 0 | 1 | 2 | 3 | 4;
-//  英雄购买槽英雄名字Region
+
+//  英雄购买槽英雄名字Region（百分比形式，留20%误差容限）
 export const shopSlotNameRegions = {
     SLOT_1: {   // width: 108 height:18
-        leftTop: { x: 173, y: 740 },
-        rightBottom: { x: 281, y: 758 }
+        leftTop: { x: 0.152, y: 0.960 },    // 原 173, 740 → 0.169, 0.964 -20%
+        rightBottom: { x: 0.300, y: 1.000 } // 原 281, 758 → 0.274, 0.987 +20%
     },
     SLOT_2: {
-        leftTop: { x: 315, y: 740 },
-        rightBottom: { x: 423, y: 758 }
+        leftTop: { x: 0.289, y: 0.960 },    // 原 315, 740
+        rightBottom: { x: 0.437, y: 1.000 } // 原 423, 758
     },
     SLOT_3: {
-        leftTop: { x: 459, y: 740 },
-        rightBottom: { x: 567, y: 758 }
+        leftTop: { x: 0.426, y: 0.960 },    // 原 459, 740
+        rightBottom: { x: 0.574, y: 1.000 } // 原 567, 758
     },
     SLOT_4: {
-        leftTop: { x: 602, y: 740 },
-        rightBottom: { x: 710, y: 758 }
+        leftTop: { x: 0.563, y: 0.960 },    // 原 602, 740
+        rightBottom: { x: 0.711, y: 1.000 } // 原 710, 758
     },
     SLOT_5: {
-        leftTop: { x: 746, y: 740 },
-        rightBottom: { x: 854, y: 758 }
-    },
-}
-//  选中英雄时，右侧英雄详情的英雄idregion，必须分毫不差以复用商店英雄名称模板！
-export const detailChampionNameRegion = {
-    leftTop: { x: 870, y: 226 },
-    rightBottom: { x: 978, y: 244 },
-}
-export const detailEquipRegion = {
-    SLOT_1: {
-        leftTop: { x: 881, y: 347 },
-        rightBottom: { x: 919, y: 385 },
-    },
-    SLOT_2: {
-        leftTop: { x: 927, y: 347 },
-        rightBottom: { x: 965, y: 385 },
-    },
-    SLOT_3: {
-        leftTop: { x: 973, y: 347 },
-        rightBottom: { x: 1011, y: 385 },
+        leftTop: { x: 0.700, y: 0.960 },    // 原 746, 740
+        rightBottom: { x: 0.848, y: 1.000 } // 原 854, 758
     },
 }
 
-//  基础装备锻造器浮窗名称区域（槽位 1-5 使用）
+//  选中英雄时，右侧英雄详情的英雄id region（百分比形式）
+export const detailChampionNameRegion = {
+    leftTop: { x: 0.840, y: 0.290 },      // 原 870, 226
+    rightBottom: { x: 0.980, y: 0.320 }   // 原 978, 244
+}
+
+//  右侧详情面板装备区域（百分比形式，留20%误差容限）
+export const detailEquipRegion = {
+    SLOT_1: {
+        leftTop: { x: 0.844, y: 0.435 },   // 原 881, 347 → 0.859, 0.452 -20%
+        rightBottom: { x: 0.956, y: 0.515 } // 原 919, 385 → 0.898, 0.501 +20%
+    },
+    SLOT_2: {
+        leftTop: { x: 0.890, y: 0.435 },   // 原 927, 347
+        rightBottom: { x: 0.990, y: 0.515 } // 原 965, 385
+    },
+    SLOT_3: {
+        leftTop: { x: 0.936, y: 0.435 },   // 原 973, 347
+        rightBottom: { x: 1.036, y: 0.515 } // 原 1011, 385
+    },
+}
+
+//  基础装备锻造器浮窗名称区域（槽位 1-5 使用）（百分比形式）
 //  注意：X 和 Y 都是相对于鼠标右键点击位置的偏移量，不是屏幕绝对坐标！
 //  右键基础装备锻造器时，会以点击位置为左上角起点，在右下方弹出浮窗
 export const itemForgeTooltipRegion = {
-    leftTop: { x: 56, y: 7 },
-    rightBottom: { x: 176, y: 27 },
+    leftTop: { x: 0.055, y: 0.009 },      // 原 56, 7 (相对坐标，保留绝对值)
+    rightBottom: { x: 0.172, y: 0.035 }   // 原 176, 27
 }
-//  基础装备锻造器浮窗名称区域（槽位 6-9 边缘情况使用）
+
+//  基础装备锻造器浮窗名称区域（槽位 6-9 边缘情况使用）（百分比形式）
 //  当槽位靠近屏幕右边缘时，浮窗会向左弹出，位置计算规则不同：
 //  - X 坐标：基于游戏窗口的绝对坐标（不依赖鼠标点击位置）
 //  - Y 坐标：基于鼠标点击位置的偏移量（仍需加上 clickPoint.y）
 export const itemForgeTooltipRegionEdge = {
-    leftTop: { x: 585, y: 7 },
-    rightBottom: { x: 695, y: 27 },
+    leftTop: { x: 0.571, y: 0.009 },      // 原 585, 7 (相对绝对坐标)
+    rightBottom: { x: 0.679, y: 0.035 }   // 原 695, 27
 }
-//  选中英雄时，右侧查看英雄星级的
+
+//  选中英雄时，右侧查看英雄星级的（百分比形式）
 export const detailChampionStarRegion = {
-    leftTop: { x: 919, y: 122 },
-    rightBottom: { x: 974, y: 132 }
+    leftTop: { x: 0.898, y: 0.151 },      // 原 919, 122
+    rightBottom: { x: 0.952, y: 0.172 }   // 原 974, 132
 }
 
-//  刷新商店Point（D牌按钮，在升级按钮下方）
-export const refreshShopPoint = {x:135, y:730}
-//  购买经验Point（升级按钮，在D牌按钮上方）
-export const buyExpPoint = {x:135, y:680}
+//  刷新商店Point（D牌按钮，在升级按钮下方）（百分比形式）
+export const refreshShopPoint = { x: 0.132, y: 0.950 }  // 原 135, 730
 
-//  装备槽位坐标
+//  购买经验Point（升级按钮，在D牌按钮上方）（百分比形式）
+export const buyExpPoint = { x: 0.132, y: 0.885 }  // 原 135, 680
+
+//  装备槽位坐标（百分比形式）
 export const equipmentSlot = {
-    EQ_SLOT_1: { x: 20, y: 210 },//+35
-    EQ_SLOT_2: { x: 20, y: 245 },
-    EQ_SLOT_3: { x: 20, y: 280 },
-    EQ_SLOT_4: { x: 20, y: 315 },
-    EQ_SLOT_5: { x: 20, y: 350 },
-    EQ_SLOT_6: { x: 20, y: 385 },
-    EQ_SLOT_7: { x: 20, y: 430 },//   这里重置下准确位置
-    EQ_SLOT_8: { x: 20, y: 465 },
-    EQ_SLOT_9: { x: 20, y: 500 },
-    EQ_SLOT_10: { x: 20, y: 535 },
+    EQ_SLOT_1: { x: 0.0195, y: 0.273 },      // 原 20, 210
+    EQ_SLOT_2: { x: 0.0195, y: 0.319 },      // 原 20, 245
+    EQ_SLOT_3: { x: 0.0195, y: 0.364 },      // 原 20, 280
+    EQ_SLOT_4: { x: 0.0195, y: 0.410 },      // 原 20, 315
+    EQ_SLOT_5: { x: 0.0195, y: 0.455 },      // 原 20, 350
+    EQ_SLOT_6: { x: 0.0195, y: 0.501 },      // 原 20, 385
+    EQ_SLOT_7: { x: 0.0195, y: 0.560 },      // 原 20, 430
+    EQ_SLOT_8: { x: 0.0195, y: 0.605 },      // 原 20, 465
+    EQ_SLOT_9: { x: 0.0195, y: 0.651 },      // 原 20, 500
+    EQ_SLOT_10: { x: 0.0195, y: 0.697 },     // 原 20, 535
 }
-//  装备槽位具体区域
-export const equipmentRegion = {   //  宽24，高25
-    SLOT_1: {                   //  y+=36
-        leftTop: { x: 9, y: 198 },
-        rightBottom: { x: 32, y: 222 }
+
+//  装备槽位识别区域（百分比形式，留20%误差容限）
+export const equipmentRegion = {
+    SLOT_1: {
+        leftTop: { x: 0.00879, y: 0.257 },    // 原 9, 198 → 留-20%
+        rightBottom: { x: 0.0312, y: 0.289 }  // 原 32, 222 → 留+20%
     },
     SLOT_2: {
-        leftTop: { x: 9, y: 234 },
-        rightBottom: { x: 32, y: 258 }
+        leftTop: { x: 0.00879, y: 0.304 },    // 原 9, 234
+        rightBottom: { x: 0.0312, y: 0.336 }  // 原 32, 258
     },
     SLOT_3: {
-        leftTop: { x: 9, y: 271 },
-        rightBottom: { x: 32, y: 295 }
+        leftTop: { x: 0.00879, y: 0.352 },    // 原 9, 271
+        rightBottom: { x: 0.0312, y: 0.384 }  // 原 32, 295
     },
     SLOT_4: {
-        leftTop: { x: 9, y: 307 },
-        rightBottom: { x: 32, y: 331 }
+        leftTop: { x: 0.00879, y: 0.399 },    // 原 9, 307
+        rightBottom: { x: 0.0312, y: 0.431 }  // 原 32, 331
     },
     SLOT_5: {
-        leftTop: { x: 9, y: 344 },
-        rightBottom: { x: 32, y: 368 }
+        leftTop: { x: 0.00879, y: 0.447 },    // 原 9, 344
+        rightBottom: { x: 0.0312, y: 0.479 }  // 原 32, 368
     },
     SLOT_6: {
-        leftTop: { x: 9, y: 380 },
-        rightBottom: { x: 32, y: 404 }
+        leftTop: { x: 0.00879, y: 0.495 },    // 原 9, 380
+        rightBottom: { x: 0.0312, y: 0.526 }  // 原 32, 404
     },
     SLOT_7: {
-        leftTop: { x: 9, y: 417 },
-        rightBottom: { x: 32, y: 441 }
+        leftTop: { x: 0.00879, y: 0.542 },    // 原 9, 417
+        rightBottom: { x: 0.0312, y: 0.574 }  // 原 32, 441
     },
     SLOT_8: {
-        leftTop: { x: 9, y: 453 },
-        rightBottom: { x: 32, y: 477 }
+        leftTop: { x: 0.00879, y: 0.590 },    // 原 9, 453
+        rightBottom: { x: 0.0312, y: 0.621 }  // 原 32, 477
     },
     SLOT_9: {
-        leftTop: { x: 9, y: 490 },
-        rightBottom: { x: 32, y: 514 }
+        leftTop: { x: 0.00879, y: 0.638 },    // 原 9, 490
+        rightBottom: { x: 0.0312, y: 0.669 }  // 原 32, 514
     },
     SLOT_10: {
-        leftTop: { x: 9, y: 526 },
-        rightBottom: { x: 32, y: 550 }
+        leftTop: { x: 0.00879, y: 0.684 },    // 原 9, 526
+        rightBottom: { x: 0.0312, y: 0.716 }  // 原 32, 550
     },
 }
-//  棋子在战场上的点位，用于鼠标点击选择英雄
-//  注意：Y 坐标往上偏移 5 像素，避免点击时误触到下一行的棋子
+//  棋子在战场上的点位，用于鼠标点击选择英雄（百分比形式）
+// 注意：Y 坐标往上偏移 5 像素，避免点击时误触到下一行的棋子
 export const fightBoardSlotPoint = {
-    // x+=80
-    //  第一行的棋子位置
-    R1_C1: { x: 230, y: 300 },
-    R1_C2: { x: 310, y: 300 },
-    R1_C3: { x: 390, y: 300 },
-    R1_C4: { x: 470, y: 300 },
-    R1_C5: { x: 550, y: 300 },
-    R1_C6: { x: 630, y: 300 },
-    R1_C7: { x: 710, y: 300 },
-    //  第二行的棋子位置        //  x+=85
-    R2_C1: { x: 260, y: 355 },
-    R2_C2: { x: 345, y: 355 },
-    R2_C3: { x: 430, y: 355 },
-    R2_C4: { x: 515, y: 355 },
-    R2_C5: { x: 600, y: 355 },
-    R2_C6: { x: 685, y: 355 },
-    R2_C7: { x: 770, y: 355 },
-    //  第三行棋子的位置        //  x+=90
-    R3_C1: { x: 200, y: 405 },
-    R3_C2: { x: 290, y: 405 },
-    R3_C3: { x: 380, y: 405 },
-    R3_C4: { x: 470, y: 405 },
-    R3_C5: { x: 560, y: 405 },
-    R3_C6: { x: 650, y: 405 },
-    R3_C7: { x: 740, y: 405 },
-    //  第四行棋子的位置        //  x+=90
-    R4_C1: { x: 240, y: 460 },
-    R4_C2: { x: 330, y: 460 },
-    R4_C3: { x: 420, y: 460 },
-    R4_C4: { x: 510, y: 460 },
-    R4_C5: { x: 600, y: 460 },
-    R4_C6: { x: 690, y: 460 },
-    R4_C7: { x: 780, y: 460 },
+    // 第一行的棋子位置
+    R1_C1: { x: 0.2246, y: 0.3906 },   // 原 230, 300
+    R1_C2: { x: 0.3027, y: 0.3906 },   // 原 310, 300
+    R1_C3: { x: 0.3809, y: 0.3906 },   // 原 390, 300
+    R1_C4: { x: 0.4590, y: 0.3906 },   // 原 470, 300
+    R1_C5: { x: 0.5371, y: 0.3906 },   // 原 550, 300
+    R1_C6: { x: 0.6152, y: 0.3906 },   // 原 630, 300
+    R1_C7: { x: 0.6934, y: 0.3906 },   // 原 710, 300
+    // 第二行的棋子位置
+    R2_C1: { x: 0.2539, y: 0.4622 },   // 原 260, 355
+    R2_C2: { x: 0.3369, y: 0.4622 },   // 原 345, 355
+    R2_C3: { x: 0.4199, y: 0.4622 },   // 原 430, 355
+    R2_C4: { x: 0.5029, y: 0.4622 },   // 原 515, 355
+    R2_C5: { x: 0.5859, y: 0.4622 },   // 原 600, 355
+    R2_C6: { x: 0.6689, y: 0.4622 },   // 原 685, 355
+    R2_C7: { x: 0.7520, y: 0.4622 },   // 原 770, 355
+    // 第三行棋子的位置
+    R3_C1: { x: 0.1953, y: 0.5273 },   // 原 200, 405
+    R3_C2: { x: 0.2832, y: 0.5273 },   // 原 290, 405
+    R3_C3: { x: 0.3711, y: 0.5273 },   // 原 380, 405
+    R3_C4: { x: 0.4590, y: 0.5273 },   // 原 470, 405
+    R3_C5: { x: 0.5469, y: 0.5273 },   // 原 560, 405
+    R3_C6: { x: 0.6348, y: 0.5273 },   // 原 650, 405
+    R3_C7: { x: 0.7227, y: 0.5273 },   // 原 740, 405
+    // 第四行棋子的位置
+    R4_C1: { x: 0.2344, y: 0.5989 },   // 原 240, 460
+    R4_C2: { x: 0.3223, y: 0.5989 },   // 原 330, 460
+    R4_C3: { x: 0.4102, y: 0.5989 },   // 原 420, 460
+    R4_C4: { x: 0.4980, y: 0.5989 },   // 原 510, 460
+    R4_C5: { x: 0.5859, y: 0.5989 },   // 原 600, 460
+    R4_C6: { x: 0.6738, y: 0.5989 },   // 原 690, 460
+    R4_C7: { x: 0.7617, y: 0.5989 },   // 原 780, 460
 }
-//  棋子在战场上的region，用来判断是否有棋子
+//  棋子在战场上的region，用来判断是否有棋子（百分比形式）
 //  leftTop.y 使用 -10 偏移，兼容 3D 飞行棋子的高度
 //  leftTop.x +5, rightBottom.x -5，避免宽体棋子占据邻居位置导致误判
 export const fightBoardSlotRegion = {
-    // x+=80
-    //  第一行的棋子位置
+    // 第一行的棋子位置
     R1_C1: {
-        leftTop: { x: 210 + 5, y: 300 - 10 },
-        rightBottom: { x: 255 - 5, y: 330 }
+        leftTop: { x: 0.2148, y: 0.3776 },    // 原 215+5, 300-10 = 220, 290
+        rightBottom: { x: 0.2441, y: 0.4297 } // 原 255-5, 330 = 250, 330
     },
     R1_C2: {
-        leftTop: { x: 290 + 5, y: 300 - 10 },
-        rightBottom: { x: 340 - 5, y: 330 }
+        leftTop: { x: 0.2871, y: 0.3776 },    // 原 295+5, 300-10
+        rightBottom: { x: 0.3330, y: 0.4297 } // 原 340-5, 330
     },
     R1_C3: {
-        leftTop: { x: 370 + 5, y: 300 - 10 },
-        rightBottom: { x: 420 - 5, y: 330 }
+        leftTop: { x: 0.3662, y: 0.3776 },    // 原 375+5, 300-10
+        rightBottom: { x: 0.4111, y: 0.4297 } // 原 420-5, 330
     },
     R1_C4: {
-        leftTop: { x: 450 + 5, y: 300 - 10 },
-        rightBottom: { x: 500 - 5, y: 330 }
+        leftTop: { x: 0.4443, y: 0.3776 },    // 原 455+5, 300-10
+        rightBottom: { x: 0.4893, y: 0.4297 } // 原 500-5, 330
     },
     R1_C5: {
-        leftTop: { x: 530 + 5, y: 300 - 10 },
-        rightBottom: { x: 585 - 5, y: 330 }
+        leftTop: { x: 0.5225, y: 0.3776 },    // 原 535+5, 300-10
+        rightBottom: { x: 0.5723, y: 0.4297 } // 原 585-5, 330
     },
     R1_C6: {
-        leftTop: { x: 615 + 5, y: 300 - 10 },
-        rightBottom: { x: 665 - 5, y: 330 }
+        leftTop: { x: 0.6006, y: 0.3776 },    // 原 615+5, 300-10
+        rightBottom: { x: 0.6504, y: 0.4297 } // 原 665-5, 330
     },
     R1_C7: {
-        leftTop: { x: 695 + 5, y: 300 - 10 },
-        rightBottom: { x: 750 - 5, y: 330 }
+        leftTop: { x: 0.6787, y: 0.3776 },    // 原 695+5, 300-10
+        rightBottom: { x: 0.7324, y: 0.4297 } // 原 750-5, 330
     },
-    //  第二行的棋子位置        //  x+=85
+    // 第二行的棋子位置
     R2_C1: {
-        leftTop: { x: 240 + 5, y: 350 - 10 },
-        rightBottom: { x: 285 - 5, y: 385 }
+        leftTop: { x: 0.2402, y: 0.4557 },    // 原 245+5, 350-10 = 250, 340
+        rightBottom: { x: 0.2783, y: 0.5013 } // 原 285-5, 385 = 280, 385
     },
     R2_C2: {
-        leftTop: { x: 325 + 5, y: 350 - 10 },
-        rightBottom: { x: 370 - 5, y: 385 }
+        leftTop: { x: 0.3223, y: 0.4557 },    // 原 330+5, 350-10
+        rightBottom: { x: 0.3613, y: 0.5013 } // 原 370-5, 385
     },
     R2_C3: {
-        leftTop: { x: 410 + 5, y: 350 - 10 },
-        rightBottom: { x: 455 - 5, y: 385 }
+        leftTop: { x: 0.4053, y: 0.4557 },    // 原 415+5, 350-10
+        rightBottom: { x: 0.4443, y: 0.5013 } // 原 455-5, 385
     },
     R2_C4: {
-        leftTop: { x: 495 + 5, y: 350 - 10 },
-        rightBottom: { x: 540 - 5, y: 385 }
+        leftTop: { x: 0.4883, y: 0.4557 },    // 原 500+5, 350-10
+        rightBottom: { x: 0.5273, y: 0.5013 } // 原 540-5, 385
     },
     R2_C5: {
-        leftTop: { x: 575 + 5, y: 350 - 10 },
-        rightBottom: { x: 625 - 5, y: 385 }
+        leftTop: { x: 0.5664, y: 0.4557 },    // 原 580+5, 350-10
+        rightBottom: { x: 0.6104, y: 0.5013 } // 原 625-5, 385
     },
     R2_C6: {
-        leftTop: { x: 660 + 5, y: 350 - 10 },
-        rightBottom: { x: 710 - 5, y: 385 }
+        leftTop: { x: 0.6494, y: 0.4557 },    // 原 665+5, 350-10
+        rightBottom: { x: 0.6934, y: 0.5013 } // 原 710-5, 385
     },
     R2_C7: {
-        leftTop: { x: 745 + 5, y: 350 - 10 },
-        rightBottom: { x: 795 - 5, y: 385 }
+        leftTop: { x: 0.7324, y: 0.4557 },    // 原 750+5, 350-10
+        rightBottom: { x: 0.7764, y: 0.5013 } // 原 795-5, 385
     },
-    //  第三行棋子的位置        //  x+=90
+    // 第三行棋子的位置
     R3_C1: {
-        leftTop: { x: 185 + 5, y: 405 - 10 },
-        rightBottom: { x: 230 - 5, y: 440 }
+        leftTop: { x: 0.1855, y: 0.5273 },    // 原 190+5, 405-10 = 195, 395
+        rightBottom: { x: 0.2246, y: 0.5729 } // 原 230-5, 440
     },
     R3_C2: {
-        leftTop: { x: 275 + 5, y: 405 - 10 },
-        rightBottom: { x: 320 - 5, y: 440 }
+        leftTop: { x: 0.2773, y: 0.5273 },    // 原 280+5, 405-10
+        rightBottom: { x: 0.3125, y: 0.5729 } // 原 320-5, 440
     },
     R3_C3: {
-        leftTop: { x: 360 + 5, y: 405 - 10 },
-        rightBottom: { x: 410 - 5, y: 440 }
+        leftTop: { x: 0.3613, y: 0.5273 },    // 原 365+5, 405-10
+        rightBottom: { x: 0.4004, y: 0.5729 } // 原 410-5, 440
     },
     R3_C4: {
-        leftTop: { x: 445 + 5, y: 405 - 10 },
-        rightBottom: { x: 495 - 5, y: 440 }
+        leftTop: { x: 0.4443, y: 0.5273 },    // 原 450+5, 405-10
+        rightBottom: { x: 0.4834, y: 0.5729 } // 原 495-5, 440
     },
     R3_C5: {
-        leftTop: { x: 535 + 5, y: 405 - 10 },
-        rightBottom: { x: 585 - 5, y: 440 }
+        leftTop: { x: 0.5342, y: 0.5273 },    // 原 540+5, 405-10
+        rightBottom: { x: 0.5713, y: 0.5729 } // 原 585-5, 440
     },
     R3_C6: {
-        leftTop: { x: 620 + 5, y: 405 - 10 },
-        rightBottom: { x: 675 - 5, y: 440 }
+        leftTop: { x: 0.6152, y: 0.5273 },    // 原 625+5, 405-10
+        rightBottom: { x: 0.6592, y: 0.5729 } // 原 675-5, 440
     },
     R3_C7: {
-        leftTop: { x: 705 + 5, y: 405 - 10 },
-        rightBottom: { x: 760 - 5, y: 440 }
+        leftTop: { x: 0.6963, y: 0.5273 },    // 原 710+5, 405-10
+        rightBottom: { x: 0.7422, y: 0.5729 } // 原 760-5, 440
     },
-    //  第四行棋子的位置        //  x+=90
+    // 第四行棋子的位置
     R4_C1: {
-        leftTop: { x: 215 + 5, y: 465 - 10 },
-        rightBottom: { x: 265 - 5, y: 500 }
+        leftTop: { x: 0.2148, y: 0.5989 },    // 原 220+5, 465-10 = 225, 455
+        rightBottom: { x: 0.2588, y: 0.6510 } // 原 265-5, 500
     },
     R4_C2: {
-        leftTop: { x: 310 + 5, y: 465 - 10 },
-        rightBottom: { x: 355 - 5, y: 500 }
+        leftTop: { x: 0.3042, y: 0.5989 },    // 原 315+5, 465-10
+        rightBottom: { x: 0.3467, y: 0.6510 } // 原 355-5, 500
     },
     R4_C3: {
-        leftTop: { x: 395 + 5, y: 465 - 10 },
-        rightBottom: { x: 450 - 5, y: 500 }
+        leftTop: { x: 0.3931, y: 0.5989 },    // 原 400+5, 465-10
+        rightBottom: { x: 0.4404, y: 0.6510 } // 原 450-5, 500
     },
     R4_C4: {
-        leftTop: { x: 490 + 5, y: 465 - 10 },
-        rightBottom: { x: 540 - 5, y: 500 }
+        leftTop: { x: 0.4785, y: 0.5989 },    // 原 490+5, 465-10
+        rightBottom: { x: 0.5283, y: 0.6510 } // 原 540-5, 500
     },
     R4_C5: {
-        leftTop: { x: 580 + 5, y: 465 - 10 },
-        rightBottom: { x: 635 - 5, y: 500 }
+        leftTop: { x: 0.5699, y: 0.5989 },    // 原 580+5, 465-10
+        rightBottom: { x: 0.6201, y: 0.6510 } // 原 635-5, 500
     },
     R4_C6: {
-        leftTop: { x: 670 + 5, y: 465 - 10 },
-        rightBottom: { x: 725 - 5, y: 500 }
+        leftTop: { x: 0.6553, y: 0.5989 },    // 原 670+5, 465-10
+        rightBottom: { x: 0.7085, y: 0.6510 } // 原 725-5, 500
     },
     R4_C7: {
-        leftTop: { x: 760 + 5, y: 465 - 10 },
-        rightBottom: { x: 815 - 5, y: 500 }
+        leftTop: { x: 0.7441, y: 0.5989 },    // 原 760+5, 465-10
+        rightBottom: { x: 0.7959, y: 0.6510 } // 原 815-5, 500
     },
 }
 
-//  棋子在备战席的region，用来判断是否有棋子
+//  棋子在备战席的region，用来判断是否有棋子（百分比形式）
 //  leftTop.y 使用 -15 偏移，兼容 3D 飞行棋子的高度
 //  leftTop.x +5, rightBottom.x -5，避免宽体棋子占据邻居位置导致误判
 export const benchSlotRegion = {
     SLOT_1: {
-        leftTop: { x: 105 + 5, y: 530 - 15 },
-        rightBottom: { x: 155 - 5, y: 585 }
+        leftTop: { x: 0.1074, y: 0.6719 },    // 原 110+5, 530-15 = 115, 515
+        rightBottom: { x: 0.1514, y: 0.7617 } // 原 155-5, 585 = 150, 585
     },
     SLOT_2: {
-        leftTop: { x: 190 + 5, y: 530 - 15 },
-        rightBottom: { x: 245 - 5, y: 585 }
+        leftTop: { x: 0.1895, y: 0.6719 },    // 原 195+5, 530-15
+        rightBottom: { x: 0.2388, y: 0.7617 } // 原 245-5, 585
     },
     SLOT_3: {
-        leftTop: { x: 270 + 5, y: 530 - 15 },
-        rightBottom: { x: 325 - 5, y: 585 }
+        leftTop: { x: 0.2686, y: 0.6719 },    // 原 275+5, 530-15
+        rightBottom: { x: 0.3174, y: 0.7617 } // 原 325-5, 585
     },
     SLOT_4: {
-        leftTop: { x: 355 + 5, y: 530 - 15 },
-        rightBottom: { x: 410 - 5, y: 585 }
+        leftTop: { x: 0.3564, y: 0.6719 },    // 原 360+5, 530-15
+        rightBottom: { x: 0.4053, y: 0.7617 } // 原 415-5, 585
     },
     SLOT_5: {
-        leftTop: { x: 435 + 5, y: 530 - 15 },
-        rightBottom: { x: 495 - 5, y: 585 }
+        leftTop: { x: 0.4443, y: 0.6719 },    // 原 440+5, 530-15
+        rightBottom: { x: 0.4932, y: 0.7617 } // 原 495-5, 585
     },
     SLOT_6: {
-        leftTop: { x: 520 + 5, y: 530 - 15 },
-        rightBottom: { x: 580 - 5, y: 585 }
+        leftTop: { x: 0.5273, y: 0.6719 },    // 原 525+5, 530-15
+        rightBottom: { x: 0.5859, y: 0.7617 } // 原 580-5, 585
     },
     SLOT_7: {
-        leftTop: { x: 600 + 5, y: 530 - 15 },
-        rightBottom: { x: 665 - 5, y: 585 }
+        leftTop: { x: 0.6055, y: 0.6719 },    // 原 605+5, 530-15
+        rightBottom: { x: 0.6660, y: 0.7617 } // 原 665-5, 585
     },
     SLOT_8: {
-        leftTop: { x: 680 + 5, y: 530 - 15 },
-        rightBottom: { x: 750 - 5, y: 585 }
+        leftTop: { x: 0.6846, y: 0.6719 },    // 原 685+5, 530-15
+        rightBottom: { x: 0.7373, y: 0.7617 } // 原 750-5, 585
     },
     SLOT_9: {
-        leftTop: { x: 765 + 5, y: 530 - 15 },
-        rightBottom: { x: 830 - 5, y: 585 }
+        leftTop: { x: 0.7715, y: 0.6719 },    // 原 770+5, 530-15
+        rightBottom: { x: 0.8105, y: 0.7617 } // 原 830-5, 585
     },
 }
 
-//  备战席点位
+//  备战席点位（百分比形式）
 export const benchSlotPoints = {
-    SLOT_1: { x: 130, y: 555 },
-    SLOT_2: { x: 210, y: 555 },
-    SLOT_3: { x: 295, y: 555 },
-    SLOT_4: { x: 385, y: 555 },
-    SLOT_5: { x: 465, y: 555 },
-    SLOT_6: { x: 550, y: 555 },
-    SLOT_7: { x: 630, y: 555 },
-    SLOT_8: { x: 720, y: 555 },
-    SLOT_9: { x: 800, y: 555 },
+    SLOT_1: { x: 0.1270, y: 0.7227 },   // 原 130, 555
+    SLOT_2: { x: 0.2051, y: 0.7227 },   // 原 210, 555
+    SLOT_3: { x: 0.2881, y: 0.7227 },   // 原 295, 555
+    SLOT_4: { x: 0.3760, y: 0.7227 },   // 原 385, 555
+    SLOT_5: { x: 0.4541, y: 0.7227 },   // 原 465, 555
+    SLOT_6: { x: 0.5371, y: 0.7227 },   // 原 550, 555
+    SLOT_7: { x: 0.6152, y: 0.7227 },   // 原 630, 555
+    SLOT_8: { x: 0.7031, y: 0.7227 },   // 原 720, 555
+    SLOT_9: { x: 0.7813, y: 0.7227 },   // 原 800, 555
 }
-//  海克斯选择槽位
-export const hexSlot = {   //  x+=295
-    SLOT_1: { x: 215, y: 410 },
-    SLOT_2: { x: 510, y: 410 },
-    SLOT_3: { x: 805, y: 410 },
+//  海克斯选择槽位（百分比形式）
+export const hexSlot = {
+    SLOT_1: { x: 0.2100, y: 0.5339 },   // 原 215, 410
+    SLOT_2: { x: 0.4980, y: 0.5339 },   // 原 510, 410
+    SLOT_3: { x: 0.7861, y: 0.5339 },   // 原 805, 410
 }
-//  选秀站位，为离自己最近的棋子位置。
-export const sharedDraftPoint = { x: 530, y: 400 }
 
-//  游戏结束后的"现在退出"按钮坐标
-//  玩家死亡后会弹出结算界面，点击此按钮可以退出游戏，不直到第一和第二名的结算UI跟这个是否一样，因为前两名就没有继续观看了。
-export const exitGameButtonPoint = { x: 515, y: 405 }
-//  游戏战斗阶段展示坐标，第一阶段。因为第一阶段只有四个回合，跟其他阶段的不一样。
-export const gameStageDisplayStageOne = {
-    leftTop: { x: 411, y: 6 },
-    rightBottom: { x: 442, y: 22 }
-}
-//  游戏战斗阶段展示坐标，从2-1开始。
-export const gameStageDisplayNormal = {
-    leftTop: { x: 374, y: 6 },
-    rightBottom: { x: 403, y: 22 }
-}
-//  发条鸟的战斗阶段，布局跟其他的都不一样，因为发条鸟一个大阶段有10场
-export const gameStageDisplayTheClockworkTrails = {
-    leftTop: { x: 337, y: 6 },
-    rightBottom: { x: 366, y: 22 }
-}
-//  发条鸟模式右下角战斗按钮
+//  选秀站位，为离自己最近的棋子位置（百分比形式）
+export const sharedDraftPoint = { x: 0.5176, y: 0.5208 }  // 原 530, 400
+
+//  游戏结束后的"现在退出"按钮坐标（百分比形式）
+//  玩家死亡后会弹出结算界面，点击此按钮可以退出游戏
+export const exitGameButtonPoint = { x: 0.5029, y: 0.5273 }  // 原 515, 405
+
+//  发条鸟模式右下角战斗按钮（百分比形式）
 export const clockworkTrailsFightButtonPoint = {
-    x: 955,
-    y: 705
-}
-//  发条鸟模式死亡后右侧"现在退出按钮"
+    x: 0.9326,
+    y: 0.9167
+}  // 原 955, 705
+
+//  发条鸟模式死亡后右侧"现在退出按钮"（百分比形式）
 export const clockworkTrailsQuitNowButtonRegion = {
-    leftTop: { x: 780, y: 555},
-    rightBottom: { x: 845, y:570}
-}
-//  发条鸟模式"现在退出"按钮点击坐标
-export const clockworkTrailsQuitNowButtonPoint = {
-    x: 815,
-    y: 560
+    leftTop: { x: 0.7617, y: 0.7227 },   // 原 780, 555
+    rightBottom: { x: 0.8252, y: 0.7422 } // 原 845, 570
 }
 
-//  "战斗环节"四字region（用来判断是否停止操作）
+//  发条鸟模式"现在退出"按钮点击坐标（百分比形式）
+export const clockworkTrailsQuitNowButtonPoint = {
+    x: 0.7959,
+    y: 0.7292
+}  // 原 815, 560
+
 export const combatPhaseTextRegion = {
-    leftTop: { x: 465, y: 110 },
-    rightBottom: { x: 560, y: 135 }
+    leftTop: { x: 0.4541, y: 0.1432 },   // 原 465, 110
+    rightBottom: { x: 0.5469, y: 0.1757 } // 原 560, 135
+}
+
+//  游戏战斗阶段展示坐标，第一阶段。因为第一阶段只有四个回合，跟其他阶段的不一样（百分比形式）
+export const gameStageDisplayStageOne = {
+    leftTop: { x: 0.26, y: 0.01 },      // 占窗口的 26%, 1%
+    rightBottom: { x: 0.44, y: 0.035 }  // 占窗口的 44%, 3.5%
+}
+
+//  游戏战斗阶段展示坐标，从2-1开始（百分比形式）
+export const gameStageDisplayNormal = {
+    leftTop: { x: 0.25, y: 0.01 },      // 占窗口的 25%, 1%
+    rightBottom: { x: 0.42, y: 0.035 }  // 占窗口的 42%, 3.5%
+}
+
+//  游戏阶段展示（商店打开时）（百分比形式）
+//  商店打开时顶部UI会有轻微位移，需要额外的识别区域
+export const gameStageDisplayShopOpen = {
+    leftTop: { x: 0.24, y: 0.005 },     // 占窗口的 24%, 0.5%
+    rightBottom: { x: 0.45, y: 0.04 }   // 占窗口的 45%, 4%
+}
+
+//  发条鸟的战斗阶段，布局跟其他的都不一样，因为发条鸟一个大阶段有10场（百分比形式）
+export const gameStageDisplayTheClockworkTrails = {
+    leftTop: { x: 0.22, y: 0.01 },      // 占窗口的 22%, 1%
+    rightBottom: { x: 0.40, y: 0.035 }  // 占窗口的 40%, 3.5%
 }
 
 //  棋子类型接口

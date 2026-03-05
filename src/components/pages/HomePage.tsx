@@ -15,6 +15,7 @@ import {SummonerInfo} from "../../../src-backend/lcu/utils/LCUProtocols.ts";
 import {TFTMode} from "../../../src-backend/TFTProtocol.ts";
 import {LogMode} from "../../../src-backend/types/AppTypes.ts";
 import {settingsStore, GameStatistics} from "../../stores/settingsStore.ts";
+import type { GameClient } from "../../types/GameTypes.ts";
 
 // 导入 APP 图标（让 Vite 正确处理资源路径）
 import appIconUrl from '../../../public/icon.png';
@@ -1115,6 +1116,12 @@ export const HomePage = () => {
     const [statistics, setStatistics] = useState<GameStatistics>(settingsStore.getStatistics());
     // 新增：格式化后的运行时长文本
     const [elapsedTime, setElapsedTime] = useState('00:00:00');
+    // 新增：当前客户端类型（安卓端/电脑 Riot 端）
+    const [gameClient, setGameClient] = useState<GameClient>(settingsStore.getGameClient());
+
+    // 安卓端模式不依赖 LCU 连接
+    const requiresLcu = gameClient !== 'ANDROID';
+    const isClientReady = requiresLcu ? isLcuConnected : true;
 
     /**
      * 检查指定模式对应的赛季是否有已选中的阵容
@@ -1203,6 +1210,8 @@ export const HomePage = () => {
             // 获取 LCU 连接状态
             const connected = await window.lcu.getConnectionStatus();
             setIsLcuConnected(connected);
+            const currentClient = settingsStore.getGameClient();
+            setGameClient(currentClient);
             
             // 获取 HexService 运行状态（页面切换回来时恢复正确状态）
             const running = await window.hex.getStatus();
@@ -1228,6 +1237,12 @@ export const HomePage = () => {
             await settingsStore.refreshStatistics();
             setStatistics(settingsStore.getStatistics());
             
+            if (currentClient === 'ANDROID') {
+                // 安卓端不依赖 LCU，直接进入可操作状态
+                setIsLoading(false);
+                return;
+            }
+
             if (connected) {
                 // 如果已经连接了，直接获取召唤师信息
                 fetchSummonerInfo();
@@ -1242,15 +1257,19 @@ export const HomePage = () => {
         const cleanupConnect = window.lcu.onConnect(() => {
             console.log('🎮 [HomePage] 收到 LCU 连接事件');
             setIsLcuConnected(true);
-            fetchSummonerInfo();
+            if (settingsStore.getGameClient() !== 'ANDROID') {
+                fetchSummonerInfo();
+            }
         });
 
         // 3. 监听 LCU 断开事件
         const cleanupDisconnect = window.lcu.onDisconnect(() => {
             console.log('🎮 [HomePage] 收到 LCU 断开事件');
             setIsLcuConnected(false);
-            setSummonerInfo(null);
-            setIsLoading(false);
+            if (settingsStore.getGameClient() !== 'ANDROID') {
+                setSummonerInfo(null);
+                setIsLoading(false);
+            }
         });
 
         // 4. 组件卸载时清理监听器
@@ -1265,6 +1284,13 @@ export const HomePage = () => {
         // 订阅 settingsStore 的变化，实时更新统计数据
         const unsubscribe = settingsStore.subscribe(() => {
             setStatistics(settingsStore.getStatistics());
+            const latestClient = settingsStore.getGameClient();
+            setGameClient(latestClient);
+            if (latestClient === 'ANDROID') {
+                // 切到安卓端后无需等待 LCU
+                setSummonerInfo(null);
+                setIsLoading(false);
+            }
         });
 
         return () => unsubscribe();
@@ -1339,7 +1365,7 @@ export const HomePage = () => {
 
     const handleToggle = async () => {
         // 未连接客户端时禁止操作
-        if (!isLcuConnected) {
+        if (!isClientReady) {
             return;
         }
 
@@ -1602,7 +1628,7 @@ export const HomePage = () => {
                     <LoadingPlaceholder>
                         <span>正在获取召唤师信息...</span>
                     </LoadingPlaceholder>
-                ) : !isLcuConnected ? (
+                ) : (requiresLcu && !isLcuConnected) ? (
                     // 未连接 LOL 客户端时的提示 - 海克斯科技风格
                     <LoadingPlaceholder>
                         <ProjectTitle>TFT-Hextech-Helper</ProjectTitle>
@@ -1614,6 +1640,23 @@ export const HomePage = () => {
                         </AppIconContainer>
                         
                         {/* 未检测到管理员权限时显示警告 */}
+                        {isElevated === false && (
+                            <AdminWarningBanner>
+                                <WarningAmberIcon style={{ fontSize: '1rem' }} />
+                                请以管理员模式运行本软件！(╯°□°)╯︵ ┻━┻
+                            </AdminWarningBanner>
+                        )}
+                    </LoadingPlaceholder>
+                ) : !requiresLcu ? (
+                    // 安卓端模式提示（不依赖 LCU）
+                    <LoadingPlaceholder>
+                        <ProjectTitle>TFT-Hextech-Helper</ProjectTitle>
+                        <AppIconContainer>
+                            <RadarCircle />
+                            <RadarCircleInner />
+                            <AppIconImage src={appIconUrl} alt="App Icon" />
+                        </AppIconContainer>
+                        <span>安卓端模式已启用：手动进入对局后点击开始</span>
                         {isElevated === false && (
                             <AdminWarningBanner>
                                 <WarningAmberIcon style={{ fontSize: '1rem' }} />
@@ -1829,10 +1872,10 @@ export const HomePage = () => {
                     <ControlButton 
                         onClick={handleToggle} 
                         $isRunning={isRunning}
-                        $disabled={!isLcuConnected || (needsLineup && !hasSelectedLineup)}
-                        $isConnected={isLcuConnected}
+                        $disabled={!isClientReady || (needsLineup && !hasSelectedLineup)}
+                        $isConnected={isClientReady}
                     >
-                        {!isLcuConnected ? (
+                        {!isClientReady ? (
                             <>
                                 <BlockIcon />
                                 未检测到客户端

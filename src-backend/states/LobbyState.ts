@@ -290,7 +290,13 @@ export class LobbyState implements IState {
             try {
                 logger.info(`[LobbyState] 正在退出房间... (第 ${attempt} 次尝试)`);
                 await this.lcuManager!.leaveLobby();
-                await sleep(100);  // 等待房间退出完成
+                
+                // 使用可中断的sleep
+                for (let i = 0; i < 10; i++) {
+                    if (signal.aborted) return false;
+                    await sleep(10);
+                }
+                
                 logger.info(`[LobbyState] 成功退出房间！共尝试 ${attempt} 次`);
                 return true;
             } catch (e: any) {
@@ -309,8 +315,12 @@ export class LobbyState implements IState {
                 }
                 
                 logger.warn(`[LobbyState] 退出房间失败 (第 ${attempt} 次): ${errorMsg}`);
-                // 等待 1 秒后重试
-                await sleep(LEAVE_LOBBY_RETRY_DELAY_MS);
+                
+                // 使用可中断的sleep，每100ms检查一次abort信号
+                for (let i = 0; i < LEAVE_LOBBY_RETRY_DELAY_MS / 100; i++) {
+                    if (signal.aborted) return false;
+                    await sleep(100);
+                }
             }
         }
     }
