@@ -23,6 +23,14 @@ export interface ObservedUnit {
     traits: string[];
 }
 
+export interface ObservedTrait {
+    name: string;
+    count: number;
+    required: number | null;
+    levels: number[];
+    active: boolean;
+}
+
 export interface ShopOffer {
     slot: number;
     unit: ObservedUnit | null;
@@ -52,6 +60,7 @@ export interface ObservedState {
     board: ObservedUnit[];
     shop: ShopOffer[];
     items: string[];
+    activeTraits?: ObservedTrait[];
     augments?: AugmentOffer[];
     metadata?: Record<string, unknown>;
 }

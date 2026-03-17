@@ -131,6 +131,66 @@ export const detailChampionNameRegion = {
     rightBottom: { x: 0.980, y: 0.320 }   // 原 978, 244
 }
 
+// 安卓真机右侧详情面板的棋子名称区域（基于 2026-03-15 真机录屏校准）
+export const androidDetailChampionNameRegion = {
+    leftTop: { x: 0.790, y: 0.205 },
+    rightBottom: { x: 0.920, y: 0.250 }
+}
+
+// 安卓真机商店卡牌中的名称区域（基于 2026-03-15 真机录屏校准）
+export const androidShopSlotNameRegions = {
+    SLOT_1: {
+        leftTop: { x: 0.250, y: 0.326 },
+        rightBottom: { x: 0.322, y: 0.383 }
+    },
+    SLOT_2: {
+        leftTop: { x: 0.385, y: 0.323 },
+        rightBottom: { x: 0.478, y: 0.387 }
+    },
+    SLOT_3: {
+        leftTop: { x: 0.525, y: 0.323 },
+        rightBottom: { x: 0.617, y: 0.387 }
+    },
+    SLOT_4: {
+        leftTop: { x: 0.663, y: 0.323 },
+        rightBottom: { x: 0.778, y: 0.387 }
+    },
+    SLOT_5: {
+        leftTop: { x: 0.808, y: 0.326 },
+        rightBottom: { x: 0.873, y: 0.383 }
+    },
+}
+
+// 安卓真机 HUD 金币数字区域（基于 2026-03-15 真机录屏校准）
+export const androidHudGoldTextRegion = {
+    leftTop: { x: 0.9019, y: 0.7833 },
+    rightBottom: { x: 0.9577, y: 0.9125 }
+}
+
+// 安卓真机 HUD 经验文本区域（基于 2026-03-15 真机录屏校准）
+export const androidHudXpTextRegion = {
+    leftTop: { x: 0.0240, y: 0.6667 },
+    rightBottom: { x: 0.1298, y: 0.7917 }
+}
+
+// 安卓真机 HUD 等级数字区域（基于 2026-03-15 真机录屏校准）
+export const androidHudLevelDigitRegion = {
+    leftTop: { x: 0.1173, y: 0.8792 },
+    rightBottom: { x: 0.1346, y: 0.9417 }
+}
+
+// 安卓真机左下角色名牌区域（用于匹配自己在右侧分数板中的名字）
+export const androidSelfNameplateRegion = {
+    leftTop: { x: 0.1971, y: 0.5583 },
+    rightBottom: { x: 0.2740, y: 0.6542 }
+}
+
+// 安卓真机右侧分数板区域（基于 2026-03-15 真机录屏校准）
+export const androidScoreboardRegion = {
+    leftTop: { x: 0.7885, y: 0.0417 },
+    rightBottom: { x: 0.9904, y: 0.7083 }
+}
+
 //  右侧详情面板装备区域（百分比形式，留20%误差容限）
 export const detailEquipRegion = {
     SLOT_1: {
@@ -231,6 +291,39 @@ export const equipmentRegion = {
     SLOT_10: {
         leftTop: { x: 0.00879, y: 0.684 },    // 原 9, 526
         rightBottom: { x: 0.0312, y: 0.716 }  // 原 32, 550
+    },
+}
+
+// 安卓真机/模拟器左侧装备栏（当前实机观测为 5 个可见槽位）
+// 基于 2026-03-15 真机 5-2 录屏抽帧标定，后续如果出现滚动装备栏再单独补分页逻辑。
+export const androidEquipmentSlot = {
+    EQ_SLOT_1: { x: 0.0578, y: 0.1110 },
+    EQ_SLOT_2: { x: 0.0578, y: 0.2070 },
+    EQ_SLOT_3: { x: 0.0578, y: 0.3030 },
+    EQ_SLOT_4: { x: 0.0578, y: 0.3990 },
+    EQ_SLOT_5: { x: 0.0578, y: 0.4950 },
+}
+
+export const androidEquipmentRegion = {
+    SLOT_1: {
+        leftTop: { x: 0.0305, y: 0.0510 },
+        rightBottom: { x: 0.0851, y: 0.1700 },
+    },
+    SLOT_2: {
+        leftTop: { x: 0.0305, y: 0.1470 },
+        rightBottom: { x: 0.0851, y: 0.2660 },
+    },
+    SLOT_3: {
+        leftTop: { x: 0.0305, y: 0.2430 },
+        rightBottom: { x: 0.0851, y: 0.3620 },
+    },
+    SLOT_4: {
+        leftTop: { x: 0.0305, y: 0.3390 },
+        rightBottom: { x: 0.0851, y: 0.4580 },
+    },
+    SLOT_5: {
+        leftTop: { x: 0.0305, y: 0.4360 },
+        rightBottom: { x: 0.0851, y: 0.5548 },
     },
 }
 //  棋子在战场上的点位，用于鼠标点击选择英雄（百分比形式）
@@ -499,6 +592,22 @@ export const gameStageDisplayNormal = {
 export const gameStageDisplayShopOpen = {
     leftTop: { x: 0.24, y: 0.005 },     // 占窗口的 24%, 0.5%
     rightBottom: { x: 0.45, y: 0.04 }   // 占窗口的 45%, 4%
+}
+
+// 安卓真机顶部回合号区域（比 PC 版更窄，避免把进度条一起裁进去）
+export const androidGameStageDisplayStageOne = {
+    leftTop: { x: 0.345, y: 0.000 },
+    rightBottom: { x: 0.470, y: 0.080 }
+}
+
+export const androidGameStageDisplayNormal = {
+    leftTop: { x: 0.330, y: 0.000 },
+    rightBottom: { x: 0.430, y: 0.060 }
+}
+
+export const androidGameStageDisplayShopOpen = {
+    leftTop: { x: 0.330, y: 0.000 },
+    rightBottom: { x: 0.430, y: 0.060 }
 }
 
 //  发条鸟的战斗阶段，布局跟其他的都不一样，因为发条鸟一个大阶段有10场（百分比形式）

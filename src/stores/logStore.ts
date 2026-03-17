@@ -53,7 +53,6 @@ const parseLogMessage = (message: string): { timestamp: string; content: string 
 class LogStore {
     private logs: LogEntry[] = [];
     private listeners: Set<LogListener> = new Set();
-    private ipcCleanup: (() => void) | null = null;
     private initialized = false;
     // 缓存的日志清理阈值，避免每次添加日志都调用 IPC
     private cachedThreshold: LogAutoCleanThreshold = 500;
@@ -70,7 +69,7 @@ class LogStore {
 
         if (window.ipc?.on) {
             try {
-                this.ipcCleanup = window.ipc.on('log-message', (logData: { message: string; level?: LogLevel }) => {
+                window.ipc.on('log-message', (logData: { message: string; level?: LogLevel }) => {
                     if (logData) {
                         this.addLog(logData.message, logData.level || 'info');
                     }

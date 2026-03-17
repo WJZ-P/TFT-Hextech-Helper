@@ -135,7 +135,7 @@ class LCUConnector extends EventEmitter {
         const installDirRegexMac = /--install-directory=(.+?)(?=\s+--|$)/;
 
         let command: string;
-        let executionOptions = {};
+        let executionOptions: cp.ExecOptions = {};
 
         if (!isWindows) {
             // macOS / Linux: 使用 ps 命令
@@ -149,7 +149,7 @@ class LCUConnector extends EventEmitter {
 
         try {
             const { stdout: rawStdout } = await exec(command, executionOptions);
-            const stdout = rawStdout.replace(/\n|\r/g, ''); // 移除换行符
+            const stdout = String(rawStdout).replace(/\n|\r/g, ''); // 移除换行符
 
             // 尝试匹配关键信息
             const portMatch = stdout.match(portRegex);
@@ -178,7 +178,7 @@ class LCUConnector extends EventEmitter {
             // 如果是 ClientNotFoundError 或者是 exec 执行出错（比如进程没找到），我们需要进一步判断
             
             // Windows 下检查是否是因为权限问题导致找不到进程
-            if (isWindows && executionOptions['shell'] === 'powershell') {
+            if (isWindows && executionOptions.shell === 'powershell') {
                 try {
                     const checkAdminCmd = `if ((Get-Process -Name ${name} -ErrorAction SilentlyContinue | Where-Object {!$_.Handle -and !$_.Path})) {Write-Output "True"} else {Write-Output "False"}`;
                     const { stdout: isAdmin } = await exec(checkAdminCmd, executionOptions);

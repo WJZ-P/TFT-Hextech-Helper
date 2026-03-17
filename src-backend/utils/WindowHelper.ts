@@ -6,8 +6,12 @@
  */
 
 import { getActiveWindow, getWindows } from "@nut-tree-fork/nut-js";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { logger } from "./Logger";
 import { GameClient } from "./SettingsStore";
+
+const execFileAsync = promisify(execFile);
 
 /**
  * 窗口信息接口
@@ -96,6 +100,46 @@ const MIN_GAME_WINDOW_HEIGHT = 600;
  * @description 封装 nut-js 的窗口 API，提供查找 LOL 游戏窗口的功能
  */
 class WindowHelper {
+    private async appActivateWindow(title: string): Promise<boolean> {
+        try {
+            await execFileAsync("powershell.exe", [
+                "-NoProfile",
+                "-Command",
+                `$ws = New-Object -ComObject WScript.Shell; if ($ws.AppActivate('${title.replace(/'/g, "''")}')) { exit 0 } else { exit 1 }`,
+            ]);
+            logger.info(`[WindowHelper] 已通过 AppActivate 聚焦窗口: "${title}"`);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    private async findNativeWindow(target: WindowInfo) {
+        const windows = await getWindows();
+        for (const window of windows) {
+            try {
+                const title = await window.title;
+                if (title !== target.title) {
+                    continue;
+                }
+
+                const region = await window.region;
+                if (
+                    region.left === target.left &&
+                    region.top === target.top &&
+                    region.width === target.width &&
+                    region.height === target.height
+                ) {
+                    return window;
+                }
+            } catch {
+                continue;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * 为候选窗口打分（分数越高越优先）
      */
@@ -332,6 +376,40 @@ class WindowHelper {
             return { x: windowInfo.left, y: windowInfo.top };
         }
         return null;
+    }
+
+    /**
+     * 聚焦指定窗口
+     * @description nut-js 的截图读取屏幕像素而不是窗口离屏缓冲，
+     *              安卓模拟器被其他窗口遮挡时必须先 restore/focus 才能保证识别与点击有效。
+     */
+    public async focusWindow(windowInfo: WindowInfo): Promise<boolean> {
+        try {
+            const nativeWindow = await this.findNativeWindow(windowInfo);
+            if (!nativeWindow) {
+                logger.warn(`[WindowHelper] 未找到可聚焦窗口: "${windowInfo.title}"`);
+                return this.appActivateWindow(windowInfo.title);
+            }
+
+            try {
+                await nativeWindow.restore();
+            } catch {
+                // 某些平台实现不支持 restore，忽略后继续尝试聚焦。
+            }
+
+            try {
+                await nativeWindow.focus();
+            } catch (error: any) {
+                logger.warn(`[WindowHelper] nut-js 聚焦失败，尝试 AppActivate: ${error.message}`);
+                return this.appActivateWindow(windowInfo.title);
+            }
+
+            logger.info(`[WindowHelper] 已尝试聚焦窗口: "${windowInfo.title}"`);
+            return true;
+        } catch (error: any) {
+            logger.warn(`[WindowHelper] 聚焦窗口失败: ${error.message}`);
+            return this.appActivateWindow(windowInfo.title);
+        }
     }
 }
 

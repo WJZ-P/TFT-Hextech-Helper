@@ -7,3 +7,4 @@ export { OcrService, ocrService, OcrWorkerType } from "./OcrService";
 export { TemplateLoader, templateLoader } from "./TemplateLoader";
 export { TemplateMatcher, templateMatcher } from "./TemplateMatcher";
 export { ScreenCapture, screenCapture } from "./ScreenCapture";
+export * from "./RecognitionUtils";

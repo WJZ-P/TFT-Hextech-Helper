@@ -1,46 +1,19 @@
-import { fightBoardSlotPoint, GameStageType, hexSlot } from "../TFTProtocol";
+import { GameStageType, hexSlot } from "../TFTProtocol";
 import { tftOperator } from "../TftOperator";
-import type { BenchLocation, BoardLocation } from "../tft";
 import { mouseController, MouseButtonType } from "../tft";
 import { sleep } from "../utils/HelperTools";
 import { logger } from "../utils/Logger";
-import { GameClient } from "../utils/SettingsStore";
+import { GameClient, settingsStore } from "../utils/SettingsStore";
 import { windowHelper } from "../utils/WindowHelper";
 import { normalizeRuntimeState } from "../core/StateNormalizer";
 import type { ActionPlan, AdapterHealth, GameAdapter, ObservedState, PlatformTarget } from "../core/types";
-
-function isBoardLocation(value: unknown): value is BoardLocation {
-    return typeof value === "string" && /^R[1-4]_C[1-7]$/.test(value);
-}
-
-function isBenchLocation(value: unknown): value is BenchLocation {
-    return typeof value === "string" && /^SLOT_[1-9]$/.test(value);
-}
-
-function parseSlotIndex(value: unknown): number | null {
-    const parsed = Number(value);
-    if (!Number.isFinite(parsed)) {
-        return null;
-    }
-    return Math.trunc(parsed);
-}
-
-function parseBenchIndex(value: unknown): number | null {
-    if (typeof value === "string") {
-        const match = value.match(/^SLOT_(\d+)$/);
-        if (match) {
-            const parsed = Number(match[1]);
-            if (Number.isFinite(parsed)) {
-                return parsed - 1;
-            }
-        }
-    }
-    return parseSlotIndex(value);
-}
+import { buildAndroidExecutionPlan } from "./AndroidActionPlanner";
+import { TFTMode } from "../TFTProtocol";
 
 export class AndroidEmulatorAdapter implements GameAdapter {
     public readonly target: PlatformTarget = "ANDROID_EMULATOR";
     private attached = false;
+    private lastObservedState: ObservedState | null = null;
 
     public async attach(): Promise<void> {
         const win = await windowHelper.findLOLWindow(GameClient.ANDROID);
@@ -62,25 +35,28 @@ export class AndroidEmulatorAdapter implements GameAdapter {
             await this.attach();
         }
 
-        const [stageResult, levelInfo, gold, shopUnits, benchUnits, boardUnits, equips] = await Promise.all([
+        const [stageResult, levelInfo, gold, hp, shopUnits, benchUnits, boardUnits, equips] = await Promise.all([
             tftOperator.getGameStage(),
             tftOperator.getLevelInfo(),
             tftOperator.getCoinCount(),
+            tftOperator.getSelfHp(),
             tftOperator.getShopInfo(),
             tftOperator.getBenchInfo(),
             tftOperator.getFightBoardInfo(),
             tftOperator.getEquipInfo(),
         ]);
 
-        return normalizeRuntimeState({
+        const state = normalizeRuntimeState({
             client: GameClient.ANDROID,
             target: this.target,
+            mode: (settingsStore.get("tftMode") as TFTMode | undefined) ?? TFTMode.NORMAL,
             stageText: stageResult.stageText,
             stageType: stageResult.type,
             level: levelInfo?.level ?? 1,
             currentXp: levelInfo?.currentXp ?? 0,
             totalXp: levelInfo?.totalXp ?? 0,
             gold: gold ?? 0,
+            hp: hp ?? undefined,
             shopUnits,
             benchUnits,
             boardUnits,
@@ -89,84 +65,61 @@ export class AndroidEmulatorAdapter implements GameAdapter {
                 hasValidStage: stageResult.type !== GameStageType.UNKNOWN,
             },
         });
+
+        this.lastObservedState = state;
+        return state;
     }
 
     public async execute(actions: ActionPlan[]): Promise<void> {
-        const sorted = [...actions].sort((a, b) => b.priority - a.priority || a.tick - b.tick);
+        const executionPlan = buildAndroidExecutionPlan(actions, this.lastObservedState);
 
-        for (const action of sorted) {
-            switch (action.type) {
-                case "BUY": {
-                    const rawSlot = parseSlotIndex(action.payload.slot);
-                    if (rawSlot === null) {
-                        break;
-                    }
-                    const slot = rawSlot >= 1 ? rawSlot : rawSlot + 1;
-                    if (slot >= 1 && slot <= 5) {
-                        await tftOperator.buyAtSlot(slot);
-                    }
-                    break;
-                }
-                case "ROLL": {
-                    const count = Math.min(3, Math.max(1, parseSlotIndex(action.payload.count) ?? 1));
-                    for (let i = 0; i < count; i += 1) {
-                        await tftOperator.refreshShop();
-                        await sleep(50);
-                    }
-                    break;
-                }
-                case "LEVEL_UP": {
-                    const count = Math.min(3, Math.max(1, parseSlotIndex(action.payload.count) ?? 1));
-                    for (let i = 0; i < count; i += 1) {
-                        await tftOperator.buyExperience();
-                        await sleep(50);
-                    }
-                    break;
-                }
-                case "MOVE": {
-                    const fromBench = action.payload.fromBench;
-                    const fromBoard = action.payload.fromBoard;
-                    const toBoard = action.payload.toBoard;
-                    const toBench = action.payload.toBench;
+        if (executionPlan.warnings.length > 0) {
+            logger.warn(`[AndroidEmulatorAdapter] 离线执行计划存在警告: ${executionPlan.warnings.join(" | ")}`);
+        }
 
-                    if (isBenchLocation(fromBench)) {
-                        const targetBoard = await this.resolveBoardLocation(toBoard);
-                        if (targetBoard) {
-                            await tftOperator.moveBenchToBoard(fromBench, targetBoard);
-                        }
-                        break;
-                    }
-
-                    if (isBoardLocation(fromBoard) && isBoardLocation(toBoard)) {
-                        await tftOperator.moveBoardToBoard(fromBoard, toBoard);
-                        break;
-                    }
-
-                    if (isBoardLocation(fromBoard)) {
-                        const benchIndexRaw = parseBenchIndex(toBench);
-                        if (benchIndexRaw !== null) {
-                            const benchIndex = Math.max(0, Math.min(8, benchIndexRaw));
-                            await tftOperator.moveBoardToBench(fromBoard, benchIndex);
-                        }
+        for (const step of executionPlan.steps) {
+            switch (step.kind) {
+                case "BUY_SLOT":
+                    if (typeof step.slot === "number") {
+                        await tftOperator.buyAtSlot(step.slot);
                     }
                     break;
-                }
-                case "EQUIP": {
-                    const itemIndex = parseSlotIndex(action.payload.itemIndex);
-                    const boardLocation = action.payload.toBoard;
-                    if (itemIndex !== null && isBoardLocation(boardLocation)) {
-                        await tftOperator.equipToBoardUnit(itemIndex, boardLocation);
+                case "REFRESH_SHOP":
+                    await tftOperator.refreshShop();
+                    await sleep(50);
+                    break;
+                case "BUY_XP":
+                    await tftOperator.buyExperience();
+                    await sleep(50);
+                    break;
+                case "MOVE_BENCH_TO_BOARD":
+                    if (step.fromBench && step.toBoard) {
+                        await tftOperator.moveBenchToBoard(step.fromBench, step.toBoard);
                     }
                     break;
-                }
-                case "PICK_AUGMENT": {
-                    const slot = Math.max(1, Math.min(3, parseSlotIndex(action.payload.slot) ?? 2));
-                    const slotKey = `SLOT_${slot}` as keyof typeof hexSlot;
-                    await mouseController.clickAt(hexSlot[slotKey], MouseButtonType.LEFT);
+                case "MOVE_BOARD_TO_BOARD":
+                    if (step.fromBoard && step.toBoard) {
+                        await tftOperator.moveBoardToBoard(step.fromBoard, step.toBoard);
+                    }
                     break;
-                }
+                case "MOVE_BOARD_TO_BENCH":
+                    if (step.fromBoard && typeof step.benchIndex === "number") {
+                        await tftOperator.moveBoardToBench(step.fromBoard, step.benchIndex);
+                    }
+                    break;
+                case "EQUIP_TO_BOARD":
+                    if (typeof step.itemIndex === "number" && step.toBoard) {
+                        await tftOperator.equipToBoardUnit(step.itemIndex, step.toBoard);
+                    }
+                    break;
+                case "PICK_AUGMENT":
+                    if (typeof step.slot === "number") {
+                        const slotKey = `SLOT_${step.slot}` as keyof typeof hexSlot;
+                        await mouseController.clickAt(hexSlot[slotKey], MouseButtonType.LEFT);
+                    }
+                    break;
                 case "NOOP":
-                case "SELL":
+                case "UNSUPPORTED":
                 default:
                     break;
             }
@@ -185,22 +138,5 @@ export class AndroidEmulatorAdapter implements GameAdapter {
             ok: true,
             detail: `窗口已就绪: ${win.title}`,
         };
-    }
-
-    private async resolveBoardLocation(rawValue: unknown): Promise<BoardLocation | null> {
-        if (isBoardLocation(rawValue)) {
-            return rawValue;
-        }
-        if (rawValue === "AUTO_SLOT") {
-            const boardUnits = await tftOperator.getFightBoardInfo();
-            const boardKeys = Object.keys(fightBoardSlotPoint) as BoardLocation[];
-            for (let i = 0; i < boardKeys.length && i < boardUnits.length; i += 1) {
-                if (boardUnits[i] === null) {
-                    return boardKeys[i];
-                }
-            }
-            return boardKeys[0] ?? null;
-        }
-        return null;
     }
 }

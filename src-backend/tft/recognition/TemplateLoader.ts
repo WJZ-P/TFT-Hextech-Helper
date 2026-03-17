@@ -76,8 +76,14 @@ export class TemplateLoader {
     /** 文件监听器引用（切换赛季时需要先关闭旧的监听器） */
     private championWatcher: fs.FSWatcher | null = null;
 
+    /** 是否启用模板目录监听（离线测试时应关闭，避免常驻句柄） */
+    private watchEnabled = true;
+
     /** 模板加载完成标志 */
     private isLoaded = false;
+
+    /** 初始化中的 Promise，避免并发重复加载同一批模板 */
+    private initializeInFlight: Promise<void> | null = null;
 
     // ========== 路径 Getter ==========
 
@@ -136,33 +142,53 @@ export class TemplateLoader {
      * 初始化模板加载器
      * @description 在 OpenCV 初始化完成后调用，加载所有模板并启动文件监听
      */
-    public async initialize(): Promise<void> {
+    public async initialize(options: { watch?: boolean } = {}): Promise<void> {
+        this.watchEnabled = options.watch ?? this.watchEnabled;
+
         if (this.isLoaded) {
+            if (this.watchEnabled) {
+                this.setupChampionTemplateWatcher();
+            } else {
+                this.teardownChampionTemplateWatcher();
+            }
+
             logger.warn("[TemplateLoader] 模板已加载，跳过重复初始化");
             return;
         }
 
-        logger.info("[TemplateLoader] 开始初始化模板加载器...");
+        if (!this.initializeInFlight) {
+            this.initializeInFlight = (async () => {
+                logger.info("[TemplateLoader] 开始初始化模板加载器...");
 
-        // 创建空槽位模板
-        this.createEmptySlotTemplate();
+                // 创建空槽位模板
+                this.createEmptySlotTemplate();
 
-        // 并行加载所有模板
-        await Promise.all([
-            this.loadEquipTemplates(),
-            this.loadChampionTemplates(),
-            this.loadStarLevelTemplates(),
-            this.loadBenchSlotTemplates(),
-            this.loadFightBoardSlotTemplates(),
-            this.loadLootOrbTemplates(),
-            this.loadButtonTemplates(),
-        ]);
+                // 并行加载所有模板
+                await Promise.all([
+                    this.loadEquipTemplates(),
+                    this.loadChampionTemplates(),
+                    this.loadStarLevelTemplates(),
+                    this.loadBenchSlotTemplates(),
+                    this.loadFightBoardSlotTemplates(),
+                    this.loadLootOrbTemplates(),
+                    this.loadButtonTemplates(),
+                ]);
 
-        // 启动文件监听
-        this.setupChampionTemplateWatcher();
+                // 启动文件监听（离线回放/单测场景可关闭，避免 watcher 占住进程）
+                if (this.watchEnabled) {
+                    this.setupChampionTemplateWatcher();
+                } else {
+                    this.teardownChampionTemplateWatcher();
+                }
 
-        this.isLoaded = true;
-        logger.info("[TemplateLoader] 模板加载器初始化完成");
+                this.isLoaded = true;
+                logger.info("[TemplateLoader] 模板加载器初始化完成");
+            })().finally(() => {
+                this.initializeInFlight = null;
+            });
+        }
+
+        await this.initializeInFlight;
     }
 
     // ========== 公共访问方法 ==========
@@ -210,7 +236,11 @@ export class TemplateLoader {
         await this.loadChampionTemplates();
 
         // 重新设置文件监听（指向新赛季目录）
-        this.setupChampionTemplateWatcher();
+        if (this.watchEnabled) {
+            this.setupChampionTemplateWatcher();
+        } else {
+            this.teardownChampionTemplateWatcher();
+        }
 
         logger.info(`[TemplateLoader] 赛季模板切换完成: ${seasonDir} (${this.championTemplates.size} 个模板)`);
     }
@@ -664,7 +694,7 @@ export class TemplateLoader {
 
             const { data, info } = await pipeline.raw().toBuffer({ resolveWithObject: true });
 
-            let channels = info.channels;
+            const channels = info.channels;
             // sharp 的 info.channels 会返回实际通道数
             
             // 验证数据长度
@@ -701,11 +731,7 @@ export class TemplateLoader {
      *              切换赛季时会先关闭旧的 watcher 再创建新的。
      */
     private setupChampionTemplateWatcher(): void {
-        // 关闭旧的监听器（切换赛季时需要）
-        if (this.championWatcher) {
-            this.championWatcher.close();
-            this.championWatcher = null;
-        }
+        this.teardownChampionTemplateWatcher();
 
         if (!fs.existsSync(this.championTemplatePath)) {
             fs.ensureDirSync(this.championTemplatePath);
@@ -724,6 +750,22 @@ export class TemplateLoader {
         });
 
         logger.debug(`[TemplateLoader] 英雄模板文件监听已启动 (${this.currentSeasonDir})`);
+    }
+
+    /**
+     * 关闭英雄模板文件监听
+     * @description 离线测试和脚本模式不需要 watcher，关闭后能避免 Node 进程被常驻句柄阻塞。
+     */
+    private teardownChampionTemplateWatcher(): void {
+        if (this.championWatcher) {
+            this.championWatcher.close();
+            this.championWatcher = null;
+        }
+
+        if (this.watcherDebounceTimer) {
+            clearTimeout(this.watcherDebounceTimer);
+            this.watcherDebounceTimer = null;
+        }
     }
 
     // ========== 清理方法 ==========
@@ -841,6 +883,7 @@ export class TemplateLoader {
             this.championWatcher = null;
         }
 
+        this.initializeInFlight = null;
         this.isLoaded = false;
         logger.info("[TemplateLoader] 模板加载器资源已释放");
     }
