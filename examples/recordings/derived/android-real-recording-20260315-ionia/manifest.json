@@ -1,0 +1,209 @@
+{
+  "presetId": "android-real-recording-20260315-ionia",
+  "presetLabel": "2026-03-15 安卓真机艾欧尼亚对局",
+  "recordingPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\Screen_Recording_20260315_134448_TFT.mp4",
+  "outputDir": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia",
+  "generatedAt": "2026-03-16T19:53:23.642Z",
+  "keyframes": [
+    {
+      "id": "recording-opening-detail-1-4",
+      "label": "1-4 详情面板",
+      "description": "开局阶段的真实详情面板，用于抽取凯特琳名称裁片。",
+      "timestamp": "00:01:40",
+      "framePath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\frames\\recording-opening-detail-1-4.png",
+      "crops": [
+        {
+          "id": "stage",
+          "label": "回合 1-4",
+          "expectedText": "1-4",
+          "rawPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-opening-detail-1-4-stage-raw.png",
+          "ocrPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-opening-detail-1-4-stage-ocr.png",
+          "ocrText": "1-4",
+          "normalizedText": "1-4",
+          "selectedRegionLabel": "requested"
+        },
+        {
+          "id": "detail-name",
+          "label": "详情名 凯特琳",
+          "expectedText": "凯特琳",
+          "rawPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-opening-detail-1-4-detail-name-raw.png",
+          "ocrPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-opening-detail-1-4-detail-name-ocr.png",
+          "ocrText": "凯特琳",
+          "normalizedText": "凯特琳",
+          "templateMatchName": "慎",
+          "templateConfidence": 0.4779042899608612
+        }
+      ]
+    },
+    {
+      "id": "recording-opening-augment-2-1",
+      "label": "2-1 海克斯",
+      "description": "真实 2-1 海克斯选择画面。",
+      "timestamp": "00:02:10",
+      "framePath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\frames\\recording-opening-augment-2-1.png",
+      "crops": [
+        {
+          "id": "stage",
+          "label": "回合 2-1",
+          "expectedText": "2-1",
+          "rawPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-opening-augment-2-1-stage-raw.png",
+          "ocrPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-opening-augment-2-1-stage-ocr.png",
+          "ocrText": "2-1",
+          "normalizedText": "2-1",
+          "selectedRegionLabel": "requested"
+        }
+      ]
+    },
+    {
+      "id": "recording-board-2-5",
+      "label": "2-5 过渡站位",
+      "description": "真实 2-5 战斗结算后的棋盘和备战席状态。",
+      "timestamp": "00:06:50",
+      "framePath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\frames\\recording-board-2-5.png",
+      "crops": [
+        {
+          "id": "stage",
+          "label": "回合 2-5",
+          "expectedText": "2-5",
+          "rawPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-board-2-5-stage-raw.png",
+          "ocrPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-board-2-5-stage-ocr.png",
+          "ocrText": "2-5",
+          "normalizedText": "2-5",
+          "selectedRegionLabel": "requested"
+        },
+        {
+          "id": "trait-ionia-count",
+          "label": "羁绊 艾欧尼亚 3/5",
+          "rawPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-board-2-5-trait-ionia-count-raw.png"
+        },
+        {
+          "id": "trait-fighter-count",
+          "label": "羁绊 斗士 1/2",
+          "rawPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-board-2-5-trait-fighter-count-raw.png"
+        },
+        {
+          "id": "trait-mage-count",
+          "label": "羁绊 法师 1/2",
+          "rawPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-board-2-5-trait-mage-count-raw.png"
+        }
+      ]
+    },
+    {
+      "id": "recording-augment-3-2",
+      "label": "3-2 海克斯",
+      "description": "真实 3-2 海克斯选择画面。",
+      "timestamp": "00:10:40",
+      "framePath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\frames\\recording-augment-3-2.png",
+      "crops": [
+        {
+          "id": "stage",
+          "label": "回合 3-2",
+          "expectedText": "3-2",
+          "rawPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-augment-3-2-stage-raw.png",
+          "ocrPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-augment-3-2-stage-ocr.png",
+          "ocrText": "3-2",
+          "normalizedText": "3-2",
+          "selectedRegionLabel": "requested"
+        }
+      ]
+    },
+    {
+      "id": "recording-shop-5-1",
+      "label": "5-1 商店 D 牌",
+      "description": "真实 5-1 商店开启状态，用于抽取商店名称裁片。",
+      "timestamp": "00:24:15",
+      "framePath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\frames\\recording-shop-5-1.png",
+      "crops": [
+        {
+          "id": "stage",
+          "label": "回合 5-1",
+          "expectedText": "5-1",
+          "rawPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-shop-5-1-stage-raw.png",
+          "ocrPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-shop-5-1-stage-ocr.png",
+          "ocrText": "5-1",
+          "normalizedText": "5-1",
+          "selectedRegionLabel": "candidate-a"
+        },
+        {
+          "id": "shop-slot-1",
+          "label": "商店 1 赛恩",
+          "expectedText": "赛恩",
+          "rawPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-shop-5-1-shop-slot-1-raw.png",
+          "ocrPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-shop-5-1-shop-slot-1-ocr.png",
+          "ocrText": "赛恩",
+          "normalizedText": "赛恩",
+          "templateMatchName": null,
+          "templateConfidence": null
+        },
+        {
+          "id": "shop-slot-2",
+          "label": "商店 2 德莱文",
+          "expectedText": "德莱文",
+          "rawPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-shop-5-1-shop-slot-2-raw.png",
+          "ocrPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-shop-5-1-shop-slot-2-ocr.png",
+          "ocrText": "德莱文",
+          "normalizedText": "德莱文",
+          "templateMatchName": null,
+          "templateConfidence": null
+        },
+        {
+          "id": "shop-slot-3",
+          "label": "商店 3 拉克丝",
+          "expectedText": "拉克丝",
+          "rawPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-shop-5-1-shop-slot-3-raw.png",
+          "ocrPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-shop-5-1-shop-slot-3-ocr.png",
+          "ocrText": "拉克丝",
+          "normalizedText": "拉克丝",
+          "templateMatchName": null,
+          "templateConfidence": null
+        },
+        {
+          "id": "shop-slot-4",
+          "label": "商店 4 蒙多医生",
+          "expectedText": "蒙多医生",
+          "rawPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-shop-5-1-shop-slot-4-raw.png",
+          "ocrPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-shop-5-1-shop-slot-4-ocr.png",
+          "ocrText": "蒙多医生",
+          "normalizedText": "蒙多医生",
+          "templateMatchName": null,
+          "templateConfidence": null
+        },
+        {
+          "id": "shop-slot-5",
+          "label": "商店 5 艾希",
+          "expectedText": "艾希",
+          "rawPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-shop-5-1-shop-slot-5-raw.png",
+          "ocrPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-shop-5-1-shop-slot-5-ocr.png",
+          "ocrText": "艾希",
+          "normalizedText": "艾希",
+          "templateMatchName": null,
+          "templateConfidence": null
+        }
+      ]
+    },
+    {
+      "id": "recording-board-5-2",
+      "label": "5-2 成型棋盘",
+      "description": "真实 5-2 的 8 人口成型站位。",
+      "timestamp": "00:25:45",
+      "framePath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\frames\\recording-board-5-2.png",
+      "crops": [
+        {
+          "id": "stage",
+          "label": "回合 5-2",
+          "expectedText": "5-2",
+          "rawPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-board-5-2-stage-raw.png",
+          "ocrPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-board-5-2-stage-ocr.png",
+          "ocrText": "25-2",
+          "normalizedText": "5-2",
+          "selectedRegionLabel": "requested"
+        },
+        {
+          "id": "recurve-bow",
+          "label": "散件 反曲弓",
+          "rawPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\derived\\android-real-recording-20260315-ionia\\crops\\recording-board-5-2-recurve-bow-raw.png"
+        }
+      ]
+    }
+  ]
+}

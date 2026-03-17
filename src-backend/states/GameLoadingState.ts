@@ -10,9 +10,17 @@ import { EndState } from "./EndState.ts";
 import { GameRunningState } from "./GameRunningState.ts";
 import { inGameApi, InGameApiEndpoints } from "../lcu/InGameApi.ts";
 import { tftOperator, GAME_WIDTH, GAME_HEIGHT } from "../TftOperator.ts";
+import { mouseController, MouseButtonType, screenCapture } from "../tft";
 import { GameClient, settingsStore } from "../utils/SettingsStore.ts";
 import { windowHelper, type WindowInfo } from "../utils/WindowHelper.ts";
 import { GameStageType } from "../TFTProtocol.ts";
+import { sleep } from "../utils/HelperTools.ts";
+import { classifyAndroidWindowScreenshot } from "../utils/AndroidWindowClassifier.ts";
+import {
+    createInitialAndroidForegroundProgressState,
+    planAndroidForegroundProgress,
+    type AndroidForegroundProgressState,
+} from "../services/AndroidForegroundProgression.ts";
 
 /** 轮询间隔 (ms) */
 const POLL_INTERVAL_MS = 500;
@@ -72,6 +80,64 @@ export class GameLoadingState implements IState {
         }
     }
 
+    private async captureAndroidWindowScreenshot(windowInfo: WindowInfo): Promise<Buffer> {
+        screenCapture.setGameWindowOrigin(
+            { x: windowInfo.left, y: windowInfo.top },
+            { width: windowInfo.width, height: windowInfo.height },
+            true
+        );
+
+        return screenCapture.captureGameRegionAsPng({
+            leftTop: { x: 0, y: 0 },
+            rightBottom: { x: 1, y: 1 },
+        }, false);
+    }
+
+    private async advanceAndroidForegroundIfNeeded(
+        windowInfo: WindowInfo,
+        progressState: AndroidForegroundProgressState
+    ): Promise<{
+        classificationState: "BLUESTACKS_BOOT" | "TFT_FRONTEND" | "LIVE_CONTENT" | "UNKNOWN";
+        nextProgressState: AndroidForegroundProgressState;
+        shouldWaitForNextPoll: boolean;
+    }> {
+        const screenshot = await this.captureAndroidWindowScreenshot(windowInfo);
+        const classification = await classifyAndroidWindowScreenshot(screenshot);
+        const progressResult = planAndroidForegroundProgress(classification, progressState);
+
+        if (progressResult.decision.kind === "TAP_PRIMARY_CTA") {
+            logger.info(`[GameLoadingState] 安卓前台检测到安全主按钮，准备点击推进: ${windowInfo.title}`);
+            await windowHelper.focusWindow(windowInfo);
+            mouseController.setGameWindowOrigin(
+                { x: windowInfo.left, y: windowInfo.top },
+                { width: windowInfo.width, height: windowInfo.height },
+                true
+            );
+            await mouseController.clickAt(progressResult.decision.targetPoint, MouseButtonType.LEFT);
+            await sleep(3000);
+            return {
+                classificationState: classification.state,
+                nextProgressState: progressResult.nextState,
+                shouldWaitForNextPoll: true,
+            };
+        }
+
+        if (progressResult.decision.kind === "BLOCKED") {
+            logger.warn(`[GameLoadingState] 安卓前台自动推进被阻止: ${progressResult.decision.reason}`);
+        } else if (classification.state !== "LIVE_CONTENT") {
+            logger.debug(
+                `[GameLoadingState] 安卓前台仍未进入可读 HUD: ${classification.state}` +
+                `${classification.frontendVariant ? ` (${classification.frontendVariant})` : ""}`
+            );
+        }
+
+        return {
+            classificationState: classification.state,
+            nextProgressState: progressResult.nextState,
+            shouldWaitForNextPoll: progressResult.decision.kind === "BLOCKED",
+        };
+    }
+
     /**
      * 等待游戏加载完成
      * @param signal AbortSignal 用于取消轮询
@@ -84,6 +150,8 @@ export class GameLoadingState implements IState {
             let checking = false;
             let androidValidStageStreak = 0;
             let lastValidWindowKey = "";
+            let androidForegroundProgressState = createInitialAndroidForegroundProgressState();
+            let androidForegroundWindowKey = "";
 
             /**
              * 清理函数：确保定时器被正确清除
@@ -146,6 +214,27 @@ export class GameLoadingState implements IState {
                             // 这里对前几个候选窗口逐个尝试阶段识别，避免命中 bluestacks-services 等错误窗口。
                             const topCandidates = orderedCandidates.slice(0, 3);
                             for (const candidate of topCandidates) {
+                                const candidateWindowKey = `${candidate.title}|${candidate.left}|${candidate.top}|${candidate.width}|${candidate.height}`;
+                                if (candidateWindowKey !== androidForegroundWindowKey) {
+                                    androidForegroundWindowKey = candidateWindowKey;
+                                    androidForegroundProgressState = createInitialAndroidForegroundProgressState();
+                                }
+
+                                const foregroundResult = await this.advanceAndroidForegroundIfNeeded(
+                                    candidate,
+                                    androidForegroundProgressState
+                                );
+                                androidForegroundProgressState = foregroundResult.nextProgressState;
+
+                                if (foregroundResult.shouldWaitForNextPoll) {
+                                    preferredAndroidWindow = candidate;
+                                    return;
+                                }
+
+                                if (foregroundResult.classificationState !== "LIVE_CONTENT") {
+                                    continue;
+                                }
+
                                 const initResult = await tftOperator.init(candidate);
                                 if (!initResult.success) {
                                     logger.debug(`[GameLoadingState] 安卓候选窗口初始化失败: ${candidate.title}`);
@@ -167,7 +256,7 @@ export class GameLoadingState implements IState {
                                     `[GameLoadingState] 安卓端检测到有效阶段: ${stageResult.stageText} ` +
                                     `(窗口: ${candidate.title})`
                                 );
-                                const windowKey = `${candidate.title}|${candidate.left}|${candidate.top}|${candidate.width}|${candidate.height}`;
+                                const windowKey = candidateWindowKey;
                                 if (windowKey === lastValidWindowKey) {
                                     androidValidStageStreak += 1;
                                 } else {

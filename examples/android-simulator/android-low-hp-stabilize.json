@@ -1,0 +1,175 @@
+{
+  "id": "android-low-hp-stabilize",
+  "label": "安卓低血稳血",
+  "description": "模拟 4-2 低血量局面，观察升人口、买牌、上人和 D 牌的组合动作。",
+  "context": {
+    "targetChampionNames": [
+      "安妮",
+      "辛德拉",
+      "妮蔻"
+    ],
+    "strategyPreset": "STANDARD",
+    "stabilizeHpThreshold": 35
+  },
+  "state": {
+    "timestamp": 1773565200000,
+    "client": "ANDROID",
+    "target": "ANDROID_EMULATOR",
+    "stageText": "4-2",
+    "stageType": "PVP",
+    "level": 7,
+    "currentXp": 24,
+    "totalXp": 40,
+    "gold": 34,
+    "hp": 24,
+    "bench": [
+      {
+        "id": "TFT16_Neeko",
+        "name": "妮蔻",
+        "star": 1,
+        "cost": 4,
+        "location": "SLOT_1",
+        "items": [],
+        "traits": [
+          "法师",
+          "护卫"
+        ]
+      },
+      {
+        "id": "TFT16_Syndra",
+        "name": "辛德拉",
+        "star": 1,
+        "cost": 2,
+        "location": "SLOT_2",
+        "items": [],
+        "traits": [
+          "法师"
+        ]
+      }
+    ],
+    "board": [
+      {
+        "id": "TFT16_Annie",
+        "name": "安妮",
+        "star": 2,
+        "cost": 3,
+        "location": "R1_C5",
+        "items": [
+          "鬼索的狂暴之刃"
+        ],
+        "traits": [
+          "法师"
+        ]
+      },
+      {
+        "id": "TFT16_Amumu",
+        "name": "阿木木",
+        "star": 1,
+        "cost": 1,
+        "location": "R1_C4",
+        "items": [],
+        "traits": [
+          "护卫"
+        ]
+      },
+      {
+        "id": "TFT16_Galio",
+        "name": "加里奥",
+        "star": 1,
+        "cost": 2,
+        "location": "R2_C4",
+        "items": [],
+        "traits": [
+          "护卫"
+        ]
+      },
+      {
+        "id": "TFT16_Lulu",
+        "name": "璐璐",
+        "star": 1,
+        "cost": 2,
+        "location": "R3_C5",
+        "items": [],
+        "traits": [
+          "法师"
+        ]
+      },
+      {
+        "id": "TFT16_Ahri",
+        "name": "阿狸",
+        "star": 1,
+        "cost": 4,
+        "location": "R4_C5",
+        "items": [],
+        "traits": [
+          "法师"
+        ]
+      },
+      {
+        "id": "TFT16_Ekko",
+        "name": "艾克",
+        "star": 1,
+        "cost": 3,
+        "location": "R2_C3",
+        "items": [],
+        "traits": [
+          "护卫"
+        ]
+      }
+    ],
+    "shop": [
+      {
+        "slot": 0,
+        "cost": 4,
+        "unit": {
+          "id": "TFT16_Neeko",
+          "name": "妮蔻",
+          "star": 1,
+          "cost": 4,
+          "items": [],
+          "traits": [
+            "法师",
+            "护卫"
+          ]
+        }
+      },
+      {
+        "slot": 1,
+        "cost": 3,
+        "unit": {
+          "id": "TFT16_Annie",
+          "name": "安妮",
+          "star": 1,
+          "cost": 3,
+          "items": [],
+          "traits": [
+            "法师"
+          ]
+        }
+      },
+      {
+        "slot": 2,
+        "cost": 2,
+        "unit": {
+          "id": "TFT16_Syndra",
+          "name": "辛德拉",
+          "star": 1,
+          "cost": 2,
+          "items": [],
+          "traits": [
+            "法师"
+          ]
+        }
+      },
+      { "slot": 3, "cost": null, "unit": null },
+      { "slot": 4, "cost": null, "unit": null }
+    ],
+    "items": [
+      "无尽之刃"
+    ],
+    "metadata": {
+      "source": "android-simulator",
+      "goal": "stabilize-low-hp"
+    }
+  }
+}

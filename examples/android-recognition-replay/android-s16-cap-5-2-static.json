@@ -1,0 +1,96 @@
+{
+  "id": "android-s16-cap-5-2-static",
+  "label": "真机 5-2 成型盘面回放",
+  "description": "使用 2026-03-15 安卓真机 5-2 关键帧，离线验证 8 人口盘面、备战席、装备栏和后期羁绊推导。",
+  "mode": "NORMAL",
+  "referenceScenarioId": "android-real-recording-5-2-board",
+  "notes": [
+    "该 fixture 绑定真实 5-2 成型棋盘。",
+    "目标是把棋盘单位、备战席单位、散件和羁绊一起纳入真素材回归。"
+  ],
+  "champions": [],
+  "staticSnapshot": {
+    "framePath": "../recordings/derived/android-real-recording-20260315-ionia/frames/recording-board-5-2.png",
+    "note": "真实 5-2 盘面，验证 8 个棋盘单位、2 个备战席单位和 1 个散件。",
+    "boardUnits": [
+      {
+        "slot": "R1_C2",
+        "expectedName": "赛恩",
+        "starLevel": 1,
+        "items": []
+      },
+      {
+        "slot": "R1_C3",
+        "expectedName": "瑟提",
+        "starLevel": 2,
+        "items": [
+          "离子火花"
+        ]
+      },
+      {
+        "slot": "R1_C4",
+        "expectedName": "慎",
+        "starLevel": 1,
+        "items": [
+          "石像鬼石板甲"
+        ]
+      },
+      {
+        "slot": "R2_C5",
+        "expectedName": "刀妹",
+        "starLevel": 2,
+        "items": []
+      },
+      {
+        "slot": "R2_C6",
+        "expectedName": "亚索",
+        "starLevel": 1,
+        "items": []
+      },
+      {
+        "slot": "R3_C4",
+        "expectedName": "卡尔玛",
+        "starLevel": 2,
+        "items": []
+      },
+      {
+        "slot": "R4_C4",
+        "expectedName": "阿狸",
+        "starLevel": 1,
+        "items": [
+          "蓝霸符"
+        ]
+      },
+      {
+        "slot": "R4_C6",
+        "expectedName": "烬",
+        "starLevel": 1,
+        "items": [
+          "无尽之刃"
+        ]
+      }
+    ],
+    "benchUnits": [
+      {
+        "slot": "SLOT_1",
+        "expectedName": "凯特琳",
+        "starLevel": 1,
+        "items": []
+      },
+      {
+        "slot": "SLOT_2",
+        "expectedName": "刀妹",
+        "starLevel": 1,
+        "items": []
+      }
+    ],
+    "equipments": [
+      {
+        "slot": "SLOT_1",
+        "expectedName": "反曲之弓",
+        "imagePath": "../recordings/derived/android-real-recording-20260315-ionia/crops/recording-board-5-2-recurve-bow-raw.png"
+      }
+    ],
+    "expectedTraits": []
+  }
+}

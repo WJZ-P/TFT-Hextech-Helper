@@ -1,0 +1,50 @@
+{
+  "id": "android-s16-lategame-recognition",
+  "label": "真机后期商店名识别",
+  "description": "使用同一局真机录屏的 5-1 D 牌画面，验证后期回合号和 3 张真实商店名裁片。",
+  "mode": "NORMAL",
+  "referenceScenarioId": "android-real-recording-5-1-roll",
+  "notes": [
+    "5-1 顶部回合号已经切到多窗口投票链路，当前真机自动提取会选择 candidate-a 区域并直出 5-1。",
+    "商店 3、4、5 的名字条继续保持 OCR 直中，后期 D 牌关键识别链路已经能稳定回放。"
+  ],
+  "stage": {
+    "imagePath": "../recordings/derived/android-real-recording-20260315-ionia/crops/recording-shop-5-1-stage-raw.png",
+    "ocrText": "5-1",
+    "expectedText": "5-1",
+    "expectedType": "PVP",
+    "note": "当前自动提取观测值: 5-1（selectedRegionLabel=candidate-a）"
+  },
+  "champions": [
+    {
+      "id": "shop-lux",
+      "region": "SHOP",
+      "slot": "SHOP_SLOT_3",
+      "expectedName": "拉克丝",
+      "expectedSource": "OCR",
+      "ocrText": "拉克丝",
+      "imagePath": "../recordings/derived/android-real-recording-20260315-ionia/crops/recording-shop-5-1-shop-slot-3-raw.png",
+      "note": "当前自动提取观测值: 拉克丝"
+    },
+    {
+      "id": "shop-mundo",
+      "region": "SHOP",
+      "slot": "SHOP_SLOT_4",
+      "expectedName": "蒙多医生",
+      "expectedSource": "OCR",
+      "ocrText": "蒙多医生",
+      "imagePath": "../recordings/derived/android-real-recording-20260315-ionia/crops/recording-shop-5-1-shop-slot-4-raw.png",
+      "note": "当前自动提取观测值: 蒙多医生"
+    },
+    {
+      "id": "shop-ashe",
+      "region": "SHOP",
+      "slot": "SHOP_SLOT_5",
+      "expectedName": "艾希",
+      "expectedSource": "OCR",
+      "ocrText": "艾希",
+      "imagePath": "../recordings/derived/android-real-recording-20260315-ionia/crops/recording-shop-5-1-shop-slot-5-raw.png",
+      "note": "当前自动提取观测值: 艾希"
+    }
+  ]
+}
