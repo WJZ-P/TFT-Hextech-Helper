@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "android-foreground-fixture.v1",
+  "id": "android-na-queue-timeout-synthetic",
+  "label": "安卓前台链路合成回放：匹配超时回退",
+  "description": "使用 synthetic queue placeholder 验证超时、取消匹配、回退等待这条动作链。",
+  "notes": [
+    "全部为 synthetic placeholder，用于先验证 planner 的超时与回退行为。",
+    "取消匹配坐标需要等真机 queue 素材后再校准。"
+  ],
+  "frames": [
+    {
+      "id": "queue-timeout-1",
+      "label": "匹配中 #1",
+      "observation": {
+        "state": "QUEUE",
+        "verification": "SYNTHETIC_PLACEHOLDER",
+        "reason": "Synthetic placeholder queue polling state.",
+        "anchors": [
+          "queue-spinner-placeholder",
+          "cancel-queue-placeholder"
+        ],
+        "actionPoints": {
+          "CANCEL_QUEUE": {
+            "x": 0.82,
+            "y": 0.9
+          }
+        }
+      },
+      "expectedDecisionKind": "WAIT"
+    },
+    {
+      "id": "queue-timeout-2",
+      "label": "匹配中 #2",
+      "observation": {
+        "state": "QUEUE",
+        "verification": "SYNTHETIC_PLACEHOLDER",
+        "reason": "Synthetic placeholder queue polling state.",
+        "anchors": [
+          "queue-spinner-placeholder",
+          "cancel-queue-placeholder"
+        ],
+        "actionPoints": {
+          "CANCEL_QUEUE": {
+            "x": 0.82,
+            "y": 0.9
+          }
+        }
+      },
+      "expectedDecisionKind": "WAIT"
+    },
+    {
+      "id": "queue-timeout-3",
+      "label": "匹配中 #3",
+      "observation": {
+        "state": "QUEUE",
+        "verification": "SYNTHETIC_PLACEHOLDER",
+        "reason": "Synthetic placeholder queue polling state.",
+        "anchors": [
+          "queue-spinner-placeholder",
+          "cancel-queue-placeholder"
+        ],
+        "actionPoints": {
+          "CANCEL_QUEUE": {
+            "x": 0.82,
+            "y": 0.9
+          }
+        }
+      },
+      "expectedDecisionKind": "WAIT"
+    },
+    {
+      "id": "queue-timeout-4",
+      "label": "匹配中 #4",
+      "observation": {
+        "state": "QUEUE",
+        "verification": "SYNTHETIC_PLACEHOLDER",
+        "reason": "Synthetic placeholder queue polling state.",
+        "anchors": [
+          "queue-spinner-placeholder",
+          "cancel-queue-placeholder"
+        ],
+        "actionPoints": {
+          "CANCEL_QUEUE": {
+            "x": 0.82,
+            "y": 0.9
+          }
+        }
+      },
+      "expectedDecisionKind": "WAIT"
+    },
+    {
+      "id": "queue-timeout-5",
+      "label": "匹配中 #5",
+      "observation": {
+        "state": "QUEUE",
+        "verification": "SYNTHETIC_PLACEHOLDER",
+        "reason": "Synthetic placeholder queue polling state.",
+        "anchors": [
+          "queue-spinner-placeholder",
+          "cancel-queue-placeholder"
+        ],
+        "actionPoints": {
+          "CANCEL_QUEUE": {
+            "x": 0.82,
+            "y": 0.9
+          }
+        }
+      },
+      "expectedDecisionKind": "WAIT"
+    },
+    {
+      "id": "queue-timeout-6",
+      "label": "匹配中 #6 超时",
+      "observation": {
+        "state": "QUEUE",
+        "verification": "SYNTHETIC_PLACEHOLDER",
+        "reason": "Synthetic placeholder queue polling state.",
+        "anchors": [
+          "queue-spinner-placeholder",
+          "cancel-queue-placeholder"
+        ],
+        "actionPoints": {
+          "CANCEL_QUEUE": {
+            "x": 0.82,
+            "y": 0.9
+          }
+        }
+      },
+      "expectedDecisionKind": "TAP_CANCEL_QUEUE"
+    }
+  ]
+}

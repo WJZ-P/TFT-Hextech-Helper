@@ -12,6 +12,13 @@ import {
     planAndroidForegroundProgress,
     type AndroidForegroundDecision,
 } from "../src-backend/services/AndroidForegroundProgression";
+import {
+    createAndroidForegroundObservationFromFixture,
+    normalizeAndroidForegroundObservation,
+    type AndroidForegroundFixtureDocument,
+    type AndroidForegroundFixtureObservationInput,
+    type AndroidForegroundObservation,
+} from "../src-backend/services/AndroidForegroundProtocol";
 
 const execFileAsync = promisify(execFile);
 const DEFAULT_SHORTCUT_PATH = "C:\\Users\\ASUS\\Desktop\\TFT.lnk";
@@ -21,6 +28,7 @@ interface CliArgs {
     skipLaunch: boolean;
     waitSeconds: number;
     screenshotPaths: string[];
+    fixturePath: string | null;
 }
 
 function parseArgs(argv: string[]): CliArgs {
@@ -29,6 +37,7 @@ function parseArgs(argv: string[]): CliArgs {
         skipLaunch: false,
         waitSeconds: 45,
         screenshotPaths: [],
+        fixturePath: null,
     };
 
     for (let index = 0; index < argv.length; index += 1) {
@@ -55,6 +64,12 @@ function parseArgs(argv: string[]): CliArgs {
 
         if (token === "--screenshot" && argv[index + 1]) {
             args.screenshotPaths.push(path.resolve(argv[index + 1]));
+            index += 1;
+            continue;
+        }
+
+        if (token === "--fixture" && argv[index + 1]) {
+            args.fixturePath = path.resolve(argv[index + 1]);
             index += 1;
         }
     }
@@ -144,12 +159,13 @@ async function waitForEmulatorContent(
     const startedAt = Date.now();
     let lastScreenshot = await captureWindowScreenshot(initialWindow);
     let lastClassification = await classifyAndroidWindowScreenshot(lastScreenshot);
+    let lastObservation = normalizeAndroidForegroundObservation(lastClassification);
     let lastWindowInfo = initialWindow;
     let progressState = createInitialAndroidForegroundProgressState();
     let foregroundDecision: AndroidForegroundDecision | null = null;
 
-    while (lastClassification.state !== "LIVE_CONTENT" && Date.now() - startedAt < timeoutMs) {
-        const progressResult = planAndroidForegroundProgress(lastClassification, progressState);
+    while (lastObservation.state !== "LIVE_CONTENT" && Date.now() - startedAt < timeoutMs) {
+        const progressResult = planAndroidForegroundProgress(lastObservation, progressState);
         progressState = progressResult.nextState;
         foregroundDecision = progressResult.decision;
 
@@ -174,9 +190,10 @@ async function waitForEmulatorContent(
         lastWindowInfo = refreshedWindow;
         lastScreenshot = await captureWindowScreenshot(refreshedWindow);
         lastClassification = await classifyAndroidWindowScreenshot(lastScreenshot);
+        lastObservation = normalizeAndroidForegroundObservation(lastClassification);
     }
 
-    if (lastClassification.state === "LIVE_CONTENT") {
+    if (lastObservation.state === "LIVE_CONTENT") {
         foregroundDecision = {
             kind: "READY",
             reason: "Live HUD detected",
@@ -191,32 +208,181 @@ async function waitForEmulatorContent(
     };
 }
 
+async function buildObservationFromFixtureFrame(
+    fixturePath: string,
+    frame: AndroidForegroundFixtureDocument["frames"][number]
+): Promise<{
+    screenshotPath: string | null;
+    observation: AndroidForegroundObservation;
+    expectedObservation: AndroidForegroundObservation | null;
+}> {
+    const expectedObservation = frame.expectedObservation
+        ? createAndroidForegroundObservationFromFixture(frame.expectedObservation)
+        : null;
+
+    if (frame.screenshotPath) {
+        const screenshotPath = path.resolve(path.dirname(fixturePath), frame.screenshotPath);
+        const screenshot = await fs.readFile(screenshotPath);
+        const classification = await classifyAndroidWindowScreenshot(screenshot);
+        return {
+            screenshotPath,
+            observation: normalizeAndroidForegroundObservation(classification),
+            expectedObservation,
+        };
+    }
+
+    if (frame.observation) {
+        return {
+            screenshotPath: null,
+            observation: createAndroidForegroundObservationFromFixture(frame.observation),
+            expectedObservation,
+        };
+    }
+
+    throw new Error(`前台 fixture 帧缺少 screenshotPath 或 observation: ${frame.id}`);
+}
+
+function buildTraceSummary(
+    analysisSequence: Array<{
+        foregroundObservation: AndroidForegroundObservation;
+        foregroundDecision: AndroidForegroundDecision;
+    }>
+) {
+    const verificationCounts: Record<string, number> = {};
+    const stateCounts: Record<string, number> = {};
+    let stateTransitionCount = 0;
+    let decisionTransitionCount = 0;
+
+    for (let index = 0; index < analysisSequence.length; index += 1) {
+        const entry = analysisSequence[index];
+        verificationCounts[entry.foregroundObservation.verification] =
+            (verificationCounts[entry.foregroundObservation.verification] ?? 0) + 1;
+        stateCounts[entry.foregroundObservation.state] = (stateCounts[entry.foregroundObservation.state] ?? 0) + 1;
+
+        if (index === 0) {
+            continue;
+        }
+
+        const previous = analysisSequence[index - 1];
+        if (previous?.foregroundObservation.state !== entry.foregroundObservation.state) {
+            stateTransitionCount += 1;
+        }
+        if (previous?.foregroundDecision.kind !== entry.foregroundDecision.kind) {
+            decisionTransitionCount += 1;
+        }
+    }
+
+    return {
+        frameCount: analysisSequence.length,
+        verificationCounts,
+        stateCounts,
+        stateTransitionCount,
+        decisionTransitionCount,
+    };
+}
+
 async function main(): Promise<void> {
     process.env.VITE_PUBLIC ??= path.resolve(process.cwd(), "public");
 
     const args = parseArgs(process.argv.slice(2));
+
+    if (args.fixturePath) {
+        const fixture = JSON.parse(await fs.readFile(args.fixturePath, "utf8")) as AndroidForegroundFixtureDocument;
+        if (fixture.schemaVersion !== "android-foreground-fixture.v1") {
+            throw new Error(`不支持的前台 fixture schemaVersion: ${String((fixture as { schemaVersion?: string }).schemaVersion)}`);
+        }
+
+        let progressState = createInitialAndroidForegroundProgressState();
+        const analysisSequence: Array<{
+            frameId: string;
+            frameLabel: string;
+            screenshotPath: string | null;
+            foregroundObservation: AndroidForegroundObservation;
+            expectedObservation: AndroidForegroundObservation | null;
+            foregroundDecision: AndroidForegroundDecision;
+            expectedDecisionKind: string | null;
+            expectedDecisionMatched: boolean | null;
+            expectedStateMatched: boolean | null;
+        }> = [];
+
+        for (const frame of fixture.frames) {
+            const { screenshotPath, observation, expectedObservation } = await buildObservationFromFixtureFrame(args.fixturePath, frame);
+            const progression = planAndroidForegroundProgress(observation, progressState);
+            progressState = progression.nextState;
+            analysisSequence.push({
+                frameId: frame.id,
+                frameLabel: frame.label,
+                screenshotPath,
+                foregroundObservation: observation,
+                expectedObservation,
+                foregroundDecision: progression.decision,
+                expectedDecisionKind: frame.expectedDecisionKind ?? null,
+                expectedDecisionMatched: frame.expectedDecisionKind
+                    ? progression.decision.kind === frame.expectedDecisionKind
+                    : null,
+                expectedStateMatched: expectedObservation ? expectedObservation.state === observation.state : null,
+            });
+        }
+
+        const lastStep = analysisSequence[analysisSequence.length - 1];
+        const allExpectedMatched = analysisSequence.every(
+            (entry) => entry.expectedDecisionMatched !== false && entry.expectedStateMatched !== false
+        );
+        const traceSummary = buildTraceSummary(analysisSequence);
+        if (!allExpectedMatched) {
+            process.exitCode = 1;
+        }
+        process.stdout.write(`${JSON.stringify({
+            launchedShortcut: false,
+            shortcutPath: args.shortcutPath,
+            waitSeconds: args.waitSeconds,
+            detectedWindow: null,
+            focusedWindow: null,
+            candidateCount: 0,
+            health: null,
+            fixturePath: args.fixturePath,
+            fixtureId: fixture.id,
+            fixtureLabel: fixture.label,
+            screenshotPath: lastStep?.screenshotPath ?? null,
+            screenshotPaths: analysisSequence.map((entry) => entry.screenshotPath).filter(Boolean),
+            contentClassification: lastStep?.foregroundObservation.rawClassification ?? null,
+            foregroundObservation: lastStep?.foregroundObservation ?? null,
+            expectedObservation: lastStep?.expectedObservation ?? null,
+            foregroundDecision: lastStep?.foregroundDecision ?? null,
+            analysisSequence,
+            allExpectedMatched,
+            traceSummary,
+            observedSummary: null,
+            observeError: null,
+        }, null, 2)}\n`);
+        return;
+    }
 
     if (args.screenshotPaths.length > 0) {
         let progressState = createInitialAndroidForegroundProgressState();
         const analysisSequence: Array<{
             screenshotPath: string;
             contentClassification: AndroidWindowClassification;
+            foregroundObservation: AndroidForegroundObservation;
             foregroundDecision: AndroidForegroundDecision;
         }> = [];
 
         for (const screenshotPath of args.screenshotPaths) {
             const screenshot = await fs.readFile(screenshotPath);
             const classification = await classifyAndroidWindowScreenshot(screenshot);
-            const progression = planAndroidForegroundProgress(classification, progressState);
+            const observation = normalizeAndroidForegroundObservation(classification);
+            const progression = planAndroidForegroundProgress(observation, progressState);
             progressState = progression.nextState;
             analysisSequence.push({
                 screenshotPath,
                 contentClassification: classification,
+                foregroundObservation: observation,
                 foregroundDecision: progression.decision,
             });
         }
 
         const lastStep = analysisSequence[analysisSequence.length - 1];
+        const traceSummary = buildTraceSummary(analysisSequence);
 
         process.stdout.write(`${JSON.stringify({
             launchedShortcut: false,
@@ -229,8 +395,10 @@ async function main(): Promise<void> {
             screenshotPath: lastStep?.screenshotPath ?? null,
             screenshotPaths: args.screenshotPaths,
             contentClassification: lastStep?.contentClassification ?? null,
+            foregroundObservation: lastStep?.foregroundObservation ?? null,
             foregroundDecision: lastStep?.foregroundDecision ?? null,
             analysisSequence,
+            traceSummary,
             observedSummary: null,
             observeError: null,
         }, null, 2)}\n`);

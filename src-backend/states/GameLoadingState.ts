@@ -21,6 +21,7 @@ import {
     planAndroidForegroundProgress,
     type AndroidForegroundProgressState,
 } from "../services/AndroidForegroundProgression.ts";
+import { normalizeAndroidForegroundObservation, type AndroidForegroundState } from "../services/AndroidForegroundProtocol.ts";
 
 /** 轮询间隔 (ms) */
 const POLL_INTERVAL_MS = 500;
@@ -97,16 +98,25 @@ export class GameLoadingState implements IState {
         windowInfo: WindowInfo,
         progressState: AndroidForegroundProgressState
     ): Promise<{
-        classificationState: "BLUESTACKS_BOOT" | "TFT_FRONTEND" | "LIVE_CONTENT" | "UNKNOWN";
+        classificationState: AndroidForegroundState;
         nextProgressState: AndroidForegroundProgressState;
         shouldWaitForNextPoll: boolean;
     }> {
         const screenshot = await this.captureAndroidWindowScreenshot(windowInfo);
         const classification = await classifyAndroidWindowScreenshot(screenshot);
-        const progressResult = planAndroidForegroundProgress(classification, progressState);
+        const observation = normalizeAndroidForegroundObservation(classification);
+        const progressResult = planAndroidForegroundProgress(observation, progressState);
 
-        if (progressResult.decision.kind === "TAP_PRIMARY_CTA") {
-            logger.info(`[GameLoadingState] 安卓前台检测到安全主按钮，准备点击推进: ${windowInfo.title}`);
+        if (
+            progressResult.decision.kind === "TAP_PRIMARY_CTA" ||
+            progressResult.decision.kind === "TAP_START_QUEUE" ||
+            progressResult.decision.kind === "TAP_ACCEPT_READY" ||
+            progressResult.decision.kind === "TAP_CANCEL_QUEUE"
+        ) {
+            logger.info(
+                `[GameLoadingState] 安卓前台动作已规划: ${progressResult.decision.kind} ` +
+                `(state=${observation.state}, title=${windowInfo.title})`
+            );
             await windowHelper.focusWindow(windowInfo);
             mouseController.setGameWindowOrigin(
                 { x: windowInfo.left, y: windowInfo.top },
@@ -116,7 +126,7 @@ export class GameLoadingState implements IState {
             await mouseController.clickAt(progressResult.decision.targetPoint, MouseButtonType.LEFT);
             await sleep(3000);
             return {
-                classificationState: classification.state,
+                classificationState: observation.state,
                 nextProgressState: progressResult.nextState,
                 shouldWaitForNextPoll: true,
             };
@@ -124,15 +134,15 @@ export class GameLoadingState implements IState {
 
         if (progressResult.decision.kind === "BLOCKED") {
             logger.warn(`[GameLoadingState] 安卓前台自动推进被阻止: ${progressResult.decision.reason}`);
-        } else if (classification.state !== "LIVE_CONTENT") {
+        } else if (observation.state !== "LIVE_CONTENT") {
             logger.debug(
-                `[GameLoadingState] 安卓前台仍未进入可读 HUD: ${classification.state}` +
-                `${classification.frontendVariant ? ` (${classification.frontendVariant})` : ""}`
+                `[GameLoadingState] 安卓前台仍未进入可读 HUD: ${observation.state}` +
+                `${observation.verification === "SYNTHETIC_PLACEHOLDER" ? " [synthetic]" : ""}`
             );
         }
 
         return {
-            classificationState: classification.state,
+            classificationState: observation.state,
             nextProgressState: progressResult.nextState,
             shouldWaitForNextPoll: progressResult.decision.kind === "BLOCKED",
         };

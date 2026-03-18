@@ -104,3 +104,95 @@ test("android window classifier rejects unrelated desktop screenshots", async ()
     assert.equal(result.frontendVariant, undefined);
     assert.equal(result.primaryActionPoint, undefined);
 });
+
+test("android window classifier detects real ready-check accept state", async () => {
+    const screenshot = await fs.readFile(
+        path.resolve(
+            process.cwd(),
+            "examples",
+            "recordings",
+            "android-foreground-na-captures",
+            "pending-real-captures",
+            "accept-ready",
+            "na_accept_ready_03.png"
+        )
+    );
+
+    const result = await classifyAndroidWindowScreenshot(screenshot);
+
+    assert.equal(result.state, "ACCEPT_READY");
+    assert.deepEqual(result.acceptReadyPoint, { x: 0.51, y: 0.68 });
+    assert.ok((result.acceptModalDarkRatio ?? 0) > 0.35);
+    assert.ok((result.acceptButtonBlueRatio ?? 0) > 0.04);
+});
+
+test("android window classifier detects real queue state", async () => {
+    const screenshot = await fs.readFile(
+        path.resolve(
+            process.cwd(),
+            "examples",
+            "recordings",
+            "android-foreground-na-captures",
+            "pending-real-captures",
+            "queue",
+            "na_queue_02.png"
+        )
+    );
+
+    const result = await classifyAndroidWindowScreenshot(screenshot);
+
+    assert.equal(result.state, "QUEUE");
+    assert.deepEqual(result.cancelQueuePoint, { x: 0.83, y: 0.9 });
+    assert.ok((result.queueCancelDarkRatio ?? 0) > 0.60);
+    assert.ok((result.queueStatusGoldRatio ?? 0) > 0.035);
+});
+
+test("android window classifier detects real lobby state", async () => {
+    const screenshot = await fs.readFile(
+        path.resolve(
+            process.cwd(),
+            "examples",
+            "recordings",
+            "android-foreground-na-captures",
+            "pending-real-captures",
+            "queue",
+            "na_queue_04.png"
+        )
+    );
+
+    const result = await classifyAndroidWindowScreenshot(screenshot);
+
+    assert.equal(result.state, "LOBBY");
+    assert.deepEqual(result.startQueuePoint, { x: 0.84, y: 0.9 });
+    assert.ok((result.lobbyStartBlueRatio ?? 0) > 0.30);
+});
+
+test("android window classifier detects post-accept and loading transition states", async () => {
+    const frames = [
+        path.resolve(
+            process.cwd(),
+            "examples",
+            "recordings",
+            "android-foreground-na-captures",
+            "pending-real-captures",
+            "accept-ready",
+            "na_accept_ready_05.png"
+        ),
+        path.resolve(
+            process.cwd(),
+            "examples",
+            "recordings",
+            "android-foreground-na-captures",
+            "pending-real-captures",
+            "in-game-transition",
+            "na_in_game_transition_01.png"
+        ),
+    ];
+
+    for (const frame of frames) {
+        const screenshot = await fs.readFile(frame);
+        const result = await classifyAndroidWindowScreenshot(screenshot);
+
+        assert.equal(result.state, "IN_GAME_TRANSITION");
+    }
+});

@@ -1,0 +1,187 @@
+{
+  "schemaVersion": "android-foreground-manifest.v1",
+  "id": "android-na-lobby-draft",
+  "label": "安卓 lobby 真实草稿",
+  "description": "从 NA 前台 capture pack 接入 lobby 真图",
+  "generatedAt": "2026-03-17T23:27:51.935Z",
+  "outputDir": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\lobby",
+  "fixturePath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\lobby\\android-na-lobby-draft.json",
+  "stateHint": "LOBBY",
+  "frames": [
+    {
+      "id": "lobby-1",
+      "screenshotPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\android-foreground-na-captures\\pending-real-captures\\lobby\\na_lobby_01.png",
+      "width": 1920,
+      "height": 1080,
+      "classifiedState": "UPDATE_READY",
+      "classifiedVerification": "VERIFIED_REAL",
+      "expectedState": "LOBBY",
+      "expectedVerification": "REAL_CAPTURE_DRAFT",
+      "expectedDecisionKind": "WAIT",
+      "crops": [
+        {
+          "id": "lobby-start-queue",
+          "label": "大厅开始匹配按钮草稿",
+          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\lobby\\crops\\lobby-1-lobby-start-queue.png",
+          "note": "Review and tighten the real start-queue CTA."
+        },
+        {
+          "id": "lobby-top-anchors",
+          "label": "大厅顶部锚点草稿",
+          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\lobby\\crops\\lobby-1-lobby-top-anchors.png",
+          "note": "Use for invite/team-planner/header anchors."
+        }
+      ]
+    },
+    {
+      "id": "lobby-2",
+      "screenshotPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\android-foreground-na-captures\\pending-real-captures\\lobby\\na_lobby_02.png",
+      "width": 1920,
+      "height": 1080,
+      "classifiedState": "LIVE_CONTENT",
+      "classifiedVerification": "VERIFIED_REAL",
+      "expectedState": "LOBBY",
+      "expectedVerification": "REAL_CAPTURE_DRAFT",
+      "expectedDecisionKind": "TAP_START_QUEUE",
+      "crops": [
+        {
+          "id": "lobby-start-queue",
+          "label": "大厅开始匹配按钮草稿",
+          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\lobby\\crops\\lobby-2-lobby-start-queue.png",
+          "note": "Review and tighten the real start-queue CTA."
+        },
+        {
+          "id": "lobby-top-anchors",
+          "label": "大厅顶部锚点草稿",
+          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\lobby\\crops\\lobby-2-lobby-top-anchors.png",
+          "note": "Use for invite/team-planner/header anchors."
+        }
+      ]
+    },
+    {
+      "id": "lobby-3",
+      "screenshotPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\android-foreground-na-captures\\pending-real-captures\\lobby\\na_lobby_03.png",
+      "width": 1920,
+      "height": 1080,
+      "classifiedState": "UNKNOWN",
+      "classifiedVerification": "VERIFIED_REAL",
+      "expectedState": "LOBBY",
+      "expectedVerification": "REAL_CAPTURE_DRAFT",
+      "expectedDecisionKind": "WAIT",
+      "crops": [
+        {
+          "id": "lobby-start-queue",
+          "label": "大厅开始匹配按钮草稿",
+          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\lobby\\crops\\lobby-3-lobby-start-queue.png",
+          "note": "Review and tighten the real start-queue CTA."
+        },
+        {
+          "id": "lobby-top-anchors",
+          "label": "大厅顶部锚点草稿",
+          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\lobby\\crops\\lobby-3-lobby-top-anchors.png",
+          "note": "Use for invite/team-planner/header anchors."
+        }
+      ]
+    },
+    {
+      "id": "lobby-4",
+      "screenshotPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\android-foreground-na-captures\\pending-real-captures\\lobby\\na_lobby_04.png",
+      "width": 1920,
+      "height": 1080,
+      "classifiedState": "UNKNOWN",
+      "classifiedVerification": "VERIFIED_REAL",
+      "expectedState": "LOBBY",
+      "expectedVerification": "REAL_CAPTURE_DRAFT",
+      "expectedDecisionKind": "WAIT",
+      "crops": [
+        {
+          "id": "lobby-start-queue",
+          "label": "大厅开始匹配按钮草稿",
+          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\lobby\\crops\\lobby-4-lobby-start-queue.png",
+          "note": "Review and tighten the real start-queue CTA."
+        },
+        {
+          "id": "lobby-top-anchors",
+          "label": "大厅顶部锚点草稿",
+          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\lobby\\crops\\lobby-4-lobby-top-anchors.png",
+          "note": "Use for invite/team-planner/header anchors."
+        }
+      ]
+    },
+    {
+      "id": "lobby-5",
+      "screenshotPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\android-foreground-na-captures\\pending-real-captures\\lobby\\na_lobby_05.png",
+      "width": 1920,
+      "height": 1080,
+      "classifiedState": "LIVE_CONTENT",
+      "classifiedVerification": "VERIFIED_REAL",
+      "expectedState": "LOBBY",
+      "expectedVerification": "REAL_CAPTURE_DRAFT",
+      "expectedDecisionKind": "WAIT",
+      "crops": [
+        {
+          "id": "lobby-start-queue",
+          "label": "大厅开始匹配按钮草稿",
+          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\lobby\\crops\\lobby-5-lobby-start-queue.png",
+          "note": "Review and tighten the real start-queue CTA."
+        },
+        {
+          "id": "lobby-top-anchors",
+          "label": "大厅顶部锚点草稿",
+          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\lobby\\crops\\lobby-5-lobby-top-anchors.png",
+          "note": "Use for invite/team-planner/header anchors."
+        }
+      ]
+    },
+    {
+      "id": "lobby-6",
+      "screenshotPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\android-foreground-na-captures\\pending-real-captures\\lobby\\na_lobby_06.png",
+      "width": 1920,
+      "height": 1080,
+      "classifiedState": "LIVE_CONTENT",
+      "classifiedVerification": "VERIFIED_REAL",
+      "expectedState": "LOBBY",
+      "expectedVerification": "REAL_CAPTURE_DRAFT",
+      "expectedDecisionKind": "WAIT",
+      "crops": [
+        {
+          "id": "lobby-start-queue",
+          "label": "大厅开始匹配按钮草稿",
+          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\lobby\\crops\\lobby-6-lobby-start-queue.png",
+          "note": "Review and tighten the real start-queue CTA."
+        },
+        {
+          "id": "lobby-top-anchors",
+          "label": "大厅顶部锚点草稿",
+          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\lobby\\crops\\lobby-6-lobby-top-anchors.png",
+          "note": "Use for invite/team-planner/header anchors."
+        }
+      ]
+    },
+    {
+      "id": "lobby-7",
+      "screenshotPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\android-foreground-na-captures\\pending-real-captures\\lobby\\na_lobby_07.png",
+      "width": 1920,
+      "height": 1080,
+      "classifiedState": "LIVE_CONTENT",
+      "classifiedVerification": "VERIFIED_REAL",
+      "expectedState": "LOBBY",
+      "expectedVerification": "REAL_CAPTURE_DRAFT",
+      "expectedDecisionKind": "WAIT",
+      "crops": [
+        {
+          "id": "lobby-start-queue",
+          "label": "大厅开始匹配按钮草稿",
+          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\lobby\\crops\\lobby-7-lobby-start-queue.png",
+          "note": "Review and tighten the real start-queue CTA."
+        },
+        {
+          "id": "lobby-top-anchors",
+          "label": "大厅顶部锚点草稿",
+          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\lobby\\crops\\lobby-7-lobby-top-anchors.png",
+          "note": "Use for invite/team-planner/header anchors."
+        }
+      ]
+    }
+  ]
+}

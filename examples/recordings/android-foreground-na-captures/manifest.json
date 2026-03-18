@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "android-foreground-capture-pack.v1",
+  "id": "android-na-foreground-current-pack",
+  "label": "NA Android Foreground Current Pack",
+  "description": "Curated from repository recordings to hand off current real screenshot coverage plus the next capture drop targets.",
+  "currentReal": [
+    {
+      "state": "BLUESTACKS_BOOT",
+      "verification": "VERIFIED_REAL",
+      "path": "current-real/na_bluestacks_boot_01.png",
+      "source": "../smoke/android-live-smoke-1773702691252.png"
+    },
+    {
+      "state": "UPDATE_READY",
+      "verification": "VERIFIED_REAL",
+      "path": "current-real/na_update_ready_01.png",
+      "source": "../smoke/android-live-smoke-1773702968907.png"
+    },
+    {
+      "state": "LOGIN_REQUIRED",
+      "verification": "VERIFIED_REAL",
+      "path": "current-real/na_login_required_01.png",
+      "source": "../smoke/android-live-smoke-1773703133640.png"
+    },
+    {
+      "state": "UNKNOWN",
+      "verification": "VERIFIED_REAL",
+      "path": "current-real/na_unknown_01.png",
+      "source": "../smoke/android-live-smoke-1773701883707.png"
+    },
+    {
+      "state": "LIVE_CONTENT",
+      "verification": "VERIFIED_REAL",
+      "path": "current-real/na_live_content_opening_augment_01.png",
+      "source": "../derived/android-real-recording-20260315-ionia/frames/recording-opening-augment-2-1.png"
+    },
+    {
+      "state": "LIVE_CONTENT",
+      "verification": "VERIFIED_REAL",
+      "path": "current-real/na_live_content_shop_01.png",
+      "source": "../derived/android-real-recording-20260315-ionia/frames/recording-shop-5-1.png"
+    },
+    {
+      "state": "LIVE_CONTENT",
+      "verification": "VERIFIED_REAL",
+      "path": "current-real/na_live_content_board_01.png",
+      "source": "../derived/android-real-recording-20260315-ionia/frames/recording-board-5-2.png"
+    }
+  ],
+  "missingRequiredStates": [
+    {
+      "state": "LOBBY",
+      "targetDir": "pending-real-captures/lobby",
+      "requiredCount": 3
+    },
+    {
+      "state": "QUEUE",
+      "targetDir": "pending-real-captures/queue",
+      "requiredCount": 3
+    },
+    {
+      "state": "ACCEPT_READY",
+      "targetDir": "pending-real-captures/accept-ready",
+      "requiredCount": 3
+    },
+    {
+      "state": "IN_GAME_TRANSITION",
+      "targetDir": "pending-real-captures/in-game-transition",
+      "requiredCount": 3
+    }
+  ]
+}

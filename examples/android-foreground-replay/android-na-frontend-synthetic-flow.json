@@ -1,0 +1,151 @@
+{
+  "schemaVersion": "android-foreground-fixture.v1",
+  "id": "android-na-frontend-synthetic-flow",
+  "label": "安卓前台链路合成回放：更新到对局内",
+  "description": "在缺少美服安卓 lobby/queue/accept-ready 真图时，使用已验证的 update/live 截图和 synthetic placeholder 状态把前台状态机整条链路离线跑通。",
+  "notes": [
+    "UPDATE_READY 与 LIVE_CONTENT 使用仓库中的真实安卓截图。",
+    "LOBBY / QUEUE / ACCEPT_READY / IN_GAME_TRANSITION 目前为 synthetic placeholder，仅用于离线 smoke 和单测预铺链路。",
+    "所有 synthetic action point 都需要等真机素材到位后再校准。"
+  ],
+  "frames": [
+    {
+      "id": "update-ready-1",
+      "label": "真实更新页首帧",
+      "screenshotPath": "../recordings/smoke/android-live-smoke-1773702968907.png",
+      "expectedDecisionKind": "WAIT",
+      "note": "真实素材已验证：第一帧只建立稳定度，不点击。"
+    },
+    {
+      "id": "update-ready-2",
+      "label": "真实更新页稳定帧",
+      "screenshotPath": "../recordings/smoke/android-live-smoke-1773702968907.png",
+      "expectedDecisionKind": "TAP_PRIMARY_CTA",
+      "note": "真实素材已验证：第二帧触发安全更新按钮点击。"
+    },
+    {
+      "id": "lobby-1",
+      "label": "合成大厅首帧",
+      "observation": {
+        "state": "LOBBY",
+        "verification": "SYNTHETIC_PLACEHOLDER",
+        "reason": "Synthetic placeholder lobby until NA Android lobby fixture is captured.",
+        "anchors": [
+          "play-button-placeholder",
+          "team-planner-placeholder"
+        ],
+        "actionPoints": {
+          "START_QUEUE": {
+            "x": 0.86,
+            "y": 0.9
+          }
+        },
+        "note": "待真机确认：大厅开始匹配按钮。"
+      },
+      "expectedDecisionKind": "WAIT"
+    },
+    {
+      "id": "lobby-2",
+      "label": "合成大厅稳定帧",
+      "observation": {
+        "state": "LOBBY",
+        "verification": "SYNTHETIC_PLACEHOLDER",
+        "reason": "Synthetic placeholder lobby until NA Android lobby fixture is captured.",
+        "anchors": [
+          "play-button-placeholder",
+          "team-planner-placeholder"
+        ],
+        "actionPoints": {
+          "START_QUEUE": {
+            "x": 0.86,
+            "y": 0.9
+          }
+        },
+        "note": "待真机确认：大厅开始匹配按钮。"
+      },
+      "expectedDecisionKind": "TAP_START_QUEUE"
+    },
+    {
+      "id": "queue-1",
+      "label": "合成匹配中首帧",
+      "observation": {
+        "state": "QUEUE",
+        "verification": "SYNTHETIC_PLACEHOLDER",
+        "reason": "Synthetic placeholder queue polling state.",
+        "anchors": [
+          "queue-spinner-placeholder",
+          "cancel-queue-placeholder"
+        ],
+        "actionPoints": {
+          "CANCEL_QUEUE": {
+            "x": 0.82,
+            "y": 0.9
+          }
+        },
+        "note": "待真机确认：匹配中取消按钮。"
+      },
+      "expectedDecisionKind": "WAIT"
+    },
+    {
+      "id": "queue-2",
+      "label": "合成匹配中稳定帧",
+      "observation": {
+        "state": "QUEUE",
+        "verification": "SYNTHETIC_PLACEHOLDER",
+        "reason": "Synthetic placeholder queue polling state.",
+        "anchors": [
+          "queue-spinner-placeholder",
+          "cancel-queue-placeholder"
+        ],
+        "actionPoints": {
+          "CANCEL_QUEUE": {
+            "x": 0.82,
+            "y": 0.9
+          }
+        }
+      },
+      "expectedDecisionKind": "WAIT"
+    },
+    {
+      "id": "accept-ready",
+      "label": "合成 ready-check",
+      "observation": {
+        "state": "ACCEPT_READY",
+        "verification": "SYNTHETIC_PLACEHOLDER",
+        "reason": "Synthetic placeholder ready-check accept state.",
+        "anchors": [
+          "accept-button-placeholder"
+        ],
+        "actionPoints": {
+          "ACCEPT_READY": {
+            "x": 0.61,
+            "y": 0.69
+          }
+        },
+        "note": "待真机确认：ready-check 接受按钮。"
+      },
+      "expectedDecisionKind": "TAP_ACCEPT_READY"
+    },
+    {
+      "id": "transition-1",
+      "label": "合成入局过渡",
+      "observation": {
+        "state": "IN_GAME_TRANSITION",
+        "verification": "SYNTHETIC_PLACEHOLDER",
+        "reason": "Synthetic placeholder in-game transition after ready-check accept.",
+        "anchors": [
+          "loading-or-fade-placeholder"
+        ],
+        "note": "待真机确认：从 ready-check 到对局 HUD 的过渡页。"
+      },
+      "expectedDecisionKind": "WAIT"
+    },
+    {
+      "id": "live-hud",
+      "label": "真实 5-2 局内 HUD",
+      "screenshotPath": "../recordings/derived/android-real-recording-20260315-ionia/frames/recording-board-5-2.png",
+      "expectedDecisionKind": "READY",
+      "note": "真实素材已验证：最终进入可读 HUD。"
+    }
+  ]
+}
