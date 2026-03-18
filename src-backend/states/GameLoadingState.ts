@@ -109,6 +109,7 @@ export class GameLoadingState implements IState {
 
         if (
             progressResult.decision.kind === "TAP_PRIMARY_CTA" ||
+            progressResult.decision.kind === "TAP_DISMISS_OVERLAY" ||
             progressResult.decision.kind === "TAP_START_QUEUE" ||
             progressResult.decision.kind === "TAP_ACCEPT_READY" ||
             progressResult.decision.kind === "TAP_CANCEL_QUEUE"

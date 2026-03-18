@@ -5,6 +5,12 @@ import { promisify } from "util";
 import { mouseController, MouseButtonType, screenCapture } from "../src-backend/tft";
 import { classifyAndroidWindowScreenshot, type AndroidWindowClassification } from "../src-backend/utils/AndroidWindowClassifier";
 import { windowHelper } from "../src-backend/utils/WindowHelper";
+import {
+    buildAndroidWindowDiagnosticsSummary,
+    getEmulatorProcessDiagnostics,
+    getInterestingWindowEntries,
+    getNativeInterestingEntries,
+} from "../src-backend/utils/AndroidWindowDiagnostics";
 import { GameClient, GameRegion, settingsStore } from "../src-backend/utils/SettingsStore";
 import type { ObservedState } from "../src-backend/core/types";
 import {
@@ -29,6 +35,17 @@ interface CliArgs {
     waitSeconds: number;
     screenshotPaths: string[];
     fixturePath: string | null;
+}
+
+interface ForegroundTraceEntry {
+    state: string;
+    verification: string;
+    decisionKind: string;
+    decisionReason: string;
+    clickEligible: boolean;
+    clicked: boolean;
+    blocker: string | null;
+    targetPoint: { x: number; y: number } | null;
 }
 
 function parseArgs(argv: string[]): CliArgs {
@@ -155,6 +172,7 @@ async function waitForEmulatorContent(
     classification: AndroidWindowClassification;
     windowInfo: { title: string; left: number; top: number; width: number; height: number };
     foregroundDecision: AndroidForegroundDecision | null;
+    foregroundTrace: ForegroundTraceEntry[];
 }> {
     const startedAt = Date.now();
     let lastScreenshot = await captureWindowScreenshot(initialWindow);
@@ -163,26 +181,75 @@ async function waitForEmulatorContent(
     let lastWindowInfo = initialWindow;
     let progressState = createInitialAndroidForegroundProgressState();
     let foregroundDecision: AndroidForegroundDecision | null = null;
+    const foregroundTrace: ForegroundTraceEntry[] = [];
+
+    const isTapDecision = (
+        decision: AndroidForegroundDecision
+    ): decision is Extract<AndroidForegroundDecision, { targetPoint: { x: number; y: number } }> => {
+        return (
+            decision.kind === "TAP_PRIMARY_CTA" ||
+            decision.kind === "TAP_DISMISS_OVERLAY" ||
+            decision.kind === "TAP_START_QUEUE" ||
+            decision.kind === "TAP_ACCEPT_READY" ||
+            decision.kind === "TAP_CANCEL_QUEUE"
+        );
+    };
 
     while (lastObservation.state !== "LIVE_CONTENT" && Date.now() - startedAt < timeoutMs) {
         const progressResult = planAndroidForegroundProgress(lastObservation, progressState);
         progressState = progressResult.nextState;
-        foregroundDecision = progressResult.decision;
+        const decision = progressResult.decision;
+        foregroundDecision = decision;
+        const clickEligible = isTapDecision(decision);
+        let clicked = false;
+        let blocker: string | null = null;
 
-        if (progressResult.decision.kind === "BLOCKED") {
+        if (decision.kind === "BLOCKED") {
+            blocker = decision.reason;
+            foregroundTrace.push({
+                state: lastObservation.state,
+                verification: lastObservation.verification,
+                decisionKind: decision.kind,
+                decisionReason: decision.reason,
+                clickEligible,
+                clicked,
+                blocker,
+                targetPoint: null,
+            });
             break;
         }
 
-        if (progressResult.decision.kind === "TAP_PRIMARY_CTA") {
+        if (clickEligible) {
             await windowHelper.focusWindow(lastWindowInfo);
             mouseController.setGameWindowOrigin(
                 { x: lastWindowInfo.left, y: lastWindowInfo.top },
                 { width: lastWindowInfo.width, height: lastWindowInfo.height },
                 true
             );
-            await mouseController.clickAt(progressResult.decision.targetPoint, MouseButtonType.LEFT);
+            await mouseController.clickAt(decision.targetPoint, MouseButtonType.LEFT);
+            clicked = true;
+            foregroundTrace.push({
+                state: lastObservation.state,
+                verification: lastObservation.verification,
+                decisionKind: decision.kind,
+                decisionReason: decision.reason,
+                clickEligible,
+                clicked,
+                blocker,
+                targetPoint: decision.targetPoint,
+            });
             await sleep(3000);
         } else {
+            foregroundTrace.push({
+                state: lastObservation.state,
+                verification: lastObservation.verification,
+                decisionKind: decision.kind,
+                decisionReason: decision.reason,
+                clickEligible,
+                clicked,
+                blocker,
+                targetPoint: null,
+            });
             await sleep(2000);
         }
 
@@ -205,6 +272,7 @@ async function waitForEmulatorContent(
         classification: lastClassification,
         windowInfo: lastWindowInfo,
         foregroundDecision,
+        foregroundTrace,
     };
 }
 
@@ -418,7 +486,34 @@ async function main(): Promise<void> {
     const detectedWindow = candidates[0] ?? null;
 
     if (!detectedWindow) {
-        throw new Error(`在 ${args.waitSeconds} 秒内未检测到安卓模拟器窗口`);
+        const diagnostics = await windowHelper.diagnoseLOLWindows(GameClient.ANDROID);
+        const emulatorProcesses = await getEmulatorProcessDiagnostics();
+        const interestingEntries = getInterestingWindowEntries(diagnostics);
+        const nativeInterestingEntries = getNativeInterestingEntries(diagnostics);
+        const diagnosticsSummary = buildAndroidWindowDiagnosticsSummary(diagnostics, emulatorProcesses);
+
+        process.stdout.write(`${JSON.stringify({
+            launchedShortcut: !args.skipLaunch,
+            shortcutPath: args.shortcutPath,
+            waitSeconds: args.waitSeconds,
+            detectedWindow: null,
+            focusedWindow: null,
+            candidateCount: 0,
+            health: null,
+            diagnosticsSummary,
+            activeWindow: diagnostics.activeWindow,
+            interestingEntries,
+            nativeInterestingEntries,
+            emulatorProcesses,
+            screenshotPath: null,
+            contentClassification: null,
+            foregroundDecision: null,
+            foregroundTrace: [],
+            observedSummary: null,
+            observeError: `在 ${args.waitSeconds} 秒内未检测到安卓模拟器窗口`,
+        }, null, 2)}\n`);
+        process.exitCode = 1;
+        return;
     }
 
     await windowHelper.focusWindow(detectedWindow);
@@ -466,6 +561,7 @@ async function main(): Promise<void> {
         screenshotPath,
         contentClassification: contentProbe.classification,
         foregroundDecision: contentProbe.foregroundDecision,
+        foregroundTrace: contentProbe.foregroundTrace,
         observedSummary,
         observeError,
     }, null, 2)}\n`);

@@ -49,6 +49,27 @@
       "expectedDecisionKind": "TAP_PRIMARY_CTA"
     },
     {
+      "id": "lobby-side-menu",
+      "label": "真实大厅侧边菜单展开帧",
+      "screenshotPath": "../recordings/smoke/android-live-smoke-1773875308190.png",
+      "expectedObservation": {
+        "state": "LOBBY",
+        "verification": "VERIFIED_REAL",
+        "reason": "Verified real lobby frame with side menu open",
+        "anchors": [
+          "side-menu-overlay",
+          "lobby-backdrop"
+        ],
+        "actionPoints": {
+          "DISMISS_OVERLAY": {
+            "x": 0.78,
+            "y": 0.52
+          }
+        }
+      },
+      "expectedDecisionKind": "TAP_DISMISS_OVERLAY"
+    },
+    {
       "id": "lobby-1",
       "label": "真实大厅首帧",
       "screenshotPath": "../recordings/android-foreground-na-captures/pending-real-captures/queue/na_queue_01.png",

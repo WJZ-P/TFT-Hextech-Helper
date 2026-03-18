@@ -122,6 +122,21 @@ These states are intentionally supported in the protocol and planner, but not ye
 - Command example:
 - `npm run android:smoke -- --fixture "examples/android-foreground-replay/android-na-frontend-real-flow.json"`
 
+### Canonical Real Replay Table
+
+| Frame | Screenshot | State | Anchors | Action Point | Transition Reason |
+|---|---|---|---|---|---|
+| `update-ready-1` | `na_update_ready_01.png` | `UPDATE_READY` | `update-primary-cta` | `PRIMARY_CTA (0.5, 0.545)` | First stable update dialog frame, do not click yet |
+| `update-ready-2` | `na_update_ready_01.png` | `UPDATE_READY` | `update-primary-cta` | `PRIMARY_CTA (0.5, 0.545)` | Second stable update frame, safe to advance |
+| `lobby-1` | `na_queue_01.png` | `LOBBY` | `start-queue-cta`, `lobby-profile` | `START_QUEUE (0.84, 0.9)` | First stable lobby frame after update |
+| `lobby-2` | `na_queue_04.png` | `LOBBY` | `start-queue-cta`, `lobby-profile` | `START_QUEUE (0.84, 0.9)` | Second stable lobby frame, safe to queue |
+| `queue-1` | `na_queue_02.png` | `QUEUE` | `queue-status`, `cancel-queue-cta` | `CANCEL_QUEUE (0.83, 0.9)` | First verified matchmaking frame |
+| `queue-2` | `na_queue_03.png` | `QUEUE` | `queue-status`, `cancel-queue-cta` | `CANCEL_QUEUE (0.83, 0.9)` | Stable matchmaking polling frame |
+| `accept-ready` | `na_accept_ready_03.png` | `ACCEPT_READY` | `accept-modal`, `accept-ready-cta` | `ACCEPT_READY (0.51, 0.68)` | Ready-check dialog with visible accept CTA |
+| `transition-1` | `na_accept_ready_05.png` | `IN_GAME_TRANSITION` | `transition-center`, `pre-hud-loading` | none | Accept already issued, waiting for other players/loading |
+| `transition-2` | `na_in_game_transition_01.png` | `IN_GAME_TRANSITION` | `transition-center`, `pre-hud-loading` | none | Loading art before readable HUD |
+| `live-hud` | `na_live_content_board_01.png` | `LIVE_CONTENT` | `hud-gold-region`, `scoreboard-region` | none | Readable HUD; hand off to live observe |
+
 ### Fixture Scaffolding
 - Script: `scripts/scaffold-android-foreground-fixture.ts`
 - Purpose: generate `android-foreground-fixture.v1` JSON from captured screenshots for one target state.

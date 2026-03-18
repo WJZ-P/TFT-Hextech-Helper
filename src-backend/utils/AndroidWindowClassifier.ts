@@ -11,6 +11,7 @@ export type AndroidWindowScreenState =
     | "LIVE_CONTENT"
     | "UNKNOWN";
 export type AndroidFrontendVariant = "UPDATE_READY" | "LOGIN_REQUIRED";
+export type AndroidLobbyVariant = "DEFAULT" | "SIDE_MENU_OPEN";
 
 export interface AndroidWindowClassification {
     state: AndroidWindowScreenState;
@@ -29,11 +30,16 @@ export interface AndroidWindowClassification {
     acceptButtonDarkRatio?: number;
     transitionCenterGoldRatio?: number;
     transitionCenterDarkRatio?: number;
+    sideMenuDarkRatio?: number;
+    sideMenuGoldRatio?: number;
+    sideDismissDarkRatio?: number;
     frontendVariant?: AndroidFrontendVariant;
+    lobbyVariant?: AndroidLobbyVariant;
     primaryActionPoint?: SimplePoint;
     startQueuePoint?: SimplePoint;
     cancelQueuePoint?: SimplePoint;
     acceptReadyPoint?: SimplePoint;
+    dismissOverlayPoint?: SimplePoint;
     loginSecondaryGoldRatio?: number;
     progressDarkRatio?: number;
 }
@@ -42,6 +48,7 @@ const UPDATE_PRIMARY_ACTION_POINT: SimplePoint = { x: 0.5, y: 0.545 };
 const START_QUEUE_ACTION_POINT: SimplePoint = { x: 0.84, y: 0.90 };
 const CANCEL_QUEUE_ACTION_POINT: SimplePoint = { x: 0.83, y: 0.90 };
 const ACCEPT_READY_ACTION_POINT: SimplePoint = { x: 0.51, y: 0.68 };
+const DISMISS_OVERLAY_ACTION_POINT: SimplePoint = { x: 0.78, y: 0.52 };
 
 function isGoldLoginPixel(red: number, green: number, blue: number): boolean {
     return red > 150 && green > 100 && green < 220 && blue < 140 && red > green;
@@ -132,6 +139,20 @@ export async function classifyAndroidWindowScreenshot(
         height: Math.max(1, Math.round(height * 0.62)),
     };
 
+    const sideMenuRegion = {
+        left: Math.max(0, Math.round(width * 0.00)),
+        top: Math.max(0, Math.round(height * 0.08)),
+        width: Math.max(1, Math.round(width * 0.42)),
+        height: Math.max(1, Math.round(height * 0.84)),
+    };
+
+    const sideDismissRegion = {
+        left: Math.max(0, Math.round(width * 0.62)),
+        top: Math.max(0, Math.round(height * 0.28)),
+        width: Math.max(1, Math.round(width * 0.30)),
+        height: Math.max(1, Math.round(height * 0.50)),
+    };
+
     const { data, info } = await sharp(screenshot)
         .extract(blueRegion)
         .raw()
@@ -182,6 +203,16 @@ export async function classifyAndroidWindowScreenshot(
         .raw()
         .toBuffer({ resolveWithObject: true });
 
+    const sideMenuBuffer = await sharp(screenshot)
+        .extract(sideMenuRegion)
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+
+    const sideDismissBuffer = await sharp(screenshot)
+        .extract(sideDismissRegion)
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+
     let blueDominant = 0;
     let brightBlue = 0;
     let brightWhite = 0;
@@ -199,6 +230,9 @@ export async function classifyAndroidWindowScreenshot(
     let acceptButtonDark = 0;
     let transitionCenterGold = 0;
     let transitionCenterDark = 0;
+    let sideMenuDark = 0;
+    let sideMenuGold = 0;
+    let sideDismissDark = 0;
 
     for (let index = 0; index < data.length; index += info.channels) {
         const red = data[index];
@@ -316,6 +350,29 @@ export async function classifyAndroidWindowScreenshot(
         }
     }
 
+    for (let index = 0; index < sideMenuBuffer.data.length; index += sideMenuBuffer.info.channels) {
+        const red = sideMenuBuffer.data[index];
+        const green = sideMenuBuffer.data[index + 1];
+        const blue = sideMenuBuffer.data[index + 2];
+
+        if (isDarkProgressPixel(red, green, blue)) {
+            sideMenuDark += 1;
+        }
+        if (isGoldLoginPixel(red, green, blue)) {
+            sideMenuGold += 1;
+        }
+    }
+
+    for (let index = 0; index < sideDismissBuffer.data.length; index += sideDismissBuffer.info.channels) {
+        const red = sideDismissBuffer.data[index];
+        const green = sideDismissBuffer.data[index + 1];
+        const blue = sideDismissBuffer.data[index + 2];
+
+        if (isDarkProgressPixel(red, green, blue)) {
+            sideDismissDark += 1;
+        }
+    }
+
     const liveHudGoldBuffer = await sharp(screenshot)
         .extract({
             left: Math.max(0, Math.round(width * 0.80)),
@@ -366,6 +423,8 @@ export async function classifyAndroidWindowScreenshot(
     const acceptModalPixelCount = Math.max(1, acceptModalBuffer.info.width * acceptModalBuffer.info.height);
     const acceptButtonPixelCount = Math.max(1, acceptButtonBuffer.info.width * acceptButtonBuffer.info.height);
     const transitionCenterPixelCount = Math.max(1, transitionCenterBuffer.info.width * transitionCenterBuffer.info.height);
+    const sideMenuPixelCount = Math.max(1, sideMenuBuffer.info.width * sideMenuBuffer.info.height);
+    const sideDismissPixelCount = Math.max(1, sideDismissBuffer.info.width * sideDismissBuffer.info.height);
     const liveHudGoldPixelCount = Math.max(1, liveHudGoldBuffer.info.width * liveHudGoldBuffer.info.height);
     const liveHudScorePixelCount = Math.max(1, liveHudScoreBuffer.info.width * liveHudScoreBuffer.info.height);
     const blueDominantRatio = blueDominant / pixelCount;
@@ -383,15 +442,20 @@ export async function classifyAndroidWindowScreenshot(
     const acceptButtonDarkRatio = acceptButtonDark / acceptButtonPixelCount;
     const transitionCenterGoldRatio = transitionCenterGold / transitionCenterPixelCount;
     const transitionCenterDarkRatio = transitionCenterDark / transitionCenterPixelCount;
+    const sideMenuDarkRatio = sideMenuDark / sideMenuPixelCount;
+    const sideMenuGoldRatio = sideMenuGold / sideMenuPixelCount;
+    const sideDismissDarkRatio = sideDismissDark / sideDismissPixelCount;
     const liveHudGoldSignalRatio = liveHudGoldSignal / liveHudGoldPixelCount;
     const liveHudScoreSignalRatio = liveHudScoreSignal / liveHudScorePixelCount;
 
     let state: AndroidWindowScreenState = "UNKNOWN";
     let frontendVariant: AndroidFrontendVariant | undefined;
+    let lobbyVariant: AndroidLobbyVariant | undefined;
     let primaryActionPoint: SimplePoint | undefined;
     let startQueuePoint: SimplePoint | undefined;
     let cancelQueuePoint: SimplePoint | undefined;
     let acceptReadyPoint: SimplePoint | undefined;
+    let dismissOverlayPoint: SimplePoint | undefined;
 
     if (brightBlueRatio > 0.18) {
         state = "BLUESTACKS_BOOT";
@@ -409,8 +473,21 @@ export async function classifyAndroidWindowScreenshot(
     } else if (queueCancelDarkRatio > 0.60 && queueStatusGoldRatio > 0.035 && queueStatusDarkRatio > 0.15 && queueStatusDarkRatio < 0.45) {
         state = "QUEUE";
         cancelQueuePoint = CANCEL_QUEUE_ACTION_POINT;
+    } else if (
+        sideMenuDarkRatio > 0.30 &&
+        sideMenuGoldRatio > 0.02 &&
+        sideDismissDarkRatio > 0.85 &&
+        lobbyStartBlueRatio < 0.05 &&
+        queueStatusGoldRatio < 0.04 &&
+        acceptButtonBlueRatio < 0.02 &&
+        progressDarkRatio < 0.80
+    ) {
+        state = "LOBBY";
+        lobbyVariant = "SIDE_MENU_OPEN";
+        dismissOverlayPoint = DISMISS_OVERLAY_ACTION_POINT;
     } else if (lobbyStartBlueRatio > 0.30 && lobbyStartDarkRatio < 0.20) {
         state = "LOBBY";
+        lobbyVariant = "DEFAULT";
         startQueuePoint = START_QUEUE_ACTION_POINT;
     } else if (
         (transitionCenterGoldRatio > 0.10 && transitionCenterDarkRatio < 0.12) ||
@@ -445,11 +522,16 @@ export async function classifyAndroidWindowScreenshot(
         acceptButtonDarkRatio,
         transitionCenterGoldRatio,
         transitionCenterDarkRatio,
+        sideMenuDarkRatio,
+        sideMenuGoldRatio,
+        sideDismissDarkRatio,
         frontendVariant,
+        lobbyVariant,
         primaryActionPoint,
         startQueuePoint,
         cancelQueuePoint,
         acceptReadyPoint,
+        dismissOverlayPoint,
         loginSecondaryGoldRatio,
         progressDarkRatio,
     };

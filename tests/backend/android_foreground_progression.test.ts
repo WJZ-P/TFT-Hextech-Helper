@@ -95,6 +95,51 @@ test("android foreground progression prepares a synthetic lobby start action", (
     assert.deepEqual(second.decision.targetPoint, { x: 0.86, y: 0.90 });
 });
 
+test("android foreground progression dismisses open lobby side menu before queueing", () => {
+    const observation = createObservation({
+        state: "LOBBY",
+        actionPoints: { DISMISS_OVERLAY: { x: 0.78, y: 0.52 } },
+    });
+
+    const result = planAndroidForegroundProgress(observation, createInitialAndroidForegroundProgressState());
+
+    assert.equal(result.decision.kind, "TAP_DISMISS_OVERLAY");
+    assert.deepEqual(result.decision.targetPoint, { x: 0.78, y: 0.52 });
+});
+
+test("android foreground progression does not spam lobby side-menu dismiss clicks", () => {
+    const observation = createObservation({
+        state: "LOBBY",
+        actionPoints: { DISMISS_OVERLAY: { x: 0.78, y: 0.52 } },
+    });
+
+    const first = planAndroidForegroundProgress(observation, createInitialAndroidForegroundProgressState());
+    const second = planAndroidForegroundProgress(observation, first.nextState);
+
+    assert.equal(first.decision.kind, "TAP_DISMISS_OVERLAY");
+    assert.equal(second.decision.kind, "WAIT");
+    assert.match(second.decision.reason, /dismiss already issued/i);
+});
+
+test("android foreground progression resumes canonical lobby flow after side menu closes", () => {
+    const sideMenu = createObservation({
+        state: "LOBBY",
+        actionPoints: { DISMISS_OVERLAY: { x: 0.78, y: 0.52 } },
+    });
+    const cleanLobby = createObservation({
+        state: "LOBBY",
+        actionPoints: { START_QUEUE: { x: 0.84, y: 0.90 } },
+    });
+
+    const dismissed = planAndroidForegroundProgress(sideMenu, createInitialAndroidForegroundProgressState());
+    const firstLobby = planAndroidForegroundProgress(cleanLobby, dismissed.nextState);
+    const secondLobby = planAndroidForegroundProgress(cleanLobby, firstLobby.nextState);
+
+    assert.equal(dismissed.decision.kind, "TAP_DISMISS_OVERLAY");
+    assert.equal(firstLobby.decision.kind, "WAIT");
+    assert.equal(secondLobby.decision.kind, "TAP_START_QUEUE");
+});
+
 test("android foreground progression retries queue via synthetic cancel action after timeout", () => {
     const observation = createObservation({
         state: "QUEUE",

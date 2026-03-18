@@ -17,6 +17,7 @@ export type AndroidForegroundDecision =
     | { kind: "BLOCKED"; reason: string }
     | { kind: "READY"; reason: string }
     | { kind: "TAP_PRIMARY_CTA"; reason: string; targetPoint: SimplePoint }
+    | { kind: "TAP_DISMISS_OVERLAY"; reason: string; targetPoint: SimplePoint }
     | { kind: "TAP_START_QUEUE"; reason: string; targetPoint: SimplePoint }
     | { kind: "TAP_ACCEPT_READY"; reason: string; targetPoint: SimplePoint }
     | { kind: "TAP_CANCEL_QUEUE"; reason: string; targetPoint: SimplePoint };
@@ -151,6 +152,22 @@ export function planAndroidForegroundProgress(
     }
 
     if (observation.state === "LOBBY") {
+        const dismissOverlayPoint = getActionPoint(observation, "DISMISS_OVERLAY");
+        if (dismissOverlayPoint) {
+            if (alreadyActioned("TAP_DISMISS_OVERLAY", nextState)) {
+                return waitDecision("Lobby side menu dismiss already issued; waiting for clean lobby frame", nextState);
+            }
+
+            return {
+                decision: {
+                    kind: "TAP_DISMISS_OVERLAY",
+                    reason: `Lobby side menu is open; dismissing overlay before queueing (${observation.verification})`,
+                    targetPoint: dismissOverlayPoint,
+                },
+                nextState: buildNextState(observation, previousState, "TAP_DISMISS_OVERLAY"),
+            };
+        }
+
         const startQueuePoint = getActionPoint(observation, "START_QUEUE");
         if (!startQueuePoint) {
             return waitDecision("Lobby detected, waiting for a verified or synthetic start-queue action point", nextState);

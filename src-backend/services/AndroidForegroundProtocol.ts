@@ -14,7 +14,7 @@ export type AndroidForegroundState =
 
 export type AndroidForegroundVerification = "VERIFIED_REAL" | "REAL_CAPTURE_DRAFT" | "SYNTHETIC_PLACEHOLDER";
 export type AndroidForegroundSource = "SCREENSHOT_CLASSIFIER" | "SMOKE_FIXTURE";
-export type AndroidForegroundActionPointKey = "PRIMARY_CTA" | "START_QUEUE" | "ACCEPT_READY" | "CANCEL_QUEUE";
+export type AndroidForegroundActionPointKey = "PRIMARY_CTA" | "START_QUEUE" | "ACCEPT_READY" | "CANCEL_QUEUE" | "DISMISS_OVERLAY";
 export type AndroidForegroundDecisionKind =
     | "WAIT"
     | "BLOCKED"
@@ -22,7 +22,8 @@ export type AndroidForegroundDecisionKind =
     | "TAP_PRIMARY_CTA"
     | "TAP_START_QUEUE"
     | "TAP_ACCEPT_READY"
-    | "TAP_CANCEL_QUEUE";
+    | "TAP_CANCEL_QUEUE"
+    | "TAP_DISMISS_OVERLAY";
 
 export interface AndroidForegroundObservation {
     state: AndroidForegroundState;
@@ -129,6 +130,18 @@ export function normalizeAndroidForegroundObservation(
     }
 
     if (classification.state === "LOBBY") {
+        if (classification.dismissOverlayPoint) {
+            return {
+                state: "LOBBY",
+                verification: "VERIFIED_REAL",
+                source: "SCREENSHOT_CLASSIFIER",
+                reason: "Lobby detected with side menu open; recover by dismissing the overlay before queueing",
+                anchors: ["side-menu-overlay", "lobby-backdrop"],
+                actionPoints: { DISMISS_OVERLAY: { ...classification.dismissOverlayPoint } },
+                rawClassification: classification,
+            };
+        }
+
         return {
             state: "LOBBY",
             verification: "VERIFIED_REAL",

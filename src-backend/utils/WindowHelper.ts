@@ -27,6 +27,39 @@ export interface WindowInfo {
     top: number;
     width: number;
     height: number;
+    visible?: boolean;
+    className?: string;
+    processName?: string;
+    source?: "nut" | "native";
+}
+
+export interface WindowCandidateDiagnostic extends WindowInfo {
+    matchedTitle: boolean;
+    matchedTitleKeyword: string | null;
+    excluded: boolean;
+    excludedKeyword: string | null;
+    weakCandidate: boolean;
+    weakKeyword: string | null;
+    activeTitleMatch: boolean;
+    activeHintMatch: boolean;
+    sizeAccepted: boolean;
+    rejectionReasons: string[];
+    score: number | null;
+    bucket: "candidate" | "weak" | "rejected";
+    injectedActiveFallback: boolean;
+}
+
+export interface WindowCandidateDiagnosticsReport {
+    clientType: GameClient;
+    activeWindow: WindowInfo | null;
+    totalWindows: number;
+    nativeTotalWindows: number;
+    candidates: WindowInfo[];
+    weakCandidates: WindowInfo[];
+    selected: WindowInfo | null;
+    usedWeakFallback: boolean;
+    entries: WindowCandidateDiagnostic[];
+    nativeEntries: WindowInfo[];
 }
 
 const RIOT_PC_WINDOW_TITLES = [
@@ -95,11 +128,380 @@ const ANDROID_ACTIVE_WINDOW_HINT_TITLES = [
 const MIN_GAME_WINDOW_WIDTH = 800;
 const MIN_GAME_WINDOW_HEIGHT = 600;
 
+const POWERSHELL_NATIVE_WINDOW_ENUM_SCRIPT = `
+$signature = @"
+using System;
+using System.Text;
+using System.Runtime.InteropServices;
+public static class NativeWindowQuery {
+  public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+  [DllImport("user32.dll")] public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+  [DllImport("user32.dll", SetLastError=true)] public static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
+  [DllImport("user32.dll", SetLastError=true)] public static extern int GetWindowTextLength(IntPtr hWnd);
+  [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hWnd);
+  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT rect);
+  [DllImport("user32.dll", SetLastError=true)] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+  [DllImport("user32.dll", SetLastError=true, CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr hWnd, StringBuilder className, int maxCount);
+  [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
+}
+"@
+Add-Type $signature -ErrorAction SilentlyContinue
+$results = New-Object System.Collections.Generic.List[object]
+[NativeWindowQuery]::EnumWindows({
+  param($hWnd, $lParam)
+  $length = [NativeWindowQuery]::GetWindowTextLength($hWnd)
+  $titleBuilder = New-Object System.Text.StringBuilder ($length + 1)
+  [void][NativeWindowQuery]::GetWindowText($hWnd, $titleBuilder, $titleBuilder.Capacity)
+  $classBuilder = New-Object System.Text.StringBuilder 512
+  [void][NativeWindowQuery]::GetClassName($hWnd, $classBuilder, $classBuilder.Capacity)
+  $rect = New-Object NativeWindowQuery+RECT
+  [void][NativeWindowQuery]::GetWindowRect($hWnd, [ref]$rect)
+  $pid = 0
+  [void][NativeWindowQuery]::GetWindowThreadProcessId($hWnd, [ref]$pid)
+  $processName = $null
+  try {
+    if ($pid -gt 0) { $processName = (Get-Process -Id $pid -ErrorAction Stop).ProcessName }
+  } catch {}
+  $results.Add([pscustomobject]@{
+    title = $titleBuilder.ToString();
+    className = $classBuilder.ToString();
+    processName = $processName;
+    visible = [NativeWindowQuery]::IsWindowVisible($hWnd);
+    left = $rect.Left;
+    top = $rect.Top;
+    width = ($rect.Right - $rect.Left);
+    height = ($rect.Bottom - $rect.Top)
+  }) | Out-Null
+  return $true
+}, [IntPtr]::Zero) | Out-Null
+$results | ConvertTo-Json -Depth 4 -Compress
+`;
+
+function scoreWindow(windowInfo: WindowInfo, clientType: GameClient): number {
+    const title = windowInfo.title.toLowerCase();
+    const area = windowInfo.width * windowInfo.height;
+    let score = 0;
+
+    if (clientType === GameClient.RIOT_PC) {
+        if (title === "league of legends (tm) client".toLowerCase()) score += 300;
+        if (title.includes("league of legends")) score += 200;
+        score += area / 100000;
+        return score;
+    }
+
+    if (title.includes("金铲铲") || title.includes("云顶")) score += 260;
+    if (title.includes("teamfight tactics")) score += 260;
+    if (title.includes("app player")) score += 240;
+    if (title.includes("bluestacks")) score += 80;
+    if (title.includes("bluestacks-services")) score -= 160;
+    if (title.includes("helper") || title.includes("service")) score -= 20;
+
+    const ratio = windowInfo.width / Math.max(1, windowInfo.height);
+    const ratioDiff = Math.abs(ratio - 4 / 3);
+    if (ratioDiff < 0.02) score += 220;
+    else if (ratioDiff < 0.05) score += 150;
+    else if (ratioDiff < 0.10) score += 80;
+    else score -= 60;
+
+    score += area / 80000;
+    return score;
+}
+
+function sameWindow(a: WindowInfo, b: WindowInfo): boolean {
+    return (
+        a.title.toLowerCase() === b.title.toLowerCase() &&
+        a.left === b.left &&
+        a.top === b.top &&
+        a.width === b.width &&
+        a.height === b.height
+    );
+}
+
+function matchesAndroidHint(windowInfo: WindowInfo): boolean {
+    const values = [windowInfo.title, windowInfo.className, windowInfo.processName]
+        .filter(Boolean)
+        .map((value) => (value ?? "").toLowerCase());
+
+    if (ANDROID_WINDOW_EXCLUDE_TITLES.some((keyword) => values.some((value) => value.includes(keyword)))) {
+        return false;
+    }
+
+    return ANDROID_WINDOW_TITLES.some((keyword) => values.some((value) => value.includes(keyword.toLowerCase()))) ||
+        ANDROID_ACTIVE_WINDOW_HINT_TITLES.some((keyword) => values.some((value) => value.includes(keyword)));
+}
+
+function mergeWindowSnapshots(primary: WindowInfo[], nativeWindows: WindowInfo[]): WindowInfo[] {
+    const merged = [...primary];
+
+    for (const nativeWindow of nativeWindows) {
+        const matchedIndex = merged.findIndex(
+            (entry) => entry.title.toLowerCase() === nativeWindow.title.toLowerCase() && entry.title.length > 0
+        );
+
+        if (matchedIndex >= 0) {
+            const existing = merged[matchedIndex];
+            if ((existing?.width ?? 0) <= 0 || (existing?.height ?? 0) <= 0) {
+                merged[matchedIndex] = {
+                    ...existing,
+                    ...nativeWindow,
+                    source: "native",
+                };
+            }
+            continue;
+        }
+
+        if (matchesAndroidHint(nativeWindow)) {
+            merged.push(nativeWindow);
+        }
+    }
+
+    return merged;
+}
+
+export function analyzeWindowCandidates(
+    windows: WindowInfo[],
+    clientType: GameClient,
+    activeWindow: WindowInfo | null
+): WindowCandidateDiagnosticsReport {
+    const titleList = clientType === GameClient.ANDROID ? ANDROID_WINDOW_TITLES : RIOT_PC_WINDOW_TITLES;
+    const normalizedTitles = titleList.map((title) => title.toLowerCase());
+    const isAndroidClient = clientType === GameClient.ANDROID;
+    const candidates: Array<{ info: WindowInfo; score: number }> = [];
+    const weakCandidates: Array<{ info: WindowInfo; score: number }> = [];
+    const entries: WindowCandidateDiagnostic[] = [];
+    const minWidth = isAndroidClient ? 500 : MIN_GAME_WINDOW_WIDTH;
+    const minHeight = isAndroidClient ? 300 : MIN_GAME_WINDOW_HEIGHT;
+    const activeTitle = activeWindow?.title.toLowerCase() ?? "";
+
+    for (const info of windows) {
+        const normalizedWindowTitle = info.title.toLowerCase();
+        const matchedTitleKeyword = normalizedTitles.find((candidateTitle) => normalizedWindowTitle.includes(candidateTitle)) ??
+            (isAndroidClient && matchesAndroidHint(info) ? "native-hint" : null);
+        const excludedKeyword = isAndroidClient
+            ? ANDROID_WINDOW_EXCLUDE_TITLES.find((kw) => normalizedWindowTitle.includes(kw)) ?? null
+            : null;
+        const weakKeyword = isAndroidClient
+            ? ANDROID_WEAK_WINDOW_TITLES.find((kw) => normalizedWindowTitle.includes(kw)) ?? null
+            : null;
+        const activeHintMatch = isAndroidClient
+            ? ANDROID_ACTIVE_WINDOW_HINT_TITLES.some((kw) => normalizedWindowTitle.includes(kw))
+            : false;
+        const sizeAccepted = info.width >= minWidth && info.height >= minHeight && info.width > 0 && info.height > 0;
+        const activeTitleMatch = Boolean(activeTitle) && normalizedWindowTitle === activeTitle;
+        const rejectionReasons: string[] = [];
+
+        if (!matchedTitleKeyword) {
+            rejectionReasons.push("title_miss");
+        }
+        if (excludedKeyword) {
+            rejectionReasons.push(`excluded:${excludedKeyword}`);
+        }
+        if (!sizeAccepted) {
+            rejectionReasons.push(`too_small:${info.width}x${info.height}`);
+        }
+
+        let score: number | null = null;
+        let bucket: WindowCandidateDiagnostic["bucket"] = "rejected";
+
+        if (!excludedKeyword && matchedTitleKeyword && sizeAccepted) {
+            score = scoreWindow(info, clientType);
+
+            let withActiveBonus = score;
+            if (activeTitleMatch) {
+                withActiveBonus += 600;
+                if (activeWindow) {
+                    const delta =
+                        Math.abs(info.left - activeWindow.left) +
+                        Math.abs(info.top - activeWindow.top) +
+                        Math.abs(info.width - activeWindow.width) +
+                        Math.abs(info.height - activeWindow.height);
+                    withActiveBonus += Math.max(0, 500 - delta * 0.5);
+                    if (delta === 0) {
+                        withActiveBonus += 400;
+                    }
+                }
+            }
+
+            score = withActiveBonus;
+            if (isAndroidClient && weakKeyword) {
+                weakCandidates.push({ info, score });
+                bucket = "weak";
+            } else {
+                candidates.push({ info, score });
+                bucket = "candidate";
+            }
+        }
+
+        entries.push({
+            ...info,
+            matchedTitle: Boolean(matchedTitleKeyword),
+            matchedTitleKeyword,
+            excluded: Boolean(excludedKeyword),
+            excludedKeyword,
+            weakCandidate: Boolean(weakKeyword),
+            weakKeyword,
+            activeTitleMatch,
+            activeHintMatch,
+            sizeAccepted,
+            rejectionReasons,
+            score,
+            bucket,
+            injectedActiveFallback: false,
+        });
+    }
+
+    if (
+        isAndroidClient &&
+        activeWindow &&
+        activeWindow.width >= minWidth &&
+        activeWindow.height >= minHeight &&
+        ANDROID_ACTIVE_WINDOW_HINT_TITLES.some((kw) => activeTitle.includes(kw)) &&
+        !ANDROID_WINDOW_EXCLUDE_TITLES.some((kw) => activeTitle.includes(kw))
+    ) {
+        const alreadyIncluded = [...candidates, ...weakCandidates].some((entry) => sameWindow(entry.info, activeWindow));
+        if (!alreadyIncluded) {
+            const activeScore = scoreWindow(activeWindow, clientType) + 1200;
+            candidates.push({ info: activeWindow, score: activeScore });
+            entries.push({
+                ...activeWindow,
+                matchedTitle: false,
+                matchedTitleKeyword: null,
+                excluded: false,
+                excludedKeyword: null,
+                weakCandidate: false,
+                weakKeyword: null,
+                activeTitleMatch: true,
+                activeHintMatch: true,
+                sizeAccepted: true,
+                rejectionReasons: [],
+                score: activeScore,
+                bucket: "candidate",
+                injectedActiveFallback: true,
+            });
+        }
+    }
+
+    candidates.sort((a, b) => b.score - a.score);
+    weakCandidates.sort((a, b) => b.score - a.score);
+
+    const finalCandidates = candidates.length > 0 ? candidates : weakCandidates;
+    return {
+        clientType,
+        activeWindow,
+        totalWindows: windows.length,
+        nativeTotalWindows: 0,
+        candidates: candidates.map((entry) => entry.info),
+        weakCandidates: weakCandidates.map((entry) => entry.info),
+        selected: finalCandidates[0]?.info ?? null,
+        usedWeakFallback: candidates.length === 0 && weakCandidates.length > 0,
+        entries,
+        nativeEntries: [],
+    };
+}
+
 /**
  * 窗口查找助手类
  * @description 封装 nut-js 的窗口 API，提供查找 LOL 游戏窗口的功能
  */
 class WindowHelper {
+    private async getWindowSnapshots(): Promise<WindowInfo[]> {
+        const windows = await getWindows();
+        const snapshots: WindowInfo[] = [];
+
+        for (const window of windows) {
+            try {
+                const title = await window.title;
+                if (!title) {
+                    continue;
+                }
+                const region = await window.region;
+                snapshots.push({
+                    title,
+                    left: region.left,
+                    top: region.top,
+                    width: region.width,
+                    height: region.height,
+                    source: "nut",
+                });
+            } catch {
+                continue;
+            }
+        }
+
+        return snapshots;
+    }
+
+    private async getNativeWindowSnapshots(): Promise<WindowInfo[]> {
+        try {
+            const encoded = Buffer.from(POWERSHELL_NATIVE_WINDOW_ENUM_SCRIPT, "utf16le").toString("base64");
+            const { stdout } = await execFileAsync("powershell.exe", [
+                "-NoProfile",
+                "-EncodedCommand",
+                encoded,
+            ]);
+            const trimmed = stdout.trim();
+            if (!trimmed) {
+                return [];
+            }
+
+            const parsed = JSON.parse(trimmed) as Array<{
+                title?: string;
+                className?: string;
+                processName?: string;
+                visible?: boolean;
+                left?: number;
+                top?: number;
+                width?: number;
+                height?: number;
+            }> | {
+                title?: string;
+                className?: string;
+                processName?: string;
+                visible?: boolean;
+                left?: number;
+                top?: number;
+                width?: number;
+                height?: number;
+            };
+
+            const records = Array.isArray(parsed) ? parsed : [parsed];
+            return records.map((entry) => ({
+                title: entry.title ?? "",
+                className: entry.className,
+                processName: entry.processName,
+                visible: entry.visible,
+                left: entry.left ?? 0,
+                top: entry.top ?? 0,
+                width: entry.width ?? 0,
+                height: entry.height ?? 0,
+                source: "native",
+            }));
+        } catch (error: any) {
+            logger.warn(`[WindowHelper] 原生窗口枚举失败: ${error.message}`);
+            return [];
+        }
+    }
+
+    private async getActiveWindowSnapshot(): Promise<WindowInfo | null> {
+        try {
+            const activeWindow = await getActiveWindow();
+            const title = await activeWindow.title;
+            const region = await activeWindow.region;
+            if ((!title || title.trim().length === 0) && region.width <= 0 && region.height <= 0) {
+                return null;
+            }
+            return {
+                title,
+                left: region.left,
+                top: region.top,
+                width: region.width,
+                height: region.height,
+            };
+        } catch {
+            return null;
+        }
+    }
+
     private async appActivateWindow(title: string): Promise<boolean> {
         try {
             await execFileAsync("powershell.exe", [
@@ -141,206 +543,61 @@ class WindowHelper {
     }
 
     /**
-     * 为候选窗口打分（分数越高越优先）
-     */
-    private scoreWindow(windowInfo: WindowInfo, clientType: GameClient): number {
-        const title = windowInfo.title.toLowerCase();
-        const area = windowInfo.width * windowInfo.height;
-        let score = 0;
-
-        if (clientType === GameClient.RIOT_PC) {
-            if (title === "league of legends (tm) client".toLowerCase()) score += 300;
-            if (title.includes("league of legends")) score += 200;
-            score += area / 100000;
-            return score;
-        }
-
-        // 安卓端：优先真实游戏标题和 4:3 比例窗口
-        if (title.includes("金铲铲") || title.includes("云顶")) score += 260;
-        if (title.includes("teamfight tactics")) score += 260;
-        if (title.includes("app player")) score += 240;
-        if (title.includes("bluestacks")) score += 80;
-        if (title.includes("bluestacks-services")) score -= 160;
-        if (title.includes("helper") || title.includes("service")) score -= 20;
-
-        const ratio = windowInfo.width / Math.max(1, windowInfo.height);
-        const ratioDiff = Math.abs(ratio - 4 / 3);
-        if (ratioDiff < 0.02) score += 220;
-        else if (ratioDiff < 0.05) score += 150;
-        else if (ratioDiff < 0.10) score += 80;
-        else score -= 60;
-
-        score += area / 80000;
-        return score;
-    }
-
-    /**
      * 查找所有候选窗口（按优先级排序）
      */
     public async findLOLWindows(clientType: GameClient = GameClient.RIOT_PC): Promise<WindowInfo[]> {
-        const titleList = clientType === GameClient.ANDROID ? ANDROID_WINDOW_TITLES : RIOT_PC_WINDOW_TITLES;
-        const normalizedTitles = titleList.map((title) => title.toLowerCase());
         const isAndroidClient = clientType === GameClient.ANDROID;
         try {
-            const windows = await getWindows();
+            const windows = await this.getWindowSnapshots();
+            const nativeWindows = isAndroidClient ? await this.getNativeWindowSnapshots() : [];
+            const mergedWindows = isAndroidClient ? mergeWindowSnapshots(windows, nativeWindows) : windows;
             logger.debug(`[WindowHelper] 找到 ${windows.length} 个窗口`);
-            let activeWindowTitle = "";
-            let activeWindowRegion: { left: number; top: number; width: number; height: number } | null = null;
-            try {
-                const activeWindow = await getActiveWindow();
-                activeWindowTitle = ((await activeWindow.title) || "").toLowerCase();
-                const region = await activeWindow.region;
-                activeWindowRegion = {
-                    left: region.left,
-                    top: region.top,
-                    width: region.width,
-                    height: region.height,
-                };
-            } catch {
-                activeWindowTitle = "";
-                activeWindowRegion = null;
-            }
-            if (isAndroidClient && activeWindowTitle) {
+            const activeWindow = await this.getActiveWindowSnapshot();
+            if (isAndroidClient && activeWindow) {
                 logger.debug(
-                    `[WindowHelper] 当前激活窗口: "${activeWindowTitle}" ` +
-                    `${activeWindowRegion ? `(${activeWindowRegion.width}x${activeWindowRegion.height})` : ""}`
+                    `[WindowHelper] 当前激活窗口: "${activeWindow.title.toLowerCase()}" ` +
+                    `(${activeWindow.width}x${activeWindow.height})`
                 );
             }
 
-            const candidates: Array<{ info: WindowInfo; score: number }> = [];
-            const weakCandidates: Array<{ info: WindowInfo; score: number }> = [];
-            const minWidth = isAndroidClient ? 500 : MIN_GAME_WINDOW_WIDTH;
-            const minHeight = isAndroidClient ? 300 : MIN_GAME_WINDOW_HEIGHT;
-
-            for (const window of windows) {
-                try {
-                    const title = await window.title;
-                    if (!title) continue;
-
-                    const normalizedWindowTitle = title.toLowerCase();
-
-                    if (
-                        isAndroidClient &&
-                        ANDROID_WINDOW_EXCLUDE_TITLES.some((kw) => normalizedWindowTitle.includes(kw))
-                    ) {
-                        continue;
-                    }
-
-                    const isTargetWindow = normalizedTitles.some(
-                        (candidateTitle) => normalizedWindowTitle.includes(candidateTitle)
-                    );
-                    if (!isTargetWindow) continue;
-
-                    const region = await window.region;
-                    if (
-                        region.width < minWidth ||
-                        region.height < minHeight ||
-                        region.width <= 0 ||
-                        region.height <= 0
-                    ) {
-                        logger.debug(
-                            `[WindowHelper] 跳过小窗口: ${title} (${region.width}x${region.height})`
-                        );
-                        continue;
-                    }
-
-                    const info: WindowInfo = {
-                        title,
-                        left: region.left,
-                        top: region.top,
-                        width: region.width,
-                        height: region.height,
-                    };
-
-                    const score = this.scoreWindow(info, clientType);
-                    const isWeakAndroidCandidate =
-                        isAndroidClient &&
-                        ANDROID_WEAK_WINDOW_TITLES.some((kw) => normalizedWindowTitle.includes(kw));
-
-                    let withActiveBonus = score;
-                    if (activeWindowTitle && normalizedWindowTitle === activeWindowTitle) {
-                        withActiveBonus += 600;
-                        if (activeWindowRegion) {
-                            // 同名窗口（如 BlueStacks 子窗口）可能有多个，优先坐标/尺寸最接近当前激活窗口的候选
-                            const delta =
-                                Math.abs(region.left - activeWindowRegion.left) +
-                                Math.abs(region.top - activeWindowRegion.top) +
-                                Math.abs(region.width - activeWindowRegion.width) +
-                                Math.abs(region.height - activeWindowRegion.height);
-
-                            withActiveBonus += Math.max(0, 500 - delta * 0.5);
-                            if (delta === 0) {
-                                withActiveBonus += 400;
-                            }
-                        }
-                    }
-
-                    if (isWeakAndroidCandidate) {
-                        weakCandidates.push({ info, score: withActiveBonus });
-                    } else {
-                        candidates.push({ info, score: withActiveBonus });
-                    }
-                } catch {
-                    continue;
-                }
-            }
-
-            // 安卓端额外兜底：把当前激活窗口强制纳入候选（即便标题未命中关键词）
-            if (
-                isAndroidClient &&
-                activeWindowTitle &&
-                activeWindowRegion &&
-                activeWindowRegion.width >= minWidth &&
-                activeWindowRegion.height >= minHeight &&
-                ANDROID_ACTIVE_WINDOW_HINT_TITLES.some((kw) => activeWindowTitle.includes(kw)) &&
-                !ANDROID_WINDOW_EXCLUDE_TITLES.some((kw) => activeWindowTitle.includes(kw))
-            ) {
-                const alreadyIncluded = [...candidates, ...weakCandidates].some(
-                    (c) =>
-                        c.info.title.toLowerCase() === activeWindowTitle &&
-                        c.info.left === activeWindowRegion.left &&
-                        c.info.top === activeWindowRegion.top
-                );
-
-                if (!alreadyIncluded) {
-                    const activeInfo: WindowInfo = {
-                        title: activeWindowTitle,
-                        left: activeWindowRegion.left,
-                        top: activeWindowRegion.top,
-                        width: activeWindowRegion.width,
-                        height: activeWindowRegion.height,
-                    };
-                    const activeScore = this.scoreWindow(activeInfo, clientType) + 1200;
-                    candidates.push({ info: activeInfo, score: activeScore });
-                }
-            }
-
-            if (candidates.length === 0 && weakCandidates.length === 0) {
+            const report = analyzeWindowCandidates(mergedWindows, clientType, activeWindow);
+            if (report.candidates.length === 0 && report.weakCandidates.length === 0) {
                 logger.warn("[WindowHelper] 未找到可识别的游戏窗口。请确认客户端已进入对局且窗口未最小化。");
                 return [];
             }
 
-            const finalCandidates = candidates.length > 0 ? candidates : weakCandidates;
-            if (candidates.length === 0 && weakCandidates.length > 0 && isAndroidClient) {
+            if (report.usedWeakFallback && isAndroidClient) {
                 logger.warn("[WindowHelper] 安卓端仅找到弱候选窗口（services/helper），可能导致识别不稳定");
             }
 
-            finalCandidates.sort((a, b) => b.score - a.score);
-            const sorted = finalCandidates.map((item) => item.info);
-
             if (isAndroidClient) {
-                const preview = finalCandidates
+                const preview = report.entries
+                    .filter((entry) => entry.bucket !== "rejected")
+                    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
                     .slice(0, 5)
-                    .map((c) => `"${c.info.title}"(${c.info.width}x${c.info.height}, score=${c.score.toFixed(1)})`)
+                    .map((entry) => `"${entry.title}"(${entry.width}x${entry.height}, score=${(entry.score ?? 0).toFixed(1)})`)
                     .join(" | ");
                 logger.info(`[WindowHelper] 安卓候选窗口: ${preview}`);
             }
 
-            return sorted;
+            return report.candidates.length > 0 ? report.candidates : report.weakCandidates;
         } catch (error: any) {
             logger.error(`[WindowHelper] 查找窗口失败: ${error.message}`);
             return [];
         }
+    }
+
+    public async diagnoseLOLWindows(clientType: GameClient = GameClient.RIOT_PC): Promise<WindowCandidateDiagnosticsReport> {
+        const windows = await this.getWindowSnapshots();
+        const nativeWindows = clientType === GameClient.ANDROID ? await this.getNativeWindowSnapshots() : [];
+        const activeWindow = await this.getActiveWindowSnapshot();
+        const mergedWindows = clientType === GameClient.ANDROID ? mergeWindowSnapshots(windows, nativeWindows) : windows;
+        const report = analyzeWindowCandidates(mergedWindows, clientType, activeWindow);
+        return {
+            ...report,
+            nativeTotalWindows: nativeWindows.length,
+            nativeEntries: nativeWindows,
+        };
     }
 
     /**

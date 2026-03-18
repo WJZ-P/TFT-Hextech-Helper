@@ -167,6 +167,26 @@ test("android window classifier detects real lobby state", async () => {
     assert.ok((result.lobbyStartBlueRatio ?? 0) > 0.30);
 });
 
+test("android window classifier detects side-menu-open lobby as recoverable lobby", async () => {
+    const screenshot = await fs.readFile(
+        path.resolve(
+            process.cwd(),
+            "examples",
+            "recordings",
+            "smoke",
+            "android-live-smoke-1773875308190.png"
+        )
+    );
+
+    const result = await classifyAndroidWindowScreenshot(screenshot);
+
+    assert.equal(result.state, "LOBBY");
+    assert.equal(result.lobbyVariant, "SIDE_MENU_OPEN");
+    assert.deepEqual(result.dismissOverlayPoint, { x: 0.78, y: 0.52 });
+    assert.equal(result.startQueuePoint, undefined);
+    assert.ok((result.sideDismissDarkRatio ?? 0) > 0.85);
+});
+
 test("android window classifier detects post-accept and loading transition states", async () => {
     const frames = [
         path.resolve(

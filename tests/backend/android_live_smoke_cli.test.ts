@@ -177,6 +177,47 @@ test("android live smoke CLI can analyze unknown non-game screenshots", { timeou
     assert.equal(parsed.foregroundDecision?.kind, "WAIT");
 });
 
+test("android live smoke CLI emits lobby recovery for side-menu-open screenshot", { timeout: 120000 }, async () => {
+    const screenshotPath = path.join(
+        repoRoot,
+        "examples",
+        "recordings",
+        "smoke",
+        "android-live-smoke-1773875308190.png"
+    );
+
+    const { stdout } = await execFileAsync(
+        process.execPath,
+        [tsxCli, "scripts/run-android-live-smoke.ts", "--screenshot", screenshotPath],
+        {
+            cwd: repoRoot,
+            windowsHide: true,
+        }
+    );
+
+    const parsed = JSON.parse(stdout.slice(stdout.indexOf("{"))) as {
+        contentClassification: {
+            state: string;
+            lobbyVariant?: string;
+        };
+        foregroundObservation: {
+            state: string;
+            anchors?: string[];
+        } | null;
+        foregroundDecision: {
+            kind: string;
+            reason: string;
+        } | null;
+    };
+
+    assert.equal(parsed.contentClassification.state, "LOBBY");
+    assert.equal(parsed.contentClassification.lobbyVariant, "SIDE_MENU_OPEN");
+    assert.equal(parsed.foregroundObservation?.state, "LOBBY");
+    assert.ok(parsed.foregroundObservation?.anchors?.includes("side-menu-overlay"));
+    assert.equal(parsed.foregroundDecision?.kind, "TAP_DISMISS_OVERLAY");
+    assert.match(parsed.foregroundDecision?.reason ?? "", /dismissing overlay/i);
+});
+
 test("android live smoke CLI can replay screenshot sequences for progression QA", { timeout: 120000 }, async () => {
     const screenshotPath = path.join(
         repoRoot,
@@ -365,12 +406,13 @@ test("android live smoke CLI can replay verified real frontend flow fixtures", {
 
     assert.equal(parsed.fixtureId, "android-na-frontend-real-flow");
     assert.equal(parsed.allExpectedMatched, true);
-    assert.equal(parsed.traceSummary.verificationCounts.VERIFIED_REAL, 10);
+    assert.equal(parsed.traceSummary.verificationCounts.VERIFIED_REAL, 11);
     assert.deepEqual(
         parsed.analysisSequence.map((entry) => entry.foregroundObservation.state),
         [
             "UPDATE_READY",
             "UPDATE_READY",
+            "LOBBY",
             "LOBBY",
             "LOBBY",
             "QUEUE",
@@ -381,6 +423,7 @@ test("android live smoke CLI can replay verified real frontend flow fixtures", {
             "LIVE_CONTENT",
         ]
     );
+    assert.equal(parsed.analysisSequence[2]?.foregroundDecision.kind, "TAP_DISMISS_OVERLAY");
     assert.ok(parsed.analysisSequence.every((entry) => entry.expectedStateMatched === true));
     assert.ok(parsed.analysisSequence.every((entry) => entry.expectedDecisionMatched === true));
     assert.equal(parsed.foregroundDecision?.kind, "READY");
