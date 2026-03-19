@@ -1,0 +1,40 @@
+{
+  "id": "android-s16-midgame-recognition",
+  "label": "真机中期海克斯与商店名识别",
+  "description": "使用同一局真机录屏的 3-2 海克斯和 5-1 D 牌画面，验证中期回合号与真实商店名回放。",
+  "mode": "NORMAL",
+  "referenceScenarioId": "android-real-recording-3-2-augment",
+  "notes": [
+    "回合号裁片来自 3-2 海克斯，商店名裁片来自同一局 5-1 商店界面。",
+    "安卓商店裁片已经重新切到名字条，赛恩和德莱文在当前链路下都能直接 OCR 命中。"
+  ],
+  "stage": {
+    "imagePath": "../recordings/derived/android-real-recording-20260315-ionia/crops/recording-augment-3-2-stage-raw.png",
+    "ocrText": "3-2",
+    "expectedText": "3-2",
+    "expectedType": "AUGMENT",
+    "note": "真机 3-2 海克斯裁片"
+  },
+  "champions": [
+    {
+      "id": "shop-sion",
+      "region": "SHOP",
+      "slot": "SHOP_SLOT_1",
+      "expectedName": "赛恩",
+      "expectedSource": "OCR",
+      "ocrText": "赛恩",
+      "imagePath": "../recordings/derived/android-real-recording-20260315-ionia/crops/recording-shop-5-1-shop-slot-1-raw.png",
+      "note": "当前自动提取观测值: 赛恩"
+    },
+    {
+      "id": "shop-draven",
+      "region": "SHOP",
+      "slot": "SHOP_SLOT_2",
+      "expectedName": "德莱文",
+      "expectedSource": "OCR",
+      "ocrText": "德莱文",
+      "imagePath": "../recordings/derived/android-real-recording-20260315-ionia/crops/recording-shop-5-1-shop-slot-2-raw.png",
+      "note": "当前自动提取观测值: 德莱文"
+    }
+  ]
+}

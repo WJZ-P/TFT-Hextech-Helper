@@ -4,7 +4,7 @@ import {LobbyConfig, Queue, SummonerInfo} from "../src-backend/lcu/utils/LCUProt
 import {IpcChannel} from "./protocol.ts";
 
 // --------- Expose some API to the Renderer process ---------
-contextBridge.exposeInMainWorld('ipcRenderer', {
+const exposedIpcRenderer = {
     on(...args: Parameters<typeof ipcRenderer.on>) {
         const [channel, listener] = args
         return ipcRenderer.on(channel, (event, ...args) => listener(event, ...args))
@@ -24,7 +24,9 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
 
     // You can expose other APTs you need here.
     // ...
-})
+}
+export type ExposedIpcRenderer = typeof exposedIpcRenderer
+contextBridge.exposeInMainWorld('ipcRenderer', exposedIpcRenderer)
 
 const ipcApi = {
     on: (channel: string, callback: (...args: any[]) => void) => {
@@ -130,6 +132,10 @@ const tftApi = {
     saveBenchSlotSnapshots : ()=> ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT),
     saveFightBoardSlotSnapshots : ()=>ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT),
     saveQuitButtonSnapshot: () => ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_QUIT_BUTTON_SNAPSHOT),  // 保存发条鸟退出按钮截图
+    planAndroidSimulation: (state: any, context?: any) => ipcRenderer.invoke(IpcChannel.ANDROID_SIMULATION_PLAN_ONCE, state, context),
+    getAndroidSimulationScenarios: () => ipcRenderer.invoke(IpcChannel.ANDROID_SIMULATION_LIST_SCENARIOS),
+    runAndroidRecognitionReplay: (fixtureId: string) => ipcRenderer.invoke(IpcChannel.ANDROID_RECOGNITION_REPLAY_RUN, fixtureId),
+    getAndroidRecognitionReplayFixtures: () => ipcRenderer.invoke(IpcChannel.ANDROID_RECOGNITION_REPLAY_LIST_FIXTURES),
 }
 export type TftApi = typeof tftApi
 contextBridge.exposeInMainWorld('tft', tftApi)

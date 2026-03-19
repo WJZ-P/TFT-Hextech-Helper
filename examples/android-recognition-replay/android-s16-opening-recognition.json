@@ -1,0 +1,31 @@
+{
+  "id": "android-s16-opening-recognition",
+  "label": "真机开局回合与详情名识别",
+  "description": "使用 2026-03-15 安卓真机录屏的 2-1 海克斯和 1-4 详情面板，验证开局回合号与英雄名称回放。",
+  "mode": "NORMAL",
+  "referenceScenarioId": "android-real-recording-2-1-augment",
+  "notes": [
+    "回合号图片和英雄名图片都来自同一局真机录屏拆帧。",
+    "2-1 阶段在当前自动提取链路里已经可以直接读到 2-1。",
+    "凯特琳详情名在当前安卓灰度 normalize 方案下已经可以直接读到。"
+  ],
+  "stage": {
+    "imagePath": "../recordings/derived/android-real-recording-20260315-ionia/crops/recording-opening-augment-2-1-stage-raw.png",
+    "ocrText": "2-1",
+    "expectedText": "2-1",
+    "expectedType": "AUGMENT",
+    "note": "真机 2-1 海克斯裁片，当前自动提取观测值: 2-1。"
+  },
+  "champions": [
+    {
+      "id": "detail-kaitlyn",
+      "region": "BOARD",
+      "slot": "DETAIL_PANEL",
+      "expectedName": "凯特琳",
+      "expectedSource": "OCR",
+      "ocrText": "凯特琳",
+      "imagePath": "../recordings/derived/android-real-recording-20260315-ionia/crops/recording-opening-detail-1-4-detail-name-raw.png",
+      "note": "当前自动提取观测值: 凯特琳"
+    }
+  ]
+}

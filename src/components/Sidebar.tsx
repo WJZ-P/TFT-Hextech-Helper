@@ -4,7 +4,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import SettingsIcon from '@mui/icons-material/Settings';
 import BoltIcon from '@mui/icons-material/Bolt';
 import styled from "styled-components";
-import React, {useEffect, useState} from "react";
+import {useEffect, useState} from "react";
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import HomeIcon from '@mui/icons-material/Home';
@@ -107,13 +107,6 @@ const StyledNavLink = styled(NavLink)<{ $isCollapsed: boolean }>`
       color: ${props => props.theme.colors.navActiveText};
     }
   }
-`;
-
-const Version = styled.div`
-  margin-top: auto;
-  text-align: center;
-  font-size: 0.75rem;
-  color: #4a5568;
 `;
 
 const ToggleButton = styled.button`

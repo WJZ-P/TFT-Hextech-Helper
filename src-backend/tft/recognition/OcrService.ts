@@ -20,6 +20,10 @@ export enum OcrWorkerType {
     CHESS = "CHESS",
     /** 等级识别 (中文"级"字 + 数字 + 斜杠) */
     LEVEL = "LEVEL",
+    /** 安卓 HUD 数字识别（金钱/经验/血量） */
+    HUD_DIGITS = "HUD_DIGITS",
+    /** 安卓 HUD 玩家名称识别（美服英文名） */
+    PLAYER_NAME = "PLAYER_NAME",
     /** 战斗阶段文字识别 (中文，如 "战斗环节") */
     COMBAT_PHASE = "COMBAT_PHASE",
 }
@@ -45,6 +49,12 @@ export class OcrService {
 
     /** 等级识别 Worker (中文"级"字 + 数字) */
     private levelWorker: Tesseract.Worker | null = null;
+
+    /** 安卓 HUD 数字识别 Worker (英文数字 + 斜杠) */
+    private hudDigitsWorker: Tesseract.Worker | null = null;
+
+    /** 安卓 HUD 玩家名称识别 Worker (英文/数字) */
+    private playerNameWorker: Tesseract.Worker | null = null;
 
     /** 战斗阶段文字识别 Worker (中文"战斗环节") */
     private combatPhaseWorker: Tesseract.Worker | null = null;
@@ -82,6 +92,10 @@ export class OcrService {
                 return this.getChessWorker();
             case OcrWorkerType.LEVEL:
                 return this.getLevelWorker();
+            case OcrWorkerType.HUD_DIGITS:
+                return this.getHudDigitsWorker();
+            case OcrWorkerType.PLAYER_NAME:
+                return this.getPlayerNameWorker();
             case OcrWorkerType.COMBAT_PHASE:
                 return this.getCombatPhaseWorker();
             default:
@@ -232,6 +246,61 @@ export class OcrService {
     }
 
     /**
+     * 获取安卓 HUD 数字识别 Worker
+     * @description 金币/经验/血量都属于短数字串，使用 eng + 稀疏文本模式更稳定。
+     */
+    private async getHudDigitsWorker(): Promise<Tesseract.Worker> {
+        if (this.hudDigitsWorker) {
+            return this.hudDigitsWorker;
+        }
+
+        logger.info("[OcrService] 正在创建安卓 HUD 数字识别 Worker...");
+
+        const worker = await createWorker("eng", 1, {
+            langPath: this.langPath,
+            cachePath: this.langPath,
+        });
+
+        await worker.setParameters({
+            tessedit_char_whitelist: "0123456789/",
+            tessedit_pageseg_mode: PSM.SPARSE_TEXT,
+        });
+
+        this.hudDigitsWorker = worker;
+        logger.info("[OcrService] 安卓 HUD 数字识别 Worker 准备就绪");
+
+        return this.hudDigitsWorker;
+    }
+
+    /**
+     * 获取安卓 HUD 玩家名称识别 Worker
+     * @description 美服安卓端名字通常是英文/数字混合，使用 eng + 稀疏文本模式读取。
+     */
+    private async getPlayerNameWorker(): Promise<Tesseract.Worker> {
+        if (this.playerNameWorker) {
+            return this.playerNameWorker;
+        }
+
+        logger.info("[OcrService] 正在创建安卓 HUD 玩家名称识别 Worker...");
+
+        const worker = await createWorker("eng", 1, {
+            langPath: this.langPath,
+            cachePath: this.langPath,
+        });
+
+        await worker.setParameters({
+            tessedit_char_whitelist: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-",
+            tessedit_pageseg_mode: PSM.SPARSE_TEXT,
+            preserve_interword_spaces: "1",
+        });
+
+        this.playerNameWorker = worker;
+        logger.info("[OcrService] 安卓 HUD 玩家名称识别 Worker 准备就绪");
+
+        return this.playerNameWorker;
+    }
+
+    /**
      * 获取战斗阶段文字识别 Worker
      * @description 只需要识别“战斗环节”这类固定短语，白名单尽量收紧，提升准确率。
      */
@@ -282,6 +351,18 @@ export class OcrService {
             await this.levelWorker.terminate();
             this.levelWorker = null;
             logger.info("[OcrService] 等级识别 Worker 已销毁");
+        }
+
+        if (this.hudDigitsWorker) {
+            await this.hudDigitsWorker.terminate();
+            this.hudDigitsWorker = null;
+            logger.info("[OcrService] 安卓 HUD 数字识别 Worker 已销毁");
+        }
+
+        if (this.playerNameWorker) {
+            await this.playerNameWorker.terminate();
+            this.playerNameWorker = null;
+            logger.info("[OcrService] 安卓 HUD 玩家名称识别 Worker 已销毁");
         }
 
         if (this.combatPhaseWorker) {

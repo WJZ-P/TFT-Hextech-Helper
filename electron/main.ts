@@ -88,6 +88,8 @@ import {registerOverlayCallbacks} from "../src-backend/utils/OverlayBridge";  //
 // ============================================================================
 let hexService: any;
 let pcLogicRunner: any;
+let androidSimulationRunner: any;
+let androidRecognitionReplayRunner: any;
 let tftDataService: any;
 let tftOperator: any;
 let lineupLoader: any;
@@ -499,6 +501,8 @@ app.whenReady().then(async () => {
         const ServicesModule = await import("../src-backend/services");
         hexService = ServicesModule.hexService;
         pcLogicRunner = ServicesModule.pcLogicRunner;
+        androidSimulationRunner = ServicesModule.androidSimulationRunner;
+        androidRecognitionReplayRunner = ServicesModule.androidRecognitionReplayRunner;
         tftDataService = ServicesModule.tftDataService;
 
         // 2. 加载 TftOperator (依赖 nut.js)
@@ -751,6 +755,18 @@ function registerHandler() {
     })
     ipcMain.handle(IpcChannel.PC_LOGIC_PLAN_ONCE, async (_event, state: any, context?: any) => {
         return pcLogicRunner.planOnce(state, context);
+    })
+    ipcMain.handle(IpcChannel.ANDROID_SIMULATION_PLAN_ONCE, async (_event, state: any, context?: any) => {
+        return androidSimulationRunner.planOnce(state, context);
+    })
+    ipcMain.handle(IpcChannel.ANDROID_SIMULATION_LIST_SCENARIOS, async () => {
+        return androidSimulationRunner.listScenarios();
+    })
+    ipcMain.handle(IpcChannel.ANDROID_RECOGNITION_REPLAY_RUN, async (_event, fixtureId: string) => {
+        return androidRecognitionReplayRunner.runFixture(fixtureId);
+    })
+    ipcMain.handle(IpcChannel.ANDROID_RECOGNITION_REPLAY_LIST_FIXTURES, async () => {
+        return androidRecognitionReplayRunner.listFixtures();
     })
 
     // TFT 游戏模式相关

@@ -14,7 +14,6 @@
 import { logger } from "./utils/Logger";
 import { windowHelper, type WindowInfo } from "./utils/WindowHelper";
 import { Region } from "@nut-tree-fork/nut-js";
-import { screen } from "electron";
 import path from "path";
 import fs from "fs-extra";
 import sharp from "sharp";
@@ -22,6 +21,17 @@ import cv from "@techstark/opencv-js";
 
 // 协议层导入
 import {
+    androidHudGoldTextRegion,
+    androidHudXpTextRegion,
+    androidScoreboardRegion,
+    androidSelfNameplateRegion,
+    androidDetailChampionNameRegion,
+    androidGameStageDisplayNormal,
+    androidGameStageDisplayShopOpen,
+    androidGameStageDisplayStageOne,
+    androidShopSlotNameRegions,
+    androidEquipmentRegion,
+    androidEquipmentSlot,
     benchSlotPoints,
     benchSlotRegion,
     clockworkTrailsQuitNowButtonPoint,
@@ -60,6 +70,7 @@ import {
     TFTUnit,
     SimplePoint,
     getChessDataForMode,
+    getSeasonTemplateDir,
 } from "./TFTProtocol";
 
 
@@ -68,8 +79,23 @@ import {
 import {
     GAME_WIDTH,
     GAME_HEIGHT,
+    buildAndroidHudDigitVariants,
+    buildAndroidPlayerNameOcrVariants,
+    buildAndroidStageOcrVariants,
+    buildChampionOcrVariants,
+    extractLikelyHudNumber,
+    extractLikelyPlayerNameToken,
+    extractLikelyXpText,
+    extractSelfHpFromScoreboardText,
+    extractLikelyStageText as extractLikelyStageTextFromOcr,
+    inferLevelFromXpTotal,
+    normalizeChampionOcrText,
+    normalizePlayerNameOcrText,
     ocrService,
     OcrWorkerType,
+    resolveChampionNameFromText,
+    selectBestPlayerNameCandidate,
+    selectBestStageText,
     templateLoader,
     templateMatcher,
     screenCapture,
@@ -89,6 +115,18 @@ import type {
     LootOrb,
 } from "./tft";
 import { sleep } from "./utils/HelperTools";
+
+let electronScreenPromise: Promise<any | null> | null = null;
+
+async function getElectronScreen(): Promise<any | null> {
+    if (!electronScreenPromise) {
+        electronScreenPromise = import("electron")
+            .then((module) => module.screen ?? (module as any).default?.screen ?? null)
+            .catch(() => null);
+    }
+
+    return electronScreenPromise;
+}
 
 // ============================================================================
 // 类型重导出 (保持向后兼容)
@@ -140,6 +178,9 @@ class TftOperator {
         usedFallback: boolean;
     }> | null = null;
 
+    /** 识别运行时初始化中的 Promise，避免并发重复等待 OpenCV/模板 */
+    private recognitionReadyInFlight: Promise<void> | null = null;
+
     /** 当前游戏模式 */
     private tftMode: TFTMode = TFTMode.CLASSIC;
 
@@ -167,6 +208,123 @@ class TftOperator {
         const mode = settingsStore.get('tftMode') as TFTMode || TFTMode.NORMAL;
         this.currentChessData = getChessDataForMode(mode);
         return this.currentChessData;
+    }
+
+    private canUseOpenCvNow(): boolean {
+        try {
+            const probe = new cv.Mat(1, 1, cv.CV_8UC1);
+            probe.delete();
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    private async waitForOpenCvReady(timeoutMs: number = 15000): Promise<void> {
+        if (this.canUseOpenCvNow()) {
+            this.isOpenCVReady = true;
+            return;
+        }
+
+        await new Promise<void>((resolve, reject) => {
+            const runtime = cv as typeof cv & { onRuntimeInitialized?: () => void };
+            const previous = runtime.onRuntimeInitialized;
+            let settled = false;
+            let pollTimer: NodeJS.Timeout | null = null;
+            let timeoutTimer: NodeJS.Timeout | null = null;
+
+            const cleanup = (restoreCallback: boolean) => {
+                if (restoreCallback && runtime.onRuntimeInitialized === handleRuntimeReady) {
+                    runtime.onRuntimeInitialized = previous;
+                }
+                if (pollTimer) {
+                    clearInterval(pollTimer);
+                }
+                if (timeoutTimer) {
+                    clearTimeout(timeoutTimer);
+                }
+            };
+
+            const finish = (error?: Error) => {
+                if (settled) {
+                    return;
+                }
+
+                settled = true;
+                cleanup(!error);
+
+                if (error) {
+                    reject(error);
+                    return;
+                }
+
+                this.isOpenCVReady = true;
+                logger.info("[TftOperator] OpenCV 就绪检测通过");
+                resolve();
+            };
+
+            const checkReady = () => {
+                if (this.canUseOpenCvNow()) {
+                    finish();
+                }
+            };
+
+            const handleRuntimeReady = () => {
+                previous?.();
+                checkReady();
+            };
+
+            runtime.onRuntimeInitialized = handleRuntimeReady;
+
+            pollTimer = setInterval(checkReady, 50);
+            timeoutTimer = setTimeout(() => {
+                cleanup(false);
+                reject(new Error(`OpenCV 在 ${timeoutMs}ms 内未完成初始化`));
+            }, timeoutMs);
+
+            checkReady();
+        });
+    }
+
+    private ensurePublicAssetRoot(): void {
+        const existing = process.env.VITE_PUBLIC;
+        const candidates = [existing, path.resolve(process.cwd(), "public")].filter(
+            (candidate): candidate is string => Boolean(candidate)
+        );
+
+        for (const candidate of candidates) {
+            const equipmentDir = path.join(candidate, "resources", "assets", "images", "equipment");
+            if (fs.existsSync(equipmentDir)) {
+                if (process.env.VITE_PUBLIC !== candidate) {
+                    process.env.VITE_PUBLIC = candidate;
+                    logger.info(`[TftOperator] 已修正资源根目录: ${candidate}`);
+                }
+                return;
+            }
+        }
+    }
+
+    private async ensureRecognitionReady(): Promise<void> {
+        this.ensurePublicAssetRoot();
+        this.tftMode = (settingsStore.get('tftMode') as TFTMode | undefined) ?? TFTMode.NORMAL;
+
+        if (templateLoader.isReady() && this.canUseOpenCvNow()) {
+            this.isOpenCVReady = true;
+            await templateLoader.switchSeason(getSeasonTemplateDir(this.tftMode));
+            return;
+        }
+
+        if (!this.recognitionReadyInFlight) {
+            this.recognitionReadyInFlight = (async () => {
+                await this.waitForOpenCvReady();
+                await templateLoader.initialize();
+                await templateLoader.switchSeason(getSeasonTemplateDir(this.tftMode));
+            })().finally(() => {
+                this.recognitionReadyInFlight = null;
+            });
+        }
+
+        await this.recognitionReadyInFlight;
     }
 
     /** 空槽匹配阈值：平均像素差值大于此值视为"有棋子占用" */
@@ -220,13 +378,19 @@ class TftOperator {
      * @description 在 OpenCV WASM 加载完成后初始化模板加载器
      */
     private initOpenCV(): void {
-        cv["onRuntimeInitialized"] = async () => {
+        const runtime = cv as typeof cv & { onRuntimeInitialized?: () => void };
+        const previous = runtime.onRuntimeInitialized;
+        runtime.onRuntimeInitialized = () => {
+            previous?.();
             logger.info("[TftOperator] OpenCV (WASM) 核心模块加载完毕");
             this.isOpenCVReady = true;
-
-            // 初始化模板加载器
-            await templateLoader.initialize();
+            void this.ensureRecognitionReady();
         };
+
+        if (this.canUseOpenCvNow()) {
+            this.isOpenCVReady = true;
+            void this.ensureRecognitionReady();
+        }
     }
 
     /**
@@ -262,7 +426,9 @@ class TftOperator {
             const windowInfo = windowInfoOverride ?? await windowHelper.findLOLWindow(gameClient);
             
             if (windowInfo) {
+                await windowHelper.focusWindow(windowInfo);
                 this.applyWindowInfo(windowInfo, gameClient);
+                await this.ensureRecognitionReady();
 
                 return {
                     success: true,
@@ -281,7 +447,12 @@ class TftOperator {
             // ============================================================
             logger.warn(`[TftOperator] ⚠️ 未找到 LOL 窗口，使用"居中假设"方案`);
 
-            const primaryDisplay = screen.getPrimaryDisplay();
+            const electronScreen = await getElectronScreen();
+            if (!electronScreen) {
+                throw new Error("当前运行环境缺少 electron.screen，无法使用居中假设方案");
+            }
+
+            const primaryDisplay = electronScreen.getPrimaryDisplay();
             const scaleFactor = primaryDisplay.scaleFactor;
             const { width: logicalWidth, height: logicalHeight } = primaryDisplay.size;
 
@@ -303,6 +474,7 @@ class TftOperator {
             // 同步到子模块
             screenCapture.setGameWindowOrigin(this.gameWindowRegion, { width: GAME_WIDTH, height: GAME_HEIGHT }, false);
             mouseController.setGameWindowOrigin(this.gameWindowRegion, { width: GAME_WIDTH, height: GAME_HEIGHT }, false);
+            await this.ensureRecognitionReady();
 
             logger.info(`[TftOperator] 屏幕尺寸: ${screenWidth}x${screenHeight}`);
             logger.info(`[TftOperator] 游戏基准点 (居中假设): (${originX}, ${originY})`);
@@ -384,16 +556,34 @@ class TftOperator {
              * 直接导致 "2-1" 这类阶段文字被"吃掉"。用原图 OCR 能保留色彩/对比信息。
              */
             const recognizeStageText = async (region: Region, forOCR: boolean = false): Promise<string> => {
-                const rawPng = await screenCapture.captureRegionAsPng(region, forOCR);
-                const rawText = await ocrService.recognize(rawPng, OcrWorkerType.GAME_STAGE);
-                const extracted = this.extractLikelyStageText(rawText);
-                
-                // 调试时打印原OCR结果
-                if (rawText !== extracted) {
-                    logger.debug(`[TftOperator] OCR原始: "${rawText}" -> 提取: "${extracted}"`);
+                const rawPng = await screenCapture.captureRegionAsPng(region, false);
+                const variants =
+                    gameClient === GameClient.ANDROID && forOCR
+                        ? await buildAndroidStageOcrVariants(rawPng)
+                        : [
+                            { label: "stage/raw", buffer: rawPng },
+                            ...(forOCR
+                                ? [{
+                                    label: "stage/legacy-preprocessed",
+                                    buffer: await screenCapture.captureRegionAsPng(region, true),
+                                }]
+                                : []),
+                        ];
+
+                for (const variant of variants) {
+                    const rawText = await ocrService.recognize(variant.buffer, OcrWorkerType.GAME_STAGE);
+                    const extracted = this.extractLikelyStageText(rawText);
+
+                    if (rawText !== extracted) {
+                        logger.debug(`[TftOperator] 阶段OCR ${variant.label}: "${rawText}" -> "${extracted}"`);
+                    }
+
+                    if (extracted) {
+                        return extracted;
+                    }
                 }
-                
-                return extracted;
+
+                return "";
             };
 
             // 从设置中获取当前游戏模式，根据模式选择识别策略
@@ -427,42 +617,44 @@ class TftOperator {
             // ============================================================
             let stageText = "";
 
-            // 1. 先在精确小区域做多次尝试：
-            //    - normal raw / preprocessed
-            //    - stage1 raw / preprocessed
-            //    - shopOpen raw / preprocessed (新增：处理商店遮挡）
-            const normalRegion = this.getStageAbsoluteRegion(false, false);
-            const stageOneRegion = this.getStageAbsoluteRegion(true, false);
-            const shopOpenRegion = this.getStageAbsoluteRegion(false, true);
+            if (gameClient === GameClient.ANDROID) {
+                stageText = await this.recognizeAndroidStageWithVoting();
 
-            const preciseAttempts: Array<{
-                name: string;
-                region: Region;
-                forOCR: boolean;
-            }> = [
-                { name: "normal/raw", region: normalRegion, forOCR: false },
-                { name: "shopOpen/raw", region: shopOpenRegion, forOCR: false },
-                { name: "stage1/raw", region: stageOneRegion, forOCR: false },
-                { name: "normal/preprocessed", region: normalRegion, forOCR: true },
-                { name: "shopOpen/preprocessed", region: shopOpenRegion, forOCR: true },
-                { name: "stage1/preprocessed", region: stageOneRegion, forOCR: true },
-            ];
-
-            for (const attempt of preciseAttempts) {
-                stageText = await recognizeStageText(attempt.region, attempt.forOCR);
-                if (isValidStageFormat(stageText) && this.isReasonableStage(stageText)) {
-                    logger.debug(`[TftOperator] 阶段精确识别命中: ${attempt.name} -> "${stageText}"`);
-                    break;
-                } else if (stageText) {
-                    logger.debug(`[TftOperator] 阶段识别结果不合理: ${attempt.name} -> "${stageText}"`);
-                    stageText = ""; // 清空不合理的结果
+                if (!isValidStageFormat(stageText)) {
+                    stageText = await this.tryRecognizeAndroidStageWithFallback(recognizeStageText);
                 }
-            }
+            } else {
+                // 1. 先在精确小区域做多次尝试：
+                //    - normal raw / preprocessed
+                //    - stage1 raw / preprocessed
+                //    - shopOpen raw / preprocessed (新增：处理商店遮挡）
+                const normalRegion = this.getStageAbsoluteRegion(false, false);
+                const stageOneRegion = this.getStageAbsoluteRegion(true, false);
+                const shopOpenRegion = this.getStageAbsoluteRegion(false, true);
 
-            // 2. 安卓端兜底：窗口存在标题栏/侧边栏时，固定坐标可能失配。
-            //    这里在顶部区域做多候选扫描，并同时尝试原图/预处理两种 OCR。
-            if (!isValidStageFormat(stageText) && gameClient === GameClient.ANDROID) {
-                stageText = await this.tryRecognizeAndroidStageWithFallback(recognizeStageText);
+                const preciseAttempts: Array<{
+                    name: string;
+                    region: Region;
+                    forOCR: boolean;
+                }> = [
+                    { name: "normal/raw", region: normalRegion, forOCR: false },
+                    { name: "shopOpen/raw", region: shopOpenRegion, forOCR: false },
+                    { name: "stage1/raw", region: stageOneRegion, forOCR: false },
+                    { name: "normal/preprocessed", region: normalRegion, forOCR: true },
+                    { name: "shopOpen/preprocessed", region: shopOpenRegion, forOCR: true },
+                    { name: "stage1/preprocessed", region: stageOneRegion, forOCR: true },
+                ];
+
+                for (const attempt of preciseAttempts) {
+                    stageText = await recognizeStageText(attempt.region, attempt.forOCR);
+                    if (isValidStageFormat(stageText) && this.isReasonableStage(stageText)) {
+                        logger.debug(`[TftOperator] 阶段精确识别命中: ${attempt.name} -> "${stageText}"`);
+                        break;
+                    } else if (stageText) {
+                        logger.debug(`[TftOperator] 阶段识别结果不合理: ${attempt.name} -> "${stageText}"`);
+                        stageText = "";
+                    }
+                }
             }
 
             // 3. 连续确认机制：防止OCR误读（1-1误识别怇2-1/3-1）
@@ -509,40 +701,21 @@ class TftOperator {
 
         for (let i = 1; i <= 5; i++) {
             const slotKey = `SLOT_${i}` as keyof typeof shopSlotNameRegions;
-            const region = screenCapture.toAbsoluteRegion(shopSlotNameRegions[slotKey]);
-
-            // 截图并 OCR 识别
-            const processedPng = await screenCapture.captureRegionAsPng(region);
-            const text = await ocrService.recognize(processedPng, OcrWorkerType.CHESS);
-            let cleanName = text.replace(/\s/g, "");
-
-            // 尝试从 OCR 结果中找到匹配的英雄
-            let tftUnit: TFTUnit | null = chessData[cleanName] || null;
-
-            // OCR 失败时使用模板匹配兜底
-            if (!tftUnit) {
-                logger.warn(`[商店槽位 ${i}] OCR 识别失败，尝试模板匹配...`, true);
-                // 复用 processedPng (已经是 3x 放大后的了)
-                const mat = await screenCapture.pngBufferToMat(processedPng);
-
-                // 关键步骤：转为灰度图！
-                // 因为我们的模板是灰度/单通道的，而 captureRegionAsPng 返回的是 RGB/RGBA。
-                if (mat.channels() > 1) {
-                    cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
-                }
-
-                cleanName = templateMatcher.matchChampion(mat) || "";
-                mat.delete();
-            }
-
-            // 从数据集中找到对应英雄
-            tftUnit = chessData[cleanName] || null;
+            const region = this.getShopNameAbsoluteRegion(slotKey);
+            const recognition = await this.recognizeChampionFromRegion(
+                region,
+                chessData,
+                "SHOP",
+                `商店槽位 ${i}`
+            );
+            const cleanName = recognition.cleanName;
+            const tftUnit = recognition.unit;
 
             if (tftUnit) {
                 logger.debug(`[商店槽位 ${i}] 识别成功 -> ${tftUnit.displayName} (${tftUnit.price}费)`);
                 shopUnits.push(tftUnit);
             } else {
-                this.handleRecognitionFailure("shop", i, cleanName, processedPng);
+                this.handleRecognitionFailure("shop", i, cleanName);
                 shopUnits.push(null);
             }
         }
@@ -566,17 +739,23 @@ class TftOperator {
             return [];
         }
 
+        const gameClient = settingsStore.get('gameClient') as GameClient;
+        const isAndroidClient = gameClient === GameClient.ANDROID;
+        const activeEquipmentRegions = this.getEquipmentRegionMap();
         const resultEquips: IdentifiedEquip[] = [];
         logger.info("[TftOperator] 开始扫描装备栏...");
 
-        for (const [slotName, regionDef] of Object.entries(equipmentRegion)) {
+        for (const [slotName, regionDef] of Object.entries(activeEquipmentRegions)) {
             const targetRegion = screenCapture.toAbsoluteRegion(regionDef);
 
             let targetMat: cv.Mat | null = null;
 
             try {
                 targetMat = await screenCapture.captureRegionAsMat(targetRegion);
-                const matchResult = templateMatcher.matchEquip(targetMat);
+                const matchResult = templateMatcher.matchEquip(targetMat, {
+                    androidProfile: isAndroidClient,
+                    acceptWeakTopMatch: isAndroidClient,
+                });
 
                 if (!matchResult) {
                     logger.error(`[TftOperator] ${slotName} 槽位识别失败`);
@@ -623,6 +802,8 @@ class TftOperator {
      */
     private async getDetailPanelEquips(): Promise<TFTEquip[]> {
         const equips: TFTEquip[] = [];
+        const gameClient = settingsStore.get('gameClient') as GameClient;
+        const isAndroidClient = gameClient === GameClient.ANDROID;
 
         // 遍历详情面板的 3 个装备槽位 (SLOT_1, SLOT_2, SLOT_3)
         for (const [slotName, regionDef] of Object.entries(detailEquipRegion)) {
@@ -637,7 +818,10 @@ class TftOperator {
                 
                 // 使用模板匹配识别装备（复用装备栏的识别逻辑）
                 // matchEquip 内部会将图像缩放到 24x24 以匹配模板尺寸
-                const matchResult = templateMatcher.matchEquip(targetMat);
+                const matchResult = templateMatcher.matchEquip(targetMat, {
+                    androidProfile: isAndroidClient,
+                    acceptWeakTopMatch: isAndroidClient,
+                });
 
                 // 过滤掉空槽位，只保留实际装备
                 if (matchResult && matchResult.name !== "空槽位") {
@@ -678,10 +862,10 @@ class TftOperator {
     public async isShopSlotEmpty(slotIndex: ShopSlotIndex): Promise<boolean> {
         // 槽位索引 0-4 对应 SLOT_1 到 SLOT_5
         const slotKey = `SLOT_${slotIndex + 1}` as keyof typeof shopSlotNameRegions;
-        const region = screenCapture.toAbsoluteRegion(shopSlotNameRegions[slotKey]);
+        const region = this.getShopNameAbsoluteRegion(slotKey);
 
         // 截图并转为灰度图
-        const processedPng = await screenCapture.captureRegionAsPng(region);
+        const processedPng = await screenCapture.captureRegionAsPng(region, false);
         const mat = await screenCapture.pngBufferToMat(processedPng);
         if (mat.channels() > 1) {
             cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
@@ -766,30 +950,15 @@ class TftOperator {
             await sleep(10); // 等待 UI 渲染完成（右键后游戏会立即刷新 UI，10ms 足够）
 
             // 识别英雄名称
-            const nameRegion = screenCapture.toAbsoluteRegion(detailChampionNameRegion);
-            const namePng = await screenCapture.captureRegionAsPng(nameRegion);
-            const text = await ocrService.recognize(namePng, OcrWorkerType.CHESS);
-            let cleanName = text.replace(/\s/g, "");
-
-
-            // 尝试从 OCR 结果中找到匹配的英雄
-            let tftUnit: TFTUnit | null = chessData[cleanName] || null;
-
-            // OCR 失败时使用模板匹配兜底
-            if (!tftUnit) {
-                logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] OCR 识别失败，尝试模板匹配...`, true);
-                // 复用 namePng (3x 放大后的图片)
-                const mat = await screenCapture.pngBufferToMat(namePng);
-                // 转灰度
-                if (mat.channels() > 1) {
-                    cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
-                }
-
-                cleanName = templateMatcher.matchChampion(mat) || "";
-                mat.delete();
-            }
-
-            tftUnit = chessData[cleanName] || null;
+            const nameRegion = this.getDetailChampionNameAbsoluteRegion();
+            const recognition = await this.recognizeChampionFromRegion(
+                nameRegion,
+                chessData,
+                "DETAIL",
+                `备战席槽位 ${benchSlot.slice(-1)}`
+            );
+            const cleanName = recognition.cleanName;
+            const tftUnit = recognition.unit;
 
             if (tftUnit) {
                 // 识别星级
@@ -842,7 +1011,7 @@ class TftOperator {
                     });
                 } else {
                     // 英雄和锻造器都识别失败，说明是误识别（空槽位被误判为有棋子）
-                    this.handleRecognitionFailure("bench", benchSlot.slice(-1), cleanName, namePng);
+                    this.handleRecognitionFailure("bench", benchSlot.slice(-1), cleanName);
                     benchUnits.push(null);
                     
                     // 归位小小英雄：右键点击空槽位会导致小小英雄走过去，影响后续识别
@@ -887,27 +1056,15 @@ class TftOperator {
             await sleep(10); // 等待 UI 渲染完成（右键后游戏会立即刷新 UI，10ms 足够）
 
             // 识别英雄名称
-            const nameRegion = screenCapture.toAbsoluteRegion(detailChampionNameRegion);
-            const namePng = await screenCapture.captureRegionAsPng(nameRegion);
-            const text = await ocrService.recognize(namePng, OcrWorkerType.CHESS);
-            let cleanName = text.replace(/\s/g, "");
-
-            // 尝试从 OCR 结果中找到匹配的英雄
-            let tftUnit: TFTUnit | null = chessData[cleanName] || null;
-
-            // OCR 失败时使用模板匹配兜底
-            if (!tftUnit) {
-                logger.warn(`[棋盘槽位 ${boardSlot}] OCR 识别失败，尝试模板匹配...`, true);
-                const mat = await screenCapture.pngBufferToMat(namePng);
-                // 转灰度
-                if (mat.channels() > 1) {
-                    cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
-                }
-                cleanName = templateMatcher.matchChampion(mat) || "";
-                mat.delete();
-            }
-
-            tftUnit = chessData[cleanName] || null;
+            const nameRegion = this.getDetailChampionNameAbsoluteRegion();
+            const recognition = await this.recognizeChampionFromRegion(
+                nameRegion,
+                chessData,
+                "DETAIL",
+                `棋盘槽位 ${boardSlot}`
+            );
+            const cleanName = recognition.cleanName;
+            const tftUnit = recognition.unit;
 
             if (tftUnit) {
                 // 识别星级
@@ -934,7 +1091,7 @@ class TftOperator {
                 });
             } else {
                 // 识别失败
-                this.handleRecognitionFailure("board", boardSlot, cleanName, namePng);
+                this.handleRecognitionFailure("board", boardSlot, cleanName);
                 boardUnits.push(null);
             }
         }
@@ -1383,8 +1540,17 @@ class TftOperator {
      * @param isShopOpen 是否为商店打开状态
      */
     private getStageAbsoluteRegion(isStageOne: boolean = false, isShopOpen: boolean = false): Region {
+        const gameClient = settingsStore.get('gameClient') as GameClient;
         let display;
-        if (isShopOpen) {
+        if (gameClient === GameClient.ANDROID) {
+            if (isShopOpen) {
+                display = androidGameStageDisplayShopOpen;
+            } else if (isStageOne) {
+                display = androidGameStageDisplayStageOne;
+            } else {
+                display = androidGameStageDisplayNormal;
+            }
+        } else if (isShopOpen) {
             display = gameStageDisplayShopOpen;
         } else if (isStageOne) {
             display = gameStageDisplayStageOne;
@@ -1394,6 +1560,34 @@ class TftOperator {
         return screenCapture.toAbsoluteRegion(display);
     }
 
+    private getShopNameAbsoluteRegion(slotKey: keyof typeof shopSlotNameRegions): Region {
+        const gameClient = settingsStore.get('gameClient') as GameClient;
+        return screenCapture.toAbsoluteRegion(
+            gameClient === GameClient.ANDROID
+                ? androidShopSlotNameRegions[slotKey]
+                : shopSlotNameRegions[slotKey]
+        );
+    }
+
+    private getDetailChampionNameAbsoluteRegion(): Region {
+        const gameClient = settingsStore.get('gameClient') as GameClient;
+        return screenCapture.toAbsoluteRegion(
+            gameClient === GameClient.ANDROID
+                ? androidDetailChampionNameRegion
+                : detailChampionNameRegion
+        );
+    }
+
+    private getEquipmentRegionMap() {
+        const gameClient = settingsStore.get('gameClient') as GameClient;
+        return gameClient === GameClient.ANDROID ? androidEquipmentRegion : equipmentRegion;
+    }
+
+    private getEquipmentSlotMap() {
+        const gameClient = settingsStore.get('gameClient') as GameClient;
+        return gameClient === GameClient.ANDROID ? androidEquipmentSlot : equipmentSlot;
+    }
+
     /**
      * 获取发条鸟试炼模式的阶段显示区域
      */
@@ -1401,64 +1595,138 @@ class TftOperator {
         return screenCapture.toAbsoluteRegion(gameStageDisplayTheClockworkTrails);
     }
 
+    private async recognizeChampionFromRegion(
+        region: Region,
+        chessData: Record<string, TFTUnit>,
+        profile: "SHOP" | "DETAIL",
+        label: string
+    ): Promise<{ unit: TFTUnit | null; cleanName: string; source: "OCR" | "TEMPLATE" | "NONE" }> {
+        const rawPng = await screenCapture.captureRegionAsPng(region, false);
+        const variants = await buildChampionOcrVariants(rawPng, profile);
+        const attemptedTexts: string[] = [];
+
+        for (const variant of variants) {
+            const text = await ocrService.recognize(variant.buffer, OcrWorkerType.CHESS);
+            const resolved = resolveChampionNameFromText(text, chessData);
+
+            if (resolved.normalizedText) {
+                attemptedTexts.push(resolved.normalizedText);
+            }
+
+            if (resolved.name && chessData[resolved.name]) {
+                logger.debug(
+                    `[TftOperator] ${label} OCR命中 ${variant.label}: ${resolved.name}` +
+                    (resolved.strategy === "FUZZY"
+                        ? ` (fuzzy ${(resolved.score * 100).toFixed(1)}%)`
+                        : "")
+                );
+                return {
+                    unit: chessData[resolved.name],
+                    cleanName: resolved.name,
+                    source: "OCR",
+                };
+            }
+        }
+
+        if (templateLoader.isReady()) {
+            const templateBuffer = variants.find((variant) => variant.label.includes("gray"))?.buffer ?? rawPng;
+            const mat = await screenCapture.pngBufferToMat(templateBuffer);
+
+            try {
+                if (mat.channels() > 1) {
+                    cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
+                }
+
+                const templateMatch = templateMatcher.matchChampionDetailed(mat);
+                const matchedName = templateMatch?.name ?? "";
+                if (matchedName && matchedName !== "empty" && chessData[matchedName]) {
+                    logger.debug(
+                        `[TftOperator] ${label} 模板兜底命中: ${matchedName} ` +
+                        `(${((templateMatch?.confidence ?? 0) * 100).toFixed(1)}%)`
+                    );
+                    return {
+                        unit: chessData[matchedName],
+                        cleanName: matchedName,
+                        source: "TEMPLATE",
+                    };
+                }
+            } finally {
+                mat.delete();
+            }
+        }
+
+        return {
+            unit: null,
+            cleanName: attemptedTexts.find((text) => text.length > 0) ?? normalizeChampionOcrText(""),
+            source: "NONE",
+        };
+    }
+
     /**
      * 从 OCR 原始结果中提取最可能的阶段文本（如 "2-1"）
      * @description 安卓端有时会识别出多余字符、不同 dash 符号或空白，这里统一归一化。
      */
     private extractLikelyStageText(rawText: string): string {
-        if (!rawText) return "";
-
-        const normalized = rawText
-            .replace(/[—–－]/g, "-")
-            .replace(/\s+/g, "")
-            .replace(/[^0-9-]/g, "");
-
-        if (!normalized) return "";
-
-        const candidates = normalized.match(/\d{1,2}-\d{1,2}/g) ?? [];
-        for (const token of candidates) {
-            const [stageText, roundText] = token.split("-");
-            const stage = parseInt(stageText, 10);
-            const round = parseInt(roundText, 10);
-            if (this.isLikelyStagePair(stage, round)) {
-                return `${stage}-${round}`;
-            }
-        }
-
-        // OCR 丢失连字符时的兜底（例如 "21" 代表 "2-1"）
-        const compactDigits = normalized.replace(/-/g, "");
-        const twoDigitPairs = compactDigits.match(/\d{2}/g) ?? [];
-        for (const pair of twoDigitPairs) {
-            const stage = parseInt(pair[0], 10);
-            const round = parseInt(pair[1], 10);
-            if (this.isLikelyStagePair(stage, round)) {
-                return `${stage}-${round}`;
-            }
-        }
-
-        // ❌ FIX: 如果所有合理性检查都失败，返回空字符串而非垃圾值！
-        logger.debug(`[TftOperator] 阶段文本提取失败（所有候选都不合理）: rawText="${rawText}" normalized="${normalized}"`);
-        return "";
+        return extractLikelyStageTextFromOcr(rawText);
     }
 
     /**
-     * 判断阶段数字对是否在 TFT 合理范围内
+     * 安卓端阶段识别：对多个顶部候选窗口统一做 OCR，再按投票结果选择最可信的阶段文本。
+     * 这样可以规避单一区域把 "5-1" 误读成 "6-1" 这类局部误判。
      */
-    private isLikelyStagePair(stage: number, round: number): boolean {
-        if (!Number.isFinite(stage) || !Number.isFinite(round)) {
-            return false;
+    private async recognizeAndroidStageWithVoting(): Promise<string> {
+        const attempts = [
+            { label: "normal", region: this.getStageAbsoluteRegion(false, false) },
+            { label: "shop-open", region: this.getStageAbsoluteRegion(false, true) },
+            { label: "stage-one", region: this.getStageAbsoluteRegion(true, false) },
+            {
+                label: "candidate-a",
+                region: screenCapture.toAbsoluteRegion({
+                    leftTop: { x: 0.32, y: 0.00 },
+                    rightBottom: { x: 0.42, y: 0.06 },
+                }),
+            },
+            {
+                label: "tight",
+                region: screenCapture.toAbsoluteRegion({
+                    leftTop: { x: 0.321, y: 0.00 },
+                    rightBottom: { x: 0.411, y: 0.055 },
+                }),
+            },
+        ];
+
+        const candidates: Array<{ text: string; rawText: string; label: string }> = [];
+
+        for (const attempt of attempts) {
+            const rawPng = await screenCapture.captureRegionAsPng(attempt.region, false);
+            const variants = await buildAndroidStageOcrVariants(rawPng);
+
+            for (const variant of variants) {
+                const rawText = await ocrService.recognize(variant.buffer, OcrWorkerType.GAME_STAGE);
+                const extracted = this.extractLikelyStageText(rawText);
+
+                if (!extracted || !isValidStageFormat(extracted) || !this.isReasonableStage(extracted)) {
+                    continue;
+                }
+
+                candidates.push({
+                    text: extracted,
+                    rawText,
+                    label: `${attempt.label}/${variant.label}`,
+                });
+            }
         }
-        if (stage < 1 || stage > 7) {
-            return false;
+
+        const selection = selectBestStageText(candidates);
+        if (selection.text) {
+            logger.info(
+                `[TftOperator] 安卓阶段投票命中: ${selection.text} ` +
+                `(support=${selection.support}, rawExact=${selection.rawExactSupport}, source=${selection.label})`
+            );
+            return selection.text;
         }
-        if (round < 1 || round > 7) {
-            return false;
-        }
-        // 第一阶段只有 1-1 ~ 1-4
-        if (stage === 1 && round > 4) {
-            return false;
-        }
-        return true;
+
+        return "";
     }
 
     /**
@@ -1505,6 +1773,8 @@ class TftOperator {
 
         const { left, top, width, height } = this.gameWindowBounds;
         const defs: Array<{ x: number; y: number; w: number; h: number }> = [
+            { x: 0.32, y: 0.00, w: 0.10, h: 0.06 },
+            { x: 0.315, y: 0.00, w: 0.13, h: 0.07 },
             // 商店展开时，阶段文本通常位于顶部中间偏左的小区域
             { x: 0.36, y: 0.00, w: 0.12, h: 0.06 },
             { x: 0.34, y: 0.00, w: 0.16, h: 0.08 },
@@ -1618,6 +1888,7 @@ class TftOperator {
      */
     private async ensureInitialized(): Promise<void> {
         if (this.gameWindowRegion) {
+            await this.ensureRecognitionReady();
             return;
         }
 
@@ -1636,6 +1907,8 @@ class TftOperator {
         if (!initResult.success || !this.gameWindowRegion) {
             throw new Error("[TftOperator] 初始化失败，请确认游戏窗口可见且未最小化");
         }
+
+        await this.ensureRecognitionReady();
     }
 
     /**
@@ -1643,13 +1916,11 @@ class TftOperator {
      * @param type 识别类型 (shop/bench)
      * @param slot 槽位标识
      * @param recognizedName 识别到的名称
-     * @param imageBuffer 截图 Buffer
      */
     private handleRecognitionFailure(
         type: "shop" | "bench" | "board",
         slot: string | number,
-        recognizedName: string | null,
-        imageBuffer: Buffer
+        recognizedName: string | null
     ): void {
         if (recognizedName === "empty") {
             logger.debug(`[${type}槽位 ${slot}] 识别为空槽位`);
@@ -1710,6 +1981,14 @@ class TftOperator {
         await this.ensureInitialized();
 
         try {
+            const gameClient = settingsStore.get('gameClient') as GameClient;
+            if (gameClient === GameClient.ANDROID) {
+                const androidLevelInfo = await this.getAndroidLevelInfo();
+                if (androidLevelInfo) {
+                    return androidLevelInfo;
+                }
+            }
+
             // 1. 计算等级区域的绝对坐标
             const absoluteRegion = screenCapture.toAbsoluteRegion(levelRegion);
 
@@ -1825,6 +2104,50 @@ class TftOperator {
         return null;
     }
 
+    private async getAndroidLevelInfo(): Promise<{ level: number; currentXp: number; totalXp: number } | null> {
+        const absoluteRegion = screenCapture.toAbsoluteRegion(androidHudXpTextRegion);
+        const rawPng = await screenCapture.captureRegionAsPng(absoluteRegion, false);
+        const variants = await buildAndroidHudDigitVariants(rawPng);
+        const candidates: string[] = [];
+
+        for (const variant of variants) {
+            const rawText = await ocrService.recognize(variant.buffer, OcrWorkerType.HUD_DIGITS);
+            const normalizedText = extractLikelyXpText(rawText);
+            if (normalizedText) {
+                candidates.push(normalizedText);
+            }
+        }
+
+        const grouped = new Map<string, number>();
+        for (const candidate of candidates) {
+            grouped.set(candidate, (grouped.get(candidate) ?? 0) + 1);
+        }
+
+        const best = [...grouped.entries()].sort((left, right) => right[1] - left[1])[0]?.[0];
+        if (!best) {
+            return null;
+        }
+
+        const match = best.match(/^(\d{1,2})\/(\d{1,2})$/);
+        if (!match) {
+            return null;
+        }
+
+        const currentXp = parseInt(match[1], 10);
+        const totalXp = parseInt(match[2], 10);
+        const level = inferLevelFromXpTotal(totalXp);
+        if (level === null) {
+            return null;
+        }
+
+        logger.info(`[TftOperator] 安卓等级解析成功: Lv.${level}, 经验 ${currentXp}/${totalXp}`);
+        return {
+            level,
+            currentXp,
+            totalXp,
+        };
+    }
+
     /**
      * 获取当前持有的金币数量
      * @description 通过 OCR 识别左下角金币区域，解析当前金币数
@@ -1839,6 +2162,14 @@ class TftOperator {
         await this.ensureInitialized();
 
         try {
+            const gameClient = settingsStore.get('gameClient') as GameClient;
+            if (gameClient === GameClient.ANDROID) {
+                const androidGold = await this.getAndroidCoinCount();
+                if (androidGold !== null) {
+                    return androidGold;
+                }
+            }
+
             // 1. 计算金币区域的绝对坐标
             const absoluteRegion = screenCapture.toAbsoluteRegion(coinRegion);
 
@@ -1882,6 +2213,92 @@ class TftOperator {
             return null;
         } catch (error) {
             logger.error(`[TftOperator] 获取金币数量异常: ${error}`);
+            return null;
+        }
+    }
+
+    private async getAndroidCoinCount(): Promise<number | null> {
+        const absoluteRegion = screenCapture.toAbsoluteRegion(androidHudGoldTextRegion);
+        const rawPng = await screenCapture.captureRegionAsPng(absoluteRegion, false);
+        const variants = await buildAndroidHudDigitVariants(rawPng);
+        const candidates: string[] = [];
+
+        for (const variant of variants) {
+            const rawText = await ocrService.recognize(variant.buffer, OcrWorkerType.HUD_DIGITS);
+            const normalizedText = extractLikelyHudNumber(rawText, { min: 0, max: 99, maxDigits: 2 });
+            if (normalizedText) {
+                candidates.push(normalizedText);
+            }
+        }
+
+        const grouped = new Map<string, number>();
+        for (const candidate of candidates) {
+            grouped.set(candidate, (grouped.get(candidate) ?? 0) + 1);
+        }
+
+        const best = [...grouped.entries()]
+            .sort((left, right) => right[1] - left[1])
+            .map(([text]) => text)[0];
+
+        if (!best) {
+            return null;
+        }
+
+        const coinCount = parseInt(best, 10);
+        if (!Number.isFinite(coinCount)) {
+            return null;
+        }
+
+        logger.info(`[TftOperator] 安卓金币识别成功: ${coinCount}`);
+        return coinCount;
+    }
+
+    public async getSelfHp(): Promise<number | null> {
+        await this.ensureInitialized();
+
+        const gameClient = settingsStore.get('gameClient') as GameClient;
+        if (gameClient !== GameClient.ANDROID) {
+            return null;
+        }
+
+        try {
+            const selfNameRegion = screenCapture.toAbsoluteRegion(androidSelfNameplateRegion);
+            const scoreboardRegion = screenCapture.toAbsoluteRegion(androidScoreboardRegion);
+
+            const [selfNamePng, scoreboardPng] = await Promise.all([
+                screenCapture.captureRegionAsPng(selfNameRegion, false),
+                screenCapture.captureRegionAsPng(scoreboardRegion, false),
+            ]);
+
+            const selfNameVariants = await buildAndroidPlayerNameOcrVariants(selfNamePng);
+            const scoreboardVariants = await buildAndroidPlayerNameOcrVariants(scoreboardPng);
+
+            const selfNameCandidates: string[] = [];
+            for (const variant of selfNameVariants) {
+                const rawText = await ocrService.recognize(variant.buffer, OcrWorkerType.PLAYER_NAME);
+                const normalized = extractLikelyPlayerNameToken(rawText);
+                if (normalized) {
+                    selfNameCandidates.push(normalized);
+                }
+            }
+
+            const selfName = selectBestPlayerNameCandidate(selfNameCandidates);
+            if (!selfName) {
+                return null;
+            }
+
+            for (const variant of scoreboardVariants) {
+                const rawText = await ocrService.recognize(variant.buffer, OcrWorkerType.PLAYER_NAME);
+                const hp = extractSelfHpFromScoreboardText(selfName, rawText);
+                if (hp !== null) {
+                    logger.info(`[TftOperator] 安卓自身体力识别成功: ${hp} (self=${normalizePlayerNameOcrText(selfName)})`);
+                    return hp;
+                }
+            }
+
+            return null;
+        } catch (error) {
+            logger.error(`[TftOperator] 获取安卓自身体力异常: ${error}`);
             return null;
         }
     }
@@ -2221,15 +2638,17 @@ class TftOperator {
     ): Promise<void> {
         await this.ensureInitialized();
 
+        const activeEquipmentSlots = this.getEquipmentSlotMap();
+        const maxEquipIndex = Object.keys(activeEquipmentSlots).length - 1;
+
         // 1. 获取装备槽位坐标
-        // 装备索引 0-9 -> EQ_SLOT_1 ~ EQ_SLOT_10
-        if (equipSlotIndex < 0 || equipSlotIndex > 9) {
-            logger.error(`[TftOperator] 无效的装备槽位索引: ${equipSlotIndex} (只接受 0-9)`);
+        if (equipSlotIndex < 0 || equipSlotIndex > maxEquipIndex) {
+            logger.error(`[TftOperator] 无效的装备槽位索引: ${equipSlotIndex} (只接受 0-${maxEquipIndex})`);
             return;
         }
 
-        const equipSlotKey = `EQ_SLOT_${equipSlotIndex + 1}` as keyof typeof equipmentSlot;
-        const fromPoint = equipmentSlot[equipSlotKey];
+        const equipSlotKey = `EQ_SLOT_${equipSlotIndex + 1}` as keyof typeof activeEquipmentSlots;
+        const fromPoint = activeEquipmentSlots[equipSlotKey];
 
 
         if (!fromPoint) {

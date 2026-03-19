@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { ThemeType } from "../../styles/theme.ts";
 import { toast } from "../toast/toast-core.ts";
+import AndroidSimulatorPanel from "../debug/AndroidSimulatorPanel.tsx";
 
 // -------------------------------------------------------------------
 // ✨ 样式组件定义 (Styled Components Definitions) ✨
@@ -166,6 +167,8 @@ const DebugPage = () => {
         <PageWrapper>
             <PageTitle>调试面板</PageTitle>
             <PageSubtitle>开发调试用，结果会通过弹窗显示（详细数据请查看控制台 F12）</PageSubtitle>
+
+            <AndroidSimulatorPanel />
 
             {/* LCU 客户端操作 */}
             <SectionHeader>🎮 LCU 客户端</SectionHeader>

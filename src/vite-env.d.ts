@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import {ConfigApi, HexApi, IpcApi, LcuApi, TftApi, LineupApi, UtilApi, SettingsApi, StatsApi} from "../electron/preload.ts";
+import {ConfigApi, ExposedIpcRenderer, HexApi, IpcApi, LcuApi, TftApi, LineupApi, UtilApi, SettingsApi, StatsApi} from "../electron/preload.ts";
 
 export {}   // 让文件变成模块，避免全局污染
 
@@ -8,6 +8,7 @@ export {}   // 让文件变成模块，避免全局污染
 
 declare global {
     interface Window {
+        ipcRenderer: ExposedIpcRenderer
         ipc:IpcApi
         lcu:LcuApi
         config:ConfigApi

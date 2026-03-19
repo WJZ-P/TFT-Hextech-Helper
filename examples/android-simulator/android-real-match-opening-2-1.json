@@ -1,0 +1,141 @@
+{
+  "id": "android-real-recording-2-1-augment",
+  "label": "真机关键帧 2-1 海克斯",
+  "description": "2026-03-15 安卓真机录屏的 2-1 海克斯选择画面，记录真实金币、血量和开局单位分布。",
+  "sequence": {
+    "id": "android-real-recording-20260315-ionia",
+    "label": "安卓真机时间线：2026-03-15 实录",
+    "index": 1,
+    "total": 5
+  },
+  "context": {
+    "targetChampionNames": [
+      "阿狸",
+      "赛恩",
+      "德莱文",
+      "拉克丝",
+      "艾希"
+    ],
+    "strategyPreset": "STANDARD",
+    "stabilizeHpThreshold": 35
+  },
+  "state": {
+    "timestamp": 1773607610000,
+    "client": "ANDROID",
+    "target": "ANDROID_EMULATOR",
+    "stageText": "2-1",
+    "stageType": "AUGMENT",
+    "level": 4,
+    "currentXp": 0,
+    "totalXp": 10,
+    "gold": 39,
+    "hp": 100,
+    "bench": [
+      {
+        "id": "TFT16_Caitlyn",
+        "name": "凯特琳",
+        "star": 1,
+        "cost": 1,
+        "location": "SLOT_1",
+        "items": [],
+        "traits": [
+          "皮尔特沃夫",
+          "狙神"
+        ]
+      },
+      {
+        "id": "TFT16_Irelia",
+        "name": "刀妹",
+        "star": 1,
+        "cost": 1,
+        "location": "SLOT_2",
+        "items": [],
+        "traits": [
+          "艾欧尼亚",
+          "征服者"
+        ]
+      },
+      {
+        "id": "TFT16_Irelia",
+        "name": "刀妹",
+        "star": 1,
+        "cost": 1,
+        "location": "SLOT_3",
+        "items": [],
+        "traits": [
+          "艾欧尼亚",
+          "征服者"
+        ]
+      }
+    ],
+    "board": [
+      {
+        "id": "TFT16_Sett",
+        "name": "瑟提",
+        "star": 1,
+        "cost": 2,
+        "location": "R2_C4",
+        "items": [
+          "反曲弓"
+        ],
+        "traits": [
+          "艾欧尼亚",
+          "斗士"
+        ]
+      },
+      {
+        "id": "TFT16_Caitlyn",
+        "name": "凯特琳",
+        "star": 1,
+        "cost": 1,
+        "location": "R2_C5",
+        "items": [],
+        "traits": [
+          "皮尔特沃夫",
+          "狙神"
+        ]
+      },
+      {
+        "id": "TFT16_Irelia",
+        "name": "刀妹",
+        "star": 1,
+        "cost": 1,
+        "location": "R3_C5",
+        "items": [],
+        "traits": [
+          "艾欧尼亚",
+          "征服者"
+        ]
+      }
+    ],
+    "shop": [],
+    "items": [
+      "锁子甲",
+      "负极斗篷"
+    ],
+    "augments": [
+      {
+        "slot": 1,
+        "name": "人生切片",
+        "score": 8.6
+      },
+      {
+        "slot": 2,
+        "name": "基础装备自助餐",
+        "score": 9.1
+      },
+      {
+        "slot": 3,
+        "name": "战时补给：巨人腰带",
+        "score": 7.8
+      }
+    ],
+    "metadata": {
+      "source": "android-real-recording",
+      "recordingId": "android-real-recording-20260315-ionia",
+      "observedAt": "00:02:10",
+      "framePath": "../recordings/derived/android-real-recording-20260315-ionia/frames/recording-opening-augment-2-1.png",
+      "note": "真实回合号、金币和海克斯来自真机录屏；单位分布按同局相邻帧人工整理。"
+    }
+  }
+}

@@ -14,8 +14,11 @@
   "include": [
     "src-backend/core/**/*.ts",
     "src-backend/data/**/*.ts",
+    "src-backend/adapters/AndroidActionPlanner.ts",
+    "src-backend/services/AndroidSimulationRunner.ts",
     "src-backend/services/PcLogicRunner.ts",
     "src-backend/services/TftDataService.ts",
+    "scripts/run-android-simulation.ts",
     "scripts/run-pc-logic.ts",
     "scripts/refresh-tft-data.ts",
     "scripts/convert-liveclient-to-observed.ts",
