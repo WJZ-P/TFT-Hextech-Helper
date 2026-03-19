@@ -1,7 +1,8 @@
 import { applySeasonPackAssetPaths, syncJinChanSeasonPackAssets } from "../data/JinChanSeasonPackAssetSyncer";
 import { TftDataProvider } from "../data/TftDataProvider";
 import type { TftDataSnapshot } from "../data/types";
-import { BUILTIN_OCR_CORRECTIONS, mergeOcrCorrections, ocrCorrectionService } from "../tft";
+import { BUILTIN_OCR_CORRECTIONS, mergeOcrCorrections } from "../tft/recognition/OcrCorrectionCatalog";
+import { ocrCorrectionService } from "../tft/recognition/OcrCorrectionService";
 
 interface TftSnapshotProvider {
     refresh(force?: boolean): Promise<void>;
