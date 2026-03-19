@@ -144,6 +144,10 @@ export class TftDataProvider {
         return this.snapshot;
     }
 
+    public getSeasonPackDir(): string {
+        return this.seasonPackDir;
+    }
+
     private loadSeasonPackSnapshot(): TftDataSnapshot | null {
         return loadJinChanSeasonPackSnapshot(this.seasonPackDir);
     }

@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import cv from "@techstark/opencv-js";
 import sharp from "sharp";
 import { logger } from "../utils/Logger";
+import { equipmentNamesMatch, normalizeEquipmentName } from "../data/TftNameNormalizer";
 import {
     TFT_16_EQUIP_DATA,
     TFT_4_EQUIP_DATA,
@@ -503,7 +504,7 @@ async function evaluateEquipmentResults(
                 recognizedName,
                 recognizedSource: recognizedName ? "TEMPLATE" : "NONE",
                 confidence: match?.confidence ?? null,
-                passed: recognizedName === equipment.expectedName,
+                passed: equipmentNamesMatch(recognizedName, equipment.expectedName),
                 note: equipment.note,
             });
         } finally {
@@ -518,6 +519,22 @@ async function evaluateEquipmentResults(
 
 function getEquipDataForMode(mode: TFTMode) {
     return mode === TFTMode.S4_RUISHOU ? TFT_4_EQUIP_DATA : TFT_16_EQUIP_DATA;
+}
+
+function resolveFixtureEquipmentName(
+    rawName: string,
+    equipData: Record<string, ReturnType<typeof getEquipDataForMode>[string]>
+): string | null {
+    const canonicalName = normalizeEquipmentName(rawName);
+    if (equipData[canonicalName]) {
+        return canonicalName;
+    }
+
+    if (equipData[rawName]) {
+        return rawName;
+    }
+
+    return null;
 }
 
 function resolveFixtureChampionName(
@@ -647,6 +664,8 @@ function buildBoardUnitsFromFixture(
             tftUnit: resolvedUnit,
             starLevel: normalizeStarLevel(unit.starLevel),
             equips: (unit.items ?? [])
+                .map((itemName) => resolveFixtureEquipmentName(itemName, equipData))
+                .filter((itemName): itemName is string => Boolean(itemName))
                 .map((itemName) => equipData[itemName])
                 .filter((item): item is NonNullable<typeof item> => Boolean(item)),
         };
@@ -672,6 +691,8 @@ function buildBenchUnitsFromFixture(
             tftUnit: resolvedUnit,
             starLevel: normalizeStarLevel(unit.starLevel),
             equips: (unit.items ?? [])
+                .map((itemName) => resolveFixtureEquipmentName(itemName, equipData))
+                .filter((itemName): itemName is string => Boolean(itemName))
                 .map((itemName) => equipData[itemName])
                 .filter((item): item is NonNullable<typeof item> => Boolean(item)),
         };

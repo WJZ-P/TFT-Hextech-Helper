@@ -6,6 +6,7 @@ import { ocrCorrectionService } from "../../src-backend/tft/recognition/OcrCorre
 
 test("TftDataService loads OCR corrections from snapshot refreshes", async () => {
     ocrCorrectionService.clearCorrections();
+    ocrCorrectionService.configureLogging({ enabled: false });
 
     const snapshot: TftDataSnapshot = {
         fetchedAt: new Date().toISOString(),
@@ -33,5 +34,6 @@ test("TftDataService loads OCR corrections from snapshot refreshes", async () =>
     await service.refresh(true);
 
     assert.equal(ocrCorrectionService.applyCorrections("2—1", "stage"), "2-1");
+    assert.equal(ocrCorrectionService.applyCorrections("梦欧娜", "shop"), "蕾欧娜");
     ocrCorrectionService.clearCorrections();
 });

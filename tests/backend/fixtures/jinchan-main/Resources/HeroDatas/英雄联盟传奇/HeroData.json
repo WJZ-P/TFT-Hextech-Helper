@@ -1,0 +1,20 @@
+[
+  {
+    "HeroName": "蕾欧娜",
+    "Cost": 1,
+    "Profession": ["哨兵"],
+    "Peculiarity": ["源计划"]
+  },
+  {
+    "HeroName": "卡密尔",
+    "Cost": 2,
+    "Profession": ["裁决使"],
+    "Peculiarity": ["执法官"]
+  },
+  {
+    "HeroName": "巴德",
+    "Cost": 3,
+    "Profession": [],
+    "Peculiarity": ["旅者"]
+  }
+]

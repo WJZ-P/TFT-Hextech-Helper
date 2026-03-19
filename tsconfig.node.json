@@ -9,5 +9,5 @@
     "strict": true,
     "types": ["electron-vite/node"]  // ← 加：nut.js Point等Node API类型
   },
-  "include": ["electron/**/*.ts", "electron.vite.config.*"]  // ← include你的main/preload + 新config
+  "include": ["electron/**/*.ts", "electron.vite.config.*"]
 }

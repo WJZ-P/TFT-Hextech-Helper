@@ -5,6 +5,7 @@
 
 export { OcrService, ocrService, OcrWorkerType } from "./OcrService";
 export { OcrCorrectionService, ocrCorrectionService } from "./OcrCorrectionService";
+export { BUILTIN_OCR_CORRECTIONS, mergeOcrCorrections } from "./OcrCorrectionCatalog";
 export { TemplateLoader, templateLoader } from "./TemplateLoader";
 export { TemplateMatcher, templateMatcher } from "./TemplateMatcher";
 export { ScreenCapture, screenCapture } from "./ScreenCapture";

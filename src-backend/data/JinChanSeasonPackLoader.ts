@@ -10,10 +10,12 @@ import type {
     TftTraitData,
 } from "./types";
 
-interface SeasonPackLocation {
+export interface JinChanSeasonPackLocation {
     rootDir: string;
+    seasonRootDir: string;
     seasonDir: string;
     seasonName: string;
+    correctionsSearchDirs: string[];
 }
 
 interface JinChanLineUpUnit {
@@ -55,16 +57,44 @@ function isPackDirectory(directoryPath: string): boolean {
     return REQUIRED_FILES.every((fileName) => fs.existsSync(path.join(directoryPath, fileName)));
 }
 
-function resolveSeasonPackLocation(baseDir: string): SeasonPackLocation | null {
+function buildCorrectionsSearchDirs(directories: string[]): string[] {
+    return [...new Set(directories.filter((directory) => fs.existsSync(directory)))];
+}
+
+export function resolveJinChanSeasonPackLocation(baseDir: string): JinChanSeasonPackLocation | null {
     if (!fs.existsSync(baseDir)) {
         return null;
+    }
+
+    const heroDatasDir = path.join(baseDir, "HeroDatas");
+    if (fs.existsSync(heroDatasDir) && fs.statSync(heroDatasDir).isDirectory()) {
+        const nestedLocation = resolveJinChanSeasonPackLocation(heroDatasDir);
+        if (!nestedLocation) {
+            return null;
+        }
+
+        return {
+            ...nestedLocation,
+            rootDir: baseDir,
+            correctionsSearchDirs: buildCorrectionsSearchDirs([
+                nestedLocation.seasonDir,
+                heroDatasDir,
+                baseDir,
+            ]),
+        };
     }
 
     if (isPackDirectory(baseDir)) {
         return {
             rootDir: path.dirname(baseDir),
+            seasonRootDir: path.dirname(baseDir),
             seasonDir: baseDir,
             seasonName: path.basename(baseDir),
+            correctionsSearchDirs: buildCorrectionsSearchDirs([
+                baseDir,
+                path.dirname(baseDir),
+                path.dirname(path.dirname(baseDir)),
+            ]),
         };
     }
 
@@ -81,8 +111,14 @@ function resolveSeasonPackLocation(baseDir: string): SeasonPackLocation | null {
 
         return {
             rootDir: baseDir,
+            seasonRootDir: baseDir,
             seasonDir,
             seasonName,
+            correctionsSearchDirs: buildCorrectionsSearchDirs([
+                seasonDir,
+                baseDir,
+                path.dirname(baseDir),
+            ]),
         };
     }
 
@@ -364,7 +400,7 @@ function mapCorrections(payload: unknown): TftOcrCorrectionEntry[] {
 }
 
 export function loadJinChanSeasonPackSnapshot(baseDir: string): TftDataSnapshot | null {
-    const location = resolveSeasonPackLocation(baseDir);
+    const location = resolveJinChanSeasonPackLocation(baseDir);
     if (!location) {
         return null;
     }
@@ -378,9 +414,9 @@ export function loadJinChanSeasonPackSnapshot(baseDir: string): TftDataSnapshot 
     const equipmentDataPayload = readJsonFile(path.join(location.seasonDir, "EquipmentData.json"));
     const lineupsPayload = readJsonFile(path.join(location.seasonDir, "LineUps.json"));
     const recommendedLineupsPayload = readJsonFile(path.join(location.seasonDir, "RecommendedLineUps.json"));
-    const correctionsPayload =
-        readJsonFile(path.join(location.seasonDir, "CorrectionsList.json")) ??
-        readJsonFile(path.join(location.rootDir, "CorrectionsList.json"));
+    const correctionsPayload = location.correctionsSearchDirs
+        .map((directoryPath) => readJsonFile(path.join(directoryPath, "CorrectionsList.json")))
+        .find((payload) => payload !== null);
 
     const champions = heroPayload
         .map((rawHero) => mapChampion(rawHero))

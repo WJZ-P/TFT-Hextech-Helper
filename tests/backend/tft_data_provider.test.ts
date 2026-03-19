@@ -1,9 +1,19 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
+import fsSync from "node:fs";
 import path from "path";
 import os from "os";
 import { TftDataProvider } from "../../src-backend/data/TftDataProvider";
+
+const REAL_FIXTURE_RESOURCES_DIR = path.resolve(
+    process.cwd(),
+    "tests",
+    "backend",
+    "fixtures",
+    "jinchan-main",
+    "Resources"
+);
 
 type FakeResponse = { data: unknown };
 type FakeGet = (url: string) => Promise<FakeResponse>;
@@ -165,5 +175,31 @@ test("TftDataProvider prioritizes season-pack data before remote qq snapshot", a
     assert.equal(snapshot.source, "season-pack");
     assert.equal(snapshot.champions[0]?.name, "赛季包英雄");
     assert.equal(snapshot.items[0]?.name, "赛季包装备");
+    assert.equal(remoteCalls, 0);
+});
+
+test("TftDataProvider loads a real-main-branch-shaped JinChan Resources root as season-pack data", async () => {
+    let remoteCalls = 0;
+    const cacheFilePath = path.join(os.tmpdir(), `tft-jinchan-real-${Date.now()}.json`);
+    if (fsSync.existsSync(cacheFilePath)) {
+        fsSync.unlinkSync(cacheFilePath);
+    }
+
+    const provider = new TftDataProvider({
+        seasonPackDir: REAL_FIXTURE_RESOURCES_DIR,
+        cacheFilePath,
+        httpClient: buildFakeClient(async () => {
+            remoteCalls += 1;
+            throw new Error("remote should not be called");
+        }),
+    });
+
+    await provider.refresh(true);
+    const snapshot = provider.getSnapshot();
+
+    assert.equal(snapshot.source, "season-pack");
+    assert.equal(snapshot.champions.length, 3);
+    assert.equal(snapshot.lineups[0]?.name, "真实推荐阵容");
+    assert.equal(snapshot.ocrCorrections?.length, 3);
     assert.equal(remoteCalls, 0);
 });

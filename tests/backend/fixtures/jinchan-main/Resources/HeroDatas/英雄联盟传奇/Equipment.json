@@ -1,0 +1,16 @@
+[
+  {
+    "Name": "反曲之弓",
+    "EquipmentType": "散件"
+  },
+  {
+    "Name": "无尽之刃",
+    "EquipmentType": "普通装备",
+    "SyntheticPathway": ["暴风之剑", "拳套"]
+  },
+  {
+    "Name": "迅击战士纹章",
+    "EquipmentType": "转职纹章",
+    "SyntheticPathway": ["金锅锅", "反曲之弓"]
+  }
+]

@@ -35,7 +35,7 @@ export interface TftLineupData {
     notes?: string[];
 }
 
-export type TftOcrCorrectionContext = "all" | "stage" | "shop";
+export type TftOcrCorrectionContext = "all" | "stage" | "shop" | "equipment";
 
 export interface TftOcrCorrectionEntry {
     incorrect: string;

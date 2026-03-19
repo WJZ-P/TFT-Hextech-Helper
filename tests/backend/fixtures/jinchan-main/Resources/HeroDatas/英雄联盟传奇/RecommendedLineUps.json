@@ -1,0 +1,33 @@
+{
+  "UpdateTime": "2026-01-09T00:55:41.4931775+08:00",
+  "LineUps": [
+    {
+      "LineUpName": "真实推荐阵容",
+      "LineUpUnits": [
+        {
+          "HeroName": "卡密尔",
+          "EquipmentNames": ["无尽之刃", "反曲之弓", ""],
+          "Position": {
+            "Item1": 1,
+            "Item2": 2
+          }
+        },
+        {
+          "HeroName": "蕾欧娜",
+          "EquipmentNames": ["", "", ""],
+          "Position": {
+            "Item1": 2,
+            "Item2": 3
+          }
+        }
+      ],
+      "Tier": "S",
+      "WinRate": 26.12,
+      "AverageRank": 3.71,
+      "PickRate": 18.19,
+      "TopFourRate": 62.52,
+      "Tags": ["速9", "困难"],
+      "Description": "真实主分支结构样例"
+    }
+  ]
+}
