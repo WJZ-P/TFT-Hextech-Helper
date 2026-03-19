@@ -35,6 +35,14 @@ export interface TftLineupData {
     notes?: string[];
 }
 
+export type TftOcrCorrectionContext = "all" | "stage" | "shop";
+
+export interface TftOcrCorrectionEntry {
+    incorrect: string;
+    correct: string;
+    context?: TftOcrCorrectionContext;
+}
+
 export interface TftDataVersionInfo {
     chess?: string;
     equip?: string;
@@ -46,10 +54,11 @@ export interface TftDataVersionInfo {
 
 export interface TftDataSnapshot {
     fetchedAt: string;
-    source: "remote" | "cache" | "fallback";
+    source: "remote" | "cache" | "fallback" | "season-pack";
     versions: TftDataVersionInfo;
     champions: TftChampionData[];
     items: TftItemData[];
     traits: TftTraitData[];
     lineups: TftLineupData[];
+    ocrCorrections?: TftOcrCorrectionEntry[];
 }

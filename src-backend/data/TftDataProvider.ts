@@ -18,12 +18,14 @@ import type {
     TftLineupData,
     TftTraitData,
 } from "./types";
+import { loadJinChanSeasonPackSnapshot } from "./JinChanSeasonPackLoader";
 
 const DEFAULT_REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const DEFAULT_TIMEOUT_MS = 8000;
 const DEFAULT_LINEUP_SEASON = "s16";
 const DEFAULT_LINEUP_CHANNEL = "53";
 const DEFAULT_CACHE_FILE = path.join(process.cwd(), ".cache", "tft-data-snapshot.json");
+const DEFAULT_SEASON_PACK_DIR = path.join(process.cwd(), "season-packs");
 
 const QQ_DATA_BASE = "https://game.gtimg.cn/images/lol/act/img/tft/js";
 const LINEUP_BASE = "https://game.gtimg.cn/images/lol/act/tftzlkauto/json/lineupJson";
@@ -34,6 +36,7 @@ interface TftDataProviderOptions {
     lineupSeason?: string;
     lineupChannel?: string;
     cacheFilePath?: string;
+    seasonPackDir?: string;
     httpClient?: AxiosInstance;
 }
 
@@ -67,6 +70,7 @@ export class TftDataProvider {
     private readonly lineupSeason: string;
     private readonly lineupChannel: string;
     private readonly cacheFilePath: string;
+    private readonly seasonPackDir: string;
     private snapshot: TftDataSnapshot | null = null;
     private lastRefreshTs = 0;
 
@@ -80,6 +84,7 @@ export class TftDataProvider {
         this.lineupSeason = options.lineupSeason ?? DEFAULT_LINEUP_SEASON;
         this.lineupChannel = options.lineupChannel ?? DEFAULT_LINEUP_CHANNEL;
         this.cacheFilePath = options.cacheFilePath ?? DEFAULT_CACHE_FILE;
+        this.seasonPackDir = options.seasonPackDir ?? DEFAULT_SEASON_PACK_DIR;
     }
 
     public async refresh(force = false): Promise<void> {
@@ -88,6 +93,16 @@ export class TftDataProvider {
             this.snapshot &&
             Date.now() - this.lastRefreshTs < this.refreshIntervalMs
         ) {
+            return;
+        }
+
+        const seasonPackSnapshot = this.loadSeasonPackSnapshot();
+        if (seasonPackSnapshot) {
+            this.snapshot = seasonPackSnapshot;
+            this.lastRefreshTs = Date.now();
+            logger.info(
+                `[TftDataProvider] 赛季资源包加载成功: 英雄 ${seasonPackSnapshot.champions.length}, 阵容 ${seasonPackSnapshot.lineups.length}`
+            );
             return;
         }
 
@@ -123,10 +138,14 @@ export class TftDataProvider {
 
     public getSnapshot(): TftDataSnapshot {
         if (!this.snapshot) {
-            this.snapshot = this.buildFallbackSnapshot();
+            this.snapshot = this.loadSeasonPackSnapshot() ?? this.buildFallbackSnapshot();
             this.lastRefreshTs = Date.now();
         }
         return this.snapshot;
+    }
+
+    private loadSeasonPackSnapshot(): TftDataSnapshot | null {
+        return loadJinChanSeasonPackSnapshot(this.seasonPackDir);
     }
 
     private async fetchRemoteSnapshot(): Promise<TftDataSnapshot> {

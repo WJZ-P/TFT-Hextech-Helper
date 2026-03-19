@@ -49,7 +49,7 @@ test("android live smoke CLI can analyze update-ready screenshots", { timeout: 1
     assert.equal(parsed.verificationGate.readyToClick, true);
     assert.equal(parsed.contentClassification.state, "TFT_FRONTEND");
     assert.equal(parsed.contentClassification.frontendVariant, "UPDATE_READY");
-    assert.equal(parsed.foregroundDecision?.kind, "WAIT");
+    assert.equal(parsed.foregroundDecision?.kind, "TAP_PRIMARY_CTA");
 });
 
 test("android live smoke CLI can analyze login-required screenshots", { timeout: 120000 }, async () => {
@@ -353,7 +353,7 @@ test("android live smoke CLI can replay screenshot sequences for progression QA"
     assert.equal(parsed.screenshotPaths.length, 3);
     assert.deepEqual(
         parsed.analysisSequence.map((entry) => entry.foregroundDecision.kind),
-        ["WAIT", "TAP_PRIMARY_CTA", "WAIT"]
+        ["TAP_PRIMARY_CTA", "WAIT", "WAIT"]
     );
     assert.equal(parsed.foregroundDecision?.kind, "WAIT");
 });
@@ -404,8 +404,8 @@ test("android live smoke CLI can replay synthetic frontend flow fixtures", { tim
     assert.deepEqual(
         parsed.analysisSequence.map((entry) => entry.foregroundDecision.kind),
         [
-            "WAIT",
             "TAP_PRIMARY_CTA",
+            "WAIT",
             "WAIT",
             "TAP_START_QUEUE",
             "WAIT",

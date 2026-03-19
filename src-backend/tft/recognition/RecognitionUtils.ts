@@ -1,5 +1,6 @@
 import sharp from "sharp";
 import type { TFTUnit } from "../../TFTProtocol";
+import { ocrCorrectionService } from "./OcrCorrectionService";
 
 export interface StageOcrCandidate {
     text: string;
@@ -45,7 +46,7 @@ function normalizeText(rawText?: string): string {
 }
 
 export function normalizeChampionOcrText(rawText?: string): string {
-    return normalizeText(rawText);
+    return normalizeText(ocrCorrectionService.applyCorrections(String(rawText ?? ""), "shop"));
 }
 
 async function preprocessImage(buffer: Buffer, options: ImagePreprocessOptions): Promise<Buffer> {
@@ -270,7 +271,7 @@ function buildStagePair(stage: string, round: string): string {
 }
 
 function normalizeStageRawText(rawText?: string): string {
-    return String(rawText ?? "")
+    return ocrCorrectionService.applyCorrections(String(rawText ?? ""), "stage")
         .replace(/[—–－]/g, "-")
         .replace(/\s+/g, "")
         .replace(/[^0-9-]/g, "");

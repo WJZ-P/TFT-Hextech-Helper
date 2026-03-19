@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
 import path from "path";
 import os from "os";
 import { TftDataProvider } from "../../src-backend/data/TftDataProvider";
@@ -11,6 +12,11 @@ function buildFakeClient(getImpl: FakeGet): any {
     return {
         get: getImpl,
     };
+}
+
+async function writeJson(filePath: string, data: unknown): Promise<void> {
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
+    await fs.writeFile(filePath, JSON.stringify(data, null, 2), "utf8");
 }
 
 test("TftDataProvider falls back to local snapshot when remote endpoints fail", async () => {
@@ -121,4 +127,43 @@ test("TftDataProvider maps remote champion/item/lineup payloads into snapshot", 
     assert.equal(snapshot.lineups[0]?.name, "测试阵容");
     assert.deepEqual(snapshot.lineups[0]?.coreChampions, ["测试英雄"]);
     assert.deepEqual(snapshot.lineups[0]?.recommendedItems, ["测试装备"]);
+});
+
+test("TftDataProvider prioritizes season-pack data before remote qq snapshot", async () => {
+    const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), "tft-season-pack-"));
+    const seasonDir = path.join(rootDir, "英雄联盟传奇");
+    let remoteCalls = 0;
+
+    await writeJson(path.join(seasonDir, "HeroData.json"), [
+        {
+            HeroName: "赛季包英雄",
+            Cost: 3,
+            Profession: ["狙神"],
+            Peculiarity: ["虚空"],
+        },
+    ]);
+    await writeJson(path.join(seasonDir, "Equipment.json"), [
+        {
+            Name: "赛季包装备",
+            EquipmentType: "普通装备",
+            SyntheticPathway: ["暴风之剑", "拳套"],
+        },
+    ]);
+
+    const provider = new TftDataProvider({
+        cacheFilePath: path.join(os.tmpdir(), `tft-season-pack-cache-${Date.now()}.json`),
+        seasonPackDir: rootDir,
+        httpClient: buildFakeClient(async () => {
+            remoteCalls += 1;
+            throw new Error("remote should not be called");
+        }),
+    });
+
+    await provider.refresh(true);
+    const snapshot = provider.getSnapshot();
+
+    assert.equal(snapshot.source, "season-pack");
+    assert.equal(snapshot.champions[0]?.name, "赛季包英雄");
+    assert.equal(snapshot.items[0]?.name, "赛季包装备");
+    assert.equal(remoteCalls, 0);
 });

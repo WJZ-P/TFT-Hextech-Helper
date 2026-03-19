@@ -128,12 +128,15 @@ export function planAndroidForegroundProgress(
     }
 
     if (observation.state === "UPDATE_READY") {
+        const requiredStableUpdateFrames = observation.verification === "VERIFIED_REAL"
+            ? 1
+            : REQUIRED_STABLE_UPDATE_FRAMES;
         const targetPoint = getActionPoint(observation, "PRIMARY_CTA");
         if (!targetPoint) {
             return waitDecision("Update-ready frontend detected, but no primary CTA is available", nextState);
         }
 
-        if (nextState.stableCount < REQUIRED_STABLE_UPDATE_FRAMES) {
+        if (nextState.stableCount < requiredStableUpdateFrames) {
             return waitDecision("Waiting for a stable update-ready frontend before tapping", nextState);
         }
 

@@ -26,7 +26,7 @@
           }
         }
       },
-      "expectedDecisionKind": "WAIT"
+      "expectedDecisionKind": "TAP_PRIMARY_CTA"
     },
     {
       "id": "update-ready-2",
@@ -46,7 +46,7 @@
           }
         }
       },
-      "expectedDecisionKind": "TAP_PRIMARY_CTA"
+      "expectedDecisionKind": "WAIT"
     },
     {
       "id": "lobby-side-menu",

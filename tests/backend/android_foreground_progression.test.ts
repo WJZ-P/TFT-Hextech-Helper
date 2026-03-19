@@ -41,18 +41,15 @@ test("android foreground progression waits on unknown non-game windows", () => {
     assert.match(result.decision.reason, /recognized Android game state/i);
 });
 
-test("android foreground progression requires a stable frontend before tapping update CTA", () => {
+test("android foreground progression taps verified real update CTA on first frame", () => {
     const observation = createObservation({
         state: "UPDATE_READY",
         actionPoints: { PRIMARY_CTA: { x: 0.5, y: 0.545 } },
     });
 
     const first = planAndroidForegroundProgress(observation, createInitialAndroidForegroundProgressState());
-    assert.equal(first.decision.kind, "WAIT");
-
-    const second = planAndroidForegroundProgress(observation, first.nextState);
-    assert.equal(second.decision.kind, "TAP_PRIMARY_CTA");
-    assert.deepEqual(second.decision.targetPoint, { x: 0.5, y: 0.545 });
+    assert.equal(first.decision.kind, "TAP_PRIMARY_CTA");
+    assert.deepEqual(first.decision.targetPoint, { x: 0.5, y: 0.545 });
 });
 
 test("android foreground progression does not spam update taps on repeated identical frames", () => {
@@ -65,8 +62,10 @@ test("android foreground progression does not spam update taps on repeated ident
     const second = planAndroidForegroundProgress(observation, first.nextState);
     const third = planAndroidForegroundProgress(observation, second.nextState);
 
-    assert.equal(second.decision.kind, "TAP_PRIMARY_CTA");
+    assert.equal(first.decision.kind, "TAP_PRIMARY_CTA");
+    assert.equal(second.decision.kind, "WAIT");
     assert.equal(third.decision.kind, "WAIT");
+    assert.match(second.decision.reason, /awaiting/i);
     assert.match(third.decision.reason, /awaiting/i);
 });
 

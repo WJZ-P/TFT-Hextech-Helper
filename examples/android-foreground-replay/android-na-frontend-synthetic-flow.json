@@ -13,15 +13,15 @@
       "id": "update-ready-1",
       "label": "真实更新页首帧",
       "screenshotPath": "../recordings/smoke/android-live-smoke-1773702968907.png",
-      "expectedDecisionKind": "WAIT",
-      "note": "真实素材已验证：第一帧只建立稳定度，不点击。"
+      "expectedDecisionKind": "TAP_PRIMARY_CTA",
+      "note": "真实素材已验证：VERIFIED_REAL 更新页首帧即可触发主 CTA。"
     },
     {
       "id": "update-ready-2",
       "label": "真实更新页稳定帧",
       "screenshotPath": "../recordings/smoke/android-live-smoke-1773702968907.png",
-      "expectedDecisionKind": "TAP_PRIMARY_CTA",
-      "note": "真实素材已验证：第二帧触发安全更新按钮点击。"
+      "expectedDecisionKind": "WAIT",
+      "note": "真实素材已验证：首帧点击后，重复帧仅等待后续状态推进。"
     },
     {
       "id": "lobby-1",
