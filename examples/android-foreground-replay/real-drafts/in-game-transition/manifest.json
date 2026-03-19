@@ -4,13 +4,11 @@
   "label": "安卓入局过渡真实草稿",
   "description": "从 NA 前台 capture pack 接入 in-game transition 真图",
   "generatedAt": "2026-03-17T23:27:50.812Z",
-  "outputDir": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\in-game-transition",
-  "fixturePath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\in-game-transition\\android-na-in-game-transition-draft.json",
   "stateHint": "IN_GAME_TRANSITION",
   "frames": [
     {
       "id": "in_game_transition-1",
-      "screenshotPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\android-foreground-na-captures\\pending-real-captures\\in-game-transition\\na_accept_ready_00.png",
+      "screenshotPath": "../../../recordings/android-foreground-na-captures/pending-real-captures/in-game-transition/na_accept_ready_00.png",
       "width": 1920,
       "height": 1080,
       "classifiedState": "UNKNOWN",
@@ -22,20 +20,20 @@
         {
           "id": "transition-center",
           "label": "入局过渡中心区域草稿",
-          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\in-game-transition\\crops\\in_game_transition-1-transition-center.png",
+          "path": "crops/in_game_transition-1-transition-center.png",
           "note": "Review loading/fade anchors before live HUD appears."
         },
         {
           "id": "transition-hud-probe",
           "label": "入局 HUD 探针草稿",
-          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\in-game-transition\\crops\\in_game_transition-1-transition-hud-probe.png",
+          "path": "crops/in_game_transition-1-transition-hud-probe.png",
           "note": "Helps determine when transition should hand over to LIVE_CONTENT."
         }
       ]
     },
     {
       "id": "in_game_transition-2",
-      "screenshotPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\android-foreground-na-captures\\pending-real-captures\\in-game-transition\\na_in_game_transition_01.png",
+      "screenshotPath": "../../../recordings/android-foreground-na-captures/pending-real-captures/in-game-transition/na_in_game_transition_01.png",
       "width": 1920,
       "height": 1080,
       "classifiedState": "UNKNOWN",
@@ -47,20 +45,20 @@
         {
           "id": "transition-center",
           "label": "入局过渡中心区域草稿",
-          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\in-game-transition\\crops\\in_game_transition-2-transition-center.png",
+          "path": "crops/in_game_transition-2-transition-center.png",
           "note": "Review loading/fade anchors before live HUD appears."
         },
         {
           "id": "transition-hud-probe",
           "label": "入局 HUD 探针草稿",
-          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\in-game-transition\\crops\\in_game_transition-2-transition-hud-probe.png",
+          "path": "crops/in_game_transition-2-transition-hud-probe.png",
           "note": "Helps determine when transition should hand over to LIVE_CONTENT."
         }
       ]
     },
     {
       "id": "in_game_transition-3",
-      "screenshotPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\android-foreground-na-captures\\pending-real-captures\\in-game-transition\\na_in_game_transition_02.png",
+      "screenshotPath": "../../../recordings/android-foreground-na-captures/pending-real-captures/in-game-transition/na_in_game_transition_02.png",
       "width": 1920,
       "height": 1080,
       "classifiedState": "UNKNOWN",
@@ -72,13 +70,13 @@
         {
           "id": "transition-center",
           "label": "入局过渡中心区域草稿",
-          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\in-game-transition\\crops\\in_game_transition-3-transition-center.png",
+          "path": "crops/in_game_transition-3-transition-center.png",
           "note": "Review loading/fade anchors before live HUD appears."
         },
         {
           "id": "transition-hud-probe",
           "label": "入局 HUD 探针草稿",
-          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\in-game-transition\\crops\\in_game_transition-3-transition-hud-probe.png",
+          "path": "crops/in_game_transition-3-transition-hud-probe.png",
           "note": "Helps determine when transition should hand over to LIVE_CONTENT."
         }
       ]
