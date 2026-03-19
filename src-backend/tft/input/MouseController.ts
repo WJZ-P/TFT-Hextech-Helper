@@ -110,30 +110,23 @@ export class MouseController {
         return this.gameWindowOrigin;
     }
 
-    private getActualWindowSize(): { width: number; height: number } {
-        return {
-            width: Math.round(MouseController.BASE_WIDTH * this.scaleX),
-            height: Math.round(MouseController.BASE_HEIGHT * this.scaleY),
-        };
-    }
-
     private toAbsolutePoint(offset: SimplePoint): Point {
         if (!this.gameWindowOrigin) {
             throw new Error("[MouseController] 尚未设置游戏窗口基准点，请先调用 setGameWindowOrigin()");
         }
 
         const isPercentage = (value: number) => value >= 0 && value <= 1;
-        const actualWindowSize = this.getActualWindowSize();
-        const absoluteX = isPercentage(offset.x)
-            ? this.gameWindowOrigin.x + offset.x * actualWindowSize.width
-            : this.gameWindowOrigin.x + offset.x * this.scaleX;
-        const absoluteY = isPercentage(offset.y)
-            ? this.gameWindowOrigin.y + offset.y * actualWindowSize.height
-            : this.gameWindowOrigin.y + offset.y * this.scaleY;
+        const isPercentageOffset = isPercentage(offset.x) && isPercentage(offset.y);
+
+        // 与 ScreenCapture 保持一致：百分比坐标使用实际窗口宽高；像素坐标沿用缩放逻辑。
+        const actualWidth = Math.round(MouseController.BASE_WIDTH * this.scaleX);
+        const actualHeight = Math.round(MouseController.BASE_HEIGHT * this.scaleY);
+        const offsetX = isPercentageOffset ? offset.x * actualWidth : offset.x * this.scaleX;
+        const offsetY = isPercentageOffset ? offset.y * actualHeight : offset.y * this.scaleY;
 
         return new Point(
-            Math.round(absoluteX),
-            Math.round(absoluteY)
+            Math.round(this.gameWindowOrigin.x + offsetX),
+            Math.round(this.gameWindowOrigin.y + offsetY)
         );
     }
 

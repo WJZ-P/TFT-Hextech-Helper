@@ -80,6 +80,7 @@ const RIOT_PC_WINDOW_TITLES = [
 const ANDROID_WINDOW_TITLES = [
     "金铲铲之战",
     "云顶之弈",
+    "TFT",
     "Teamfight Tactics",
     "MuMu",
     "BlueStacks",
