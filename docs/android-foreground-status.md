@@ -98,8 +98,10 @@ These states are intentionally supported in the protocol and planner, but not ye
 - Protocol types: `src-backend/services/AndroidForegroundProtocol.ts`
 - Planner/state machine: `src-backend/services/AndroidForegroundProgression.ts`
 - Real screenshot classifier: `src-backend/utils/AndroidWindowClassifier.ts`
+- Capture-surface diagnostics: `src-backend/utils/AndroidCaptureSurface.ts`
 - Runtime polling integration: `src-backend/states/GameLoadingState.ts`
 - Offline/live smoke CLI: `scripts/run-android-live-smoke.ts`
+- Emulator diagnose CLI: `scripts/diagnose-android-emulator-window.ts`
 
 ## Fixture Replay
 
@@ -121,6 +123,37 @@ These states are intentionally supported in the protocol and planner, but not ye
 - `examples/android-foreground-replay/android-na-frontend-real-flow.json`
 - Command example:
 - `npm run android:smoke -- --fixture "examples/android-foreground-replay/android-na-frontend-real-flow.json"`
+
+### One-Shot Live Verification
+- Primary command: `npm run android:smoke`
+- Alias: `npm run android:verify-live`
+- Behavior:
+- Diagnose window visibility first.
+- If no selectable emulator window exists, emit blocker JSON and exit non-zero.
+- If a selectable window exists, probe capture paths in order: top-level, retry, native child, top-level `PrintWindow`, child `PrintWindow`.
+- If every path is `BLACK_SURFACE`, emit blocker JSON and exit non-zero.
+- If any path yields visible content, continue directly into real foreground classification and click smoke.
+
+### Black Surface Semantics
+- `captureSurface.state = BLACK_SURFACE` means the sampled render target is effectively solid black.
+- `captureAttempts` records every capture path tried, in order, with per-attempt surface diagnostics.
+- `verificationGate` is the top-level summary intended for fast diagnosis:
+- `readyToClassify`: whether the capture is usable for foreground classification.
+- `readyToClick`: whether the smoke chain is allowed to continue into real click logic.
+- `blockerType`: one of `BLACK_SURFACE`, `DIM_SURFACE`, `BLOCKED_STATE`, `STATE_NOT_READY`, or `null`.
+- `captureRecovery` summarizes whether content recovered from an initially black surface and which capture path became usable first.
+
+### Multi-Monitor Capture Caveat
+- `@nut-tree-fork/nut-js` / `libnut-win32` screen capture behaves like a primary-display capture path on Windows.
+- If BlueStacks is placed on a secondary display, `screen.capture` can fail with `x coordinate outside of display`.
+- The repo now treats this as an environment/capture-path issue, not a foreground-classification issue.
+- Current fallback order in `android:smoke` / `android:verify-live` is:
+- selected top-level capture
+- delayed retry on the same target
+- native child-window capture
+- top-level `PrintWindow`
+- child-window `PrintWindow`
+- If all of them remain black or invalid, the command exits with blocker JSON instead of attempting clicks.
 
 ### Canonical Real Replay Table
 

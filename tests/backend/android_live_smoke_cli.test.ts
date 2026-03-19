@@ -29,6 +29,11 @@ test("android live smoke CLI can analyze update-ready screenshots", { timeout: 1
     const parsed = JSON.parse(stdout.slice(stdout.indexOf("{"))) as {
         screenshotPath: string;
         screenshotPaths: string[];
+        verificationGate: {
+            readyToClassify: boolean;
+            readyToClick: boolean;
+            blockerType: string | null;
+        };
         contentClassification: {
             state: string;
             frontendVariant?: string;
@@ -40,6 +45,8 @@ test("android live smoke CLI can analyze update-ready screenshots", { timeout: 1
 
     assert.equal(path.resolve(parsed.screenshotPath), screenshotPath);
     assert.deepEqual(parsed.screenshotPaths, [screenshotPath]);
+    assert.equal(parsed.verificationGate.readyToClassify, true);
+    assert.equal(parsed.verificationGate.readyToClick, true);
     assert.equal(parsed.contentClassification.state, "TFT_FRONTEND");
     assert.equal(parsed.contentClassification.frontendVariant, "UPDATE_READY");
     assert.equal(parsed.foregroundDecision?.kind, "WAIT");
@@ -64,6 +71,9 @@ test("android live smoke CLI can analyze login-required screenshots", { timeout:
     );
 
     const parsed = JSON.parse(stdout.slice(stdout.indexOf("{"))) as {
+        verificationGate: {
+            blockerType: string | null;
+        };
         contentClassification: {
             state: string;
             frontendVariant?: string;
@@ -74,6 +84,7 @@ test("android live smoke CLI can analyze login-required screenshots", { timeout:
         } | null;
     };
 
+    assert.equal(parsed.verificationGate.blockerType, "BLOCKED_STATE");
     assert.equal(parsed.contentClassification.state, "TFT_FRONTEND");
     assert.equal(parsed.contentClassification.frontendVariant, "LOGIN_REQUIRED");
     assert.equal(parsed.foregroundDecision?.kind, "BLOCKED");
@@ -175,6 +186,88 @@ test("android live smoke CLI can analyze unknown non-game screenshots", { timeou
 
     assert.equal(parsed.contentClassification.state, "UNKNOWN");
     assert.equal(parsed.foregroundDecision?.kind, "WAIT");
+});
+
+test("android live smoke CLI reports black capture surfaces for black screenshots", { timeout: 120000 }, async () => {
+    const screenshotPath = path.join(
+        repoRoot,
+        "examples",
+        "recordings",
+        "smoke",
+        "android-live-smoke-1773876338476.png"
+    );
+
+    const { stdout } = await execFileAsync(
+        process.execPath,
+        [tsxCli, "scripts/run-android-live-smoke.ts", "--screenshot", screenshotPath],
+        {
+            cwd: repoRoot,
+            windowsHide: true,
+        }
+    );
+
+    const parsed = JSON.parse(stdout.slice(stdout.indexOf("{"))) as {
+        verificationGate: {
+            readyToClassify: boolean;
+            blockerType: string | null;
+        };
+        captureSurface: {
+            state: string;
+            darkPixelRatio: number;
+            blockerReason: string | null;
+        } | null;
+        contentClassification: {
+            state: string;
+        };
+    };
+
+    assert.equal(parsed.verificationGate.readyToClassify, false);
+    assert.equal(parsed.verificationGate.blockerType, "BLACK_SURFACE");
+    assert.equal(parsed.captureSurface?.state, "BLACK_SURFACE");
+    assert.ok((parsed.captureSurface?.darkPixelRatio ?? 0) > 0.98);
+    assert.match(parsed.captureSurface?.blockerReason ?? "", /black/i);
+    assert.equal(parsed.contentClassification.state, "UNKNOWN");
+});
+
+test("android live smoke CLI reports visible capture surfaces for side-menu lobby screenshots", { timeout: 120000 }, async () => {
+    const screenshotPath = path.join(
+        repoRoot,
+        "examples",
+        "recordings",
+        "smoke",
+        "android-live-smoke-1773875308190.png"
+    );
+
+    const { stdout } = await execFileAsync(
+        process.execPath,
+        [tsxCli, "scripts/run-android-live-smoke.ts", "--screenshot", screenshotPath],
+        {
+            cwd: repoRoot,
+            windowsHide: true,
+        }
+    );
+
+    const parsed = JSON.parse(stdout.slice(stdout.indexOf("{"))) as {
+        verificationGate: {
+            readyToClassify: boolean;
+            readyToClick: boolean;
+        };
+        captureSurface: {
+            state: string;
+            blockerReason: string | null;
+        } | null;
+        contentClassification: {
+            state: string;
+            lobbyVariant?: string;
+        };
+    };
+
+    assert.equal(parsed.verificationGate.readyToClassify, true);
+    assert.equal(parsed.verificationGate.readyToClick, true);
+    assert.equal(parsed.captureSurface?.state, "VISIBLE_CONTENT");
+    assert.equal(parsed.captureSurface?.blockerReason, null);
+    assert.equal(parsed.contentClassification.state, "LOBBY");
+    assert.equal(parsed.contentClassification.lobbyVariant, "SIDE_MENU_OPEN");
 });
 
 test("android live smoke CLI emits lobby recovery for side-menu-open screenshot", { timeout: 120000 }, async () => {
@@ -385,8 +478,14 @@ test("android live smoke CLI can replay verified real frontend flow fixtures", {
     const parsed = JSON.parse(stdout.slice(stdout.indexOf("{"))) as {
         fixtureId: string;
         allExpectedMatched: boolean;
+        verificationGate: {
+            blockerType: string | null;
+        };
         traceSummary: {
             verificationCounts: Record<string, number>;
+        };
+        captureRecovery?: {
+            firstVisibleSource: string | null;
         };
         analysisSequence: Array<{
             foregroundObservation: {
@@ -406,6 +505,7 @@ test("android live smoke CLI can replay verified real frontend flow fixtures", {
 
     assert.equal(parsed.fixtureId, "android-na-frontend-real-flow");
     assert.equal(parsed.allExpectedMatched, true);
+    assert.equal(parsed.verificationGate.blockerType, null);
     assert.equal(parsed.traceSummary.verificationCounts.VERIFIED_REAL, 11);
     assert.deepEqual(
         parsed.analysisSequence.map((entry) => entry.foregroundObservation.state),

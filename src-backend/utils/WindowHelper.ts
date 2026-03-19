@@ -7,6 +7,9 @@
 
 import { getActiveWindow, getWindows } from "@nut-tree-fork/nut-js";
 import { execFile } from "node:child_process";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { promisify } from "node:util";
 import { logger } from "./Logger";
 import { GameClient } from "./SettingsStore";
@@ -175,6 +178,142 @@ $results = New-Object System.Collections.Generic.List[object]
   return $true
 }, [IntPtr]::Zero) | Out-Null
 $results | ConvertTo-Json -Depth 4 -Compress
+`;
+
+const POWERSHELL_NATIVE_CHILD_WINDOW_ENUM_TEMPLATE = `
+$targetTitle = '__TARGET_TITLE__'
+$signature = @"
+using System;
+using System.Text;
+using System.Runtime.InteropServices;
+public static class NativeChildWindowQuery {
+  public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+  public delegate bool EnumChildProc(IntPtr hWnd, IntPtr lParam);
+  [DllImport("user32.dll")] public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+  [DllImport("user32.dll")] public static extern bool EnumChildWindows(IntPtr hWnd, EnumChildProc lpEnumFunc, IntPtr lParam);
+  [DllImport("user32.dll", SetLastError=true)] public static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
+  [DllImport("user32.dll", SetLastError=true)] public static extern int GetWindowTextLength(IntPtr hWnd);
+  [DllImport("user32.dll", SetLastError=true, CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr hWnd, StringBuilder className, int maxCount);
+  [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hWnd);
+  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT rect);
+  [DllImport("user32.dll", SetLastError=true)] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+  [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
+}
+"@
+Add-Type $signature -ErrorAction SilentlyContinue
+$results = New-Object System.Collections.Generic.List[object]
+[NativeChildWindowQuery]::EnumWindows({
+  param($hWnd, $lParam)
+  $len = [NativeChildWindowQuery]::GetWindowTextLength($hWnd)
+  $titleBuilder = New-Object System.Text.StringBuilder ($len + 1)
+  [void][NativeChildWindowQuery]::GetWindowText($hWnd, $titleBuilder, $titleBuilder.Capacity)
+  $title = $titleBuilder.ToString()
+  if ($title -ne $targetTitle) { return $true }
+  [NativeChildWindowQuery]::EnumChildWindows($hWnd, {
+    param($childHwnd, $childLParam)
+    $childLen = [NativeChildWindowQuery]::GetWindowTextLength($childHwnd)
+    $childTitleBuilder = New-Object System.Text.StringBuilder ($childLen + 1)
+    [void][NativeChildWindowQuery]::GetWindowText($childHwnd, $childTitleBuilder, $childTitleBuilder.Capacity)
+    $classBuilder = New-Object System.Text.StringBuilder 512
+    [void][NativeChildWindowQuery]::GetClassName($childHwnd, $classBuilder, $classBuilder.Capacity)
+    $childRect = New-Object NativeChildWindowQuery+RECT
+    [void][NativeChildWindowQuery]::GetWindowRect($childHwnd, [ref]$childRect)
+    $pid = 0
+    [void][NativeChildWindowQuery]::GetWindowThreadProcessId($childHwnd, [ref]$pid)
+    $processName = $null
+    try { if ($pid -gt 0) { $processName = (Get-Process -Id $pid -ErrorAction Stop).ProcessName } } catch {}
+    $results.Add([pscustomobject]@{
+      title = $childTitleBuilder.ToString();
+      className = $classBuilder.ToString();
+      processName = $processName;
+      visible = [NativeChildWindowQuery]::IsWindowVisible($childHwnd);
+      left = $childRect.Left;
+      top = $childRect.Top;
+      width = ($childRect.Right - $childRect.Left);
+      height = ($childRect.Bottom - $childRect.Top)
+    }) | Out-Null
+    return $true
+  }, [IntPtr]::Zero) | Out-Null
+  return $false
+}, [IntPtr]::Zero) | Out-Null
+$results | ConvertTo-Json -Depth 4 -Compress
+`;
+
+const POWERSHELL_PRINT_WINDOW_CAPTURE_TEMPLATE = `
+$targetTitle = '__TARGET_TITLE__'
+$targetClass = '__TARGET_CLASS__'
+$targetLeft = __TARGET_LEFT__
+$targetTop = __TARGET_TOP__
+$targetWidth = __TARGET_WIDTH__
+$targetHeight = __TARGET_HEIGHT__
+$outputPath = '__OUTPUT_PATH__'
+$signature = @"
+using System;
+using System.Text;
+using System.Runtime.InteropServices;
+public static class NativePrintCapture {
+  public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+  public delegate bool EnumChildProc(IntPtr hWnd, IntPtr lParam);
+  [DllImport("user32.dll")] public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+  [DllImport("user32.dll")] public static extern bool EnumChildWindows(IntPtr hWnd, EnumChildProc lpEnumFunc, IntPtr lParam);
+  [DllImport("user32.dll", SetLastError=true)] public static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
+  [DllImport("user32.dll", SetLastError=true)] public static extern int GetWindowTextLength(IntPtr hWnd);
+  [DllImport("user32.dll", SetLastError=true, CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr hWnd, StringBuilder className, int maxCount);
+  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT rect);
+  [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr hWnd, IntPtr hdcBlt, uint nFlags);
+  [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
+}
+"@
+Add-Type $signature -ErrorAction SilentlyContinue
+Add-Type -AssemblyName System.Drawing
+$script:targetHandle = [IntPtr]::Zero
+function Test-WindowMatch($title, $className, $rect) {
+  $rectMatch = [Math]::Abs($rect.Left - $targetLeft) -le 20 -and [Math]::Abs($rect.Top - $targetTop) -le 20 -and [Math]::Abs(($rect.Right - $rect.Left) - $targetWidth) -le 40 -and [Math]::Abs(($rect.Bottom - $rect.Top) - $targetHeight) -le 40
+  if (-not $rectMatch) { return $false }
+  if ($targetClass -and $className -eq $targetClass) { return $true }
+  if ($targetTitle -and $title -eq $targetTitle) { return $true }
+  return $false
+}
+[NativePrintCapture]::EnumWindows({
+  param($hWnd, $lParam)
+  $len = [NativePrintCapture]::GetWindowTextLength($hWnd)
+  $titleBuilder = New-Object System.Text.StringBuilder ($len + 1)
+  [void][NativePrintCapture]::GetWindowText($hWnd, $titleBuilder, $titleBuilder.Capacity)
+  $classBuilder = New-Object System.Text.StringBuilder 512
+  [void][NativePrintCapture]::GetClassName($hWnd, $classBuilder, $classBuilder.Capacity)
+  $rect = New-Object NativePrintCapture+RECT
+  [void][NativePrintCapture]::GetWindowRect($hWnd, [ref]$rect)
+  if (Test-WindowMatch $titleBuilder.ToString() $classBuilder.ToString() $rect) {
+    $script:targetHandle = $hWnd
+    return $false
+  }
+  [NativePrintCapture]::EnumChildWindows($hWnd, {
+    param($childHwnd, $childLParam)
+    $childLen = [NativePrintCapture]::GetWindowTextLength($childHwnd)
+    $childTitleBuilder = New-Object System.Text.StringBuilder ($childLen + 1)
+    [void][NativePrintCapture]::GetWindowText($childHwnd, $childTitleBuilder, $childTitleBuilder.Capacity)
+    $childClassBuilder = New-Object System.Text.StringBuilder 512
+    [void][NativePrintCapture]::GetClassName($childHwnd, $childClassBuilder, $childClassBuilder.Capacity)
+    $childRect = New-Object NativePrintCapture+RECT
+    [void][NativePrintCapture]::GetWindowRect($childHwnd, [ref]$childRect)
+    if (Test-WindowMatch $childTitleBuilder.ToString() $childClassBuilder.ToString() $childRect) {
+      $script:targetHandle = $childHwnd
+      return $false
+    }
+    return $true
+  }, [IntPtr]::Zero) | Out-Null
+  if ($script:targetHandle -ne [IntPtr]::Zero) { return $false }
+  return $true
+}, [IntPtr]::Zero) | Out-Null
+if ($script:targetHandle -eq [IntPtr]::Zero) { exit 2 }
+$bitmap = New-Object System.Drawing.Bitmap($targetWidth, $targetHeight)
+$graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+$hdc = $graphics.GetHdc()
+[void][NativePrintCapture]::PrintWindow($script:targetHandle, $hdc, 0)
+$graphics.ReleaseHdc($hdc)
+$graphics.Dispose()
+$bitmap.Save($outputPath, [System.Drawing.Imaging.ImageFormat]::Png)
+$bitmap.Dispose()
 `;
 
 function scoreWindow(windowInfo: WindowInfo, clientType: GameClient): number {
@@ -479,6 +618,85 @@ class WindowHelper {
         } catch (error: any) {
             logger.warn(`[WindowHelper] 原生窗口枚举失败: ${error.message}`);
             return [];
+        }
+    }
+
+    public async getNativeChildWindows(target: WindowInfo): Promise<WindowInfo[]> {
+        try {
+            const script = POWERSHELL_NATIVE_CHILD_WINDOW_ENUM_TEMPLATE
+                .replace(/__TARGET_TITLE__/g, target.title.replace(/'/g, "''"));
+            const encoded = Buffer.from(script, "utf16le").toString("base64");
+            const { stdout } = await execFileAsync("powershell.exe", [
+                "-NoProfile",
+                "-EncodedCommand",
+                encoded,
+            ]);
+            const trimmed = stdout.trim();
+            if (!trimmed) {
+                return [];
+            }
+
+            const parsed = JSON.parse(trimmed) as Array<{
+                title?: string;
+                className?: string;
+                processName?: string;
+                visible?: boolean;
+                left?: number;
+                top?: number;
+                width?: number;
+                height?: number;
+            }> | {
+                title?: string;
+                className?: string;
+                processName?: string;
+                visible?: boolean;
+                left?: number;
+                top?: number;
+                width?: number;
+                height?: number;
+            };
+
+            const records = Array.isArray(parsed) ? parsed : [parsed];
+            return records.map((entry) => ({
+                title: entry.title ?? "",
+                className: entry.className,
+                processName: entry.processName,
+                visible: entry.visible,
+                left: entry.left ?? 0,
+                top: entry.top ?? 0,
+                width: entry.width ?? 0,
+                height: entry.height ?? 0,
+                source: "native",
+            }));
+        } catch (error: any) {
+            logger.warn(`[WindowHelper] 原生子窗口枚举失败: ${error.message}`);
+            return [];
+        }
+    }
+
+    public async captureNativeWindowPng(target: WindowInfo): Promise<Buffer | null> {
+        const outputPath = path.join(os.tmpdir(), `tft-window-capture-${Date.now()}-${Math.random().toString(16).slice(2)}.png`);
+        try {
+            const script = POWERSHELL_PRINT_WINDOW_CAPTURE_TEMPLATE
+                .replace(/__TARGET_TITLE__/g, (target.title ?? "").replace(/'/g, "''"))
+                .replace(/__TARGET_CLASS__/g, (target.className ?? "").replace(/'/g, "''"))
+                .replace(/__TARGET_LEFT__/g, String(target.left))
+                .replace(/__TARGET_TOP__/g, String(target.top))
+                .replace(/__TARGET_WIDTH__/g, String(target.width))
+                .replace(/__TARGET_HEIGHT__/g, String(target.height))
+                .replace(/__OUTPUT_PATH__/g, outputPath.replace(/'/g, "''"));
+            const encoded = Buffer.from(script, "utf16le").toString("base64");
+            await execFileAsync("powershell.exe", [
+                "-NoProfile",
+                "-EncodedCommand",
+                encoded,
+            ]);
+            return await fs.readFile(outputPath);
+        } catch (error: any) {
+            logger.warn(`[WindowHelper] 原生 PrintWindow 捕获失败: ${error.message}`);
+            return null;
+        } finally {
+            await fs.unlink(outputPath).catch(() => undefined);
         }
     }
 

@@ -42,6 +42,7 @@
 - Android simulation replay: `npm run android:sim -- --scenario <scenario-name>`
 - Android OCR replay: `npm run android:ocr -- --fixture <fixture-id>`
 - Android smoke script: `npm run android:smoke`
+- Android one-shot live verify alias: `npm run android:verify-live`
 - Extract Android fixtures: `npm run android:extract`
 - Refresh TFT data snapshots: `npm run data:refresh`
 - Convert raw live state to observed state: `npm run state:convert -- <input> <output>`

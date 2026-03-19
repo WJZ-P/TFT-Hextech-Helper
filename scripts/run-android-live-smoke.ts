@@ -3,8 +3,9 @@ import path from "path";
 import { execFile } from "child_process";
 import { promisify } from "util";
 import { mouseController, MouseButtonType, screenCapture } from "../src-backend/tft";
+import { analyzeAndroidCaptureSurface, type AndroidCaptureSurfaceDiagnostics } from "../src-backend/utils/AndroidCaptureSurface";
 import { classifyAndroidWindowScreenshot, type AndroidWindowClassification } from "../src-backend/utils/AndroidWindowClassifier";
-import { windowHelper } from "../src-backend/utils/WindowHelper";
+import { windowHelper, type WindowInfo } from "../src-backend/utils/WindowHelper";
 import {
     buildAndroidWindowDiagnosticsSummary,
     getEmulatorProcessDiagnostics,
@@ -46,6 +47,98 @@ interface ForegroundTraceEntry {
     clicked: boolean;
     blocker: string | null;
     targetPoint: { x: number; y: number } | null;
+}
+
+interface CaptureAttemptTraceEntry {
+    source: "selected-window" | "selected-window-retry" | "child-window" | "selected-window-print" | "child-window-print";
+    targetWindow: WindowInfo;
+    surface: AndroidCaptureSurfaceDiagnostics;
+}
+
+function buildCaptureFailureSurface(reason: string): AndroidCaptureSurfaceDiagnostics {
+    return {
+        state: "BLACK_SURFACE",
+        meanBrightness: 0,
+        darkPixelRatio: 1,
+        nonBlackPixelRatio: 0,
+        brightPixelRatio: 0,
+        lumaStdDev: 0,
+        isUniform: true,
+        blockerReason: reason,
+    };
+}
+
+async function tryCaptureWindowContent(
+    source: CaptureAttemptTraceEntry["source"],
+    targetWindow: WindowInfo,
+    capture: () => Promise<Buffer>
+): Promise<{ screenshot: Buffer | null; surface: AndroidCaptureSurfaceDiagnostics }> {
+    try {
+        const screenshot = await capture();
+        const surface = await analyzeAndroidCaptureSurface(screenshot);
+        return { screenshot, surface };
+    } catch (error) {
+        const reason = error instanceof Error ? error.stack ?? error.message : String(error);
+        return {
+            screenshot: null,
+            surface: buildCaptureFailureSurface(`[${source}] ${reason}`),
+        };
+    }
+}
+
+function buildCaptureRecoverySummary(
+    captureSurface: AndroidCaptureSurfaceDiagnostics,
+    captureAttempts: CaptureAttemptTraceEntry[]
+) {
+    const firstVisibleAttempt = captureAttempts.find((attempt) => attempt.surface.state !== "BLACK_SURFACE") ?? null;
+    const attemptedSources = captureAttempts.map((attempt) => attempt.source);
+    return {
+        finalSurfaceState: captureSurface.state,
+        blockerReason: captureSurface.blockerReason,
+        attemptedSources,
+        recoveredFromBlackSurface: firstVisibleAttempt !== null && captureAttempts[0]?.surface.state === "BLACK_SURFACE",
+        firstVisibleSource: firstVisibleAttempt?.source ?? null,
+    };
+}
+
+function buildVerificationGateSummary(input: {
+    captureSurface: AndroidCaptureSurfaceDiagnostics | null;
+    foregroundDecision: AndroidForegroundDecision | null;
+    classificationState: string | null;
+    observeError: string | null;
+}) {
+    const blockerType = input.captureSurface?.state === "BLACK_SURFACE"
+        ? "BLACK_SURFACE"
+        : input.captureSurface?.state === "DIM_SURFACE"
+            ? "DIM_SURFACE"
+            : input.foregroundDecision?.kind === "BLOCKED"
+                ? "BLOCKED_STATE"
+                : input.observeError
+                    ? "STATE_NOT_READY"
+                    : null;
+
+    return {
+        readyToClassify: input.captureSurface?.state === "VISIBLE_CONTENT",
+        readyToClick: input.captureSurface?.state === "VISIBLE_CONTENT" && input.foregroundDecision?.kind !== "BLOCKED",
+        blockerType,
+        blockerReason:
+            input.captureSurface?.blockerReason ??
+            (input.foregroundDecision?.kind === "BLOCKED" ? input.foregroundDecision.reason : input.observeError),
+        currentState: input.classificationState,
+    };
+}
+
+async function classifyScreenshotOrUnknown(screenshot: Buffer): Promise<AndroidWindowClassification> {
+    if (screenshot.length === 0) {
+        return {
+            state: "UNKNOWN",
+            brightBlueRatio: 0,
+            blueDominantRatio: 0,
+            brightWhiteRatio: 0,
+        };
+    }
+
+    return classifyAndroidWindowScreenshot(screenshot);
 }
 
 function parseArgs(argv: string[]): CliArgs {
@@ -164,6 +257,167 @@ async function persistWindowScreenshot(screenshot: Buffer): Promise<string> {
     return outputPath;
 }
 
+function scoreChildCaptureTarget(parent: { left: number; top: number; width: number; height: number }, child: { left: number; top: number; width: number; height: number; visible?: boolean }): number {
+    const overlapLeft = Math.max(parent.left, child.left);
+    const overlapTop = Math.max(parent.top, child.top);
+    const overlapRight = Math.min(parent.left + parent.width, child.left + child.width);
+    const overlapBottom = Math.min(parent.top + parent.height, child.top + child.height);
+    const overlapArea = Math.max(0, overlapRight - overlapLeft) * Math.max(0, overlapBottom - overlapTop);
+    const childArea = Math.max(1, child.width * child.height);
+    const overlapRatio = overlapArea / childArea;
+    let score = overlapArea;
+    if (child.visible) {
+        score += 1_000_000;
+    }
+    if (overlapRatio > 0.8) {
+        score += 500_000;
+    }
+    return score;
+}
+
+async function probeRenderableWindowContent(
+    focusWindow: WindowInfo
+): Promise<{
+    captureWindow: WindowInfo;
+    screenshot: Buffer;
+    surface: AndroidCaptureSurfaceDiagnostics;
+    attempts: CaptureAttemptTraceEntry[];
+}> {
+    const attempts: CaptureAttemptTraceEntry[] = [];
+
+    const topLevelResult = await tryCaptureWindowContent(
+        "selected-window",
+        focusWindow,
+        () => captureWindowScreenshot(focusWindow)
+    );
+    attempts.push({
+        source: "selected-window",
+        targetWindow: focusWindow,
+        surface: topLevelResult.surface,
+    });
+    if (topLevelResult.screenshot && topLevelResult.surface.state !== "BLACK_SURFACE") {
+        return {
+            captureWindow: focusWindow,
+            screenshot: topLevelResult.screenshot,
+            surface: topLevelResult.surface,
+            attempts,
+        };
+    }
+
+    await sleep(1200);
+    const retryResult = await tryCaptureWindowContent(
+        "selected-window-retry",
+        focusWindow,
+        () => captureWindowScreenshot(focusWindow)
+    );
+    attempts.push({
+        source: "selected-window-retry",
+        targetWindow: focusWindow,
+        surface: retryResult.surface,
+    });
+    if (retryResult.screenshot && retryResult.surface.state !== "BLACK_SURFACE") {
+        return {
+            captureWindow: focusWindow,
+            screenshot: retryResult.screenshot,
+            surface: retryResult.surface,
+            attempts,
+        };
+    }
+
+    const childWindows = (await windowHelper.getNativeChildWindows(focusWindow))
+        .filter((child) => (child.visible ?? true) && child.width >= 300 && child.height >= 200)
+        .sort((a, b) => scoreChildCaptureTarget(focusWindow, b) - scoreChildCaptureTarget(focusWindow, a));
+
+    for (const childWindow of childWindows.slice(0, 5)) {
+        const childResult = await tryCaptureWindowContent(
+            "child-window",
+            childWindow,
+            () => captureWindowScreenshot(childWindow)
+        );
+        attempts.push({
+            source: "child-window",
+            targetWindow: childWindow,
+            surface: childResult.surface,
+        });
+        if (childResult.screenshot && childResult.surface.state !== "BLACK_SURFACE") {
+            return {
+                captureWindow: childWindow,
+                screenshot: childResult.screenshot,
+                surface: childResult.surface,
+                attempts,
+            };
+        }
+    }
+
+    const nativeTopLevelResult = await tryCaptureWindowContent(
+        "selected-window-print",
+        focusWindow,
+        async () => {
+            const screenshot = await windowHelper.captureNativeWindowPng(focusWindow);
+            if (!screenshot) {
+                throw new Error("PrintWindow top-level capture returned null");
+            }
+            return screenshot;
+        }
+    );
+    if (nativeTopLevelResult.screenshot) {
+        attempts.push({
+            source: "selected-window-print",
+            targetWindow: focusWindow,
+            surface: nativeTopLevelResult.surface,
+        });
+        if (nativeTopLevelResult.surface.state !== "BLACK_SURFACE") {
+            return {
+                captureWindow: focusWindow,
+                screenshot: nativeTopLevelResult.screenshot,
+                surface: nativeTopLevelResult.surface,
+                attempts,
+            };
+        }
+    } else {
+        attempts.push({
+            source: "selected-window-print",
+            targetWindow: focusWindow,
+            surface: nativeTopLevelResult.surface,
+        });
+    }
+
+    for (const childWindow of childWindows.slice(0, 5)) {
+        const nativeChildResult = await tryCaptureWindowContent(
+            "child-window-print",
+            childWindow,
+            async () => {
+                const screenshot = await windowHelper.captureNativeWindowPng(childWindow);
+                if (!screenshot) {
+                    throw new Error("PrintWindow child capture returned null");
+                }
+                return screenshot;
+            }
+        );
+        attempts.push({
+            source: "child-window-print",
+            targetWindow: childWindow,
+            surface: nativeChildResult.surface,
+        });
+        if (nativeChildResult.screenshot && nativeChildResult.surface.state !== "BLACK_SURFACE") {
+            return {
+                captureWindow: childWindow,
+                screenshot: nativeChildResult.screenshot,
+                surface: nativeChildResult.surface,
+                attempts,
+            };
+        }
+    }
+
+    const fallbackScreenshot = retryResult.screenshot ?? topLevelResult.screenshot ?? Buffer.alloc(0);
+    return {
+        captureWindow: focusWindow,
+        screenshot: fallbackScreenshot,
+        surface: retryResult.surface,
+        attempts,
+    };
+}
+
 async function waitForEmulatorContent(
     initialWindow: { title: string; left: number; top: number; width: number; height: number },
     timeoutMs: number
@@ -173,15 +427,20 @@ async function waitForEmulatorContent(
     windowInfo: { title: string; left: number; top: number; width: number; height: number };
     foregroundDecision: AndroidForegroundDecision | null;
     foregroundTrace: ForegroundTraceEntry[];
+    captureSurface: AndroidCaptureSurfaceDiagnostics;
+    captureAttempts: CaptureAttemptTraceEntry[];
 }> {
     const startedAt = Date.now();
-    let lastScreenshot = await captureWindowScreenshot(initialWindow);
-    let lastClassification = await classifyAndroidWindowScreenshot(lastScreenshot);
+    let initialProbe = await probeRenderableWindowContent(initialWindow);
+    let lastScreenshot = initialProbe.screenshot;
+    let lastClassification = await classifyScreenshotOrUnknown(lastScreenshot);
     let lastObservation = normalizeAndroidForegroundObservation(lastClassification);
-    let lastWindowInfo = initialWindow;
+    let lastWindowInfo = initialProbe.captureWindow;
     let progressState = createInitialAndroidForegroundProgressState();
     let foregroundDecision: AndroidForegroundDecision | null = null;
     const foregroundTrace: ForegroundTraceEntry[] = [];
+    let captureSurface = initialProbe.surface;
+    let captureAttempts = initialProbe.attempts;
 
     const isTapDecision = (
         decision: AndroidForegroundDecision
@@ -196,7 +455,24 @@ async function waitForEmulatorContent(
     };
 
     while (lastObservation.state !== "LIVE_CONTENT" && Date.now() - startedAt < timeoutMs) {
-        const progressResult = planAndroidForegroundProgress(lastObservation, progressState);
+        if (captureSurface.state === "BLACK_SURFACE") {
+            foregroundDecision = {
+                kind: "WAIT",
+                reason: captureSurface.blockerReason ?? "Capture target is black/unrendered",
+            };
+            foregroundTrace.push({
+                state: lastObservation.state,
+                verification: lastObservation.verification,
+                decisionKind: foregroundDecision.kind,
+                decisionReason: foregroundDecision.reason,
+                clickEligible: false,
+                clicked: false,
+                blocker: captureSurface.blockerReason,
+                targetPoint: null,
+            });
+            await sleep(2000);
+        } else {
+            const progressResult = planAndroidForegroundProgress(lastObservation, progressState);
         progressState = progressResult.nextState;
         const decision = progressResult.decision;
         foregroundDecision = decision;
@@ -252,11 +528,15 @@ async function waitForEmulatorContent(
             });
             await sleep(2000);
         }
+        }
 
         const refreshedWindow = await windowHelper.findLOLWindow(GameClient.ANDROID) ?? lastWindowInfo;
-        lastWindowInfo = refreshedWindow;
-        lastScreenshot = await captureWindowScreenshot(refreshedWindow);
-        lastClassification = await classifyAndroidWindowScreenshot(lastScreenshot);
+        const probe = await probeRenderableWindowContent(refreshedWindow);
+        lastWindowInfo = probe.captureWindow;
+        lastScreenshot = probe.screenshot;
+        captureSurface = probe.surface;
+        captureAttempts = probe.attempts;
+        lastClassification = await classifyScreenshotOrUnknown(lastScreenshot);
         lastObservation = normalizeAndroidForegroundObservation(lastClassification);
     }
 
@@ -273,6 +553,8 @@ async function waitForEmulatorContent(
         windowInfo: lastWindowInfo,
         foregroundDecision,
         foregroundTrace,
+        captureSurface,
+        captureAttempts,
     };
 }
 
@@ -397,6 +679,12 @@ async function main(): Promise<void> {
             (entry) => entry.expectedDecisionMatched !== false && entry.expectedStateMatched !== false
         );
         const traceSummary = buildTraceSummary(analysisSequence);
+        const verificationGate = buildVerificationGateSummary({
+            captureSurface: null,
+            foregroundDecision: lastStep?.foregroundDecision ?? null,
+            classificationState: lastStep?.foregroundObservation.state ?? null,
+            observeError: null,
+        });
         if (!allExpectedMatched) {
             process.exitCode = 1;
         }
@@ -413,6 +701,7 @@ async function main(): Promise<void> {
             fixtureLabel: fixture.label,
             screenshotPath: lastStep?.screenshotPath ?? null,
             screenshotPaths: analysisSequence.map((entry) => entry.screenshotPath).filter(Boolean),
+            verificationGate,
             contentClassification: lastStep?.foregroundObservation.rawClassification ?? null,
             foregroundObservation: lastStep?.foregroundObservation ?? null,
             expectedObservation: lastStep?.expectedObservation ?? null,
@@ -430,6 +719,7 @@ async function main(): Promise<void> {
         let progressState = createInitialAndroidForegroundProgressState();
         const analysisSequence: Array<{
             screenshotPath: string;
+            captureSurface: AndroidCaptureSurfaceDiagnostics;
             contentClassification: AndroidWindowClassification;
             foregroundObservation: AndroidForegroundObservation;
             foregroundDecision: AndroidForegroundDecision;
@@ -437,12 +727,14 @@ async function main(): Promise<void> {
 
         for (const screenshotPath of args.screenshotPaths) {
             const screenshot = await fs.readFile(screenshotPath);
+            const captureSurface = await analyzeAndroidCaptureSurface(screenshot);
             const classification = await classifyAndroidWindowScreenshot(screenshot);
             const observation = normalizeAndroidForegroundObservation(classification);
             const progression = planAndroidForegroundProgress(observation, progressState);
             progressState = progression.nextState;
             analysisSequence.push({
                 screenshotPath,
+                captureSurface,
                 contentClassification: classification,
                 foregroundObservation: observation,
                 foregroundDecision: progression.decision,
@@ -451,6 +743,12 @@ async function main(): Promise<void> {
 
         const lastStep = analysisSequence[analysisSequence.length - 1];
         const traceSummary = buildTraceSummary(analysisSequence);
+        const verificationGate = buildVerificationGateSummary({
+            captureSurface: lastStep?.captureSurface ?? null,
+            foregroundDecision: lastStep?.foregroundDecision ?? null,
+            classificationState: lastStep?.contentClassification?.state ?? null,
+            observeError: null,
+        });
 
         process.stdout.write(`${JSON.stringify({
             launchedShortcut: false,
@@ -462,6 +760,8 @@ async function main(): Promise<void> {
             health: null,
             screenshotPath: lastStep?.screenshotPath ?? null,
             screenshotPaths: args.screenshotPaths,
+            captureSurface: lastStep?.captureSurface ?? null,
+            verificationGate,
             contentClassification: lastStep?.contentClassification ?? null,
             foregroundObservation: lastStep?.foregroundObservation ?? null,
             foregroundDecision: lastStep?.foregroundDecision ?? null,
@@ -522,6 +822,7 @@ async function main(): Promise<void> {
     const activeWindow = await windowHelper.findLOLWindow(GameClient.ANDROID) ?? detectedWindow;
     const contentProbe = await waitForEmulatorContent(activeWindow, Math.min(args.waitSeconds * 1000, 90000));
     const screenshotPath = await persistWindowScreenshot(contentProbe.screenshot);
+    const captureRecovery = buildCaptureRecoverySummary(contentProbe.captureSurface, contentProbe.captureAttempts);
 
     const { AndroidEmulatorAdapter } = await import("../src-backend/adapters/AndroidEmulatorAdapter");
     const adapter = new AndroidEmulatorAdapter();
@@ -530,7 +831,13 @@ async function main(): Promise<void> {
     let observedSummary: ReturnType<typeof summarizeState> | null = null;
     let observeError: string | null = null;
 
-        if (contentProbe.classification.state !== "LIVE_CONTENT") {
+        if (contentProbe.captureSurface.state === "BLACK_SURFACE") {
+        observeError = contentProbe.captureSurface.blockerReason ?? "检测到黑屏/未渲染表面，无法进入前台识别链";
+        process.exitCode = 1;
+    } else if (contentProbe.captureSurface.state === "DIM_SURFACE") {
+        observeError = contentProbe.captureSurface.blockerReason ?? "检测到异常偏暗表面，当前渲染内容不稳定";
+        process.exitCode = 1;
+    } else if (contentProbe.classification.state !== "LIVE_CONTENT") {
         observeError =
             contentProbe.foregroundDecision?.kind === "BLOCKED"
                 ? contentProbe.foregroundDecision.reason
@@ -550,6 +857,13 @@ async function main(): Promise<void> {
         }
     }
 
+    const verificationGate = buildVerificationGateSummary({
+        captureSurface: contentProbe.captureSurface,
+        foregroundDecision: contentProbe.foregroundDecision,
+        classificationState: contentProbe.classification.state,
+        observeError,
+    });
+
     process.stdout.write(`${JSON.stringify({
         launchedShortcut: !args.skipLaunch,
         shortcutPath: args.shortcutPath,
@@ -559,9 +873,13 @@ async function main(): Promise<void> {
         candidateCount: candidates.length,
         health,
         screenshotPath,
+        verificationGate,
+        captureRecovery,
         contentClassification: contentProbe.classification,
         foregroundDecision: contentProbe.foregroundDecision,
         foregroundTrace: contentProbe.foregroundTrace,
+        captureSurface: contentProbe.captureSurface,
+        captureAttempts: contentProbe.captureAttempts,
         observedSummary,
         observeError,
     }, null, 2)}\n`);
