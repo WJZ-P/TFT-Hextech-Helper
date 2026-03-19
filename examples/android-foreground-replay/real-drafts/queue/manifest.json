@@ -4,13 +4,11 @@
   "label": "安卓 queue 真实草稿",
   "description": "从 NA 前台 capture pack 接入 queue 真图",
   "generatedAt": "2026-03-17T23:27:51.456Z",
-  "outputDir": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\queue",
-  "fixturePath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\queue\\android-na-queue-draft.json",
   "stateHint": "QUEUE",
   "frames": [
     {
       "id": "queue-1",
-      "screenshotPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\android-foreground-na-captures\\pending-real-captures\\queue\\na_queue_01.png",
+      "screenshotPath": "../../../recordings/android-foreground-na-captures/pending-real-captures/queue/na_queue_01.png",
       "width": 1920,
       "height": 1080,
       "classifiedState": "LIVE_CONTENT",
@@ -22,20 +20,20 @@
         {
           "id": "queue-status-center",
           "label": "匹配中状态草稿",
-          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\queue\\crops\\queue-1-queue-status-center.png",
+          "path": "crops/queue-1-queue-status-center.png",
           "note": "Review for spinner/text/modal anchors."
         },
         {
           "id": "queue-cancel-cta",
           "label": "取消匹配按钮草稿",
-          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\queue\\crops\\queue-1-queue-cancel-cta.png",
+          "path": "crops/queue-1-queue-cancel-cta.png",
           "note": "Review cancel-queue action point and hitbox."
         }
       ]
     },
     {
       "id": "queue-2",
-      "screenshotPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\android-foreground-na-captures\\pending-real-captures\\queue\\na_queue_02.png",
+      "screenshotPath": "../../../recordings/android-foreground-na-captures/pending-real-captures/queue/na_queue_02.png",
       "width": 1920,
       "height": 1080,
       "classifiedState": "UNKNOWN",
@@ -47,20 +45,20 @@
         {
           "id": "queue-status-center",
           "label": "匹配中状态草稿",
-          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\queue\\crops\\queue-2-queue-status-center.png",
+          "path": "crops/queue-2-queue-status-center.png",
           "note": "Review for spinner/text/modal anchors."
         },
         {
           "id": "queue-cancel-cta",
           "label": "取消匹配按钮草稿",
-          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\queue\\crops\\queue-2-queue-cancel-cta.png",
+          "path": "crops/queue-2-queue-cancel-cta.png",
           "note": "Review cancel-queue action point and hitbox."
         }
       ]
     },
     {
       "id": "queue-3",
-      "screenshotPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\android-foreground-na-captures\\pending-real-captures\\queue\\na_queue_03.png",
+      "screenshotPath": "../../../recordings/android-foreground-na-captures/pending-real-captures/queue/na_queue_03.png",
       "width": 1920,
       "height": 1080,
       "classifiedState": "UNKNOWN",
@@ -72,20 +70,20 @@
         {
           "id": "queue-status-center",
           "label": "匹配中状态草稿",
-          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\queue\\crops\\queue-3-queue-status-center.png",
+          "path": "crops/queue-3-queue-status-center.png",
           "note": "Review for spinner/text/modal anchors."
         },
         {
           "id": "queue-cancel-cta",
           "label": "取消匹配按钮草稿",
-          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\queue\\crops\\queue-3-queue-cancel-cta.png",
+          "path": "crops/queue-3-queue-cancel-cta.png",
           "note": "Review cancel-queue action point and hitbox."
         }
       ]
     },
     {
       "id": "queue-4",
-      "screenshotPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\android-foreground-na-captures\\pending-real-captures\\queue\\na_queue_04.png",
+      "screenshotPath": "../../../recordings/android-foreground-na-captures/pending-real-captures/queue/na_queue_04.png",
       "width": 1920,
       "height": 1080,
       "classifiedState": "LIVE_CONTENT",
@@ -97,20 +95,20 @@
         {
           "id": "queue-status-center",
           "label": "匹配中状态草稿",
-          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\queue\\crops\\queue-4-queue-status-center.png",
+          "path": "crops/queue-4-queue-status-center.png",
           "note": "Review for spinner/text/modal anchors."
         },
         {
           "id": "queue-cancel-cta",
           "label": "取消匹配按钮草稿",
-          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\queue\\crops\\queue-4-queue-cancel-cta.png",
+          "path": "crops/queue-4-queue-cancel-cta.png",
           "note": "Review cancel-queue action point and hitbox."
         }
       ]
     },
     {
       "id": "queue-5",
-      "screenshotPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\android-foreground-na-captures\\pending-real-captures\\queue\\na_queue_05.png",
+      "screenshotPath": "../../../recordings/android-foreground-na-captures/pending-real-captures/queue/na_queue_05.png",
       "width": 1920,
       "height": 1080,
       "classifiedState": "UNKNOWN",
@@ -122,13 +120,13 @@
         {
           "id": "queue-status-center",
           "label": "匹配中状态草稿",
-          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\queue\\crops\\queue-5-queue-status-center.png",
+          "path": "crops/queue-5-queue-status-center.png",
           "note": "Review for spinner/text/modal anchors."
         },
         {
           "id": "queue-cancel-cta",
           "label": "取消匹配按钮草稿",
-          "path": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\android-foreground-replay\\real-drafts\\queue\\crops\\queue-5-queue-cancel-cta.png",
+          "path": "crops/queue-5-queue-cancel-cta.png",
           "note": "Review cancel-queue action point and hitbox."
         }
       ]

@@ -87,7 +87,7 @@
     "equipments": [
       {
         "slot": "SLOT_1",
-        "expectedName": "反曲之弓",
+        "expectedName": "反曲弓",
         "imagePath": "../recordings/derived/android-real-recording-20260315-ionia/crops/recording-board-5-2-recurve-bow-raw.png"
       }
     ],
