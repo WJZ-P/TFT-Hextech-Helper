@@ -31,6 +31,9 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["LINEUP_SAVE"] = "lineup-save";
   IpcChannel2["LINEUP_DELETE"] = "lineup-delete";
   IpcChannel2["TFT_GET_CHAMPION_CN_TO_EN_MAP"] = "tft-get-champion-cn-to-en-map";
+  IpcChannel2["TFT_DATA_REFRESH"] = "tft-data-refresh";
+  IpcChannel2["TFT_DATA_GET_SNAPSHOT"] = "tft-data-get-snapshot";
+  IpcChannel2["PC_LOGIC_PLAN_ONCE"] = "pc-logic-plan-once";
   IpcChannel2["TFT_GET_MODE"] = "tft-get-mode";
   IpcChannel2["TFT_SET_MODE"] = "tft-set-mode";
   IpcChannel2["LOG_GET_MODE"] = "log-get-mode";

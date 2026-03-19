@@ -147,7 +147,10 @@ class SettingsStore {
             gameRegion: GameRegion.CN,   // 默认国服
             gameClient: GameClient.RIOT_PC, // 默认电脑 Riot 客户端
         }
-        this.store = new Store<AppSettings>({defaults})
+        this.store = new Store<AppSettings>({
+            projectName: "tft-hextech-helper",
+            defaults,
+        } as any)
     }
 
     /**

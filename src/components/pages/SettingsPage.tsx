@@ -6,10 +6,6 @@ import { logStore, LogAutoCleanThreshold } from "../../stores/logStore.ts";
 import { settingsStore } from "../../stores/settingsStore.ts"; // 全局设置状态
 import type { GameRegion, GameClient } from "../../types/GameTypes.ts";
 
-
-type GameRegion = 'CN' | 'NA';
-type GameClient = 'ANDROID' | 'RIOT_PC';
-
 // -------------------------------------------------------------------
 // ✨ 样式组件定义 (Styled Components Definitions) ✨
 // -------------------------------------------------------------------
@@ -60,18 +56,6 @@ const SettingInfo = styled.div`
   display: flex;
   align-items: center;
   gap: ${props => props.theme.spacing.large};
-`;
-
-const IconWrapper = styled.div`
-  color: ${props => props.theme.colors.primary};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  // 给 Material Icon 设置一下大小
-  .MuiSvgIcon-root {
-    font-size: 28px;
-  }
 `;
 
 const SettingText = styled.div`
@@ -411,7 +395,7 @@ const TipsCard = styled.div<{ theme: ThemeType }>`
       position: relative;
       padding-left: 20px;
       margin-bottom: 8px;
-      color: ${props => props.theme.colors.secondaryText};
+      color: ${props => props.theme.colors.textSecondary};
       font-size: ${props => props.theme.fontSizes.small};
       line-height: 1.6;
       
@@ -707,6 +691,7 @@ const SettingsPage = () => {
             window.addEventListener('keydown', handleStopAfterGameHotkeyKeyDown);
             return () => window.removeEventListener('keydown', handleStopAfterGameHotkeyKeyDown);
         }
+        return undefined;
     }, [isRecordingHotkey, isRecordingStopAfterGameHotkey, handleHotkeyKeyDown, handleStopAfterGameHotkeyKeyDown]);
 
     // 处理日志清理阈值变化

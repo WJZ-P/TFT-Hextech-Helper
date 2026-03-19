@@ -8,9 +8,14 @@
  * - 时间戳支持
  * - 前端实时推送
  * - 后端控制台输出
+ * - 文件记录（按天分割）
+ * - 日志去重（防止短时间内重复日志刷屏）
  */
 
 import { BrowserWindow } from "electron";
+import fs from "fs-extra";
+import path from "path";
+import os from "os";
 
 /**
  * 日志级别枚举
@@ -55,6 +60,21 @@ class Logger {
     /** 是否启用时间戳 */
     private enableTimestamp: boolean = true;
 
+    /** 是否启用文件日志 */
+    private enableFileLogging: boolean = true;
+
+    /** 日志文件路径 */
+    private logFilePath: string = "";
+
+    /** 当前日志文件日期（用于判断是否需要切换文件） */
+    private currentLogDate: string = "";
+
+    /** 最近的日志缓存（用于去重），格式：{message: timestamp} */
+    private recentLogs: Map<string, number> = new Map();
+
+    /** 日志去重时间窗口（毫秒），相同日志在此时间内只输出一次 */
+    private readonly DEDUP_WINDOW_MS = 2000;
+
     /**
      * 获取 Logger 单例
      */
@@ -65,7 +85,9 @@ class Logger {
         return Logger.instance;
     }
 
-    private constructor() {}
+    private constructor() {
+        this.initFileLogging();
+    }
 
     /**
      * 初始化 Logger
@@ -89,6 +111,130 @@ class Logger {
      */
     public setTimestampEnabled(enable: boolean): void {
         this.enableTimestamp = enable;
+    }
+
+    /**
+     * 初始化文件日志
+     */
+    private initFileLogging(): void {
+        try {
+            // 使用跨平台的用户数据目录
+            // Windows: C:\Users\Username\AppData\Roaming\tft-hextech-helper\logs
+            // macOS: ~/Library/Application Support/tft-hextech-helper/logs
+            // Linux: ~/.config/tft-hextech-helper/logs
+            const userDataDir = path.join(os.homedir(), process.platform === 'win32' ? 'AppData/Roaming' : '.config', 'tft-hextech-helper');
+            const logsDir = path.join(userDataDir, 'logs');
+            
+            fs.ensureDirSync(logsDir);
+            this.updateLogFilePath(logsDir);
+            
+            console.log(`[Logger] 日志文件路径: ${this.logFilePath}`);
+            
+            // 清理7天前的日志文件
+            this.cleanOldLogs(logsDir, 7);
+        } catch (error) {
+            console.error('[Logger] 初始化文件日志失败:', error);
+            this.enableFileLogging = false;
+        }
+    }
+
+    /**
+     * 更新日志文件路径（按日期切分）
+     */
+    private updateLogFilePath(logsDir: string): void {
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        if (today !== this.currentLogDate) {
+            this.currentLogDate = today;
+            this.logFilePath = path.join(logsDir, `tft-${today}.log`);
+        }
+    }
+
+    /**
+     * 清理旧日志文件
+     * @param logsDir 日志目录
+     * @param daysToKeep 保留天数
+     */
+    private cleanOldLogs(logsDir: string, daysToKeep: number): void {
+        try {
+            const files = fs.readdirSync(logsDir);
+            const now = Date.now();
+            const maxAge = daysToKeep * 24 * 60 * 60 * 1000;
+
+            files.forEach(file => {
+                const filePath = path.join(logsDir, file);
+                const stat = fs.statSync(filePath);
+                if (now - stat.mtime.getTime() > maxAge) {
+                    fs.removeSync(filePath);
+                    console.log(`[Logger] 清理旧日志: ${file}`);
+                }
+            });
+        } catch (error) {
+            console.error('[Logger] 清理旧日志失败:', error);
+        }
+    }
+
+    /**
+     * 检查是否为重复日志
+     * @param message 日志消息
+     * @param level 日志级别
+     * @returns true 表示是重复日志，应该跳过
+     */
+    private isDuplicateLog(message: string, level: LogLevel): boolean {
+        // error 级别的日志永远不去重
+        if (level === 'error') {
+            return false;
+        }
+
+        const key = `${level}:${message}`;
+        const lastTime = this.recentLogs.get(key);
+        const now = Date.now();
+
+        if (lastTime && now - lastTime < this.DEDUP_WINDOW_MS) {
+            return true; // 重复日志
+        }
+
+        // 更新时间戳
+        this.recentLogs.set(key, now);
+
+        // 清理过期的缓存（避免内存泄漏）
+        if (this.recentLogs.size > 100) {
+            const expiredKeys: string[] = [];
+            this.recentLogs.forEach((time, k) => {
+                if (now - time > this.DEDUP_WINDOW_MS) {
+                    expiredKeys.push(k);
+                }
+            });
+            expiredKeys.forEach(k => this.recentLogs.delete(k));
+        }
+
+        return false;
+    }
+
+    /**
+     * 写入日志到文件
+     * @param message 日志消息
+     */
+    private writeToFile(message: string): void {
+        if (!this.enableFileLogging || !this.logFilePath) {
+            return;
+        }
+
+        try {
+            // 检查是否需要切换日志文件（跨天）
+            const logsDir = path.dirname(this.logFilePath);
+            this.updateLogFilePath(logsDir);
+
+            // 异步追加，避免阻塞
+            fs.appendFile(this.logFilePath, message + '\n', (err) => {
+                if (err && this.enableFileLogging) {
+                    // 只在首次失败时输出错误，避免循环报错
+                    console.error('[Logger] 写入日志文件失败:', err);
+                    this.enableFileLogging = false;
+                }
+            });
+        } catch (error) {
+            // 静默失败，不影响主流程
+        }
     }
 
     /**
@@ -168,15 +314,24 @@ class Logger {
     private log(message: string, level: LogLevel): void {
         if (!this.shouldLog(level)) return;
 
+        // 去重检查（error级别除外）
+        if (this.isDuplicateLog(message, level)) {
+            return;
+        }
+
         const timestamp = this.getTimestamp();
         const color = LOG_LEVEL_COLORS[level];
         const levelTag = `[${level.toUpperCase()}]`.padEnd(7);
+        const fullMessage = `${timestamp}${levelTag} ${message}`;
 
         // 后端控制台输出 (带颜色)
-        console.log(`${color}${timestamp}${levelTag}${COLOR_RESET} ${message}`);
+        console.log(`${color}${fullMessage}${COLOR_RESET}`);
+
+        // 写入文件（不带颜色码）
+        this.writeToFile(fullMessage);
 
         // 前端推送 (不带颜色码)
-        this.sendLogToFrontend(`${timestamp}${levelTag} ${message}`, level);
+        this.sendLogToFrontend(fullMessage, level);
     }
 
     /**

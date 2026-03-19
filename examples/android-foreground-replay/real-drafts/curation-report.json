@@ -1,0 +1,182 @@
+{
+  "schemaVersion": "android-foreground-draft-curation.v1",
+  "generatedFrom": "current classifier + verified real replay selection",
+  "notes": [
+    "This report does not modify original screenshots. It records which raw draft frames should be kept, rehomed, or removed from each state pool.",
+    "Canonical verified replay lives in examples/android-foreground-replay/android-na-frontend-real-flow.json."
+  ],
+  "states": {
+    "ACCEPT_READY": {
+      "keepCandidates": [
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/accept-ready/na_accept_ready_02.png",
+          "actualState": "ACCEPT_READY",
+          "disposition": "keep_candidate",
+          "note": "Clear visible accept CTA."
+        },
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/accept-ready/na_accept_ready_03.png",
+          "actualState": "ACCEPT_READY",
+          "disposition": "canonical_real_flow",
+          "note": "Current canonical accept-ready frame."
+        },
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/accept-ready/na_accept_ready_04.png",
+          "actualState": "ACCEPT_READY",
+          "disposition": "keep_candidate",
+          "note": "Clear visible accept CTA variant."
+        }
+      ],
+      "rehome": [
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/accept-ready/na_accept_ready_01.png",
+          "actualState": "QUEUE",
+          "targetState": "QUEUE",
+          "disposition": "rehome",
+          "note": "Queue-found edge frame before accept CTA is clearly visible."
+        },
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/accept-ready/na_accept_ready_05.png",
+          "actualState": "IN_GAME_TRANSITION",
+          "targetState": "IN_GAME_TRANSITION",
+          "disposition": "canonical_real_flow",
+          "note": "Accepted/waiting frame now used in canonical transition path."
+        },
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/accept-ready/na_accept_ready_06.png",
+          "actualState": "IN_GAME_TRANSITION",
+          "targetState": "IN_GAME_TRANSITION",
+          "disposition": "rehome",
+          "note": "Loading progress frame after accept."
+        }
+      ],
+      "remove": []
+    },
+    "QUEUE": {
+      "keepCandidates": [
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/queue/na_queue_02.png",
+          "actualState": "QUEUE",
+          "disposition": "canonical_real_flow",
+          "note": "Current canonical queue first frame."
+        },
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/queue/na_queue_03.png",
+          "actualState": "QUEUE",
+          "disposition": "canonical_real_flow",
+          "note": "Current canonical queue stable frame."
+        },
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/queue/na_queue_05.png",
+          "actualState": "QUEUE",
+          "disposition": "keep_candidate",
+          "note": "Additional stable queue timer frame."
+        }
+      ],
+      "rehome": [
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/queue/na_queue_01.png",
+          "actualState": "LOBBY",
+          "targetState": "LOBBY",
+          "disposition": "canonical_real_flow",
+          "note": "Current canonical lobby first frame."
+        },
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/queue/na_queue_04.png",
+          "actualState": "LOBBY",
+          "targetState": "LOBBY",
+          "disposition": "canonical_real_flow",
+          "note": "Current canonical lobby stable frame."
+        }
+      ],
+      "remove": []
+    },
+    "LOBBY": {
+      "keepCandidates": [
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/lobby/na_lobby_02.png",
+          "actualState": "LOBBY",
+          "disposition": "keep_candidate",
+          "note": "Valid lobby frame with start CTA."
+        },
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/lobby/na_lobby_05.png",
+          "actualState": "LOBBY",
+          "disposition": "keep_candidate",
+          "note": "Valid lobby frame with bright start CTA."
+        },
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/lobby/na_lobby_06.png",
+          "actualState": "LOBBY",
+          "disposition": "keep_candidate",
+          "note": "Valid lobby frame variant."
+        },
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/lobby/na_lobby_07.png",
+          "actualState": "LOBBY",
+          "disposition": "keep_candidate",
+          "note": "Valid lobby frame confirmed by manual inspection."
+        }
+      ],
+      "rehome": [
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/lobby/na_lobby_01.png",
+          "actualState": "UPDATE_READY",
+          "targetState": "UPDATE_READY",
+          "disposition": "rehome",
+          "note": "Looks like frontend/update rather than playable lobby."
+        }
+      ],
+      "remove": [
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/lobby/na_lobby_03.png",
+          "actualState": "UNKNOWN",
+          "disposition": "remove_from_lobby_pool",
+          "note": "Mode-selection-like frame, not suitable for start-queue replacement."
+        },
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/lobby/na_lobby_04.png",
+          "actualState": "UNKNOWN",
+          "disposition": "remove_from_lobby_pool",
+          "note": "Mode-selection-like frame, not suitable for start-queue replacement."
+        }
+      ]
+    },
+    "IN_GAME_TRANSITION": {
+      "keepCandidates": [
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/in-game-transition/na_accept_ready_00.png",
+          "actualState": "IN_GAME_TRANSITION",
+          "disposition": "keep_candidate",
+          "note": "Early transition/loading frame."
+        },
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/in-game-transition/na_in_game_transition_01.png",
+          "actualState": "IN_GAME_TRANSITION",
+          "disposition": "canonical_real_flow",
+          "note": "Current canonical loading-art frame."
+        },
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/in-game-transition/na_in_game_transition_02.png",
+          "actualState": "IN_GAME_TRANSITION",
+          "disposition": "keep_candidate",
+          "note": "Additional loading-art frame."
+        },
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/accept-ready/na_accept_ready_05.png",
+          "actualState": "IN_GAME_TRANSITION",
+          "disposition": "canonical_real_flow",
+          "note": "Current canonical post-accept waiting frame."
+        },
+        {
+          "path": "examples/recordings/android-foreground-na-captures/pending-real-captures/accept-ready/na_accept_ready_06.png",
+          "actualState": "IN_GAME_TRANSITION",
+          "disposition": "keep_candidate",
+          "note": "Additional progress/loading frame after accept."
+        }
+      ],
+      "rehome": [],
+      "remove": []
+    }
+  }
+}

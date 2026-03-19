@@ -5,11 +5,8 @@
  */
 
 import cv from "@techstark/opencv-js";
-import path from "path";
-import fs from "fs-extra";
-import sharp from "sharp";
 import {logger} from "../../utils/Logger";
-import {IdentifiedEquip, EquipCategory, EQUIP_CATEGORY_PRIORITY, LootOrb, LootOrbType} from "../types";
+import {IdentifiedEquip, EQUIP_CATEGORY_PRIORITY, LootOrb} from "../types";
 import {TFT_16_EQUIP_DATA} from "../../TFTProtocol";
 import {templateLoader} from "./TemplateLoader";
 
@@ -32,6 +29,23 @@ const MATCH_THRESHOLDS = {
     BUTTON: 0.80,
 } as const;
 
+export interface ChampionTemplateMatch {
+    name: string;
+    confidence: number;
+}
+
+export interface EquipMatchOptions {
+    androidProfile?: boolean;
+    acceptWeakTopMatch?: boolean;
+}
+
+interface EquipTemplateCandidate {
+    category: string;
+    templateName: string;
+    confidence: number;
+    variantLabel: string;
+}
+
 /**
  * 模板匹配器
  * @description 单例模式，提供各种模板匹配功能
@@ -46,13 +60,6 @@ export class TemplateMatcher {
     private static instance: TemplateMatcher;
 
     private constructor() {
-    }
-
-    // ========== 路径 Getter ==========
-
-    /** 星级识别失败图片保存路径 (运行时获取，确保 VITE_PUBLIC 已设置) */
-    private get starLevelFailPath(): string {
-        return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/starLevel");
     }
 
     /**
@@ -89,24 +96,22 @@ export class TemplateMatcher {
 
     /**
      * 匹配装备模板
-     * @description 按分类优先级顺序匹配，找到即返回
-     *              会将输入图像缩放到 24x24 以匹配模板尺寸
-     * @param targetMat 目标图像 (需要是 RGB 3 通道)
+     * @description 安卓真机/模拟器的装备栏会带更厚的 UI 边框，
+     *              这里会在标准缩放之外额外尝试几组裁边变体，避免真素材被边框压低分数。
+     * @param targetMat 目标图像
+     * @param options 匹配配置
      * @returns 匹配到的装备信息，未匹配返回 null
      */
-    public matchEquip(targetMat: cv.Mat): IdentifiedEquip | null {
-        // 模板统一尺寸为 24x24，需要将输入图像也缩放到相同尺寸
-        const TEMPLATE_SIZE = 24;
-        let resizedMat: cv.Mat | null = null;
+    public matchEquip(targetMat: cv.Mat, options: EquipMatchOptions = {}): IdentifiedEquip | null {
+        const preparedTarget = this.prepareEquipTargetMat(targetMat);
+        const variants = this.buildEquipTargetVariants(preparedTarget, options.androidProfile ?? false);
 
         try {
-            // 缩放输入图像到 24x24，与模板尺寸一致
-            // 使用 INTER_AREA 插值算法，适合缩小图像，能保持更好的细节
-            resizedMat = new cv.Mat();
-            cv.resize(targetMat, resizedMat, new cv.Size(TEMPLATE_SIZE, TEMPLATE_SIZE), 0, 0, cv.INTER_AREA);
+            if (variants.length === 0) {
+                return null;
+            }
 
-            // 快速空槽位检测（使用缩放后的图像）
-            if (this.isEmptySlot(resizedMat)) {
+            if (this.isEmptySlot(variants[0].mat)) {
                 return {
                     name: "空槽位",
                     confidence: 1,
@@ -115,63 +120,204 @@ export class TemplateMatcher {
                 } as IdentifiedEquip;
             }
 
-            const equipTemplates = templateLoader.getEquipTemplates();
-            if (equipTemplates.size === 0) {
-                logger.warn("[TemplateMatcher] 装备模板为空，跳过匹配");
+            const bestCandidate = this.findBestEquipCandidate(variants);
+            if (!bestCandidate) {
                 return null;
             }
 
-            const mask = new cv.Mat();
-            const resultMat = new cv.Mat();
-
-            try {
-                // 按优先级顺序遍历各分类
-                for (const category of EQUIP_CATEGORY_PRIORITY) {
-                    const categoryMap = equipTemplates.get(category);
-                    if (!categoryMap || categoryMap.size === 0) continue;
-
-                    for (const [templateName, templateMat] of categoryMap) {
-                        // 由于已经统一缩放到 24x24，尺寸应该完全匹配
-                        // 但为了安全起见，仍然保留检查
-                        if (templateMat.rows > resizedMat.rows || templateMat.cols > resizedMat.cols) {
-                            continue;
-                        }
-
-                        cv.matchTemplate(resizedMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
-                        const result = cv.minMaxLoc(resultMat, mask);
-
-                        if (result.maxVal >= MATCH_THRESHOLDS.EQUIP) {
-                            // 从数据集中查找装备信息
-                            const equipData = Object.values(TFT_16_EQUIP_DATA).find(
-                                (e) => e.englishName.toLowerCase() === templateName.toLowerCase()
-                            );
-
-                            if (equipData) {
-                                return {
-                                    ...equipData,
-                                    slot: "",
-                                    confidence: result.maxVal,
-                                    category,
-                                };
-                            }
-                        }
-                    }
-                }
-
+            const accepted = this.shouldAcceptEquipCandidate(bestCandidate, options);
+            if (!accepted) {
+                logger.debug(
+                    `[TemplateMatcher] 装备匹配未达标: ${bestCandidate.templateName} ` +
+                    `(变体: ${bestCandidate.variantLabel}, 相似度 ${(bestCandidate.confidence * 100).toFixed(1)}%)`
+                );
                 return null;
-            } finally {
-                mask.delete();
-                resultMat.delete();
             }
+
+            const equipData = Object.values(TFT_16_EQUIP_DATA).find(
+                (entry) => entry.englishName.toLowerCase() === bestCandidate.templateName.toLowerCase()
+            );
+
+            if (!equipData) {
+                return null;
+            }
+
+            return {
+                ...equipData,
+                slot: "",
+                confidence: bestCandidate.confidence,
+                category: bestCandidate.category,
+            };
         } catch (e) {
             logger.error(`[TemplateMatcher] 装备匹配出错: ${e}`);
             return null;
         } finally {
-            // 释放缩放后的图像内存
-            if (resizedMat && !resizedMat.isDeleted()) {
-                resizedMat.delete();
+            for (const variant of variants) {
+                if (!variant.mat.isDeleted()) {
+                    variant.mat.delete();
+                }
+            }
+
+            if (preparedTarget !== targetMat && !preparedTarget.isDeleted()) {
+                preparedTarget.delete();
             }
         }
+    }
+
+    private prepareEquipTargetMat(targetMat: cv.Mat): cv.Mat {
+        if (targetMat.channels() === 3) {
+            return targetMat;
+        }
+
+        const converted = new cv.Mat();
+        if (targetMat.channels() === 4) {
+            cv.cvtColor(targetMat, converted, cv.COLOR_RGBA2RGB);
+        } else if (targetMat.channels() === 1) {
+            cv.cvtColor(targetMat, converted, cv.COLOR_GRAY2RGB);
+        } else {
+            targetMat.copyTo(converted);
+        }
+
+        return converted;
+    }
+
+    private buildEquipTargetVariants(
+        targetMat: cv.Mat,
+        androidProfile: boolean
+    ): Array<{ label: string; mat: cv.Mat }> {
+        const variants: Array<{ label: string; mat: cv.Mat }> = [];
+        const cropProfiles = androidProfile
+            ? [
+                { label: "full", left: 0, top: 0, right: 0, bottom: 0 },
+                { label: "trim-balanced-8", left: 0.08, top: 0.08, right: 0.08, bottom: 0.08 },
+                { label: "trim-balanced-12", left: 0.12, top: 0.12, right: 0.12, bottom: 0.12 },
+                { label: "trim-left-top-18", left: 0.18, top: 0.18, right: 0.02, bottom: 0.02 },
+                { label: "trim-left-top-21", left: 0.21, top: 0.21, right: 0.00, bottom: 0.00 },
+            ]
+            : [{ label: "full", left: 0, top: 0, right: 0, bottom: 0 }];
+
+        for (const profile of cropProfiles) {
+            const variant = this.createResizedEquipVariant(targetMat, profile);
+            if (variant) {
+                variants.push(variant);
+            }
+        }
+
+        return variants;
+    }
+
+    private createResizedEquipVariant(
+        targetMat: cv.Mat,
+        profile: { label: string; left: number; top: number; right: number; bottom: number }
+    ): { label: string; mat: cv.Mat } | null {
+        const left = Math.round(targetMat.cols * profile.left);
+        const top = Math.round(targetMat.rows * profile.top);
+        const right = Math.round(targetMat.cols * profile.right);
+        const bottom = Math.round(targetMat.rows * profile.bottom);
+        const width = targetMat.cols - left - right;
+        const height = targetMat.rows - top - bottom;
+
+        if (width < 8 || height < 8) {
+            return null;
+        }
+
+        const roi = targetMat.roi(new cv.Rect(left, top, width, height));
+        const resized = new cv.Mat();
+
+        try {
+            cv.resize(roi, resized, new cv.Size(24, 24), 0, 0, cv.INTER_AREA);
+            return {
+                label: profile.label,
+                mat: resized,
+            };
+        } finally {
+            roi.delete();
+        }
+    }
+
+    private findBestEquipCandidate(
+        variants: Array<{ label: string; mat: cv.Mat }>
+    ): (EquipTemplateCandidate & { runnerUpConfidence: number; runnerUpName: string | null }) | null {
+        const equipTemplates = templateLoader.getEquipTemplates();
+        if (equipTemplates.size === 0) {
+            logger.warn("[TemplateMatcher] 装备模板为空，跳过匹配");
+            return null;
+        }
+
+        const mask = new cv.Mat();
+        const resultMat = new cv.Mat();
+
+        try {
+            let bestCandidate: EquipTemplateCandidate | null = null;
+            let runnerUpConfidence = 0;
+            let runnerUpName: string | null = null;
+
+            for (const variant of variants) {
+                for (const category of EQUIP_CATEGORY_PRIORITY) {
+                    const categoryMap = equipTemplates.get(category);
+                    if (!categoryMap || categoryMap.size === 0) {
+                        continue;
+                    }
+
+                    for (const [templateName, templateMat] of categoryMap) {
+                        if (templateMat.rows > variant.mat.rows || templateMat.cols > variant.mat.cols) {
+                            continue;
+                        }
+
+                        cv.matchTemplate(variant.mat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
+                        const result = cv.minMaxLoc(resultMat, mask);
+                        const confidence = result.maxVal;
+
+                        if (!bestCandidate || confidence > bestCandidate.confidence) {
+                            runnerUpConfidence = bestCandidate?.confidence ?? runnerUpConfidence;
+                            runnerUpName = bestCandidate?.templateName ?? runnerUpName;
+                            bestCandidate = {
+                                category,
+                                templateName,
+                                confidence,
+                                variantLabel: variant.label,
+                            };
+                        } else if (confidence > runnerUpConfidence) {
+                            runnerUpConfidence = confidence;
+                            runnerUpName = templateName;
+                        }
+                    }
+                }
+            }
+
+            if (!bestCandidate) {
+                return null;
+            }
+
+            return {
+                ...bestCandidate,
+                runnerUpConfidence,
+                runnerUpName,
+            };
+        } finally {
+            mask.delete();
+            resultMat.delete();
+        }
+    }
+
+    private shouldAcceptEquipCandidate(
+        candidate: EquipTemplateCandidate & { runnerUpConfidence: number; runnerUpName: string | null },
+        options: EquipMatchOptions
+    ): boolean {
+        if (candidate.confidence >= MATCH_THRESHOLDS.EQUIP) {
+            return true;
+        }
+
+        if (!(options.androidProfile && options.acceptWeakTopMatch)) {
+            return false;
+        }
+
+        const relaxedThreshold = 0.30;
+        const relaxedMargin = 0.03;
+        return (
+            candidate.confidence >= relaxedThreshold &&
+            candidate.confidence - candidate.runnerUpConfidence >= relaxedMargin
+        );
     }
 
     /**
@@ -181,9 +327,22 @@ export class TemplateMatcher {
      * @returns 匹配到的英雄名称，空槽位返回 "empty"，未匹配返回 null
      */
     public matchChampion(targetMat: cv.Mat): string | null {
+        return this.matchChampionDetailed(targetMat)?.name ?? null;
+    }
+
+    /**
+     * 匹配英雄模板并返回详细结果
+     * @description 离线识别回放需要区分是 OCR 命中还是模板兜底命中，因此这里暴露置信度。
+     */
+    public matchChampionDetailed(targetMat: cv.Mat): ChampionTemplateMatch | null {
+        let preparedTarget: cv.Mat | null = null;
+
         // 快速空槽位检测
         if (this.isEmptySlot(targetMat)) {
-            return "empty";
+            return {
+                name: "empty",
+                confidence: 1,
+            };
         }
 
         const championTemplates = templateLoader.getChampionTemplates();
@@ -196,23 +355,44 @@ export class TemplateMatcher {
         const resultMat = new cv.Mat();
 
         try {
+            preparedTarget = targetMat;
+
+            // 安卓商店名字条通常只有 30px 左右高，模板高度是 35px。
+            // 先把目标图等比放大到至少 35px，避免大量模板因为尺寸不足直接被跳过。
+            const MIN_TEMPLATE_HEIGHT = 35;
+            if (targetMat.rows < MIN_TEMPLATE_HEIGHT) {
+                preparedTarget = new cv.Mat();
+                const scale = MIN_TEMPLATE_HEIGHT / targetMat.rows;
+                cv.resize(
+                    targetMat,
+                    preparedTarget,
+                    new cv.Size(
+                        Math.max(1, Math.round(targetMat.cols * scale)),
+                        MIN_TEMPLATE_HEIGHT
+                    ),
+                    0,
+                    0,
+                    cv.INTER_CUBIC
+                );
+            }
+
             let bestMatchName: string | null = null;
             let maxConfidence = 0;
 
             for (const [name, templateMat] of championTemplates) {
                 // 尺寸检查
-                if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) {
-                    logger.debug(`[TemplateMatcher] 模板尺寸过大: ${name} (${templateMat.cols}x${templateMat.rows}) > 目标 (${targetMat.cols}x${targetMat.rows})`);
+                if (templateMat.rows > preparedTarget.rows || templateMat.cols > preparedTarget.cols) {
+                    logger.debug(`[TemplateMatcher] 模板尺寸过大: ${name} (${templateMat.cols}x${templateMat.rows}) > 目标 (${preparedTarget.cols}x${preparedTarget.rows})`);
                     continue;
                 }
 
                 // 通道检查 (防止崩溃)
-                if (templateMat.type() !== targetMat.type()) {
-                    logger.warn(`[TemplateMatcher] 通道类型不匹配: ${name} (${templateMat.type()}) vs 目标 (${targetMat.type()})`);
+                if (templateMat.type() !== preparedTarget.type()) {
+                    logger.warn(`[TemplateMatcher] 通道类型不匹配: ${name} (${templateMat.type()}) vs 目标 (${preparedTarget.type()})`);
                     continue;
                 }
 
-                cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
+                cv.matchTemplate(preparedTarget, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
                 const result = cv.minMaxLoc(resultMat, mask);
 
                 if (result.maxVal >= MATCH_THRESHOLDS.CHAMPION && result.maxVal > maxConfidence) {
@@ -232,11 +412,19 @@ export class TemplateMatcher {
                 }
             }
 
-            return bestMatchName;
+            return bestMatchName
+                ? {
+                    name: bestMatchName,
+                    confidence: maxConfidence,
+                }
+                : null;
         } catch (e) {
             logger.error(`[TemplateMatcher] 英雄匹配出错: ${e}`);
             return null;
         } finally {
+            if (preparedTarget && preparedTarget !== targetMat && !preparedTarget.isDeleted()) {
+                preparedTarget.delete();
+            }
             mask.delete();
             resultMat.delete();
         }
@@ -310,45 +498,6 @@ export class TemplateMatcher {
     }
 
     /**
-     * 保存星级识别失败的图片
-     * @description 将识别失败的图片保存到本地，方便排查问题
-     * @param mat 目标图像
-     */
-    private async saveFailedStarLevelImage(mat: cv.Mat): Promise<void> {
-        try {
-            // 确保目录存在 (使用 getter 在运行时获取路径)
-            const savePath = this.starLevelFailPath;
-            fs.ensureDirSync(savePath);
-
-            // 生成带时间戳的文件名
-            const timestamp = Date.now();
-            const filename = `fail_star_${timestamp}.png`;
-            const filePath = path.join(savePath, filename);
-
-            // 将 Mat 转换为 PNG 并保存
-            // Mat 数据格式：RGBA 或 RGB
-            const channels = mat.channels();
-            const width = mat.cols;
-            const height = mat.rows;
-
-            // 创建 sharp 实例并保存
-            await sharp(Buffer.from(mat.data), {
-                raw: {
-                    width,
-                    height,
-                    channels: channels as 1 | 2 | 3 | 4,
-                },
-            })
-                .png()
-                .toFile(filePath);
-
-            logger.info(`[TemplateMatcher] 星级识别失败图片已保存: ${filePath}`);
-        } catch (e) {
-            logger.error(`[TemplateMatcher] 保存星级失败图片出错: ${e}`);
-        }
-    }
-
-    /**
      * 多目标匹配战利品球
      * @description 在目标图像中查找所有战利品球，支持多种类型 (normal/blue/gold)
      *              使用非极大值抑制 (NMS) 避免重复检测
@@ -392,11 +541,13 @@ export class TemplateMatcher {
                 const templateHeight = templateMat.rows;
 
                 // 使用循环查找所有匹配点
-                while (true) {
+                let hasMoreMatches = true;
+                while (hasMoreMatches) {
                     const minMax = cv.minMaxLoc(resultMat, mask);
                     
                     if (minMax.maxVal < MATCH_THRESHOLDS.LOOT_ORB) {
-                        break; // 没有更多匹配点了
+                        hasMoreMatches = false;
+                        continue;
                     }
 
                     const matchX = minMax.maxLoc.x;

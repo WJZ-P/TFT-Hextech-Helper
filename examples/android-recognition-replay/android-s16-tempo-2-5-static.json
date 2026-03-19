@@ -1,0 +1,94 @@
+{
+  "id": "android-s16-tempo-2-5-static",
+  "label": "真机 2-5 静态盘面回放",
+  "description": "使用 2026-03-15 安卓真机 2-5 关键帧，离线验证棋盘占用、备战席占用、左侧装备栏和早期羁绊推导。",
+  "mode": "NORMAL",
+  "referenceScenarioId": "android-real-recording-2-5-board",
+  "notes": [
+    "该 fixture 绑定真实 2-5 帧，当前阵容来自同帧人工整理后的时间线 JSON。",
+    "目标是让 2-5 这种早期回合也能离线回归羁绊，不依赖 3-2 之后才出现。"
+  ],
+  "champions": [],
+  "staticSnapshot": {
+    "framePath": "../recordings/derived/android-real-recording-20260315-ionia/frames/recording-board-2-5.png",
+    "note": "真实 2-5 盘面，验证 4 个棋盘单位、4 个备战席单位和 2 个散件。",
+    "boardUnits": [
+      {
+        "slot": "R2_C4",
+        "expectedName": "瑟提",
+        "starLevel": 1,
+        "items": [
+          "负极斗篷"
+        ]
+      },
+      {
+        "slot": "R2_C5",
+        "expectedName": "刀妹",
+        "starLevel": 1,
+        "items": []
+      },
+      {
+        "slot": "R2_C6",
+        "expectedName": "凯特琳",
+        "starLevel": 1,
+        "items": []
+      },
+      {
+        "slot": "R3_C7",
+        "expectedName": "慎",
+        "starLevel": 1,
+        "items": []
+      }
+    ],
+    "benchUnits": [
+      {
+        "slot": "SLOT_1",
+        "expectedName": "凯特琳",
+        "starLevel": 1,
+        "items": []
+      },
+      {
+        "slot": "SLOT_2",
+        "expectedName": "刀妹",
+        "starLevel": 1,
+        "items": []
+      },
+      {
+        "slot": "SLOT_3",
+        "expectedName": "烬",
+        "starLevel": 1,
+        "items": []
+      },
+      {
+        "slot": "SLOT_4",
+        "expectedName": "卡尔玛",
+        "starLevel": 1,
+        "items": []
+      }
+    ],
+    "equipments": [],
+    "expectedTraits": [
+      {
+        "name": "艾欧尼亚",
+        "expectedCount": 3,
+        "expectedActive": false,
+        "expectedText": "3/5",
+        "imagePath": "../recordings/derived/android-real-recording-20260315-ionia/crops/recording-board-2-5-trait-ionia-count.png"
+      },
+      {
+        "name": "斗士",
+        "expectedCount": 1,
+        "expectedActive": false,
+        "expectedText": "1/2",
+        "imagePath": "../recordings/derived/android-real-recording-20260315-ionia/crops/recording-board-2-5-trait-fighter-count.png"
+      },
+      {
+        "name": "法师",
+        "expectedCount": 1,
+        "expectedActive": false,
+        "expectedText": "1/2",
+        "imagePath": "../recordings/derived/android-real-recording-20260315-ionia/crops/recording-board-2-5-trait-mage-count.png"
+      }
+    ]
+  }
+}

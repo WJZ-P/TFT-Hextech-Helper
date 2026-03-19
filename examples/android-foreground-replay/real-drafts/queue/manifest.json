@@ -1,0 +1,135 @@
+{
+  "schemaVersion": "android-foreground-manifest.v1",
+  "id": "android-na-queue-draft",
+  "label": "安卓 queue 真实草稿",
+  "description": "从 NA 前台 capture pack 接入 queue 真图",
+  "generatedAt": "2026-03-17T23:27:51.456Z",
+  "stateHint": "QUEUE",
+  "frames": [
+    {
+      "id": "queue-1",
+      "screenshotPath": "../../../recordings/android-foreground-na-captures/pending-real-captures/queue/na_queue_01.png",
+      "width": 1920,
+      "height": 1080,
+      "classifiedState": "LIVE_CONTENT",
+      "classifiedVerification": "VERIFIED_REAL",
+      "expectedState": "QUEUE",
+      "expectedVerification": "REAL_CAPTURE_DRAFT",
+      "expectedDecisionKind": "WAIT",
+      "crops": [
+        {
+          "id": "queue-status-center",
+          "label": "匹配中状态草稿",
+          "path": "crops/queue-1-queue-status-center.png",
+          "note": "Review for spinner/text/modal anchors."
+        },
+        {
+          "id": "queue-cancel-cta",
+          "label": "取消匹配按钮草稿",
+          "path": "crops/queue-1-queue-cancel-cta.png",
+          "note": "Review cancel-queue action point and hitbox."
+        }
+      ]
+    },
+    {
+      "id": "queue-2",
+      "screenshotPath": "../../../recordings/android-foreground-na-captures/pending-real-captures/queue/na_queue_02.png",
+      "width": 1920,
+      "height": 1080,
+      "classifiedState": "UNKNOWN",
+      "classifiedVerification": "VERIFIED_REAL",
+      "expectedState": "QUEUE",
+      "expectedVerification": "REAL_CAPTURE_DRAFT",
+      "expectedDecisionKind": "WAIT",
+      "crops": [
+        {
+          "id": "queue-status-center",
+          "label": "匹配中状态草稿",
+          "path": "crops/queue-2-queue-status-center.png",
+          "note": "Review for spinner/text/modal anchors."
+        },
+        {
+          "id": "queue-cancel-cta",
+          "label": "取消匹配按钮草稿",
+          "path": "crops/queue-2-queue-cancel-cta.png",
+          "note": "Review cancel-queue action point and hitbox."
+        }
+      ]
+    },
+    {
+      "id": "queue-3",
+      "screenshotPath": "../../../recordings/android-foreground-na-captures/pending-real-captures/queue/na_queue_03.png",
+      "width": 1920,
+      "height": 1080,
+      "classifiedState": "UNKNOWN",
+      "classifiedVerification": "VERIFIED_REAL",
+      "expectedState": "QUEUE",
+      "expectedVerification": "REAL_CAPTURE_DRAFT",
+      "expectedDecisionKind": "WAIT",
+      "crops": [
+        {
+          "id": "queue-status-center",
+          "label": "匹配中状态草稿",
+          "path": "crops/queue-3-queue-status-center.png",
+          "note": "Review for spinner/text/modal anchors."
+        },
+        {
+          "id": "queue-cancel-cta",
+          "label": "取消匹配按钮草稿",
+          "path": "crops/queue-3-queue-cancel-cta.png",
+          "note": "Review cancel-queue action point and hitbox."
+        }
+      ]
+    },
+    {
+      "id": "queue-4",
+      "screenshotPath": "../../../recordings/android-foreground-na-captures/pending-real-captures/queue/na_queue_04.png",
+      "width": 1920,
+      "height": 1080,
+      "classifiedState": "LIVE_CONTENT",
+      "classifiedVerification": "VERIFIED_REAL",
+      "expectedState": "QUEUE",
+      "expectedVerification": "REAL_CAPTURE_DRAFT",
+      "expectedDecisionKind": "WAIT",
+      "crops": [
+        {
+          "id": "queue-status-center",
+          "label": "匹配中状态草稿",
+          "path": "crops/queue-4-queue-status-center.png",
+          "note": "Review for spinner/text/modal anchors."
+        },
+        {
+          "id": "queue-cancel-cta",
+          "label": "取消匹配按钮草稿",
+          "path": "crops/queue-4-queue-cancel-cta.png",
+          "note": "Review cancel-queue action point and hitbox."
+        }
+      ]
+    },
+    {
+      "id": "queue-5",
+      "screenshotPath": "../../../recordings/android-foreground-na-captures/pending-real-captures/queue/na_queue_05.png",
+      "width": 1920,
+      "height": 1080,
+      "classifiedState": "UNKNOWN",
+      "classifiedVerification": "VERIFIED_REAL",
+      "expectedState": "QUEUE",
+      "expectedVerification": "REAL_CAPTURE_DRAFT",
+      "expectedDecisionKind": "WAIT",
+      "crops": [
+        {
+          "id": "queue-status-center",
+          "label": "匹配中状态草稿",
+          "path": "crops/queue-5-queue-status-center.png",
+          "note": "Review for spinner/text/modal anchors."
+        },
+        {
+          "id": "queue-cancel-cta",
+          "label": "取消匹配按钮草稿",
+          "path": "crops/queue-5-queue-cancel-cta.png",
+          "note": "Review cancel-queue action point and hitbox."
+        }
+      ]
+    }
+  ]
+}

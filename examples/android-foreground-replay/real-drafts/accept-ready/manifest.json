@@ -1,0 +1,160 @@
+{
+  "schemaVersion": "android-foreground-manifest.v1",
+  "id": "android-na-accept-ready-draft",
+  "label": "安卓 ready-check 真实草稿",
+  "description": "从 NA 前台 capture pack 接入 accept-ready 真图",
+  "generatedAt": "2026-03-17T23:27:51.838Z",
+  "stateHint": "ACCEPT_READY",
+  "frames": [
+    {
+      "id": "accept_ready-1",
+      "screenshotPath": "../../../recordings/android-foreground-na-captures/pending-real-captures/accept-ready/na_accept_ready_01.png",
+      "width": 1920,
+      "height": 1080,
+      "classifiedState": "UNKNOWN",
+      "classifiedVerification": "VERIFIED_REAL",
+      "expectedState": "ACCEPT_READY",
+      "expectedVerification": "REAL_CAPTURE_DRAFT",
+      "expectedDecisionKind": "TAP_ACCEPT_READY",
+      "crops": [
+        {
+          "id": "accept-modal-center",
+          "label": "接受对局弹窗草稿",
+          "path": "crops/accept_ready-1-accept-modal-center.png",
+          "note": "Review accept modal header/body anchors."
+        },
+        {
+          "id": "accept-cta",
+          "label": "接受对局按钮草稿",
+          "path": "crops/accept_ready-1-accept-cta.png",
+          "note": "Review accept button location."
+        }
+      ]
+    },
+    {
+      "id": "accept_ready-2",
+      "screenshotPath": "../../../recordings/android-foreground-na-captures/pending-real-captures/accept-ready/na_accept_ready_02.png",
+      "width": 1920,
+      "height": 1080,
+      "classifiedState": "UNKNOWN",
+      "classifiedVerification": "VERIFIED_REAL",
+      "expectedState": "ACCEPT_READY",
+      "expectedVerification": "REAL_CAPTURE_DRAFT",
+      "expectedDecisionKind": "WAIT",
+      "crops": [
+        {
+          "id": "accept-modal-center",
+          "label": "接受对局弹窗草稿",
+          "path": "crops/accept_ready-2-accept-modal-center.png",
+          "note": "Review accept modal header/body anchors."
+        },
+        {
+          "id": "accept-cta",
+          "label": "接受对局按钮草稿",
+          "path": "crops/accept_ready-2-accept-cta.png",
+          "note": "Review accept button location."
+        }
+      ]
+    },
+    {
+      "id": "accept_ready-3",
+      "screenshotPath": "../../../recordings/android-foreground-na-captures/pending-real-captures/accept-ready/na_accept_ready_03.png",
+      "width": 1920,
+      "height": 1080,
+      "classifiedState": "UNKNOWN",
+      "classifiedVerification": "VERIFIED_REAL",
+      "expectedState": "ACCEPT_READY",
+      "expectedVerification": "REAL_CAPTURE_DRAFT",
+      "expectedDecisionKind": "WAIT",
+      "crops": [
+        {
+          "id": "accept-modal-center",
+          "label": "接受对局弹窗草稿",
+          "path": "crops/accept_ready-3-accept-modal-center.png",
+          "note": "Review accept modal header/body anchors."
+        },
+        {
+          "id": "accept-cta",
+          "label": "接受对局按钮草稿",
+          "path": "crops/accept_ready-3-accept-cta.png",
+          "note": "Review accept button location."
+        }
+      ]
+    },
+    {
+      "id": "accept_ready-4",
+      "screenshotPath": "../../../recordings/android-foreground-na-captures/pending-real-captures/accept-ready/na_accept_ready_04.png",
+      "width": 1920,
+      "height": 1080,
+      "classifiedState": "UNKNOWN",
+      "classifiedVerification": "VERIFIED_REAL",
+      "expectedState": "ACCEPT_READY",
+      "expectedVerification": "REAL_CAPTURE_DRAFT",
+      "expectedDecisionKind": "WAIT",
+      "crops": [
+        {
+          "id": "accept-modal-center",
+          "label": "接受对局弹窗草稿",
+          "path": "crops/accept_ready-4-accept-modal-center.png",
+          "note": "Review accept modal header/body anchors."
+        },
+        {
+          "id": "accept-cta",
+          "label": "接受对局按钮草稿",
+          "path": "crops/accept_ready-4-accept-cta.png",
+          "note": "Review accept button location."
+        }
+      ]
+    },
+    {
+      "id": "accept_ready-5",
+      "screenshotPath": "../../../recordings/android-foreground-na-captures/pending-real-captures/accept-ready/na_accept_ready_05.png",
+      "width": 1920,
+      "height": 1080,
+      "classifiedState": "UNKNOWN",
+      "classifiedVerification": "VERIFIED_REAL",
+      "expectedState": "ACCEPT_READY",
+      "expectedVerification": "REAL_CAPTURE_DRAFT",
+      "expectedDecisionKind": "WAIT",
+      "crops": [
+        {
+          "id": "accept-modal-center",
+          "label": "接受对局弹窗草稿",
+          "path": "crops/accept_ready-5-accept-modal-center.png",
+          "note": "Review accept modal header/body anchors."
+        },
+        {
+          "id": "accept-cta",
+          "label": "接受对局按钮草稿",
+          "path": "crops/accept_ready-5-accept-cta.png",
+          "note": "Review accept button location."
+        }
+      ]
+    },
+    {
+      "id": "accept_ready-6",
+      "screenshotPath": "../../../recordings/android-foreground-na-captures/pending-real-captures/accept-ready/na_accept_ready_06.png",
+      "width": 1920,
+      "height": 1080,
+      "classifiedState": "UNKNOWN",
+      "classifiedVerification": "VERIFIED_REAL",
+      "expectedState": "ACCEPT_READY",
+      "expectedVerification": "REAL_CAPTURE_DRAFT",
+      "expectedDecisionKind": "WAIT",
+      "crops": [
+        {
+          "id": "accept-modal-center",
+          "label": "接受对局弹窗草稿",
+          "path": "crops/accept_ready-6-accept-modal-center.png",
+          "note": "Review accept modal header/body anchors."
+        },
+        {
+          "id": "accept-cta",
+          "label": "接受对局按钮草稿",
+          "path": "crops/accept_ready-6-accept-cta.png",
+          "note": "Review accept button location."
+        }
+      ]
+    }
+  ]
+}

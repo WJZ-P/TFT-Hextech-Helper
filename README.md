@@ -173,6 +173,27 @@ TFT Hextech Helper 是一款基于 Electron + React + TypeScript 开发的云顶
 - **图像识别**: OpenCV.js + Tesseract.js
 - **自动化**: nut-js (鼠标键盘控制)
 
+## 迁移开发辅助（US Android / PC Logic）
+
+为双端迁移新增了以下开发脚本（优先服务安卓模拟器与 PC 纯逻辑阶段）：
+
+- `npm run data:refresh`：拉取官方 TFT 数据（英雄/装备/羁绊/阵容）并刷新本地快照
+- `npm run pc:logic -- <state-json-path>`：对离线局面运行 PC 逻辑引擎，输出动作计划
+- `npm run android:sim -- --scenario android-reroll-midgame`：对安卓端离线样例运行回放，输出运营计划与触控步骤（无需开模拟器）
+- `npm run android:ocr -- --fixture android-s16-opening-recognition`：运行安卓截图裁片 + OCR mock 识别回放，验证回合号与英雄名识别
+- `npm run state:convert -- <liveclient+ocr.json> <observed-state.json>`：将原始对局抓取数据转换为逻辑引擎输入
+- `npm run test:unit`：执行迁移新增核心单元测试（决策引擎 + 数据管线）
+- `npm run typecheck:migration`：仅检查迁移新增模块的 TypeScript 类型
+
+示例输入/输出：
+- 原始抓取样例：`examples/liveclient-ocr-raw.sample.json`
+- 可直接用于 `pc:logic` 的样例：`examples/pc-observed-state.real-match.json`
+- 安卓离线回放样例：`examples/android-simulator/*.json`
+- 安卓实战时间线关键帧：`examples/android-simulator/android-real-match-*.json`
+- 安卓识别回放样例：`examples/android-recognition-replay/*.json`
+
+调试页中新增了“安卓离线模拟面板”和“安卓识别离线回放”，可以直接加载内置样例、按时间线切换关键帧、编辑局面 JSON，并查看生成的买牌 / D 牌 / 上人 / 装备 / 海克斯触控步骤，以及回合号 / 英雄名识别结果。
+
 ## 版权说明
 
 本项目采用 **CC BY-NC-ND 4.0** 协议，这意味着：

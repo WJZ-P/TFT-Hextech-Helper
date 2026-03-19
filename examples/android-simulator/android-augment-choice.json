@@ -1,0 +1,57 @@
+{
+  "id": "android-augment-choice",
+  "label": "安卓海克斯选择",
+  "description": "模拟 3-2 海克斯回合，只验证强化选择触控路径。",
+  "context": {
+    "targetChampionNames": [
+      "安妮",
+      "辛德拉"
+    ],
+    "strategyPreset": "REROLL",
+    "stabilizeHpThreshold": 35
+  },
+  "state": {
+    "timestamp": 1773561600000,
+    "client": "ANDROID",
+    "target": "ANDROID_EMULATOR",
+    "stageText": "3-2",
+    "stageType": "AUGMENT",
+    "level": 6,
+    "currentXp": 0,
+    "totalXp": 20,
+    "gold": 32,
+    "hp": 61,
+    "bench": [],
+    "board": [
+      {
+        "id": "TFT16_Annie",
+        "name": "安妮",
+        "star": 2,
+        "cost": 3,
+        "location": "R1_C5",
+        "items": [],
+        "traits": [
+          "法师",
+          "福牛守护者"
+        ]
+      }
+    ],
+    "shop": [
+      { "slot": 0, "cost": null, "unit": null },
+      { "slot": 1, "cost": null, "unit": null },
+      { "slot": 2, "cost": null, "unit": null },
+      { "slot": 3, "cost": null, "unit": null },
+      { "slot": 4, "cost": null, "unit": null }
+    ],
+    "items": [],
+    "augments": [
+      { "slot": 1, "name": "炽热灵魂", "score": 8.1 },
+      { "slot": 2, "name": "学术研究", "score": 9.6 },
+      { "slot": 3, "name": "潘多拉的备战席", "score": 7.4 }
+    ],
+    "metadata": {
+      "source": "android-simulator",
+      "goal": "augment-selection"
+    }
+  }
+}
