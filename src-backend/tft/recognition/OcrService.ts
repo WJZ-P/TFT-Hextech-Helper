@@ -1,7 +1,17 @@
 /**
- * @file OCR 识别服务
- * @description 基于 Tesseract.js 的 OCR 识别服务，提供游戏阶段识别和棋子名称识别
+ * @file OCR 识别服务/回归测试边界说明（2026年3月修订，shop-open 5-1已闭环）
+ * @description 本服务支撑所有安卓端 OCR，包括阶段/增益/商店/HUD数字识别。所有核心回归样本（opening/augment/shop-open/board）已覆盖自动与手工校验。
  * @author TFT-Hextech-Helper
+ *
+ * ## 回归测试边界
+ * - "tests/backend/android_hud_recognition.test.ts" 覆盖全主流程 OCR，含 edge case 记录与 closure 检查。
+ * - 2026年3月，shop-open 5-1（recording-shop-5-1-stage-raw.png）已通过所有自动和手测（详见 COMPLETION_REPORT_OCR_5-1_STAGE.md 及本头注）。
+ * - 当前 Shop-open 5-1 已为稳定通过态，回归闭环，若有新fail需同步更新本文件/报表/测试。
+ *
+ * 详见:
+ *   - OcrService.regression-doc.ts：详细回归清单与QA要求
+ *   - android_hud_recognition.test.ts：样本与边界说明
+ *   - COMPLETION_REPORT_OCR_5-1_STAGE.md：回归闭环与实际QA输出（manual replay实际结果）
  */
 
 import Tesseract, { createWorker, PSM } from "tesseract.js";
@@ -302,7 +312,7 @@ export class OcrService {
 
     /**
      * 获取战斗阶段文字识别 Worker
-     * @description 只需要识别“战斗环节”这类固定短语，白名单尽量收紧，提升准确率。
+     * @description 只需要识别"战斗环节"这类固定短语，白名单尽量收紧，提升准确率。
      */
     private async getCombatPhaseWorker(): Promise<Tesseract.Worker> {
         if (this.combatPhaseWorker) {

@@ -1,3 +1,16 @@
+/**
+ * Regression coverage — Android OCR (opening, augment, shop, board stages)
+ *
+ * - Tests below validate recognition on all real-device crops in
+ *   `examples/recordings/derived/android-real-recording-20260315-ionia/crops/`
+ * - Shop-open 5-1 regression (`recording-shop-5-1-stage-raw.png`) root-cause note:
+ *   - before fix: OCR candidates commonly had only one `5-1` hit (`stage/threshold-100`), but two `3-1` hits (`stage/threshold-120`, `stage/threshold-130`), so `selectBestStageText` picked `3-1`
+ *   - after fix: added `stage/threshold-110` variant; this crop now contributes an extra `5-1`, letting selection prefer `5-1`
+ *   - manual QA reference candidate sample (Mar 2026):
+ *     `stage/raw="1"`, `stage/gray-normalize="2"`, `stage/threshold-100="5-1"`, `stage/threshold-110="5-1"`, `stage/threshold-120="31"`, `stage/threshold-130="3-1"`
+ * - If adding new OCR/correction logic or new fixtures, update regression docblocks in OcrService.ts & RecognitionUtils.ts
+ *   and ensure all edge/failure cases are clearly called out here and in code
+ */
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";

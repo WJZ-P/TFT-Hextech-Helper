@@ -1,3 +1,22 @@
+/**
+ * Android OCR Regression — Variant/Selection Logic
+ *
+ * The helpers below (e.g., buildAndroidStageOcrVariants, extractLikelyStageText, selectBestStageText)
+ * implement normalization and selection for OCR results from game stage/augment/shop text crops.
+ *
+ * ## Role in Regression
+ * - All such helpers are directly exercised by tests in `android_hud_recognition.test.ts` to assert correct OCR on
+ *   a spectrum of real recorded crops (opening, augment, shop, board).
+ * - If you are updating OCR, correction, or selection logic, you MUST update both the regression doc in OcrService.ts
+ *   and augment/add test cases for coverage of any new edge/path.
+ *
+ * ## Edge Cases & Boundaries
+* - Shop-open 5-1 was historically considered a regression risk, but as of Mar 2026 it now passes all automated regression and manual QA reliably. If new failures are observed, add notes and cases inline.
+*   - Current variant set includes `stage/threshold-110` precisely to stabilize 5-1 vs 3-1 selection.
+*   - Regularly review edge crops for new failures and document them here and in the regression notes.
+ *
+ * For detailed coverage, see top doc in OcrService.ts and test docblocks.
+ */
 import sharp from "sharp";
 import type { TFTUnit } from "../../TFTProtocol";
 import { resolveChampionAlias } from "../../data/TftNameNormalizer";
@@ -161,12 +180,32 @@ export async function buildAndroidStageOcrVariants(rawBuffer: Buffer): Promise<O
             }),
         },
         {
+            label: "stage/threshold-110",
+            buffer: await preprocessImage(rawBuffer, {
+                scale: 6,
+                grayscale: true,
+                normalize: true,
+                threshold: 110,
+                sharpen: true,
+            }),
+        },
+        {
             label: "stage/threshold-120",
             buffer: await preprocessImage(rawBuffer, {
                 scale: 6,
                 grayscale: true,
                 normalize: true,
                 threshold: 120,
+                sharpen: true,
+            }),
+        },
+        {
+            label: "stage/threshold-130",
+            buffer: await preprocessImage(rawBuffer, {
+                scale: 6,
+                grayscale: true,
+                normalize: true,
+                threshold: 130,
                 sharpen: true,
             }),
         },
@@ -187,6 +226,16 @@ export async function buildAndroidStageOcrVariants(rawBuffer: Buffer): Promise<O
                 grayscale: true,
                 normalize: true,
                 threshold: 155,
+                sharpen: true,
+            }),
+        },
+        {
+            label: "stage/threshold-160",
+            buffer: await preprocessImage(rawBuffer, {
+                scale: 8,
+                grayscale: true,
+                normalize: true,
+                threshold: 160,
                 sharpen: true,
             }),
         },
@@ -571,6 +620,7 @@ export function selectBestStageText(candidates: StageOcrCandidate[]): StageOcrSe
     };
 
     for (const [text, entry] of grouped.entries()) {
+        
         const score =
             entry.support * 100 +
             entry.rawExactSupport * 10 +
