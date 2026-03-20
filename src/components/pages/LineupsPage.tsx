@@ -7,9 +7,8 @@ import React, {useEffect, useState, useCallback, useMemo, useRef} from 'react';
 import styled from 'styled-components';
 import {ThemeType} from '../../styles/theme';
 import {TFTEquip, TraitData, TFTUnit, getChessDataBySeason, getEquipDataBySeason, UNPURCHASABLE_CHESS} from "../../../src-backend/TFTProtocol";
-// 导入两个赛季的棋子数据，用于获取英雄原画 ID
-import {TFT_16_CHESS} from "../../../public/TFTInfo/S16/chess";
-import {TFT_4_CHESS} from "../../../public/TFTInfo/S4/chess";
+import type { TftDataSnapshot } from "../../../src-backend/data/types";
+import { createTftAssetResolver, resolveSingleAssetSource, type TftAssetResolver } from '../../utils/tftAssetResolver';
 import {TFT_16_TRAIT_DATA} from "../../../src-backend/TFTInfo/trait.ts";
 import {TFT_4_TRAIT_DATA} from "../../../src-backend/TFTInfo/trait.ts";
 import {toast} from "../toast/toast-core.ts";
@@ -27,19 +26,12 @@ interface ChampionSlot {
 }
 
 /**
- * 根据 equipId 拼接腾讯 CDN 的装备图标 URL
- * @param equipId 装备 ID（如 "91842"）
- * @returns 装备图标的完整 URL
- */
-const getEquipIconUrl = (equipId: string): string =>
-    `https://game.gtimg.cn/images/lol/act/img/tft/equip/${equipId}.png`;
-
-/**
  * 棋子配置（从后端获取）
  */
 interface ChampionConfig {
     name: string;           // 中文名
     isCore: boolean;        // 是否核心棋子
+    imageUrl?: string;
     items?: {
         core: TFTEquip[];       // 核心装备
         alternatives?: TFTEquip[];
@@ -84,32 +76,9 @@ const SEASON_TABS: { key: SeasonTab; label: string }[] = [
 ];
 
 /**
- * OP.GG 头像 API 基础 URL
- * 将 {englishId} 替换为英雄英文ID即可获取头像
- */
-const OPGG_AVATAR_BASE_S16 = 'https://c-tft-api.op.gg/img/set/16/tft-champion/tiles/{englishId}.tft_set16.png?image=q_auto:good,f_webp&v=1765176243';
-const OPGG_AVATAR_BASE_S4 = 'https://c-tft-api.op.gg/img/set/4.5/tft-champion/tiles/{englishId}.tft_set4.5.png?image=q_auto:good,f_webp&v=1765176243';
-
-/**
  * 羁绊图标 API 基础 URL
  */
 const TRAIT_ICON_BASE = 'https://game.gtimg.cn/images/lol/act/img/tft';
-
-/**
- * 英雄原画 API 基础 URL
- * 将 {chessId} 替换为英雄的 chessId 即可获取原画
- */
-const SPLASH_ART_BASE_S16 = 'https://game.gtimg.cn/images/lol/tftstore/s16/624x318/{chessId}.jpg';
-const SPLASH_ART_BASE_S4 = 'https://game.gtimg.cn/images/lol/tftstore/s4/624x318/{chessId}.jpg';
-
-/**
- * 兜底 URL：当 OP.GG 的 CDN 资源不可用时（如老赛季数据缺失），使用腾讯 CDN 兜底
- * 
- * 头像兜底：使用腾讯 TFT 棋子头像接口，URL 末尾是 chessId（如 100170.png）
- * 原画兜底：使用 s4.5m16 路径下的原画资源
- */
-const FALLBACK_AVATAR_BASE = 'https://game.gtimg.cn/images/lol/act/img/tft/champions/{chessId}.png';
-const FALLBACK_SPLASH_ART_BASE = 'https://game.gtimg.cn/images/lol/tftstore/s4.5m16/624x318/{chessId}.jpg';
 
 // ==================== 样式组件 ====================
 
@@ -1442,72 +1411,45 @@ const AvatarPlaceholder = styled.div`
 interface ChampionAvatarProps {
     champion: ChampionConfig;
     season: SeasonTab;  // 当前赛季，用于查找对应的棋子数据
+    assetResolver: TftAssetResolver;
 }
 
-/**
- * 根据中文名和赛季获取英雄的 chessId（数字ID）
- * chessId 存储在 public/TFTInfo 的完整棋子数据中（如 "100170"）
- * 用于构造腾讯 CDN 的图片 URL
- */
-const getChessId = (cnName: string, season: SeasonTab): string => {
-    const chessList = season === 'S4' ? TFT_4_CHESS : TFT_16_CHESS;
-    const chessItem = chessList.find((chess: any) => chess.displayName === cnName);
-    return chessItem?.chessId || '';
-};
+interface AssetImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+    sources: string[];
+    component?: React.ElementType;
+}
 
-/**
- * 获取头像的兜底 URL（当 OP.GG 主 URL 加载失败时使用）
- * 使用腾讯 CDN：https://game.gtimg.cn/images/lol/act/img/tft/champions/{chessId}.png
- */
-const getFallbackAvatarUrl = (cnName: string, season: SeasonTab): string => {
-    const chessId = getChessId(cnName, season);
-    if (!chessId) return '';
-    return FALLBACK_AVATAR_BASE.replace('{chessId}', chessId);
-};
+const AssetImageWithFallback: React.FC<AssetImageWithFallbackProps> = ({
+    sources,
+    component: Component = 'img',
+    onError,
+    ...imgProps
+}) => {
+    const [sourceIndex, setSourceIndex] = useState(0);
 
-/**
- * 获取原画的兜底 URL（当主 URL 加载失败时使用）
- * 使用腾讯 CDN 的 s4.5m16 路径作为备选
- */
-const getFallbackSplashUrl = (cnName: string, season: SeasonTab): string => {
-    const chessId = getChessId(cnName, season);
-    if (!chessId) return '';
-    return FALLBACK_SPLASH_ART_BASE.replace('{chessId}', chessId);
-};
+    useEffect(() => {
+        setSourceIndex(0);
+    }, [sources]);
 
-/**
- * 根据中文名和赛季获取头像 URL
- * @param cnName 棋子中文名
- * @param season 当前赛季标识
- */
-const getAvatarUrl = (cnName: string, season: SeasonTab): string => {
-    // 根据赛季选择对应的棋子数据集
-    const chessData = getChessDataBySeason(season);
-    const champion = (chessData as Record<string, TFTUnit>)[cnName];
-    if (!champion) {
-        console.warn(`未找到英雄 "${cnName}" 的数据 (${season})`);
-        return '';
+    const currentSource = sources[sourceIndex] ?? '';
+    if (!currentSource) {
+        return null;
     }
-    const englishId = champion.englishId;
-    const baseUrl = season === 'S4' ? OPGG_AVATAR_BASE_S4 : OPGG_AVATAR_BASE_S16;
-    return baseUrl.replace('{englishId}', englishId);
-};
 
-/**
- * 根据中文名和赛季获取英雄原画 URL
- * @param cnName 棋子中文名
- * @param season 当前赛季标识
- */
-const getSplashArtUrl = (cnName: string, season: SeasonTab): string => {
-    // 根据赛季选择对应的公开 chess 数据（包含 chessId）
-    const chessList = season === 'S4' ? TFT_4_CHESS : TFT_16_CHESS;
-    const chessItem = chessList.find((chess: any) => chess.displayName === cnName);
-    if (!chessItem) {
-        console.warn(`未找到英雄 "${cnName}" 的原画数据 (${season})`);
-        return '';
-    }
-    const baseUrl = season === 'S4' ? SPLASH_ART_BASE_S4 : SPLASH_ART_BASE_S16;
-    return baseUrl.replace('{chessId}', chessItem.chessId);
+    return (
+        <Component
+            {...imgProps}
+            src={currentSource}
+            onError={(event: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                if (sourceIndex + 1 < sources.length) {
+                    setSourceIndex((current) => current + 1);
+                    return;
+                }
+
+                onError?.(event);
+            }}
+        />
+    );
 };
 
 /**
@@ -1516,12 +1458,12 @@ const getSplashArtUrl = (cnName: string, season: SeasonTab): string => {
  * 自动检测边界，当顶部空间不足时改为在下方显示，左右超出时自动偏移
  * 添加 3D 倾斜效果：鼠标 hover 时卡片会朝鼠标方向轻微倾斜
  */
-const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion, season}) => {
+const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion, season, assetResolver}) => {
     const [imgError, setImgError] = useState(false);
-    const [useFallbackAvatar, setUseFallbackAvatar] = useState(false);  // 是否已切换到兜底头像
+    const [avatarSourceIndex, setAvatarSourceIndex] = useState(0);
     const [isHovered, setIsHovered] = useState(false);  // hover 状态
     const [splashError, setSplashError] = useState(false);  // 原画加载失败状态
-    const [useFallbackSplash, setUseFallbackSplash] = useState(false);  // 是否已切换到兜底原画
+    const [splashSourceIndex, setSplashSourceIndex] = useState(0);
     const [showBelow, setShowBelow] = useState(false);  // 是否在下方显示悬浮框
     const [horizontalOffset, setHorizontalOffset] = useState(0);  // 水平偏移量
     
@@ -1534,16 +1476,16 @@ const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion, seaso
     // 头像元素的 ref，用于计算鼠标相对位置
     const avatarRef = React.useRef<HTMLDivElement>(null);
     
-    const avatarUrl = getAvatarUrl(champion.name, season);
-    const fallbackAvatarUrl = getFallbackAvatarUrl(champion.name, season);  // 兜底头像 URL
-    const splashArtUrl = getSplashArtUrl(champion.name, season);
-    const fallbackSplashUrl = getFallbackSplashUrl(champion.name, season);  // 兜底原画 URL
-
-    // S4 赛季 OP.GG 没有对应资源，直接使用兜底 URL 避免加载失败闪烁
-    // S16 正常走：主 URL → 兜底 URL → 占位符
-    const isS4 = season === 'S4';
-    const currentAvatarUrl = (isS4 || useFallbackAvatar) ? fallbackAvatarUrl : avatarUrl;
-    const currentSplashUrl = (isS4 || useFallbackSplash) ? fallbackSplashUrl : splashArtUrl;
+    const avatarSources = useMemo(
+        () => assetResolver.resolveChampionAvatarSources(champion.name, season),
+        [assetResolver, champion.name, season]
+    );
+    const splashSources = useMemo(
+        () => assetResolver.resolveChampionSplashSources(champion.name, season),
+        [assetResolver, champion.name, season]
+    );
+    const currentAvatarUrl = avatarSources[avatarSourceIndex] ?? '';
+    const currentSplashUrl = splashSources[splashSourceIndex] ?? '';
 
     // 获取英雄费用（根据赛季查找对应数据集）
     const chessData = getChessDataBySeason(season);
@@ -1556,11 +1498,10 @@ const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion, seaso
      * 兜底也失败 → 显示文字占位符
      */
     const handleAvatarError = () => {
-        if (!useFallbackAvatar && fallbackAvatarUrl) {
-            // 主 URL 失败，切换到兜底
-            setUseFallbackAvatar(true);
+        const nextIndex = avatarSourceIndex + 1;
+        if (nextIndex < avatarSources.length) {
+            setAvatarSourceIndex(nextIndex);
         } else {
-            // 兜底也失败，显示占位符
             setImgError(true);
         }
     };
@@ -1571,8 +1512,9 @@ const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion, seaso
      * 兜底也失败 → 隐藏原画悬浮框
      */
     const handleSplashError = () => {
-        if (!useFallbackSplash && fallbackSplashUrl) {
-            setUseFallbackSplash(true);
+        const nextIndex = splashSourceIndex + 1;
+        if (nextIndex < splashSources.length) {
+            setSplashSourceIndex(nextIndex);
         } else {
             setSplashError(true);
         }
@@ -1731,7 +1673,7 @@ const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion, seaso
                             {equipList.map((equip, eqIdx) => (
                                 <AvatarEquipIcon
                                     key={eqIdx}
-                                    src={getEquipIconUrl(equip.equipId)}
+                                    src={resolveSingleAssetSource(assetResolver.resolveItemIconSources(equip.name, equip.equipId))}
                                     alt={equip.name}
                                 />
                             ))}
@@ -1754,23 +1696,24 @@ const SmallChampionAvatarComponent: React.FC<{
     lineupId: string;
     level: string;
     idx: number;
-}> = ({ champion, season, lineupId, level, idx }) => {
-    const [useFallback, setUseFallback] = useState(false);
+    assetResolver: TftAssetResolver;
+}> = ({ champion, season, lineupId, level, idx, assetResolver }) => {
+    const avatarSources = useMemo(
+        () => assetResolver.resolveChampionAvatarSources(champion.name, season),
+        [assetResolver, champion.name, season]
+    );
+    const [sourceIndex, setSourceIndex] = useState(0);
     const [imgError, setImgError] = useState(false);
 
     const chessData = getChessDataBySeason(season);
     const tftUnit = (chessData as Record<string, TFTUnit>)[champion.name];
     const cost = tftUnit ? tftUnit.price : 0;
-
-    const avatarUrl = getAvatarUrl(champion.name, season);
-    const fallbackUrl = getFallbackAvatarUrl(champion.name, season);
-    // S4 赛季直接用兜底 URL，避免 OP.GG 加载失败导致闪烁
-    const isS4 = season === 'S4';
-    const currentUrl = (isS4 || useFallback) ? fallbackUrl : avatarUrl;
+    const currentUrl = avatarSources[sourceIndex] ?? '';
 
     const handleError = () => {
-        if (!useFallback && fallbackUrl) {
-            setUseFallback(true);
+        const nextIndex = sourceIndex + 1;
+        if (nextIndex < avatarSources.length) {
+            setSourceIndex(nextIndex);
         } else {
             setImgError(true);
         }
@@ -1803,6 +1746,7 @@ const LineupsPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     // 当前选中的赛季 Tab
     const [activeTab, setActiveTab] = useState<SeasonTab>('S16');
+    const [tftSnapshot, setTftSnapshot] = useState<TftDataSnapshot | null>(null);
     // 展开状态：记录每个阵容的展开状态，key 是阵容 id
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
     // 已选中的阵容 ID 集合（所有赛季统一存储）
@@ -1817,6 +1761,8 @@ const LineupsPage: React.FC = () => {
 
     // 当前 Tab 下已选中的阵容数量
     const currentTabSelectedCount = lineups.filter(l => selectedIds.has(l.id)).length;
+
+    const assetResolver = useMemo(() => createTftAssetResolver(tftSnapshot), [tftSnapshot]);
 
     // 切换某个阵容的展开/收起状态
     const toggleExpand = (id: string) => {
@@ -2120,14 +2066,6 @@ const LineupsPage: React.FC = () => {
      * 获取棋子头像 URL（用于创建阵容弹窗内）
      * 复用已有的 getAvatarUrl / getFallbackAvatarUrl 函数
      */
-    const getChessAvatarForModal = useCallback((chessName: string): string => {
-        // S4 赛季 OP.GG 没有资源，直接用兜底
-        if (activeTab === 'S4') {
-            return getFallbackAvatarUrl(chessName, activeTab);
-        }
-        return getAvatarUrl(chessName, activeTab) || getFallbackAvatarUrl(chessName, activeTab);
-    }, [activeTab]);
-
     /**
      * 是否允许保存阵容
      * 条件：1) 阵容名不为空  2) 所有必填等级（level4~8）的格子必须全部填满
@@ -2420,11 +2358,13 @@ const LineupsPage: React.FC = () => {
         const fetchData = async () => {
             try {
                 // 并行获取所有阵容数据和选中状态
-                const [lineupsData, savedSelectedIds] = await Promise.all([
+                const [lineupsData, savedSelectedIds, snapshot] = await Promise.all([
                     window.lineup.getAll(),    // 不传 season，获取全部
                     window.lineup.getSelectedIds(),
+                    window.tft.getDataSnapshot(),
                 ]);
                 setAllLineups(lineupsData || []);
+                setTftSnapshot(snapshot || null);
                 // 恢复之前保存的选中状态
                 if (savedSelectedIds && savedSelectedIds.length > 0) {
                     setSelectedIds(new Set(savedSelectedIds));
@@ -2432,6 +2372,7 @@ const LineupsPage: React.FC = () => {
             } catch (error) {
                 console.error('加载数据失败:', error);
                 setAllLineups([]);
+                setTftSnapshot(null);
             } finally {
                 setLoading(false);
             }
@@ -2658,6 +2599,7 @@ const LineupsPage: React.FC = () => {
                                                             key={`${lineup.id}-${champion.name}-${index}`}
                                                             champion={champion}
                                                             season={activeTab}
+                                                            assetResolver={assetResolver}
                                                         />
                                                     ))}
                                                 </ChampionsList>
@@ -2693,13 +2635,14 @@ const LineupsPage: React.FC = () => {
                                                         {levelChampions.map((champion, idx) => (
                                                             <SmallChampionAvatarComponent
                                                                 key={`${lineup.id}-lv${level}-${champion.name}-${idx}`}
-                                                                champion={champion}
-                                                                season={activeTab}
-                                                                lineupId={lineup.id}
-                                                                level={level.toString(10)}
-                                                                idx={idx}
-                                                            />
-                                                        ))}
+                                                            champion={champion}
+                                                            season={activeTab}
+                                                            lineupId={lineup.id}
+                                                            level={level.toString(10)}
+                                                            idx={idx}
+                                                            assetResolver={assetResolver}
+                                                        />
+                                                    ))}
                                                     </LevelChampionsList>
                                                 </LevelRow>
                                             ))}
@@ -2752,6 +2695,7 @@ const LineupsPage: React.FC = () => {
                                                     key={`${lineup.id}-${champion.name}-${index}`}
                                                     champion={champion}
                                                     season={activeTab}
+                                                    assetResolver={assetResolver}
                                                 />
                                             ))}
                                         </ChampionsList>
@@ -2776,6 +2720,7 @@ const LineupsPage: React.FC = () => {
                                                         lineupId={lineup.id}
                                                         level={level.toString(10)}
                                                         idx={idx}
+                                                        assetResolver={assetResolver}
                                                     />
                                                 ))}
                                             </LevelChampionsList>
@@ -2841,8 +2786,9 @@ const LineupsPage: React.FC = () => {
                                                     onClick={() => handleChessClick(name)}
                                                     title={name}
                                                 >
-                                                    <img
-                                                        src={getChessAvatarForModal(name)}
+                                                    <AssetImageWithFallback
+                                                        component="img"
+                                                        sources={assetResolver.resolveChampionAvatarSources(name, activeTab)}
                                                         alt={name}
                                                         loading="lazy"
                                                     />
@@ -2932,7 +2878,8 @@ const LineupsPage: React.FC = () => {
                                                             {chessName ? (
                                                                 <>
                                                                     <SlotAvatar
-                                                                        src={getChessAvatarForModal(chessName)}
+                                                                        as={AssetImageWithFallback}
+                                                                        sources={assetResolver.resolveChampionAvatarSources(chessName, activeTab)}
                                                                         alt={chessName}
                                                                     />
                                                                     {/* 装备图标行，仅有装备时显示在头像下方 */}
@@ -2943,7 +2890,8 @@ const LineupsPage: React.FC = () => {
                                                                                 return eq ? (
                                                                                     <SlotEquipIcon
                                                                                         key={eqIdx}
-                                                                                        src={getEquipIconUrl(eq.equipId)}
+                                                                                        as={AssetImageWithFallback}
+                                                                                        sources={assetResolver.resolveItemIconSources(eq.name, eq.equipId)}
                                                                                         alt={eqName}
                                                                                     />
                                                                                 ) : null;
@@ -3000,8 +2948,9 @@ const LineupsPage: React.FC = () => {
                                     {/* 上方：英雄头像（边框颜色=费用色） + 3 个装备槽 */}
                                     <EquipTopSection>
                                         <EquipHeroAvatar $cost={equipEditTarget.cost}>
-                                            <img
-                                                src={getChessAvatarForModal(equipEditTarget.chessName)}
+                                            <AssetImageWithFallback
+                                                component="img"
+                                                sources={assetResolver.resolveChampionAvatarSources(equipEditTarget.chessName, activeTab)}
                                                 alt={equipEditTarget.chessName}
                                             />
                                         </EquipHeroAvatar>
@@ -3024,7 +2973,11 @@ const LineupsPage: React.FC = () => {
                                                         title={eqName || '空装备槽'}
                                                     >
                                                         {eqData ? (
-                                                            <img src={getEquipIconUrl(eqData.equipId)} alt={eqName!} />
+                                                            <AssetImageWithFallback
+                                                                component="img"
+                                                                sources={assetResolver.resolveItemIconSources(eqData.name, eqData.equipId)}
+                                                                alt={eqName!}
+                                                            />
                                                         ) : (
                                                             <EquipSlotPlus>+</EquipSlotPlus>
                                                         )}
@@ -3047,7 +3000,11 @@ const LineupsPage: React.FC = () => {
                                                             onClick={() => addEquipToSlot(name)}
                                                             title={name}
                                                         >
-                                                            <img src={getEquipIconUrl(equip.equipId)} alt={name} />
+                                                            <AssetImageWithFallback
+                                                                component="img"
+                                                                sources={assetResolver.resolveItemIconSources(name, equip.equipId)}
+                                                                alt={name}
+                                                            />
                                                             <EquipItemName>{name}</EquipItemName>
                                                         </EquipItem>
                                                     ))}
@@ -3065,7 +3022,11 @@ const LineupsPage: React.FC = () => {
                                                             onClick={() => addEquipToSlot(name)}
                                                             title={name}
                                                         >
-                                                            <img src={getEquipIconUrl(equip.equipId)} alt={name} />
+                                                            <AssetImageWithFallback
+                                                                component="img"
+                                                                sources={assetResolver.resolveItemIconSources(name, equip.equipId)}
+                                                                alt={name}
+                                                            />
                                                             <EquipItemName>{name}</EquipItemName>
                                                         </EquipItem>
                                                     ))}

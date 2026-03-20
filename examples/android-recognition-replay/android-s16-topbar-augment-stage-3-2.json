@@ -1,0 +1,17 @@
+{
+  "id": "android-s16-topbar-augment-stage-3-2",
+  "label": "真机顶部 UI 变体阶段识别",
+  "description": "使用真实 3-2 海克斯裁片，回归验证顶部 UI 变体下的阶段识别。",
+  "mode": "NORMAL",
+  "referenceScenarioId": "android-real-recording-3-2-augment",
+  "notes": [
+    "覆盖海克斯/顶部 UI 变体导致的阶段区域变化。"
+  ],
+  "stage": {
+    "imagePath": "../recordings/derived/android-real-recording-20260315-ionia/crops/recording-augment-3-2-stage-raw.png",
+    "expectedText": "3-2",
+    "expectedType": "AUGMENT",
+    "note": "真实 3-2 海克斯阶段裁片。"
+  },
+  "champions": []
+}

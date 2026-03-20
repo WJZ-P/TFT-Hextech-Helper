@@ -1,0 +1,20 @@
+{
+  "id": "android-en-alias-recognition",
+  "label": "英文别名基础识别样本",
+  "description": "使用英文英雄名样本验证中文主流程下的英文别名起步支持。",
+  "mode": "NORMAL",
+  "notes": [
+    "这是起步版英文适配，只覆盖基础英文别名映射，不代表全量英文 OCR 已完成。"
+  ],
+  "champions": [
+    {
+      "id": "shop-leona-en",
+      "region": "SHOP",
+      "slot": "SHOP_SLOT_1",
+      "expectedName": "蕾欧娜",
+      "expectedSource": "OCR",
+      "ocrText": "Leona",
+      "note": "英文别名应映射到中文英雄名。"
+    }
+  ]
+}

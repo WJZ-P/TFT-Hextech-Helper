@@ -1,5 +1,6 @@
 import sharp from "sharp";
 import type { TFTUnit } from "../../TFTProtocol";
+import { resolveChampionAlias } from "../../data/TftNameNormalizer";
 import { ocrCorrectionService } from "./OcrCorrectionService";
 
 export interface StageOcrCandidate {
@@ -166,6 +167,26 @@ export async function buildAndroidStageOcrVariants(rawBuffer: Buffer): Promise<O
                 grayscale: true,
                 normalize: true,
                 threshold: 120,
+                sharpen: true,
+            }),
+        },
+        {
+            label: "stage/threshold-140",
+            buffer: await preprocessImage(rawBuffer, {
+                scale: 7,
+                grayscale: true,
+                normalize: true,
+                threshold: 140,
+                sharpen: true,
+            }),
+        },
+        {
+            label: "stage/threshold-155",
+            buffer: await preprocessImage(rawBuffer, {
+                scale: 7,
+                grayscale: true,
+                normalize: true,
+                threshold: 155,
                 sharpen: true,
             }),
         },
@@ -721,6 +742,17 @@ export function resolveChampionNameFromText(
             rawText,
             score: 0,
             strategy: "NONE",
+        };
+    }
+
+    const aliasedName = resolveChampionAlias(rawText, chessData);
+    if (aliasedName) {
+        return {
+            name: aliasedName,
+            normalizedText,
+            rawText,
+            score: 1,
+            strategy: "EXACT",
         };
     }
 

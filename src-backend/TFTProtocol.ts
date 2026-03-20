@@ -796,6 +796,11 @@ export type EquipKey = keyof typeof TFT_16_EQUIP_DATA | keyof typeof TFT_4_EQUIP
 /**
  * 英雄英文ID到中文名的映射
  * @example "TFT16_Graves" -> "格雷福斯"
+ *
+ * 注：此映射是运行时从各赛季的棋子数据自动生成的（见文件底部的生成逻辑）。
+ * - 如果不同赛季或数据源中存在相同的 englishId，后面的赋值会覆盖之前的值（last-wins）。
+ * - 映射的键为 champion.englishId（例如 "TFT16_Graves"），值为代码中使用的中文键名（ChampionKey）。
+ * - 该常量被其他模块（例如 TftDataProvider.championEnToCnMap）以只读方式引用，用于解析来自外部数据的英文 ID。
  */
 export const CHAMPION_EN_TO_CN = {} as Record<ChampionEnglishId, ChampionKey>;
 

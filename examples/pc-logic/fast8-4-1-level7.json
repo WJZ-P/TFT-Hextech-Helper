@@ -1,0 +1,68 @@
+{
+  "state": {
+    "timestamp": 1710860400000,
+    "client": "RIOT_PC",
+    "target": "PC_LOGIC",
+    "stageText": "4-1",
+    "stageType": "PVP",
+    "level": 6,
+    "currentXp": 0,
+    "totalXp": 36,
+    "gold": 24,
+    "hp": 72,
+    "bench": [
+      {
+        "id": "TFT_Annie",
+        "name": "安妮",
+        "star": 2,
+        "cost": 3,
+        "location": "SLOT_1",
+        "items": [],
+        "traits": ["法师"]
+      }
+    ],
+    "board": [
+      {
+        "id": "TFT_Garen",
+        "name": "盖伦",
+        "star": 2,
+        "cost": 2,
+        "location": "R4_C4",
+        "items": [],
+        "traits": ["护卫"]
+      },
+      {
+        "id": "TFT_Malzahar",
+        "name": "玛尔扎哈",
+        "star": 2,
+        "cost": 3,
+        "location": "R3_C4",
+        "items": [],
+        "traits": ["法师"]
+      }
+    ],
+    "shop": [
+      {
+        "slot": 0,
+        "cost": 3,
+        "unit": {
+          "id": "TFT_Annie",
+          "name": "安妮",
+          "star": 1,
+          "cost": 3,
+          "items": [],
+          "traits": ["法师"]
+        }
+      },
+      { "slot": 1, "cost": null, "unit": null },
+      { "slot": 2, "cost": null, "unit": null },
+      { "slot": 3, "cost": null, "unit": null },
+      { "slot": 4, "cost": null, "unit": null }
+    ],
+    "items": []
+  },
+  "context": {
+    "strategyPreset": "FAST8",
+    "targetChampionNames": ["安妮"]
+  }
+}

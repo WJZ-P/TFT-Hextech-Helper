@@ -157,3 +157,41 @@ test("RuleBasedDecisionEngine triggers stabilize roll when hp is low", () => {
     assert.ok(rollPlan);
     assert.ok(Number((rollPlan?.payload.count ?? 0)) >= 2);
 });
+
+test("RuleBasedDecisionEngine follows standard level 7 timing on 4-1 for healthy fast-8 boards", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const state: ObservedState = {
+        ...buildBaseState(),
+        stageText: "4-1",
+        level: 6,
+        gold: 24,
+        hp: 72,
+        board: [
+            {
+                id: "TFT_Garen",
+                name: "盖伦",
+                star: 2,
+                cost: 2,
+                location: "R4_C4",
+                items: [],
+                traits: ["护卫"],
+            },
+            {
+                id: "TFT_Malzahar",
+                name: "玛尔扎哈",
+                star: 2,
+                cost: 3,
+                location: "R3_C4",
+                items: [],
+                traits: ["法师"],
+            },
+        ],
+    };
+
+    const plans = engine.generatePlan(state, {
+        strategyPreset: "FAST8",
+        targetChampionNames: ["安妮"],
+    });
+
+    assert.ok(plans.some((plan) => plan.type === "LEVEL_UP" && /4-1/.test(plan.reason)));
+});

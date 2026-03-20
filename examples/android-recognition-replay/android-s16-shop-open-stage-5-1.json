@@ -1,0 +1,17 @@
+{
+  "id": "android-s16-shop-open-stage-5-1",
+  "label": "真机商店展开阶段识别",
+  "description": "使用真实 5-1 商店展开裁片，回归验证商店展开时的顶部阶段识别。",
+  "mode": "NORMAL",
+  "referenceScenarioId": "android-real-recording-5-1-roll",
+  "notes": [
+    "覆盖商店展开时顶部区域更紧、更偏左的 UI 变体。"
+  ],
+  "stage": {
+    "imagePath": "../recordings/derived/android-real-recording-20260315-ionia/crops/recording-shop-5-1-stage-raw.png",
+    "expectedText": "5-1",
+    "expectedType": "PVP",
+    "note": "真实商店展开阶段裁片。"
+  },
+  "champions": []
+}

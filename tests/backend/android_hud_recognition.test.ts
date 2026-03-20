@@ -4,16 +4,21 @@ import path from "node:path";
 import sharp from "sharp";
 import {
     OcrWorkerType,
+    buildAndroidStageOcrVariants,
     buildAndroidHudDigitVariants,
     buildAndroidPlayerNameOcrVariants,
     extractLikelyHudNumber,
     extractLikelyPlayerNameToken,
+    extractLikelyStageText,
     extractLikelyXpText,
     extractSelfHpFromScoreboardText,
     inferLevelFromXpTotal,
     ocrService,
     selectBestPlayerNameCandidate,
+    selectBestStageText,
 } from "../../src-backend/tft";
+import { GameStageType } from "../../src-backend/TFTProtocol";
+import { parseStageStringToEnum } from "../../src-backend/tft/utils/GameStageParser";
 import {
     androidHudGoldTextRegion,
     androidScoreboardRegion,
@@ -58,6 +63,18 @@ async function cropRegionFromFrame(
         })
         .png()
         .toBuffer();
+}
+
+function resolveCropPath(fileName: string): string {
+    return path.resolve(
+        process.cwd(),
+        "examples",
+        "recordings",
+        "derived",
+        "android-real-recording-20260315-ionia",
+        "crops",
+        fileName
+    );
 }
 
 after(async () => {
@@ -160,4 +177,39 @@ test("android HUD self HP can be matched from self nameplate and scoreboard OCR"
     }
 
     assert.equal(hp, 29);
+});
+
+test("android stage OCR recognizes opening, shop-open, and topbar variant crops from real-device samples", { timeout: 120000 }, async () => {
+    process.env.VITE_PUBLIC ??= path.resolve(process.cwd(), "public");
+
+    const fixtures = [
+        { crop: "recording-opening-detail-1-4-stage-raw.png", expectedText: "1-4", expectedType: GameStageType.EARLY_PVE },
+        { crop: "recording-augment-3-2-stage-raw.png", expectedText: "3-2", expectedType: GameStageType.AUGMENT },
+        { crop: "recording-board-2-5-stage-raw.png", expectedText: "2-5", expectedType: GameStageType.PVP },
+        { crop: "recording-shop-5-1-stage-raw.png", expectedText: "5-1", expectedType: GameStageType.PVP }
+    ];
+
+    for (const fixture of fixtures) {
+        const cropBuffer = await sharp(resolveCropPath(fixture.crop)).png().toBuffer();
+        const variants = await buildAndroidStageOcrVariants(cropBuffer);
+        const candidates: Array<{ text: string; rawText: string; label: string }> = [];
+
+        for (const variant of variants) {
+            const rawText = await ocrService.recognize(variant.buffer, OcrWorkerType.GAME_STAGE);
+            const extracted = extractLikelyStageText(rawText);
+            if (!extracted) {
+                continue;
+            }
+
+            candidates.push({
+                text: extracted,
+                rawText,
+                label: variant.label,
+            });
+        }
+
+        const best = selectBestStageText(candidates).text ?? "";
+        assert.equal(best, fixture.expectedText, `阶段识别失败: ${fixture.crop}`);
+        assert.equal(parseStageStringToEnum(best), fixture.expectedType, `阶段类型识别失败: ${fixture.crop}`);
+    }
 });

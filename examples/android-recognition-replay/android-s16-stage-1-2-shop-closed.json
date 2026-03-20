@@ -1,0 +1,18 @@
+{
+  "id": "android-s16-stage-1-2-shop-closed",
+  "label": "真机 1-2 商店关闭阶段识别",
+  "description": "使用真实 1-2 商店关闭录屏抽帧，验证 1-2 阶段的 OCR 识别能力。覆盖早期阶段顶部 UI 变体。",
+  "mode": "NORMAL",
+  "referenceScenarioId": "android-real-recording-1-2-shop-closed",
+  "notes": [
+    "1-2 阶段在录屏 0:40 处捕获，商店处于关闭状态。",
+    "1-2 属于 EARLY_PVE 类型，parseStageStringToEnum 会返回 EARLY_PVE。"
+  ],
+  "stage": {
+    "imagePath": "assets/stage-1-2.png",
+    "expectedText": "1-2",
+    "expectedType": "EARLY_PVE",
+    "note": "真实 1-2 商店关闭阶段顶部 HUD 裁片。"
+  },
+  "champions": []
+}

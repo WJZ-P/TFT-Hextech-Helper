@@ -1,0 +1,18 @@
+{
+  "id": "android-s16-stage-2-1-normal-shop-open",
+  "label": "真机 2-1 PVP 商店开启阶段识别",
+  "description": "使用真实 2-1 PVP 商店开启录屏抽帧，验证 2-1 阶段在无海克斯 UI 时的 OCR 识别。填补了 2-1 普通回合的测试空白。",
+  "mode": "NORMAL",
+  "referenceScenarioId": "android-real-recording-2-1-normal-shop-open",
+  "notes": [
+    "2-1 普通回合在录屏 2:30 处捕获，此时已过海克斯选择阶段，商店正常开启，无海克斯 UI。",
+    "parseStageStringToEnum 对 '2-1' 返回 AUGMENT 类型（因为 2-1 是理论海克斯回合），与 expectedType 一致。"
+  ],
+  "stage": {
+    "imagePath": "assets/stage-2-1-normal.png",
+    "expectedText": "2-1",
+    "expectedType": "AUGMENT",
+    "note": "真实 2-1 PVP 商店开启阶段顶部 HUD 裁片，无海克斯 UI。"
+  },
+  "champions": []
+}

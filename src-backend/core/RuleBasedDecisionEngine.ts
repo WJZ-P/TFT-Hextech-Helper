@@ -163,6 +163,8 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
                 addPlan("LEVEL_UP", 94, "2-5 节奏点，提前补人口提升战力", { count: 1 });
             } else if (isKeyRound(parsed, 3, 2) && state.level < 6 && state.gold >= (mustStabilize ? 16 : 24)) {
                 addPlan("LEVEL_UP", 90, "3-2 中期节奏，优先上 6 进入中期运营", { count: 1 });
+            } else if (isKeyRound(parsed, 4, 1) && state.level < 7 && state.gold >= (mustStabilize ? 12 : 16)) {
+                addPlan("LEVEL_UP", 91, "4-1 标准节奏，优先上 7 稳住中后期战力", { count: 1 });
             } else if (isKeyRound(parsed, 4, 2) && state.level < 8 && state.gold >= 20) {
                 const count = state.gold >= 40 ? 2 : 1;
                 addPlan("LEVEL_UP", 92, "4-2 关键转折，优先冲 8 寻找高费核心", { count });

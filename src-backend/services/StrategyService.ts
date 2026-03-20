@@ -17,11 +17,11 @@
  */
 import {IdentifiedEquip, tftOperator} from "../TftOperator";
 import {logger} from "../utils/Logger";
+import { TftDataHub } from "../data/TftDataHub";
 import {
     TFTUnit,
     GameStageType,
     fightBoardSlotPoint,
-    getChampionRange,
     ChampionKey,
     ShopSlotIndex,
     TFT_16_EQUIP_DATA,
@@ -30,18 +30,16 @@ import {
     hexSlot,
     TFTMode,
     clockworkTrailsFightButtonPoint,
-    getChessDataForMode,
 } from "../TFTProtocol";
 import {gameStateManager} from "./GameStateManager";
 import {gameStageMonitor, GameStageEvent} from "./GameStageMonitor";
 import {settingsStore} from "../utils/SettingsStore";
 import {lineupLoader} from "../lineup";
 import {LineupConfig, StageConfig, ChampionConfig} from "../lineup/LineupTypes";
-import {TFT_16_TRAIT_DATA} from "../TFTInfo/trait";
-import {TFT_4_TRAIT_DATA} from "../TFTInfo/trait";
-import {UNSELLABLE_BOARD_UNITS} from "../TFTInfo/chess";
 import {mouseController, MouseButtonType, BenchUnit, BenchLocation, BoardUnit, BoardLocation} from "../tft";
 import {sleep} from "../utils/HelperTools";
+
+const strategyDataHub = new TftDataHub({ lineupProvider: lineupLoader });
 
 /**
  * 阵容选择状态枚举
@@ -536,7 +534,7 @@ export class StrategyService {
         if (role === 'any') return true;
 
         const name = unit.tftUnit.displayName;
-        const range = getChampionRange(name) ?? 1;
+        const range = strategyDataHub.getChampionRange(name) ?? 1;
         const isMelee = range <= 2;
 
         return role === 'frontline' ? isMelee : !isMelee;
@@ -793,12 +791,9 @@ export class StrategyService {
         }
 
         // 2. 加载所有选中的阵容配置
-        const lineups: LineupConfig[] = [];
+        const lineups = strategyDataHub.getSelectedAutomationLineups(selectedIds);
         for (const lineupId of selectedIds) {
-            const lineup = lineupLoader.getLineup(lineupId);
-            if (lineup) {
-                lineups.push(lineup);
-            } else {
+            if (!lineups.find((lineup) => lineup.id === lineupId)) {
                 logger.warn(`[StrategyService] 找不到阵容配置: ${lineupId}，已跳过`);
             }
         }
@@ -1457,7 +1452,7 @@ export class StrategyService {
         const candidates = benchUnits.filter(({unit}) => {
             const name = unit.tftUnit.displayName as ChampionKey;
             // 不可售卖的棋子（训练假人、魔像等）排除
-            if (UNSELLABLE_BOARD_UNITS.has(name)) return false;
+            if (strategyDataHub.isUnitUnsellable(name)) return false;
             // 目标棋子不卖
             if (targetChampions.has(name)) return false;
             return true;
@@ -1601,7 +1596,7 @@ export class StrategyService {
 
                 logger.info(
                     `[StrategyService] 摆放棋子: ${championName} ` +
-                    `(射程: ${getChampionRange(championName as any) ?? '未知'}) -> ${targetLocation}`
+                    `(射程: ${strategyDataHub.getChampionRange(championName) ?? '未知'}) -> ${targetLocation}`
                 );
 
                 await tftOperator.moveBenchToBoard(unit.location, targetLocation);
@@ -1740,7 +1735,7 @@ export class StrategyService {
             if (u.starLevel === -1) return false;
             if (u.tftUnit.displayName.includes('锻造器')) return false;
             // 不可售卖的棋子（训练假人、魔像等）也排除：它们不应被选为"最佳备战席棋子"
-            if (UNSELLABLE_BOARD_UNITS.has(u.tftUnit.displayName)) return false;
+            if (strategyDataHub.isUnitUnsellable(u.tftUnit.displayName)) return false;
             return true;
         };
 
@@ -1782,7 +1777,7 @@ export class StrategyService {
             if (!unit) continue;
 
             // 不可售卖的棋子（训练假人、魔像等）不参与替换，跳过
-            if (UNSELLABLE_BOARD_UNITS.has(unit.tftUnit.displayName)) continue;
+            if (strategyDataHub.isUnitUnsellable(unit.tftUnit.displayName)) continue;
 
             const score = this.calculateUnitScore(unit.tftUnit, unit.starLevel, targetChampions);
             if (!worst || score < worst.score) {
@@ -1863,7 +1858,7 @@ export class StrategyService {
      *              TFTUnit 的 traits 字段合并了 origins 和 classes，直接使用即可。
      */
     private getChampionTraits(championName: string): string[] {
-        const chessData = getChessDataForMode(this.gameMode);
+        const chessData = strategyDataHub.getChampionCatalogForMode(this.gameMode);
         const unitData = chessData[championName];
         if (!unitData) return [];
         // traits 已经是 origins + classes 的合并
@@ -1875,11 +1870,7 @@ export class StrategyService {
      * @returns 羁绊名 → TraitData 的映射表
      */
     private getTraitDataForMode(): Record<string, import("../TFTProtocol").TraitData> {
-        // S16(标准模式) 和 S4.5(发条迷城等) 使用不同的羁绊数据
-        if (this.gameMode === TFTMode.CLOCKWORK_TRAILS) {
-            return TFT_4_TRAIT_DATA;
-        }
-        return TFT_16_TRAIT_DATA;
+        return strategyDataHub.getTraitCatalogForMode(this.gameMode) as Record<string, import("../TFTProtocol").TraitData>;
     }
 
     /**
@@ -2004,7 +1995,7 @@ export class StrategyService {
             if (units.length <= 1) continue;
 
             // 不可售卖的棋子（训练假人、魔像等）跳过去重，卖不掉也移不掉
-            if (UNSELLABLE_BOARD_UNITS.has(name)) continue;
+            if (strategyDataHub.isUnitUnsellable(name)) continue;
 
             logger.info(`[StrategyService] 发现场上重复棋子: ${name} x${units.length}，开始清理...`);
 
@@ -2700,7 +2691,7 @@ export class StrategyService {
         const candidates = benchUnits.filter(({unit}) => {
             const name = unit.tftUnit.displayName as ChampionKey;
             // 不可售卖的棋子（训练假人、魔像等）排除
-            if (UNSELLABLE_BOARD_UNITS.has(name)) return false;
+            if (strategyDataHub.isUnitUnsellable(name)) return false;
             // 如果是目标棋子，绝对不卖（还需要）
             if (this.targetChampionNames.has(name)) return false;
             // 非目标棋子 → 可以卖（即使是对子也行，因为已不在目标阵容中了）
@@ -2752,7 +2743,7 @@ export class StrategyService {
             const name = unit.tftUnit.displayName as ChampionKey;
 
             // 不可售卖的棋子（训练假人、魔像等）直接跳过，卖了也没用
-            if (UNSELLABLE_BOARD_UNITS.has(name)) continue;
+            if (strategyDataHub.isUnitUnsellable(name)) continue;
 
             // 目标棋子的判断
             if (this.targetChampionNames.has(name)) {
@@ -2783,7 +2774,7 @@ export class StrategyService {
 
         for (const unit of boardUnits) {
             const name = unit.tftUnit.displayName;
-            const range = getChampionRange(name) ?? 1;
+            const range = strategyDataHub.getChampionRange(name) ?? 1;
             const isMelee = range <= 2;
             const currentRow = parseInt(unit.location.split('_')[0].replace('R', ''));
 
@@ -3363,7 +3354,7 @@ export class StrategyService {
             if (u.starLevel === -1) return false;
             if (u.tftUnit.displayName.includes('锻造器')) return false;
             // 不可售卖的棋子（训练假人、魔像等）不参与上场选择
-            if (UNSELLABLE_BOARD_UNITS.has(u.tftUnit.displayName)) return false;
+            if (strategyDataHub.isUnitUnsellable(u.tftUnit.displayName)) return false;
             return true;
         });
 
@@ -3414,7 +3405,7 @@ export class StrategyService {
      */
     private findBestPositionForUnit(unit: { tftUnit: TFTUnit }): BoardLocation | undefined {
         const championName = unit.tftUnit.displayName;
-        const range = getChampionRange(championName) ?? 1;
+        const range = strategyDataHub.getChampionRange(championName) ?? 1;
 
         // 判断是近战还是远程
         const isMelee = range <= 2;

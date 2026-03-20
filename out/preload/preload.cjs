@@ -34,6 +34,10 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["TFT_DATA_REFRESH"] = "tft-data-refresh";
   IpcChannel2["TFT_DATA_GET_SNAPSHOT"] = "tft-data-get-snapshot";
   IpcChannel2["PC_LOGIC_PLAN_ONCE"] = "pc-logic-plan-once";
+  IpcChannel2["ANDROID_SIMULATION_PLAN_ONCE"] = "android-simulation-plan-once";
+  IpcChannel2["ANDROID_SIMULATION_LIST_SCENARIOS"] = "android-simulation-list-scenarios";
+  IpcChannel2["ANDROID_RECOGNITION_REPLAY_RUN"] = "android-recognition-replay-run";
+  IpcChannel2["ANDROID_RECOGNITION_REPLAY_LIST_FIXTURES"] = "android-recognition-replay-list-fixtures";
   IpcChannel2["TFT_GET_MODE"] = "tft-get-mode";
   IpcChannel2["TFT_SET_MODE"] = "tft-set-mode";
   IpcChannel2["LOG_GET_MODE"] = "log-get-mode";
@@ -65,7 +69,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["OVERLAY_UPDATE_PLAYERS"] = "overlay-update-players";
   return IpcChannel2;
 })(IpcChannel || {});
-electron.contextBridge.exposeInMainWorld("ipcRenderer", {
+const exposedIpcRenderer = {
   on(...args) {
     const [channel, listener] = args;
     return electron.ipcRenderer.on(channel, (event, ...args2) => listener(event, ...args2));
@@ -84,7 +88,8 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", {
   }
   // You can expose other APTs you need here.
   // ...
-});
+};
+electron.contextBridge.exposeInMainWorld("ipcRenderer", exposedIpcRenderer);
 const ipcApi = {
   on: (channel, callback) => {
     const listener = (_event, ...args) => {
@@ -178,8 +183,14 @@ const tftApi = {
   saveStageSnapshots: () => electron.ipcRenderer.invoke(IpcChannel.TFT_SAVE_STAGE_SNAPSHOTS),
   saveBenchSlotSnapshots: () => electron.ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT),
   saveFightBoardSlotSnapshots: () => electron.ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT),
-  saveQuitButtonSnapshot: () => electron.ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_QUIT_BUTTON_SNAPSHOT)
+  saveQuitButtonSnapshot: () => electron.ipcRenderer.invoke(IpcChannel.TFT_TEST_SAVE_QUIT_BUTTON_SNAPSHOT),
   // 保存发条鸟退出按钮截图
+  planAndroidSimulation: (state, context) => electron.ipcRenderer.invoke(IpcChannel.ANDROID_SIMULATION_PLAN_ONCE, state, context),
+  getAndroidSimulationScenarios: () => electron.ipcRenderer.invoke(IpcChannel.ANDROID_SIMULATION_LIST_SCENARIOS),
+  runAndroidRecognitionReplay: (fixtureId) => electron.ipcRenderer.invoke(IpcChannel.ANDROID_RECOGNITION_REPLAY_RUN, fixtureId),
+  getAndroidRecognitionReplayFixtures: () => electron.ipcRenderer.invoke(IpcChannel.ANDROID_RECOGNITION_REPLAY_LIST_FIXTURES),
+  getDataSnapshot: () => electron.ipcRenderer.invoke(IpcChannel.TFT_DATA_GET_SNAPSHOT),
+  refreshDataSnapshot: () => electron.ipcRenderer.invoke(IpcChannel.TFT_DATA_REFRESH)
 };
 electron.contextBridge.exposeInMainWorld("tft", tftApi);
 const lineupApi = {

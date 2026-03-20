@@ -18,6 +18,7 @@ import {
 import { normalizeRuntimeState } from "../core/StateNormalizer";
 import { parseStageStringToEnum } from "../tft/utils/GameStageParser";
 import {
+    buildAndroidStageOcrVariants,
     buildAndroidHudDigitVariants,
     buildChampionOcrVariants,
     extractLikelyStageText,
@@ -25,6 +26,7 @@ import {
     ocrService,
     resolveChampionNameFromText,
     screenCapture,
+    selectBestStageText,
 } from "../tft";
 import { templateLoader } from "../tft/recognition/TemplateLoader";
 import { templateMatcher } from "../tft/recognition/TemplateMatcher";
@@ -308,25 +310,50 @@ async function evaluateChampionFixture(
     };
 }
 
-function evaluateStageFixture(
+async function recognizeStageFromImage(imagePath: string): Promise<string> {
+    const imageBuffer = await fs.readFile(imagePath);
+    const variants = await buildAndroidStageOcrVariants(imageBuffer);
+    const candidates: Array<{ text: string; rawText: string; label: string }> = [];
+
+    for (const variant of variants) {
+        const rawText = await ocrService.recognize(variant.buffer, OcrWorkerType.GAME_STAGE);
+        const extracted = extractLikelyStageText(rawText);
+        if (!extracted) {
+            continue;
+        }
+
+        candidates.push({
+            text: extracted,
+            rawText,
+            label: variant.label,
+        });
+    }
+
+    return selectBestStageText(candidates).text ?? "";
+}
+
+async function evaluateStageFixture(
     fixtureDir: string,
     stage: AndroidRecognitionReplayFixture["stage"]
-): AndroidRecognitionStageResult | null {
+): Promise<AndroidRecognitionStageResult | null> {
     if (!stage) {
         return null;
     }
 
-    const extractedText = extractLikelyStageText(stage.ocrText);
+    const resolvedImagePath = stage.imagePath ? resolveInputPath(fixtureDir, stage.imagePath) : undefined;
+    const fallbackOcrText = resolvedImagePath ? await recognizeStageFromImage(resolvedImagePath) : "";
+    const rawStageText = stage.ocrText ?? fallbackOcrText;
+    const extractedText = extractLikelyStageText(rawStageText) || fallbackOcrText;
     const recognizedType = parseStageStringToEnum(extractedText);
     const passed = extractedText === stage.expectedText && recognizedType === stage.expectedType;
 
     return {
-        rawText: stage.ocrText,
+        rawText: rawStageText,
         extractedText,
         expectedText: stage.expectedText,
         recognizedType,
         expectedType: stage.expectedType,
-        imagePath: stage.imagePath ? resolveInputPath(fixtureDir, stage.imagePath) : undefined,
+        imagePath: resolvedImagePath,
         note: stage.note,
         passed,
     };
@@ -960,7 +987,7 @@ export class AndroidRecognitionReplayRunner {
     public async runFixture(input: string): Promise<AndroidRecognitionReplayResult> {
         const loaded = await this.loadFixture(input);
         const fixtureDir = path.dirname(loaded.filePath);
-        const stageResult = evaluateStageFixture(fixtureDir, loaded.fixture.stage);
+        const stageResult = await evaluateStageFixture(fixtureDir, loaded.fixture.stage);
         const championResults = await Promise.all(
             loaded.fixture.champions.map((champion) =>
                 evaluateChampionFixture(fixtureDir, loaded.fixture.mode, champion)

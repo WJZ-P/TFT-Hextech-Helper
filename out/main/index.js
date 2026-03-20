@@ -1,9 +1,9 @@
 import { app, net, BrowserWindow, dialog, shell, ipcMain } from "electron";
 import * as path from "path";
 import path__default from "path";
-import cp, { exec as exec$1 } from "child_process";
 import * as fs$2 from "fs";
 import fs__default from "fs";
+import cp, { exec as exec$1 } from "child_process";
 import * as os from "os";
 import os__default from "os";
 import { EventEmitter } from "events";
@@ -5434,7 +5434,7 @@ class LCUConnector extends EventEmitter {
     }
     try {
       const { stdout: rawStdout } = await exec(command, executionOptions);
-      const stdout = rawStdout.replace(/\n|\r/g, "");
+      const stdout = String(rawStdout).replace(/\n|\r/g, "");
       const portMatch = stdout.match(portRegex);
       const passwordMatch = stdout.match(passwordRegex);
       const pidMatch = stdout.match(pidRegex);
@@ -5454,7 +5454,7 @@ class LCUConnector extends EventEmitter {
         // 返回父目录作为安装目录
       };
     } catch (err) {
-      if (isWindows && executionOptions["shell"] === "powershell") {
+      if (isWindows && executionOptions.shell === "powershell") {
         try {
           const checkAdminCmd = `if ((Get-Process -Name ${name} -ErrorAction SilentlyContinue | Where-Object {!$_.Handle -and !$_.Path})) {Write-Output "True"} else {Write-Output "False"}`;
           const { stdout: isAdmin } = await exec(checkAdminCmd, executionOptions);
@@ -6319,6 +6319,10 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["TFT_DATA_REFRESH"] = "tft-data-refresh";
   IpcChannel2["TFT_DATA_GET_SNAPSHOT"] = "tft-data-get-snapshot";
   IpcChannel2["PC_LOGIC_PLAN_ONCE"] = "pc-logic-plan-once";
+  IpcChannel2["ANDROID_SIMULATION_PLAN_ONCE"] = "android-simulation-plan-once";
+  IpcChannel2["ANDROID_SIMULATION_LIST_SCENARIOS"] = "android-simulation-list-scenarios";
+  IpcChannel2["ANDROID_RECOGNITION_REPLAY_RUN"] = "android-recognition-replay-run";
+  IpcChannel2["ANDROID_RECOGNITION_REPLAY_LIST_FIXTURES"] = "android-recognition-replay-list-fixtures";
   IpcChannel2["TFT_GET_MODE"] = "tft-get-mode";
   IpcChannel2["TFT_SET_MODE"] = "tft-set-mode";
   IpcChannel2["LOG_GET_MODE"] = "log-get-mode";
@@ -10496,383 +10500,680 @@ var TFTMode = /* @__PURE__ */ ((TFTMode2) => {
   return TFTMode2;
 })(TFTMode || {});
 const levelRegion = {
-  leftTop: { x: 25, y: 625 },
-  rightBottom: { x: 145, y: 645 }
+  leftTop: { x: 0.016, y: 0.796 },
+  // 原 25, 625 → 0.024, 0.813 -30%
+  rightBottom: { x: 0.16, y: 0.856 }
+  // 原 145, 645 → 0.142, 0.839 +30%
 };
 const lootRegion = {
-  leftTop: { x: 200, y: 125 },
-  rightBottom: { x: 855, y: 585 }
+  leftTop: { x: 0.15, y: 0.13 },
+  // 原 200, 125 → 0.195, 0.163 -25%
+  rightBottom: { x: 0.88, y: 0.8 }
+  // 原 855, 585 → 0.835, 0.761 +25%
 };
-const littleLegendDefaultPoint = { x: 120, y: 430 };
+const littleLegendDefaultPoint = { x: 0.1, y: 0.55 };
 const selfWalkAroundPoints = {
-  left: [{ x: 156, y: 400 }, { x: 165, y: 355 }, { x: 175, y: 315 }, { x: 185, y: 185 }, { x: 195, y: 150 }],
-  right: [{ x: 840, y: 495 }, { x: 830, y: 450 }, { x: 830, y: 420 }, { x: 800, y: 280 }, { x: 805, y: 295 }, { x: 790, y: 215 }, { x: 790, y: 215 }, { x: 785, y: 180 }, { x: 785, y: 150 }]
+  left: [
+    { x: 0.135, y: 0.52 },
+    // 原 156, 400
+    { x: 0.145, y: 0.462 },
+    // 原 165, 355
+    { x: 0.16, y: 0.41 },
+    // 原 175, 315
+    { x: 0.175, y: 0.24 },
+    // 原 185, 185
+    { x: 0.19, y: 0.195 }
+    // 原 195, 150
+  ],
+  right: [
+    { x: 0.82, y: 0.644 },
+    // 原 840, 495
+    { x: 0.81, y: 0.586 },
+    // 原 830, 450
+    { x: 0.81, y: 0.547 },
+    // 原 830, 420
+    { x: 0.78, y: 0.365 },
+    // 原 800, 280
+    { x: 0.79, y: 0.384 },
+    // 原 805, 295
+    { x: 0.77, y: 0.28 },
+    // 原 790, 215
+    { x: 0.77, y: 0.28 },
+    // 原 790, 215
+    { x: 0.765, y: 0.234 },
+    // 原 785, 180
+    { x: 0.765, y: 0.195 }
+    // 原 785, 150
+  ]
 };
 const coinRegion = {
-  leftTop: { x: 505, y: 626 },
-  rightBottom: { x: 545, y: 642 }
+  leftTop: { x: 0.47, y: 0.796 },
+  // 原 505, 626 → 0.493, 0.815 -25%
+  rightBottom: { x: 0.56, y: 0.856 }
+  // 原 545, 642 → 0.532, 0.836 +25%
 };
 const shopSlot = {
-  SHOP_SLOT_1: { x: 240, y: 700 },
-  SHOP_SLOT_2: { x: 380, y: 700 },
-  SHOP_SLOT_3: { x: 520, y: 700 },
-  SHOP_SLOT_4: { x: 660, y: 700 },
-  SHOP_SLOT_5: { x: 800, y: 700 }
+  SHOP_SLOT_1: { x: 0.234, y: 0.911 },
+  // 原 240, 700
+  SHOP_SLOT_2: { x: 0.371, y: 0.911 },
+  // 原 380, 700
+  SHOP_SLOT_3: { x: 0.508, y: 0.911 },
+  // 原 520, 700
+  SHOP_SLOT_4: { x: 0.645, y: 0.911 },
+  // 原 660, 700
+  SHOP_SLOT_5: { x: 0.781, y: 0.911 }
+  // 原 800, 700
 };
 const shopSlotNameRegions = {
   SLOT_1: {
     // width: 108 height:18
-    leftTop: { x: 173, y: 740 },
-    rightBottom: { x: 281, y: 758 }
+    leftTop: { x: 0.152, y: 0.96 },
+    // 原 173, 740 → 0.169, 0.964 -20%
+    rightBottom: { x: 0.3, y: 1 }
+    // 原 281, 758 → 0.274, 0.987 +20%
   },
   SLOT_2: {
-    leftTop: { x: 315, y: 740 },
-    rightBottom: { x: 423, y: 758 }
+    leftTop: { x: 0.289, y: 0.96 },
+    // 原 315, 740
+    rightBottom: { x: 0.437, y: 1 }
+    // 原 423, 758
   },
   SLOT_3: {
-    leftTop: { x: 459, y: 740 },
-    rightBottom: { x: 567, y: 758 }
+    leftTop: { x: 0.426, y: 0.96 },
+    // 原 459, 740
+    rightBottom: { x: 0.574, y: 1 }
+    // 原 567, 758
   },
   SLOT_4: {
-    leftTop: { x: 602, y: 740 },
-    rightBottom: { x: 710, y: 758 }
+    leftTop: { x: 0.563, y: 0.96 },
+    // 原 602, 740
+    rightBottom: { x: 0.711, y: 1 }
+    // 原 710, 758
   },
   SLOT_5: {
-    leftTop: { x: 746, y: 740 },
-    rightBottom: { x: 854, y: 758 }
+    leftTop: { x: 0.7, y: 0.96 },
+    // 原 746, 740
+    rightBottom: { x: 0.848, y: 1 }
+    // 原 854, 758
   }
 };
 const detailChampionNameRegion = {
-  leftTop: { x: 870, y: 226 },
-  rightBottom: { x: 978, y: 244 }
+  leftTop: { x: 0.84, y: 0.29 },
+  // 原 870, 226
+  rightBottom: { x: 0.98, y: 0.32 }
+  // 原 978, 244
+};
+const androidDetailChampionNameRegion = {
+  leftTop: { x: 0.79, y: 0.205 },
+  rightBottom: { x: 0.92, y: 0.25 }
+};
+const androidShopSlotNameRegions = {
+  SLOT_1: {
+    leftTop: { x: 0.25, y: 0.326 },
+    rightBottom: { x: 0.322, y: 0.383 }
+  },
+  SLOT_2: {
+    leftTop: { x: 0.385, y: 0.323 },
+    rightBottom: { x: 0.478, y: 0.387 }
+  },
+  SLOT_3: {
+    leftTop: { x: 0.525, y: 0.323 },
+    rightBottom: { x: 0.617, y: 0.387 }
+  },
+  SLOT_4: {
+    leftTop: { x: 0.663, y: 0.323 },
+    rightBottom: { x: 0.778, y: 0.387 }
+  },
+  SLOT_5: {
+    leftTop: { x: 0.808, y: 0.326 },
+    rightBottom: { x: 0.873, y: 0.383 }
+  }
+};
+const androidHudGoldTextRegion = {
+  leftTop: { x: 0.9019, y: 0.7833 },
+  rightBottom: { x: 0.9577, y: 0.9125 }
+};
+const androidHudXpTextRegion = {
+  leftTop: { x: 0.024, y: 0.6667 },
+  rightBottom: { x: 0.1298, y: 0.7917 }
+};
+const androidSelfNameplateRegion = {
+  leftTop: { x: 0.1971, y: 0.5583 },
+  rightBottom: { x: 0.274, y: 0.6542 }
+};
+const androidScoreboardRegion = {
+  leftTop: { x: 0.7885, y: 0.0417 },
+  rightBottom: { x: 0.9904, y: 0.7083 }
 };
 const detailEquipRegion = {
   SLOT_1: {
-    leftTop: { x: 881, y: 347 },
-    rightBottom: { x: 919, y: 385 }
+    leftTop: { x: 0.844, y: 0.435 },
+    // 原 881, 347 → 0.859, 0.452 -20%
+    rightBottom: { x: 0.956, y: 0.515 }
+    // 原 919, 385 → 0.898, 0.501 +20%
   },
   SLOT_2: {
-    leftTop: { x: 927, y: 347 },
-    rightBottom: { x: 965, y: 385 }
+    leftTop: { x: 0.89, y: 0.435 },
+    // 原 927, 347
+    rightBottom: { x: 0.99, y: 0.515 }
+    // 原 965, 385
   },
   SLOT_3: {
-    leftTop: { x: 973, y: 347 },
-    rightBottom: { x: 1011, y: 385 }
+    leftTop: { x: 0.936, y: 0.435 },
+    // 原 973, 347
+    rightBottom: { x: 1.036, y: 0.515 }
+    // 原 1011, 385
   }
 };
 const itemForgeTooltipRegion = {
-  leftTop: { x: 56, y: 7 },
-  rightBottom: { x: 176, y: 27 }
+  leftTop: { x: 0.055, y: 9e-3 },
+  // 原 56, 7 (相对坐标，保留绝对值)
+  rightBottom: { x: 0.172, y: 0.035 }
+  // 原 176, 27
 };
 const itemForgeTooltipRegionEdge = {
-  leftTop: { x: 585, y: 7 },
-  rightBottom: { x: 695, y: 27 }
+  leftTop: { x: 0.571, y: 9e-3 },
+  // 原 585, 7 (相对绝对坐标)
+  rightBottom: { x: 0.679, y: 0.035 }
+  // 原 695, 27
 };
 const detailChampionStarRegion = {
-  leftTop: { x: 919, y: 122 },
-  rightBottom: { x: 974, y: 132 }
+  leftTop: { x: 0.898, y: 0.151 },
+  // 原 919, 122
+  rightBottom: { x: 0.952, y: 0.172 }
+  // 原 974, 132
 };
-const refreshShopPoint = { x: 135, y: 730 };
-const buyExpPoint = { x: 135, y: 680 };
+const refreshShopPoint = { x: 0.132, y: 0.95 };
+const buyExpPoint = { x: 0.132, y: 0.885 };
 const equipmentSlot = {
-  EQ_SLOT_1: { x: 20, y: 210 },
-  //+35
-  EQ_SLOT_2: { x: 20, y: 245 },
-  EQ_SLOT_3: { x: 20, y: 280 },
-  EQ_SLOT_4: { x: 20, y: 315 },
-  EQ_SLOT_5: { x: 20, y: 350 },
-  EQ_SLOT_6: { x: 20, y: 385 },
-  EQ_SLOT_7: { x: 20, y: 430 },
-  //   这里重置下准确位置
-  EQ_SLOT_8: { x: 20, y: 465 },
-  EQ_SLOT_9: { x: 20, y: 500 },
-  EQ_SLOT_10: { x: 20, y: 535 }
+  EQ_SLOT_1: { x: 0.0195, y: 0.273 },
+  // 原 20, 210
+  EQ_SLOT_2: { x: 0.0195, y: 0.319 },
+  // 原 20, 245
+  EQ_SLOT_3: { x: 0.0195, y: 0.364 },
+  // 原 20, 280
+  EQ_SLOT_4: { x: 0.0195, y: 0.41 },
+  // 原 20, 315
+  EQ_SLOT_5: { x: 0.0195, y: 0.455 },
+  // 原 20, 350
+  EQ_SLOT_6: { x: 0.0195, y: 0.501 },
+  // 原 20, 385
+  EQ_SLOT_7: { x: 0.0195, y: 0.56 },
+  // 原 20, 430
+  EQ_SLOT_8: { x: 0.0195, y: 0.605 },
+  // 原 20, 465
+  EQ_SLOT_9: { x: 0.0195, y: 0.651 },
+  // 原 20, 500
+  EQ_SLOT_10: { x: 0.0195, y: 0.697 }
+  // 原 20, 535
 };
 const equipmentRegion = {
-  //  宽24，高25
   SLOT_1: {
-    //  y+=36
-    leftTop: { x: 9, y: 198 },
-    rightBottom: { x: 32, y: 222 }
+    leftTop: { x: 879e-5, y: 0.257 },
+    // 原 9, 198 → 留-20%
+    rightBottom: { x: 0.0312, y: 0.289 }
+    // 原 32, 222 → 留+20%
   },
   SLOT_2: {
-    leftTop: { x: 9, y: 234 },
-    rightBottom: { x: 32, y: 258 }
+    leftTop: { x: 879e-5, y: 0.304 },
+    // 原 9, 234
+    rightBottom: { x: 0.0312, y: 0.336 }
+    // 原 32, 258
   },
   SLOT_3: {
-    leftTop: { x: 9, y: 271 },
-    rightBottom: { x: 32, y: 295 }
+    leftTop: { x: 879e-5, y: 0.352 },
+    // 原 9, 271
+    rightBottom: { x: 0.0312, y: 0.384 }
+    // 原 32, 295
   },
   SLOT_4: {
-    leftTop: { x: 9, y: 307 },
-    rightBottom: { x: 32, y: 331 }
+    leftTop: { x: 879e-5, y: 0.399 },
+    // 原 9, 307
+    rightBottom: { x: 0.0312, y: 0.431 }
+    // 原 32, 331
   },
   SLOT_5: {
-    leftTop: { x: 9, y: 344 },
-    rightBottom: { x: 32, y: 368 }
+    leftTop: { x: 879e-5, y: 0.447 },
+    // 原 9, 344
+    rightBottom: { x: 0.0312, y: 0.479 }
+    // 原 32, 368
   },
   SLOT_6: {
-    leftTop: { x: 9, y: 380 },
-    rightBottom: { x: 32, y: 404 }
+    leftTop: { x: 879e-5, y: 0.495 },
+    // 原 9, 380
+    rightBottom: { x: 0.0312, y: 0.526 }
+    // 原 32, 404
   },
   SLOT_7: {
-    leftTop: { x: 9, y: 417 },
-    rightBottom: { x: 32, y: 441 }
+    leftTop: { x: 879e-5, y: 0.542 },
+    // 原 9, 417
+    rightBottom: { x: 0.0312, y: 0.574 }
+    // 原 32, 441
   },
   SLOT_8: {
-    leftTop: { x: 9, y: 453 },
-    rightBottom: { x: 32, y: 477 }
+    leftTop: { x: 879e-5, y: 0.59 },
+    // 原 9, 453
+    rightBottom: { x: 0.0312, y: 0.621 }
+    // 原 32, 477
   },
   SLOT_9: {
-    leftTop: { x: 9, y: 490 },
-    rightBottom: { x: 32, y: 514 }
+    leftTop: { x: 879e-5, y: 0.638 },
+    // 原 9, 490
+    rightBottom: { x: 0.0312, y: 0.669 }
+    // 原 32, 514
   },
   SLOT_10: {
-    leftTop: { x: 9, y: 526 },
-    rightBottom: { x: 32, y: 550 }
+    leftTop: { x: 879e-5, y: 0.684 },
+    // 原 9, 526
+    rightBottom: { x: 0.0312, y: 0.716 }
+    // 原 32, 550
+  }
+};
+const androidEquipmentSlot = {
+  EQ_SLOT_1: { x: 0.0578, y: 0.111 },
+  EQ_SLOT_2: { x: 0.0578, y: 0.207 },
+  EQ_SLOT_3: { x: 0.0578, y: 0.303 },
+  EQ_SLOT_4: { x: 0.0578, y: 0.399 },
+  EQ_SLOT_5: { x: 0.0578, y: 0.495 }
+};
+const androidEquipmentRegion = {
+  SLOT_1: {
+    leftTop: { x: 0.0305, y: 0.051 },
+    rightBottom: { x: 0.0851, y: 0.17 }
+  },
+  SLOT_2: {
+    leftTop: { x: 0.0305, y: 0.147 },
+    rightBottom: { x: 0.0851, y: 0.266 }
+  },
+  SLOT_3: {
+    leftTop: { x: 0.0305, y: 0.243 },
+    rightBottom: { x: 0.0851, y: 0.362 }
+  },
+  SLOT_4: {
+    leftTop: { x: 0.0305, y: 0.339 },
+    rightBottom: { x: 0.0851, y: 0.458 }
+  },
+  SLOT_5: {
+    leftTop: { x: 0.0305, y: 0.436 },
+    rightBottom: { x: 0.0851, y: 0.5548 }
   }
 };
 const fightBoardSlotPoint = {
-  // x+=80
-  //  第一行的棋子位置
-  R1_C1: { x: 230, y: 300 },
-  R1_C2: { x: 310, y: 300 },
-  R1_C3: { x: 390, y: 300 },
-  R1_C4: { x: 470, y: 300 },
-  R1_C5: { x: 550, y: 300 },
-  R1_C6: { x: 630, y: 300 },
-  R1_C7: { x: 710, y: 300 },
-  //  第二行的棋子位置        //  x+=85
-  R2_C1: { x: 260, y: 355 },
-  R2_C2: { x: 345, y: 355 },
-  R2_C3: { x: 430, y: 355 },
-  R2_C4: { x: 515, y: 355 },
-  R2_C5: { x: 600, y: 355 },
-  R2_C6: { x: 685, y: 355 },
-  R2_C7: { x: 770, y: 355 },
-  //  第三行棋子的位置        //  x+=90
-  R3_C1: { x: 200, y: 405 },
-  R3_C2: { x: 290, y: 405 },
-  R3_C3: { x: 380, y: 405 },
-  R3_C4: { x: 470, y: 405 },
-  R3_C5: { x: 560, y: 405 },
-  R3_C6: { x: 650, y: 405 },
-  R3_C7: { x: 740, y: 405 },
-  //  第四行棋子的位置        //  x+=90
-  R4_C1: { x: 240, y: 460 },
-  R4_C2: { x: 330, y: 460 },
-  R4_C3: { x: 420, y: 460 },
-  R4_C4: { x: 510, y: 460 },
-  R4_C5: { x: 600, y: 460 },
-  R4_C6: { x: 690, y: 460 },
-  R4_C7: { x: 780, y: 460 }
+  // 第一行的棋子位置
+  R1_C1: { x: 0.2246, y: 0.3906 },
+  // 原 230, 300
+  R1_C2: { x: 0.3027, y: 0.3906 },
+  // 原 310, 300
+  R1_C3: { x: 0.3809, y: 0.3906 },
+  // 原 390, 300
+  R1_C4: { x: 0.459, y: 0.3906 },
+  // 原 470, 300
+  R1_C5: { x: 0.5371, y: 0.3906 },
+  // 原 550, 300
+  R1_C6: { x: 0.6152, y: 0.3906 },
+  // 原 630, 300
+  R1_C7: { x: 0.6934, y: 0.3906 },
+  // 原 710, 300
+  // 第二行的棋子位置
+  R2_C1: { x: 0.2539, y: 0.4622 },
+  // 原 260, 355
+  R2_C2: { x: 0.3369, y: 0.4622 },
+  // 原 345, 355
+  R2_C3: { x: 0.4199, y: 0.4622 },
+  // 原 430, 355
+  R2_C4: { x: 0.5029, y: 0.4622 },
+  // 原 515, 355
+  R2_C5: { x: 0.5859, y: 0.4622 },
+  // 原 600, 355
+  R2_C6: { x: 0.6689, y: 0.4622 },
+  // 原 685, 355
+  R2_C7: { x: 0.752, y: 0.4622 },
+  // 原 770, 355
+  // 第三行棋子的位置
+  R3_C1: { x: 0.1953, y: 0.5273 },
+  // 原 200, 405
+  R3_C2: { x: 0.2832, y: 0.5273 },
+  // 原 290, 405
+  R3_C3: { x: 0.3711, y: 0.5273 },
+  // 原 380, 405
+  R3_C4: { x: 0.459, y: 0.5273 },
+  // 原 470, 405
+  R3_C5: { x: 0.5469, y: 0.5273 },
+  // 原 560, 405
+  R3_C6: { x: 0.6348, y: 0.5273 },
+  // 原 650, 405
+  R3_C7: { x: 0.7227, y: 0.5273 },
+  // 原 740, 405
+  // 第四行棋子的位置
+  R4_C1: { x: 0.2344, y: 0.5989 },
+  // 原 240, 460
+  R4_C2: { x: 0.3223, y: 0.5989 },
+  // 原 330, 460
+  R4_C3: { x: 0.4102, y: 0.5989 },
+  // 原 420, 460
+  R4_C4: { x: 0.498, y: 0.5989 },
+  // 原 510, 460
+  R4_C5: { x: 0.5859, y: 0.5989 },
+  // 原 600, 460
+  R4_C6: { x: 0.6738, y: 0.5989 },
+  // 原 690, 460
+  R4_C7: { x: 0.7617, y: 0.5989 }
+  // 原 780, 460
 };
 const fightBoardSlotRegion = {
-  // x+=80
-  //  第一行的棋子位置
+  // 第一行的棋子位置
   R1_C1: {
-    leftTop: { x: 210 + 5, y: 300 - 10 },
-    rightBottom: { x: 255 - 5, y: 330 }
+    leftTop: { x: 0.2148, y: 0.3776 },
+    // 原 215+5, 300-10 = 220, 290
+    rightBottom: { x: 0.2441, y: 0.4297 }
+    // 原 255-5, 330 = 250, 330
   },
   R1_C2: {
-    leftTop: { x: 290 + 5, y: 300 - 10 },
-    rightBottom: { x: 340 - 5, y: 330 }
+    leftTop: { x: 0.2871, y: 0.3776 },
+    // 原 295+5, 300-10
+    rightBottom: { x: 0.333, y: 0.4297 }
+    // 原 340-5, 330
   },
   R1_C3: {
-    leftTop: { x: 370 + 5, y: 300 - 10 },
-    rightBottom: { x: 420 - 5, y: 330 }
+    leftTop: { x: 0.3662, y: 0.3776 },
+    // 原 375+5, 300-10
+    rightBottom: { x: 0.4111, y: 0.4297 }
+    // 原 420-5, 330
   },
   R1_C4: {
-    leftTop: { x: 450 + 5, y: 300 - 10 },
-    rightBottom: { x: 500 - 5, y: 330 }
+    leftTop: { x: 0.4443, y: 0.3776 },
+    // 原 455+5, 300-10
+    rightBottom: { x: 0.4893, y: 0.4297 }
+    // 原 500-5, 330
   },
   R1_C5: {
-    leftTop: { x: 530 + 5, y: 300 - 10 },
-    rightBottom: { x: 585 - 5, y: 330 }
+    leftTop: { x: 0.5225, y: 0.3776 },
+    // 原 535+5, 300-10
+    rightBottom: { x: 0.5723, y: 0.4297 }
+    // 原 585-5, 330
   },
   R1_C6: {
-    leftTop: { x: 615 + 5, y: 300 - 10 },
-    rightBottom: { x: 665 - 5, y: 330 }
+    leftTop: { x: 0.6006, y: 0.3776 },
+    // 原 615+5, 300-10
+    rightBottom: { x: 0.6504, y: 0.4297 }
+    // 原 665-5, 330
   },
   R1_C7: {
-    leftTop: { x: 695 + 5, y: 300 - 10 },
-    rightBottom: { x: 750 - 5, y: 330 }
+    leftTop: { x: 0.6787, y: 0.3776 },
+    // 原 695+5, 300-10
+    rightBottom: { x: 0.7324, y: 0.4297 }
+    // 原 750-5, 330
   },
-  //  第二行的棋子位置        //  x+=85
+  // 第二行的棋子位置
   R2_C1: {
-    leftTop: { x: 240 + 5, y: 350 - 10 },
-    rightBottom: { x: 285 - 5, y: 385 }
+    leftTop: { x: 0.2402, y: 0.4557 },
+    // 原 245+5, 350-10 = 250, 340
+    rightBottom: { x: 0.2783, y: 0.5013 }
+    // 原 285-5, 385 = 280, 385
   },
   R2_C2: {
-    leftTop: { x: 325 + 5, y: 350 - 10 },
-    rightBottom: { x: 370 - 5, y: 385 }
+    leftTop: { x: 0.3223, y: 0.4557 },
+    // 原 330+5, 350-10
+    rightBottom: { x: 0.3613, y: 0.5013 }
+    // 原 370-5, 385
   },
   R2_C3: {
-    leftTop: { x: 410 + 5, y: 350 - 10 },
-    rightBottom: { x: 455 - 5, y: 385 }
+    leftTop: { x: 0.4053, y: 0.4557 },
+    // 原 415+5, 350-10
+    rightBottom: { x: 0.4443, y: 0.5013 }
+    // 原 455-5, 385
   },
   R2_C4: {
-    leftTop: { x: 495 + 5, y: 350 - 10 },
-    rightBottom: { x: 540 - 5, y: 385 }
+    leftTop: { x: 0.4883, y: 0.4557 },
+    // 原 500+5, 350-10
+    rightBottom: { x: 0.5273, y: 0.5013 }
+    // 原 540-5, 385
   },
   R2_C5: {
-    leftTop: { x: 575 + 5, y: 350 - 10 },
-    rightBottom: { x: 625 - 5, y: 385 }
+    leftTop: { x: 0.5664, y: 0.4557 },
+    // 原 580+5, 350-10
+    rightBottom: { x: 0.6104, y: 0.5013 }
+    // 原 625-5, 385
   },
   R2_C6: {
-    leftTop: { x: 660 + 5, y: 350 - 10 },
-    rightBottom: { x: 710 - 5, y: 385 }
+    leftTop: { x: 0.6494, y: 0.4557 },
+    // 原 665+5, 350-10
+    rightBottom: { x: 0.6934, y: 0.5013 }
+    // 原 710-5, 385
   },
   R2_C7: {
-    leftTop: { x: 745 + 5, y: 350 - 10 },
-    rightBottom: { x: 795 - 5, y: 385 }
+    leftTop: { x: 0.7324, y: 0.4557 },
+    // 原 750+5, 350-10
+    rightBottom: { x: 0.7764, y: 0.5013 }
+    // 原 795-5, 385
   },
-  //  第三行棋子的位置        //  x+=90
+  // 第三行棋子的位置
   R3_C1: {
-    leftTop: { x: 185 + 5, y: 405 - 10 },
-    rightBottom: { x: 230 - 5, y: 440 }
+    leftTop: { x: 0.1855, y: 0.5273 },
+    // 原 190+5, 405-10 = 195, 395
+    rightBottom: { x: 0.2246, y: 0.5729 }
+    // 原 230-5, 440
   },
   R3_C2: {
-    leftTop: { x: 275 + 5, y: 405 - 10 },
-    rightBottom: { x: 320 - 5, y: 440 }
+    leftTop: { x: 0.2773, y: 0.5273 },
+    // 原 280+5, 405-10
+    rightBottom: { x: 0.3125, y: 0.5729 }
+    // 原 320-5, 440
   },
   R3_C3: {
-    leftTop: { x: 360 + 5, y: 405 - 10 },
-    rightBottom: { x: 410 - 5, y: 440 }
+    leftTop: { x: 0.3613, y: 0.5273 },
+    // 原 365+5, 405-10
+    rightBottom: { x: 0.4004, y: 0.5729 }
+    // 原 410-5, 440
   },
   R3_C4: {
-    leftTop: { x: 445 + 5, y: 405 - 10 },
-    rightBottom: { x: 495 - 5, y: 440 }
+    leftTop: { x: 0.4443, y: 0.5273 },
+    // 原 450+5, 405-10
+    rightBottom: { x: 0.4834, y: 0.5729 }
+    // 原 495-5, 440
   },
   R3_C5: {
-    leftTop: { x: 535 + 5, y: 405 - 10 },
-    rightBottom: { x: 585 - 5, y: 440 }
+    leftTop: { x: 0.5342, y: 0.5273 },
+    // 原 540+5, 405-10
+    rightBottom: { x: 0.5713, y: 0.5729 }
+    // 原 585-5, 440
   },
   R3_C6: {
-    leftTop: { x: 620 + 5, y: 405 - 10 },
-    rightBottom: { x: 675 - 5, y: 440 }
+    leftTop: { x: 0.6152, y: 0.5273 },
+    // 原 625+5, 405-10
+    rightBottom: { x: 0.6592, y: 0.5729 }
+    // 原 675-5, 440
   },
   R3_C7: {
-    leftTop: { x: 705 + 5, y: 405 - 10 },
-    rightBottom: { x: 760 - 5, y: 440 }
+    leftTop: { x: 0.6963, y: 0.5273 },
+    // 原 710+5, 405-10
+    rightBottom: { x: 0.7422, y: 0.5729 }
+    // 原 760-5, 440
   },
-  //  第四行棋子的位置        //  x+=90
+  // 第四行棋子的位置
   R4_C1: {
-    leftTop: { x: 215 + 5, y: 465 - 10 },
-    rightBottom: { x: 265 - 5, y: 500 }
+    leftTop: { x: 0.2148, y: 0.5989 },
+    // 原 220+5, 465-10 = 225, 455
+    rightBottom: { x: 0.2588, y: 0.651 }
+    // 原 265-5, 500
   },
   R4_C2: {
-    leftTop: { x: 310 + 5, y: 465 - 10 },
-    rightBottom: { x: 355 - 5, y: 500 }
+    leftTop: { x: 0.3042, y: 0.5989 },
+    // 原 315+5, 465-10
+    rightBottom: { x: 0.3467, y: 0.651 }
+    // 原 355-5, 500
   },
   R4_C3: {
-    leftTop: { x: 395 + 5, y: 465 - 10 },
-    rightBottom: { x: 450 - 5, y: 500 }
+    leftTop: { x: 0.3931, y: 0.5989 },
+    // 原 400+5, 465-10
+    rightBottom: { x: 0.4404, y: 0.651 }
+    // 原 450-5, 500
   },
   R4_C4: {
-    leftTop: { x: 490 + 5, y: 465 - 10 },
-    rightBottom: { x: 540 - 5, y: 500 }
+    leftTop: { x: 0.4785, y: 0.5989 },
+    // 原 490+5, 465-10
+    rightBottom: { x: 0.5283, y: 0.651 }
+    // 原 540-5, 500
   },
   R4_C5: {
-    leftTop: { x: 580 + 5, y: 465 - 10 },
-    rightBottom: { x: 635 - 5, y: 500 }
+    leftTop: { x: 0.5699, y: 0.5989 },
+    // 原 580+5, 465-10
+    rightBottom: { x: 0.6201, y: 0.651 }
+    // 原 635-5, 500
   },
   R4_C6: {
-    leftTop: { x: 670 + 5, y: 465 - 10 },
-    rightBottom: { x: 725 - 5, y: 500 }
+    leftTop: { x: 0.6553, y: 0.5989 },
+    // 原 670+5, 465-10
+    rightBottom: { x: 0.7085, y: 0.651 }
+    // 原 725-5, 500
   },
   R4_C7: {
-    leftTop: { x: 760 + 5, y: 465 - 10 },
-    rightBottom: { x: 815 - 5, y: 500 }
+    leftTop: { x: 0.7441, y: 0.5989 },
+    // 原 760+5, 465-10
+    rightBottom: { x: 0.7959, y: 0.651 }
+    // 原 815-5, 500
   }
 };
 const benchSlotRegion = {
   SLOT_1: {
-    leftTop: { x: 105 + 5, y: 530 - 15 },
-    rightBottom: { x: 155 - 5, y: 585 }
+    leftTop: { x: 0.1074, y: 0.6719 },
+    // 原 110+5, 530-15 = 115, 515
+    rightBottom: { x: 0.1514, y: 0.7617 }
+    // 原 155-5, 585 = 150, 585
   },
   SLOT_2: {
-    leftTop: { x: 190 + 5, y: 530 - 15 },
-    rightBottom: { x: 245 - 5, y: 585 }
+    leftTop: { x: 0.1895, y: 0.6719 },
+    // 原 195+5, 530-15
+    rightBottom: { x: 0.2388, y: 0.7617 }
+    // 原 245-5, 585
   },
   SLOT_3: {
-    leftTop: { x: 270 + 5, y: 530 - 15 },
-    rightBottom: { x: 325 - 5, y: 585 }
+    leftTop: { x: 0.2686, y: 0.6719 },
+    // 原 275+5, 530-15
+    rightBottom: { x: 0.3174, y: 0.7617 }
+    // 原 325-5, 585
   },
   SLOT_4: {
-    leftTop: { x: 355 + 5, y: 530 - 15 },
-    rightBottom: { x: 410 - 5, y: 585 }
+    leftTop: { x: 0.3564, y: 0.6719 },
+    // 原 360+5, 530-15
+    rightBottom: { x: 0.4053, y: 0.7617 }
+    // 原 415-5, 585
   },
   SLOT_5: {
-    leftTop: { x: 435 + 5, y: 530 - 15 },
-    rightBottom: { x: 495 - 5, y: 585 }
+    leftTop: { x: 0.4443, y: 0.6719 },
+    // 原 440+5, 530-15
+    rightBottom: { x: 0.4932, y: 0.7617 }
+    // 原 495-5, 585
   },
   SLOT_6: {
-    leftTop: { x: 520 + 5, y: 530 - 15 },
-    rightBottom: { x: 580 - 5, y: 585 }
+    leftTop: { x: 0.5273, y: 0.6719 },
+    // 原 525+5, 530-15
+    rightBottom: { x: 0.5859, y: 0.7617 }
+    // 原 580-5, 585
   },
   SLOT_7: {
-    leftTop: { x: 600 + 5, y: 530 - 15 },
-    rightBottom: { x: 665 - 5, y: 585 }
+    leftTop: { x: 0.6055, y: 0.6719 },
+    // 原 605+5, 530-15
+    rightBottom: { x: 0.666, y: 0.7617 }
+    // 原 665-5, 585
   },
   SLOT_8: {
-    leftTop: { x: 680 + 5, y: 530 - 15 },
-    rightBottom: { x: 750 - 5, y: 585 }
+    leftTop: { x: 0.6846, y: 0.6719 },
+    // 原 685+5, 530-15
+    rightBottom: { x: 0.7373, y: 0.7617 }
+    // 原 750-5, 585
   },
   SLOT_9: {
-    leftTop: { x: 765 + 5, y: 530 - 15 },
-    rightBottom: { x: 830 - 5, y: 585 }
+    leftTop: { x: 0.7715, y: 0.6719 },
+    // 原 770+5, 530-15
+    rightBottom: { x: 0.8105, y: 0.7617 }
+    // 原 830-5, 585
   }
 };
 const benchSlotPoints = {
-  SLOT_1: { x: 130, y: 555 },
-  SLOT_2: { x: 210, y: 555 },
-  SLOT_3: { x: 295, y: 555 },
-  SLOT_4: { x: 385, y: 555 },
-  SLOT_5: { x: 465, y: 555 },
-  SLOT_6: { x: 550, y: 555 },
-  SLOT_7: { x: 630, y: 555 },
-  SLOT_8: { x: 720, y: 555 },
-  SLOT_9: { x: 800, y: 555 }
+  SLOT_1: { x: 0.127, y: 0.7227 },
+  // 原 130, 555
+  SLOT_2: { x: 0.2051, y: 0.7227 },
+  // 原 210, 555
+  SLOT_3: { x: 0.2881, y: 0.7227 },
+  // 原 295, 555
+  SLOT_4: { x: 0.376, y: 0.7227 },
+  // 原 385, 555
+  SLOT_5: { x: 0.4541, y: 0.7227 },
+  // 原 465, 555
+  SLOT_6: { x: 0.5371, y: 0.7227 },
+  // 原 550, 555
+  SLOT_7: { x: 0.6152, y: 0.7227 },
+  // 原 630, 555
+  SLOT_8: { x: 0.7031, y: 0.7227 },
+  // 原 720, 555
+  SLOT_9: { x: 0.7813, y: 0.7227 }
+  // 原 800, 555
 };
 const hexSlot = {
-  //  x+=295
-  SLOT_1: { x: 215, y: 410 },
-  SLOT_2: { x: 510, y: 410 },
-  SLOT_3: { x: 805, y: 410 }
+  SLOT_1: { x: 0.21, y: 0.5339 },
+  // 原 215, 410
+  SLOT_2: { x: 0.498, y: 0.5339 },
+  // 原 510, 410
+  SLOT_3: { x: 0.7861, y: 0.5339 }
+  // 原 805, 410
 };
-const sharedDraftPoint = { x: 530, y: 400 };
-const gameStageDisplayStageOne = {
-  leftTop: { x: 411, y: 6 },
-  rightBottom: { x: 442, y: 22 }
-};
-const gameStageDisplayNormal = {
-  leftTop: { x: 374, y: 6 },
-  rightBottom: { x: 403, y: 22 }
-};
-const gameStageDisplayShopOpen = {
-  leftTop: { x: 365, y: 4 },
-  rightBottom: { x: 410, y: 24 }
-};
-const gameStageDisplayTheClockworkTrails = {
-  leftTop: { x: 337, y: 6 },
-  rightBottom: { x: 366, y: 22 }
-};
+const sharedDraftPoint = { x: 0.5176, y: 0.5208 };
 const clockworkTrailsFightButtonPoint = {
-  x: 955,
-  y: 705
+  x: 0.9326,
+  y: 0.9167
 };
 const clockworkTrailsQuitNowButtonRegion = {
-  leftTop: { x: 780, y: 555 },
-  rightBottom: { x: 845, y: 570 }
+  leftTop: { x: 0.7617, y: 0.7227 },
+  // 原 780, 555
+  rightBottom: { x: 0.8252, y: 0.7422 }
+  // 原 845, 570
 };
 const clockworkTrailsQuitNowButtonPoint = {
-  x: 815,
-  y: 560
+  x: 0.7959,
+  y: 0.7292
 };
 const combatPhaseTextRegion = {
-  leftTop: { x: 465, y: 110 },
-  rightBottom: { x: 560, y: 135 }
+  leftTop: { x: 0.4541, y: 0.1432 },
+  // 原 465, 110
+  rightBottom: { x: 0.5469, y: 0.1757 }
+  // 原 560, 135
+};
+const gameStageDisplayStageOne = {
+  leftTop: { x: 0.26, y: 0.01 },
+  // 占窗口的 26%, 1%
+  rightBottom: { x: 0.44, y: 0.035 }
+  // 占窗口的 44%, 3.5%
+};
+const gameStageDisplayNormal = {
+  leftTop: { x: 0.25, y: 0.01 },
+  // 占窗口的 25%, 1%
+  rightBottom: { x: 0.42, y: 0.035 }
+  // 占窗口的 42%, 3.5%
+};
+const gameStageDisplayShopOpen = {
+  leftTop: { x: 0.24, y: 5e-3 },
+  // 占窗口的 24%, 0.5%
+  rightBottom: { x: 0.45, y: 0.04 }
+  // 占窗口的 45%, 4%
+};
+const androidGameStageDisplayStageOne = {
+  leftTop: { x: 0.345, y: 0 },
+  rightBottom: { x: 0.47, y: 0.08 }
+};
+const androidGameStageDisplayNormal = {
+  leftTop: { x: 0.33, y: 0 },
+  rightBottom: { x: 0.43, y: 0.06 }
+};
+const androidGameStageDisplayShopOpen = {
+  leftTop: { x: 0.33, y: 0 },
+  rightBottom: { x: 0.43, y: 0.06 }
+};
+const gameStageDisplayTheClockworkTrails = {
+  leftTop: { x: 0.22, y: 0.01 },
+  // 占窗口的 22%, 1%
+  rightBottom: { x: 0.4, y: 0.035 }
+  // 占窗口的 40%, 3.5%
 };
 var ItemForgeType = /* @__PURE__ */ ((ItemForgeType2) => {
   ItemForgeType2["NONE"] = "NONE";
@@ -11032,7 +11333,10 @@ class SettingsStore {
       /* RIOT_PC */
       // 默认电脑 Riot 客户端
     };
-    this.store = new Store({ defaults });
+    this.store = new Store({
+      projectName: "tft-hextech-helper",
+      defaults
+    });
   }
   /**
    * 获取配置项（支持点号路径访问嵌套属性）
@@ -11330,6 +11634,8 @@ function checkNativeModules() {
 }
 let hexService;
 let pcLogicRunner;
+let androidSimulationRunner;
+let androidRecognitionReplayRunner;
 let tftDataService;
 let tftOperator;
 let lineupLoader;
@@ -11456,8 +11762,98 @@ function sendOverlayPlayerData(players) {
     overlayWindow.webContents.send(IpcChannel.OVERLAY_UPDATE_PLAYERS, players);
   }
 }
+function normalizeStartRoute(rawRoute) {
+  if (!rawRoute) {
+    return "";
+  }
+  if (rawRoute.startsWith("#")) {
+    return rawRoute;
+  }
+  if (rawRoute.startsWith("/")) {
+    return `#${rawRoute}`;
+  }
+  return `#/${rawRoute}`;
+}
+function shouldBlockRemoteAsset(url) {
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.hostname === "game.gtimg.cn" || parsedUrl.hostname === "c-tft-api.op.gg";
+  } catch {
+    return false;
+  }
+}
+function configureGuiVerificationSession(targetWindow) {
+  if (process.env.TFT_BLOCK_REMOTE_ASSETS !== "1") {
+    return;
+  }
+  targetWindow.webContents.session.webRequest.onBeforeRequest((details, callback) => {
+    if (shouldBlockRemoteAsset(details.url)) {
+      callback({ cancel: true });
+      return;
+    }
+    callback({});
+  });
+}
+async function runGuiVerification(targetWindow) {
+  const waitMs = Number.parseInt(process.env.TFT_GUI_VERIFY_WAIT_MS ?? "5000", 10);
+  const screenshotPath = process.env.TFT_GUI_VERIFY_SCREENSHOT ? path__default.resolve(process.cwd(), process.env.TFT_GUI_VERIFY_SCREENSHOT) : null;
+  const summaryPath = process.env.TFT_GUI_VERIFY_SUMMARY ? path__default.resolve(process.cwd(), process.env.TFT_GUI_VERIFY_SUMMARY) : null;
+  await new Promise((resolve) => setTimeout(resolve, Number.isFinite(waitMs) ? waitMs : 5e3));
+  const summary = await targetWindow.webContents.executeJavaScript(`
+        (async () => {
+            const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+            for (let index = 0; index < 20; index += 1) {
+                if (window.location.hash.includes('lineups') && document.querySelector('[data-page-wrapper]')) {
+                    break;
+                }
+                await sleep(250);
+            }
+
+            const images = [...document.querySelectorAll('img')].map((img) => ({
+                alt: img.getAttribute('alt') || '',
+                src: img.getAttribute('src') || '',
+                currentSrc: img.currentSrc || '',
+                complete: img.complete,
+                naturalWidth: img.naturalWidth,
+            }));
+            const resolvedSrc = (image) => image.currentSrc || image.src || '';
+            const localImages = images.filter((image) => /resources/season-packs/i.test(resolvedSrc(image)));
+            const remoteImages = images.filter((image) => /^https?:///i.test(resolvedSrc(image)));
+            const brokenImages = images.filter((image) => image.complete && image.naturalWidth === 0);
+
+            return {
+                hash: window.location.hash,
+                title: document.title,
+                bodyTextSample: document.body.innerText.slice(0, 800),
+                lineupPageVisible: Boolean(document.querySelector('[data-page-wrapper]')),
+                createButtonVisible: document.body.innerText.includes('创建阵容'),
+                totalImages: images.length,
+                localImageCount: localImages.length,
+                remoteImageCount: remoteImages.length,
+                brokenImageCount: brokenImages.length,
+                localImages: localImages.slice(0, 12),
+                remoteImages: remoteImages.slice(0, 12),
+                brokenImages: brokenImages.slice(0, 12),
+            };
+        })();
+    `, true);
+  if (summaryPath) {
+    fs__default.mkdirSync(path__default.dirname(summaryPath), { recursive: true });
+    fs__default.writeFileSync(summaryPath, JSON.stringify(summary, null, 2), "utf8");
+  }
+  if (screenshotPath) {
+    fs__default.mkdirSync(path__default.dirname(screenshotPath), { recursive: true });
+    const screenshot = await targetWindow.webContents.capturePage();
+    fs__default.writeFileSync(screenshotPath, screenshot.toPNG());
+  }
+  console.log(`[GUI_VERIFY] ${JSON.stringify(summary)}`);
+  if (process.env.TFT_GUI_VERIFY_EXIT !== "0") {
+    setTimeout(() => app.quit(), 300);
+  }
+}
 function createWindow() {
   const savedWindowInfo = settingsStore.get("window");
+  const startRoute = normalizeStartRoute(process.env.TFT_START_ROUTE);
   win = new BrowserWindow({
     icon: path__default.join(process.env.VITE_PUBLIC, "icon.png"),
     //  窗口左上角的图标
@@ -11472,6 +11868,7 @@ function createWindow() {
   });
   console.log("图标路径为：" + path__default.join(process.env.VITE_PUBLIC, "icon.png"));
   optimizer.watchWindowShortcuts(win);
+  configureGuiVerificationSession(win);
   const debouncedSaveBounds = debounce(() => {
     if (!win?.isMaximized() && !win?.isFullScreen()) {
       settingsStore.set("window.bounds", win?.getBounds());
@@ -11485,6 +11882,9 @@ function createWindow() {
   });
   win.webContents.on("did-finish-load", () => {
     win?.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
+    if (process.env.TFT_GUI_VERIFY === "1") {
+      void runGuiVerification(win);
+    }
   });
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith("http://") || url.startsWith("https://")) {
@@ -11494,9 +11894,14 @@ function createWindow() {
   });
   if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
     console.log("Renderer URL:", process.env.ELECTRON_RENDERER_URL);
-    win.loadURL(process.env["ELECTRON_RENDERER_URL"]);
+    win.loadURL(startRoute ? `${process.env["ELECTRON_RENDERER_URL"]}${startRoute}` : process.env["ELECTRON_RENDERER_URL"]);
   } else {
-    win.loadFile(path__default.join(__dirname, "../renderer/index.html"));
+    const rendererEntry = path__default.join(__dirname, "../renderer/index.html");
+    if (startRoute) {
+      win.loadFile(rendererEntry, { hash: startRoute.replace(/^#\/?/, "") });
+    } else {
+      win.loadFile(rendererEntry);
+    }
   }
 }
 app.on("window-all-closed", () => {
@@ -11565,11 +11970,13 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-EeZbVVM2.js");
+    const ServicesModule = await import("./chunks/index-DmLHaWJ_.js");
     hexService = ServicesModule.hexService;
     pcLogicRunner = ServicesModule.pcLogicRunner;
+    androidSimulationRunner = ServicesModule.androidSimulationRunner;
+    androidRecognitionReplayRunner = ServicesModule.androidRecognitionReplayRunner;
     tftDataService = ServicesModule.tftDataService;
-    const TftOperatorModule = await import("./chunks/TftOperator-BT9Sj3jw.js").then((n) => n.T);
+    const TftOperatorModule = await import("./chunks/TftOperator-CT-y2xpt.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
     const LineupModule = await import("./chunks/index-BZspSCi7.js");
     lineupLoader = LineupModule.lineupLoader;
@@ -11728,6 +12135,18 @@ function registerHandler() {
   ipcMain.handle(IpcChannel.PC_LOGIC_PLAN_ONCE, async (_event, state, context) => {
     return pcLogicRunner.planOnce(state, context);
   });
+  ipcMain.handle(IpcChannel.ANDROID_SIMULATION_PLAN_ONCE, async (_event, state, context) => {
+    return androidSimulationRunner.planOnce(state, context);
+  });
+  ipcMain.handle(IpcChannel.ANDROID_SIMULATION_LIST_SCENARIOS, async () => {
+    return androidSimulationRunner.listScenarios();
+  });
+  ipcMain.handle(IpcChannel.ANDROID_RECOGNITION_REPLAY_RUN, async (_event, fixtureId) => {
+    return androidRecognitionReplayRunner.runFixture(fixtureId);
+  });
+  ipcMain.handle(IpcChannel.ANDROID_RECOGNITION_REPLAY_LIST_FIXTURES, async () => {
+    return androidRecognitionReplayRunner.listFixtures();
+  });
   ipcMain.handle(IpcChannel.TFT_GET_MODE, async () => settingsStore.get("tftMode"));
   ipcMain.handle(IpcChannel.TFT_SET_MODE, async (_event, mode) => {
     settingsStore.set("tftMode", mode);
@@ -11844,45 +12263,56 @@ function registerHandler() {
   });
 }
 export {
-  showOverlay as $,
-  clockworkTrailsQuitNowButtonPoint as A,
-  levelRegion as B,
-  coinRegion as C,
-  hexSlot as D,
-  lootRegion as E,
-  littleLegendDefaultPoint as F,
+  TFT_4_CHESS_DATA as $,
+  detailChampionNameRegion as A,
+  androidEquipmentRegion as B,
+  equipmentRegion as C,
+  androidEquipmentSlot as D,
+  equipmentSlot as E,
+  gameStageDisplayTheClockworkTrails as F,
   GameClient as G,
-  selfWalkAroundPoints as H,
+  clockworkTrailsQuitNowButtonPoint as H,
   ItemForgeType as I,
-  equipmentSlot as J,
-  gameStageDisplayShopOpen as K,
-  gameStageDisplayStageOne as L,
-  gameStageDisplayNormal as M,
+  levelRegion as J,
+  androidHudXpTextRegion as K,
+  coinRegion as L,
+  hexSlot as M,
   MAIN_DIST,
-  combatPhaseTextRegion as N,
-  getChampionRange as O,
-  clockworkTrailsFightButtonPoint as P,
-  TFT_4_TRAIT_DATA as Q,
-  TFT_16_TRAIT_DATA as R,
+  androidHudGoldTextRegion as N,
+  androidSelfNameplateRegion as O,
+  androidScoreboardRegion as P,
+  lootRegion as Q,
+  littleLegendDefaultPoint as R,
   RENDERER_DIST,
-  sharedDraftPoint as S,
+  selfWalkAroundPoints as S,
   TFTMode as T,
-  UNSELLABLE_BOARD_UNITS as U,
-  GameConfigHelper as V,
+  androidGameStageDisplayShopOpen as U,
+  androidGameStageDisplayStageOne as V,
   VITE_DEV_SERVER_URL,
-  IpcChannel as W,
-  LCUManager as X,
-  getSeasonTemplateDir as Y,
-  isStandardChessMode as Z,
-  LcuEventUri as _,
+  androidGameStageDisplayNormal as W,
+  gameStageDisplayShopOpen as X,
+  gameStageDisplayStageOne as Y,
+  gameStageDisplayNormal as Z,
+  combatPhaseTextRegion as _,
   getEquipDataBySeason as a,
-  sendOverlayPlayers as a0,
-  closeOverlay as a1,
-  GameRegion as a2,
-  TFT_4_CHESS_DATA as a3,
-  TFT_4_EQUIP_DATA as a4,
-  analyticsManager as a5,
-  AnalyticsEvent as a6,
+  TFT_4_EQUIP_DATA as a0,
+  TFT_16_TRAIT_DATA as a1,
+  TFT_4_TRAIT_DATA as a2,
+  getChampionRange as a3,
+  UNSELLABLE_BOARD_UNITS as a4,
+  clockworkTrailsFightButtonPoint as a5,
+  sharedDraftPoint as a6,
+  GameConfigHelper as a7,
+  IpcChannel as a8,
+  LCUManager as a9,
+  isStandardChessMode as aa,
+  LcuEventUri as ab,
+  showOverlay as ac,
+  sendOverlayPlayers as ad,
+  closeOverlay as ae,
+  GameRegion as af,
+  analyticsManager as ag,
+  AnalyticsEvent as ah,
   getChessDataForMode as b,
   TFT_16_EQUIP_DATA as c,
   GameStageType as d,
@@ -11890,22 +12320,22 @@ export {
   fs as f,
   getChessDataBySeason as g,
   settingsStore as h,
-  shopSlotNameRegions as i,
-  equipmentRegion as j,
-  detailEquipRegion as k,
+  getSeasonTemplateDir as i,
+  detailEquipRegion as j,
+  shopSlot as k,
   logger as l,
-  shopSlot as m,
-  buyExpPoint as n,
-  benchSlotPoints as o,
-  benchSlotRegion as p,
-  detailChampionNameRegion as q,
+  buyExpPoint as m,
+  benchSlotPoints as n,
+  benchSlotRegion as o,
+  detailChampionStarRegion as p,
+  fightBoardSlotPoint as q,
   refreshShopPoint as r,
   sleep as s,
-  detailChampionStarRegion as t,
-  fightBoardSlotPoint as u,
-  fightBoardSlotRegion as v,
-  clockworkTrailsQuitNowButtonRegion as w,
-  itemForgeTooltipRegionEdge as x,
-  itemForgeTooltipRegion as y,
-  gameStageDisplayTheClockworkTrails as z
+  fightBoardSlotRegion as t,
+  clockworkTrailsQuitNowButtonRegion as u,
+  itemForgeTooltipRegionEdge as v,
+  itemForgeTooltipRegion as w,
+  androidShopSlotNameRegions as x,
+  shopSlotNameRegions as y,
+  androidDetailChampionNameRegion as z
 };

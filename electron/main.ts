@@ -1,5 +1,6 @@
 import {app, BrowserWindow, ipcMain, shell, net, dialog} from 'electron'
 import 'source-map-support/register';
+import fs from 'fs';
 import path from "path";
 import { exec } from 'child_process';  // 用于执行系统命令
 
@@ -324,8 +325,117 @@ function sendOverlayPlayerData(players: { name: string; isBot: boolean }[]): voi
     }
 }
 
+function normalizeStartRoute(rawRoute?: string): string {
+    if (!rawRoute) {
+        return "";
+    }
+
+    if (rawRoute.startsWith("#")) {
+        return rawRoute;
+    }
+
+    if (rawRoute.startsWith("/")) {
+        return `#${rawRoute}`;
+    }
+
+    return `#/${rawRoute}`;
+}
+
+function shouldBlockRemoteAsset(url: string): boolean {
+    try {
+        const parsedUrl = new URL(url);
+        return parsedUrl.hostname === "game.gtimg.cn" || parsedUrl.hostname === "c-tft-api.op.gg";
+    } catch {
+        return false;
+    }
+}
+
+function configureGuiVerificationSession(targetWindow: BrowserWindow): void {
+    if (process.env.TFT_BLOCK_REMOTE_ASSETS !== "1") {
+        return;
+    }
+
+    targetWindow.webContents.session.webRequest.onBeforeRequest((details, callback) => {
+        if (shouldBlockRemoteAsset(details.url)) {
+            callback({ cancel: true });
+            return;
+        }
+
+        callback({});
+    });
+}
+
+async function runGuiVerification(targetWindow: BrowserWindow): Promise<void> {
+    const waitMs = Number.parseInt(process.env.TFT_GUI_VERIFY_WAIT_MS ?? "5000", 10);
+    const screenshotPath = process.env.TFT_GUI_VERIFY_SCREENSHOT
+        ? path.resolve(process.cwd(), process.env.TFT_GUI_VERIFY_SCREENSHOT)
+        : null;
+    const summaryPath = process.env.TFT_GUI_VERIFY_SUMMARY
+        ? path.resolve(process.cwd(), process.env.TFT_GUI_VERIFY_SUMMARY)
+        : null;
+
+    await new Promise((resolve) => setTimeout(resolve, Number.isFinite(waitMs) ? waitMs : 5000));
+
+    const summary = await targetWindow.webContents.executeJavaScript(`
+        (async () => {
+            const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+            for (let index = 0; index < 20; index += 1) {
+                if (window.location.hash.includes('lineups') && document.querySelector('[data-page-wrapper]')) {
+                    break;
+                }
+                await sleep(250);
+            }
+
+            const images = [...document.querySelectorAll('img')].map((img) => ({
+                alt: img.getAttribute('alt') || '',
+                src: img.getAttribute('src') || '',
+                currentSrc: img.currentSrc || '',
+                complete: img.complete,
+                naturalWidth: img.naturalWidth,
+            }));
+            const resolvedSrc = (image) => image.currentSrc || image.src || '';
+            const localImages = images.filter((image) => /resources\/season-packs/i.test(resolvedSrc(image)));
+            const remoteImages = images.filter((image) => /^https?:\/\//i.test(resolvedSrc(image)));
+            const brokenImages = images.filter((image) => image.complete && image.naturalWidth === 0);
+
+            return {
+                hash: window.location.hash,
+                title: document.title,
+                bodyTextSample: document.body.innerText.slice(0, 800),
+                lineupPageVisible: Boolean(document.querySelector('[data-page-wrapper]')),
+                createButtonVisible: document.body.innerText.includes('创建阵容'),
+                totalImages: images.length,
+                localImageCount: localImages.length,
+                remoteImageCount: remoteImages.length,
+                brokenImageCount: brokenImages.length,
+                localImages: localImages.slice(0, 12),
+                remoteImages: remoteImages.slice(0, 12),
+                brokenImages: brokenImages.slice(0, 12),
+            };
+        })();
+    `, true);
+
+    if (summaryPath) {
+        fs.mkdirSync(path.dirname(summaryPath), { recursive: true });
+        fs.writeFileSync(summaryPath, JSON.stringify(summary, null, 2), 'utf8');
+    }
+
+    if (screenshotPath) {
+        fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
+        const screenshot = await targetWindow.webContents.capturePage();
+        fs.writeFileSync(screenshotPath, screenshot.toPNG());
+    }
+
+    console.log(`[GUI_VERIFY] ${JSON.stringify(summary)}`);
+
+    if (process.env.TFT_GUI_VERIFY_EXIT !== "0") {
+        setTimeout(() => app.quit(), 300);
+    }
+}
+
 function createWindow() {
     const savedWindowInfo = settingsStore.get("window")
+    const startRoute = normalizeStartRoute(process.env.TFT_START_ROUTE);
 
     win = new BrowserWindow({
         icon: path.join(process.env.VITE_PUBLIC, 'icon.png'),//  窗口左上角的图标
@@ -340,6 +450,8 @@ function createWindow() {
     console.log("图标路径为：" + path.join(process.env.VITE_PUBLIC, 'icon.png'))
 
     optimizer.watchWindowShortcuts(win) //  监听快捷键，打开F12控制台
+
+    configureGuiVerificationSession(win)
 
 
     const debouncedSaveBounds = debounce(() => {
@@ -365,6 +477,10 @@ function createWindow() {
     // Test active push message to Renderer-process.
     win.webContents.on('did-finish-load', () => {
         win?.webContents.send('main-process-message', (new Date).toLocaleString())
+
+        if (process.env.TFT_GUI_VERIFY === '1') {
+            void runGuiVerification(win!);
+        }
     })
     
     // 拦截所有外部链接，使用系统默认浏览器打开
@@ -381,11 +497,16 @@ function createWindow() {
     if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
         console.log('Renderer URL:', process.env.ELECTRON_RENDERER_URL);
 
-        win.loadURL(process.env['ELECTRON_RENDERER_URL'])
+        win.loadURL(startRoute ? `${process.env['ELECTRON_RENDERER_URL']}${startRoute}` : process.env['ELECTRON_RENDERER_URL'])
     } else {
         // prod: load built index.html
         // __dirname 在打包后指向 out/main/，而 index.html 在 out/renderer/ 目录
-        win.loadFile(path.join(__dirname, '../renderer/index.html'))
+        const rendererEntry = path.join(__dirname, '../renderer/index.html')
+        if (startRoute) {
+            win.loadFile(rendererEntry, { hash: startRoute.replace(/^#\/?/, '') })
+        } else {
+            win.loadFile(rendererEntry)
+        }
     }
 }
 

@@ -1,7 +1,7 @@
 import {ipcRenderer, contextBridge} from 'electron'
 import IpcRendererEvent = Electron.IpcRendererEvent;
-import {LobbyConfig, Queue, SummonerInfo} from "../src-backend/lcu/utils/LCUProtocols.ts";
-import {IpcChannel} from "./protocol.ts";
+import {LobbyConfig, Queue, SummonerInfo} from "../src-backend/lcu/utils/LCUProtocols";
+import {IpcChannel} from "./protocol";
 
 // --------- Expose some API to the Renderer process ---------
 const exposedIpcRenderer = {
@@ -136,6 +136,8 @@ const tftApi = {
     getAndroidSimulationScenarios: () => ipcRenderer.invoke(IpcChannel.ANDROID_SIMULATION_LIST_SCENARIOS),
     runAndroidRecognitionReplay: (fixtureId: string) => ipcRenderer.invoke(IpcChannel.ANDROID_RECOGNITION_REPLAY_RUN, fixtureId),
     getAndroidRecognitionReplayFixtures: () => ipcRenderer.invoke(IpcChannel.ANDROID_RECOGNITION_REPLAY_LIST_FIXTURES),
+    getDataSnapshot: () => ipcRenderer.invoke(IpcChannel.TFT_DATA_GET_SNAPSHOT),
+    refreshDataSnapshot: () => ipcRenderer.invoke(IpcChannel.TFT_DATA_REFRESH),
 }
 export type TftApi = typeof tftApi
 contextBridge.exposeInMainWorld('tft', tftApi)

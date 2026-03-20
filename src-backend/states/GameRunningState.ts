@@ -59,6 +59,18 @@ export class GameRunningState implements IState {
     /** LCU 管理器实例 */
     private lcuManager: LCUManager | null = null;
 
+    private async hasAndroidLiveHudSignal(): Promise<boolean> {
+        const [levelResult, coinResult] = await Promise.allSettled([
+            tftOperator.getLevelInfo(),
+            tftOperator.getCoinCount(),
+        ]);
+
+        return (
+            (levelResult.status === "fulfilled" && levelResult.value !== null) ||
+            (coinResult.status === "fulfilled" && coinResult.value !== null)
+        );
+    }
+
     /**
      * 执行游戏运行状态逻辑
      * @param signal AbortSignal 用于取消操作
@@ -416,6 +428,13 @@ export class GameRunningState implements IState {
 
                         if (hasValidStage) {
                             androidUnknownStageCount = 0;
+                            return;
+                        }
+
+                        const hasHudSignal = await this.hasAndroidLiveHudSignal();
+                        if (hasHudSignal) {
+                            androidUnknownStageCount = 0;
+                            logger.debug("[GameRunningState] 安卓端阶段暂未识别，但 HUD 仍可读取，跳过结束计数");
                             return;
                         }
 

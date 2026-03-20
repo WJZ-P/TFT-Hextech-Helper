@@ -60,6 +60,21 @@ The importer tolerates:
 
 It does not copy images, generate manifests, or rewrite `public/lineups`.
 
+### Unified Read Layer
+
+`src-backend/data/TftDataHub.ts` is the incremental read adapter for mixed data sources.
+
+It currently centralizes:
+
+- snapshot reads from `TftDataService`
+- automation lineup reads from `LineupLoader`
+- season-aware champion/item/trait lookups for strategy code
+- `getTraitCatalogForMode(mode)` — returns `TFT_16_TRAIT_DATA` or `TFT_4_TRAIT_DATA` by mode
+- `getEquipmentNameById(equipId, season?)` — resolves an equipment ID to its display name via the loaded catalog
+- `isUnitUnsellable(name)` — delegates to `UNSELLABLE_BOARD_UNITS` from `chess.ts`
+
+This layer is intentionally additive. It does not remove static fallbacks; it gives strategy code a clearer place to migrate toward.
+
 ### Image Syncer
 
 `src-backend/data/JinChanSeasonPackAssetSyncer.ts` owns non-destructive asset staging for season packs:
@@ -113,6 +128,7 @@ These fields support planning and runtime decisions:
 - trait lists
 
 `src-backend/lineup/LineupLoader.ts` remains the automation-specific loader for staged lineup configs under `public/lineups`.
+`src-backend/data/TftDataHub.ts` is the preferred read facade when strategy code needs lineup plus catalog access in one place.
 
 ### Display Fields
 

@@ -1,0 +1,18 @@
+{
+  "id": "android-s16-stage-1-1-combat",
+  "label": "真机 1-1 阶段识别",
+  "description": "使用真实 1-1 战斗阶段录屏抽帧，验证 1-1 阶段的 OCR 识别能力。填补了 1-1 阶段的测试空白。",
+  "mode": "NORMAL",
+  "referenceScenarioId": "android-real-recording-1-1-combat",
+  "notes": [
+    "1-1 阶段在录屏 0:05 处捕获，阶段文字清晰可读。",
+    "1-1 属于 EARLY_PVE 类型，parseStageStringToEnum 会返回 EARLY_PVE。"
+  ],
+  "stage": {
+    "imagePath": "assets/stage-1-1.png",
+    "expectedText": "1-1",
+    "expectedType": "EARLY_PVE",
+    "note": "真实 1-1 战斗阶段顶部 HUD 裁片。"
+  },
+  "champions": []
+}

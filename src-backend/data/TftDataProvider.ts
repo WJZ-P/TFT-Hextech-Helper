@@ -25,7 +25,9 @@ const DEFAULT_TIMEOUT_MS = 8000;
 const DEFAULT_LINEUP_SEASON = "s16";
 const DEFAULT_LINEUP_CHANNEL = "53";
 const DEFAULT_CACHE_FILE = path.join(process.cwd(), ".cache", "tft-data-snapshot.json");
-const DEFAULT_SEASON_PACK_DIR = path.join(process.cwd(), "season-packs");
+const DEFAULT_SEASON_PACK_DIR = process.env.TFT_SEASON_PACK_DIR
+    ? path.resolve(process.env.TFT_SEASON_PACK_DIR)
+    : path.join(process.cwd(), "season-packs");
 
 const QQ_DATA_BASE = "https://game.gtimg.cn/images/lol/act/img/tft/js";
 const LINEUP_BASE = "https://game.gtimg.cn/images/lol/act/tftzlkauto/json/lineupJson";

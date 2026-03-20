@@ -3,7 +3,7 @@ import path from "path";
 import type { TftDataSnapshot } from "./types";
 import { resolveJinChanSeasonPackLocation } from "./JinChanSeasonPackLoader";
 
-const SUPPORTED_IMAGE_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg"] as const;
+const SUPPORTED_IMAGE_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg", ".svg"] as const;
 const DEFAULT_OUTPUT_ROOT = path.join(process.cwd(), "public", "resources", "season-packs");
 const DEFAULT_PUBLIC_PREFIX = "resources/season-packs";
 

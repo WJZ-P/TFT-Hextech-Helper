@@ -1,0 +1,18 @@
+{
+  "id": "android-s16-opening-stage-1-4",
+  "label": "真机开局商店关闭阶段识别",
+  "description": "使用真实开局 1-4 顶部阶段裁片，回归验证开局商店关闭时的阶段识别。",
+  "mode": "NORMAL",
+  "referenceScenarioId": "android-real-recording-opening-detail-1-4",
+  "notes": [
+    "这是当前最接近开局商店关闭的真实样本。",
+    "用于覆盖第一阶段顶部 UI 与详情面板共存时的识别。"
+  ],
+  "stage": {
+    "imagePath": "../recordings/derived/android-real-recording-20260315-ionia/crops/recording-opening-detail-1-4-stage-raw.png",
+    "expectedText": "1-4",
+    "expectedType": "EARLY_PVE",
+    "note": "真实开局详情页阶段裁片。"
+  },
+  "champions": []
+}

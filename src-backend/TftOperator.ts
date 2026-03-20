@@ -1693,6 +1693,20 @@ class TftOperator {
                     rightBottom: { x: 0.411, y: 0.055 },
                 }),
             },
+            {
+                label: "titlebar-shift",
+                region: screenCapture.toAbsoluteRegion({
+                    leftTop: { x: 0.28, y: 0.035 },
+                    rightBottom: { x: 0.49, y: 0.105 },
+                }),
+            },
+            {
+                label: "shop-open-wide",
+                region: screenCapture.toAbsoluteRegion({
+                    leftTop: { x: 0.33, y: 0.00 },
+                    rightBottom: { x: 0.50, y: 0.075 },
+                }),
+            },
         ];
 
         const candidates: Array<{ text: string; rawText: string; label: string }> = [];

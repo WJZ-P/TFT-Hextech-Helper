@@ -6,7 +6,7 @@ export type StaticRecognitionSource = "OCR" | "TEMPLATE" | "UNITS" | "FIXTURE" |
 
 export interface AndroidRecognitionStageFixture {
     imagePath?: string;
-    ocrText: string;
+    ocrText?: string;
     expectedText: string;
     expectedType: GameStageType;
     note?: string;

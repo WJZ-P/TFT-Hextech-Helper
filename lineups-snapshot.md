@@ -1,0 +1,25 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]:
+      - img [ref=e6]
+      - generic: 海克斯科技助手
+    - navigation [ref=e8]:
+      - link "主界面" [ref=e11] [cursor=pointer]:
+        - /url: "#/"
+        - img [ref=e12]
+        - generic: 主界面
+      - link "阵容搭配" [ref=e16] [cursor=pointer]:
+        - /url: "#/lineups"
+        - img [ref=e17]
+        - generic: 阵容搭配
+      - link "调试页" [ref=e21] [cursor=pointer]:
+        - /url: "#/debug"
+        - img [ref=e22]
+        - generic: 调试页
+      - link "设置" [ref=e26] [cursor=pointer]:
+        - /url: "#/settings"
+        - img [ref=e27]
+        - generic: 设置
+    - button [ref=e29] [cursor=pointer]:
+      - img [ref=e30]
+  - main [ref=e32]

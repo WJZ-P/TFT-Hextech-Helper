@@ -1,0 +1,16 @@
+[
+  {
+    "Name": "反曲之弓",
+    "EquipmentType": "散件"
+  },
+  {
+    "Name": "鬼索的狂暴之刃",
+    "EquipmentType": "普通装备",
+    "SyntheticPathway": ["反曲之弓", "无用大棒"]
+  },
+  {
+    "Name": "无尽之刃",
+    "EquipmentType": "普通装备",
+    "SyntheticPathway": ["暴风之剑", "拳套"]
+  }
+]
