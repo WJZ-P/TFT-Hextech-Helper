@@ -56,25 +56,6 @@ function getUnitData(cnName: string, season: TftUiSeason): TFTUnit | undefined {
     return chessData[cnName];
 }
 
-// Tencent champions/{chessId}.png returns skill icons (not portraits) for S16 100xxx chessIds.
-// OP.GG URL is reliable for S16 portraits, so we skip the broken Tencent fallback for S16.
-/**
- * Detects if a URL is likely a skill icon rather than a champion avatar.
- * Skill icons contain patterns like _q, _w, _e, _r, _passive in the filename.
- * @example
- * isSkillIconUrl("https://game.gtimg.cn/...tft15_ekko_e.tft_set15.png") → true
- * isSkillIconUrl("https://c-tft-api.op.gg/.../TFT16_Ekko.tft_set16.png") → false
- */
-function isSkillIconUrl(url: string): boolean {
-    if (!url) {
-        return false;
-    }
-    // Match Tencent skill icon patterns: tft*_champion_[qwer|passive].tft_set*.png
-    // Also match URLs with icons_ prefix (icon strip patterns)
-    return /tft\d+_[a-z0-9_]+(passive|_q|_w|_e|_r)\.tft_set\d+\.png$/i.test(url) ||
-           /icons_tft/i.test(url);
-}
-
 function getCdnAvatarSources(cnName: string, season: TftUiSeason): string[] {
     const chessId = getChessId(cnName, season);
     const unitData = getUnitData(cnName, season);
@@ -122,12 +103,14 @@ export function createTftAssetResolver(snapshot?: TftImageSnapshot | null): TftA
         resolveChampionAvatarSources(championName: string, season: TftUiSeason): string[] {
             const snapshotUrl = championImageByName.get(championName);
             
-            // S16: Filter out skill icon URLs from snapshot to prevent display errors.
-            // Remote QQ snapshot often contains skill icons instead of portraits for S16 champions.
-            // OP.GG is the reliable source for S16 avatars.
-            const safeSnapshotUrl = (season === "S16" && snapshotUrl && isSkillIconUrl(snapshotUrl))
-                ? undefined
-                : snapshotUrl;
+            // S16: Skip snapshot URLs from Tencent CDN (game.gtimg.cn) because nearly all
+            // S16 champions have ability/skill icon URLs embedded as their imageUrl
+            // (e.g. tft16_jinx_q1, tft16_garen_e1, tft16_viw2, etc.).
+            // Pattern-matching individual ability names is a losing game with 28+ variants.
+            // Local season-pack paths are safe to use; only remote Tencent CDN is unreliable.
+            // OP.GG is the only reliable remote source for S16 champion portraits.
+            const isTencentCdnUrl = snapshotUrl && /game\.gtimg\.cn/i.test(snapshotUrl);
+            const safeSnapshotUrl = season === "S16" && isTencentCdnUrl ? undefined : snapshotUrl;
             
             return uniqueSources([
                 safeSnapshotUrl,
