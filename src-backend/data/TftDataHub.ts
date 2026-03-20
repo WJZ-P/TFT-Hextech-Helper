@@ -121,4 +121,56 @@ export class TftDataHub {
     public isUnitUnsellable(name: string): boolean {
         return UNSELLABLE_BOARD_UNITS.has(name);
     }
+
+    /**
+     * 判断某装备是否可穿戴（排除特殊道具，如拆卸器/重铸器，equipId="-1"）
+     */
+    public isWearableEquipment(name: string, season?: string): boolean {
+        const data = this.getEquipmentDefinition(name, season);
+        if (!data) return false;
+        return data.equipId !== "-1";
+    }
+
+    /**
+     * 根据装备散件组成推断前排/后排倾向
+     */
+    public getEquipmentRoleHint(name: string, season?: string): 'frontline' | 'backline' | 'any' {
+        const components = this.getEquipmentComponents(name, season);
+        if (components.length === 0) return 'any';
+        const isFront = (n: string) => n === '锁子甲' || n === '负极斗篷' || n === '巨人腰带';
+        const isBack = (n: string) => n === '反曲之弓' || n === '暴风之剑' || n === '无用大棒' || n === '女神之泪';
+        if (components.length === 1) {
+            if (isFront(components[0])) return 'frontline';
+            if (isBack(components[0])) return 'backline';
+            return 'any';
+        }
+        const frontCount = components.filter(isFront).length;
+        const backCount = components.filter(isBack).length;
+        if (frontCount === 2) return 'frontline';
+        if (backCount === 2) return 'backline';
+        return 'any';
+    }
+
+    /**
+     * 判断某装备是否为基础散件（formula 为空字符串）
+     */
+    public isBaseComponentEquipment(name: string, season?: string): boolean {
+        const equip = this.getEquipmentDefinition(name, season);
+        if (!equip) return false;
+        return (equip.formula ?? '').trim() === '';
+    }
+
+    /**
+     * 获取装备的散件组成（基础散件返回 [自身]，成装返回 [散件1, 散件2]）
+     */
+    public getEquipmentComponents(name: string, season?: string): string[] {
+        const equip = this.getEquipmentDefinition(name, season);
+        if (!equip) return [];
+        const formula = (equip.formula ?? '').trim();
+        if (!formula) return [name];
+        const [id1, id2] = formula.split(',');
+        const n1 = id1 ? this.getEquipmentNameById(id1, season) : undefined;
+        const n2 = id2 ? this.getEquipmentNameById(id2, season) : undefined;
+        return [n1, n2].filter((n): n is string => Boolean(n));
+    }
 }

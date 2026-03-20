@@ -81,6 +81,36 @@ export class AndroidEmulatorAdapter implements GameAdapter {
             tftOperator.getEquipInfo(),
         ]);
 
+        // Live stability note: stageResult.type may be UNKNOWN when OCR crops fall outside expected
+        // regions due to emulator resolution mismatch, shop-open UI shift, or frame timing.
+        // Three known instability sources (as of Mar 2026, wave 3 investigation):
+        //
+        // 1. Crop offset drift — percentage-based region constants assume a fixed aspect ratio;
+        //    emulators with non-standard resolutions shift the stage text out of the crop window.
+        //    MITIGATED: getAndroidStageFallbackRegions() provides 9 fallback scan windows with
+        //    varying percentages (TftOperator.ts lines 1783-1814).
+        //
+        // 2. Shop-open UI compression — when the shop is open, the topbar compresses horizontally,
+        //    causing stage text to appear further left than the standard region covers.
+        //    MITIGATED: androidGameStageDisplayShopOpen (TFTProtocol.ts) was widened to x=0.310-0.470
+        //    to cover the leftward drift; recognizeAndroidStageWithVoting() also adds shop-open-wide
+        //    and titlebar-shift variants (TftOperator.ts lines 1684-1709).
+        //
+        // 3. Frame timing — getGameStage() may capture mid-transition frames where text is partially
+        //    obscured by animations; regression fixtures use settled frames only.
+        //    MITIGATED: confirmStageWithHistory() requires 4 consecutive matching reads (TftOperator.ts
+        //    lines 1821-1847) before confirming a stage.
+        //
+        // Remaining risk: very high-DPI emulators, emulators with title-bar/toolbar offsets not
+        // captured by any fallback region, or rapid stage transitions where 4-frame confirmation
+        // lags behind. UNKNOWN is a safe fallback — it triggers the "stay in place" behavior.
+        if (stageResult.type === GameStageType.UNKNOWN) {
+            logger.warn(
+                `[AndroidEmulatorAdapter] stage OCR returned UNKNOWN — stageText="${stageResult.stageText ?? ""}". ` +
+                `Possible causes: resolution crop drift, shop-open UI shift, or mid-transition frame.`
+            );
+        }
+
         return normalizeRuntimeState({
             client: GameClient.ANDROID,
             target: this.target,

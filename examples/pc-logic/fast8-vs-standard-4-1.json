@@ -1,0 +1,54 @@
+{
+  "description": "4-1 FAST8 vs standard economy floor difference: hp=44 (just above threshold 42), gold=32, 3 board units at level 6 (board.length=3 < level-1=5 → weakBoard via slot underfill). Both presets: mustStabilize=true (via weakBoard from board underfill). FAST8: economyFloor=24, rollBudget=8, count=3. Standard: economyFloor=30, rollBudget=2, count=1. FAST8 rolls MORE (count=3) than standard (count=1) due to lower economy floor (24 vs 30) when mustStabilize fires. Tests the compositional economy floor divergence between presets.",
+  "state": {
+    "timestamp": 1710860400000,
+    "client": "RIOT_PC",
+    "target": "PC_LOGIC",
+    "stageText": "4-1",
+    "stageType": "PVP",
+    "level": 6,
+    "currentXp": 0,
+    "totalXp": 36,
+    "gold": 32,
+    "hp": 44,
+    "bench": [],
+    "board": [
+      {
+        "id": "TFT_A",
+        "name": "高费前排",
+        "star": 2,
+        "cost": 5,
+        "location": "R4_C4",
+        "items": [],
+        "traits": ["护卫"]
+      },
+      {
+        "id": "TFT_B",
+        "name": "高费后排",
+        "star": 2,
+        "cost": 5,
+        "location": "R3_C4",
+        "items": [],
+        "traits": ["斗士"]
+      },
+      {
+        "id": "TFT_C",
+        "name": "高费中排",
+        "star": 2,
+        "cost": 5,
+        "location": "R4_C5",
+        "items": [],
+        "traits": ["神谕者"]
+      }
+    ],
+    "shop": [
+      { "slot": 0, "cost": null, "unit": null },
+      { "slot": 1, "cost": null, "unit": null },
+      { "slot": 2, "cost": null, "unit": null },
+      { "slot": 3, "cost": null, "unit": null },
+      { "slot": 4, "cost": null, "unit": null }
+    ],
+    "items": []
+  },
+  "context": {}
+}

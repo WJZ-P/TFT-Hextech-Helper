@@ -69,11 +69,41 @@ It currently centralizes:
 - snapshot reads from `TftDataService`
 - automation lineup reads from `LineupLoader`
 - season-aware champion/item/trait lookups for strategy code
-- `getTraitCatalogForMode(mode)` — returns `TFT_16_TRAIT_DATA` or `TFT_4_TRAIT_DATA` by mode
-- `getEquipmentNameById(equipId, season?)` — resolves an equipment ID to its display name via the loaded catalog
+- `getChampionCatalogForMode(mode)`, `getChampionCatalogForSeason(season?)` — champion catalog access
+- `getEquipmentCatalogForSeason(season?)`, `getEquipmentDefinition(name, season?)` — equipment catalog access
+- `getTraitCatalogForMode(mode)`, `getTraitCatalogForSeason(season?)` — trait catalog access
+- `getChampionRange(name)` — champion attack-range lookup (delegates to `getChampionRange` from TFTProtocol)
+- `getEquipmentNameById(equipId, season?)` — resolves an equipment ID to its display name
 - `isUnitUnsellable(name)` — delegates to `UNSELLABLE_BOARD_UNITS` from `chess.ts`
+- `isWearableEquipment(name, season?)` — returns true if equipment is wearable (equipId !== "-1")
+- `getEquipmentRoleHint(name, season?)` — infers frontline/backline role from component items
+- `isBaseComponentEquipment(name, season?)` — returns true if equipment is a base component (formula is empty)
+- `getEquipmentComponents(name, season?)` — returns component item names for an equipment
 
 This layer is intentionally additive. It does not remove static fallbacks; it gives strategy code a clearer place to migrate toward.
+
+### StrategyService Migration Status
+
+`src-backend/services/StrategyService.ts` (3513 lines) was audited for remaining static protocol/table accesses.
+
+**Round 3 audit findings (2026-03-20):** No direct static protocol or table accesses remain. All catalog data access is routed through `strategyDataHub` (a `TftDataHub` instance seeded with `lineupLoader`).
+
+**Active `strategyDataHub` calls in StrategyService:**
+
+| Method | Call sites | Notes |
+|--------|-----------|-------|
+| `getChampionRange(name)` | 3 | Champion range lookup |
+| `getSelectedAutomationLineups(selectedIds)` | 1 | Lineup selection |
+| `isWearableEquipment(name)` | 4 | Via `this.isWearableEquipmentName()` wrapper |
+| `getEquipmentRoleHint(name)` | 3 | Via `this.getEquipmentRolePreference()` wrapper |
+| `isBaseComponentEquipment(name)` | 2 | Direct call in equipment composition logic |
+| `getEquipmentComponents(name)` | 1 | Via dead `this.getComponentNamesOfItem()` wrapper (unused, kept per non-deletion rule) |
+
+**Dead wrapper note:** `getComponentNamesOfItem()` at line 458 delegates to `strategyDataHub.getEquipmentComponents()` but has zero call sites. It is retained per the no-deletion rule; the underlying `TftDataHub` method remains available.
+
+**Previously migrated (Rounds 1-2):** All `TFT_16_EQUIP_DATA` accesses migrated; `isBaseComponentEquipment()`, `getEquipmentRoleHint()`, `isWearableEquipment()` added to `TftDataHub`.
+
+**Remaining architectural gap (not addressed this round):** `getChampionDefinition(name)`, `getTraitDefinition(name, traitKey)`, and `getTraitBreakpoints(unit)` do not yet have `TftDataHub` wrappers. These would require champion definition or trait rule lookups that are currently handled inline in StrategyService.
 
 ### Image Syncer
 

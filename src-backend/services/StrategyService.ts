@@ -24,8 +24,6 @@ import {
     fightBoardSlotPoint,
     ChampionKey,
     ShopSlotIndex,
-    TFT_16_EQUIP_DATA,
-    EquipKey,
     sharedDraftPoint,
     hexSlot,
     TFTMode,
@@ -430,27 +428,14 @@ export class StrategyService {
      * TODO: 实现特殊道具的使用策略（拆卸器/金拆/重铸器等），并加入更严格的目标选择与安全保护。
      */
     private isWearableEquipmentName(itemName: string): boolean {
-        const data = TFT_16_EQUIP_DATA[itemName as EquipKey];
-
-        // 未知物品：为了安全，默认按"不可穿戴"处理，避免误把道具当装备拖到棋子身上。
-        if (!data) {
-            return false;
-        }
-
-        // 当前协议里 specialEquip 统一用 equipId = "-1" 标记（例如：装备拆卸器/重铸器/强化果实/复制器等）
-        // 这些都不是"穿上去就生效"的传统装备。
-        if (data.equipId === "-1") {
-            return false;
-        }
-
-        return true;
+        return strategyDataHub.isWearableEquipment(itemName);
     }
 
     /**
      * 推断：装备更适合"前排"还是"后排"
-     * @description
-     * 我们没有直接的"装备类型标签"（坦装/输出装），但可以利用 `TFT_16_EQUIP_DATA.formula`：
-     * - 基础散件：formula 为空
+      * @description
+      * 我们没有直接的"装备类型标签"（坦装/输出装），但可以利用装备 formula 字段：
+      * - 基础散件：formula 为空
      * - 成装：formula 是 "散件ID1,散件ID2"
      *
      * 基于散件做一个非常粗粒度的启发式（足够让"随便上装备"变得更像人）：
@@ -461,46 +446,7 @@ export class StrategyService {
      * TODO: 后续可以结合"阵容配置的前排/后排位"或"英雄定位(主C/主T)"做更准确的分配。
      */
     private getEquipmentRolePreference(itemName: string): 'frontline' | 'backline' | 'any' {
-        const data = TFT_16_EQUIP_DATA[itemName as EquipKey];
-        if (!data) return 'any';
-
-        // 取组成它的散件名（成装取 2 个散件；散件本身返回自己）
-        const componentNames = this.getComponentNamesOfItem(itemName);
-        if (componentNames.length === 0) return 'any';
-
-        const isFrontlineComponent = (name: string): boolean => {
-            return name === '锁子甲' || name === '负极斗篷' || name === '巨人腰带';
-        };
-
-        const isBacklineComponent = (name: string): boolean => {
-            return name === '反曲之弓' || name === '暴风之剑' || name === '无用大棒' || name === '女神之泪';
-        };
-
-        const isNeutralComponent = (name: string): boolean => {
-            return name === '拳套' || name === '金铲铲' || name === '金锅锅';
-        };
-
-        // 只有一个散件（基础散件）时：直接按散件决定倾向
-        if (componentNames.length === 1) {
-            const c = componentNames[0];
-            if (isFrontlineComponent(c)) return 'frontline';
-            if (isBacklineComponent(c)) return 'backline';
-            if (isNeutralComponent(c)) return 'any';
-            return 'any';
-        }
-
-        // 两个散件（成装）时：
-        // - 双防御散件 → 更像前排装
-        // - 双输出散件 → 更像后排装
-        // - 混搭 → 暂时按通用装处理（避免误导）
-        const frontlineCount = componentNames.filter(isFrontlineComponent).length;
-        const backlineCount = componentNames.filter(isBacklineComponent).length;
-
-        if (frontlineCount === 2) return 'frontline';
-        if (backlineCount === 2) return 'backline';
-
-        // 混搭/含拳套/转职等，先按通用
-        return 'any';
+        return strategyDataHub.getEquipmentRoleHint(itemName);
     }
 
     /**
@@ -510,19 +456,7 @@ export class StrategyService {
      * - 成装：返回 [散件1, 散件2]
      */
     private getComponentNamesOfItem(itemName: string): string[] {
-        const equip = TFT_16_EQUIP_DATA[itemName as EquipKey];
-        if (!equip) return [];
-
-        const formula = (equip.formula ?? '').trim();
-        if (!formula) {
-            return [itemName];
-        }
-
-        const [id1, id2] = formula.split(',');
-        const name1 = id1 ? this.findEquipNameById(id1) : undefined;
-        const name2 = id2 ? this.findEquipNameById(id2) : undefined;
-
-        return [name1, name2].filter((n): n is string => Boolean(n));
+        return strategyDataHub.getEquipmentComponents(itemName);
     }
 
     /**
@@ -649,10 +583,7 @@ export class StrategyService {
 
         // 2) 如果背包里有"散件"，就允许执行装备策略（散件先上，拉即时战力）
         //    这里用 formula 是否为空来粗略判断"基础散件"（暴风大剑/反曲弓/女神泪等）
-        const component = wearableEquipments.find(e => {
-            const data = TFT_16_EQUIP_DATA[e.name as EquipKey];
-            return data && (data.formula ?? "") === "";
-        });
+        const component = wearableEquipments.find(e => strategyDataHub.isBaseComponentEquipment(e.name));
         if (component) {
             return { can: true, reason: `存在散件可穿戴：${component.name} -> ${equipableUnit.tftUnit.displayName}` };
         }
@@ -2901,10 +2832,7 @@ export class StrategyService {
             // 2) 如果没有核心装可做：把背包里的装备尽快"合理地"挂出去（保前四：即时战力）
             if (!actionTaken) {
                 // 2.1 优先选择一个"基础散件"（formula 为空）；没有散件就随便取一个可穿戴装备
-                const component = equipments.find(e => {
-                    const data = TFT_16_EQUIP_DATA[e.name as EquipKey];
-                    return data && (data.formula ?? "") === "";
-                });
+                const component = equipments.find(e => strategyDataHub.isBaseComponentEquipment(e.name));
 
                 const itemToEquip = component?.name ?? equipments[0].name;
 
@@ -2987,17 +2915,16 @@ export class StrategyService {
      * @returns 如果可以合成，返回两个散件的名称；否则返回 null
      */
     private checkSynthesis(targetItemName: string, bag: Map<string, number>): { component1: string, component2: string } | null {
-        const targetEquip = TFT_16_EQUIP_DATA[targetItemName as EquipKey];
+        const targetEquip = strategyDataHub.getEquipmentDefinition(targetItemName);
         if (!targetEquip || !targetEquip.formula) return null;
 
         // 解析配方 ID
         const [id1, id2] = targetEquip.formula.split(',');
         if (!id1 || !id2) return null;
 
-        // 将 ID 转换为名称 (需要遍历所有装备数据查找，性能稍低但数据量小没问题)
-        // 优化：可以预先建立 ID -> Name 的映射，但这里为了简单直接查找
-        const name1 = this.findEquipNameById(id1);
-        const name2 = this.findEquipNameById(id2);
+        // 将 ID 转换为名称
+        const name1 = strategyDataHub.getEquipmentNameById(id1);
+        const name2 = strategyDataHub.getEquipmentNameById(id2);
 
         if (!name1 || !name2) return null;
 
@@ -3014,18 +2941,6 @@ export class StrategyService {
         }
 
         return null;
-    }
-
-    /**
-     * 根据 ID 查找装备名称
-     */
-    private findEquipNameById(id: string): string | undefined {
-        for (const key in TFT_16_EQUIP_DATA) {
-            if (TFT_16_EQUIP_DATA[key].equipId === id) {
-                return TFT_16_EQUIP_DATA[key].name;
-            }
-        }
-        return undefined;
     }
 
     /**

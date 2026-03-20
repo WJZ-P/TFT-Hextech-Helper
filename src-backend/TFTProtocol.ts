@@ -606,8 +606,9 @@ export const androidGameStageDisplayNormal = {
 }
 
 export const androidGameStageDisplayShopOpen = {
-    leftTop: { x: 0.330, y: 0.000 },
-    rightBottom: { x: 0.430, y: 0.060 }
+    leftTop: { x: 0.310, y: 0.000 },   // shifted left: shop UI compresses topbar, stage text drifts leftward
+    rightBottom: { x: 0.470, y: 0.080 } // wider: titlebar-shift and shop-open-wide variants in voting() handle this,
+    // but the wider base crop reduces reliance on fallback scan for standard shop-open frames
 }
 
 //  发条鸟的战斗阶段，布局跟其他的都不一样，因为发条鸟一个大阶段有10场（百分比形式）

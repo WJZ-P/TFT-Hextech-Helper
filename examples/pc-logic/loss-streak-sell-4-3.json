@@ -1,0 +1,41 @@
+{
+  "description": "4-3 loss-streak sell: hp=35 (dangerously low), gold=8 (below 12), bench overflow (9 units). isBenchOverflowed=true, hp<=42=true, gold<12=true → SELL condition fires. Engine should prioritize selling a non-target, low-cost bench unit over rolling, because rolling costs 2 gold/refresh and the player cannot afford it while bench is full.",
+  "state": {
+    "timestamp": 1710860400000,
+    "client": "RIOT_PC",
+    "target": "PC_LOGIC",
+    "stageText": "4-3",
+    "stageType": "PVP",
+    "level": 6,
+    "currentXp": 0,
+    "totalXp": 36,
+    "gold": 8,
+    "hp": 35,
+    "bench": [
+      { "id": "TFT_B1", "name": "卖一", "star": 1, "cost": 1, "location": "SLOT_1", "items": [], "traits": ["护卫"] },
+      { "id": "TFT_B2", "name": "卖二", "star": 1, "cost": 1, "location": "SLOT_2", "items": [], "traits": ["斗士"] },
+      { "id": "TFT_B3", "name": "卖三", "star": 1, "cost": 1, "location": "SLOT_3", "items": [], "traits": ["护卫"] },
+      { "id": "TFT_B4", "name": "卖四", "star": 1, "cost": 2, "location": "SLOT_4", "items": [], "traits": ["斗士"] },
+      { "id": "TFT_B5", "name": "卖五", "star": 1, "cost": 1, "location": "SLOT_5", "items": [], "traits": ["神谕者"] },
+      { "id": "TFT_B6", "name": "卖六", "star": 1, "cost": 1, "location": "SLOT_6", "items": [], "traits": ["护卫"] },
+      { "id": "TFT_B7", "name": "卖七", "star": 1, "cost": 1, "location": "SLOT_7", "items": [], "traits": ["斗士"] },
+      { "id": "TFT_B8", "name": "卖八", "star": 1, "cost": 2, "location": "SLOT_8", "items": [], "traits": ["护卫"] },
+      { "id": "TFT_B9", "name": "卖九", "star": 1, "cost": 1, "location": "SLOT_9", "items": [], "traits": ["神谕者"] }
+    ],
+    "board": [
+      { "id": "TFT_Front", "name": "前排", "star": 2, "cost": 2, "location": "R4_C4", "items": [], "traits": ["护卫"] },
+      { "id": "TFT_Back", "name": "后排", "star": 2, "cost": 2, "location": "R3_C4", "items": [], "traits": ["斗士"] }
+    ],
+    "shop": [
+      { "slot": 0, "cost": null, "unit": null },
+      { "slot": 1, "cost": null, "unit": null },
+      { "slot": 2, "cost": null, "unit": null },
+      { "slot": 3, "cost": null, "unit": null },
+      { "slot": 4, "cost": null, "unit": null }
+    ],
+    "items": []
+  },
+  "context": {
+    "targetChampionNames": []
+  }
+}
