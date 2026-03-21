@@ -17,7 +17,8 @@ function configureGuiVerificationRuntime(): void {
         return;
     }
 
-    const verifierRoot = path.resolve(process.cwd(), '.cache', 'gui-verify-profile');
+    const verifierProfileName = process.env.TFT_GUI_VERIFY_PROFILE || 'gui-verify-profile';
+    const verifierRoot = path.resolve(process.cwd(), '.cache', verifierProfileName);
     const userDataDir = path.join(verifierRoot, 'user-data');
     const sessionDataDir = path.join(verifierRoot, 'session-data');
     const cacheDir = path.join(verifierRoot, 'cache');

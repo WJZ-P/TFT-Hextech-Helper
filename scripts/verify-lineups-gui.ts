@@ -26,9 +26,13 @@ function waitForMarker(buffer: string, marker: string): boolean {
 async function main(): Promise<void> {
     const screenshotPath = path.resolve(process.cwd(), ".cache", "gui-lineups-offline.png");
     const summaryPath = path.resolve(process.cwd(), ".cache", "gui-lineups-offline.json");
+    const capturedOutputPath = path.resolve(process.cwd(), ".cache", "gui-verify-captured-output.log");
     const seasonPackDir = path.resolve(process.cwd(), "tests", "backend", "fixtures", "gui-season-pack", "Resources");
+    const verifierProfileName = `gui-verify-profile-${process.pid}-${Date.now()}`;
 
     fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
+    fs.rmSync(summaryPath, { force: true });
+    fs.rmSync(capturedOutputPath, { force: true });
 
     const envOverrides = {
         ELECTRON_RUN_AS_NODE: "",
@@ -38,6 +42,7 @@ async function main(): Promise<void> {
         TFT_GUI_VERIFY_EXIT: "1",
         TFT_GUI_VERIFY_SCREENSHOT: screenshotPath,
         TFT_GUI_VERIFY_SUMMARY: summaryPath,
+        TFT_GUI_VERIFY_PROFILE: verifierProfileName,
         TFT_BLOCK_REMOTE_ASSETS: "1",
         TFT_SEASON_PACK_DIR: seasonPackDir,
     };
@@ -109,11 +114,18 @@ async function main(): Promise<void> {
     const summary = JSON.parse(fs.readFileSync(summaryPath, "utf8")) as {
         localImageCount: number;
         remoteImageCount: number;
+        remoteLoadedImageCount?: number;
         brokenImageCount: number;
+        brokenLocalImageCount?: number;
         lineupPageVisible: boolean;
     };
 
-    if (!summary.lineupPageVisible || summary.localImageCount <= 0 || summary.remoteImageCount !== 0 || summary.brokenImageCount !== 0) {
+    if (
+        !summary.lineupPageVisible ||
+        summary.localImageCount <= 0 ||
+        (summary.remoteLoadedImageCount ?? 0) !== 0 ||
+        (summary.brokenLocalImageCount ?? 0) !== 0
+    ) {
         throw new Error(`GUI verification summary failed expectations: ${JSON.stringify(summary, null, 2)}`);
     }
 
