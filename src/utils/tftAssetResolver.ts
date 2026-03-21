@@ -45,6 +45,10 @@ function buildImageLookup(entities: TftImageEntity[]): Map<string, string> {
     );
 }
 
+function shouldBlockRemoteRendererAssets(): boolean {
+    return typeof window !== "undefined" && window.appEnv?.blocksRemoteAssets === true;
+}
+
 function getChessId(cnName: string, season: TftUiSeason): string {
     const chessList = season === "S4" ? TFT_4_CHESS : TFT_16_CHESS;
     const chessItem = chessList.find((chess: any) => chess.displayName === cnName);
@@ -123,10 +127,12 @@ export function createTftAssetResolver(snapshot?: TftImageSnapshot | null): TftA
         },
 
         resolveItemIconSources(itemName: string, equipId?: string): string[] {
-            return uniqueSources([
-                itemImageByName.get(itemName),
-                ...getCdnEquipSources(equipId),
-            ]);
+            const snapshotSource = itemImageByName.get(itemName);
+            if (shouldBlockRemoteRendererAssets()) {
+                return uniqueSources([snapshotSource]);
+            }
+
+            return uniqueSources([snapshotSource, ...getCdnEquipSources(equipId)]);
         },
     };
 }

@@ -1,0 +1,107 @@
+{
+  "hash": "#/lineups",
+  "title": "TFT-Hextech-Helper",
+  "appEnv": {
+    "isGuiVerify": true,
+    "blocksRemoteAssets": true
+  },
+  "bodyTextSample": "海克斯科技助手\n主界面\n阵容搭配\n调试页\n设置\n英雄联盟传奇\n瑞兽闹新春\n已勾选 14 个阵容，将根据开局情况智能选择最终阵容\n创建阵容\n全部取消\n2\n巨神峰\n2\n法师\n2\n护卫\n2\n皮尔特沃夫\n1\n星界游神\n1\n狂野女猎手\n2\n以绪塔尔\n1\n祖安\n1\n神盾使\n1\n诺克萨斯\n1\n主宰\n厄斐\n厄斐琉斯\n巴德\n巴德\n妮蔻\n妮蔻\n蔚\n蔚\n洛里\n洛里斯\n奈德\n奈德丽\n斯维\n斯维因\n塔里\n塔里克\n巨神峰 厄斐琉斯\n▼\nLv.4\nLv.5\nLv.6\nLv.7\nLv.8\nLv.9\n3\n巨神峰\n2\n法师\n2\n护卫\n2\n皮尔特沃夫\n2\n耀光使\n2\n主宰\n1\n沙漠皇帝\n1\n龙血武姬\n1\n铸星龙王\n1\n以绪塔尔\n1\n祖安\n1\n诺克萨斯\n1\n恕瑞玛\n妮蔻\n妮蔻\n蔚\n蔚\n黛安\n黛安娜\n萨勒\n萨勒芬妮\n斯维\n斯维因\n塔里\n塔里克\n阿兹\n阿兹尔\n希瓦\n希瓦娜\n奥瑞\n奥瑞利安·索尔\n巨神峰 奥瑞利安·索尔\n▼\nLv.4\nLv.5\nLv.6\nLv.7\nLv.8\nLv.9\n5\n弗雷尔卓德\n4\n神谕者\n2\n斗士\n2\n神盾使\n1\n巨神峰\n1\n山隐之焰\n1\n时光守护者\n1\n约德尔人\n1\n护卫\n艾尼\n艾尼维亚\n可酷\n可酷伯与悠米\n瑟庄\n瑟庄妮\n布隆\n布隆\n丽桑\n丽桑卓\n塔里\n塔里克\n奥恩\n奥恩\n沃利\n沃利贝尔\n基兰\n基兰\n弗雷尔卓德 丽桑卓\n▼\nLv.4\nLv.5\nLv.6\nLv.7\nLv.8\nLv.9\n3\n弗雷尔卓德\n3\n比尔吉沃特\n2\n迅击战士\n2\n主宰\n2\n神盾使\n2\n枪手\n2\n斗士\n1\n永猎双子\n1\n系魂圣枪\n1\n龙血武姬\n1\n河流之王\n艾希\n艾希\n诺提\n诺提勒斯\n布隆\n布隆\n厄运\n厄运小姐\n千珏\n千珏\n卢锡\n卢锡安与赛娜\n希瓦\n希瓦娜\n塔姆\n塔姆\n沃利\n沃利贝尔\n弗雷尔卓德 千珏\n▼\nLv.4\nLv.5\nLv.6\nLv.7\nLv.8\nLv.9\nLv.10\n7\n德玛西亚\n2\n护卫\n2\n主宰\n2\n狙神\n2\n法师",
+  "lineupPageVisible": true,
+  "createButtonVisible": true,
+  "totalImages": 21,
+  "localImageCount": 21,
+  "remoteImageCount": 0,
+  "remoteLoadedImageCount": 0,
+  "brokenImageCount": 0,
+  "brokenLocalImageCount": 0,
+  "localImages": [
+    {
+      "alt": "鬼索的狂暴之刃",
+      "src": "./resources/season-packs/英雄联盟传奇/equipment/鬼索的狂暴之刃.svg",
+      "currentSrc": "http://localhost:5174/resources/season-packs/%E8%8B%B1%E9%9B%84%E8%81%94%E7%9B%9F%E4%BC%A0%E5%A5%87/equipment/%E9%AC%BC%E7%B4%A2%E7%9A%84%E7%8B%82%E6%9A%B4%E4%B9%8B%E5%88%83.svg",
+      "complete": true,
+      "naturalWidth": 0
+    },
+    {
+      "alt": "无尽之刃",
+      "src": "./resources/season-packs/英雄联盟传奇/equipment/无尽之刃.svg",
+      "currentSrc": "http://localhost:5174/resources/season-packs/%E8%8B%B1%E9%9B%84%E8%81%94%E7%9B%9F%E4%BC%A0%E5%A5%87/equipment/%E6%97%A0%E5%B0%BD%E4%B9%8B%E5%88%83.svg",
+      "complete": true,
+      "naturalWidth": 0
+    },
+    {
+      "alt": "鬼索的狂暴之刃",
+      "src": "./resources/season-packs/英雄联盟传奇/equipment/鬼索的狂暴之刃.svg",
+      "currentSrc": "http://localhost:5174/resources/season-packs/%E8%8B%B1%E9%9B%84%E8%81%94%E7%9B%9F%E4%BC%A0%E5%A5%87/equipment/%E9%AC%BC%E7%B4%A2%E7%9A%84%E7%8B%82%E6%9A%B4%E4%B9%8B%E5%88%83.svg",
+      "complete": true,
+      "naturalWidth": 0
+    },
+    {
+      "alt": "无尽之刃",
+      "src": "./resources/season-packs/英雄联盟传奇/equipment/无尽之刃.svg",
+      "currentSrc": "http://localhost:5174/resources/season-packs/%E8%8B%B1%E9%9B%84%E8%81%94%E7%9B%9F%E4%BC%A0%E5%A5%87/equipment/%E6%97%A0%E5%B0%BD%E4%B9%8B%E5%88%83.svg",
+      "complete": true,
+      "naturalWidth": 0
+    },
+    {
+      "alt": "鬼索的狂暴之刃",
+      "src": "./resources/season-packs/英雄联盟传奇/equipment/鬼索的狂暴之刃.svg",
+      "currentSrc": "http://localhost:5174/resources/season-packs/%E8%8B%B1%E9%9B%84%E8%81%94%E7%9B%9F%E4%BC%A0%E5%A5%87/equipment/%E9%AC%BC%E7%B4%A2%E7%9A%84%E7%8B%82%E6%9A%B4%E4%B9%8B%E5%88%83.svg",
+      "complete": true,
+      "naturalWidth": 0
+    },
+    {
+      "alt": "无尽之刃",
+      "src": "./resources/season-packs/英雄联盟传奇/equipment/无尽之刃.svg",
+      "currentSrc": "http://localhost:5174/resources/season-packs/%E8%8B%B1%E9%9B%84%E8%81%94%E7%9B%9F%E4%BC%A0%E5%A5%87/equipment/%E6%97%A0%E5%B0%BD%E4%B9%8B%E5%88%83.svg",
+      "complete": true,
+      "naturalWidth": 0
+    },
+    {
+      "alt": "鬼索的狂暴之刃",
+      "src": "./resources/season-packs/英雄联盟传奇/equipment/鬼索的狂暴之刃.svg",
+      "currentSrc": "http://localhost:5174/resources/season-packs/%E8%8B%B1%E9%9B%84%E8%81%94%E7%9B%9F%E4%BC%A0%E5%A5%87/equipment/%E9%AC%BC%E7%B4%A2%E7%9A%84%E7%8B%82%E6%9A%B4%E4%B9%8B%E5%88%83.svg",
+      "complete": true,
+      "naturalWidth": 0
+    },
+    {
+      "alt": "鬼索的狂暴之刃",
+      "src": "./resources/season-packs/英雄联盟传奇/equipment/鬼索的狂暴之刃.svg",
+      "currentSrc": "http://localhost:5174/resources/season-packs/%E8%8B%B1%E9%9B%84%E8%81%94%E7%9B%9F%E4%BC%A0%E5%A5%87/equipment/%E9%AC%BC%E7%B4%A2%E7%9A%84%E7%8B%82%E6%9A%B4%E4%B9%8B%E5%88%83.svg",
+      "complete": true,
+      "naturalWidth": 0
+    },
+    {
+      "alt": "无尽之刃",
+      "src": "./resources/season-packs/英雄联盟传奇/equipment/无尽之刃.svg",
+      "currentSrc": "http://localhost:5174/resources/season-packs/%E8%8B%B1%E9%9B%84%E8%81%94%E7%9B%9F%E4%BC%A0%E5%A5%87/equipment/%E6%97%A0%E5%B0%BD%E4%B9%8B%E5%88%83.svg",
+      "complete": true,
+      "naturalWidth": 0
+    },
+    {
+      "alt": "鬼索的狂暴之刃",
+      "src": "./resources/season-packs/英雄联盟传奇/equipment/鬼索的狂暴之刃.svg",
+      "currentSrc": "http://localhost:5174/resources/season-packs/%E8%8B%B1%E9%9B%84%E8%81%94%E7%9B%9F%E4%BC%A0%E5%A5%87/equipment/%E9%AC%BC%E7%B4%A2%E7%9A%84%E7%8B%82%E6%9A%B4%E4%B9%8B%E5%88%83.svg",
+      "complete": true,
+      "naturalWidth": 0
+    },
+    {
+      "alt": "鬼索的狂暴之刃",
+      "src": "./resources/season-packs/英雄联盟传奇/equipment/鬼索的狂暴之刃.svg",
+      "currentSrc": "http://localhost:5174/resources/season-packs/%E8%8B%B1%E9%9B%84%E8%81%94%E7%9B%9F%E4%BC%A0%E5%A5%87/equipment/%E9%AC%BC%E7%B4%A2%E7%9A%84%E7%8B%82%E6%9A%B4%E4%B9%8B%E5%88%83.svg",
+      "complete": true,
+      "naturalWidth": 0
+    },
+    {
+      "alt": "无尽之刃",
+      "src": "./resources/season-packs/英雄联盟传奇/equipment/无尽之刃.svg",
+      "currentSrc": "http://localhost:5174/resources/season-packs/%E8%8B%B1%E9%9B%84%E8%81%94%E7%9B%9F%E4%BC%A0%E5%A5%87/equipment/%E6%97%A0%E5%B0%BD%E4%B9%8B%E5%88%83.svg",
+      "complete": true,
+      "naturalWidth": 0
+    }
+  ],
+  "remoteImages": [],
+  "loadedRemoteImages": [],
+  "brokenImages": [],
+  "brokenLocalImages": []
+}

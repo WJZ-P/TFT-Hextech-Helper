@@ -1,8 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import { GameStageType } from "../../src-backend/TFTProtocol";
 import { RuleBasedDecisionEngine } from "../../src-backend/core/RuleBasedDecisionEngine";
 import type { ObservedState } from "../../src-backend/core/types";
+
+const repoRoot = path.resolve(process.cwd());
+
+function readExampleFixture<T>(fileName: string): T {
+    return JSON.parse(
+        fs.readFileSync(path.join(repoRoot, "examples", "pc-logic", fileName), "utf8")
+    ) as T;
+}
 
 function buildBaseState(): ObservedState {
     return {
@@ -223,6 +233,30 @@ test("RuleBasedDecisionEngine recommends D-card roll window on 3-2 when board is
         targetChampionNames: ["安妮"],
     });
     assert.ok(plans.some((p) => p.type === "ROLL" && /稳场/.test(p.reason)));
+});
+
+test("RuleBasedDecisionEngine protects winstreak tempo by leveling on 3-2 earlier than the normal floor", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: { targetChampionNames: string[] };
+    }>("winstreak-keep-tempo-3-2.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+
+    assert.ok(plans.some((plan) => plan.type === "LEVEL_UP" && /3-2/.test(plan.reason)));
+});
+
+test("RuleBasedDecisionEngine preserves economy on healthy loss-streak boards instead of panic rolling", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: { targetChampionNames: string[] };
+    }>("losestreak-econ-line-3-2.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+
+    assert.ok(!plans.some((plan) => plan.type === "ROLL"));
 });
 
 test("RuleBasedDecisionEngine holds economy floor on 4-5 late stage with FAST8 preset", () => {

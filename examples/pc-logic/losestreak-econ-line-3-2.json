@@ -1,0 +1,39 @@
+{
+  "description": "3-2 loss-streak economy sample: weak board but healthy enough HP and a 4-loss streak. The engine should preserve economy and avoid panic rolling while holding the loss-streak line.",
+  "state": {
+    "timestamp": 1710860400000,
+    "client": "RIOT_PC",
+    "target": "PC_LOGIC",
+    "stageText": "3-2",
+    "stageType": "PVP",
+    "level": 5,
+    "currentXp": 0,
+    "totalXp": 20,
+    "gold": 34,
+    "hp": 68,
+    "streak": -4,
+    "bench": [],
+    "board": [
+      {
+        "id": "TFT_WeakUnit",
+        "name": "弱单位",
+        "star": 1,
+        "cost": 1,
+        "location": "R4_C4",
+        "items": [],
+        "traits": ["护卫"]
+      }
+    ],
+    "shop": [
+      { "slot": 0, "cost": null, "unit": null },
+      { "slot": 1, "cost": null, "unit": null },
+      { "slot": 2, "cost": null, "unit": null },
+      { "slot": 3, "cost": null, "unit": null },
+      { "slot": 4, "cost": null, "unit": null }
+    ],
+    "items": []
+  },
+  "context": {
+    "targetChampionNames": []
+  }
+}

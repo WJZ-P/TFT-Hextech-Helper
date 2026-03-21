@@ -86,6 +86,7 @@ function chooseCarryUnit(board: ObservedUnit[], targetNames: Set<string>): Obser
 function computeEconomyFloor(state: ObservedState, context: DecisionContext, parsed: ParsedStage | null): number {
     const hpThreshold = context.stabilizeHpThreshold ?? DEFAULT_STABILIZE_HP_THRESHOLD;
     const hp = state.hp ?? 100;
+    const streak = state.streak ?? 0;
 
     if (context.strategyPreset === "REROLL") {
         if (hp <= hpThreshold) {
@@ -111,6 +112,12 @@ function computeEconomyFloor(state: ObservedState, context: DecisionContext, par
     if (hp <= hpThreshold) {
         return 10;
     }
+    if (streak <= -3 && parsed && parsed.stage <= 4) {
+        return Math.max(base, 40);
+    }
+    if (streak >= 3 && parsed && parsed.stage <= 4) {
+        return Math.min(base, 24);
+    }
     if (parsed && parsed.stage <= 2) {
         return Math.min(base, 20);
     }
@@ -128,10 +135,13 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
         const economyFloor = computeEconomyFloor(state, context, parsed);
         const hpThreshold = context.stabilizeHpThreshold ?? DEFAULT_STABILIZE_HP_THRESHOLD;
         const hp = state.hp ?? 100;
+        const streak = state.streak ?? 0;
         const weakBoard =
             boardStrength(state.board) < expectedBoardStrengthByStage(parsed, state.level) ||
             state.board.length < Math.max(1, state.level - 1);
-        const mustStabilize = hp <= hpThreshold || weakBoard;
+        const shouldProtectLossStreak = streak <= -3 && hp > hpThreshold + 10 && parsed?.stage !== undefined && parsed.stage <= 4;
+        const shouldProtectWinStreak = streak >= 3 && hp > hpThreshold && parsed?.stage !== undefined && parsed.stage <= 4;
+        const mustStabilize = hp <= hpThreshold || (weakBoard && !shouldProtectLossStreak);
 
         let tick = 0;
         const addPlan = (
@@ -161,7 +171,7 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
                 addPlan("LEVEL_UP", 96, "2-1 关键节奏，优先升人口保连胜或稳血", { count: 1 });
             } else if (isKeyRound(parsed, 2, 5) && state.level < 5 && state.gold >= 4) {
                 addPlan("LEVEL_UP", 94, "2-5 节奏点，提前补人口提升战力", { count: 1 });
-            } else if (isKeyRound(parsed, 3, 2) && state.level < 6 && state.gold >= (mustStabilize ? 16 : 24)) {
+            } else if (isKeyRound(parsed, 3, 2) && state.level < 6 && state.gold >= (mustStabilize ? 16 : shouldProtectWinStreak ? 20 : 24)) {
                 addPlan("LEVEL_UP", 90, "3-2 中期节奏，优先上 6 进入中期运营", { count: 1 });
             } else if (isKeyRound(parsed, 4, 1) && state.level < 7 && state.gold >= (mustStabilize ? 12 : 16)) {
                 addPlan("LEVEL_UP", 91, "4-1 标准节奏，优先上 7 稳住中后期战力", { count: 1 });
@@ -258,7 +268,7 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
 
         if (state.stageType === GameStageType.PVP) {
             const keyStabilizeRound = isKeyRound(parsed, 3, 2) || isKeyRound(parsed, 4, 2);
-            if ((mustStabilize && state.gold >= 12) || (keyStabilizeRound && weakBoard && state.gold >= 16)) {
+            if ((mustStabilize && state.gold >= 12) || (keyStabilizeRound && weakBoard && !shouldProtectLossStreak && state.gold >= 16)) {
                 const baseRoll =
                     hp <= 20 ? 5 :
                     hp <= 30 ? 4 :

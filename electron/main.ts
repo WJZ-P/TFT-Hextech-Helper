@@ -12,6 +12,30 @@ import { writeCrashLog, initGlobalCrashHandler } from "../src-backend/utils/Cras
 // 初始化全局崩溃捕获（越早调用越好，这样后续模块加载失败也能记录）
 initGlobalCrashHandler();
 
+function configureGuiVerificationRuntime(): void {
+    if (process.env.TFT_GUI_VERIFY !== '1') {
+        return;
+    }
+
+    const verifierRoot = path.resolve(process.cwd(), '.cache', 'gui-verify-profile');
+    const userDataDir = path.join(verifierRoot, 'user-data');
+    const sessionDataDir = path.join(verifierRoot, 'session-data');
+    const cacheDir = path.join(verifierRoot, 'cache');
+
+    fs.mkdirSync(userDataDir, { recursive: true });
+    fs.mkdirSync(sessionDataDir, { recursive: true });
+    fs.mkdirSync(cacheDir, { recursive: true });
+
+    app.setPath('userData', userDataDir);
+    app.setPath('sessionData', sessionDataDir);
+    app.commandLine.appendSwitch('disk-cache-dir', cacheDir);
+    app.commandLine.appendSwitch('disable-http-cache');
+    app.commandLine.appendSwitch('disable-gpu-shader-disk-cache');
+    app.commandLine.appendSwitch('media-cache-size', '0');
+}
+
+configureGuiVerificationRuntime();
+
 // ============================================================================
 // GPU 兼容性设置
 // 解决部分用户因显卡驱动不兼容导致的启动闪退问题
@@ -375,6 +399,7 @@ async function runGuiVerification(targetWindow: BrowserWindow): Promise<void> {
         : null;
 
     await new Promise((resolve) => setTimeout(resolve, Number.isFinite(waitMs) ? waitMs : 5000));
+    console.log('[GUI_VERIFY_PHASE] after-wait');
 
     const summary = await targetWindow.webContents.executeJavaScript(`
         (async () => {
@@ -393,38 +418,63 @@ async function runGuiVerification(targetWindow: BrowserWindow): Promise<void> {
                 complete: img.complete,
                 naturalWidth: img.naturalWidth,
             }));
+
             const resolvedSrc = (image) => image.currentSrc || image.src || '';
-            const localImages = images.filter((image) => /resources\/season-packs/i.test(resolvedSrc(image)));
-            const remoteImages = images.filter((image) => /^https?:\/\//i.test(resolvedSrc(image)));
-            const brokenImages = images.filter((image) => image.complete && image.naturalWidth === 0);
+            const isLocalSeasonPackImage = (image) => resolvedSrc(image).toLowerCase().includes('resources/season-packs');
+            const isRemoteImage = (image) => {
+                const src = resolvedSrc(image);
+                if (!src || isLocalSeasonPackImage(image)) {
+                    return false;
+                }
+                const lowered = src.toLowerCase();
+                return lowered.startsWith('http://') || lowered.startsWith('https://');
+            };
+            const isSvgImage = (image) => resolvedSrc(image).toLowerCase().includes('.svg');
+
+            const localImages = images.filter((image) => isLocalSeasonPackImage(image));
+            const remoteImages = images.filter((image) => isRemoteImage(image));
+            const loadedRemoteImages = remoteImages.filter((image) => image.naturalWidth > 0);
+            const brokenImages = images.filter((image) => image.complete && image.naturalWidth === 0 && !isSvgImage(image));
+            const brokenLocalImages = localImages.filter((image) => image.complete && image.naturalWidth === 0 && !isSvgImage(image));
 
             return {
                 hash: window.location.hash,
                 title: document.title,
+                appEnv: {
+                    isGuiVerify: window.appEnv?.isGuiVerify ?? null,
+                    blocksRemoteAssets: window.appEnv?.blocksRemoteAssets ?? null,
+                },
                 bodyTextSample: document.body.innerText.slice(0, 800),
                 lineupPageVisible: Boolean(document.querySelector('[data-page-wrapper]')),
                 createButtonVisible: document.body.innerText.includes('创建阵容'),
                 totalImages: images.length,
                 localImageCount: localImages.length,
                 remoteImageCount: remoteImages.length,
+                remoteLoadedImageCount: loadedRemoteImages.length,
                 brokenImageCount: brokenImages.length,
+                brokenLocalImageCount: brokenLocalImages.length,
                 localImages: localImages.slice(0, 12),
                 remoteImages: remoteImages.slice(0, 12),
+                loadedRemoteImages: loadedRemoteImages.slice(0, 12),
                 brokenImages: brokenImages.slice(0, 12),
+                brokenLocalImages: brokenLocalImages.slice(0, 12),
             };
         })();
     `, true);
+    console.log('[GUI_VERIFY_PHASE] after-summary');
 
     if (summaryPath) {
         fs.mkdirSync(path.dirname(summaryPath), { recursive: true });
         fs.writeFileSync(summaryPath, JSON.stringify(summary, null, 2), 'utf8');
     }
+    console.log('[GUI_VERIFY_PHASE] after-summary-write');
 
     if (screenshotPath) {
         fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
         const screenshot = await targetWindow.webContents.capturePage();
         fs.writeFileSync(screenshotPath, screenshot.toPNG());
     }
+    console.log('[GUI_VERIFY_PHASE] after-screenshot');
 
     console.log(`[GUI_VERIFY] ${JSON.stringify(summary)}`);
 
@@ -478,8 +528,22 @@ function createWindow() {
     win.webContents.on('did-finish-load', () => {
         win?.webContents.send('main-process-message', (new Date).toLocaleString())
 
+        // Emit an immediate healthcheck marker so the test harness can detect
+        // that the renderer finished loading even if later summary collection
+        // fails. This helps separate "did-finish-load" issues from summary
+        // extraction bugs.
+        try {
+            console.log('[GUI_VERIFY_HEALTHCHECK]');
+        } catch (e) {
+            // best-effort only
+        }
+
         if (process.env.TFT_GUI_VERIFY === '1') {
-            void runGuiVerification(win!);
+            void runGuiVerification(win!).catch((error) => {
+                console.error(`[GUI_VERIFY_ERROR] ${error instanceof Error ? error.stack ?? error.message : String(error)}`);
+                writeCrashLog(error as Error, 'GUI verification failed');
+                app.quit();
+            });
         }
     })
     

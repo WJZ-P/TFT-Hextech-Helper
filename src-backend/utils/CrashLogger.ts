@@ -161,12 +161,20 @@ EXE_PATH: ${app.getPath('exe')}
         // 同步写入，确保进程退出前写完
         fs.writeFileSync(finalLogPath, logContent, 'utf-8');
 
-        // 尝试用 console 输出路径，方便调试
-        console.error(`\n🔴 严重错误！崩溃日志已保存至: ${finalLogPath}\n`);
+        // 尝试用 console 输出路径，方便调试。保护 console 调用以避免在父进程 pipe 已关闭时抛出 EPIPE
+        try {
+            console.error(`\n🔴 严重错误！崩溃日志已保存至: ${finalLogPath}\n`);
+        } catch (e) {
+            // 忽略写入控制台失败（例如父进程管道已关闭， causes EPIPE）
+        }
 
     } catch (writeError) {
-        console.error('❌ 写入崩溃日志失败 (Write Failed):', writeError);
-        console.error('原始错误 (Original Error):', error);
+        try {
+            console.error('❌ 写入崩溃日志失败 (Write Failed):', writeError);
+            console.error('原始错误 (Original Error):', error);
+        } catch (e) {
+            // 忽略控制台写入失败
+        }
     }
 
     return finalLogPath;

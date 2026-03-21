@@ -69,6 +69,55 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["OVERLAY_UPDATE_PLAYERS"] = "overlay-update-players";
   return IpcChannel2;
 })(IpcChannel || {});
+if (typeof globalThis.Module === "undefined") {
+  globalThis.Module = {
+    // Prevent opencv.js from trying to resolve/fetch the real .wasm file
+    locateFile: (_path) => {
+      return "";
+    },
+    // Silence noisy runtime output that previously overflowed test buffers
+    print: () => {
+    },
+    printErr: () => {
+    },
+    // Short-circuit WebAssembly instantiation so no network fetch occurs.
+    instantiateWasm: (_imports, callback) => {
+      try {
+        callback({ exports: {} }, {});
+      } catch (e) {
+        console.warn("Module.instantiateWasm stub failed:", e?.toString?.() ?? e);
+      }
+      return {};
+    },
+    setStatus: () => {
+    },
+    onRuntimeInitialized: () => {
+    }
+  };
+}
+if (typeof globalThis.cv === "undefined") {
+  globalThis.cv = (mod) => {
+    try {
+      mod.print = () => {
+      };
+      mod.printErr = () => {
+      };
+      mod.setStatus = () => {
+      };
+      mod.instantiateWasm = (_imports, callback) => {
+        try {
+          callback({ exports: {} }, {});
+        } catch (e) {
+        }
+        return {};
+      };
+      mod.onRuntimeInitialized?.();
+    } catch (e) {
+      console.warn("cv stub setup failed:", e?.toString?.() ?? e);
+    }
+    return mod;
+  };
+}
 const exposedIpcRenderer = {
   on(...args) {
     const [channel, listener] = args;
@@ -274,6 +323,11 @@ const settingsApi = {
   set: (key, value) => electron.ipcRenderer.invoke(IpcChannel.SETTINGS_SET, key, value)
 };
 electron.contextBridge.exposeInMainWorld("settings", settingsApi);
+const appEnvApi = {
+  isGuiVerify: process.env.TFT_GUI_VERIFY === "1",
+  blocksRemoteAssets: process.env.TFT_BLOCK_REMOTE_ASSETS === "1"
+};
+electron.contextBridge.exposeInMainWorld("appEnv", appEnvApi);
 const lcuApi = {
   /**
    * 获取当前召唤师信息

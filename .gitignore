@@ -38,4 +38,9 @@ public/GameConfig/UserConfig/*
 public/GameConfig/TempConfig/*
 examples/recordings/Screen_Recording_20260315_134448_TFT.mp4
 session-ses_304d.md
+
+# Ignore all Electron/Chromium session cache and profile data
+.cache/gui-verify-profile/session-data/
 session-ses_2fae.md
+# Ignore all session data files
+session-*.md

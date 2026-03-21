@@ -1,0 +1,85 @@
+{
+  "description": "3-2 winstreak tempo sample: healthy HP, active 4-win streak, and enough gold to press level for tempo even before the normal 24g threshold. This covers the '连胜保节奏' branch.",
+  "state": {
+    "timestamp": 1710860400000,
+    "client": "RIOT_PC",
+    "target": "PC_LOGIC",
+    "stageText": "3-2",
+    "stageType": "PVP",
+    "level": 5,
+    "currentXp": 0,
+    "totalXp": 20,
+    "gold": 22,
+    "hp": 78,
+    "streak": 4,
+    "bench": [
+      {
+        "id": "TFT_Annie",
+        "name": "安妮",
+        "star": 2,
+        "cost": 3,
+        "location": "SLOT_1",
+        "items": [],
+        "traits": ["法师"]
+      }
+    ],
+    "board": [
+      {
+        "id": "TFT_Garen",
+        "name": "盖伦",
+        "star": 2,
+        "cost": 2,
+        "location": "R4_C4",
+        "items": [],
+        "traits": ["护卫"]
+      },
+      {
+        "id": "TFT_Malzahar",
+        "name": "玛尔扎哈",
+        "star": 2,
+        "cost": 3,
+        "location": "R3_C4",
+        "items": [],
+        "traits": ["法师"]
+      },
+      {
+        "id": "TFT_Shield",
+        "name": "慎",
+        "star": 2,
+        "cost": 2,
+        "location": "R4_C3",
+        "items": [],
+        "traits": ["护卫"]
+      },
+      {
+        "id": "TFT_Backline",
+        "name": "巴德",
+        "star": 2,
+        "cost": 3,
+        "location": "R3_C5",
+        "items": [],
+        "traits": ["神谕者"]
+      },
+      {
+        "id": "TFT_FrontTwo",
+        "name": "赛恩",
+        "star": 2,
+        "cost": 2,
+        "location": "R4_C2",
+        "items": [],
+        "traits": ["斗士"]
+      }
+    ],
+    "shop": [
+      { "slot": 0, "cost": null, "unit": null },
+      { "slot": 1, "cost": null, "unit": null },
+      { "slot": 2, "cost": null, "unit": null },
+      { "slot": 3, "cost": null, "unit": null },
+      { "slot": 4, "cost": null, "unit": null }
+    ],
+    "items": []
+  },
+  "context": {
+    "targetChampionNames": ["安妮"]
+  }
+}

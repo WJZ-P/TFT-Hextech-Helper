@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import {ConfigApi, ExposedIpcRenderer, HexApi, IpcApi, LcuApi, TftApi, LineupApi, UtilApi, SettingsApi, StatsApi} from "../electron/preload.ts";
+import {AppEnvApi, ConfigApi, ExposedIpcRenderer, HexApi, IpcApi, LcuApi, TftApi, LineupApi, UtilApi, SettingsApi, StatsApi} from "../electron/preload.ts";
 
 export {}   // 让文件变成模块，避免全局污染
 
@@ -18,5 +18,6 @@ declare global {
         util:UtilApi          // 通用工具 API
         settings:SettingsApi  // 通用设置 API（与后端 SettingsStore 对接）
         stats:StatsApi        // 统计数据 API
+        appEnv: AppEnvApi
     }
 }

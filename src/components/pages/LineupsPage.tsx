@@ -635,6 +635,15 @@ const AvatarEquipIcon = styled.img`
   opacity: 0.95;
 `;
 
+const AvatarEquipPlaceholder = styled.div<{ theme: ThemeType }>`
+  width: 18px;
+  height: 18px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-sizing: border-box;
+`;
+
 // 英雄名字
 const ChampionName = styled.span`
   font-size: 13px;
@@ -1670,13 +1679,22 @@ const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion, seaso
 
                     return (
                         <AvatarEquipRow>
-                            {equipList.map((equip, eqIdx) => (
-                                <AvatarEquipIcon
-                                    key={eqIdx}
-                                    src={resolveSingleAssetSource(assetResolver.resolveItemIconSources(equip.name, equip.equipId))}
-                                    alt={equip.name}
-                                />
-                            ))}
+                            {equipList.map((equip, eqIdx) => {
+                                const equipSources = assetResolver.resolveItemIconSources(equip.name, equip.equipId);
+                                const equipSource = resolveSingleAssetSource(equipSources);
+
+                                if (!equipSource) {
+                                    return <AvatarEquipPlaceholder key={eqIdx} title={equip.name} />;
+                                }
+
+                                return (
+                                    <AvatarEquipIcon
+                                        key={eqIdx}
+                                        src={equipSource}
+                                        alt={equip.name}
+                                    />
+                                );
+                            })}
                         </AvatarEquipRow>
                     );
                 })()}
@@ -1740,6 +1758,7 @@ const SmallChampionAvatarComponent: React.FC<{
 // ==================== 主组件 ====================
 
 const LineupsPage: React.FC = () => {
+    const shouldSuppressNonCriticalRemoteImages = window.appEnv?.blocksRemoteAssets ?? false;
     // 阵容列表状态（所有赛季的完整列表）
     const [allLineups, setAllLineups] = useState<LineupConfig[]>([]);
     // 加载状态
@@ -2585,7 +2604,9 @@ const LineupsPage: React.FC = () => {
                                                         const isActive = trait.count >= trait.data.levels[0];
                                                         return (
                                                             <TraitItem key={`${lineup.id}-trait-${idx}`} $active={isActive}>
-                                                                <TraitIcon src={getTraitIconUrl(trait.data)} alt={trait.name} />
+                                                                {!shouldSuppressNonCriticalRemoteImages && (
+                                                                    <TraitIcon src={getTraitIconUrl(trait.data)} alt={trait.name} />
+                                                                )}
                                                                 <TraitCount>{trait.count}</TraitCount>
                                                                 <TraitName>{trait.name}</TraitName>
                                                             </TraitItem>
@@ -2681,7 +2702,9 @@ const LineupsPage: React.FC = () => {
                                                 const isActive = trait.count >= trait.data.levels[0];
                                                 return (
                                                     <TraitItem key={`${lineup.id}-trait-${idx}`} $active={isActive}>
-                                                        <TraitIcon src={getTraitIconUrl(trait.data)} alt={trait.name} />
+                                                        {!shouldSuppressNonCriticalRemoteImages && (
+                                                            <TraitIcon src={getTraitIconUrl(trait.data)} alt={trait.name} />
+                                                        )}
                                                         <TraitCount>{trait.count}</TraitCount>
                                                         <TraitName>{trait.name}</TraitName>
                                                     </TraitItem>

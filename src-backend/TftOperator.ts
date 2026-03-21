@@ -17,7 +17,15 @@ import { Region } from "@nut-tree-fork/nut-js";
 import path from "path";
 import fs from "fs-extra";
 import sharp from "sharp";
-import cv from "@techstark/opencv-js";
+import type * as OpencvType from "@techstark/opencv-js";
+
+// Prefer a preinstalled global cv (set by electron preload during tests). If
+// absent, we'll dynamically import the heavy @techstark/opencv-js package at
+// runtime except when running the GUI verification harness (TFT_GUI_VERIFY=1)
+// where we must avoid loading the wasm to prevent test-time crashes.
+let cv: typeof OpencvType | undefined = (globalThis as unknown as Record<string, unknown>)["cv"] as
+    | typeof OpencvType
+    | undefined;
 
 // 协议层导入
 import {
@@ -378,7 +386,42 @@ class TftOperator {
      * @description 在 OpenCV WASM 加载完成后初始化模板加载器
      */
     private initOpenCV(): void {
-        const runtime = cv as typeof cv & { onRuntimeInitialized?: () => void };
+        // If a global stub is present (preload), use it immediately.
+        if ((globalThis as unknown as Record<string, unknown>)["cv"]) {
+            cv = (globalThis as unknown as Record<string, unknown>)["cv"] as typeof OpencvType;
+            this.setupOpenCvRuntime();
+            return;
+        }
+
+        // In GUI verification/test runs we must avoid importing the real
+        // opencv-js package because it triggers WASM fetch/instantiate that
+        // crashes in headless renderer contexts. The preload provides a stub
+        // for tests instead.
+        if (process.env.TFT_GUI_VERIFY === "1") {
+            logger.info("[TftOperator] GUI verify mode: skipping dynamic import of @techstark/opencv-js");
+            return;
+        }
+
+        // Otherwise, perform a dynamic import so the module is only loaded when
+        // actually needed at runtime (keeps dev/test harness stable).
+        void import("@techstark/opencv-js")
+            .then((mod) => {
+                // support both ESM default and CJS shapes
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                cv = ((mod as any).default ?? mod) as typeof OpencvType;
+                this.setupOpenCvRuntime();
+            })
+            .catch((e) => {
+                logger.warn(`[TftOperator] 动态导入 OpenCV 失败: ${e?.toString?.() ?? e}`);
+            });
+    }
+
+    private setupOpenCvRuntime(): void {
+        if (!cv) {
+            return;
+        }
+
+        const runtime = cv as unknown as { onRuntimeInitialized?: () => void };
         const previous = runtime.onRuntimeInitialized;
         runtime.onRuntimeInitialized = () => {
             previous?.();

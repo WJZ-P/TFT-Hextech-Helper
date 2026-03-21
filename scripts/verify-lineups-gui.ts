@@ -2,11 +2,14 @@ import fs from "fs";
 import path from "path";
 import { spawn } from "child_process";
 
-function resolveNpmCommand(): { command: string; args: string[] } {
+function resolveDevCommand(envOverrides: Record<string, string>): { command: string; args: string[] } {
     if (process.platform === "win32") {
+        const setCommands = Object.entries(envOverrides)
+            .map(([key, value]) => `set "${key}=${value}"`)
+            .join(" && ");
         return {
             command: process.env.comspec ?? "cmd.exe",
-            args: ["/d", "/s", "/c", "npm run dev"],
+            args: ["/d", "/s", "/c", `${setCommands} && npm run dev`],
         };
     }
 
@@ -27,20 +30,23 @@ async function main(): Promise<void> {
 
     fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
 
-    const npmCommand = resolveNpmCommand();
-    const child = spawn(npmCommand.command, npmCommand.args, {
+    const envOverrides = {
+        ELECTRON_RUN_AS_NODE: "",
+        TFT_START_ROUTE: "/lineups",
+        TFT_GUI_VERIFY: "1",
+        TFT_GUI_VERIFY_WAIT_MS: "5000",
+        TFT_GUI_VERIFY_EXIT: "1",
+        TFT_GUI_VERIFY_SCREENSHOT: screenshotPath,
+        TFT_GUI_VERIFY_SUMMARY: summaryPath,
+        TFT_BLOCK_REMOTE_ASSETS: "1",
+        TFT_SEASON_PACK_DIR: seasonPackDir,
+    };
+    const devCommand = resolveDevCommand(envOverrides);
+    const child = spawn(devCommand.command, devCommand.args, {
         cwd: process.cwd(),
         env: {
             ...process.env,
-            ELECTRON_RUN_AS_NODE: "",
-            TFT_START_ROUTE: "/lineups",
-            TFT_GUI_VERIFY: "1",
-            TFT_GUI_VERIFY_WAIT_MS: "5000",
-            TFT_GUI_VERIFY_EXIT: "1",
-            TFT_GUI_VERIFY_SCREENSHOT: screenshotPath,
-            TFT_GUI_VERIFY_SUMMARY: summaryPath,
-            TFT_BLOCK_REMOTE_ASSETS: "1",
-            TFT_SEASON_PACK_DIR: seasonPackDir,
+            ...envOverrides,
         },
         stdio: ["ignore", "pipe", "pipe"],
         shell: false,
@@ -87,6 +93,16 @@ async function main(): Promise<void> {
     if (!waitForMarker(stdout, "[GUI_VERIFY]")) {
         const combinedOutput = capturedOutput.join("");
         const failureTail = combinedOutput.slice(-4000);
+        // Persist the captured output to disk for post-mortem analysis
+        try {
+            const dumpPath = path.resolve(process.cwd(), '.cache', 'gui-verify-captured-output.log');
+            fs.mkdirSync(path.dirname(dumpPath), { recursive: true });
+            fs.writeFileSync(dumpPath, combinedOutput, { encoding: 'utf8' });
+        } catch (e) {
+            // best-effort only
+            // eslint-disable-next-line no-console
+            console.warn('Failed to write captured output dump:', e?.toString?.() ?? e);
+        }
         throw new Error(`GUI verification did not emit summary (exit=${exitCode})\n${failureTail}`);
     }
 
@@ -104,6 +120,7 @@ async function main(): Promise<void> {
     console.log(`[gui-verify] summary=${JSON.stringify(summary)}`);
     console.log(`[gui-verify] screenshot=${screenshotPath}`);
     console.log(`[gui-verify] report=${summaryPath}`);
+
 }
 
 void main();

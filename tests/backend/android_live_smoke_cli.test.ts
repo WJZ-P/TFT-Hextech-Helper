@@ -157,6 +157,47 @@ test("android live smoke CLI treats augment overlay screenshots as live content"
     assert.equal(parsed.foregroundDecision?.kind, "READY");
 });
 
+test("android live smoke CLI treats shop-open live HUD screenshots as ready live content", { timeout: 120000 }, async () => {
+    const screenshotPath = path.join(
+        repoRoot,
+        "examples",
+        "recordings",
+        "derived",
+        "android-real-recording-20260315-ionia",
+        "frames",
+        "recording-shop-5-1.png"
+    );
+
+    const { stdout } = await execFileAsync(
+        process.execPath,
+        [tsxCli, "scripts/run-android-live-smoke.ts", "--screenshot", screenshotPath],
+        {
+            cwd: repoRoot,
+            windowsHide: true,
+        }
+    );
+
+    const parsed = JSON.parse(stdout.slice(stdout.indexOf("{"))) as {
+        verificationGate: {
+            readyToClassify: boolean;
+            readyToClick: boolean;
+            blockerType: string | null;
+        };
+        contentClassification: {
+            state: string;
+        };
+        foregroundDecision: {
+            kind: string;
+        } | null;
+    };
+
+    assert.equal(parsed.verificationGate.readyToClassify, true);
+    assert.equal(parsed.verificationGate.readyToClick, true);
+    assert.equal(parsed.verificationGate.blockerType, null);
+    assert.equal(parsed.contentClassification.state, "LIVE_CONTENT");
+    assert.equal(parsed.foregroundDecision?.kind, "READY");
+});
+
 test("android live smoke CLI can analyze unknown non-game screenshots", { timeout: 120000 }, async () => {
     const screenshotPath = path.join(
         repoRoot,
