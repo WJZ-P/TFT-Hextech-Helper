@@ -36,12 +36,22 @@ test("TftNameNormalizer normalizes completed equipment English aliases (Round 4 
     assert.equal(normalizeEquipmentName("morello"), "莫雷洛秘典");
     assert.equal(normalizeEquipmentName("shojin"), "朔极之矛");
     assert.equal(normalizeEquipmentName("hoj"), "海克斯科技枪刃");
+    assert.equal(normalizeEquipmentName("ie"), "无尽之刃");
+    assert.equal(normalizeEquipmentName("bt"), "饮血剑");
     assert.equal(normalizeEquipmentName("gs"), "巨人杀手");
     assert.equal(normalizeEquipmentName("jgs"), "珠光护手");
     // Case insensitivity
     assert.equal(normalizeEquipmentName("QUICKSILVER"), "水银");
     assert.equal(normalizeEquipmentName("LW"), "最后的轻语");
     assert.equal(normalizeEquipmentName("MORELLO"), "莫雷洛秘典");
+});
+
+test("TftNameNormalizer supports spaced and punctuated English equipment aliases without hurting canonical Chinese names", () => {
+    assert.equal(normalizeEquipmentName("Last Whisper"), "最后的轻语");
+    assert.equal(normalizeEquipmentName("Rabadon's Deathcap"), "灭世者的死亡之帽");
+    assert.equal(normalizeEquipmentName("Infinity Edge"), "无尽之刃");
+    assert.equal(normalizeEquipmentName("Bloodthirster"), "饮血剑");
+    assert.equal(normalizeEquipmentName("无尽之刃"), "无尽之刃");
 });
 
 test("TftNameNormalizer resolves champion shorthand asol to 奥瑞利安·索尔", () => {
@@ -84,4 +94,10 @@ test("TftNameNormalizer resolves additional champion shorthands (Round 4 expansi
     // Case insensitivity
     const morgUpper = resolveChampionAlias("MORG", chessData);
     assert.equal(morgUpper, "魔甘娜");
+});
+
+test("TftNameNormalizer resolves spaced or punctuated English champion aliases through normalized tokens", () => {
+    assert.equal(resolveChampionAlias("Miss Fortune", chessData), "厄运小姐");
+    assert.equal(resolveChampionAlias("Twisted Fate", chessData), "崔斯特");
+    assert.equal(resolveChampionAlias("Kog'Maw", chessData), "科加斯");
 });

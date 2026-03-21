@@ -259,6 +259,26 @@ test("RuleBasedDecisionEngine preserves economy on healthy loss-streak boards in
     assert.ok(!plans.some((plan) => plan.type === "ROLL"));
 });
 
+test("RuleBasedDecisionEngine spends extra controlled roll budget for target pair all-in windows", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: {
+            targetChampionNames: string[];
+            allInPairThreshold: number;
+            pairAllInStage: number;
+            upgradeAllInExtraBudget: number;
+            maxRollCount: number;
+        };
+    }>("target-allin-4-2.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+    const rollPlan = plans.find((plan) => plan.type === "ROLL");
+
+    assert.ok(rollPlan, "应在目标对子冲刺窗口触发滚牌");
+    assert.equal(rollPlan?.payload.count, 6);
+});
+
 test("RuleBasedDecisionEngine holds economy floor on 4-5 late stage with FAST8 preset", () => {
     // FAST8路线在4-5非关键时机，真人会停手攒钱冲8，不随意买过渡牌
     // 前提：阵容满编（level=6 单位）、血量健康、经济恰好在 floor，softBudget=0 → 不买

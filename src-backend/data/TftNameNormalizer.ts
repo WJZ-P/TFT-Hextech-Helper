@@ -11,7 +11,7 @@ import type { TFTUnit } from "../TFTProtocol";
  *   ✅ Direct champion englishId simplification (e.g., "TFT16_Graves" → "格雷福斯")
  *
  * WHAT IS NOT SUPPORTED:
- *   ❌ Full English UI text parsing (e.g., "Last Whisper" with space)
+ *   ❌ Full English UI / OCR sentence parsing beyond item/champion tokens
  *   ❌ OCR-corrected names (relies on game returning standardized names)
  *   ❌ Trait/abyss abbreviations (not implemented)
  *   ❌ Champion Korean/Japanese names (Chinese game required)
@@ -41,6 +41,8 @@ const EQUIPMENT_NAME_ALIASES: Record<string, string> = {
     quicksilver: "水银",
     lastwhisper: "最后的轻语",
     lw: "最后的轻语",
+    infinityedge: "无尽之刃",
+    ie: "无尽之刃",
     rabadonsdeathcap: "灭世者的死亡之帽",
     rabadon: "灭世者的死亡之帽",
     dcap: "灭世者的死亡之帽",
@@ -50,6 +52,8 @@ const EQUIPMENT_NAME_ALIASES: Record<string, string> = {
     spearofshojin: "朔极之矛",
     hextechgunblade: "海克斯科技枪刃",
     hoj: "海克斯科技枪刃",
+    bloodthirster: "饮血剑",
+    bt: "饮血剑",
     giantslayer: "巨人杀手",
     gs: "巨人杀手",
     madredsbloodrazor: "巨人杀手",

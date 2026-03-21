@@ -83,6 +83,14 @@ function chooseCarryUnit(board: ObservedUnit[], targetNames: Set<string>): Obser
     return [...board].sort((a, b) => unitPower(b) - unitPower(a))[0] ?? null;
 }
 
+function getHighestTargetPairCount(ownedCounts: Map<string, number>, targetNames: Set<string>): number {
+    let highest = 0;
+    for (const name of targetNames) {
+        highest = Math.max(highest, ownedCounts.get(name) ?? 0);
+    }
+    return highest;
+}
+
 function computeEconomyFloor(state: ObservedState, context: DecisionContext, parsed: ParsedStage | null): number {
     const hpThreshold = context.stabilizeHpThreshold ?? DEFAULT_STABILIZE_HP_THRESHOLD;
     const hp = state.hp ?? 100;
@@ -184,6 +192,7 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
         }
 
         const ownedCounts = countOwnedUnits([...state.bench, ...state.board]);
+        const highestTargetPairCount = getHighestTargetPairCount(ownedCounts, targetNames);
         let spendableGold = state.gold;
         const softBudget = Math.max(0, state.gold - economyFloor);
         let spent = 0;
@@ -273,8 +282,24 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
                     hp <= 20 ? 5 :
                     hp <= 30 ? 4 :
                     hp <= hpThreshold ? 3 : 2;
-                const rollBudget = Math.max(0, state.gold - (hp <= hpThreshold ? 0 : economyFloor));
-                const count = Math.max(1, Math.min(baseRoll, Math.floor(rollBudget / 2)));
+                const pairAllInStage = context.pairAllInStage ?? 4;
+                const allInPairThreshold = context.allInPairThreshold ?? 2;
+                const extraRollBudget =
+                    highestTargetPairCount >= allInPairThreshold &&
+                    parsed !== null &&
+                    parsed.stage >= pairAllInStage
+                        ? context.upgradeAllInExtraBudget ?? 8
+                        : 0;
+                const baseRollBudget = Math.max(0, state.gold - (hp <= hpThreshold ? 0 : economyFloor));
+                const count = extraRollBudget > 0
+                    ? Math.max(
+                        1,
+                        Math.min(
+                            context.maxRollCount ?? Number.MAX_SAFE_INTEGER,
+                            Math.max(baseRoll, Math.floor((baseRollBudget + extraRollBudget) / 2))
+                        )
+                    )
+                    : Math.max(1, Math.min(baseRoll, Math.floor(baseRollBudget / 2)));
                 addPlan("ROLL", 82, "战力或血量触发保命节奏，执行小规模 D 牌稳场", { count });
             } else if (weakBoard && state.gold > economyFloor + 6) {
                 addPlan("ROLL", 52, "当前战力偏弱且经济允许，补一次 D 牌找即时提升", { count: 1 });

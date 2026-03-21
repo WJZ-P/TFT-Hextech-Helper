@@ -1,0 +1,71 @@
+{
+  "description": "4-2 target pair all-in sample: weak board, healthy enough HP, and target pair count already at two copies. The engine should spend a bit beyond the normal stabilization budget to push the upgrade window without becoming a full unlimited all-in.",
+  "state": {
+    "timestamp": 1710860400000,
+    "client": "RIOT_PC",
+    "target": "PC_LOGIC",
+    "stageText": "4-2",
+    "stageType": "PVP",
+    "level": 7,
+    "currentXp": 20,
+    "totalXp": 56,
+    "gold": 34,
+    "hp": 39,
+    "streak": 0,
+    "bench": [
+      {
+        "id": "TFT_Annie_1",
+        "name": "安妮",
+        "star": 2,
+        "cost": 3,
+        "location": "SLOT_1",
+        "items": [],
+        "traits": ["法师"]
+      },
+      {
+        "id": "TFT_Annie_2",
+        "name": "安妮",
+        "star": 1,
+        "cost": 3,
+        "location": "SLOT_2",
+        "items": [],
+        "traits": ["法师"]
+      }
+    ],
+    "board": [
+      {
+        "id": "TFT_WeakFront",
+        "name": "弱前排",
+        "star": 1,
+        "cost": 1,
+        "location": "R4_C4",
+        "items": [],
+        "traits": ["护卫"]
+      },
+      {
+        "id": "TFT_WeakBack",
+        "name": "弱后排",
+        "star": 1,
+        "cost": 1,
+        "location": "R3_C4",
+        "items": [],
+        "traits": ["法师"]
+      }
+    ],
+    "shop": [
+      { "slot": 0, "cost": null, "unit": null },
+      { "slot": 1, "cost": null, "unit": null },
+      { "slot": 2, "cost": null, "unit": null },
+      { "slot": 3, "cost": null, "unit": null },
+      { "slot": 4, "cost": null, "unit": null }
+    ],
+    "items": []
+  },
+  "context": {
+    "targetChampionNames": ["安妮"],
+    "allInPairThreshold": 2,
+    "pairAllInStage": 4,
+    "upgradeAllInExtraBudget": 8,
+    "maxRollCount": 6
+  }
+}

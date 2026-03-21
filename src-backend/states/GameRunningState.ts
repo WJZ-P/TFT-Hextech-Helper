@@ -38,12 +38,14 @@ import { showOverlay, closeOverlay, sendOverlayPlayers } from "../utils/OverlayB
 import { windowHelper } from "../utils/WindowHelper";
 import { GameLoadingState } from "./GameLoadingState";
 import { getAdapterByClient } from "../adapters/AdapterFactory";
+import {
+    ANDROID_MISSING_HUD_SIGNAL_GRACE_COUNT,
+    ANDROID_UNKNOWN_STAGE_THRESHOLD,
+    updateAndroidUnknownStageProgress,
+} from "./AndroidUnknownStageGuard";
 
 /** abort 信号轮询间隔 (ms)，作为事件监听的兜底 */
 const ABORT_CHECK_INTERVAL_MS = 2000;
-
-/** 安卓端：连续识别不到有效阶段的阈值（达到后判定本局已结束） */
-const ANDROID_UNKNOWN_STAGE_THRESHOLD = 40;
 
 /** 发条鸟模式：阶段变化超时时间 (ms)，超过此时间未收到阶段事件则视为卡住 */
 const CLOCKWORK_STAGE_TIMEOUT_MS = 60000;  // 1 分钟
@@ -241,6 +243,7 @@ export class GameRunningState implements IState {
             /** 标记是否已经尝试过退出游戏，避免重复调用 */
             let hasTriedQuit = false;
             let androidUnknownStageCount = 0;
+            let androidMissingHudSignalCount = 0;
             let androidCheckInFlight = false;
 
             /**
@@ -425,22 +428,29 @@ export class GameRunningState implements IState {
 
                         const stageResult = await tftOperator.getGameStage();
                         const hasValidStage = Boolean(stageResult.stageText) && stageResult.type !== GameStageType.UNKNOWN;
+                        const hasHudSignal = await this.hasAndroidLiveHudSignal();
+                        const progress = updateAndroidUnknownStageProgress({
+                            hasValidStage,
+                            hasHudSignal,
+                            previousUnknownStageCount: androidUnknownStageCount,
+                            previousMissingHudSignalCount: androidMissingHudSignalCount,
+                        });
+
+                        androidUnknownStageCount = progress.unknownStageCount;
+                        androidMissingHudSignalCount = progress.missingHudSignalCount;
 
                         if (hasValidStage) {
-                            androidUnknownStageCount = 0;
                             return;
                         }
 
-                        const hasHudSignal = await this.hasAndroidLiveHudSignal();
                         if (hasHudSignal) {
-                            androidUnknownStageCount = 0;
                             logger.debug("[GameRunningState] 安卓端阶段暂未识别，但 HUD 仍可读取，跳过结束计数");
                             return;
                         }
 
-                        androidUnknownStageCount += 1;
+                        logger.debug(`[GameRunningState] 安卓端 HUD 缺失计数: ${androidMissingHudSignalCount}/${ANDROID_MISSING_HUD_SIGNAL_GRACE_COUNT}`);
                         logger.debug(`[GameRunningState] 安卓端阶段识别失败计数: ${androidUnknownStageCount}/${ANDROID_UNKNOWN_STAGE_THRESHOLD}`);
-                        if (androidUnknownStageCount >= ANDROID_UNKNOWN_STAGE_THRESHOLD) {
+                        if (progress.shouldEndGame) {
                             logger.info("[GameRunningState] 安卓端连续识别不到有效阶段，判定本局已结束");
                             safeResolve('ended');
                         }

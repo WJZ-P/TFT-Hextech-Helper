@@ -78,6 +78,10 @@ export interface DecisionContext {
     conservativeEconomyFloor?: number;
     strategyPreset?: "STANDARD" | "FAST8" | "REROLL";
     stabilizeHpThreshold?: number;
+    allInPairThreshold?: number;
+    pairAllInStage?: number;
+    upgradeAllInExtraBudget?: number;
+    maxRollCount?: number;
 }
 
 export interface DecisionEngine {

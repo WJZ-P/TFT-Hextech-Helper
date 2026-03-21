@@ -43,3 +43,22 @@ test("pc logic CLI replays a winstreak 3-2 sample and keeps tempo with an early 
 
     assert.ok(parsed.plans.some((plan) => plan.type === "LEVEL_UP" && /3-2/.test(plan.reason)));
 });
+
+test("pc logic CLI replays a target-pair 4-2 sample and increases roll commitment within a capped window", { timeout: 120000 }, async () => {
+    const statePath = path.join("examples", "pc-logic", "target-allin-4-2.json");
+    const { stdout } = await execFileAsync(
+        process.execPath,
+        [tsxCli, "scripts/run-pc-logic.ts", statePath],
+        {
+            cwd: repoRoot,
+            windowsHide: true,
+        }
+    );
+
+    const parsed = JSON.parse(stdout) as {
+        plans: Array<{ type: string; payload?: { count?: number } }>;
+    };
+
+    const rollPlan = parsed.plans.find((plan) => plan.type === "ROLL");
+    assert.equal(rollPlan?.payload?.count, 6);
+});
