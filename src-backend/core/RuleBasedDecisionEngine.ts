@@ -188,6 +188,9 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
                 addPlan("LEVEL_UP", 92, "4-2 关键转折，优先冲 8 寻找高费核心", { count });
             } else if (isKeyRound(parsed, 4, 5) && state.level < 8 && hp > hpThreshold + 10 && state.gold >= 30) {
                 addPlan("LEVEL_UP", 88, "4-5 血量健康且经济充足，先贪人口拉上限", { count: 1 });
+            } else if ((isKeyRound(parsed, 4, 2) || isKeyRound(parsed, 4, 5)) && state.level < 8 && hp > hpThreshold + 4 && state.gold >= 20 && state.gold < 30) {
+                // 中期小 D 没能立刻扭转质量时，血量仍安全就该转回升人口恢复节奏，避免继续无脑 D 空经济。
+                addPlan("LEVEL_UP", 86, "中期小D后血量仍安全，转向升人口恢复运营节奏", { count: 1 });
             } else if (isKeyRound(parsed, 5, 1) && state.level < 9 && hp > hpThreshold + 10 && state.gold >= 40) {
                 addPlan("LEVEL_UP", 87, "5-1 仍然健康且经济够用，优先贪升级而不是提前 D 牌", { count: 1 });
             } else if (parsed && parsed.stage >= 5 && state.level < 9 && state.gold >= 50 && hp > hpThreshold) {
@@ -200,6 +203,10 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
         let spendableGold = state.gold;
         const softBudget = Math.max(0, state.gold - economyFloor);
         let spent = 0;
+        const midgameRecoveryLevel = (isKeyRound(parsed, 4, 2) || isKeyRound(parsed, 4, 5)) && state.level < 8 && hp > hpThreshold + 4 && state.gold >= 20 && state.gold < 30;
+        const lateHealthyPreserve = isKeyRound(parsed, 5, 1) && state.level < 9 && hp > hpThreshold + 10 && state.gold >= 40;
+        const staleTargetPairPivot = highestTargetPairCount < 2 && ((isKeyRound(parsed, 4, 2) && hp > hpThreshold + 6 && state.gold >= 24) || (isKeyRound(parsed, 5, 1) && hp > hpThreshold + 10 && state.gold >= 32));
+        const dropLowValueChase = parsed !== null && parsed.stage >= 5 && hp <= hpThreshold && highestTargetPairCount < 2;
 
         if ((isKeyRound(parsed, 4, 2) || isKeyRound(parsed, 5, 1)) && highestTargetPairCount >= 2 && hp > hpThreshold + 8 && state.gold >= 24) {
             addPlan("LEVEL_UP", 89, "4-2 / 5-1 目标对子已成型且血量健康，优先贪人口吃上限", { count: 1 });
@@ -232,6 +239,14 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
             }
 
             if (!isTarget && !canUpgradeSoon && context.strategyPreset === "FAST8" && (offer.cost ?? 0) <= 2) {
+                continue;
+            }
+
+            if (isTarget && staleTargetPairPivot && !canUpgradeSoon) {
+                continue;
+            }
+
+            if (isTarget && dropLowValueChase && !canUpgradeSoon && (offer.cost ?? 0) <= 3) {
                 continue;
             }
 
@@ -287,6 +302,7 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
             const keyStabilizeRound = isKeyRound(parsed, 3, 2) || isKeyRound(parsed, 4, 2);
             const lateRollDownRound = isKeyRound(parsed, 4, 5) || isKeyRound(parsed, 5, 1);
             const lateSmallDRound = isKeyRound(parsed, 4, 5) || isKeyRound(parsed, 5, 1);
+            const targetPairTriBandActive = highestTargetPairCount >= 2 && (isKeyRound(parsed, 4, 2) || isKeyRound(parsed, 5, 1));
             // 5阶段低血量优先进入止损 all-in，避免被通用的小 D 稳场逻辑吃掉。
             const lateStageAllIn = parsed !== null && parsed.stage >= 5 && hp <= 20 && state.gold >= 12;
             if (lateStageAllIn) {
@@ -304,10 +320,10 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
             } else if (lateRollDownRound && hp <= hpThreshold && state.gold >= 12) {
                 const count = hp <= 20 ? 5 : hp <= 30 ? 4 : 3;
                 addPlan("ROLL", 83, "4-5 / 5-1 进入低血量 roll-down，先稳血再谈贪经济", { count });
-            } else if ((isKeyRound(parsed, 4, 2) || isKeyRound(parsed, 5, 1)) && highestTargetPairCount >= 2 && hp <= hpThreshold && state.gold >= 16) {
+            } else if (targetPairTriBandActive && hp <= hpThreshold && state.gold >= 16) {
                 const count = hp <= 20 ? 5 : 4;
                 addPlan("ROLL", 81, "4-2 / 5-1 目标对子在危险血量下先稳血，避免贪升级", { count });
-            } else if ((mustStabilize && state.gold >= 12) || (keyStabilizeRound && weakBoard && !shouldProtectLossStreak && state.gold >= 16)) {
+            } else if (!((isKeyRound(parsed, 4, 2) || isKeyRound(parsed, 5, 1)) && highestTargetPairCount >= 2 && hp > hpThreshold + 8) && !midgameRecoveryLevel && !lateHealthyPreserve && ((mustStabilize && state.gold >= 12) || (keyStabilizeRound && weakBoard && !shouldProtectLossStreak && state.gold >= 16))) {
                 const baseRoll =
                     hp <= 20 ? 5 :
                     hp <= 30 ? 4 :
@@ -330,8 +346,8 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
                         )
                     )
                     : Math.max(1, Math.min(baseRoll, Math.floor(baseRollBudget / 2)));
-                addPlan("ROLL", 82, "战力或血量触发保命节奏，执行小规模 D 牌稳场", { count });
-            } else if (weakBoard && state.gold > economyFloor + 6) {
+                addPlan("ROLL", 82, targetPairTriBandActive ? "4-2 / 5-1 目标对子进入受控稳血节奏" : "战力或血量触发保命节奏，执行小规模 D 牌稳场", { count });
+            } else if (weakBoard && state.gold > economyFloor + 6 && !lateHealthyPreserve) {
                 addPlan("ROLL", 52, "当前战力偏弱且经济允许，补一次 D 牌找即时提升", { count: 1 });
             }
         }

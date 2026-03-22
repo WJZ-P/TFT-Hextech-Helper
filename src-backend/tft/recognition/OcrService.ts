@@ -38,6 +38,31 @@ export enum OcrWorkerType {
     COMBAT_PHASE = "COMBAT_PHASE",
 }
 
+/**
+ * Worker 健康追踪元数据
+ * @description 用于监控 Worker 生命周期，触发回收
+ */
+interface WorkerHealthMeta {
+    /** Worker 创建时间戳 */
+    createdAt: number;
+    /** 累计识别次数 */
+    recognitionCount: number;
+    /** 上次识别时间戳 */
+    lastUsedAt: number;
+}
+
+/**
+ * Worker 回收配置
+ */
+const WORKER_RECYCLE_CONFIG = {
+    /** 最大识别次数后触发回收 */
+    MAX_RECOGNITIONS: 500,
+    /** 最大存活时间（毫秒）后触发回收 */
+    MAX_LIFETIME_MS: 30 * 60 * 1000, // 30 minutes
+    /** 最大闲置时间（毫秒）后触发回收 */
+    MAX_IDLE_MS: 10 * 60 * 1000, // 10 minutes
+};
+
 
 /**
  * OCR 识别服务
@@ -71,6 +96,15 @@ export class OcrService {
 
     /** 当前棋子 Worker 对应的赛季模式，用于判断是否需要重建 Worker */
     private currentChessMode: TFTMode | null = null;
+
+    /** Worker 健康追踪元数据 */
+    private workerHealth: Map<OcrWorkerType, WorkerHealthMeta> = new Map();
+
+    /** switchChessWorker 防抖定时器 */
+    private switchChessDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+    /** switchChessWorker 防抖等待中的模式 */
+    private pendingChessMode: TFTMode | null = null;
 
     /** Tesseract 语言包路径 */
     private get langPath(): string {
@@ -115,15 +149,130 @@ export class OcrService {
     }
 
     /**
-     * 执行 OCR 识别
+     * 执行 OCR 识别（带自动回收）
      * @param imageBuffer PNG 图片 Buffer
      * @param type Worker 类型
      * @returns 识别结果文本
+     * 
+     * 自动回收逻辑：
+     * - 识别次数超过 MAX_RECOGNITIONS (500)
+     * - 存活时间超过 MAX_LIFETIME_MS (30分钟)
+     * - 闲置时间超过 MAX_IDLE_MS (10分钟)
      */
     public async recognize(imageBuffer: Buffer, type: OcrWorkerType): Promise<string> {
+        // 检查是否需要回收
+        await this.recycleIfNeeded(type);
+
         const worker = await this.getWorker(type);
         const result = await worker.recognize(imageBuffer);
+
+        // 更新健康追踪
+        this.updateHealthMeta(type);
+
         return result.data.text.trim();
+    }
+
+    /**
+     * 更新 Worker 健康追踪元数据
+     */
+    private updateHealthMeta(type: OcrWorkerType): void {
+        const meta = this.workerHealth.get(type);
+        const now = Date.now();
+        
+        if (meta) {
+            meta.recognitionCount++;
+            meta.lastUsedAt = now;
+        } else {
+            this.workerHealth.set(type, {
+                createdAt: now,
+                recognitionCount: 1,
+                lastUsedAt: now,
+            });
+        }
+    }
+
+    /**
+     * 检查 Worker 是否需要回收，如果是则重建
+     * @param type Worker 类型
+     */
+    private async recycleIfNeeded(type: OcrWorkerType): Promise<void> {
+        const meta = this.workerHealth.get(type);
+        if (!meta) return;
+
+        const now = Date.now();
+        const needsRecycle =
+            meta.recognitionCount >= WORKER_RECYCLE_CONFIG.MAX_RECOGNITIONS ||
+            (now - meta.createdAt) >= WORKER_RECYCLE_CONFIG.MAX_LIFETIME_MS ||
+            (now - meta.lastUsedAt) >= WORKER_RECYCLE_CONFIG.MAX_IDLE_MS;
+
+        if (!needsRecycle) return;
+
+        logger.info(
+            `[OcrService] Worker ${type} 触发回收: ` +
+            `识别次数=${meta.recognitionCount}, ` +
+            `存活=${Math.round((now - meta.createdAt) / 1000)}s, ` +
+            `闲置=${Math.round((now - meta.lastUsedAt) / 1000)}s`
+        );
+
+        // 重建对应 Worker
+        await this.rebuildWorker(type);
+
+        // 重置健康追踪
+        this.workerHealth.set(type, {
+            createdAt: Date.now(),
+            recognitionCount: 0,
+            lastUsedAt: Date.now(),
+        });
+    }
+
+    /**
+     * 重建指定类型的 Worker
+     */
+    private async rebuildWorker(type: OcrWorkerType): Promise<void> {
+        switch (type) {
+            case OcrWorkerType.GAME_STAGE:
+                if (this.gameStageWorker) {
+                    await this.gameStageWorker.terminate();
+                    this.gameStageWorker = null;
+                }
+                await this.getGameStageWorker();
+                break;
+            case OcrWorkerType.CHESS:
+                if (this.chessWorker) {
+                    await this.chessWorker.terminate();
+                    this.chessWorker = null;
+                }
+                await this.getChessWorker();
+                break;
+            case OcrWorkerType.LEVEL:
+                if (this.levelWorker) {
+                    await this.levelWorker.terminate();
+                    this.levelWorker = null;
+                }
+                await this.getLevelWorker();
+                break;
+            case OcrWorkerType.HUD_DIGITS:
+                if (this.hudDigitsWorker) {
+                    await this.hudDigitsWorker.terminate();
+                    this.hudDigitsWorker = null;
+                }
+                await this.getHudDigitsWorker();
+                break;
+            case OcrWorkerType.PLAYER_NAME:
+                if (this.playerNameWorker) {
+                    await this.playerNameWorker.terminate();
+                    this.playerNameWorker = null;
+                }
+                await this.getPlayerNameWorker();
+                break;
+            case OcrWorkerType.COMBAT_PHASE:
+                if (this.combatPhaseWorker) {
+                    await this.combatPhaseWorker.terminate();
+                    this.combatPhaseWorker = null;
+                }
+                await this.getCombatPhaseWorker();
+                break;
+        }
     }
 
     /**
@@ -209,9 +358,10 @@ export class OcrService {
     }
 
     /**
-     * 切换棋子 OCR Worker 到指定赛季
+     * 切换棋子 OCR Worker 到指定赛季（带防抖）
      * @param mode 目标 TFT 游戏模式
-     * @description 外部调用入口。如果目标赛季与当前赛季相同，则跳过重建，避免不必要的开销。
+     * @description 外部调用入口。使用 500ms 防抖避免连续调用导致频繁重建。
+     *              如果目标赛季与当前赛季相同，则跳过重建。
      *              应在每局游戏开始时（GameRunningState.action）调用。
      *
      * 使用示例：
@@ -224,7 +374,77 @@ export class OcrService {
             logger.debug(`[OcrService] 棋子 Worker 赛季未变 (${mode})，跳过重建`);
             return;
         }
-        await this.buildChessWorker(mode);
+
+        // 防抖：如果有等待中的切换，取消它
+        if (this.switchChessDebounceTimer) {
+            clearTimeout(this.switchChessDebounceTimer);
+            this.switchChessDebounceTimer = null;
+        }
+
+        this.pendingChessMode = mode;
+
+        return new Promise((resolve) => {
+            this.switchChessDebounceTimer = setTimeout(async () => {
+                const targetMode = this.pendingChessMode;
+                this.pendingChessMode = null;
+                this.switchChessDebounceTimer = null;
+
+                if (targetMode && targetMode !== this.currentChessMode) {
+                    await this.buildChessWorker(targetMode);
+                }
+                resolve();
+            }, 500);
+        });
+    }
+
+    /**
+     * 预热所有常用 Worker
+     * @description 在应用启动或游戏开始时调用，避免首次使用时的延迟。
+     *              预热 GAME_STAGE 和 CHESS Worker（最常用的两个）。
+     */
+    public async prewarmWorkers(): Promise<void> {
+        logger.info("[OcrService] 开始预热 OCR Workers...");
+        
+        try {
+            await Promise.all([
+                this.getGameStageWorker(),
+                this.getChessWorker(),
+            ]);
+            logger.info("[OcrService] OCR Workers 预热完成");
+        } catch (e) {
+            logger.warn(`[OcrService] Worker 预热部分失败: ${e}`);
+        }
+    }
+
+    /**
+     * 检查指定类型的 Worker 是否已就绪
+     * @param type Worker 类型
+     * @returns true 表示 Worker 已创建且可用
+     */
+    public isWorkerReady(type: OcrWorkerType): boolean {
+        switch (type) {
+            case OcrWorkerType.GAME_STAGE:
+                return this.gameStageWorker !== null;
+            case OcrWorkerType.CHESS:
+                return this.chessWorker !== null;
+            case OcrWorkerType.LEVEL:
+                return this.levelWorker !== null;
+            case OcrWorkerType.HUD_DIGITS:
+                return this.hudDigitsWorker !== null;
+            case OcrWorkerType.PLAYER_NAME:
+                return this.playerNameWorker !== null;
+            case OcrWorkerType.COMBAT_PHASE:
+                return this.combatPhaseWorker !== null;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * 获取指定 Worker 的健康状态（用于调试/监控）
+     */
+    public getWorkerHealth(type: OcrWorkerType): WorkerHealthMeta | undefined {
+        return this.workerHealth.get(type);
     }
 
     /**
@@ -345,6 +565,12 @@ export class OcrService {
      * @description 在应用退出时调用
      */
     public async destroy(): Promise<void> {
+        // 清除防抖定时器
+        if (this.switchChessDebounceTimer) {
+            clearTimeout(this.switchChessDebounceTimer);
+            this.switchChessDebounceTimer = null;
+        }
+
         if (this.gameStageWorker) {
             await this.gameStageWorker.terminate();
             this.gameStageWorker = null;
@@ -380,6 +606,9 @@ export class OcrService {
             this.combatPhaseWorker = null;
             logger.info("[OcrService] 战斗阶段识别 Worker 已销毁");
         }
+
+        // 清空健康追踪
+        this.workerHealth.clear();
     }
 }
 

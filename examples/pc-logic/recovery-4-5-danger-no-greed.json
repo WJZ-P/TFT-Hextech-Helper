@@ -1,0 +1,35 @@
+{
+  "description": "4-5 小D失败且血量危险时，不进入 greed recovery",
+  "state": {
+    "timestamp": 1710000000000,
+    "client": "RIOT_PC",
+    "target": "PC_LOGIC",
+    "stageText": "4-5",
+    "stageType": "PVP",
+    "level": 7,
+    "currentXp": 0,
+    "totalXp": 40,
+    "gold": 24,
+    "hp": 33,
+    "streak": -3,
+    "bench": [],
+    "board": [
+      { "id": "TFT_A", "name": "前排A", "star": 1, "cost": 3, "location": "R4_C1", "items": [], "traits": ["护卫"] },
+      { "id": "TFT_B", "name": "前排B", "star": 1, "cost": 3, "location": "R4_C2", "items": [], "traits": ["斗士"] },
+      { "id": "TFT_C", "name": "后排A", "star": 1, "cost": 4, "location": "R3_C3", "items": [], "traits": ["法师"] },
+      { "id": "TFT_D", "name": "后排B", "star": 1, "cost": 4, "location": "R3_C4", "items": [], "traits": ["狙神"] }
+    ],
+    "shop": [
+      { "slot": 0, "cost": null, "unit": null },
+      { "slot": 1, "cost": null, "unit": null },
+      { "slot": 2, "cost": null, "unit": null },
+      { "slot": 3, "cost": null, "unit": null },
+      { "slot": 4, "cost": null, "unit": null }
+    ],
+    "items": []
+  },
+  "context": {
+    "stabilizeHpThreshold": 42,
+    "strategyPreset": "STANDARD"
+  }
+}

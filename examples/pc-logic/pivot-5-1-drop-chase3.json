@@ -1,0 +1,36 @@
+{
+  "description": "终局保命优先，放弃低价值追三",
+  "state": {
+    "timestamp": 1710000000000,
+    "client": "RIOT_PC",
+    "target": "PC_LOGIC",
+    "stageText": "5-1",
+    "stageType": "PVP",
+    "level": 8,
+    "currentXp": 0,
+    "totalXp": 56,
+    "gold": 24,
+    "hp": 34,
+    "streak": -2,
+    "bench": [
+      { "id": "TFT_TargetA", "name": "波比", "star": 1, "cost": 1, "location": "SLOT_1", "items": [], "traits": ["护卫"] }
+    ],
+    "board": [
+      { "id": "TFT_FrontA", "name": "残血前排", "star": 1, "cost": 4, "location": "R4_C1", "items": [], "traits": ["护卫"] },
+      { "id": "TFT_BackA", "name": "残血后排", "star": 1, "cost": 4, "location": "R3_C3", "items": [], "traits": ["狙神"] }
+    ],
+    "shop": [
+      { "slot": 0, "cost": 1, "unit": { "id": "TFT_TargetShop", "name": "波比", "star": 1, "cost": 1, "items": [], "traits": ["护卫"] } },
+      { "slot": 1, "cost": null, "unit": null },
+      { "slot": 2, "cost": null, "unit": null },
+      { "slot": 3, "cost": null, "unit": null },
+      { "slot": 4, "cost": null, "unit": null }
+    ],
+    "items": []
+  },
+  "context": {
+    "targetChampionNames": ["波比"],
+    "stabilizeHpThreshold": 42,
+    "strategyPreset": "STANDARD"
+  }
+}

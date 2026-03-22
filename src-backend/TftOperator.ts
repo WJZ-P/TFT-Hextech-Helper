@@ -1857,31 +1857,100 @@ class TftOperator {
     }
 
     /**
-     * 连续确认机制：防止OCR误读（例如把1-1误识别怇2-1/3-1）
+     * 标准化阶段文本，处理OCR常见误读
+     * @param stageText 原始OCR文本
+     * @returns 标准化后的阶段文本，无法识别返回null
+     * 
+     * 处理的误读场景：
+     * - '8' 误读为 '3'（如 3-1 应为 8-1）
+     * - '6' 误读为 '0'（如 0-2 应为 6-2）
+     * - 空格/换行干扰
+     * - '1' 误读为 'l' 或 'I'
+     */
+    private normalizeStageText(stageText: string): string | null {
+        // 去除空白字符
+        const cleaned = stageText.replace(/\s+/g, '').trim();
+        
+        // 基本格式校验: X-Y
+        const match = cleaned.match(/^(\d)[\-\.](\d)$/);
+        if (!match) return null;
+
+        let stage = parseInt(match[1]);
+        let round = parseInt(match[2]);
+
+        // 常见误读修正
+        // stage 0 不合法，通常是 6 的误读
+        if (stage === 0) stage = 6;
+        
+        // round 0 不合法，通常是 6 的误读
+        if (round === 0) round = 6;
+
+        // 第一阶段最多4回合
+        if (stage === 1 && round > 4) return null;
+
+        // TFT最多7个大阶段，每个阶段最多7个回合
+        if (stage < 1 || stage > 7 || round < 1 || round > 7) {
+            return null;
+        }
+
+        return `${stage}-${round}`;
+    }
+
+    /**
+     * 连续确认机制：使用多数投票防止OCR误读
      * @param stageText 识别到的阶段文本
      * @returns 确认后的阶段文本，如果不稳定则返回null
+     * 
+     * 投票规则：
+     * - 从历史中取最近 STAGE_CONFIRM_THRESHOLD 条记录
+     * - 统计每个阶段文本出现的次数
+     * - 若最高票数 >= 2 且占比 >= 50%，则确认为该阶段
+     * - 否则返回 null（不稳定）
      */
     private confirmStageWithHistory(stageText: string): string | null {
-        // 添加到历史
-        this.stageRecognitionHistory.push(stageText);
+        const normalized = this.normalizeStageText(stageText);
+        if (!normalized) {
+            logger.debug(`[TftOperator] 阶段文本无法标准化: "${stageText}"`);
+            return null;
+        }
+
+        // 添加标准化后的结果到历史
+        this.stageRecognitionHistory.push(normalized);
 
         // 保持历史长度
         if (this.stageRecognitionHistory.length > this.MAX_HISTORY_LENGTH) {
             this.stageRecognitionHistory.shift();
         }
 
-        // 检查最近 STAGE_CONFIRM_THRESHOLD 次识别是否相同
+        // 数据不足，暂不确认
         if (this.stageRecognitionHistory.length < this.STAGE_CONFIRM_THRESHOLD) {
             logger.debug(`[TftOperator] 阶段确认中... (剩余${this.STAGE_CONFIRM_THRESHOLD - this.stageRecognitionHistory.length}次)`);
-            return null; // 数据不足，暂不确认
+            return null;
         }
 
         const recentResults = this.stageRecognitionHistory.slice(-this.STAGE_CONFIRM_THRESHOLD);
-        const allSame = recentResults.every(s => s === recentResults[0]);
+        
+        // 多数投票：统计每个值的出现次数
+        const voteCounts = new Map<string, number>();
+        for (const s of recentResults) {
+            voteCounts.set(s, (voteCounts.get(s) || 0) + 1);
+        }
 
-        if (allSame) {
-            logger.info(`[TftOperator] ✅ 阶段确认成功: ${recentResults[0]}`);
-            return recentResults[0];
+        // 找出最高票数
+        let maxVotes = 0;
+        let majorityStage: string | null = null;
+        for (const [stage, count] of voteCounts) {
+            if (count > maxVotes) {
+                maxVotes = count;
+                majorityStage = stage;
+            }
+        }
+
+        // 多数投票阈值：最高票数 >= 2 且占比 >= 50%
+        const threshold = Math.max(2, Math.ceil(this.STAGE_CONFIRM_THRESHOLD / 2));
+        if (maxVotes >= threshold) {
+            logger.info(`[TftOperator] ✅ 阶段确认成功 (投票${maxVotes}/${this.STAGE_CONFIRM_THRESHOLD}): ${majorityStage}`);
+            return majorityStage;
         }
 
         // 识别结果不稳定

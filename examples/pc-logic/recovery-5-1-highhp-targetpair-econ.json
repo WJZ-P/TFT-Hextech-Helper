@@ -1,0 +1,41 @@
+{
+  "description": "5-1 高血量但出现诱惑目标对子时，仍然不被轻易带偏",
+  "state": {
+    "timestamp": 1710000000000,
+    "client": "RIOT_PC",
+    "target": "PC_LOGIC",
+    "stageText": "5-1",
+    "stageType": "PVP",
+    "level": 8,
+    "currentXp": 0,
+    "totalXp": 56,
+    "gold": 38,
+    "hp": 69,
+    "streak": 2,
+    "bench": [
+      { "id": "TFT_Annie_A", "name": "安妮", "star": 1, "cost": 3, "location": "SLOT_1", "items": [], "traits": ["法师"] },
+      { "id": "TFT_Annie_B", "name": "安妮", "star": 1, "cost": 3, "location": "SLOT_2", "items": [], "traits": ["法师"] }
+    ],
+    "board": [
+      { "id": "TFT_A", "name": "高费前排", "star": 2, "cost": 4, "location": "R4_C1", "items": [], "traits": ["护卫"] },
+      { "id": "TFT_B", "name": "高费输出", "star": 2, "cost": 4, "location": "R3_C3", "items": [], "traits": ["狙神"] },
+      { "id": "TFT_C", "name": "功能A", "star": 2, "cost": 3, "location": "R2_C4", "items": [], "traits": ["法师"] }
+    ],
+    "shop": [
+      { "slot": 0, "cost": 3, "unit": { "id": "TFT_Annie_Shop", "name": "安妮", "star": 1, "cost": 3, "items": [], "traits": ["法师"] } },
+      { "slot": 1, "cost": null, "unit": null },
+      { "slot": 2, "cost": null, "unit": null },
+      { "slot": 3, "cost": null, "unit": null },
+      { "slot": 4, "cost": null, "unit": null }
+    ],
+    "items": []
+  },
+  "context": {
+    "targetChampionNames": ["安妮"],
+    "allInPairThreshold": 2,
+    "pairAllInStage": 4,
+    "upgradeAllInExtraBudget": 8,
+    "maxRollCount": 6,
+    "strategyPreset": "STANDARD"
+  }
+}
