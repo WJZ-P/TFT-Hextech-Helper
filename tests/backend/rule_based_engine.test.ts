@@ -247,6 +247,18 @@ test("RuleBasedDecisionEngine protects winstreak tempo by leveling on 3-2 earlie
     assert.ok(plans.some((plan) => plan.type === "LEVEL_UP" && /3-2/.test(plan.reason)));
 });
 
+test("RuleBasedDecisionEngine keeps winstreak tempo by leveling on 2-5", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: { strategyPreset: "FAST8" };
+    }>("winstreak-tempo-2-5.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+
+    assert.ok(plans.some((plan) => plan.type === "LEVEL_UP" && /2-5/.test(plan.reason)));
+});
+
 test("RuleBasedDecisionEngine preserves economy on healthy loss-streak boards instead of panic rolling", () => {
     const engine = new RuleBasedDecisionEngine();
     const fixture = readExampleFixture<{
@@ -257,6 +269,19 @@ test("RuleBasedDecisionEngine preserves economy on healthy loss-streak boards in
     const plans = engine.generatePlan(fixture.state, fixture.context);
 
     assert.ok(!plans.some((plan) => plan.type === "ROLL"));
+});
+
+test("RuleBasedDecisionEngine preserves economy on loss-streak board by avoiding unnecessary buys", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: { strategyPreset: "STANDARD"; targetChampionNames: string[] };
+    }>("loss-econ-no-d-3-2.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+
+    assert.ok(!plans.some((plan) => plan.type === "ROLL"));
+    assert.ok(!plans.some((plan) => plan.type === "BUY"));
 });
 
 test("RuleBasedDecisionEngine spends extra controlled roll budget for target pair all-in windows", () => {
@@ -276,7 +301,177 @@ test("RuleBasedDecisionEngine spends extra controlled roll budget for target pai
     const rollPlan = plans.find((plan) => plan.type === "ROLL");
 
     assert.ok(rollPlan, "应在目标对子冲刺窗口触发滚牌");
-    assert.equal(rollPlan?.payload.count, 6);
+    assert.equal(rollPlan?.payload.count, 4);
+});
+
+test("RuleBasedDecisionEngine stops loss after failed pair rush with a capped 4-2 roll", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: {
+            targetChampionNames: string[];
+            allInPairThreshold: number;
+            pairAllInStage: number;
+            upgradeAllInExtraBudget: number;
+            maxRollCount: number;
+        };
+    }>("midgame-pair-stoploss-4-2.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+    const rollPlan = plans.find((plan) => plan.type === "ROLL");
+
+    assert.ok(rollPlan, "应在对子冲刺失败后执行止损 D 牌");
+    assert.equal(rollPlan?.payload.count, 3);
+});
+
+test("RuleBasedDecisionEngine all-ins at stage 5 low hp with capped roll count", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: { stabilizeHpThreshold: number; maxRollCount: number };
+    }>("stage5-lowhp-allin.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+    const rollPlan = plans.find((plan) => plan.type === "ROLL");
+
+    assert.ok(rollPlan, "5阶段低血量应触发全力止损滚牌");
+    assert.equal(rollPlan?.payload.count, 3);
+    assert.ok(plans.some((plan) => /5 阶段低血量/.test(plan.reason)));
+});
+
+test("RuleBasedDecisionEngine preserves economy on stage 5 healthy boards instead of rolling all-in", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: { strategyPreset: "STANDARD"; targetChampionNames: string[] };
+    }>("stage5-highhp-econ.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+
+    assert.ok(!plans.some((plan) => plan.type === "ROLL"));
+    assert.ok(!plans.some((plan) => plan.type === "BUY"));
+    assert.ok(plans.some((plan) => plan.type === "NOOP" || plan.type === "LEVEL_UP"));
+});
+
+test("RuleBasedDecisionEngine keeps stage-5 healthy target-pair spots on economy instead of forcing all-in", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: {
+            strategyPreset: "STANDARD";
+            targetChampionNames: string[];
+            allInPairThreshold: number;
+            pairAllInStage: number;
+            upgradeAllInExtraBudget: number;
+            maxRollCount: number;
+        };
+    }>("stage5-highhp-targetpair-econ.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+
+    assert.ok(!plans.some((plan) => plan.type === "ROLL"));
+    assert.ok(plans.some((plan) => plan.type === "BUY" && plan.payload.champion === "安妮"));
+    assert.ok(!plans.some((plan) => plan.reason.includes("5 阶段低血量")));
+});
+
+test("RuleBasedDecisionEngine greed-levels on 4-5 when hp and economy are healthy", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: { strategyPreset: "FAST8" };
+    }>("greed-levelup-4-5.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+
+    assert.ok(plans.some((plan) => plan.type === "LEVEL_UP" && /4-5/.test(plan.reason)));
+    assert.ok(!plans.some((plan) => plan.type === "ROLL"));
+});
+
+test("RuleBasedDecisionEngine greed-levels on 4-5 high hp in the late-game tri-band", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: { strategyPreset: "FAST8" };
+    }>("lategame-4-5-highhp-greed.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+
+    assert.ok(plans.some((plan) => plan.type === "LEVEL_UP" && /4-5/.test(plan.reason)));
+    assert.ok(!plans.some((plan) => plan.type === "ROLL"));
+});
+
+test("RuleBasedDecisionEngine small-Ds on 4-5 mid hp in the late-game tri-band", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: { stabilizeHpThreshold: number };
+    }>("lategame-4-5-midhp-small-d.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+    const rollPlan = plans.find((plan) => plan.type === "ROLL");
+
+    assert.ok(rollPlan, "4-5 中血量应触发小 D 稳血");
+    assert.equal(rollPlan?.payload.count, 2);
+    assert.ok(plans.some((plan) => /中血量小 D 稳血/.test(plan.reason)));
+});
+
+test("RuleBasedDecisionEngine roll-downs on 5-1 when hp is low", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: { targetChampionNames: string[]; stabilizeHpThreshold: number; maxRollCount: number };
+    }>("roll-down-5-1.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+    const rollPlan = plans.find((plan) => plan.type === "ROLL");
+
+    assert.ok(rollPlan, "5-1 应触发小 D 稳血");
+    assert.equal(rollPlan?.payload.count, 2);
+    assert.ok(plans.some((plan) => /中血量小 D 稳血/.test(plan.reason)));
+    assert.ok(!plans.some((plan) => plan.type === "LEVEL_UP" && /5-1/.test(plan.reason)));
+});
+
+test("RuleBasedDecisionEngine all-ins on 5-1 low hp in the late-game tri-band", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: { stabilizeHpThreshold: number; maxRollCount: number };
+    }>("lategame-5-1-lowhp-allin.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+    const rollPlan = plans.find((plan) => plan.type === "ROLL");
+
+    assert.ok(rollPlan, "5-1 低血量应触发 all-in");
+    assert.equal(rollPlan?.payload.count, 3);
+    assert.ok(plans.some((plan) => /全力止损/.test(plan.reason)));
+});
+
+test("RuleBasedDecisionEngine greed-levels on 4-2 when target pair is ready and hp is healthy", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: { targetChampionNames: string[]; allInPairThreshold: number; pairAllInStage: number; upgradeAllInExtraBudget: number; maxRollCount: number };
+    }>("targetpair-greed-4-2-levelup.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+
+    assert.ok(plans.some((plan) => plan.type === "LEVEL_UP" && /4-2/.test(plan.reason)));
+    assert.ok(!plans.some((plan) => plan.type === "ROLL" && /目标对子在危险血量/.test(plan.reason)));
+});
+
+test("RuleBasedDecisionEngine stabilizes on 5-1 when target pair exists but hp is dangerous", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: { targetChampionNames: string[]; stabilizeHpThreshold: number; allInPairThreshold: number; pairAllInStage: number; upgradeAllInExtraBudget: number; maxRollCount: number };
+    }>("targetpair-stabilize-5-1-danger.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+    const rollPlan = plans.find((plan) => plan.type === "ROLL");
+
+    assert.ok(rollPlan, "危险血量 5-1 应触发稳血 roll-down");
+    assert.equal(rollPlan?.payload.count, 4);
+    assert.ok(plans.some((plan) => /4-5 \/ 5-1 进入低血量 roll-down/.test(plan.reason)));
 });
 
 test("RuleBasedDecisionEngine holds economy floor on 4-5 late stage with FAST8 preset", () => {

@@ -1,0 +1,34 @@
+{
+  "description": "5阶段低血量 all-in 分支：主动止损抢提升",
+  "state": {
+    "timestamp": 1710000000000,
+    "client": "RIOT_PC",
+    "target": "PC_LOGIC",
+    "stageText": "5-1",
+    "stageType": "PVP",
+    "level": 8,
+    "currentXp": 0,
+    "totalXp": 56,
+    "gold": 22,
+    "hp": 18,
+    "streak": -1,
+    "bench": [],
+    "board": [
+      { "id": "TFT_A", "name": "前排", "star": 1, "cost": 2, "location": "R4_C4", "items": [], "traits": ["护卫"] },
+      { "id": "TFT_B", "name": "后排", "star": 1, "cost": 3, "location": "R3_C4", "items": [], "traits": ["法师"] },
+      { "id": "TFT_C", "name": "功能", "star": 2, "cost": 2, "location": "R1_C5", "items": [], "traits": ["斗士"] }
+    ],
+    "shop": [
+      { "slot": 0, "cost": null, "unit": null },
+      { "slot": 1, "cost": null, "unit": null },
+      { "slot": 2, "cost": null, "unit": null },
+      { "slot": 3, "cost": null, "unit": null },
+      { "slot": 4, "cost": null, "unit": null }
+    ],
+    "items": []
+  },
+  "context": {
+    "stabilizeHpThreshold": 42,
+    "maxRollCount": 4
+  }
+}

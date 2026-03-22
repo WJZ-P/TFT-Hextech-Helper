@@ -1,0 +1,38 @@
+{
+  "description": "中期对子冲刺失败后的止损逻辑：4-2 只做保命小 D",
+  "state": {
+    "timestamp": 1710000000000,
+    "client": "RIOT_PC",
+    "target": "PC_LOGIC",
+    "stageText": "4-2",
+    "stageType": "PVP",
+    "level": 7,
+    "currentXp": 0,
+    "totalXp": 40,
+    "gold": 33,
+    "hp": 31,
+    "streak": -2,
+    "bench": [
+      { "id": "TFT_Target1", "name": "安妮", "star": 1, "cost": 3, "location": "SLOT_1", "items": [], "traits": ["法师"] }
+    ],
+    "board": [
+      { "id": "TFT_Front", "name": "弱前排", "star": 1, "cost": 2, "location": "R4_C4", "items": [], "traits": ["护卫"] },
+      { "id": "TFT_Back", "name": "弱后排", "star": 1, "cost": 2, "location": "R3_C4", "items": [], "traits": ["法师"] }
+    ],
+    "shop": [
+      { "slot": 0, "cost": 3, "unit": { "id": "TFT_Annie", "name": "安妮", "star": 1, "cost": 3, "items": [], "traits": ["法师"] } },
+      { "slot": 1, "cost": null, "unit": null },
+      { "slot": 2, "cost": null, "unit": null },
+      { "slot": 3, "cost": null, "unit": null },
+      { "slot": 4, "cost": null, "unit": null }
+    ],
+    "items": []
+  },
+  "context": {
+    "targetChampionNames": ["安妮"],
+    "allInPairThreshold": 3,
+    "pairAllInStage": 5,
+    "upgradeAllInExtraBudget": 10,
+    "maxRollCount": 4
+  }
+}

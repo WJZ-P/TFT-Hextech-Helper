@@ -1,0 +1,35 @@
+{
+  "description": "连败保经济时的不乱D：3-2 保持经济线",
+  "state": {
+    "timestamp": 1710000000000,
+    "client": "RIOT_PC",
+    "target": "PC_LOGIC",
+    "stageText": "3-2",
+    "stageType": "PVP",
+    "level": 6,
+    "currentXp": 0,
+    "totalXp": 20,
+    "gold": 42,
+    "hp": 62,
+    "streak": -4,
+    "bench": [],
+    "board": [
+      { "id": "TFT_Tank", "name": "过渡前排", "star": 2, "cost": 2, "location": "R4_C4", "items": [], "traits": ["护卫"] },
+      { "id": "TFT_Back", "name": "过渡后排", "star": 2, "cost": 3, "location": "R3_C4", "items": [], "traits": ["法师"] },
+      { "id": "TFT_Flex", "name": "功能单位", "star": 1, "cost": 2, "location": "R1_C5", "items": [], "traits": ["斗士"] },
+      { "id": "TFT_Flex2", "name": "功能单位二号", "star": 1, "cost": 2, "location": "R1_C4", "items": [], "traits": ["神谕者"] }
+    ],
+    "shop": [
+      { "slot": 0, "cost": 5, "unit": { "id": "TFT_Expensive", "name": "昂贵单位", "star": 1, "cost": 5, "items": [], "traits": ["法师"] } },
+      { "slot": 1, "cost": 4, "unit": { "id": "TFT_Another", "name": "非目标五费", "star": 1, "cost": 4, "items": [], "traits": ["斗士"] } },
+      { "slot": 2, "cost": null, "unit": null },
+      { "slot": 3, "cost": null, "unit": null },
+      { "slot": 4, "cost": null, "unit": null }
+    ],
+    "items": []
+  },
+  "context": {
+    "strategyPreset": "STANDARD",
+    "targetChampionNames": ["安妮"]
+  }
+}

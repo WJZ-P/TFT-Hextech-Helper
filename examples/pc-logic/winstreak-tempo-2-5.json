@@ -1,0 +1,33 @@
+{
+  "description": "连胜保节奏时的提前升级：2-5 继续保血量与 tempo",
+  "state": {
+    "timestamp": 1710000000000,
+    "client": "RIOT_PC",
+    "target": "PC_LOGIC",
+    "stageText": "2-5",
+    "stageType": "PVP",
+    "level": 4,
+    "currentXp": 0,
+    "totalXp": 12,
+    "gold": 14,
+    "hp": 84,
+    "streak": 4,
+    "bench": [],
+    "board": [
+      { "id": "TFT_Garen", "name": "盖伦", "star": 2, "cost": 2, "location": "R4_C4", "items": [], "traits": ["护卫"] },
+      { "id": "TFT_Lux", "name": "拉克丝", "star": 2, "cost": 3, "location": "R3_C4", "items": [], "traits": ["法师"] },
+      { "id": "TFT_Jinx", "name": "金克丝", "star": 1, "cost": 4, "location": "R1_C5", "items": [], "traits": ["枪手"] }
+    ],
+    "shop": [
+      { "slot": 0, "cost": null, "unit": null },
+      { "slot": 1, "cost": null, "unit": null },
+      { "slot": 2, "cost": null, "unit": null },
+      { "slot": 3, "cost": null, "unit": null },
+      { "slot": 4, "cost": null, "unit": null }
+    ],
+    "items": []
+  },
+  "context": {
+    "strategyPreset": "FAST8"
+  }
+}

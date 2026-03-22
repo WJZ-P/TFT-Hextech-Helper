@@ -186,6 +186,10 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
             } else if (isKeyRound(parsed, 4, 2) && state.level < 8 && state.gold >= 20) {
                 const count = state.gold >= 40 ? 2 : 1;
                 addPlan("LEVEL_UP", 92, "4-2 关键转折，优先冲 8 寻找高费核心", { count });
+            } else if (isKeyRound(parsed, 4, 5) && state.level < 8 && hp > hpThreshold + 10 && state.gold >= 30) {
+                addPlan("LEVEL_UP", 88, "4-5 血量健康且经济充足，先贪人口拉上限", { count: 1 });
+            } else if (isKeyRound(parsed, 5, 1) && state.level < 9 && hp > hpThreshold + 10 && state.gold >= 40) {
+                addPlan("LEVEL_UP", 87, "5-1 仍然健康且经济够用，优先贪升级而不是提前 D 牌", { count: 1 });
             } else if (parsed && parsed.stage >= 5 && state.level < 9 && state.gold >= 50 && hp > hpThreshold) {
                 addPlan("LEVEL_UP", 78, "后期经济充足且血量健康，准备上 9 提升上限", { count: 1 });
             }
@@ -196,6 +200,10 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
         let spendableGold = state.gold;
         const softBudget = Math.max(0, state.gold - economyFloor);
         let spent = 0;
+
+        if ((isKeyRound(parsed, 4, 2) || isKeyRound(parsed, 5, 1)) && highestTargetPairCount >= 2 && hp > hpThreshold + 8 && state.gold >= 24) {
+            addPlan("LEVEL_UP", 89, "4-2 / 5-1 目标对子已成型且血量健康，优先贪人口吃上限", { count: 1 });
+        }
 
         for (const offer of state.shop) {
             if (!offer.unit || offer.cost === null) {
@@ -277,7 +285,29 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
 
         if (state.stageType === GameStageType.PVP) {
             const keyStabilizeRound = isKeyRound(parsed, 3, 2) || isKeyRound(parsed, 4, 2);
-            if ((mustStabilize && state.gold >= 12) || (keyStabilizeRound && weakBoard && !shouldProtectLossStreak && state.gold >= 16)) {
+            const lateRollDownRound = isKeyRound(parsed, 4, 5) || isKeyRound(parsed, 5, 1);
+            const lateSmallDRound = isKeyRound(parsed, 4, 5) || isKeyRound(parsed, 5, 1);
+            // 5阶段低血量优先进入止损 all-in，避免被通用的小 D 稳场逻辑吃掉。
+            const lateStageAllIn = parsed !== null && parsed.stage >= 5 && hp <= 20 && state.gold >= 12;
+            if (lateStageAllIn) {
+                const baseRoll =
+                    hp <= 20 ? 6 :
+                    hp <= 30 ? 5 :
+                    4;
+                const count = Math.max(
+                    1,
+                    Math.min(context.maxRollCount ?? Number.MAX_SAFE_INTEGER, Math.floor(state.gold / 6), baseRoll)
+                );
+                addPlan("ROLL", 84, "5 阶段低血量进入全力止损节奏，集中 D 牌找即时提升", { count });
+            } else if (lateSmallDRound && hp > hpThreshold - 8 && hp <= hpThreshold + 8 && state.gold >= 12) {
+                addPlan("ROLL", 83, "4-5 / 5-1 中血量小 D 稳血，先找即时提升再决定是否 all-in", { count: 2 });
+            } else if (lateRollDownRound && hp <= hpThreshold && state.gold >= 12) {
+                const count = hp <= 20 ? 5 : hp <= 30 ? 4 : 3;
+                addPlan("ROLL", 83, "4-5 / 5-1 进入低血量 roll-down，先稳血再谈贪经济", { count });
+            } else if ((isKeyRound(parsed, 4, 2) || isKeyRound(parsed, 5, 1)) && highestTargetPairCount >= 2 && hp <= hpThreshold && state.gold >= 16) {
+                const count = hp <= 20 ? 5 : 4;
+                addPlan("ROLL", 81, "4-2 / 5-1 目标对子在危险血量下先稳血，避免贪升级", { count });
+            } else if ((mustStabilize && state.gold >= 12) || (keyStabilizeRound && weakBoard && !shouldProtectLossStreak && state.gold >= 16)) {
                 const baseRoll =
                     hp <= 20 ? 5 :
                     hp <= 30 ? 4 :
