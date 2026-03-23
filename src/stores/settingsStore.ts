@@ -27,6 +27,8 @@ export interface GameStatistics {
 // 设置状态接口（前端关心的设置项）
 interface SettingsState {
     showDebugPage: boolean;
+    /** Beta 功能开关 */
+    betaFeaturesEnabled: boolean;
     /** 统计数据（运行时 + 持久化的聚合） */
     statistics: GameStatistics;
     /** 游戏区服 */
@@ -46,6 +48,7 @@ class SettingsStore {
     // 内部状态（从后端同步的缓存）
     private state: SettingsState = {
         showDebugPage: false,
+        betaFeaturesEnabled: false,
         statistics: { ...DEFAULT_STATISTICS },
         gameRegion: 'CN',
         gameClient: 'RIOT_PC',
@@ -71,6 +74,10 @@ class SettingsStore {
             // 通过通用 settings API 读取后端设置
             const showDebugPage = await window.settings.get<boolean>('showDebugPage');
             this.state.showDebugPage = showDebugPage;
+
+            // 读取 betaFeaturesEnabled
+            const betaFeaturesEnabled = await window.settings.get<boolean>('betaFeaturesEnabled');
+            this.state.betaFeaturesEnabled = !!betaFeaturesEnabled;
 
             // 读取区服与客户端类型
             const gameRegion = await window.settings.get<GameRegion>('gameRegion');
@@ -100,6 +107,13 @@ class SettingsStore {
      */
     getState(): SettingsState {
         return { ...this.state };
+    }
+
+    /**
+     * 获取 betaFeaturesEnabled 的值
+     */
+    getBetaFeaturesEnabled(): boolean {
+        return this.state.betaFeaturesEnabled;
     }
 
     /**
@@ -222,6 +236,23 @@ class SettingsStore {
             this.cleanupStatsListener = null;
         }
         this.listeners.clear();
+    }
+
+    /**
+     * 设置 betaFeaturesEnabled 并通知所有订阅者
+     * @param value 新的值
+     * @param persist 是否同步到后端（默认 true）
+     */
+    async setBetaFeaturesEnabled(value: boolean, persist = true): Promise<void> {
+        this.state.betaFeaturesEnabled = value;
+        if (persist) {
+            try {
+                await window.settings.set('betaFeaturesEnabled', value);
+            } catch (error) {
+                console.error('[SettingsStore] 保存 betaFeaturesEnabled 失败:', error);
+            }
+        }
+        this.notifyListeners();
     }
 }
 
