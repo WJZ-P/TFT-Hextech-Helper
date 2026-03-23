@@ -87,7 +87,8 @@ class DataCollectorService {
     }
 
     /**
-     * 初始化收集器
+     * 初始化数据收集器并应用初始配置。
+     * @param config 初始收集配置，决定是否启用以及上报端点等参数。
      */
     public init(config: CollectionConfig): void {
         this.config = { ...config };
@@ -100,7 +101,8 @@ class DataCollectorService {
     }
 
     /**
-     * 更新配置
+     * 更新当前配置，部分字段可局部更新。
+     * @param config 需要更新的配置项，非传入的字段保持原有值。
      */
     public updateConfig(config: Partial<CollectionConfig>): void {
         this.config = { ...this.config, ...config };
@@ -113,16 +115,18 @@ class DataCollectorService {
     }
 
     /**
-     * 获取当前配置
+     * 获取当前数据收集器的配置快照。
+     * @returns 当前配置的只读副本。
      */
     public getConfig(): CollectionConfig {
         return { ...this.config };
     }
 
     /**
-     * 记录一条决策数据
-     * @param decision 原始决策数据
-     * @returns 是否成功记录
+     * 记录一次决策数据，数据将进入本地队列进行上报（或本地缓存）。
+     * 只有在启用且模式非 disabled 时才会记录。
+     * @param decision 决策数据的要素，包含计划类型、优先级、原因、阶段和血量等信息。
+     * @returns 是否成功将数据加入队列。
      */
     public recordDecision(decision: {
         planType: string;
@@ -156,7 +160,8 @@ class DataCollectorService {
     }
 
     /**
-     * 手动触发上报
+     * 手动触发当前队列的数据上报。
+     * 如果没有数据，将返回 true。
      */
     public async flush(): Promise<boolean> {
         if (this.queue.length === 0) {
@@ -195,14 +200,15 @@ class DataCollectorService {
     }
 
     /**
-     * 获取当前队列大小
+     * 获取当前待上报队列的大小（数据条数）。
+     * @returns 队列长度。
      */
     public getQueueSize(): number {
         return this.queue.length;
     }
 
     /**
-     * 清空队列
+     * 清空当前数据队列，通常在禁用模式下使用以重置状态。
      */
     public clearQueue(): void {
         this.queue = [];

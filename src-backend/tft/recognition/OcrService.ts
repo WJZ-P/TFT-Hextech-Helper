@@ -150,19 +150,24 @@ export class OcrService {
     }
 
     /**
-     * 执行 OCR 识别（带自动回收 + 内存采样）
-     * @param imageBuffer PNG 图片 Buffer
-     * @param type Worker 类型
-     * @returns 识别结果文本
-     * 
-     * 自动回收逻辑：
-     * - 识别次数超过 MAX_RECOGNITIONS (500)
-     * - 存活时间超过 MAX_LIFETIME_MS (30 分钟)
-     * - 闲置时间超过 MAX_IDLE_MS (10 分钟)
-     * 
-     * 内存采样：
-     * - 每次识别后采样 process.memoryUsage()
-     * - 追踪峰值和增长率
+     * Perform OCR recognition with built-in resilience and observability.
+     *
+     * - Uses a dedicated OCR Worker per type and recycles workers when necessary.
+     * - Includes retry logic with exponential backoff (up to 3 retries).
+     * - Performs memory sampling after each recognition for monitoring purposes.
+     * - May throw if all retries fail.
+     *
+     * @param imageBuffer PNG image buffer to recognize
+     * @param type the OCR worker type to use
+     * @returns the recognized text as a trimmed string
+     *
+     * Auto-recovery rules:
+     * - Recycle when recognitions exceed MAX_RECOGNITIONS
+     * - Recycle after MAX_LIFETIME_MS since creation
+     * - Recycle after MAX_IDLE_MS since last use
+     *
+     * Memory sampling:
+     * - Sample memoryUsage after each successful recognition
      */
     public async recognize(imageBuffer: Buffer, type: OcrWorkerType): Promise<string> {
         // 检查是否需要回收

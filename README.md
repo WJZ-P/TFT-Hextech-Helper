@@ -97,6 +97,13 @@ TFT Hextech Helper 是一款基于 Electron + React + TypeScript 开发的云顶
 - 🎨 **现代化界面** - 美观的 UI 设计，超级酷
 - 📊 **实时日志** - 查看详细的运行日志，了解程序状态
 
+## Phase 3 Features
+
+- Beta program opt-in for debugging features (调试功能的 Beta 计划入口)
+- OCR retry with exponential backoff (auto-recovery)（OCR 重试，指数退避实现）
+- Data deletion option in privacy settings（隐私设置中的数据删除选项）
+- Type safety improvements（类型安全改进）
+
 ## 使用教程
 
 ### 1. 下载并安装
