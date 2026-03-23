@@ -88,6 +88,16 @@ export interface DecisionEngine {
     generatePlan(state: ObservedState, context?: DecisionContext): ActionPlan[];
 }
 
+/**
+ * Simple serializable strategy shape used for JSON import/export.
+ * planType corresponds to ActionType (BUY, SELL, etc.)
+ */
+export interface Strategy {
+    planType: ActionType;
+    priority: number;
+    reason: string;
+}
+
 export interface AdapterHealth {
     ok: boolean;
     detail?: string;

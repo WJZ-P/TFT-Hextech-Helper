@@ -506,4 +506,72 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
             .sort((a, b) => b.priority - a.priority || a.tick - b.tick)
             .slice(0, 8);
     }
+
+    /**
+     * Export a compact strategy representation as JSON string.
+     * It serializes the top generated plan (if any) into a Strategy object.
+     */
+    public exportStrategy(state: ObservedState, context: DecisionContext = {}): string {
+        const plans = this.generatePlan(state, context);
+        const strategy = plans[0]
+            ? {
+                  planType: plans[0].type,
+                  priority: plans[0].priority,
+                  reason: plans[0].reason,
+              }
+            : { planType: "NOOP" as const, priority: 0, reason: "no-op" };
+        return JSON.stringify(strategy);
+    }
+
+    /**
+     * Import a strategy from JSON string. Returns true if the strategy was valid and applied.
+     * This method validates fields and updates the provided context accordingly (shallow mapping).
+     */
+    public importStrategy(json: string, context: DecisionContext): boolean {
+        try {
+            const parsed = JSON.parse(json) as unknown;
+            if (!parsed || typeof parsed !== "object") return false;
+
+            // Validate required fields
+            const planType = (parsed as any).planType;
+            const priority = (parsed as any).priority;
+            const reason = (parsed as any).reason;
+
+            const validPlanTypes = new Set<ActionPlan["type"]>([
+                "BUY",
+                "SELL",
+                "ROLL",
+                "LEVEL_UP",
+                "MOVE",
+                "EQUIP",
+                "PICK_AUGMENT",
+                "NOOP",
+            ]);
+
+            if (typeof planType !== "string" || !validPlanTypes.has(planType as ActionPlan["type"])) {
+                return false;
+            }
+            if (typeof priority !== "number" || !Number.isFinite(priority) || priority < 0 || priority > 100) {
+                return false;
+            }
+            if (typeof reason !== "string") {
+                return false;
+            }
+
+            // Apply strategy to context in a minimal, safe manner. We don't mutate engine state here.
+            // Map some plan hints into DecisionContext fields where sensible.
+            // For example, a NOOP with low priority -> conservative economy.
+            if (planType === "ROLL" && priority >= 80) {
+                // suggest more aggressive roll behaviour
+                context.maxRollCount = Math.max(context.maxRollCount ?? 0, 3);
+            }
+            if (planType === "LEVEL_UP" && priority >= 90) {
+                context.pairAllInStage = Math.min(context.pairAllInStage ?? 4, 4);
+            }
+
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
 }

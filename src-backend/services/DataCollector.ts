@@ -68,6 +68,9 @@ class DataCollectorService {
     /** 本地缓存队列 */
     private queue: AnonymizedDecision[] = [];
 
+    /** 比赛胜负历史（用于统计胜率），按时间顺序追加 */
+    private matchHistory: { outcome: "win" | "loss"; timestamp: number }[] = [];
+
     /** 最大批量上报大小 */
     private readonly MAX_BATCH_SIZE = 50;
 
@@ -205,6 +208,65 @@ class DataCollectorService {
      */
     public getQueueSize(): number {
         return this.queue.length;
+    }
+
+    /**
+     * 记录一局比赛的胜负结果，并发出 telemetry 事件（如果启用）。
+     * @param outcome "win" 或 "loss"
+     */
+    public recordMatchOutcome(outcome: "win" | "loss"): void {
+        const entry = { outcome, timestamp: Date.now() } as const;
+
+        // 记录到历史
+        this.matchHistory.push(entry);
+
+        // 发出 telemetry 事件（仅在启用且非 disabled 模式下）
+        if (this.config.enabled && this.config.mode !== "disabled") {
+            // 使用同样的脱敏/哈希策略记录简要事件
+            const payload = {
+                event: "match_complete",
+                outcome,
+                timestamp: entry.timestamp,
+            };
+
+            // 目前仅记录到本地队列作为匿名事件的一部分
+            try {
+                const anon: AnonymizedDecision = {
+                    decisionId: this.generateId(),
+                    timestamp: entry.timestamp,
+                    planTypeHash: this.hashString("MATCH_EVENT"),
+                    priority: outcome === "win" ? 1 : 0,
+                    outcomeHash: this.hashString(outcome),
+                    gameStage: "match-end",
+                    hpBucket: 0,
+                };
+
+                this.queue.push(anon);
+            } catch (error) {
+                logger.error(`[DataCollector] recordMatchOutcome error: ${error}`);
+            }
+        }
+    }
+
+    /**
+     * 计算最近若干局的胜率（滑动窗口）。
+     * @param windowSize 最近多少局参与计算，默认 20
+     * @returns 胜率（0-1），当没有比赛记录时返回 NaN
+     */
+    public getWinRate(windowSize = 20): number {
+        if (windowSize <= 0) {
+            throw new Error("windowSize must be positive");
+        }
+
+        const total = this.matchHistory.length;
+        if (total === 0) {
+            return NaN;
+        }
+
+        const start = Math.max(0, total - windowSize);
+        const slice = this.matchHistory.slice(start, total);
+        const wins = slice.reduce((acc, cur) => acc + (cur.outcome === "win" ? 1 : 0), 0);
+        return wins / slice.length;
     }
 
     /**

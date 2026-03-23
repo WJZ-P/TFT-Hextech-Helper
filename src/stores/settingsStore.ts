@@ -35,6 +35,8 @@ interface SettingsState {
     gameRegion: GameRegion;
     /** 客户端类型 */
     gameClient: GameClient;
+    /** 是否已完成新手引导 */
+    onboardingCompleted: boolean;
 }
 
 /** 默认的统计数据 */
@@ -52,6 +54,7 @@ class SettingsStore {
         statistics: { ...DEFAULT_STATISTICS },
         gameRegion: 'CN',
         gameClient: 'RIOT_PC',
+        onboardingCompleted: false,
     };
     
     // 订阅者列表
@@ -84,6 +87,10 @@ class SettingsStore {
             if (gameRegion) this.state.gameRegion = gameRegion;
             const gameClient = await window.settings.get<GameClient>('gameClient');
             if (gameClient) this.state.gameClient = gameClient;
+
+            // 读取 onboardingCompleted
+            const onboardingCompleted = await window.settings.get<boolean>('onboardingCompleted');
+            this.state.onboardingCompleted = !!onboardingCompleted;
 
             // 读取统计数据
             const stats = await window.stats.getStatistics();
@@ -138,6 +145,13 @@ class SettingsStore {
     }
 
     /**
+     * 获取新手引导完成状态
+     */
+    getOnboardingCompleted(): boolean {
+        return this.state.onboardingCompleted;
+    }
+
+    /**
      * 获取统计数据（返回副本）
      */
     getStatistics(): GameStatistics {
@@ -189,6 +203,20 @@ class SettingsStore {
             await window.settings.set('gameClient', value);
         } catch (error) {
             console.error('[SettingsStore] 保存 gameClient 失败:', error);
+        }
+        this.notifyListeners();
+    }
+
+    /**
+     * 设置新手引导完成状态并通知所有订阅者
+     * @param value 新的值
+     */
+    async setOnboardingCompleted(value: boolean): Promise<void> {
+        this.state.onboardingCompleted = value;
+        try {
+            await window.settings.set('onboardingCompleted', value);
+        } catch (error) {
+            console.error('[SettingsStore] 保存 onboardingCompleted 失败:', error);
         }
         this.notifyListeners();
     }
