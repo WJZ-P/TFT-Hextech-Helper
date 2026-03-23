@@ -1065,27 +1065,32 @@ export class StrategyService {
         const benchUnits = await tftOperator.getBenchInfo();
         const boardUnits = await tftOperator.getFightBoardInfo();
 
-        const newLevel = levelInfo?.level ?? previousLevel;
+        try {
+            const newLevel = levelInfo?.level ?? previousLevel;
 
-        // 3. 更新到 GameStateManager
-        gameStateManager.updateSnapshot({
-            benchUnits,
-            boardUnits,
-            shopUnits,
-            equipments,
-            level: newLevel,
-            currentXp: levelInfo?.currentXp ?? 0,
-            totalXp: levelInfo?.totalXp ?? 0,
-            gold: gold ?? 0,
-        });
+            // 3. 更新到 GameStateManager
+            gameStateManager.updateSnapshot({
+                benchUnits,
+                boardUnits,
+                shopUnits,
+                equipments,
+                level: newLevel,
+                currentXp: levelInfo?.currentXp ?? 0,
+                totalXp: levelInfo?.totalXp ?? 0,
+                gold: gold ?? 0,
+            });
 
-        // 4. 如果等级变化，更新目标棋子列表
-        if (newLevel !== previousLevel) {
-            logger.info(`[StrategyService] 等级变化: ${previousLevel} → ${newLevel}`);
-            this.updateTargetChampions(newLevel);
+            // 4. 如果等级变化，更新目标棋子列表
+            if (newLevel !== previousLevel) {
+                logger.info(`[StrategyService] 等级变化: ${previousLevel} → ${newLevel}`);
+                this.updateTargetChampions(newLevel);
+            }
+
+            logger.info("[StrategyService] 游戏状态采集完成");
+        } catch (error: unknown) {
+            logger.error(`[StrategyService] refreshGameState failed: ${error instanceof Error ? error.stack ?? error.message : String(error)}`);
+            throw error;
         }
-
-        logger.info("[StrategyService] 游戏状态采集完成");
     }
 
     /**
@@ -1209,32 +1214,37 @@ export class StrategyService {
         // 3. 依次拾取战利品球
         let pickedCount = 0;  // 记录成功拾取的数量
 
-        for (const orb of sortedOrbs) {
-            // 检查战斗状态是否发生变化
-            // 无论是 战斗→非战斗 还是 非战斗→战斗，状态变了就停止拾取
-            const currentFightingState = this.isFighting();
-            if (currentFightingState !== initialFightingState) {
-                logger.info(
-                    `[StrategyService] 战斗状态变化 (${initialFightingState} → ${currentFightingState})，停止拾取`
-                );
-                break;
+        try {
+            for (const orb of sortedOrbs) {
+                // 检查战斗状态是否发生变化
+                // 无论是 战斗→非战斗 还是 非战斗→战斗，状态变了就停止拾取
+                const currentFightingState = this.isFighting();
+                if (currentFightingState !== initialFightingState) {
+                    logger.info(
+                        `[StrategyService] 战斗状态变化 (${initialFightingState} → ${currentFightingState})，停止拾取`
+                    );
+                    break;
+                }
+
+                logger.info(`[StrategyService] 正在拾取 ${orb.type} 战利品球，位置: (${orb.x}, ${orb.y}), 等待 ${sleepTime}ms`);
+
+                // 右键点击战利品球位置，小小英雄会自动移动过去拾取
+                // mouseController.clickAt 接受的是游戏内相对坐标，orb.x/orb.y 正好是相对坐标
+                await mouseController.clickAt({x: orb.x, y: orb.y}, MouseButtonType.RIGHT);
+
+                // 等待小小英雄移动到目标位置并拾取
+                await sleep(sleepTime);
+                pickedCount++;
             }
 
-            logger.info(`[StrategyService] 正在拾取 ${orb.type} 战利品球，位置: (${orb.x}, ${orb.y}), 等待 ${sleepTime}ms`);
-
-            // 右键点击战利品球位置，小小英雄会自动移动过去拾取
-            // mouseController.clickAt 接受的是游戏内相对坐标，orb.x/orb.y 正好是相对坐标
-            await mouseController.clickAt({x: orb.x, y: orb.y}, MouseButtonType.RIGHT);
-
-            // 等待小小英雄移动到目标位置并拾取
-            await sleep(sleepTime);
-            pickedCount++;
+            logger.info(`[StrategyService] 战利品拾取完成，共拾取 ${pickedCount} 个`);
+            await tftOperator.selfResetPosition();
+            return pickedCount > 0;
+        } catch (error: unknown) {
+            logger.error(`[StrategyService] pickUpLootOrbs failed: ${error instanceof Error ? error.stack ?? error.message : String(error)}`);
+            // 保守起见：如果拾取失败，返回 false 但不抛出，避免阻塞上层逻辑
+            return false;
         }
-
-        logger.info(`[StrategyService] 战利品拾取完成，共拾取 ${pickedCount} 个`);
-        await tftOperator.selfResetPosition();
-
-        return pickedCount > 0;
     }
 
     // ============================================================

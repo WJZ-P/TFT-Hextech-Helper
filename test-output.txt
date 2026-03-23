@@ -1,0 +1,198 @@
+
+> tft-hextech-helper@1.5.0 test:unit
+> node --import tsx --test tests/backend/**/*.test.ts
+
+[32m✔ android capture surface detects fully black smoke frames [90m(83.4029ms)[39m[39m
+[32m✔ android capture surface keeps real rendered TFT content out of black-surface diagnosis [90m(49.3684ms)[39m[39m
+[31m✖ tests\backend\android_cli_import.test.ts [90m(2935.4922ms)[39m[39m
+[31m✖ tests\backend\android_emulator_window_diagnose_cli.test.ts [90m(2928.3149ms)[39m[39m
+[Logger] 日志文件路径: C:\Users\ASUS\AppData\Roaming\tft-hextech-helper\logs\tft-2026-03-22.log
+[31m✖ tests\backend\android_equip_recognition.test.ts [90m(2921.4637ms)[39m[39m
+[31m✖ tests\backend\android_foreground_compare_cli.test.ts [90m(2913.2529ms)[39m[39m
+[32m✔ android foreground fixture scaffold CLI creates replay schema from screenshots [90m(1345.2271ms)[39m[39m
+[31m✖ tests\backend\android_foreground_ingest_cli.test.ts [90m(2894.3922ms)[39m[39m
+[32m✔ android foreground progression waits on BlueStacks boot screens [90m(1.9474ms)[39m[39m
+[32m✔ android foreground progression waits on unknown non-game windows [90m(0.3739ms)[39m[39m
+[32m✔ android foreground progression taps verified real update CTA on first frame [90m(1.2966ms)[39m[39m
+[32m✔ android foreground progression does not spam update taps on repeated identical frames [90m(0.4066ms)[39m[39m
+[32m✔ android foreground progression blocks login-required frontend screens [90m(0.2926ms)[39m[39m
+[32m✔ android foreground progression prepares a synthetic lobby start action [90m(0.279ms)[39m[39m
+[32m✔ android foreground progression dismisses open lobby side menu before queueing [90m(0.2535ms)[39m[39m
+[32m✔ android foreground progression does not spam lobby side-menu dismiss clicks [90m(0.2708ms)[39m[39m
+[32m✔ android foreground progression resumes canonical lobby flow after side menu closes [90m(0.3006ms)[39m[39m
+[32m✔ android foreground progression retries queue via synthetic cancel action after timeout [90m(0.44ms)[39m[39m
+[32m✔ android foreground progression prepares accept-ready action [90m(0.2352ms)[39m[39m
+[32m✔ android foreground progression keeps waiting during in-game transition until live HUD arrives [90m(0.2414ms)[39m[39m
+[32m✔ android foreground progression reports ready once live HUD is available [90m(0.2367ms)[39m[39m
+[Logger] 日志文件路径: C:\Users\ASUS\AppData\Roaming\tft-hextech-helper\logs\tft-2026-03-22.log
+[31m✖ tests\backend\android_hud_recognition.test.ts [90m(2873.5153ms)[39m[39m
+[Logger] 日志文件路径: C:\Users\ASUS\AppData\Roaming\tft-hextech-helper\logs\tft-2026-03-22.log
+[31m✖ tests\backend\android_live_regions.test.ts [90m(2863.473ms)[39m[39m
+[31m✖ tests\backend\android_live_smoke_cli.test.ts [90m(2852.8592ms)[39m[39m
+[31m✖ tests\backend\android_recognition_replay_cli.test.ts [90m(2841.1131ms)[39m[39m
+[Logger] 日志文件路径: C:\Users\ASUS\AppData\Roaming\tft-hextech-helper\logs\tft-2026-03-22.log
+[31m✖ tests\backend\android_recognition_utils.test.ts [90m(2817.953ms)[39m[39m
+[31m✖ tests\backend\android_recording_extractor_cli.test.ts [90m(2799.7015ms)[39m[39m
+[32m✔ AndroidActionPlanner allocates unique AUTO_SLOT targets across consecutive move actions [90m(2.3407ms)[39m[39m
+[32m✔ AndroidSimulationRunner emits buy, move, equip, and roll steps for a midgame reroll state [90m(3.128ms)[39m[39m
+[32m✔ AndroidSimulationRunner loads bundled offline scenarios [90m(69.0007ms)[39m[39m
+[Logger] 日志文件路径: C:\Users\ASUS\AppData\Roaming\tft-hextech-helper\logs\tft-2026-03-22.log
+[31m✖ tests\backend\android_stability_long_run.test.ts [90m(2774.7477ms)[39m[39m
+[31m✖ tests\backend\android_static_snapshot_replay.test.ts [90m(2759.9353ms)[39m[39m
+[32m✔ android window classifier detects BlueStacks boot splash [90m(756.3922ms)[39m[39m
+[32m✔ android window classifier detects TFT frontend/update screen [90m(832.5715ms)[39m[39m
+[31m✖ tests\backend\android_window_classifier.test.ts [90m(2747.1233ms)[39m[39m
+[31m✖ tests\backend\android_window_helper_diagnostics.test.ts [90m(2687.3234ms)[39m[39m
+[32m✔ android unknown-stage guard resets immediately when a valid stage is seen [90m(3.0668ms)[39m[39m
+[32m✔ android unknown-stage guard resets immediately when HUD signal is still readable [90m(0.235ms)[39m[39m
+[32m✔ android unknown-stage guard ignores a short burst of missing HUD signals [90m(1.5786ms)[39m[39m
+[32m✔ android unknown-stage guard only ends after sustained missing HUD and sustained unknown stage [90m(0.4041ms)[39m[39m
+[31m✖ tests\backend\gui_lineups_offline_smoke.test.ts [90m(2163.0876ms)[39m[39m
+[Logger] 日志文件路径: C:\Users\ASUS\AppData\Roaming\tft-hextech-helper\logs\tft-2026-03-22.log
+[31m✖ tests\backend\jinchan_season_pack_asset_syncer.test.ts [90m(1910.1375ms)[39m[39m
+[32m✔ JinChan season pack loader maps a real-main-branch-shaped Resources root into snapshot data [90m(72.7864ms)[39m[39m
+[32m✔ JinChan season pack loader supports passing the HeroDatas directory directly and skips incomplete seasons [90m(3.0568ms)[39m[39m
+[32m✔ JinChan season pack location resolver keeps actual Resources-root correction lookup semantics [90m(2.989ms)[39m[39m
+[31m✖ tests\backend\ocr_correction_service.test.ts [90m(1058.3998ms)[39m[39m
+[31m✖ tests\backend\ocr_service_worker_lifecycle.test.ts [90m(115.3283ms)[39m[39m
+[31m✖ tests\backend\pc_logic_cli.test.ts[39m
+[31m✖ tests\backend\recognition_utils.test.ts[39m
+[31m✖ tests\backend\rule_based_engine.test.ts[39m
+[31m✖ tests\backend\state_normalizer.test.ts[39m
+[31m✖ tests\backend\tft_asset_resolver.test.ts[39m
+[31m✖ tests\backend\tft_asset_resolver_s16_champions.test.ts[39m
+[31m✖ tests\backend\tft_data_hub.test.ts[39m
+[31m✖ tests\backend\tft_data_provider.test.ts[39m
+[31m✖ tests\backend\tft_data_service.test.ts[39m
+[31m✖ tests\backend\tft_name_normalizer.test.ts[39m
+[31m✖ tests\backend\tft_operator_stage_confirmation.test.ts[39m
+[34mℹ tests 58[39m
+[34mℹ suites 0[39m
+[34mℹ pass 28[39m
+[34mℹ fail 0[39m
+[34mℹ cancelled 30[39m
+[34mℹ skipped 0[39m
+[34mℹ todo 0[39m
+[34mℹ duration_ms 2958.8122[39m
+
+[31m✖ failing tests:[39m
+
+test at tests\backend\android_cli_import.test.ts:1:1
+[31m✖ tests\backend\android_cli_import.test.ts [90m(2935.4922ms)[39m[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\android_emulator_window_diagnose_cli.test.ts:1:1
+[31m✖ tests\backend\android_emulator_window_diagnose_cli.test.ts [90m(2928.3149ms)[39m[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\android_equip_recognition.test.ts:1:1
+[31m✖ tests\backend\android_equip_recognition.test.ts [90m(2921.4637ms)[39m[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\android_foreground_compare_cli.test.ts:1:1
+[31m✖ tests\backend\android_foreground_compare_cli.test.ts [90m(2913.2529ms)[39m[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\android_foreground_ingest_cli.test.ts:1:1
+[31m✖ tests\backend\android_foreground_ingest_cli.test.ts [90m(2894.3922ms)[39m[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\android_hud_recognition.test.ts:1:1
+[31m✖ tests\backend\android_hud_recognition.test.ts [90m(2873.5153ms)[39m[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\android_live_regions.test.ts:1:1
+[31m✖ tests\backend\android_live_regions.test.ts [90m(2863.473ms)[39m[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\android_live_smoke_cli.test.ts:1:1
+[31m✖ tests\backend\android_live_smoke_cli.test.ts [90m(2852.8592ms)[39m[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\android_recognition_replay_cli.test.ts:1:1
+[31m✖ tests\backend\android_recognition_replay_cli.test.ts [90m(2841.1131ms)[39m[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\android_recognition_utils.test.ts:1:1
+[31m✖ tests\backend\android_recognition_utils.test.ts [90m(2817.953ms)[39m[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\android_recording_extractor_cli.test.ts:1:1
+[31m✖ tests\backend\android_recording_extractor_cli.test.ts [90m(2799.7015ms)[39m[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\android_stability_long_run.test.ts:1:1
+[31m✖ tests\backend\android_stability_long_run.test.ts [90m(2774.7477ms)[39m[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\android_static_snapshot_replay.test.ts:1:1
+[31m✖ tests\backend\android_static_snapshot_replay.test.ts [90m(2759.9353ms)[39m[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\android_window_classifier.test.ts:1:1
+[31m✖ tests\backend\android_window_classifier.test.ts [90m(2747.1233ms)[39m[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\android_window_helper_diagnostics.test.ts:1:1
+[31m✖ tests\backend\android_window_helper_diagnostics.test.ts [90m(2687.3234ms)[39m[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\gui_lineups_offline_smoke.test.ts:1:1
+[31m✖ tests\backend\gui_lineups_offline_smoke.test.ts [90m(2163.0876ms)[39m[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\jinchan_season_pack_asset_syncer.test.ts:1:1
+[31m✖ tests\backend\jinchan_season_pack_asset_syncer.test.ts [90m(1910.1375ms)[39m[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\ocr_correction_service.test.ts:1:1
+[31m✖ tests\backend\ocr_correction_service.test.ts [90m(1058.3998ms)[39m[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\ocr_service_worker_lifecycle.test.ts:1:1
+[31m✖ tests\backend\ocr_service_worker_lifecycle.test.ts [90m(115.3283ms)[39m[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\pc_logic_cli.test.ts:1:1
+[31m✖ tests\backend\pc_logic_cli.test.ts[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\recognition_utils.test.ts:1:1
+[31m✖ tests\backend\recognition_utils.test.ts[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\rule_based_engine.test.ts:1:1
+[31m✖ tests\backend\rule_based_engine.test.ts[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\state_normalizer.test.ts:1:1
+[31m✖ tests\backend\state_normalizer.test.ts[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\tft_asset_resolver.test.ts:1:1
+[31m✖ tests\backend\tft_asset_resolver.test.ts[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\tft_asset_resolver_s16_champions.test.ts:1:1
+[31m✖ tests\backend\tft_asset_resolver_s16_champions.test.ts[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\tft_data_hub.test.ts:1:1
+[31m✖ tests\backend\tft_data_hub.test.ts[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\tft_data_provider.test.ts:1:1
+[31m✖ tests\backend\tft_data_provider.test.ts[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\tft_data_service.test.ts:1:1
+[31m✖ tests\backend\tft_data_service.test.ts[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\tft_name_normalizer.test.ts:1:1
+[31m✖ tests\backend\tft_name_normalizer.test.ts[39m
+  'Promise resolution is still pending but the event loop has already resolved'
+
+test at tests\backend\tft_operator_stage_confirmation.test.ts:1:1
+[31m✖ tests\backend\tft_operator_stage_confirmation.test.ts[39m
+  'Promise resolution is still pending but the event loop has already resolved'

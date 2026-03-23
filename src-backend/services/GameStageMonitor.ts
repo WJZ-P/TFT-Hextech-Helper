@@ -239,7 +239,8 @@ export class GameStageMonitor extends EventEmitter {
             const allPlayers = response.data?.allPlayers || [];
             
             // 找到当前玩家（非 Bot 的第一个玩家，发条鸟模式只有一个真人）
-            const me = allPlayers.find((p: any) => !p.isBot);
+            interface InGamePlayer { isBot?: boolean; isDead?: boolean; [key: string]: unknown; }
+            const me = allPlayers.find((p: InGamePlayer) => !p.isBot);
             
             if (me && me.isDead === true) {
                 logger.info('[GameStageMonitor] 发条鸟模式：InGame API 检测到玩家已死亡 (isDead=true)，发出 clockworkDead 事件');
@@ -374,9 +375,9 @@ export class GameStageMonitor extends EventEmitter {
                 logger.info('[GameStageMonitor] 检测到"战斗环节"，进入战斗状态');
                 this.emit('fightingStart');
             }
-        } catch (e: any) {
+        } catch (e: unknown) {
             // 这里用 debug，避免 OCR 失败时刷屏；需要排查时再开 debug
-            logger.debug(`[GameStageMonitor] 战斗阶段检测失败: ${e?.message ?? e}`);
+            logger.debug(`[GameStageMonitor] 战斗阶段检测失败: ${e instanceof Error ? (e.message ?? String(e)) : String(e)}`);
         }
     }
 

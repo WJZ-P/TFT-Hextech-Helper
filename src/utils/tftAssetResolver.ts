@@ -46,7 +46,9 @@ function buildImageLookup(entities: TftImageEntity[]): Map<string, string> {
 }
 
 function shouldBlockRemoteRendererAssets(): boolean {
-    return typeof window !== "undefined" && window.appEnv?.blocksRemoteAssets === true;
+    if (typeof window === "undefined") return false;
+    const win = window as unknown as { appEnv?: { blocksRemoteAssets?: boolean } };
+    return win.appEnv?.blocksRemoteAssets === true;
 }
 
 function getChessId(cnName: string, season: TftUiSeason): string {

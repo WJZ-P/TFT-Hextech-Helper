@@ -52,6 +52,8 @@ interface StageConfig {
 interface LineupConfig {
     id: string;
     name: string;
+    season?: SeasonTab;
+    isUserCreated?: boolean;
     finalComp?: StageConfig; // 最终成型阵容
     stages: {
         level4?: StageConfig;
@@ -1772,11 +1774,11 @@ const LineupsPage: React.FC = () => {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
     // 根据当前 Tab 过滤出对应赛季的阵容
-    const lineups = allLineups.filter(l => (l as any).season === activeTab);
+    const lineups = allLineups.filter(l => l.season === activeTab);
 
     // 将阵容分为「自定义」和「默认」两组，自定义阵容显示在上方
-    const userLineups = lineups.filter(l => (l as any).isUserCreated);
-    const defaultLineups = lineups.filter(l => !(l as any).isUserCreated);
+    const userLineups = lineups.filter(l => Boolean(l.isUserCreated));
+    const defaultLineups = lineups.filter(l => !l.isUserCreated);
 
     // 当前 Tab 下已选中的阵容数量
     const currentTabSelectedCount = lineups.filter(l => selectedIds.has(l.id)).length;
@@ -2121,7 +2123,7 @@ const LineupsPage: React.FC = () => {
              * 计算一组棋子的羁绊激活信息（与 convert-manual-lineup.cjs 中 calculateTraits 对应）
              * 返回 [{ key, style, numUnits }] 数组
              */
-            const computeTraits = (champNames: string[]) => {
+                const computeTraits = (champNames: string[]) => {
                 const traitCounts: Record<string, number> = {};
                 const unique = new Set<string>();
 
@@ -2168,19 +2170,19 @@ const LineupsPage: React.FC = () => {
              * - 有装备 → isCore=true，items 为装备名称字符串数组
              * - starTarget 默认 2（核心棋子 3）
              */
-            const convertFinal = (slot: ChampionSlot) => {
-                const hasEquips = slot.equips.length > 0;
-                const result: any = {
-                    name: slot.name,
-                    isCore: hasEquips,
-                    starTarget: hasEquips ? 3 : 2,
+                const convertFinal = (slot: ChampionSlot) => {
+                    const hasEquips = slot.equips.length > 0;
+                    const result: Record<string, unknown> = {
+                        name: slot.name,
+                        isCore: hasEquips,
+                        starTarget: hasEquips ? 3 : 2,
+                    };
+                    if (hasEquips) {
+                        // items 是纯字符串数组，如 ["无尽之刃", "鬼索的狂暴之刃"]
+                        result.items = slot.equips;
+                    }
+                    return result;
                 };
-                if (hasEquips) {
-                    // items 是纯字符串数组，如 ["无尽之刃", "鬼索的狂暴之刃"]
-                    result.items = slot.equips;
-                }
-                return result;
-            };
 
             /**
              * 转换 stages 过渡阵容的棋子（对应 convertChampionForStage）

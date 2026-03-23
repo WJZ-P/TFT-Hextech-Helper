@@ -20,10 +20,10 @@ test("pc logic CLI replays a fast-8 4-1 sample and recommends leveling to 7", { 
     );
 
     const parsed = JSON.parse(stdout) as {
-        plans: Array<{ type: string; reason: string }>;
+        plans: Array<{ type: string; reason?: string }>;
     };
 
-    assert.ok(parsed.plans.some((plan) => plan.type === "LEVEL_UP" && /4-1/.test(plan.reason)));
+    assert.ok(parsed.plans.some((plan) => plan.type === "LEVEL_UP" && /4-1/.test(plan.reason ?? "")));
 });
 
 test("pc logic CLI replays a winstreak 3-2 sample and keeps tempo with an early level", { timeout: 120000 }, async () => {
@@ -38,10 +38,10 @@ test("pc logic CLI replays a winstreak 3-2 sample and keeps tempo with an early 
     );
 
     const parsed = JSON.parse(stdout) as {
-        plans: Array<{ type: string; reason: string }>;
+        plans: Array<{ type: string; reason?: string }>;
     };
 
-    assert.ok(parsed.plans.some((plan) => plan.type === "LEVEL_UP" && /3-2/.test(plan.reason)));
+    assert.ok(parsed.plans.some((plan) => plan.type === "LEVEL_UP" && /3-2/.test(plan.reason ?? "")));
 });
 
 test("pc logic CLI replays a target-pair 4-2 sample and increases roll commitment within a capped window", { timeout: 120000 }, async () => {
@@ -113,7 +113,7 @@ test("pc logic CLI replays a 5-stage healthy sample and preserves economy", { ti
     );
 
     const parsed = JSON.parse(stdout) as {
-        plans: Array<{ type: string }>;
+        plans: Array<{ type: string; reason?: string }>;
     };
 
     assert.ok(!parsed.plans.some((plan) => plan.type === "ROLL" && /4-2 \/ 5-1 目标对子进入受控稳血节奏/.test(plan.reason ?? "")));

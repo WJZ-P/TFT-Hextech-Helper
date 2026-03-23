@@ -7,6 +7,7 @@ import {HomePage} from "./components/pages/HomePage.tsx";
 import { RoutePath } from "./constants/routes";
 
 const DebugPage = lazy(() => import('./components/pages/DebugPage'));
+const DebugDecisionPage = lazy(() => import('./components/pages/DebugDecisionPage'));
 const SettingsPage = lazy(() => import('./components/pages/SettingsPage'));
 const LineupsPage = lazy(() => import('./components/pages/LineupsPage')); // 阵容搭配页面
 
@@ -48,6 +49,14 @@ export const router = createHashRouter([
                 element: (
                     <Suspense fallback={<LoadingSpinner/>}>
                         <DebugPage/>
+                    </Suspense>
+                )
+            },
+            {
+                path: RoutePath.DEBUG_DECISION.slice(1),
+                element: (
+                    <Suspense fallback={<LoadingSpinner/>}>
+                        <DebugDecisionPage/>
                     </Suspense>
                 )
             },

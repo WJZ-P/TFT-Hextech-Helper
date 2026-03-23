@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import {AppEnvApi, ConfigApi, ExposedIpcRenderer, HexApi, IpcApi, LcuApi, TftApi, LineupApi, UtilApi, SettingsApi, StatsApi} from "../electron/preload.ts";
+import {AppEnvApi, ConfigApi, ExposedIpcRenderer, HexApi, IpcApi, LcuApi, TftApi, LineupApi, UtilApi, SettingsApi, StatsApi, DecisionApi, MemoryApi} from "../electron/preload.ts";
 
 export {}   // 让文件变成模块，避免全局污染
 
@@ -18,6 +18,11 @@ declare global {
         util:UtilApi          // 通用工具 API
         settings:SettingsApi  // 通用设置 API（与后端 SettingsStore 对接）
         stats:StatsApi        // 统计数据 API
-        appEnv: AppEnvApi
+        appEnv: AppEnvApi & {
+            blocksRemoteAssets?: boolean | undefined;
+            isGuiVerify?: boolean | undefined;
+        }
+        decision: DecisionApi // 决策链路 API
+        memory: MemoryApi     // 内存监控 API
     }
 }

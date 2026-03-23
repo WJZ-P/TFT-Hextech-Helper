@@ -616,8 +616,8 @@ class WindowHelper {
                 height: entry.height ?? 0,
                 source: "native",
             }));
-        } catch (error: any) {
-            logger.warn(`[WindowHelper] 原生窗口枚举失败: ${error.message}`);
+        } catch (error: unknown) {
+            logger.warn(`[WindowHelper] 原生窗口枚举失败: ${error instanceof Error ? error.message : String(error)}`);
             return [];
         }
     }
@@ -669,8 +669,8 @@ class WindowHelper {
                 height: entry.height ?? 0,
                 source: "native",
             }));
-        } catch (error: any) {
-            logger.warn(`[WindowHelper] 原生子窗口枚举失败: ${error.message}`);
+        } catch (error: unknown) {
+            logger.warn(`[WindowHelper] 原生子窗口枚举失败: ${error instanceof Error ? error.message : String(error)}`);
             return [];
         }
     }
@@ -693,8 +693,8 @@ class WindowHelper {
                 encoded,
             ]);
             return await fs.readFile(outputPath);
-        } catch (error: any) {
-            logger.warn(`[WindowHelper] 原生 PrintWindow 捕获失败: ${error.message}`);
+        } catch (error: unknown) {
+            logger.warn(`[WindowHelper] 原生 PrintWindow 捕获失败: ${error instanceof Error ? error.message : String(error)}`);
             return null;
         } finally {
             await fs.unlink(outputPath).catch(() => undefined);
@@ -800,8 +800,8 @@ class WindowHelper {
             }
 
             return report.candidates.length > 0 ? report.candidates : report.weakCandidates;
-        } catch (error: any) {
-            logger.error(`[WindowHelper] 查找窗口失败: ${error.message}`);
+        } catch (error: unknown) {
+            logger.error(`[WindowHelper] 查找窗口失败: ${error instanceof Error ? error.message : String(error)}`);
             return [];
         }
     }
@@ -875,15 +875,15 @@ class WindowHelper {
 
             try {
                 await nativeWindow.focus();
-            } catch (error: any) {
-                logger.warn(`[WindowHelper] nut-js 聚焦失败，尝试 AppActivate: ${error.message}`);
+            } catch (error: unknown) {
+                logger.warn(`[WindowHelper] nut-js 聚焦失败，尝试 AppActivate: ${error instanceof Error ? error.message : String(error)}`);
                 return this.appActivateWindow(windowInfo.title);
             }
 
             logger.info(`[WindowHelper] 已尝试聚焦窗口: "${windowInfo.title}"`);
             return true;
-        } catch (error: any) {
-            logger.warn(`[WindowHelper] 聚焦窗口失败: ${error.message}`);
+        } catch (error: unknown) {
+            logger.warn(`[WindowHelper] 聚焦窗口失败: ${error instanceof Error ? error.message : String(error)}`);
             return this.appActivateWindow(windowInfo.title);
         }
     }

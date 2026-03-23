@@ -123,13 +123,29 @@ import type {
     LootOrb,
 } from "./tft";
 import { sleep } from "./utils/HelperTools";
+import { memoryMonitor } from "./utils/MemoryMonitor";
 
-let electronScreenPromise: Promise<any | null> | null = null;
+interface ElectronScreen {
+    getPrimaryDisplay(): {
+        scaleFactor: number;
+        size: { width: number; height: number };
+    };
+}
 
-async function getElectronScreen(): Promise<any | null> {
+interface ElectronModule {
+    screen?: ElectronScreen;
+    default?: { screen?: ElectronScreen };
+}
+
+let electronScreenPromise: Promise<ElectronScreen | null> | null = null;
+
+async function getElectronScreen(): Promise<ElectronScreen | null> {
     if (!electronScreenPromise) {
         electronScreenPromise = import("electron")
-            .then((module) => module.screen ?? (module as any).default?.screen ?? null)
+            .then((module) => {
+                const mod = module as ElectronModule;
+                return mod.screen ?? mod.default?.screen ?? null;
+            })
             .catch(() => null);
     }
 
@@ -404,15 +420,20 @@ class TftOperator {
 
         // Otherwise, perform a dynamic import so the module is only loaded when
         // actually needed at runtime (keeps dev/test harness stable).
+        // 采样 OpenCV 加载前的内存
+        memoryMonitor.sample("tft:opencv_before");
+
         void import("@techstark/opencv-js")
             .then((mod) => {
                 // support both ESM default and CJS shapes
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 cv = ((mod as any).default ?? mod) as typeof OpencvType;
                 this.setupOpenCvRuntime();
+                // 采样 OpenCV 加载后的内存
+                memoryMonitor.sample("tft:opencv_after");
             })
             .catch((e) => {
-                logger.warn(`[TftOperator] 动态导入 OpenCV 失败: ${e?.toString?.() ?? e}`);
+                logger.warn(`[TftOperator] 动态导入 OpenCV 失败：${e?.toString?.() ?? e}`);
             });
     }
 

@@ -18,6 +18,7 @@ import Tesseract, { createWorker, PSM } from "tesseract.js";
 import path from "path";
 import { logger } from "../../utils/Logger";
 import { TFTMode, getChessDataForMode } from "../../TFTProtocol";
+import { memoryMonitor } from "../../utils/MemoryMonitor";
 
 /**
  * OCR Worker 类型枚举
@@ -149,27 +150,68 @@ export class OcrService {
     }
 
     /**
-     * 执行 OCR 识别（带自动回收）
+     * 执行 OCR 识别（带自动回收 + 内存采样）
      * @param imageBuffer PNG 图片 Buffer
      * @param type Worker 类型
      * @returns 识别结果文本
      * 
      * 自动回收逻辑：
      * - 识别次数超过 MAX_RECOGNITIONS (500)
-     * - 存活时间超过 MAX_LIFETIME_MS (30分钟)
-     * - 闲置时间超过 MAX_IDLE_MS (10分钟)
+     * - 存活时间超过 MAX_LIFETIME_MS (30 分钟)
+     * - 闲置时间超过 MAX_IDLE_MS (10 分钟)
+     * 
+     * 内存采样：
+     * - 每次识别后采样 process.memoryUsage()
+     * - 追踪峰值和增长率
      */
     public async recognize(imageBuffer: Buffer, type: OcrWorkerType): Promise<string> {
         // 检查是否需要回收
         await this.recycleIfNeeded(type);
 
         const worker = await this.getWorker(type);
-        const result = await worker.recognize(imageBuffer);
 
-        // 更新健康追踪
-        this.updateHealthMeta(type);
+        // Retry logic: 最大 3 次重试，指数回退：100ms, 200ms, 400ms
+        const MAX_RETRIES = 3;
+        const backoffDelays = [100, 200, 400];
 
-        return result.data.text.trim();
+        let lastError: unknown;
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                const result = await worker.recognize(imageBuffer);
+
+                // 更新健康追踪 + 内存采样（仅在成功后执行一次）
+                this.updateHealthMeta(type);
+                memoryMonitor.sample(`ocr:${type}`);
+
+                return result.data.text.trim();
+            } catch (error: unknown) {
+                lastError = error;
+
+                // 如果还可以重试，则记录警告并等待回退时间
+                if (attempt < MAX_RETRIES) {
+                    const delay = backoffDelays[attempt] ?? backoffDelays[backoffDelays.length - 1];
+                    logger.warn(
+                        `[OcrService] OCR 识别失败 (type=${type}) 第 ${attempt + 1} 次尝试失败，将在 ${delay}ms 后重试: ${
+                            error instanceof Error ? error.message : String(error)
+                        }`
+                    );
+                    // 等待指定的回退时间
+                    await new Promise((resolve) => setTimeout(resolve, delay));
+                    continue;
+                }
+
+                // 已超出重试次数，记录错误并抛出
+                logger.error(
+                    `[OcrService] OCR 识别最终失败 (type=${type})，共尝试 ${MAX_RETRIES + 1} 次: ${
+                        error instanceof Error ? error.stack ?? error.message : String(error)
+                    }`
+                );
+                throw error;
+            }
+        }
+
+        // 理论上不可达，但为了类型安全，抛出上次捕获的错误
+        throw lastError as Error;
     }
 
     /**
@@ -226,9 +268,12 @@ export class OcrService {
     }
 
     /**
-     * 重建指定类型的 Worker
+     * 重建指定类型的 Worker（带内存日志）
      */
     private async rebuildWorker(type: OcrWorkerType): Promise<void> {
+        // 采样回收前的内存
+        const memBefore = memoryMonitor.sample(`ocr:recycle_before:${type}`);
+        
         switch (type) {
             case OcrWorkerType.GAME_STAGE:
                 if (this.gameStageWorker) {
@@ -273,6 +318,14 @@ export class OcrService {
                 await this.getCombatPhaseWorker();
                 break;
         }
+
+        // 采样回收后的内存
+        const memAfter = memoryMonitor.sample(`ocr:recycle_after:${type}`);
+        logger.info(
+            `[OcrService] Worker ${type} 回收完成：` +
+            `回收前 RSS=${(memBefore.rss / 1024 / 1024).toFixed(2)}MB, ` +
+            `回收后 RSS=${(memAfter.rss / 1024 / 1024).toFixed(2)}MB`
+        );
     }
 
     /**

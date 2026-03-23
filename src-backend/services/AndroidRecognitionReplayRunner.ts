@@ -46,6 +46,7 @@ import type {
     RecognitionSource,
 } from "./RecognitionReplayTypes";
 import type { BenchUnit, BoardUnit } from "../tft";
+import { GameClient } from "../utils/SettingsStore";
 
 interface RecognitionFixtureFile {
     id?: string;
@@ -734,7 +735,7 @@ function evaluateTraitResultsFromUnits(
     const boardUnits = buildBoardUnitsFromFixture(mode, snapshot.boardUnits);
     const benchUnits = buildBenchUnitsFromFixture(mode, snapshot.benchUnits);
     const normalizedState = normalizeRuntimeState({
-        client: "ANDROID" as any,
+        client: GameClient.ANDROID,
         target: "ANDROID_EMULATOR",
         mode,
         level: 1,

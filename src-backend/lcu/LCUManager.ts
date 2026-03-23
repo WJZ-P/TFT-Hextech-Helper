@@ -40,7 +40,7 @@ export enum LcuEventUri {
 export interface LCUWebSocketMessage {
     uri: string;
     eventType: 'Create' | 'Update' | 'Delete';
-    data: any;
+    data: unknown;
 }
 
 
@@ -180,7 +180,7 @@ class LCUManager extends EventEmitter {
      * @param endpoint API 端点, e.g., '/lol-summoner/v1/current-summoner'
      * @param body 请求体 (可选)
      */
-    public async request(method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE', endpoint: string, body?: object): Promise<any> {
+    public async request(method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE', endpoint: string, body?: object): Promise<unknown> {
         try {
             // 在这里打印出完整的请求 URL
             const fullUrl = `${this.api.defaults.baseURL}${endpoint}`;
@@ -267,29 +267,29 @@ class LCUManager extends EventEmitter {
     //  一堆专注于后端使用的方法
 
     public getSummonerInfo(): Promise<SummonerInfo> {
-        return this.request('GET', '/lol-summoner/v1/current-summoner');
+        return this.request('GET', '/lol-summoner/v1/current-summoner') as Promise<SummonerInfo>;
     }
 
-    public createCustomLobby(config: LobbyConfig): Promise<any> {
+    public createCustomLobby(config: LobbyConfig): Promise<unknown> {
         logger.info('📬 [LCUManager] 正在创建自定义房间...');
         return this.request('POST', '/lol-lobby/v2/lobby', config);
     }
 
-    public createLobbyByQueueId(queueId: Queue): Promise<any> {
+    public createLobbyByQueueId(queueId: Queue): Promise<unknown> {
         logger.info(`📬 [LCUManager] 正在创建房间 (队列ID: ${queueId})...`);
         return this.request('POST', '/lol-lobby/v2/lobby', {queueId: queueId});
     }
 
-    public getCurrentGamemodeInfo(): Promise<any> {
+    public getCurrentGamemodeInfo(): Promise<unknown> {
         return this.request('GET', '/lol-lobby/v1/parties/gamemode');
     }
 
-    public startMatch(): Promise<any> {
+    public startMatch(): Promise<unknown> {
         logger.info('📬 [LCUManager] 正在开始匹配...');
         return this.request('POST', '/lol-lobby/v2/lobby/matchmaking/search');
     }
 
-    public stopMatch(): Promise<any> {
+    public stopMatch(): Promise<unknown> {
         logger.info('📬 [LCUManager] 正在停止匹配...');
         return this.request('DELETE', '/lol-lobby/v2/lobby/matchmaking/search');
     }
@@ -299,66 +299,67 @@ class LCUManager extends EventEmitter {
      * @description 退出大厅房间，用于发条鸟模式下排队超时后重新开始
      * @returns Promise<any>
      */
-    public leaveLobby(): Promise<any> {
+    public leaveLobby(): Promise<unknown> {
         logger.info('📬 [LCUManager] 正在退出房间...');
         return this.request('DELETE', '/lol-lobby/v2/lobby');
     }
 
     public async checkMatchState(): Promise<MatchState> {
-        const result: {
-            errors: [],
+        interface MatchStateResult {
+            errors: unknown[];
             lowPriorityData: {
-                "bustedLeaverAccessToken": "",
-                "penalizedSummonerIds": [],
-                "penaltyTime": 0,
-                "penaltyTimeRemaining": 0,
-                "reason": ""
-            },
-            "searchState": MatchState
-        } = await this.request('GET', '/lol-lobby/v2/lobby/matchmaking/search-state')
+                bustedLeaverAccessToken: string;
+                penalizedSummonerIds: number[];
+                penaltyTime: number;
+                penaltyTimeRemaining: number;
+                reason: string;
+            };
+            searchState: MatchState;
+        }
+        const result = await this.request('GET', '/lol-lobby/v2/lobby/matchmaking/search-state') as MatchStateResult;
 
-        return result.searchState
+        return result.searchState;
     }
 
-    public getCustomGames(): Promise<any> {
+    public getCustomGames(): Promise<unknown> {
         return this.request('GET', '/lol-lobby/v1/custom-games');
     }
 
-    public getQueues(): Promise<any> {
+    public getQueues(): Promise<unknown> {
         return this.request('GET', '/lol-game-queues/v1/queues');
     }
 
-    public getChatConfig(): Promise<any> {
+    public getChatConfig(): Promise<unknown> {
         return this.request('GET', '/lol-game-queues/v1/queues');
     }
 
-    public getChampSelectSession(): Promise<any> {
+    public getChampSelectSession(): Promise<unknown> {
         return this.request('GET', '/lol-champ-select/v1/session');
     }
 
-    public getChatConversations(): Promise<any> {
+    public getChatConversations(): Promise<unknown> {
         return this.request('GET', '/lol-chat/v1/conversations');
     }
 
-    public getGameflowSession(): Promise<any> {
+    public getGameflowSession(): Promise<unknown> {
         return this.request('GET', '/lol-gameflow/v1/session');
     }
 
-    public getExtraGameClientArgs(): Promise<any> {
+    public getExtraGameClientArgs(): Promise<unknown> {
         return this.request('GET', '/lol-gameflow/v1/extra-game-client-args');
     }
 
-    public getLobby(): Promise<any> {
+    public getLobby(): Promise<unknown> {
         return this.request('GET', '/lol-lobby/v2/lobby');
     }
 
     //  接受对局
-    public acceptMatch(): Promise<any> {
+    public acceptMatch(): Promise<unknown> {
         return this.request("POST", '/lol-matchmaking/v1/ready-check/accept');
     }
 
     //  拒绝对局
-    public declineMatch(): Promise<any> {
+    public declineMatch(): Promise<unknown> {
         return this.request("POST", '/lol-matchmaking/v1/ready-check/decline');
     }
 
@@ -368,7 +369,7 @@ class LCUManager extends EventEmitter {
      *              调用后会触发 GAMEFLOW_PHASE 变为 "WaitingForStats"
      * @returns Promise<any>
      */
-    public quitGame(): Promise<any> {
+    public quitGame(): Promise<unknown> {
         logger.info('🚪 [LCUManager] 正在退出游戏...');
         return this.request("POST", '/lol-gameflow/v1/early-exit');
     }
@@ -379,7 +380,7 @@ class LCUManager extends EventEmitter {
      *              效果类似于在游戏内点击投降按钮
      * @returns Promise<any>
      */
-    public surrender(): Promise<any> {
+    public surrender(): Promise<unknown> {
         logger.info('🏳️ [LCUManager] 正在发起投降...');
         return this.request("POST", '/lol-gameflow/v1/surrender');
     }

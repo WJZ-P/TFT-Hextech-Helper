@@ -1,0 +1,86 @@
+name: Android Stability Nightly
+
+# 每日 3AM UTC 自动运行压力测试
+on:
+  schedule:
+    - cron: '0 3 * * *'  # 3AM UTC daily
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  stress-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # 2. 安装 Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      # 3. 安装依赖
+      - name: Install dependencies
+        run: npm ci
+      
+      # 4. 类型检查
+      - name: Type check
+        run: npm run typecheck
+      
+      # 5. 运行单元测试（不包含需要模拟器的长测试）
+      - name: Run unit tests
+        run: node --import tsx --test tests/backend/rule_based_engine.test.ts tests/backend/ocr_service_worker_lifecycle.test.ts tests/backend/tft_operator_stage_confirmation.test.ts
+      
+      # 6. 运行压力测试（10 轮，使用模拟器场景）
+      - name: Run Android stress test
+        run: npm run android:stress -- --rounds 10 --output-report reports/stress-test.json
+        continue-on-error: true  # 允许失败以捕获报告
+      
+      # 7. 上传压力测试报告
+      - name: Upload stress test report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stress-test-report
+          path: reports/stress-test.json
+          retention-days: 30
+      
+      # 8. 解析报告并检查失败条件
+      - name: Check stress test results
+        if: always()
+        run: |
+          if [ -f "reports/stress-test.json" ]; then
+            echo "=== Stress Test Report ==="
+            cat reports/stress-test.json | jq '.summary'
+            
+            FAILED=$(cat reports/stress-test.json | jq '.failedAt | length')
+            MEMORY_GROWTH=$(cat reports/stress-test.json | jq '.timeline.memoryGrowthRate')
+            
+            echo "Failed rounds: $FAILED"
+            echo "Memory growth: $MEMORY_GROWTH%"
+            
+            if [ "$FAILED" -gt 0 ]; then
+              echo "::error::Stress test failed: $FAILED rounds had errors"
+              exit 1
+            fi
+            
+            # 检查内存增长率（> 20% 视为警告）
+            if (( $(echo "$MEMORY_GROWTH > 20" | bc -l) )); then
+              echo "::warning::Memory growth rate ${MEMORY_GROWTH}% exceeds 20% threshold"
+            fi
+          else
+            echo "::warning::Stress test report not generated"
+          fi
+      
+      # 9. 上传日志文件（用于调试）
+      - name: Upload logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stress-test-logs
+          path: |
+            ~/.tft-hextech-helper/logs/*.log
+          retention-days: 7

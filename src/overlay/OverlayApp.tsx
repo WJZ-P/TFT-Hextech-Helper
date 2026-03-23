@@ -26,17 +26,39 @@ interface PlayerInfo {
 export const OverlayApp: React.FC = () => {
     // 玩家列表状态
     const [players, setPlayers] = useState<PlayerInfo[]>([]);
+    // 当前策略名称（来自决策引擎的上下文，可选）
+    const [strategyName, setStrategyName] = useState<string | null>(null);
     // 关闭按钮 hover 状态（内联样式不支持 :hover 伪类，用 state 模拟）
     const [closeHover, setCloseHover] = useState(false);
 
     useEffect(() => {
         // 监听主进程发送的玩家数据更新
         // window.ipc.on 返回一个清理函数（取消监听）
-        const cleanup = window.ipc?.on('overlay-update-players', (data: PlayerInfo[]) => {
-            setPlayers(data);
+        const cleanup = window.ipc?.on('overlay-update-players', (...args: unknown[]) => {
+            const data = args[0] as PlayerInfo[] | undefined;
+            if (Array.isArray(data)) setPlayers(data as PlayerInfo[]);
         });
 
         return () => cleanup?.();
+    }, []);
+
+    // 监听决策引擎的策略上下文更新（可选）
+    useEffect(() => {
+        const cleanupStrategy = window.ipc?.on('decision-chain-updated', (...args: unknown[]) => {
+            try {
+                const data = args[0] as { strategyName?: string } | undefined;
+                if (data && typeof data.strategyName === 'string') {
+                    setStrategyName(data.strategyName);
+                } else {
+                    setStrategyName(null);
+                }
+            } catch (e) {
+                // 容错：不要让浮窗因为外部数据结构问题崩溃
+                setStrategyName(null);
+            }
+        });
+
+        return () => cleanupStrategy?.();
     }, []);
 
     /**
@@ -58,6 +80,12 @@ export const OverlayApp: React.FC = () => {
             <div style={styles.header}>
                 <span style={styles.headerIcon}>🎮</span>
                 <span style={styles.headerText}>对局信息</span>
+                {/* 策略徽章：当后端提供时显示 */}
+                {strategyName && (
+                    <span style={styles.strategyBadge} title={`当前策略: ${strategyName}`}>
+                        {strategyName}
+                    </span>
+                )}
                 {/* 右上角关闭按钮 */}
                 <span
                     style={{
@@ -245,5 +273,17 @@ const styles: Record<string, React.CSSProperties> = {
         color: '#64748b',
         padding: '20px 0',
         fontSize: '11px',
+    },
+    strategyBadge: {
+        marginLeft: 8,
+        fontSize: '10px',
+        fontWeight: 700,
+        color: '#0369a1',
+        backgroundColor: 'rgba(102, 204, 255, 0.12)',
+        padding: '2px 8px',
+        borderRadius: 10,
+        border: '1px solid rgba(102, 204, 255, 0.18)',
+        alignSelf: 'center',
+        flexShrink: 0,
     },
 };

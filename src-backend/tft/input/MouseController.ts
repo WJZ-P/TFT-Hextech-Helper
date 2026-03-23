@@ -160,8 +160,8 @@ export class MouseController {
             await sleep(MOUSE_CONFIG.MOVE_DELAY);
             await mouse.click(toNutButton(button));
             await sleep(MOUSE_CONFIG.CLICK_DELAY);
-        } catch (e: any) {
-            logger.error(`[MouseController] 鼠标点击失败: ${e.message}`);
+        } catch (e: unknown) {
+            logger.error(`[MouseController] 鼠标点击失败: ${e instanceof Error ? e.message : String(e)}`);
             throw e;
         }
     }
@@ -193,8 +193,8 @@ export class MouseController {
         try {
             await mouse.move([target]);
             await sleep(MOUSE_CONFIG.MOVE_DELAY);
-        } catch (e: any) {
-            logger.error(`[MouseController] 鼠标移动失败: ${e.message}`);
+        } catch (e: unknown) {
+            logger.error(`[MouseController] 鼠标移动失败: ${e instanceof Error ? e.message : String(e)}`);
             throw e;
         }
     }
@@ -216,8 +216,8 @@ export class MouseController {
             await sleep(MOUSE_CONFIG.MOVE_DELAY);
             await mouse.click(toNutButton(button));
             await sleep(MOUSE_CONFIG.CLICK_DELAY);
-        } catch (e: any) {
-            logger.error(`[MouseController] 鼠标点击失败: ${e.message}`);
+        } catch (e: unknown) {
+            logger.error(`[MouseController] 鼠标点击失败: ${e instanceof Error ? e.message : String(e)}`);
             throw e;
         }
     }
@@ -267,14 +267,14 @@ export class MouseController {
             await sleep(MOUSE_CONFIG.CLICK_DELAY);
 
             logger.debug("[MouseController] 拖拽完成");
-        } catch (e: any) {
+        } catch (e: unknown) {
             // 确保异常时释放鼠标按键，避免鼠标卡住
             try {
                 await mouse.releaseButton(Button.LEFT);
             } catch {
                 // 忽略释放失败
             }
-            logger.error(`[MouseController] 拖拽失败: ${e.message}`);
+            logger.error(`[MouseController] 拖拽失败: ${e instanceof Error ? e.message : String(e)}`);
             throw e;
         }
     }

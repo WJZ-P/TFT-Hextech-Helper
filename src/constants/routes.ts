@@ -10,5 +10,6 @@ export enum RoutePath {
     HOME = '/',
     LINEUPS = '/lineups',
     DEBUG = '/debug',
+    DEBUG_DECISION = '/debug/decision',
     SETTINGS = '/settings',
 }

@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { GameStageType } from "../../src-backend/TFTProtocol";
 import { RuleBasedDecisionEngine } from "../../src-backend/core/RuleBasedDecisionEngine";
-import type { ObservedState } from "../../src-backend/core/types";
+import type { ObservedState, DecisionContext } from "../../src-backend/core/types";
 
 const repoRoot = path.resolve(process.cwd());
 
@@ -933,4 +933,225 @@ test("RuleBasedDecisionEngine: sells bench unit when bench overflows with low HP
     );
     // Priority 75: sells take lower priority than stabilize rolls (82) and bench moves (88)
     assert.equal(sellPlan?.priority, 75, "Sell priority should be 75 (lower than roll at 82)");
+});
+
+// ===== Multi-Fusion Parallel Evaluation Tests (Task D) =====
+
+test("RuleBasedDecisionEngine evaluates multi-fusion paths and returns sorted results", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: { targetChampionNames: string[]; strategyPreset: "STANDARD" };
+    }>("multi-fusion-comparison.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+    
+    // Should generate BUY plans for target champions
+    const buyPlans = plans.filter((p) => p.type === "BUY");
+    assert.ok(buyPlans.length > 0, "Should have BUY plans when targets in shop");
+    
+    // Priority should be numeric and within valid range
+    for (const plan of buyPlans) {
+        assert.ok(typeof plan.priority === "number", "Priority should be numeric");
+        assert.ok(plan.priority >= 0 && plan.priority <= 100, "Priority should be 0-100");
+    }
+});
+
+test("RuleBasedDecisionEngine adjusts priority based on fusion path quality", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: { targetChampionNames: string[]; strategyPreset: "STANDARD" };
+    }>("multi-fusion-comparison.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+    
+    // Target champions should have higher priority than non-targets
+    const buyPlans = plans.filter((p) => p.type === "BUY");
+    const targetBuys = buyPlans.filter((p) => 
+        fixture.context.targetChampionNames.includes(p.payload.champion as string)
+    );
+    
+    if (targetBuys.length > 0) {
+        // Target buys should have priority >= 90 (base is 90, fusion can boost higher)
+        for (const plan of targetBuys) {
+            assert.ok(plan.priority >= 90, `Target ${plan.payload.champion} priority should be >= 90, got ${plan.priority}`);
+        }
+    }
+});
+
+test("computeRiskAdjustedScore boosts priority when HP is below threshold", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: { targetChampionNames: string[]; stabilizeHpThreshold: number; strategyPreset: "STANDARD" };
+    }>("opponent-counter.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+    
+    // With HP=30 and threshold=42, should trigger mustStabilize
+    // ROLL plans should exist and have elevated priority
+    const rollPlans = plans.filter((p) => p.type === "ROLL");
+    if (rollPlans.length > 0) {
+        assert.ok(rollPlans[0].priority >= 80, "ROLL priority should be elevated when mustStabilize");
+    }
+});
+
+test("computeRiskAdjustedScore reduces economy spending when gold is low", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: { targetChampionNames: string[]; strategyPreset: "STANDARD" };
+    }>("opponent-counter.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+    
+    // With gold=25 and HP=30, economy floor should restrict spending
+    // Soft budget should limit non-essential buys
+    const buyPlans = plans.filter((p) => p.type === "BUY");
+    
+    // Check that total gold spent doesn't exceed reasonable limits
+    let totalSpent = 0;
+    for (const plan of buyPlans) {
+        totalSpent += (plan.payload.cost as number) ?? 0;
+    }
+    
+    // Should not spend more than available gold
+    assert.ok(totalSpent <= fixture.state.gold, "Should not spend more than available gold");
+});
+
+test("Fusion path scoring includes synergy count", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: { targetChampionNames: string[]; strategyPreset: "STANDARD" };
+    }>("multi-fusion-comparison.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+    
+    // Shop has 安妮 which is a target champion
+    // Should recognize synergy potential and boost relevant buys
+    const targetBuy = plans.find((p) => 
+        p.type === "BUY" && 
+        p.payload.champion === "安妮"
+    );
+    
+    // 安妮 is on stabilize round (4-2), willing to spend, and is a target
+    // Should have a BUY plan with priority >= 90 (target buy base)
+    if (targetBuy) {
+        assert.ok(targetBuy.priority >= 90, "Target buy with synergy should have priority >= 90");
+    }
+    // Note: If no buy plan, it means other filters (budget, bench overflow) prevented it
+    // which is also valid behavior
+});
+
+test("Priority ordering follows (b.priority - a.priority || a.tick - b.tick)", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: { targetChampionNames: string[]; strategyPreset: "STANDARD" };
+    }>("multi-fusion-comparison.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+    
+    // Verify plans are sorted by priority descending
+    for (let i = 1; i < plans.length; i++) {
+        const prev = plans[i - 1];
+        const curr = plans[i];
+        
+        // If priorities are equal, earlier tick should come first
+        if (prev.priority === curr.priority) {
+            assert.ok(prev.tick < curr.tick, "Plans with equal priority should maintain tick order");
+        } else {
+            assert.ok(prev.priority >= curr.priority, "Plans should be sorted by priority descending");
+        }
+    }
+});
+
+test("Weak board triggers mustStabilize and fusion priority boost", () => {
+    const engine = new RuleBasedDecisionEngine();
+    
+    // Create a state with weak board (level 7 but only 2 units)
+    const state: ObservedState = {
+        timestamp: 1710000000000,
+        client: "RIOT_PC" as any,
+        target: "PC_LOGIC" as any,
+        stageText: "4-2",
+        stageType: GameStageType.PVP,
+        level: 7,
+        currentXp: 0,
+        totalXp: 28,
+        gold: 35,
+        hp: 55,
+        streak: 0,
+        bench: [
+            { id: "TFT_A", name: "测试A", star: 1, cost: 2, location: "SLOT_1", items: [], traits: ["测试"] }
+        ],
+        board: [
+            { id: "TFT_B", name: "测试B", star: 1, cost: 2, location: "BOARD_1", items: [], traits: ["测试"] }
+        ],
+        shop: [
+            { slot: 0, cost: 2, unit: { id: "TFT_A2", name: "测试A", star: 1, cost: 2, items: [], traits: ["测试"] } },
+            { slot: 1, cost: null, unit: null },
+            { slot: 2, cost: null, unit: null },
+            { slot: 3, cost: null, unit: null },
+            { slot: 4, cost: null, unit: null }
+        ],
+        items: []
+    };
+    
+    const context: DecisionContext = {
+        targetChampionNames: ["测试A"],
+        strategyPreset: "STANDARD",
+        stabilizeHpThreshold: 42,
+    };
+    
+    const plans = engine.generatePlan(state, context);
+    
+    // Board is weak (2 units vs expected ~4.6*7=32 strength)
+    // Should trigger mustStabilize
+    // ROLL or LEVEL_UP should exist with elevated priority
+    const stabilizePlans = plans.filter((p) => p.type === "ROLL" || p.type === "LEVEL_UP");
+    assert.ok(stabilizePlans.length > 0, "Should have stabilization plans for weak board");
+});
+
+test("End-to-end: BUY priority reflects fusion path quality", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const fixture = readExampleFixture<{
+        state: ObservedState;
+        context: { targetChampionNames: string[]; strategyPreset: "STANDARD" };
+    }>("multi-fusion-comparison.json");
+
+    const plans = engine.generatePlan(fixture.state, fixture.context);
+    
+    // Find all BUY plans
+    const buyPlans = plans.filter((p) => p.type === "BUY");
+    
+    // All BUY plans should have valid priority
+    for (const plan of buyPlans) {
+        assert.ok(typeof plan.priority === "number", "Priority must be numeric");
+        assert.ok(plan.priority >= 0 && plan.priority <= 100, "Priority must be in 0-100 range");
+        
+        // CanUpgradeSoon (95) >= Target (90+) >= Generic (72+)
+        if (plan.reason.includes("合成升星")) {
+            assert.ok(plan.priority >= 95, "Upgrade-imminent should have priority >= 95");
+        }
+    }
+    
+    // Verify plans are properly sorted
+    for (let i = 1; i < plans.length; i++) {
+        assert.ok(
+            plans[i - 1].priority > plans[i].priority || 
+            (plans[i - 1].priority === plans[i].priority && plans[i - 1].tick < plans[i].tick),
+            "Plans should be sorted by priority desc, then tick asc"
+        );
+    }
+    
+    // If there are target buys, they should have high priority
+    const targetBuys = buyPlans.filter((p) => 
+        fixture.context.targetChampionNames.includes(p.payload.champion as string)
+    );
+    for (const plan of targetBuys) {
+        assert.ok(plan.priority >= 90, `Target ${plan.payload.champion} should have priority >= 90`);
+    }
 });

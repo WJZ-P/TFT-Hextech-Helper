@@ -68,6 +68,8 @@ export enum IpcChannel {
     // 通用设置读写（取代单独的 get/set 通道）
     SETTINGS_GET = 'settings-get',    // 读取设置项
     SETTINGS_SET = 'settings-set',    // 写入设置项
+    // 数据隐私：删除本地采集数据（渲染进程 -> 主进程）
+    DATA_DELETE_ALL = 'data-delete-all',
     // 系统工具
     UTIL_IS_ELEVATED = 'util-is-elevated',  // 检测当前是否有管理员权限
     // 统计数据
@@ -86,4 +88,10 @@ export enum IpcChannel {
     OVERLAY_SHOW = 'overlay-show',                        // 显示浮窗（传入游戏窗口坐标）
     OVERLAY_CLOSE = 'overlay-close',                      // 关闭浮窗
     OVERLAY_UPDATE_PLAYERS = 'overlay-update-players',    // 更新玩家列表数据（主进程 -> 浮窗渲染进程）
+    // 决策链路（Debug Decision）
+    DECISION_GET_LATEST = 'decision-get-latest',          // 获取最新决策链路数据
+    DECISION_CHAIN_UPDATED = 'decision-chain-updated',    // 决策链路更新事件（主进程 -> 渲染进程）
+    // 内存监控（Memory Monitor）
+    MEMORY_GET_STATS = 'memory-get-stats',                // 获取内存统计
+    MEMORY_SAMPLE_EVENT = 'memory-sample-event',          // 内存采样事件（主进程 -> 渲染进程，每 500ms）
 }

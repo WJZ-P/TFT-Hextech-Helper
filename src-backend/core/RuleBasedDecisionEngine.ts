@@ -1,5 +1,5 @@
 import { GameStageType } from "../TFTProtocol";
-import type { ActionPlan, DecisionContext, DecisionEngine, ObservedState, ObservedUnit } from "./types";
+import type { ActionPlan, DecisionContext, DecisionEngine, ObservedState, ObservedUnit, ShopOffer } from "./types";
 
 const DEFAULT_ECONOMY_FLOOR = 30;
 const DEFAULT_STABILIZE_HP_THRESHOLD = 42;
@@ -135,6 +135,132 @@ function computeEconomyFloor(state: ObservedState, context: DecisionContext, par
     return base;
 }
 
+/**
+ * 评估单个融合路线的强度
+ * @param board 当前棋盘
+ * @param bench 备战席（用于计算备战潜力）
+ * @param shop 商店
+ * @param targetNames 目标棋子名集合
+ * @returns { baseScore: number, synergyCount: number, unitStrength: number }
+ */
+function evaluateFusionPath(
+    board: ObservedUnit[],
+    _bench: ObservedUnit[],
+    shop: ShopOffer[],
+    targetNames: Set<string>
+): { baseScore: number; synergyCount: number; unitStrength: number } {
+    // 计算棋盘强度
+    const currentStrength = boardStrength(board);
+    
+    // 计算目标棋子协同数
+    let synergyCount = 0;
+    for (const unit of board) {
+        if (targetNames.has(unit.name)) {
+            synergyCount++;
+        }
+    }
+    
+    // 评估商店购买潜力
+    let shopPotential = 0;
+    for (const offer of shop) {
+        if (offer.unit && targetNames.has(offer.unit.name)) {
+            shopPotential += unitPower(offer.unit);
+        }
+    }
+    
+    // 基础评分 = 棋盘强度 + 协同数*2 + 商店潜力
+    const baseScore = currentStrength + synergyCount * 2 + shopPotential;
+    
+    return { baseScore, synergyCount, unitStrength: currentStrength };
+}
+
+/**
+ * 并行评估多个融合路线
+ * @param state 游戏状态
+ * @param context 决策上下文
+ * @param parsed 阶段解析结果
+ * @returns 排序后的融合路线列表（按 adjustedScore 降序）
+ */
+function evaluateMultiFusionPaths(
+    state: ObservedState,
+    context: DecisionContext,
+    parsed: ParsedStage | null
+): Array<{ path: string; baseScore: number; adjustedScore: number; synergyCount: number }> {
+    const targetNames = new Set(context.targetChampionNames ?? []);
+    
+    // 评估当前路线
+    const currentPath = evaluateFusionPath(state.board, state.bench, state.shop, targetNames);
+    
+    // 构建所有路线结果
+    const results: Array<{ path: string; baseScore: number; adjustedScore: number; synergyCount: number }> = [];
+    
+    // 添加当前路线
+    results.push({
+        path: "current",
+        baseScore: currentPath.baseScore,
+        synergyCount: currentPath.synergyCount,
+        adjustedScore: computeRiskAdjustedScore(currentPath.baseScore, state, context, parsed),
+    });
+    
+    // 评估备选路线（假设购买商店中的目标棋子）
+    for (const offer of state.shop) {
+        if (offer.unit && targetNames.has(offer.unit.name)) {
+            const altBoard = [...state.board, offer.unit];
+            const altResult = evaluateFusionPath(altBoard, state.bench, state.shop, targetNames);
+            results.push({
+                path: `buy-${offer.unit.name}`,
+                baseScore: altResult.baseScore,
+                synergyCount: altResult.synergyCount,
+                adjustedScore: computeRiskAdjustedScore(altResult.baseScore, state, context, parsed),
+            });
+        }
+    }
+    
+    // 按 adjustedScore 降序排序
+    results.sort((a, b) => b.adjustedScore - a.adjustedScore);
+    
+    return results;
+}
+
+/**
+ * 计算风险调整评分
+ * @param baseScore 基础评分
+ * @param state 游戏状态
+ * @param context 决策上下文
+ * @param parsed 阶段解析结果
+ * @returns 调整后的评分（0-100 范围）
+ */
+function computeRiskAdjustedScore(
+    baseScore: number,
+    state: ObservedState,
+    context: DecisionContext,
+    parsed: ParsedStage | null
+): number {
+    const hpThreshold = context.stabilizeHpThreshold ?? DEFAULT_STABILIZE_HP_THRESHOLD;
+    const hp = state.hp ?? 100;
+    const economyFloor = computeEconomyFloor(state, context, parsed);
+    const weakBoard = boardStrength(state.board) < expectedBoardStrengthByStage(parsed, state.level);
+    
+    // 计算风险因子
+    const riskHp = Math.max(0, hpThreshold - hp) / hpThreshold;
+    const econGap = Math.max(0, economyFloor - state.gold) / Math.max(1, economyFloor);
+    const weakBoardRatio = weakBoard ? 0.5 : 0;
+    
+    // 风险评分
+    const riskScore = riskHp * 1.8 + econGap * 1.2 + weakBoardRatio;
+    
+    // 调整幅度（0-30 范围）
+    const priorityDelta = Math.round(riskScore * 10);
+    
+    // 低血量时大幅提升优先级
+    const mustStabilize = hp <= hpThreshold;
+    if (mustStabilize) {
+        return Math.min(100, Math.round(baseScore + priorityDelta + 20));
+    }
+    
+    return Math.min(100, Math.round(baseScore + priorityDelta));
+}
+
 export class RuleBasedDecisionEngine implements DecisionEngine {
     public generatePlan(state: ObservedState, context: DecisionContext = {}): ActionPlan[] {
         const plans: ActionPlan[] = [];
@@ -150,6 +276,10 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
         const shouldProtectLossStreak = streak <= -3 && hp > hpThreshold + 10 && parsed?.stage !== undefined && parsed.stage <= 4;
         const shouldProtectWinStreak = streak >= 3 && hp > hpThreshold && parsed?.stage !== undefined && parsed.stage <= 4;
         const mustStabilize = hp <= hpThreshold || (weakBoard && !shouldProtectLossStreak);
+        
+        // 评估多融合路线，用于调整优先级
+        const fusionPaths = targetNames.size > 0 ? evaluateMultiFusionPaths(state, context, parsed) : [];
+        const bestFusionScore = fusionPaths[0]?.adjustedScore ?? 50;
 
         let tick = 0;
         const addPlan = (
@@ -205,7 +335,7 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
         let spent = 0;
         const midgameRecoveryLevel = (isKeyRound(parsed, 4, 2) || isKeyRound(parsed, 4, 5)) && state.level < 8 && hp > hpThreshold + 4 && state.gold >= 20 && state.gold < 30;
         const lateHealthyPreserve = isKeyRound(parsed, 5, 1) && state.level < 9 && hp > hpThreshold + 10 && state.gold >= 40;
-        const staleTargetPairPivot = highestTargetPairCount < 2 && ((isKeyRound(parsed, 4, 2) && hp > hpThreshold + 6 && state.gold >= 24) || (isKeyRound(parsed, 5, 1) && hp > hpThreshold + 10 && state.gold >= 32));
+        const staleTargetPairPivot = highestTargetPairCount < 2 && ((isKeyRound(parsed, 4, 2) && hp > hpThreshold + 6 && state.gold >= 24) || (isKeyRound(parsed, 4, 5) && hp > hpThreshold + 6 && state.gold >= 24) || (isKeyRound(parsed, 5, 1) && hp > hpThreshold + 10 && state.gold >= 32));
         const dropLowValueChase = parsed !== null && parsed.stage >= 5 && hp <= hpThreshold && highestTargetPairCount < 2;
 
         if ((isKeyRound(parsed, 4, 2) || isKeyRound(parsed, 5, 1)) && highestTargetPairCount >= 2 && hp > hpThreshold + 8 && state.gold >= 24) {
@@ -250,9 +380,14 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
                 continue;
             }
 
+            // 使用融合评分调整优先级
+            const basePriority = canUpgradeSoon ? 95 : isTarget ? 90 : 72;
+            const fusionBoost = isTarget ? Math.round((bestFusionScore - 50) / 10) : 0;
+            const adjustedPriority = Math.min(100, basePriority + fusionBoost);
+            
             addPlan(
                 "BUY",
-                canUpgradeSoon ? 95 : isTarget ? 90 : 72,
+                adjustedPriority,
                 canUpgradeSoon
                     ? `检测到 ${offer.unit.name} 可合成升星，优先补对子`
                     : isTarget

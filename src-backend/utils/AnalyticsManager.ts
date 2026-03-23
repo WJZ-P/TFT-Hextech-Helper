@@ -62,6 +62,22 @@ export enum AnalyticsEvent {
     LINEUP_SELECTED = 'lineup_selected',
 }
 
+/**
+ * GA4 Measurement Protocol 事件结构
+ */
+interface Ga4Event {
+    name: string;
+    params: Record<string, string | number>;
+}
+
+/**
+ * GA4 Measurement Protocol 请求体结构
+ */
+interface Ga4Payload {
+    client_id: string;
+    events: Ga4Event[];
+}
+
 // ============================================================================
 // AnalyticsManager 类
 // ============================================================================
@@ -200,13 +216,12 @@ class AnalyticsManager {
      * @description 使用 Electron 的 net.fetch 发送请求
      *              net.fetch 的优势：会自动使用系统代理设置
      */
-    private async sendToGA(payload: object): Promise<void> {
+    private async sendToGA(payload: Ga4Payload): Promise<void> {
         const endpoint = this.debugMode ? GA_DEBUG_ENDPOINT : GA_ENDPOINT;
 
         // 调试模式下打印请求详情，方便排查
         if (this.debugMode) {
-            const events = (payload as any).events;
-            const eventNames = events?.map((e: any) => e.name).join(', ') ?? '未知';
+            const eventNames = payload.events.map((e) => e.name).join(', ') ?? '未知';
             console.log(`📊 [Analytics] 正在发送到: ${this.debugMode ? '调试端点' : '正式端点'}`);
             console.log(`📊 [Analytics] 事件: ${eventNames}`);
         }
@@ -232,7 +247,7 @@ class AnalyticsManager {
             if (!response.ok && response.status !== 204) {
                 console.warn(`📊 [Analytics] 请求返回非成功状态: ${response.status}`);
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             // 网络错误等，只警告不抛出（不影响主流程）
             console.warn('📊 [Analytics] 网络请求失败:', error);
         }

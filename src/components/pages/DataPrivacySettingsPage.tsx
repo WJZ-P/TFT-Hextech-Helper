@@ -126,6 +126,23 @@ const SaveButton = styled.button<{ theme: ThemeType }>`
     }
 `;
 
+const DeleteButton = styled.button<{ theme: ThemeType }>`
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin-top: ${props => props.theme.spacing.small};
+    margin-left: 12px;
+    transition: opacity 0.2s;
+
+    &:hover {
+        opacity: 0.85;
+    }
+`;
+
 const StatusMessage = styled.div<{ $type: 'success' | 'error' }>`
     padding: 0.5rem 1rem;
     border-radius: 4px;
@@ -203,6 +220,19 @@ export default function DataPrivacySettingsPage() {
             setIsSaving(false);
         }
     }, [config]);
+
+    // 删除本地所有数据（最小实现：清空 localStorage 并展示结果）
+    const handleDeleteAll = useCallback(() => {
+        const ok = window.confirm('确认删除所有本地数据吗？此操作不可撤销。');
+        if (!ok) return;
+
+        try {
+            localStorage.clear();
+            setSaveMessage({ text: '本地数据已删除', type: 'success' });
+        } catch (e) {
+            setSaveMessage({ text: '删除失败，请重试', type: 'error' });
+        }
+    }, []);
 
     return (
         <PageWrapper>
@@ -320,10 +350,15 @@ export default function DataPrivacySettingsPage() {
                 </DataList>
             </Section>
 
-            {/* 保存按钮 */}
-            <SaveButton onClick={handleSave} disabled={isSaving}>
-                {isSaving ? '保存中...' : '保存设置'}
-            </SaveButton>
+            {/* 保存与删除按钮 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <SaveButton onClick={handleSave} disabled={isSaving}>
+                    {isSaving ? '保存中...' : '保存设置'}
+                </SaveButton>
+                <DeleteButton onClick={handleDeleteAll}>
+                    删除所有本地数据
+                </DeleteButton>
+            </div>
 
             {saveMessage && (
                 <StatusMessage $type={saveMessage.type}>

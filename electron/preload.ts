@@ -118,20 +118,24 @@ export type ExposedIpcRenderer = typeof exposedIpcRenderer
 contextBridge.exposeInMainWorld('ipcRenderer', exposedIpcRenderer)
 
 const ipcApi = {
-    on: (channel: string, callback: (...args: any[]) => void) => {
-        const listener = (_event: IpcRendererEvent, ...args: any[]) => {
-            callback(...args)
-        }
-        //  监听指定频道
-        ipcRenderer.on(channel, listener)
-        //  返回一个清理函数
+    on: (channel: string, callback: (...args: unknown[]) => void) => {
+        const listener = (_event: IpcRendererEvent, ...args: unknown[]) => {
+            try {
+                callback(...args);
+            } catch (err) {
+                // prevent renderer exceptions from bubbling to main
+                // eslint-disable-next-line no-console
+                console.error('[Preload] ipc.on callback error:', err);
+            }
+        };
+        ipcRenderer.on(channel, listener);
         return () => {
-            ipcRenderer.removeListener(channel, listener)
-        }
+            ipcRenderer.removeListener(channel, listener as any);
+        };
     }
-}
-export type IpcApi = typeof ipcApi
-contextBridge.exposeInMainWorld('ipc', ipcApi)
+};
+export type IpcApi = typeof ipcApi;
+contextBridge.exposeInMainWorld('ipc', ipcApi);
 
 const configApi = {
     backup: (): Promise<{ data?: any; error?: string }> => {
@@ -450,5 +454,44 @@ const lcuApi = {
 }
 export type LcuApi = typeof lcuApi
 contextBridge.exposeInMainWorld('lcu', lcuApi)
+
+// ===================== 决策链路 Debug API =====================
+const decisionApi = {
+    /** 获取最新决策链路数据 */
+    getLatest: (): Promise<{ plans: any[]; reasoning: string[]; scores: number[]; timestamp: number }> => {
+        return ipcRenderer.invoke(IpcChannel.DECISION_GET_LATEST);
+    },
+    /** 监听决策链路更新事件 */
+    onChainUpdated: (callback: (data: any) => void): (() => void) => {
+        const listener = (_event: IpcRendererEvent, data: any) => callback(data);
+        ipcRenderer.on(IpcChannel.DECISION_CHAIN_UPDATED, listener);
+        return () => ipcRenderer.removeListener(IpcChannel.DECISION_CHAIN_UPDATED, listener);
+    },
+}
+export type DecisionApi = typeof decisionApi
+contextBridge.exposeInMainWorld('decision', decisionApi)
+
+// ===================== 内存监控 API =====================
+const memoryApi = {
+    /** 获取当前内存使用统计 */
+    getStats: (): Promise<{
+        timestamp: number;
+        rss: number;
+        heapTotal: number;
+        heapUsed: number;
+        external: number;
+        arrayBuffers: number;
+    }> => {
+        return ipcRenderer.invoke(IpcChannel.MEMORY_GET_STATS);
+    },
+    /** 监听内存采样事件（每 500ms 推送） */
+    onSampleEvent: (callback: (stats: any) => void): (() => void) => {
+        const listener = (_event: IpcRendererEvent, stats: any) => callback(stats);
+        ipcRenderer.on(IpcChannel.MEMORY_SAMPLE_EVENT, listener);
+        return () => ipcRenderer.removeListener(IpcChannel.MEMORY_SAMPLE_EVENT, listener);
+    },
+}
+export type MemoryApi = typeof memoryApi
+contextBridge.exposeInMainWorld('memory', memoryApi)
 
 // https://127.0.0.1:2999/liveclientdata/allgamedata    开游戏后，这个url会有一些数据推送。

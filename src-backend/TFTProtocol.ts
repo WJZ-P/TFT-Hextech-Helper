@@ -900,3 +900,79 @@ export interface TeamComposition {
     midGame: LineupUnit[];
     lateGame: LineupUnit[];
 }
+
+// ==========================================
+// 多分辨率支持
+// ==========================================
+
+/** 基准分辨率（所有百分比坐标的参考基准） */
+export const BASE_RESOLUTION = { width: 1024, height: 768 };
+
+/** 支持的分辨率列表 */
+export type SupportedResolution = 
+    | { width: 960; height: 540; name: "720p" }
+    | { width: 1024; height: 768; name: "base" }
+    | { width: 1920; height: 1080; name: "1080p" }
+    | { width: 2560; height: 1440; name: "1440p" };
+
+/**
+ * 将百分比坐标区域转换为目标分辨率的像素区域
+ * 
+ * 所有 region 定义使用百分比坐标（0-1），此函数负责转换为实际像素。
+ * 
+ * @param region 百分比坐标区域 { leftTop: {x, y}, rightBottom: {x, y} }
+ * @param targetRes 目标分辨率
+ * @returns 像素坐标区域
+ * 
+ * @example
+ * const region = { leftTop: { x: 0.25, y: 0.01 }, rightBottom: { x: 0.42, y: 0.035 } };
+ * const pixelRegion = scaleRegionToResolution(region, { width: 1920, height: 1080 });
+ * // => { leftTop: { x: 480, y: 10.8 }, rightBottom: { x: 806.4, y: 37.8 } }
+ */
+export function scaleRegionToResolution(
+    region: { leftTop: { x: number; y: number }; rightBottom: { x: number; y: number } },
+    targetRes: { width: number; height: number }
+): { leftTop: { x: number; y: number }; rightBottom: { x: number; y: number } } {
+    return {
+        leftTop: {
+            x: Math.round(region.leftTop.x * targetRes.width),
+            y: Math.round(region.leftTop.y * targetRes.height),
+        },
+        rightBottom: {
+            x: Math.round(region.rightBottom.x * targetRes.width),
+            y: Math.round(region.rightBottom.y * targetRes.height),
+        },
+    };
+}
+
+/**
+ * 将百分比坐标点转换为目标分辨率的像素坐标
+ * 
+ * @param point 百分比坐标点 { x, y }
+ * @param targetRes 目标分辨率
+ * @returns 像素坐标点
+ */
+export function scalePointToResolution(
+    point: { x: number; y: number },
+    targetRes: { width: number; height: number }
+): { x: number; y: number } {
+    return {
+        x: Math.round(point.x * targetRes.width),
+        y: Math.round(point.y * targetRes.height),
+    };
+}
+
+/**
+ * 获取分辨率的缩放因子（相对于基准分辨率）
+ * 
+ * @param targetRes 目标分辨率
+ * @returns 缩放因子 { scaleX, scaleY }
+ */
+export function getResolutionScaleFactor(
+    targetRes: { width: number; height: number }
+): { scaleX: number; scaleY: number } {
+    return {
+        scaleX: targetRes.width / BASE_RESOLUTION.width,
+        scaleY: targetRes.height / BASE_RESOLUTION.height,
+    };
+}

@@ -67,6 +67,10 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["OVERLAY_SHOW"] = "overlay-show";
   IpcChannel2["OVERLAY_CLOSE"] = "overlay-close";
   IpcChannel2["OVERLAY_UPDATE_PLAYERS"] = "overlay-update-players";
+  IpcChannel2["DECISION_GET_LATEST"] = "decision-get-latest";
+  IpcChannel2["DECISION_CHAIN_UPDATED"] = "decision-chain-updated";
+  IpcChannel2["MEMORY_GET_STATS"] = "memory-get-stats";
+  IpcChannel2["MEMORY_SAMPLE_EVENT"] = "memory-sample-event";
   return IpcChannel2;
 })(IpcChannel || {});
 if (typeof globalThis.Module === "undefined") {
@@ -430,3 +434,29 @@ const lcuApi = {
   }
 };
 electron.contextBridge.exposeInMainWorld("lcu", lcuApi);
+const decisionApi = {
+  /** 获取最新决策链路数据 */
+  getLatest: () => {
+    return electron.ipcRenderer.invoke(IpcChannel.DECISION_GET_LATEST);
+  },
+  /** 监听决策链路更新事件 */
+  onChainUpdated: (callback) => {
+    const listener = (_event, data) => callback(data);
+    electron.ipcRenderer.on(IpcChannel.DECISION_CHAIN_UPDATED, listener);
+    return () => electron.ipcRenderer.removeListener(IpcChannel.DECISION_CHAIN_UPDATED, listener);
+  }
+};
+electron.contextBridge.exposeInMainWorld("decision", decisionApi);
+const memoryApi = {
+  /** 获取当前内存使用统计 */
+  getStats: () => {
+    return electron.ipcRenderer.invoke(IpcChannel.MEMORY_GET_STATS);
+  },
+  /** 监听内存采样事件（每 500ms 推送） */
+  onSampleEvent: (callback) => {
+    const listener = (_event, stats) => callback(stats);
+    electron.ipcRenderer.on(IpcChannel.MEMORY_SAMPLE_EVENT, listener);
+    return () => electron.ipcRenderer.removeListener(IpcChannel.MEMORY_SAMPLE_EVENT, listener);
+  }
+};
+electron.contextBridge.exposeInMainWorld("memory", memoryApi);

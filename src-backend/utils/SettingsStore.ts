@@ -1,5 +1,6 @@
 import type {Rectangle} from 'electron';
 import Store from 'electron-store';
+// keep import minimal - don't import unused types
 import {TFTMode} from "../TFTProtocol";
 import {LogMode} from "../types/AppTypes";
 
@@ -147,10 +148,10 @@ class SettingsStore {
             gameRegion: GameRegion.CN,   // 默认国服
             gameClient: GameClient.RIOT_PC, // 默认电脑 Riot 客户端
         }
+        // electron-store Options don't accept projectName; keep usage simple
         this.store = new Store<AppSettings>({
-            projectName: "tft-hextech-helper",
             defaults,
-        } as any)
+        });
     }
 
     /**
@@ -167,7 +168,8 @@ class SettingsStore {
     public get<K extends DotNotationKeyOf<AppSettings>>(
         key: K
     ): DotNotationValueFor<AppSettings, K> {
-        return this.store.get(key as any);
+        // electron-store expects a string key at runtime; cast via string to satisfy TS
+        return this.store.get(key as string) as DotNotationValueFor<AppSettings, K>;
     }
 
     /**
@@ -184,7 +186,7 @@ class SettingsStore {
         key: K,
         value: DotNotationValueFor<AppSettings, K>
     ): void {
-        this.store.set(key as any, value);
+        this.store.set(key as string, value as unknown);
     }
 
     public getRawStore(): Store<AppSettings> {
@@ -198,12 +200,20 @@ class SettingsStore {
      */
     public setMultiple(settings: Partial<AppSettings>): void {
         // store.set(object) 会自动合并它们
-        this.store.set(settings as AppSettings);
+        // electron-store only exposes a typed overload accepting the full
+        // AppSettings; cast here is safe because set() will merge partials.
+        this.store.set(settings as unknown as AppSettings);
     }
 
     //  返回的是unsubscribe，方便取消订阅
     public onDidChange<K extends keyof AppSettings>(key: K, callback: (newValue: AppSettings[K], oldValue: AppSettings[K]) => void) {
-        return this.store.onDidChange(key, callback as any)
+        // electron-store's callback comes in as unknown values; forward them to the
+        // typed callback after a safe cast.
+        // electron-store's onDidChange accepts either a top-level key or a
+        // dot-notated path. Cast key into that union to satisfy overloads.
+        return this.store.onDidChange(key as unknown as DotNotationKeyOf<AppSettings>, (newValue: unknown, oldValue: unknown) => {
+            callback(newValue as AppSettings[K], oldValue as AppSettings[K]);
+        });
     }
 }
 

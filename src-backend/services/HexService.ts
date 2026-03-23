@@ -199,7 +199,7 @@ export class HexService {
 
         // 2. 持久化统计：历史总局数 +1
         const currentTotal = settingsStore.get('statistics.totalGamesPlayed') as number;
-        settingsStore.set('statistics.totalGamesPlayed' as any, currentTotal + 1);
+        settingsStore.set('statistics.totalGamesPlayed', currentTotal + 1);
 
         logger.info(`[HexService] 📊 本局完成！本次会话: ${this._sessionGamesPlayed} 局, 历史总计: ${currentTotal + 1} 局`);
 

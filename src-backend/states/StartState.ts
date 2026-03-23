@@ -36,8 +36,8 @@ export class StartState implements IState {
         logger.info("[StartState] 正在初始化...");
 
         // 启动阶段预热 TFT 数据快照，不阻塞主流程
-        void tftDataService.refresh(false).catch((error: any) => {
-            logger.warn(`[StartState] TFT 数据预热失败（将继续使用本地快照）: ${error?.message ?? error}`);
+        void tftDataService.refresh(false).catch((error: unknown) => {
+            logger.warn(`[StartState] TFT 数据预热失败（将继续使用本地快照）: ${error instanceof Error ? error.message : String(error)}`);
         });
 
         const gameClient = settingsStore.get('gameClient');
