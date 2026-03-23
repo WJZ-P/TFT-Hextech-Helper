@@ -1,4 +1,5 @@
-import { strict as assert } from "assert";
+import test from "node:test";
+import assert from "node:assert/strict";
 import { RuleBasedDecisionEngine } from "../../src-backend/core/RuleBasedDecisionEngine";
 import type { DecisionContext } from "../../src-backend/core/types";
 
@@ -20,29 +21,27 @@ const baseState: any = {
     patch: "",
 };
 
-describe("Strategy JSON export/import", () => {
-    it("round trips a generated strategy", () => {
-        const engine = new RuleBasedDecisionEngine();
-        const ctx: DecisionContext = {};
-        const json = engine.exportStrategy(baseState, ctx);
-        assert.equal(typeof json, "string");
+test("round trips a generated strategy", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const ctx: DecisionContext = {};
+    const json = engine.exportStrategy(baseState, ctx);
+    assert.equal(typeof json, "string");
 
-        const ok = engine.importStrategy(json, ctx);
-        assert.equal(ok, true, "import should accept valid exported JSON");
-    });
+    const ok = engine.importStrategy(json, ctx);
+    assert.equal(ok, true, "import should accept valid exported JSON");
+});
 
-    it("rejects malformed JSON", () => {
-        const engine = new RuleBasedDecisionEngine();
-        const ctx: DecisionContext = {};
-        const ok = engine.importStrategy("not a json", ctx);
-        assert.equal(ok, false, "malformed JSON should be rejected");
-    });
+test("rejects malformed JSON", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const ctx: DecisionContext = {};
+    const ok = engine.importStrategy("not a json", ctx);
+    assert.equal(ok, false, "malformed JSON should be rejected");
+});
 
-    it("rejects invalid structure", () => {
-        const engine = new RuleBasedDecisionEngine();
-        const ctx: DecisionContext = {};
-        const bad = JSON.stringify({ planType: "UNKNOWN", priority: 999, reason: 123 });
-        const ok = engine.importStrategy(bad, ctx);
-        assert.equal(ok, false, "invalid strategy fields should be rejected");
-    });
+test("rejects invalid structure", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const ctx: DecisionContext = {};
+    const bad = JSON.stringify({ planType: "UNKNOWN", priority: 999, reason: 123 });
+    const ok = engine.importStrategy(bad, ctx);
+    assert.equal(ok, false, "invalid strategy fields should be rejected");
 });
