@@ -50,9 +50,9 @@ test("getWinRate respects windowSize smaller than history length", () => {
     for (let i = 0; i < 6; i++) dataCollector.recordMatchOutcome("win");
     for (let i = 0; i < 4; i++) dataCollector.recordMatchOutcome("loss");
 
-    // last 5 should be: win, win, loss, loss, loss -> wins = 2
+    // With 6 wins followed by 4 losses, the last 5 entries are: win, loss, loss, loss, loss -> wins = 1
     const wr5 = dataCollector.getWinRate(5);
-    assert.equal(wr5, 2 / 5);
+    assert.equal(wr5, 1 / 5);
 
     // windowSize larger than history -> use full history
     const wr20 = dataCollector.getWinRate(20);
