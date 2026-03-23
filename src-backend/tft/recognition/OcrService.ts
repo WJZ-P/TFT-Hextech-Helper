@@ -15,6 +15,7 @@
  */
 
 import Tesseract, { createWorker, PSM } from "tesseract.js";
+import crypto from "crypto";
 import path from "path";
 import { logger } from "../../utils/Logger";
 import { TFTMode, getChessDataForMode } from "../../TFTProtocol";
@@ -101,6 +102,18 @@ export class OcrService {
     /** Worker 健康追踪元数据 */
     private workerHealth: Map<OcrWorkerType, WorkerHealthMeta> = new Map();
 
+    /** 简单的内存缓存：imageHash -> recognized text */
+    private ocrCache: Map<string, { text: string; createdAt: number; lastUsedAt: number; hits: number }> = new Map();
+
+    /** 正在进行的识别请求（去重同一图像的并发识别） */
+    private recognitionPromises: Map<string, Promise<string>> = new Map();
+
+    /** 最大缓存条目数（可通过环境变量调整） */
+    private maxCacheEntries: number = parseInt(process.env.OCR_CACHE_MAX_ENTRIES ?? "1000", 10);
+
+    /** 当前 worker 是否为优化模式创建（用于在模式切换时重建 worker） */
+    private optimizedModeActive: boolean | null = null;
+
     /** switchChessWorker 防抖定时器 */
     private switchChessDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -174,49 +187,118 @@ export class OcrService {
         await this.recycleIfNeeded(type);
 
         const worker = await this.getWorker(type);
+        // 1) 计算图像 hash，用于缓存及并发去重
+        const imageHash = this.computeImageHash(imageBuffer);
 
-        // Retry logic: 最大 3 次重试，指数回退：100ms, 200ms, 400ms
-        const MAX_RETRIES = 3;
-        const backoffDelays = [100, 200, 400];
+        // 2) 先检查缓存
+        const cached = this.ocrCache.get(imageHash);
+        if (cached) {
+            cached.hits++;
+            cached.lastUsedAt = Date.now();
+            // 更新健康追踪（不计入 worker recognitionCount）
+            memoryMonitor.sample(`ocr:cache_hit:${type}`);
+            return cached.text;
+        }
 
-        let lastError: unknown;
-        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-            try {
-                const result = await worker.recognize(imageBuffer);
+        // 3) 去重并发请求：如果已有相同图像的识别在进行中，直接等待结果
+        const pending = this.recognitionPromises.get(imageHash);
+        if (pending) {
+            return pending;
+        }
 
-                // 更新健康追踪 + 内存采样（仅在成功后执行一次）
-                this.updateHealthMeta(type);
-                memoryMonitor.sample(`ocr:${type}`);
+        // 4) Retry logic with mild backoff; faster path tries fewer retries when optimizedModeActive
+        const MAX_RETRIES = this.optimizedModeActive ? 1 : 3;
+        const backoffDelays = [80, 160, 320];
 
-                return result.data.text.trim();
-            } catch (error: unknown) {
-                lastError = error;
+        const recognitionPromise = (async (): Promise<string> => {
+            let lastError: unknown;
+            for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+                try {
+                    const result = await worker.recognize(imageBuffer);
 
-                // 如果还可以重试，则记录警告并等待回退时间
-                if (attempt < MAX_RETRIES) {
-                    const delay = backoffDelays[attempt] ?? backoffDelays[backoffDelays.length - 1];
-                    logger.warn(
-                        `[OcrService] OCR 识别失败 (type=${type}) 第 ${attempt + 1} 次尝试失败，将在 ${delay}ms 后重试: ${
-                            error instanceof Error ? error.message : String(error)
+                    const text = result.data.text.trim();
+
+                    // 更新健康追踪 + 内存采样（仅在成功后执行一次）
+                    this.updateHealthMeta(type);
+                    memoryMonitor.sample(`ocr:${type}`);
+
+                    // 将结果写入缓存
+                    this.addToCache(imageHash, text);
+
+                    return text;
+                } catch (error: unknown) {
+                    lastError = error;
+                    if (attempt < MAX_RETRIES) {
+                        const delay = backoffDelays[attempt] ?? backoffDelays[backoffDelays.length - 1];
+                        logger.warn(
+                            `[OcrService] OCR 识别失败 (type=${type}) 第 ${attempt + 1} 次尝试失败，将在 ${delay}ms 后重试: ${
+                                error instanceof Error ? error.message : String(error)
+                            }`
+                        );
+                        await new Promise((resolve) => setTimeout(resolve, delay));
+                        continue;
+                    }
+
+                    logger.error(
+                        `[OcrService] OCR 识别最终失败 (type=${type})，共尝试 ${MAX_RETRIES + 1} 次: ${
+                            error instanceof Error ? error.stack ?? error.message : String(error)
                         }`
                     );
-                    // 等待指定的回退时间
-                    await new Promise((resolve) => setTimeout(resolve, delay));
-                    continue;
+                    throw error;
                 }
+            }
+            throw lastError as Error;
+        })();
 
-                // 已超出重试次数，记录错误并抛出
-                logger.error(
-                    `[OcrService] OCR 识别最终失败 (type=${type})，共尝试 ${MAX_RETRIES + 1} 次: ${
-                        error instanceof Error ? error.stack ?? error.message : String(error)
-                    }`
-                );
-                throw error;
+        // 登记进行中的识别请求，避免重复执行
+        this.recognitionPromises.set(imageHash, recognitionPromise);
+
+        try {
+            const res = await recognitionPromise;
+            return res;
+        } finally {
+            // 清理进行中请求
+            this.recognitionPromises.delete(imageHash);
+        }
+    }
+
+    /**
+     * 计算图片的哈希值（用于缓存 key）
+     */
+    private computeImageHash(buffer: Buffer): string {
+        // 使用 SHA-1 以减小 key 长度
+        return crypto.createHash("sha1").update(buffer).digest("hex");
+    }
+
+    /**
+     * 将识别结果加入缓存并进行简单的 LRU-like 淘汰
+     */
+    private addToCache(imageHash: string, text: string): void {
+        if (this.ocrCache.has(imageHash)) {
+            const entry = this.ocrCache.get(imageHash)!;
+            entry.text = text;
+            entry.lastUsedAt = Date.now();
+            entry.hits++;
+            return;
+        }
+
+        // 淘汰最旧或最少命中项以保持缓存大小
+        if (this.ocrCache.size >= this.maxCacheEntries) {
+            // 找到最久未使用的 entry
+            let oldestKey: string | null = null;
+            let oldestAt = Number.MAX_SAFE_INTEGER;
+            for (const [k, v] of this.ocrCache.entries()) {
+                if (v.lastUsedAt < oldestAt) {
+                    oldestAt = v.lastUsedAt;
+                    oldestKey = k;
+                }
+            }
+            if (oldestKey) {
+                this.ocrCache.delete(oldestKey);
             }
         }
 
-        // 理论上不可达，但为了类型安全，抛出上次捕获的错误
-        throw lastError as Error;
+        this.ocrCache.set(imageHash, { text, createdAt: Date.now(), lastUsedAt: Date.now(), hits: 0 });
     }
 
     /**
@@ -349,10 +431,11 @@ export class OcrService {
             cachePath: this.langPath,
         });
 
-        // 配置：只识别数字和连字符
+        // 配置：只识别数字和连字符；在优化模式下切换 OCR 引擎模式以加速
         await worker.setParameters({
             tessedit_char_whitelist: "0123456789-",
             tessedit_pageseg_mode: PSM.SINGLE_LINE,
+            tessedit_ocr_engine_mode: String(this.optimizedModeActive ? 1 : 3),
         });
 
         this.gameStageWorker = worker;
@@ -408,6 +491,7 @@ export class OcrService {
             tessedit_char_whitelist: uniqueChars,
             tessedit_pageseg_mode: PSM.SINGLE_LINE,
             preserve_interword_spaces: "1",
+            tessedit_ocr_engine_mode: String(this.optimizedModeActive ? 1 : 3),
         });
 
         this.chessWorker = worker;
@@ -475,6 +559,26 @@ export class OcrService {
     }
 
     /**
+     * Toggle optimized OCR mode.
+     * - When enabled, we prefer faster OCR engine mode and fewer retries.
+     * - Toggling will rebuild all workers to ensure parameters take effect.
+     */
+    public async setOptimizedMode(enabled: boolean): Promise<void> {
+        if (this.optimizedModeActive === enabled) return;
+        this.optimizedModeActive = enabled;
+
+        logger.info(`[OcrService] Setting optimized OCR mode = ${enabled}`);
+
+        // Rebuild all workers to apply new parameters
+        await this.rebuildWorker(OcrWorkerType.GAME_STAGE);
+        await this.rebuildWorker(OcrWorkerType.CHESS);
+        await this.rebuildWorker(OcrWorkerType.LEVEL);
+        await this.rebuildWorker(OcrWorkerType.HUD_DIGITS);
+        await this.rebuildWorker(OcrWorkerType.PLAYER_NAME);
+        await this.rebuildWorker(OcrWorkerType.COMBAT_PHASE);
+    }
+
+    /**
      * 检查指定类型的 Worker 是否已就绪
      * @param type Worker 类型
      * @returns true 表示 Worker 已创建且可用
@@ -525,6 +629,7 @@ export class OcrService {
         await worker.setParameters({
             tessedit_char_whitelist: "0123456789/级",
             tessedit_pageseg_mode: PSM.SINGLE_LINE,
+            tessedit_ocr_engine_mode: String(this.optimizedModeActive ? 1 : 3),
         });
 
         this.levelWorker = worker;
@@ -552,6 +657,7 @@ export class OcrService {
         await worker.setParameters({
             tessedit_char_whitelist: "0123456789/",
             tessedit_pageseg_mode: PSM.SPARSE_TEXT,
+            tessedit_ocr_engine_mode: String(this.optimizedModeActive ? 1 : 3),
         });
 
         this.hudDigitsWorker = worker;
@@ -580,6 +686,7 @@ export class OcrService {
             tessedit_char_whitelist: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-",
             tessedit_pageseg_mode: PSM.SPARSE_TEXT,
             preserve_interword_spaces: "1",
+            tessedit_ocr_engine_mode: String(this.optimizedModeActive ? 1 : 3),
         });
 
         this.playerNameWorker = worker;
@@ -609,6 +716,7 @@ export class OcrService {
             tessedit_char_whitelist: "战斗环节",
             tessedit_pageseg_mode: PSM.SINGLE_LINE,
             preserve_interword_spaces: "1",
+            tessedit_ocr_engine_mode: String(this.optimizedModeActive ? 1 : 3),
         });
 
         this.combatPhaseWorker = worker;
@@ -667,6 +775,20 @@ export class OcrService {
 
         // 清空健康追踪
         this.workerHealth.clear();
+    }
+
+    /**
+     * 清空 OCR 结果缓存（测试/调试用）
+     */
+    public clearCache(): void {
+        this.ocrCache.clear();
+    }
+
+    /**
+     * 返回缓存统计信息（测试/监控用）
+     */
+    public getCacheStats(): { entries: number } {
+        return { entries: this.ocrCache.size };
     }
 }
 
