@@ -426,16 +426,17 @@ export class OcrService {
 
         logger.info("[OcrService] 正在创建游戏阶段识别 Worker...");
 
-        const worker = await createWorker("eng", 1, {
+        // OEM must be set during worker initialization, not via setParameters
+        // OEM 1 = LSTM_ONLY (faster), OEM 3 = DEFAULT (both engines)
+        const oem = this.optimizedModeActive ? 1 : 3;
+        const worker = await createWorker("eng", oem, {
             langPath: this.langPath,
             cachePath: this.langPath,
         });
 
-        // 配置：只识别数字和连字符；在优化模式下切换 OCR 引擎模式以加速
         await worker.setParameters({
             tessedit_char_whitelist: "0123456789-",
             tessedit_pageseg_mode: PSM.SINGLE_LINE,
-            tessedit_ocr_engine_mode: String(this.optimizedModeActive ? 1 : 3),
         });
 
         this.gameStageWorker = worker;
@@ -478,7 +479,9 @@ export class OcrService {
 
         logger.info(`[OcrService] 正在为模式 ${mode} 创建棋子名称识别 Worker...`);
 
-        const worker = await createWorker("chi_sim", 1, {
+        // OEM must be set during worker initialization, not via setParameters
+        const oem = this.optimizedModeActive ? 1 : 3;
+        const worker = await createWorker("chi_sim", oem, {
             langPath: this.langPath,
             cachePath: this.langPath,
         });
@@ -491,7 +494,6 @@ export class OcrService {
             tessedit_char_whitelist: uniqueChars,
             tessedit_pageseg_mode: PSM.SINGLE_LINE,
             preserve_interword_spaces: "1",
-            tessedit_ocr_engine_mode: String(this.optimizedModeActive ? 1 : 3),
         });
 
         this.chessWorker = worker;
@@ -620,7 +622,8 @@ export class OcrService {
 
         logger.info("[OcrService] 正在创建等级识别 Worker...");
 
-        const worker = await createWorker("chi_sim", 1, {
+        const oem = this.optimizedModeActive ? 1 : 3;
+        const worker = await createWorker("chi_sim", oem, {
             langPath: this.langPath,
             cachePath: this.langPath,
         });
@@ -629,7 +632,6 @@ export class OcrService {
         await worker.setParameters({
             tessedit_char_whitelist: "0123456789/级",
             tessedit_pageseg_mode: PSM.SINGLE_LINE,
-            tessedit_ocr_engine_mode: String(this.optimizedModeActive ? 1 : 3),
         });
 
         this.levelWorker = worker;
@@ -649,7 +651,8 @@ export class OcrService {
 
         logger.info("[OcrService] 正在创建安卓 HUD 数字识别 Worker...");
 
-        const worker = await createWorker("eng", 1, {
+        const oem = this.optimizedModeActive ? 1 : 3;
+        const worker = await createWorker("eng", oem, {
             langPath: this.langPath,
             cachePath: this.langPath,
         });
@@ -657,7 +660,6 @@ export class OcrService {
         await worker.setParameters({
             tessedit_char_whitelist: "0123456789/",
             tessedit_pageseg_mode: PSM.SPARSE_TEXT,
-            tessedit_ocr_engine_mode: String(this.optimizedModeActive ? 1 : 3),
         });
 
         this.hudDigitsWorker = worker;
@@ -677,7 +679,8 @@ export class OcrService {
 
         logger.info("[OcrService] 正在创建安卓 HUD 玩家名称识别 Worker...");
 
-        const worker = await createWorker("eng", 1, {
+        const oem = this.optimizedModeActive ? 1 : 3;
+        const worker = await createWorker("eng", oem, {
             langPath: this.langPath,
             cachePath: this.langPath,
         });
@@ -686,7 +689,6 @@ export class OcrService {
             tessedit_char_whitelist: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-",
             tessedit_pageseg_mode: PSM.SPARSE_TEXT,
             preserve_interword_spaces: "1",
-            tessedit_ocr_engine_mode: String(this.optimizedModeActive ? 1 : 3),
         });
 
         this.playerNameWorker = worker;
@@ -706,7 +708,8 @@ export class OcrService {
 
         logger.info("[OcrService] 正在创建战斗阶段识别 Worker...");
 
-        const worker = await createWorker("chi_sim", 1, {
+        const oem = this.optimizedModeActive ? 1 : 3;
+        const worker = await createWorker("chi_sim", oem, {
             langPath: this.langPath,
             cachePath: this.langPath,
         });
@@ -716,7 +719,6 @@ export class OcrService {
             tessedit_char_whitelist: "战斗环节",
             tessedit_pageseg_mode: PSM.SINGLE_LINE,
             preserve_interword_spaces: "1",
-            tessedit_ocr_engine_mode: String(this.optimizedModeActive ? 1 : 3),
         });
 
         this.combatPhaseWorker = worker;
