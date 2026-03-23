@@ -44,3 +44,6 @@ session-ses_304d.md
 session-ses_2fae.md
 # Ignore all session data files
 session-*.md
+
+# Coverage reports
+coverage/
