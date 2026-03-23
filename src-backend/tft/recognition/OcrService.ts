@@ -622,6 +622,7 @@ export class OcrService {
 
         logger.info("[OcrService] 正在创建等级识别 Worker...");
 
+        // OEM must be set during worker initialization, not via setParameters
         const oem = this.optimizedModeActive ? 1 : 3;
         const worker = await createWorker("chi_sim", oem, {
             langPath: this.langPath,
@@ -651,6 +652,7 @@ export class OcrService {
 
         logger.info("[OcrService] 正在创建安卓 HUD 数字识别 Worker...");
 
+        // OEM must be set during worker initialization, not via setParameters
         const oem = this.optimizedModeActive ? 1 : 3;
         const worker = await createWorker("eng", oem, {
             langPath: this.langPath,
@@ -679,6 +681,7 @@ export class OcrService {
 
         logger.info("[OcrService] 正在创建安卓 HUD 玩家名称识别 Worker...");
 
+        // OEM must be set during worker initialization, not via setParameters
         const oem = this.optimizedModeActive ? 1 : 3;
         const worker = await createWorker("eng", oem, {
             langPath: this.langPath,
@@ -708,6 +711,7 @@ export class OcrService {
 
         logger.info("[OcrService] 正在创建战斗阶段识别 Worker...");
 
+        // OEM must be set during worker initialization, not via setParameters
         const oem = this.optimizedModeActive ? 1 : 3;
         const worker = await createWorker("chi_sim", oem, {
             langPath: this.langPath,
