@@ -1,421 +1,71 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import styled, { keyframes } from 'styled-components';
-import {ThemeType} from "../../styles/theme.ts";
-import {toast} from "../toast/toast-core.ts";
+import styled from 'styled-components';
+import {
+    Box,
+    Typography,
+    Paper,
+    Tabs,
+    Tab,
+    Switch,
+    FormControl,
+    Select,
+    MenuItem,
+    Button,
+    TextField,
+    Divider,
+    Link,
+    Card,
+    CardContent,
+} from '@mui/material';
+
+import SettingsRemoteIcon from '@mui/icons-material/SettingsRemote';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import MonitorIcon from '@mui/icons-material/Monitor';
+import HistoryIcon from '@mui/icons-material/History';
+import SaveIcon from '@mui/icons-material/Save';
+import GitHubIcon from '@mui/icons-material/GitHub';
+import UpdateIcon from '@mui/icons-material/Update';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import DeveloperModeIcon from '@mui/icons-material/DeveloperMode';
+
+import OnboardingTour from './OnboardingTour.tsx';
+import { toast } from "../toast/toast-core.ts";
 import { logStore, LogAutoCleanThreshold } from "../../stores/logStore.ts";
-import { settingsStore } from "../../stores/settingsStore.ts"; // 全局设置状态
+import { settingsStore } from "../../stores/settingsStore.ts";
 import type { GameRegion, GameClient } from "../../types/GameTypes.ts";
 
 // -------------------------------------------------------------------
-// ✨ 样式组件定义 (Styled Components Definitions) ✨
+// ✨ 样式组件定义 (Styled Components) ✨
 // -------------------------------------------------------------------
 
-// 整个页面的根容器
-const PageWrapper = styled.div<{ theme: ThemeType }>`
-  background-color: ${props => props.theme.colors.background};
-  color: ${props => props.theme.colors.text};
-  padding: ${props => props.theme.spacing.small} ${props => props.theme.spacing.large};
+const PageWrapper = styled.div`
   height: 100vh;
-  overflow-y: auto;
-  transition: background-color 0.3s, color 0.3s;
-`;
-
-//  设置每一组设置的标头
-const SettingsHeader = styled.h2`
-  margin: ${props=>props.theme.spacing.small};
-  font-size: ${props=>props.theme.fontSizes.large};
-  text-align: start;
-  margin: ${props=>props.theme.spacing.medium} 8px 6px;
-`;
-
-// 用来包裹设置项的卡片
-const SettingsCard = styled.div`
-  background-color: ${props => props.theme.colors.elementBg};
-  border-radius: ${props => props.theme.borderRadius};
-  border: 1px solid ${props => props.theme.colors.border};
-  padding: ${props => props.theme.spacing.medium};
-  transition: background-color 0.3s, border-color 0.3s;
-`;
-
-// 单个设置项的容器
-const SettingItem = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  // 如果不是最后一个设置项，给它加一点下边距
-  &:not(:last-child) {
-    margin-bottom: ${props => props.theme.spacing.medium};
-    padding-bottom: ${props => props.theme.spacing.medium};
-    border-bottom: 1px solid ${props => props.theme.colors.divider};
-  }
-`;
-
-// 设置项左侧的图标和文字信息
-const SettingInfo = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${props => props.theme.spacing.large};
-`;
-
-const SettingText = styled.div`
-  h3 {
-    font-size: ${props => props.theme.fontSizes.medium};
-    font-weight: 600;
-    color: ${props => props.theme.colors.text};
-    text-align: start;
-  }
-
-  p {
-    font-size: ${props => props.theme.fontSizes.small};
-    color: ${props => props.theme.colors.textSecondary};
-    margin-top: 0.3rem;
-  }
-`;
-
-// 右侧的操作按钮
-const ActionButton = styled.button`
-  background-color: ${props => props.theme.colors.primary};
-  color: ${props => props.theme.colors.textOnPrimary};
-  border: none;
-  font-size: ${props => props.theme.fontSizes.small};
-  border-radius: ${props => props.theme.borderRadius};
-  padding: 0.6rem 1.2rem;
-  font-weight: bolder;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-
-  &:hover {
-    background-color: ${props => props.theme.colors.primaryHover};
-  }
-
-  &:disabled {
-    background-color: ${props => props.theme.colors.textDisabled};
-    cursor: not-allowed;
-  }
-`;
-
-// 下拉选择框样式
-const SelectWrapper = styled.select<{ theme: ThemeType }>`
-  background-color: ${props => props.theme.colors.elementBg};
-  color: ${props => props.theme.colors.text};
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: ${props => props.theme.borderRadius};
-  padding: 0.5rem 1rem;
-  font-size: ${props => props.theme.fontSizes.small};
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  min-width: 120px;
-
-  &:hover {
-    border-color: ${props => props.theme.colors.primary};
-  }
-
-  &:focus {
-    outline: none;
-    border-color: ${props => props.theme.colors.primary};
-    box-shadow: 0 0 0 2px ${props => props.theme.colors.primary}30;
-  }
-
-  option {
-    background-color: ${props => props.theme.colors.elementBg};
-    color: ${props => props.theme.colors.text};
-  }
-`;
-
-// 快捷键输入框样式
-const HotkeyInput = styled.div<{ $isRecording: boolean }>`
-  background-color: ${props => props.theme.colors.elementBg};
-  color: ${props => props.$isRecording ? props.theme.colors.primary : props.theme.colors.text};
-  border: 1px solid ${props => props.$isRecording ? props.theme.colors.primary : props.theme.colors.border};
-  border-radius: ${props => props.theme.borderRadius};
-  padding: 0.5rem 1rem;
-  font-size: ${props => props.theme.fontSizes.small};
-  min-width: 120px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  user-select: none;
-
-  &:hover {
-    border-color: ${props => props.theme.colors.primary};
-  }
-
-  &:focus {
-    outline: none;
-    border-color: ${props => props.theme.colors.primary};
-    box-shadow: 0 0 0 2px ${props => props.theme.colors.primary}30;
-  }
-`;
-
-// Toggle Switch 开关样式
-const ToggleSwitch = styled.label`
-  position: relative;
-  display: inline-block;
-  width: 48px;
-  height: 26px;
-  cursor: pointer;
-`;
-
-const ToggleSlider = styled.span<{ $isOn: boolean }>`
-  position: absolute;
-  top: 0;           /* ← 加上这个 */
-  left: 0;          /* ← 加上这个 */
-  width: 100%;
-  height: 100%;
-  background-color: ${props => props.$isOn ? props.theme.colors.primary : props.theme.colors.border};
-  border-radius: 26px;
-  transition: all 0.3s ease-in-out;
-
-  &::before {
-    content: '';
-    position: absolute;
-    height: 20px;
-    width: 20px;
-    left: ${props => props.$isOn ? '25px' : '3px'};
-    bottom: 3px;
-    background-color: white;
-    border-radius: 50%;
-    transition: all 0.3s ease-in-out;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
-`;
-
-/** GitHub 链接按钮 - 放在设置项右侧 */
-const GitHubButton = styled.a<{ theme: ThemeType }>`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0.6rem 1.2rem;
-  background: linear-gradient(135deg, #24292e 0%, #1a1e22 100%);
-  border-radius: ${props => props.theme.borderRadius};
-  text-decoration: none;
-  color: #ffffff;
-  font-weight: bold;
-  font-size: ${props => props.theme.fontSizes.small};
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-    background: linear-gradient(135deg, #2d333b 0%, #24292e 100%);
-  }
-  
-  svg {
-    width: 18px;
-    height: 18px;
-    fill: currentColor;
-    flex-shrink: 0;
-  }
-`;
-
-/** 名字抖动动画 - 左右位移 + 角度旋转 */
-const shakeAnimation = keyframes`
-  0% { transform: translateX(0) rotate(0deg); }
-  25% { transform: translateX(-3px) rotate(-3deg); }
-  50% { transform: translateX(3px) rotate(3deg); }
-  75% { transform: translateX(-2px) rotate(-2deg); }
-  100% { transform: translateX(0) rotate(0deg); }
-`;
-
-/** 作者 Banner - 显示在页面底部的酷酷卡片 */
-const AuthorBanner = styled.div<{ theme: ThemeType }>`
-  text-align: center;
-  padding: ${props => props.theme.spacing.large};
-  margin-top: ${props => props.theme.spacing.large};
-  background: linear-gradient(135deg, 
-    ${props => props.theme.colors.elementBg} 0%, 
-    ${props => props.theme.colors.cardBg} 100%
-  );
-  border-radius: ${props => props.theme.borderRadius};
-  border: 1px solid ${props => props.theme.colors.border};
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  font-size: ${props => props.theme.fontSizes.medium};
-  color: ${props => props.theme.colors.text};
-  
-  a {
-    background: linear-gradient(135deg, ${props => props.theme.colors.primary}, #ff6b6b, #ffd93d);
-    background-size: 200% 200%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-weight: 900;
-    font-size: 1.1em;
-    text-decoration: none;
-    cursor: pointer;
-    display: inline-block;
-    
-    &:hover {
-      animation: ${shakeAnimation} 0.8s ease-in-out infinite;
-    }
-  }
-`;
-
-/** 定时停止操作区域 - 包含时间输入和开关 */
-const ScheduledStopRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-`;
-
-/** 数字输入框 - 用于排队随机间隔等场景 */
-const NumberInput = styled.input<{ theme: ThemeType; disabled?: boolean }>`
-  background-color: ${props => props.theme.colors.elementBg};
-  color: ${props => props.disabled ? props.theme.colors.textDisabled : props.theme.colors.text};
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: ${props => props.theme.borderRadius};
-  padding: 0.4rem 0.6rem;
-  font-size: ${props => props.theme.fontSizes.small};
-  cursor: ${props => props.disabled ? 'not-allowed' : 'text'};
-  opacity: ${props => props.disabled ? 0.6 : 1};
-  transition: all 0.2s ease-in-out;
-  width: 56px;
-  text-align: center;
-
-  &:hover:not(:disabled) {
-    border-color: ${props => props.theme.colors.primary};
-  }
-
-  &:focus {
-    outline: none;
-    border-color: ${props => props.theme.colors.primary};
-    box-shadow: 0 0 0 2px ${props => props.theme.colors.primary}30;
-  }
-
-  /* 隐藏数字输入框的上下箭头 */
-  -moz-appearance: textfield;
-  &::-webkit-outer-spin-button,
-  &::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-`;
-
-/** 排队随机间隔操作区域 - 包含两个数字输入和开关 */
-const DelayRangeRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: ${props => props.theme.fontSizes.small};
-  color: ${props => props.theme.colors.textSecondary};
-  flex-shrink: 0;
-`;
-
-/** 时间选择输入框 */
-const TimeInput = styled.input<{ theme: ThemeType; disabled?: boolean }>`
-  background-color: ${props => props.theme.colors.elementBg};
-  color: ${props => props.disabled ? props.theme.colors.textDisabled : props.theme.colors.text};
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: ${props => props.theme.borderRadius};
-  padding: 0.5rem 0.8rem;
-  font-size: ${props => props.theme.fontSizes.small};
-  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
-  opacity: ${props => props.disabled ? 0.6 : 1};
-  transition: all 0.2s ease-in-out;
-  min-width: 100px;
-  text-align: center;
-
-  &:hover:not(:disabled) {
-    border-color: ${props => props.theme.colors.primary};
-  }
-
-  &:focus {
-    outline: none;
-    border-color: ${props => props.theme.colors.primary};
-    box-shadow: 0 0 0 2px ${props => props.theme.colors.primary}30;
-  }
-
-  /* 让时间选择器的点击区域覆盖整个输入框 */
-  /* 原理：将原本只在右侧的小时钟图标通过绝对定位铺满整个 input，
-     并设为透明，这样用户点击数字区域也能弹出时间选择器 */
-  position: relative;
-  &::-webkit-calendar-picker-indicator {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
-    opacity: 0;  /* 隐藏图标本身，但保留点击区域 */
-  }
-`;
-
-/** 使用提示卡片 - 现代玻璃拟态风格 */
-const TipsCard = styled.div<{ theme: ThemeType }>`
-  position: relative;
-  background: linear-gradient(135deg, 
-    ${props => props.theme.colors.primary}10 0%, 
-    ${props => props.theme.colors.primary}05 100%
-  );
-  border: 1px solid ${props => props.theme.colors.primary}30;
-  border-radius: 12px;
-  padding: 16px 20px;
-  margin-bottom: ${props => props.theme.spacing.large};
-  backdrop-filter: blur(10px);
+  flex-direction: column;
   overflow: hidden;
-  
-  /* 左侧装饰条 */
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: linear-gradient(180deg, 
-      ${props => props.theme.colors.primary} 0%, 
-      #ff6b6b 100%
-    );
-    border-radius: 4px 0 0 4px;
-  }
-  
-  h3 {
-    color: ${props => props.theme.colors.text};
-    font-size: ${props => props.theme.fontSizes.medium};
-    font-weight: 600;
-    margin: 0 0 12px 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    
-    span {
-      font-size: 1.1em;
-    }
-  }
-  
-  ul {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    
-    li {
-      position: relative;
-      padding-left: 20px;
-      margin-bottom: 8px;
-      color: ${props => props.theme.colors.textSecondary};
-      font-size: ${props => props.theme.fontSizes.small};
-      line-height: 1.6;
-      
-      /* 自定义列表符号 */
-      &::before {
-        content: '→';
-        position: absolute;
-        left: 0;
-        color: ${props => props.theme.colors.primary};
-        font-weight: bold;
-      }
-      
-      &:last-child {
-        margin-bottom: 0;
-      }
-      
-      strong {
-        color: ${props => props.theme.colors.text};
-      }
-    }
+  background-color: #f5f7fa;
+`;
+
+const ContentArea = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+`;
+
+const HotkeyBox = styled(Box)<{ $isRecording: boolean }>`
+  background-color: ${props => props.$isRecording ? '#e3f2fd' : '#fff'};
+  border: 1px solid ${props => props.$isRecording ? '#1976d2' : '#dcdfe6'};
+  border-radius: 4px;
+  padding: 8px 16px;
+  min-width: 120px;
+  text-align: center;
+  cursor: pointer;
+  font-family: monospace;
+  font-weight: bold;
+  color: ${props => props.$isRecording ? '#1976d2' : '#303133'};
+  transition: all 0.2s;
+  &:hover {
+    border-color: #1976d2;
   }
 `;
 
@@ -423,817 +73,509 @@ const TipsCard = styled.div<{ theme: ThemeType }>`
 // ✨ 工具函数 ✨
 // -------------------------------------------------------------------
 
-/**
- * 将 KeyboardEvent 转换为 Electron Accelerator 格式
- * @description Electron Accelerator 格式示例: "Ctrl+Shift+F1", "Alt+A", "F12"
- */
 function keyEventToAccelerator(e: KeyboardEvent): string | null {
     const parts: string[] = [];
-    
-    // 添加修饰键（顺序：Ctrl -> Alt -> Shift -> Meta）
     if (e.ctrlKey) parts.push('Ctrl');
     if (e.altKey) parts.push('Alt');
     if (e.shiftKey) parts.push('Shift');
     if (e.metaKey) parts.push('Meta');
-    
-    // 获取主键
     let key = e.key;
-    
-    // 如果只按了修饰键，不算有效快捷键
-    if (['Control', 'Alt', 'Shift', 'Meta'].includes(key)) {
-        return null;
-    }
-    
-    // 转换特殊按键名称为 Electron Accelerator 格式
+    if (['Control', 'Alt', 'Shift', 'Meta'].includes(key)) return null;
     const keyMap: Record<string, string> = {
-        ' ': 'Space',
-        'ArrowUp': 'Up',
-        'ArrowDown': 'Down',
-        'ArrowLeft': 'Left',
-        'ArrowRight': 'Right',
-        'Escape': 'Esc',
+        ' ': 'Space', 'ArrowUp': 'Up', 'ArrowDown': 'Down', 'ArrowLeft': 'Left', 'ArrowRight': 'Right', 'Escape': 'Esc',
     };
-    
-    if (keyMap[key]) {
-        key = keyMap[key];
-    } else if (key.length === 1) {
-        // 单个字符转大写
-        key = key.toUpperCase();
-    }
-    
+    if (keyMap[key]) key = keyMap[key];
+    else if (key.length === 1) key = key.toUpperCase();
     parts.push(key);
     return parts.join('+');
 }
 
 // -------------------------------------------------------------------
-// ✨ React 组件本体 ✨
+// ✨ React 组件 ✨
 // -------------------------------------------------------------------
 
+interface TabPanelProps {
+    children?: React.ReactNode;
+    index: number;
+    value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+    const { children, value, index, ...other } = props;
+    return (
+        <div
+            role="tabpanel"
+            hidden={value !== index}
+            id={`settings-tabpanel-${index}`}
+            aria-labelledby={`settings-tab-${index}`}
+            {...other}
+        >
+            {value === index && (
+                <Box sx={{ py: 3 }}>
+                    {children}
+                </Box>
+            )}
+        </div>
+    );
+}
+
 const SettingsPage = () => {
-    // 备份/恢复按钮的加载状态
+    const [tabValue, setTabValue] = useState(0);
+
+    // 状态管理
     const [isBackingUp, setIsBackingUp] = useState(false);
     const [isRestoring, setIsRestoring] = useState(false);
-    
-    // 日志自动清理阈值设置
-    const [logAutoCleanThreshold, setLogAutoCleanThreshold] = useState<LogAutoCleanThreshold>(
-        logStore.getThreshold()
-    );
-    
-    // 快捷键设置
-    const [toggleHotkey, setToggleHotkey] = useState<string>('F1');
+    const [logThreshold, setLogThreshold] = useState<LogAutoCleanThreshold>(logStore.getThreshold());
+    const [toggleHotkey, setToggleHotkey] = useState('F1');
     const [isRecordingHotkey, setIsRecordingHotkey] = useState(false);
-    
-    // "本局结束后停止"快捷键设置
-    const [stopAfterGameHotkey, setStopAfterGameHotkey] = useState<string>('F2');
-    const [isRecordingStopAfterGameHotkey, setIsRecordingStopAfterGameHotkey] = useState(false);
-    
-    // 调试页面显示设置
-    const [showDebugPage, setShowDebugPage] = useState(false);
-    
-    // 游戏浮窗显示设置
+    const [stopHk, setStopHk] = useState('F2');
+    const [isRecordingStopHk, setIsRecordingStopHk] = useState(false);
+    const [showDebug, setShowDebug] = useState(false);
     const [showOverlay, setShowOverlay] = useState(true);
-    
-    // 区服 / 客户端
-    const [gameRegion, setGameRegion] = useState<GameRegion>('CN');
-    const [gameClient, setGameClient] = useState<GameClient>('RIOT_PC');
-
-    // 版本与更新
-    const [currentVersion, setCurrentVersion] = useState<string>('');
+    const [region, setRegion] = useState<GameRegion>('CN');
+    const [client, setClient] = useState<GameClient>('RIOT_PC');
+    const [appVersion, setAppVersion] = useState('');
     const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
-    
-    // 定时停止设置
-    const [scheduledStopTime, setScheduledStopTime] = useState<string>('');  // "HH:mm" 格式
-    const [scheduledStopIso, setScheduledStopIso] = useState<string | null>(null);  // 已设定的目标时间 ISO
+    const [stopTime, setStopTime] = useState('');
+    const [stopIso, setStopIso] = useState<string | null>(null);
+    const [delayEnabled, setDelayEnabled] = useState(false);
+    const [delayMin, setDelayMin] = useState(0);
+    const [delayMax, setDelayMax] = useState(0);
+    const [timeoutEnabled, setTimeoutEnabled] = useState(false);
+    const [timeoutMins, setTimeoutMins] = useState(5);
+    const [onboardingCompleted, setOnboardingCompleted] = useState(true);
 
-    // 排队随机间隔设置
-    const [queueDelayEnabled, setQueueDelayEnabled] = useState(false);
-    const [queueDelayMin, setQueueDelayMin] = useState(0);
-    const [queueDelayMax, setQueueDelayMax] = useState(0);
-
-    // 排队超时设置（普通模式下，排队超过指定分钟数自动退出房间重排）
-    const [queueTimeoutEnabled, setQueueTimeoutEnabled] = useState(false);
-    const [queueTimeoutMinutes, setQueueTimeoutMinutes] = useState(5);
-
-    // 初始化时从后端获取设置
     useEffect(() => {
-        const loadSettings = async () => {
-            // 加载日志阈值
+        const init = async () => {
             await logStore.refreshThreshold();
-            setLogAutoCleanThreshold(logStore.getThreshold());
-            
-            // 加载快捷键设置
-            const hotkey = await window.util.getToggleHotkey();
-            setToggleHotkey(hotkey);
-            
-            // 加载"本局结束后停止"快捷键设置
-            const stopAfterGameHk = await window.util.getStopAfterGameHotkey();
-            setStopAfterGameHotkey(stopAfterGameHk);
-            
-            // 加载调试页面显示设置（通过 settingsStore）
+            setLogThreshold(logStore.getThreshold());
+            setToggleHotkey(await window.util.getToggleHotkey());
+            setStopHk(await window.util.getStopAfterGameHotkey());
             await settingsStore.init();
-            setShowDebugPage(settingsStore.getShowDebugPage());
-            
-            // 加载游戏浮窗显示设置
-            const overlayEnabled = await window.settings.get<boolean>('showOverlay');
-            setShowOverlay(overlayEnabled);
-
-            // 加载区服与客户端设置（通过 settingsStore）
-            setGameRegion(settingsStore.getGameRegion());
-            setGameClient(settingsStore.getGameClient());
-            
-            // 加载当前版本号
-            const version = await window.util.getAppVersion();
-            setCurrentVersion(version);
-            
-            // 加载定时停止状态
-            const savedScheduledStop = await window.hex.getScheduledStop();
-            if (savedScheduledStop) {
-                setScheduledStopIso(savedScheduledStop);
-                // 从 ISO 字符串还原 "HH:mm" 显示
-                const d = new Date(savedScheduledStop);
-                setScheduledStopTime(
-                    `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-                );
+            setShowDebug(settingsStore.getShowDebugPage());
+            setShowOverlay(await window.settings.get<boolean>('showOverlay'));
+            setRegion(settingsStore.getGameRegion());
+            setClient(settingsStore.getGameClient());
+            setAppVersion(await window.util.getAppVersion());
+            setOnboardingCompleted(settingsStore.getOnboardingCompleted());
+            const savedStop = await window.hex.getScheduledStop();
+            if (savedStop) {
+                setStopIso(savedStop);
+                const d = new Date(savedStop);
+                setStopTime(`${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`);
             }
-            
-            // 加载排队随机间隔设置
-            const delayConfig = await window.settings.get<{enabled: boolean, minSeconds: number, maxSeconds: number}>('queueRandomDelay');
-            if (delayConfig) {
-                setQueueDelayEnabled(delayConfig.enabled);
-                setQueueDelayMin(delayConfig.minSeconds);
-                setQueueDelayMax(delayConfig.maxSeconds);
+            const delay = await window.settings.get<any>('queueRandomDelay');
+            if (delay) {
+                setDelayEnabled(delay.enabled);
+                setDelayMin(delay.minSeconds);
+                setDelayMax(delay.maxSeconds);
             }
-
-            // 加载排队超时设置
-            const timeoutConfig = await window.settings.get<{enabled: boolean, minutes: number}>('queueTimeout');
-            if (timeoutConfig) {
-                setQueueTimeoutEnabled(timeoutConfig.enabled);
-                setQueueTimeoutMinutes(timeoutConfig.minutes);
+            const timeout = await window.settings.get<any>('queueTimeout');
+            if (timeout) {
+                setTimeoutEnabled(timeout.enabled);
+                setTimeoutMins(timeout.minutes);
             }
         };
-        loadSettings();
-        
-        // 订阅 settingsStore 变化（其他组件修改时同步更新）
-        const unsubscribe = settingsStore.subscribe((settings) => {
-            setShowDebugPage(settings.showDebugPage);
-            setGameRegion(settings.gameRegion);
-            setGameClient(settings.gameClient);
+        init();
+        const sub = settingsStore.subscribe(s => {
+            setShowDebug(s.showDebugPage);
+            setRegion(s.gameRegion);
+            setClient(s.gameClient);
+            setOnboardingCompleted(s.onboardingCompleted);
         });
-
-        // 监听定时停止触发事件：后端定时器到点后通知前端自动关闭开关
-        const cleanupScheduledStop = window.hex.onScheduledStopTriggered(() => {
-            setScheduledStopIso(null);  // 关闭开关（一次性触发后自动关闭）
-        });
-        
-        return () => {
-            unsubscribe();
-            cleanupScheduledStop();
-        };
+        const cleanupStop = window.hex.onScheduledStopTriggered(() => setStopIso(null));
+        return () => { sub(); cleanupStop(); };
     }, []);
-    
-    // 快捷键录入处理
-    const handleHotkeyKeyDown = useCallback(async (e: KeyboardEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // ESC 键：取消绑定快捷键
-        if (e.key === 'Escape') {
-            const success = await window.util.setToggleHotkey('');
-            if (success) {
-                setToggleHotkey('');
-                toast.success('快捷键已取消绑定');
-            }
-            setIsRecordingHotkey(false);
-            return;
-        }
-        
-        const accelerator = keyEventToAccelerator(e);
-        if (!accelerator) return;  // 只按了修饰键，忽略
-        
-        // 如果按下的快捷键和当前一样，直接退出录入模式
-        if (accelerator === toggleHotkey) {
-            toast.success(`快捷键保持为 ${accelerator}`);
-            setIsRecordingHotkey(false);
-            return;
-        }
-        
-        // 检查是否与"本局结束后停止"快捷键冲突
-        if (accelerator === stopAfterGameHotkey) {
-            toast.error(`快捷键 ${accelerator} 已被"本局结束后停止"使用`);
-            setIsRecordingHotkey(false);
-            return;
-        }
-        
-        // 尝试设置新快捷键
-        const success = await window.util.setToggleHotkey(accelerator);
-        if (success) {
-            setToggleHotkey(accelerator);
-            toast.success(`快捷键已设置为 ${accelerator}`);
-        } else {
-            toast.error(`快捷键 ${accelerator} 设置失败，可能被其他程序占用`);
-        }
-        
-        setIsRecordingHotkey(false);
-    }, [toggleHotkey, stopAfterGameHotkey]);
-    
-    // "本局结束后停止"快捷键录入处理
-    const handleStopAfterGameHotkeyKeyDown = useCallback(async (e: KeyboardEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // ESC 键：取消绑定快捷键
-        if (e.key === 'Escape') {
-            const success = await window.util.setStopAfterGameHotkey('');
-            if (success) {
-                setStopAfterGameHotkey('');
-                toast.success('快捷键已取消绑定');
-            }
-            setIsRecordingStopAfterGameHotkey(false);
-            return;
-        }
-        
-        const accelerator = keyEventToAccelerator(e);
-        if (!accelerator) return;  // 只按了修饰键，忽略
-        
-        // 如果按下的快捷键和当前一样，直接退出录入模式
-        if (accelerator === stopAfterGameHotkey) {
-            toast.success(`快捷键保持为 ${accelerator}`);
-            setIsRecordingStopAfterGameHotkey(false);
-            return;
-        }
-        
-        // 检查是否与"挂机开关"快捷键冲突
-        if (accelerator === toggleHotkey) {
-            toast.error(`快捷键 ${accelerator} 已被"挂机开关"使用`);
-            setIsRecordingStopAfterGameHotkey(false);
-            return;
-        }
-        
-        // 尝试设置新快捷键
-        const success = await window.util.setStopAfterGameHotkey(accelerator);
-        if (success) {
-            setStopAfterGameHotkey(accelerator);
-            toast.success(`快捷键已设置为 ${accelerator}`);
-        } else {
-            toast.error(`快捷键 ${accelerator} 设置失败，可能被其他程序占用`);
-        }
-        
-        setIsRecordingStopAfterGameHotkey(false);
-    }, [toggleHotkey, stopAfterGameHotkey]);
-    
-    // 监听快捷键录入（统一处理两个快捷键的录入）
-    useEffect(() => {
-        if (isRecordingHotkey) {
-            window.addEventListener('keydown', handleHotkeyKeyDown);
-            return () => window.removeEventListener('keydown', handleHotkeyKeyDown);
-        }
-        if (isRecordingStopAfterGameHotkey) {
-            window.addEventListener('keydown', handleStopAfterGameHotkeyKeyDown);
-            return () => window.removeEventListener('keydown', handleStopAfterGameHotkeyKeyDown);
-        }
-        return undefined;
-    }, [isRecordingHotkey, isRecordingStopAfterGameHotkey, handleHotkeyKeyDown, handleStopAfterGameHotkeyKeyDown]);
 
-    // 处理日志清理阈值变化
-    const handleLogThresholdChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const value = Number(e.target.value) as LogAutoCleanThreshold;
-        setLogAutoCleanThreshold(value);
-        await logStore.setThreshold(value);
+    const handleTabChange = (_: any, newValue: number) => setTabValue(newValue);
+
+    const handleHotkeyKeyDown = useCallback(async (e: KeyboardEvent) => {
+        e.preventDefault(); e.stopPropagation();
+        if (e.key === 'Escape') {
+            if (await window.util.setToggleHotkey('')) { setToggleHotkey(''); toast.success('已取消'); }
+            setIsRecordingHotkey(false); return;
+        }
+        const acc = keyEventToAccelerator(e);
+        if (!acc) return;
+        if (acc === toggleHotkey) { setIsRecordingHotkey(false); return; }
+        if (acc === stopHk) { toast.error('冲突'); setIsRecordingHotkey(false); return; }
+        if (await window.util.setToggleHotkey(acc)) { setToggleHotkey(acc); toast.success(`已设置 ${acc}`); }
+        setIsRecordingHotkey(false);
+    }, [toggleHotkey, stopHk]);
+
+    const handleStopHkKeyDown = useCallback(async (e: KeyboardEvent) => {
+        e.preventDefault(); e.stopPropagation();
+        if (e.key === 'Escape') {
+            if (await window.util.setStopAfterGameHotkey('')) { setStopHk(''); toast.success('已取消'); }
+            setIsRecordingStopHk(false); return;
+        }
+        const acc = keyEventToAccelerator(e);
+        if (!acc) return;
+        if (acc === stopHk) { setIsRecordingStopHk(false); return; }
+        if (acc === toggleHotkey) { toast.error('冲突'); setIsRecordingStopHk(false); return; }
+        if (await window.util.setStopAfterGameHotkey(acc)) { setStopHk(acc); toast.success(`已设置 ${acc}`); }
+        setIsRecordingStopHk(false);
+    }, [toggleHotkey, stopHk]);
+
+    useEffect(() => {
+        if (isRecordingHotkey) { window.addEventListener('keydown', handleHotkeyKeyDown); return () => window.removeEventListener('keydown', handleHotkeyKeyDown); }
+        if (isRecordingStopHk) { window.addEventListener('keydown', handleStopHkKeyDown); return () => window.removeEventListener('keydown', handleStopHkKeyDown); }
+        return undefined;
+    }, [isRecordingHotkey, isRecordingStopHk, handleHotkeyKeyDown, handleStopHkKeyDown]);
+
+
+    const handleToggleDebug = async () => {
+        const val = !showDebug;
+        await settingsStore.setShowDebugPage(val);
+        toast.success(val ? '开启调试' : '隐藏调试');
     };
 
-    // 点击备份按钮的逻辑
-    const handleBackup = async () => {
-        console.log("开始备份游戏设置...");
-        setIsBackingUp(true);
-        // 执行备份
-        const success = await window.config.backup() // Boolean
-        if (!success) {
-            toast.error("备份错误！请检查客户端是否启动！")
-        } else {
-            toast.success("设置备份成功!")
-        }
+    const handleToggleOverlay = async () => {
+        const val = !showOverlay;
+        setShowOverlay(val);
+        await window.settings.set('showOverlay', val);
+        toast.success(val ? '开启浮窗' : '关闭浮窗');
+    };
 
+    const handleRegionChange = async (val: GameRegion) => {
+        setRegion(val);
+        await settingsStore.setGameRegion(val);
+        toast.success(`切换到 ${val}`);
+    };
+
+    const handleClientChange = async (val: GameClient) => {
+        setClient(val);
+        await settingsStore.setGameClient(val);
+        toast.success(`切换到 ${val}`);
+    };
+
+    const handleBackup = async () => {
+        setIsBackingUp(true);
+        if (await window.config.backup()) toast.success('备份成功');
+        else toast.error('备份失败');
         setIsBackingUp(false);
     };
 
-    // 点击恢复按钮的逻辑
     const handleRestore = async () => {
-        console.log("开始恢复游戏设置...");
         setIsRestoring(true);
-        //  执行恢复
-        const success = await window.config.restore() // Boolean
-        if (!success) {
-            toast.error("设置恢复错误！请检查客户端是否启动！")
-        } else {
-            toast.success("设置恢复成功!")
-        }
-        await window.config.restore()
+        if (await window.config.restore()) toast.success('恢复成功');
+        else toast.error('恢复失败');
         setIsRestoring(false);
     };
-    
-    // 点击快捷键输入框，开始录入（互斥：关闭另一个的录入状态）
-    const handleHotkeyClick = () => {
-        setIsRecordingStopAfterGameHotkey(false);
-        setIsRecordingHotkey(true);
-    };
-    
-    // 点击"本局结束后停止"快捷键输入框，开始录入（互斥：关闭另一个的录入状态）
-    const handleStopAfterGameHotkeyClick = () => {
-        setIsRecordingHotkey(false);
-        setIsRecordingStopAfterGameHotkey(true);
-    };
-    
-    // 切换调试页面显示
-    const handleToggleDebugPage = async () => {
-        const newValue = !showDebugPage;
-        // 通过 settingsStore 修改，会自动通知 Sidebar 更新
-        await settingsStore.setShowDebugPage(newValue);
-        toast.success(newValue ? '调试页面已显示' : '调试页面已隐藏');
-    };
-    
-    // 切换游戏浮窗显示
-    const handleToggleOverlay = async () => {
-        const newValue = !showOverlay;
-        setShowOverlay(newValue);
-        // 通过通用 settings API 持久化到后端 SettingsStore
-        await window.settings.set('showOverlay', newValue);
-        toast.success(newValue ? '游戏浮窗已开启' : '游戏浮窗已关闭');
-    };
-    
-    /**
-     * 切换定时停止开关
-     * - 开启时：校验时间 → 调用后端设置定时 → 更新状态
-     * - 关闭时：调用后端取消定时 → 清除状态
-     */
+
     const handleToggleScheduledStop = async () => {
-        if (scheduledStopIso) {
-            // 当前已开启 → 关闭
-            await window.hex.clearScheduledStop();
-            setScheduledStopIso(null);
-            toast.success('⏰ 定时停止已取消');
-        } else {
-            // 当前已关闭 → 开启
-            if (!scheduledStopTime) {
-                toast.error('请先选择一个时间');
-                return;
-            }
-            try {
-                const isoTime = await window.hex.setScheduledStop(scheduledStopTime);
-                setScheduledStopIso(isoTime);
-                
-                // 计算友好的提示信息
-                const target = new Date(isoTime);
-                const now = new Date();
-                const diffMinutes = Math.round((target.getTime() - now.getTime()) / 60000);
-                const hours = Math.floor(diffMinutes / 60);
-                const mins = diffMinutes % 60;
-                const timeDesc = hours > 0 ? `${hours}小时${mins}分钟` : `${mins}分钟`;
-                
-                toast.success(`⏰ 定时停止已设置：${timeDesc}后本局结束将自动停止`);
-            } catch (error: any) {
-                toast.error(`设置失败: ${error.message || '未知错误'}`);
-            }
+        if (stopIso) { await window.hex.clearScheduledStop(); setStopIso(null); toast.success('已取消'); }
+        else {
+            if (!stopTime) { toast.error('请选择时间'); return; }
+            try { const iso = await window.hex.setScheduledStop(stopTime); setStopIso(iso); toast.success('已设置'); }
+            catch (e: any) { toast.error(e.message); }
         }
     };
 
-    /**
-     * 切换排队随机间隔开关
-     * - 开启时：校验范围 → 持久化到后端
-     * - 关闭时：关闭并持久化
-     */
-    const handleToggleQueueDelay = async () => {
-        const newEnabled = !queueDelayEnabled;
-        
-        if (newEnabled) {
-            // 开启前校验：最大值必须 >= 最小值
-            if (queueDelayMax < queueDelayMin) {
-                toast.error('最大秒数不能小于最小秒数');
-                return;
-            }
-            if (queueDelayMax <= 0) {
-                toast.error('请先填写有效的间隔范围');
-                return;
-            }
-        }
-        
-        setQueueDelayEnabled(newEnabled);
-        await window.settings.set('queueRandomDelay', {
-            enabled: newEnabled,
-            minSeconds: queueDelayMin,
-            maxSeconds: queueDelayMax,
-        });
-        toast.success(newEnabled 
-            ? `排队随机间隔已开启：${queueDelayMin}~${queueDelayMax}秒` 
-            : '排队随机间隔已关闭');
-    };
-    
-    /**
-     * 修改排队随机间隔的范围值
-     * 如果当前已开启，修改后自动同步到后端
-     */
-    const handleQueueDelayChange = async (field: 'min' | 'max', value: number) => {
-        // 限制范围 0~9999，取整
-        const clamped = Math.max(0, Math.min(9999, Math.floor(value) || 0));
-        
-        const newMin = field === 'min' ? clamped : queueDelayMin;
-        const newMax = field === 'max' ? clamped : queueDelayMax;
-        
-        if (field === 'min') setQueueDelayMin(clamped);
-        else setQueueDelayMax(clamped);
-        
-        // 如果已开启，实时同步到后端
-        if (queueDelayEnabled) {
-            await window.settings.set('queueRandomDelay', {
-                enabled: true,
-                minSeconds: newMin,
-                maxSeconds: newMax,
-            });
-        }
+    const handleToggleDelay = async () => {
+        const enabled = !delayEnabled;
+        if (enabled && (delayMax < delayMin || delayMax <= 0)) { toast.error('范围无效'); return; }
+        setDelayEnabled(enabled);
+        await window.settings.set('queueRandomDelay', { enabled, minSeconds: delayMin, maxSeconds: delayMax });
     };
 
-    /**
-     * 切换排队超时开关
-     * - 开启时：校验分钟数 → 持久化到后端
-     * - 关闭时：关闭并持久化
-     */
-    const handleToggleQueueTimeout = async () => {
-        const newEnabled = !queueTimeoutEnabled;
-
-        if (newEnabled && queueTimeoutMinutes <= 0) {
-            toast.error('请先填写有效的超时分钟数');
-            return;
-        }
-
-        setQueueTimeoutEnabled(newEnabled);
-        await window.settings.set('queueTimeout', {
-            enabled: newEnabled,
-            minutes: queueTimeoutMinutes,
-        });
-        toast.success(newEnabled
-            ? `排队超时已开启：超过 ${queueTimeoutMinutes} 分钟未匹配将自动重排`
-            : '排队超时已关闭');
+    const handleToggleTimeout = async () => {
+        const enabled = !timeoutEnabled;
+        if (enabled && timeoutMins <= 0) { toast.error('时长无效'); return; }
+        setTimeoutEnabled(enabled);
+        await window.settings.set('queueTimeout', { enabled, minutes: timeoutMins });
     };
 
-    /**
-     * 修改排队超时的分钟数
-     * 如果当前已开启，修改后自动同步到后端
-     */
-    const handleQueueTimeoutChange = async (value: number) => {
-        // 限制范围 1~60 分钟，取整
-        const clamped = Math.max(1, Math.min(60, Math.floor(value) || 1));
-        setQueueTimeoutMinutes(clamped);
-
-        // 如果已开启，实时同步到后端
-        if (queueTimeoutEnabled) {
-            await window.settings.set('queueTimeout', {
-                enabled: true,
-                minutes: clamped,
-            });
-        }
-    };
-
-
-    const handleRegionChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const value = e.target.value as GameRegion;
-        setGameRegion(value);
-        await settingsStore.setGameRegion(value);
-        toast.success(value === 'NA' ? '已切换到美服配置' : '已切换到国服配置');
-    };
-
-    const handleClientChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const value = e.target.value as GameClient;
-        setGameClient(value);
-        await settingsStore.setGameClient(value);
-        toast.success(value === 'ANDROID' ? '已切换到安卓端模式（手动开局）' : '已切换到电脑 Riot 客户端模式');
-    };
-
-    // 检查更新
     const handleCheckUpdate = async () => {
         setIsCheckingUpdate(true);
         try {
-            const result = await window.util.checkUpdate();
-            
-            if (result.error) {
-                toast.error(`检查更新失败: ${result.error}`);
-                return;
-            }
-            
-            if (result.hasUpdate) {
-                toast.success(`发现新版本 v${result.latestVersion}！请前往 GitHub 下载更新`);
-                // 自动打开 release 页面
-                window.open(result.releaseUrl, '_blank');
-            } else {
-                toast.success('当前已是最新版本！');
-            }
-        } catch (error: any) {
-            toast.error(`检查更新失败: ${error.message || '未知错误'}`);
-        } finally {
-            setIsCheckingUpdate(false);
-        }
+            const res = await window.util.checkUpdate();
+            if (res.hasUpdate) { toast.success('有更新'); window.open(res.releaseUrl, '_blank'); }
+            else toast.success('最新版');
+        } catch { toast.error('失败'); }
+        finally { setIsCheckingUpdate(false); }
+    };
+
+    const handleRestartTour = async () => {
+        await settingsStore.setOnboardingCompleted(false);
+        toast.success('新手引导已重置');
+    };
+
+    const handleTourComplete = async () => {
+        await settingsStore.setOnboardingCompleted(true);
+        toast.success('新手引导完成，开启上分之旅！');
+    };
+
+    const handleTourClose = () => {
+        // Just close it for now, can be restarted later
+        setOnboardingCompleted(true);
     };
 
     return (
         <PageWrapper>
-            {/* 使用提示 */}
-            <TipsCard>
-                <ul>
-                    <li><strong>国服推荐简体中文；美服建议英文客户端</strong>，请与所选区服保持一致以提高识别成功率</li>
-                    <li><strong>推荐使用默认棋盘皮肤</strong>，已针对默认棋盘优化，能加快棋子识别速度</li>
-                </ul>
-            </TipsCard>
+            {!onboardingCompleted && (
+                <OnboardingTour onComplete={handleTourComplete} onClose={handleTourClose} />
+            )}
+            <Paper elevation={0} sx={{ borderBottom: 1, borderColor: 'divider', px: 3, pt: 1, bgcolor: '#fff' }}>
+                <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>设置</Typography>
+                <Tabs value={tabValue} onChange={handleTabChange} aria-label="settings tabs">
+                    <Tab icon={<MonitorIcon />} iconPosition="start" label="游戏设置" />
+                    <Tab icon={<AutoFixHighIcon />} iconPosition="start" label="自动化" />
+                    <Tab icon={<HistoryIcon />} iconPosition="start" label="高级/日志" />
+                    <Tab icon={<HelpOutlineIcon />} iconPosition="start" label="关于" />
+                </Tabs>
+            </Paper>
+
+            <ContentArea>
+                {/* 游戏设置 */}
+                <TabPanel value={tabValue} index={0}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                            <Card variant="outlined">
+                                <CardContent>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                        <SettingsRemoteIcon color="primary" sx={{ mr: 1 }} />
+                                        <Typography variant="h6" fontWeight="bold">区域与平台</Typography>
+                                    </Box>
+                                    <Divider sx={{ mb: 3 }} />
+                                    
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                                        <Box>
+                                            <Typography variant="subtitle1" fontWeight="bold">游戏区服</Typography>
+                                            <Typography variant="body2" color="text.secondary">选择您账号所在的区服。</Typography>
+                                        </Box>
+                                        <FormControl size="small" sx={{ minWidth: 200 }}>
+                                            <Select value={region} onChange={(e) => handleRegionChange(e.target.value as GameRegion)}>
+                                                <MenuItem value="CN">国服（CN）</MenuItem>
+                                                <MenuItem value="NA">美服（NA）</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Box>
+                                            <Typography variant="subtitle1" fontWeight="bold">客户端类型</Typography>
+                                            <Typography variant="body2" color="text.secondary">选择当前使用的游戏客户端。</Typography>
+                                        </Box>
+                                        <FormControl size="small" sx={{ minWidth: 200 }}>
+                                            <Select value={client} onChange={(e) => handleClientChange(e.target.value as GameClient)}>
+                                                <MenuItem value="RIOT_PC">电脑端 (Riot Client)</MenuItem>
+                                                <MenuItem value="ANDROID">安卓端 (模拟器/投屏)</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                    </Box>
+                                </CardContent>
+                            </Card>
+
+                            <Card variant="outlined">
+                                <CardContent>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                        <MonitorIcon color="primary" sx={{ mr: 1 }} />
+                                        <Typography variant="h6" fontWeight="bold">界面显示</Typography>
+                                    </Box>
+                                    <Divider sx={{ mb: 3 }} />
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Box>
+                                            <Typography variant="subtitle1" fontWeight="bold">启用游戏浮窗</Typography>
+                                            <Typography variant="body2" color="text.secondary">在游戏界面显示真人/人机信息提示。</Typography>
+                                        </Box>
+                                        <Switch checked={showOverlay} onChange={handleToggleOverlay} />
+                                    </Box>
+                                </CardContent>
+                            </Card>
+                        </Box>
+                </TabPanel>
+
+                {/* 自动化 */}
+                <TabPanel value={tabValue} index={1}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                            <Card variant="outlined">
+                                <CardContent>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                        <AutoFixHighIcon color="primary" sx={{ mr: 1 }} />
+                                        <Typography variant="h6" fontWeight="bold">智能流程控制</Typography>
+                                    </Box>
+                                    <Divider sx={{ mb: 3 }} />
+                                    
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                                        <Box>
+                                            <Typography variant="subtitle1" fontWeight="bold">定时停止挂机</Typography>
+                                            <Typography variant="body2" color="text.secondary">到达设定时间后，在本局结束后自动停止。</Typography>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <TextField
+                                                type="time"
+                                                size="small"
+                                                value={stopTime}
+                                                onChange={(e) => setStopTime(e.target.value)}
+                                                disabled={!!stopIso}
+                                                sx={{ width: 130 }}
+                                            />
+                                            <Switch checked={!!stopIso} onChange={handleToggleScheduledStop} />
+                                        </Box>
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                                        <Box>
+                                            <Typography variant="subtitle1" fontWeight="bold">排队随机间隔</Typography>
+                                            <Typography variant="body2" color="text.secondary">在每局开始前随机等待，模拟真人行为。</Typography>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <TextField type="number" size="small" value={delayMin} onChange={(e) => setDelayMin(Number(e.target.value))} disabled={delayEnabled} sx={{ width: 70 }} />
+                                            <Typography>~</Typography>
+                                            <TextField type="number" size="small" value={delayMax} onChange={(e) => setDelayMax(Number(e.target.value))} disabled={delayEnabled} sx={{ width: 70 }} />
+                                            <Typography sx={{ mr: 1 }}>秒</Typography>
+                                            <Switch checked={delayEnabled} onChange={handleToggleDelay} />
+                                        </Box>
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Box>
+                                            <Typography variant="subtitle1" fontWeight="bold">排队超时自动重排</Typography>
+                                            <Typography variant="body2" color="text.secondary">长时间匹配不到人时，自动退出房间重试。</Typography>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <TextField type="number" size="small" value={timeoutMins} onChange={(e) => setTimeoutMins(Number(e.target.value))} disabled={timeoutEnabled} sx={{ width: 80 }} />
+                                            <Typography sx={{ mr: 1 }}>分钟</Typography>
+                                            <Switch checked={timeoutEnabled} onChange={handleToggleTimeout} />
+                                        </Box>
+                                    </Box>
+                                </CardContent>
+                            </Card>
+
+                            <Card variant="outlined">
+                                <CardContent>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                        <Typography variant="h6" fontWeight="bold">全局快捷键</Typography>
+                                    </Box>
+                                    <Divider sx={{ mb: 3 }} />
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                                        <Box>
+                                            <Typography variant="subtitle1" fontWeight="bold">开始/停止挂机</Typography>
+                                            <Typography variant="body2" color="text.secondary">随时切换自动挂机状态。</Typography>
+                                        </Box>
+                                        <HotkeyBox $isRecording={isRecordingHotkey} onClick={() => setIsRecordingHotkey(true)}>
+                                            {isRecordingHotkey ? '按下按键...' : (toggleHotkey || '未绑定')}
+                                        </HotkeyBox>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Box>
+                                            <Typography variant="subtitle1" fontWeight="bold">本局结束后停止</Typography>
+                                            <Typography variant="body2" color="text.secondary">仅在当前对局结束后停止。</Typography>
+                                        </Box>
+                                        <HotkeyBox $isRecording={isRecordingStopHk} onClick={() => setIsRecordingStopHk(true)}>
+                                            {isRecordingStopHk ? '按下按键...' : (stopHk || '未绑定')}
+                                        </HotkeyBox>
+                                    </Box>
+                                </CardContent>
+                            </Card>
+                        </Box>
+                </TabPanel>
+
+                {/* 高级设置/日志 */}
+                <TabPanel value={tabValue} index={2}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                            <Card variant="outlined">
+                                <CardContent>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                        <HistoryIcon color="primary" sx={{ mr: 1 }} />
+                                        <Typography variant="h6" fontWeight="bold">日志管理</Typography>
+                                    </Box>
+                                    <Divider sx={{ mb: 3 }} />
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Box>
+                                            <Typography variant="subtitle1" fontWeight="bold">日志自动清理</Typography>
+                                            <Typography variant="body2" color="text.secondary">超过阈值后自动删除旧日志以优化性能。</Typography>
+                                        </Box>
+                                        <FormControl size="small" sx={{ minWidth: 150 }}>
+                                            <Select value={logThreshold} onChange={(e) => {
+                                                const v = Number(e.target.value) as LogAutoCleanThreshold;
+                                                setLogThreshold(v); logStore.setThreshold(v);
+                                            }}>
+                                                <MenuItem value={0}>从不</MenuItem>
+                                                <MenuItem value={200}>200条</MenuItem>
+                                                <MenuItem value={500}>500条</MenuItem>
+                                                <MenuItem value={1000}>1000条</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                    </Box>
+                                </CardContent>
+                            </Card>
+
+                            <Card variant="outlined">
+                                <CardContent>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                        <SaveIcon color="primary" sx={{ mr: 1 }} />
+                                        <Typography variant="h6" fontWeight="bold">游戏配置备份</Typography>
+                                    </Box>
+                                    <Divider sx={{ mb: 3 }} />
+                                    <Box sx={{ display: 'flex', gap: 2 }}>
+                                        <Button variant="contained" color="primary" startIcon={<SaveIcon />} onClick={handleBackup} disabled={isBackingUp}>备份当前设置</Button>
+                                        <Button variant="outlined" startIcon={<HistoryIcon />} onClick={handleRestore} disabled={isRestoring}>恢复历史备份</Button>
+                                    </Box>
+                                </CardContent>
+                            </Card>
+
+                            <Card variant="outlined" sx={{ borderColor: 'warning.main' }}>
+                                <CardContent>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                        <DeveloperModeIcon color="warning" sx={{ mr: 1 }} />
+                                        <Typography variant="h6" fontWeight="bold">开发者模式</Typography>
+                                    </Box>
+                                    <Divider sx={{ mb: 3 }} />
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Box>
+                                            <Typography variant="subtitle1" fontWeight="bold">显示调试面板</Typography>
+                                            <Typography variant="body2" color="text.secondary">侧边栏将显示调试入口（仅限高级用户）。</Typography>
+                                        </Box>
+                                        <Switch checked={showDebug} onChange={handleToggleDebug} color="warning" />
+                                    </Box>
+                                </CardContent>
+                            </Card>
+                        </Box>
+                </TabPanel>
 
 
-            {/* 区域与客户端设置 */}
-            <SettingsHeader>
-                区域与客户端
-            </SettingsHeader>
-            <SettingsCard>
-                <SettingItem>
-                    <SettingInfo>
-                        <SettingText>
-                            <h3>游戏区服</h3>
-                            <p>选择当前账号所在区服，现支持国服与美服（NA）。</p>
-                        </SettingText>
-                    </SettingInfo>
-                    <SelectWrapper value={gameRegion} onChange={handleRegionChange}>
-                        <option value="CN">国服（CN）</option>
-                        <option value="NA">美服（NA）</option>
-                    </SelectWrapper>
-                </SettingItem>
+                {/* 关于 */}
+                <TabPanel value={tabValue} index={3}>
+                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                        <Box sx={{ mb: 4 }}>
+                            <img src="icon.png" alt="logo" width={100} height={100} style={{ borderRadius: 20 }} />
+                            <Typography variant="h4" fontWeight="bold" sx={{ mt: 2 }}>TFT Hextech Helper</Typography>
+                            <Typography color="text.secondary">Version {appVersion || 'Loading...'}</Typography>
+                        </Box>
+                        
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, justifyContent: 'center', mb: 6 }}>
+                            <Button variant="outlined" startIcon={<GitHubIcon />} component={Link} href="https://github.com/WJZ-P/TFT-Hextech-Helper" target="_blank">
+                                GitHub Star ⭐
+                            </Button>
+                            <Button variant="contained" startIcon={<UpdateIcon />} onClick={handleCheckUpdate} disabled={isCheckingUpdate}>
+                                检查更新
+                            </Button>
+                            <Button variant="outlined" startIcon={<HelpOutlineIcon />} onClick={handleRestartTour}>
+                                重新开启指南
+                            </Button>
+                        </Box>
 
-                <SettingItem>
-                    <SettingInfo>
-                        <SettingText>
-                            <h3>客户端类型</h3>
-                            <p>安卓端为手动开局模式；电脑 Riot 端支持自动创建房间与排队。</p>
-                        </SettingText>
-                    </SettingInfo>
-                    <SelectWrapper value={gameClient} onChange={handleClientChange}>
-                        <option value="ANDROID">安卓端（模拟器/投屏）</option>
-                        <option value="RIOT_PC">电脑端（Riot Client）</option>
-                    </SelectWrapper>
-                </SettingItem>
-            </SettingsCard>
+                        <Paper variant="outlined" sx={{ p: 4, bgcolor: '#fafafa', borderRadius: 4 }}>
+                            <Typography variant="h6" gutterBottom fontWeight="bold">📜 使用声明</Typography>
+                            <Typography variant="body2" sx={{ maxWidth: 600, mx: 'auto', textAlign: 'left', color: 'text.secondary' }}>
+                                1. 本项目仅供学习交流使用，禁止用于任何商业用途。<br />
+                                2. 使用本软件产生的任何后果由用户自行承担。<br />
+                                3. 管理员身份运行软件以确保控制功能正常。<br />
+                                4. 推荐使用默认皮肤以提高 OCR 识别精度。
+                            </Typography>
+                        </Paper>
 
-            {/* 快捷键设置 */}
-            <SettingsHeader>
-                快捷键
-            </SettingsHeader>
-            <SettingsCard>
-                <SettingItem>
-                    <SettingInfo>
-                        <SettingText>
-                            <h3>挂机开关</h3>
-                            <p>随时开启/关闭自动挂机功能，按ESC取消绑定</p>
-                        </SettingText>
-                    </SettingInfo>
-                    <HotkeyInput 
-                        $isRecording={isRecordingHotkey}
-                        onClick={handleHotkeyClick}
-                        tabIndex={0}
-                    >
-                        {isRecordingHotkey ? '请按下快捷键' : (toggleHotkey || '未绑定')}
-                    </HotkeyInput>
-                </SettingItem>
-                
-                <SettingItem>
-                    <SettingInfo>
-                        <SettingText>
-                            <h3>本局结束后停止</h3>
-                            <p>开启后，当前对局结束将自动停止挂机，按ESC取消绑定</p>
-                        </SettingText>
-                    </SettingInfo>
-                    <HotkeyInput 
-                        $isRecording={isRecordingStopAfterGameHotkey}
-                        onClick={handleStopAfterGameHotkeyClick}
-                        tabIndex={0}
-                    >
-                        {isRecordingStopAfterGameHotkey ? '请按下快捷键' : (stopAfterGameHotkey || '未绑定')}
-                    </HotkeyInput>
-                </SettingItem>
-            </SettingsCard>
-
-            {/* 对局设置 */}
-            <SettingsHeader>
-                对局
-            </SettingsHeader>
-            <SettingsCard>
-                <SettingItem>
-                    <SettingInfo>
-                        <SettingText>
-                            <h3>显示游戏浮窗</h3>
-                            <p>对局中在游戏窗口旁显示浮窗，展示真人/人机玩家信息。</p>
-                        </SettingText>
-                    </SettingInfo>
-                    <ToggleSwitch onClick={handleToggleOverlay}>
-                        <ToggleSlider $isOn={showOverlay} />
-                    </ToggleSwitch>
-                </SettingItem>
-            </SettingsCard>
-
-            {/* 定时停止设置 */}
-            <SettingsHeader>
-                智能定时
-            </SettingsHeader>
-            <SettingsCard>
-                <SettingItem>
-                    <SettingInfo>
-                        <SettingText>
-                            <h3>定时停止挂机</h3>
-                            <p>到达指定时间后，自动在本局结束时停止挂机，方便控制挂机时长。</p>
-                        </SettingText>
-                    </SettingInfo>
-                    <ScheduledStopRow>
-                        <TimeInput
-                            type="time"
-                            value={scheduledStopTime}
-                            onChange={(e) => setScheduledStopTime(e.target.value)}
-                            disabled={!!scheduledStopIso}
-                        />
-                        <ToggleSwitch onClick={handleToggleScheduledStop}>
-                            <ToggleSlider $isOn={!!scheduledStopIso} />
-                        </ToggleSwitch>
-                    </ScheduledStopRow>
-                </SettingItem>
-                
-                {/* 排队随机间隔 */}
-                <SettingItem>
-                    <SettingInfo>
-                        <SettingText>
-                            <h3>排队随机间隔</h3>
-                            <p>每局进入大厅后，随机等待指定范围内的秒数再开始排队，模拟真人行为。</p>
-                        </SettingText>
-                    </SettingInfo>
-                    <DelayRangeRow>
-                        <NumberInput
-                            type="number"
-                            min={0}
-                            max={9999}
-                            value={queueDelayMin}
-                            onChange={(e) => handleQueueDelayChange('min', Number(e.target.value))}
-                            disabled={queueDelayEnabled}
-                            placeholder="0"
-                        />
-                        <span>~</span>
-                        <NumberInput
-                            type="number"
-                            min={0}
-                            max={9999}
-                            value={queueDelayMax}
-                            onChange={(e) => handleQueueDelayChange('max', Number(e.target.value))}
-                            disabled={queueDelayEnabled}
-                            placeholder="30"
-                        />
-                        <span>秒</span>
-                        <ToggleSwitch onClick={handleToggleQueueDelay}>
-                            <ToggleSlider $isOn={queueDelayEnabled} />
-                        </ToggleSwitch>
-                    </DelayRangeRow>
-                </SettingItem>
-
-                {/* 排队超时自动重排 */}
-                <SettingItem>
-                    <SettingInfo>
-                        <SettingText>
-                            <h3>排队超时自动重排</h3>
-                            <p>排队超过指定分钟数未匹配成功时，自动退出房间并重新排队（发条鸟模式为固定3秒）。</p>
-                        </SettingText>
-                    </SettingInfo>
-                    <DelayRangeRow>
-                        <NumberInput
-                            type="number"
-                            min={1}
-                            max={60}
-                            value={queueTimeoutMinutes}
-                            onChange={(e) => handleQueueTimeoutChange(Number(e.target.value))}
-                            disabled={queueTimeoutEnabled}
-                            placeholder="5"
-                        />
-                        <span>分钟</span>
-                        <ToggleSwitch onClick={handleToggleQueueTimeout}>
-                            <ToggleSlider $isOn={queueTimeoutEnabled} />
-                        </ToggleSwitch>
-                    </DelayRangeRow>
-                </SettingItem>
-            </SettingsCard>
-        
-            {/* 日志设置 */}
-            <SettingsHeader>
-                日志
-            </SettingsHeader>
-            <SettingsCard>
-                <SettingItem>
-                    <SettingInfo>
-                        <SettingText>
-                            <h3>日志自动清理</h3>
-                            <p>当日志数量超过阈值时，自动删除一半的旧日志以节省内存。</p>
-                        </SettingText>
-                    </SettingInfo>
-                    <SelectWrapper 
-                        value={logAutoCleanThreshold} 
-                        onChange={handleLogThresholdChange}
-                    >
-                        <option value={0}>从不</option>
-                        <option value={100}>100 条</option>
-                        <option value={200}>200 条</option>
-                        <option value={500}>500 条</option>
-                        <option value={1000}>1000 条</option>
-                    </SelectWrapper>
-                </SettingItem>
-            </SettingsCard>
-
-            {/* 备份设置 */}
-            <SettingsHeader>
-                备份
-            </SettingsHeader>
-            <SettingsCard>
-                <SettingItem>
-                    <SettingInfo>
-                        <SettingText>
-                            <h3>备份游戏设置</h3>
-                            <p>将当前的游戏内设置（如键位、画质等）备份到本地。</p>
-                        </SettingText>
-                    </SettingInfo>
-                    <ActionButton onClick={handleBackup} disabled={isBackingUp || isRestoring}>
-                        {isBackingUp ? '备份中...' : '立即备份'}
-                    </ActionButton>
-                </SettingItem>
-
-                <SettingItem>
-                    <SettingInfo>
-                        <SettingText>
-                            <h3>恢复游戏设置</h3>
-                            <p>使用之前备份的设置，覆盖当前的游戏设置。</p>
-                        </SettingText>
-                    </SettingInfo>
-                    <ActionButton onClick={handleRestore} disabled={isBackingUp || isRestoring}>
-                        {isRestoring ? '恢复中...' : '恢复备份'}
-                    </ActionButton>
-                </SettingItem>
-            </SettingsCard>
-
-            {/* 开发者选项 */}
-            <SettingsHeader>
-                开发者选项
-            </SettingsHeader>
-            <SettingsCard>
-                <SettingItem>
-                    <SettingInfo>
-                        <SettingText>
-                            <h3>显示调试页面</h3>
-                            <p>在侧边栏显示调试页面入口，用于开发调试。</p>
-                        </SettingText>
-                    </SettingInfo>
-                    <ToggleSwitch onClick={handleToggleDebugPage}>
-                        <ToggleSlider $isOn={showDebugPage} />
-                    </ToggleSwitch>
-                </SettingItem>
-            </SettingsCard>
-
-            {/* 关于 */}
-            <SettingsHeader>
-                关于
-            </SettingsHeader>
-            <SettingsCard>
-                <SettingItem>
-                    <SettingInfo>
-                        <SettingText>
-                            <h3>项目地址</h3>
-                            <p>请你给我点个 Star⭐吧！</p>
-                        </SettingText>
-                    </SettingInfo>
-                    <GitHubButton 
-                        href="https://github.com/WJZ-P/TFT-Hextech-Helper" 
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-                        </svg>
-                        GitHub ⭐
-                    </GitHubButton>
-                </SettingItem>
-                <SettingItem>
-                    <SettingInfo>
-                        <SettingText>
-                            <h3>检查更新</h3>
-                            <p>当前版本：v{currentVersion || '加载中...'}</p>
-                        </SettingText>
-                    </SettingInfo>
-                    <ActionButton onClick={handleCheckUpdate} disabled={isCheckingUpdate}>
-                        {isCheckingUpdate ? '检查中...' : '检查更新'}
-                    </ActionButton>
-                </SettingItem>
-                
-            </SettingsCard>
-
-            {/* 作者署名 */}
-            <AuthorBanner>
-                本软件由神奇的 <a href="https://github.com/WJZ-P" target="_blank" rel="noopener noreferrer">WJZ_P</a> 倾力打造 ( •̀ ω •́ )✧ ✨
-            </AuthorBanner>
+                        <Box sx={{ mt: 6 }}>
+                            <Typography color="text.secondary">
+                                Made with ❤️ by <Link href="https://github.com/WJZ-P" target="_blank" underline="hover" fontWeight="bold">WJZ_P</Link>
+                            </Typography>
+                        </Box>
+                    </Box>
+                </TabPanel>
+            </ContentArea>
         </PageWrapper>
     );
 };
 
 export default SettingsPage;
-
