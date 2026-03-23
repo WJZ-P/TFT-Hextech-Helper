@@ -79,7 +79,7 @@ export const OverlayApp: React.FC = () => {
             {/* 标题栏 */}
             <div style={styles.header}>
                 <span style={styles.headerIcon}>🎮</span>
-                <span style={styles.headerText}>对局信息</span>
+                <span style={styles.headerText}>对局实时信息</span>
                 {/* 策略徽章：当后端提供时显示 */}
                 {strategyName && (
                     <span style={styles.strategyBadge} title={`当前策略: ${strategyName}`}>
@@ -91,7 +91,7 @@ export const OverlayApp: React.FC = () => {
                     style={{
                         ...styles.closeButton,
                         // hover 时变亮 + 加背景
-                        ...(closeHover ? { color: '#e2e8f0', backgroundColor: 'rgba(255,255,255,0.1)' } : {}),
+                        ...(closeHover ? { color: '#ffffff', backgroundColor: 'rgba(255,255,255,0.15)' } : {}),
                     }}
                     onClick={handleClose}
                     onMouseEnter={() => setCloseHover(true)}
@@ -104,16 +104,17 @@ export const OverlayApp: React.FC = () => {
             <div style={styles.summary}>
                 <span style={styles.summaryItem}>
                     <span style={styles.dotReal}></span>
-                    真人 {realPlayers.length}
+                    真人玩家 <span style={styles.countBadge}>{realPlayers.length}</span>
                 </span>
                 <span style={styles.summaryItem}>
                     <span style={styles.dotBot}></span>
-                    人机 {botPlayers.length}
+                    人机对手 <span style={styles.countBadge}>{botPlayers.length}</span>
                 </span>
             </div>
 
             {/* 分割线 */}
             <div style={styles.divider}></div>
+
 
             {/* 玩家列表 */}
             <div style={styles.playerList}>
@@ -164,53 +165,62 @@ const styles: Record<string, React.CSSProperties> = {
     container: {
         width: '100%',
         height: '100%',
-        backgroundColor: 'rgba(15, 23, 42, 0.88)',  // 深色半透明背景
-        color: '#e2e8f0',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        backgroundColor: 'rgba(15, 23, 42, 0.94)',  // 加深透明度提高对比度
+        color: '#f1f5f9', // 稍微亮一点的文字
+        fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         fontSize: '12px',
         display: 'flex',
         flexDirection: 'column',
-        borderLeft: '1px solid rgba(102, 204, 255, 0.3)',  // 主题色边框
+        borderLeft: '1px solid rgba(102, 204, 255, 0.4)',  // 增强边框感
         overflow: 'hidden',
-        userSelect: 'none',  // 禁止选中文字
+        userSelect: 'none',
+        animation: 'fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)', // 添加淡入动画
     },
     header: {
         display: 'flex',
         alignItems: 'center',
-        padding: '10px 12px 6px',
-        gap: '6px',
+        padding: '12px 14px 8px', // 稍微增大内边距
+        gap: '8px',
     },
     headerIcon: {
         fontSize: '14px',
+        filter: 'drop-shadow(0 0 4px rgba(102, 204, 255, 0.4))',
     },
     headerText: {
         fontSize: '13px',
-        fontWeight: 600,
-        color: '#66ccff',  // 主题色
-        letterSpacing: '0.5px',
-        flex: 1,           // 占满剩余空间，把关闭按钮推到右边
+        fontWeight: 700, // 增加字重
+        color: '#66ccff',
+        letterSpacing: '0.4px',
+        flex: 1,
     },
     closeButton: {
-        fontSize: '12px',
-        color: '#64748b',
+        fontSize: '14px', // 稍微大一点
+        color: '#94a3b8',
         cursor: 'pointer',
-        padding: '2px 4px',
-        borderRadius: '3px',
+        padding: '4px 6px',
+        borderRadius: '6px',
         lineHeight: 1,
-        transition: 'color 0.15s, background-color 0.15s',
+        transition: 'all 0.2s ease',
         flexShrink: 0,
     },
     summary: {
         display: 'flex',
-        gap: '12px',
-        padding: '4px 12px 8px',
+        justifyContent: 'space-between', // 分散对齐
+        padding: '4px 14px 10px',
         fontSize: '11px',
-        color: '#94a3b8',
+        color: '#cbd5e1',
+    },
+    countBadge: {
+        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+        padding: '1px 5px',
+        borderRadius: '4px',
+        fontWeight: 700,
+        marginLeft: '2px',
     },
     summaryItem: {
         display: 'flex',
         alignItems: 'center',
-        gap: '4px',
+        gap: '5px',
     },
     dotReal: {
         display: 'inline-block',

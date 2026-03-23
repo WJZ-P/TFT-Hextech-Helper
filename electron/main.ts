@@ -901,9 +901,10 @@ function registerHandler() {
             const lcu = LCUManager.getInstance();
 
             if (!lcu || !lcu.isConnected) {
-                logger.error('❌ [IPC] LCUManager 尚未连接，无法处理请求');
-                return { error: 'LCU is not connected yet.' };
+                logger.error('❌ [IPC] LCUManager 尚未连接。请确保游戏客户端已启动，并尝试以管理员权限重新运行助手。');
+                return { error: '游戏客户端未连接 (LCU disconnect). 请检查游戏是否运行。' };
             }
+
 
             try {
                 logger.info(`📞 [IPC] 收到请求: ${method} ${endpoint}`);
