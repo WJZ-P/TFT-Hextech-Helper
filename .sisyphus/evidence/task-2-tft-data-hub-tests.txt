@@ -1,0 +1,11 @@
+[Logger] 日志文件路径: C:\Users\ASUS\AppData\Roaming\tft-hextech-helper\logs\tft-2026-03-25.log
+✔ TftDataHub merges snapshot display access with automation lineup access (1.0783ms)
+✔ TftDataHub champion/trait helpers (1.4536ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 530.5155

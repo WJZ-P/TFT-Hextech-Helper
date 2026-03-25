@@ -580,7 +580,7 @@ const ChampionAvatar = styled.div<{ $isCore: boolean; $cost?: number; $rotateX?:
   /* 根据英雄费用显示不同颜色的边框 */
   border: 2.5px solid ${props => {
       const cost = props.$cost;
-      // @ts-ignore
+      // @ts-expect-error: championCost index may not exist in theme
       const color = props.theme.colors.championCost[cost];
       return color || props.theme.colors.championCost.default;
   }};
@@ -735,7 +735,7 @@ const SmallChampionAvatar = styled.div<{ $cost?: number; theme: ThemeType }>`
   overflow: hidden;
   border: 2px solid ${props => {
     const cost = props.$cost;
-    // @ts-ignore
+    // @ts-expect-error: championCost index may not exist in theme
     const color = props.theme.colors.championCost[cost];
     return color || props.theme.colors.championCost.default;
   }};

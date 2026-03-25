@@ -5,6 +5,7 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 const repoRoot = path.resolve(process.cwd());
 
+// OpenCV.js WASM stubbing is applied in scripts/verify-lineups-gui.ts to prevent headless renderer crashes.
 test("Electron lineup GUI verification reports local assets when season-pack resources are available offline", { timeout: 120000 }, async () => {
     // Run the verification script via spawn to stream stdout/stderr
     // instead of buffering the entire output (avoids maxBuffer exhaustion).
@@ -18,25 +19,68 @@ test("Electron lineup GUI verification reports local assets when season-pack res
     child.stdout.on("data", (chunk) => process.stdout.write(chunk));
     child.stderr.on("data", (chunk) => process.stderr.write(chunk));
 
+    // Wait for the verification summary to be written. In some environments
+    // the dev wrapper process may not exit promptly even after Electron
+    // calls app.quit(), so instead of relying solely on the child's 'close'
+    // event we poll for the presence of the expected summary file. This
+    // prevents the test from hanging with unresolved promises when the
+    // wrapper process keeps running.
+    const summaryPath = path.resolve(process.cwd(), ".cache", "gui-lineups-offline.json");
+
     const exitCode = await new Promise<number>((resolve, reject) => {
+        const timeoutMs = 45000;
+        const pollIntervalMs = 500;
+
         const timeout = setTimeout(() => {
-            child.kill();
-            reject(new Error("GUI verification timed out before Electron exited"));
-        }, 45000);
+            try {
+                child.kill();
+            } catch (e) {
+                // best-effort
+            }
+            clearInterval(poll);
+            reject(new Error("GUI verification timed out before producing summary"));
+        }, timeoutMs);
 
-        child.on("error", (error) => {
+        const onError = (error: unknown) => {
             clearTimeout(timeout);
+            clearInterval(poll);
             reject(error);
+        };
+
+        child.on("error", onError);
+
+        // If the child process exits early, respect that but only succeed
+        // if the summary file was produced.
+        child.on("close", (code) => {
+            if (fs.existsSync(summaryPath)) {
+                clearTimeout(timeout);
+                clearInterval(poll);
+                resolve(code ?? 0);
+            } else {
+                // Closed but no summary file — treat as failure to make the
+                // resulting error clearer.
+                clearTimeout(timeout);
+                clearInterval(poll);
+                reject(new Error(`GUI verification child exited prematurely (code=${code})`));
+            }
         });
 
-        child.on("close", (code) => {
-            clearTimeout(timeout);
-            resolve(code ?? 0);
-        });
+        const poll = setInterval(() => {
+            if (fs.existsSync(summaryPath)) {
+                clearTimeout(timeout);
+                clearInterval(poll);
+                try {
+                    // Try to politely stop the spawned wrapper; best-effort.
+                    child.kill();
+                } catch (e) {
+                    // best-effort kill, ignore errors
+                }
+                resolve(0);
+            }
+        }, pollIntervalMs);
     });
 
     // The verification script writes its JSON summary to a known location.
-    const summaryPath = path.resolve(process.cwd(), ".cache", "gui-lineups-offline.json");
     if (!fs.existsSync(summaryPath)) {
         throw new Error(`GUI verification did not produce summary file (exit=${exitCode})`);
     }

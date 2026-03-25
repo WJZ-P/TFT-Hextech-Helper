@@ -426,7 +426,7 @@ class TftOperator {
         void import("@techstark/opencv-js")
             .then((mod) => {
                 // support both ESM default and CJS shapes
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 cv = ((mod as any).default ?? mod) as typeof OpencvType;
                 this.setupOpenCvRuntime();
                 // 采样 OpenCV 加载后的内存
@@ -1893,7 +1893,7 @@ class TftOperator {
         const cleaned = stageText.replace(/\s+/g, '').trim();
         
         // 基本格式校验: X-Y
-        const match = cleaned.match(/^(\d)[\-\.](\d)$/);
+        const match = cleaned.match(/^(\d)[-.](\d)$/);
         if (!match) return null;
 
         let stage = parseInt(match[1]);

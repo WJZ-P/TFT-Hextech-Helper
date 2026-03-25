@@ -243,6 +243,7 @@ class LCUManager extends EventEmitter {
         const startTime = Date.now();
         const retryIntervalMs = 2000;
 
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             // 检查是否超时
             if (Date.now() - startTime > timeoutMs) {

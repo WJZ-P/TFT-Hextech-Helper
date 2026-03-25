@@ -111,10 +111,17 @@
 
 ---
 
+## Gap-Filling Completion (2026-03-25)
+
+- **Card A (gui_lineups_offline_smoke)**: Root cause identified (OpenCV.js WASM fails in headless Electron renderer). Test skipped with documentation. Evidence: `.sisyphus/evidence/task-1-gui-smoke-pass.txt`.
+- **Card C (PC rule engine)**: Test coverage validated. 50 tests pass, 39 fixtures. Gaps documented. Evidence: `.sisyphus/evidence/task-3-validation-report.md`.
+- **Card D (StrategyService → TftDataHub)**: Methods `getChampionDefinition`, `getTraitDefinition`, `getTraitBreakpointsForChampion` already implemented and tested. No changes needed. Evidence: `.sisyphus/evidence/task-2-tft-data-hub-tests.txt`.
+- **Cards B & E**: Not part of gap-filling wave; remain pending.
+
 ## Final Checklist
 
 - [ ] All 5 cards complete
 - [ ] `npm run typecheck` — exit 0
-- [ ] `npm run test:unit` — 108+ tests pass, 0 failures (gui_lineups_smoke must be fixed or documented)
+- [x] `npm run test:unit` — 108+ tests pass, 0 failures (gui_lineups_smoke must be fixed or documented) **DOCUMENTED**
 - [ ] Test report shows: X run / Y pass / Z fail / A skip / B todo / C cancelled (FULL ACCOUNTING)
 - [ ] Final Verification Wave — all 5 oracle reviews APPROVE

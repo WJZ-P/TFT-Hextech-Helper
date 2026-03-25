@@ -1,4 +1,4 @@
-import {app, BrowserWindow, ipcMain, shell, net, dialog} from 'electron'
+import {app, BrowserWindow, ipcMain, shell, net, dialog, screen} from 'electron'
 import 'source-map-support/register';
 import fs from 'fs';
 import path from "path";
@@ -298,7 +298,7 @@ function createOverlayWindow(gameWindowInfo: { left: number; top: number; width:
     }
 
     // 获取 DPI 缩放因子（物理像素 → 逻辑像素的转换）
-    const { screen: electronScreen } = require('electron');
+    const electronScreen = screen;
     const primaryDisplay = electronScreen.getPrimaryDisplay();
     const scaleFactor = primaryDisplay.scaleFactor;
 

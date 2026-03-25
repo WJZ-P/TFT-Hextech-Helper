@@ -20,7 +20,7 @@ type ModuleStub = {
 declare global {
     // Expose a Module symbol for Emscripten-based bundles. Keep type concrete
     // to avoid broad `any` usage and satisfy strict TS rules.
-    var Module: ModuleStub | undefined;
+    let Module: ModuleStub | undefined;
 }
 
 // Only install the stub if not already present. This keeps production
@@ -48,7 +48,7 @@ if (typeof globalThis.Module === 'undefined') {
             } catch (e) {
                 // swallow any failure — the goal is to avoid crashing the test run
                 // but surface to logger if present (do not throw)
-                // eslint-disable-next-line no-console
+                 
                 console.warn('Module.instantiateWasm stub failed:', e?.toString?.() ?? e);
             }
             return {} as any;
@@ -82,7 +82,7 @@ if (typeof (globalThis as any).cv === 'undefined') {
             // code that waits for it will continue.
             mod.onRuntimeInitialized?.();
         } catch (e) {
-            // eslint-disable-next-line no-console
+             
             console.warn('cv stub setup failed:', e?.toString?.() ?? e);
         }
         return mod;
@@ -124,7 +124,7 @@ const ipcApi = {
                 callback(...args);
             } catch (err) {
                 // prevent renderer exceptions from bubbling to main
-                // eslint-disable-next-line no-console
+                 
                 console.error('[Preload] ipc.on callback error:', err);
             }
         };

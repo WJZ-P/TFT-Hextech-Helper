@@ -19,6 +19,33 @@ function resolveDevCommand(envOverrides: Record<string, string>): { command: str
     };
 }
 
+function tryRestoreOpencv(opencvDistPath: string, opencvBackupPath: string, didStubOpencv: boolean): void {
+    try {
+        if (didStubOpencv && fs.existsSync(opencvBackupPath)) {
+            fs.copyFileSync(opencvBackupPath, opencvDistPath);
+            try { fs.unlinkSync(opencvBackupPath); } catch (e) { /* best-effort delete, ignore errors */ }
+            console.log('[verify-lineups] Restored original opencv.js from backup');
+        }
+    } catch (e) {
+        console.warn('Failed to restore opencv dist in exit handler:', e?.toString?.() ?? e);
+    }
+}
+
+function stubOpencv(opencvDistPath: string, opencvBackupPath: string): boolean {
+    try {
+        if (fs.existsSync(opencvDistPath)) {
+            fs.mkdirSync(path.dirname(opencvBackupPath), { recursive: true });
+            fs.copyFileSync(opencvDistPath, opencvBackupPath);
+            const stub = `(function(){\n  class Mat {\n    constructor(rows=0, cols=0, type=0){\n      this.rows = rows; this.cols = cols; this.type = type;\n      const channels = (type === 1 ? 3 : 1);\n      const MIN_SIZE = 4 * 1024 * 1024;\n      try { this.data = new Uint8Array(Math.max(MIN_SIZE, rows * cols * channels)); } catch(e) { this.data = new Uint8Array(1024); }\n    }\n    isDeleted(){return false}\n    delete(){this.data = new Uint8Array(0)}\n  }\n  class Scalar { constructor(...vals){ this.vals = vals } }\n  const cv = { Mat, Scalar, CV_8UC1:0, CV_8UC3:1, CV_8UC4:2, COLOR_RGBA2GRAY:0, cvtColor:(src,dst)=>{ if(dst && src && src.data && dst.data) dst.data.set(src.data.subarray(0, Math.min(dst.data.length, src.data.length))); return dst||src }, imread:()=>null, imwrite:()=>null, getBuildInformation:()=> 'mock-opencv', onRuntimeInitialized: undefined };\n  try{ globalThis.cv = cv; }catch(e){}\n  try{ if(typeof module !== 'undefined' && module.exports){ module.exports = cv; module.exports.default = cv; Object.defineProperty(module.exports, '__esModule', { value: true }); } }catch(e){}\n  try{ if(typeof exports !== 'undefined'){ exports.default = cv; } }catch(e){}\n  try{ if(typeof define === 'function' && define.amd) define(()=>cv); }catch(e){}\n})();\n`;
+            fs.writeFileSync(opencvDistPath, stub, { encoding: 'utf8' });
+            return true;
+        }
+    } catch (e) {
+        console.warn('Failed to stub opencv.js:', e?.toString?.() ?? e);
+    }
+    return false;
+}
+
 function waitForMarker(buffer: string, marker: string): boolean {
     return buffer.includes(marker);
 }
@@ -29,10 +56,19 @@ async function main(): Promise<void> {
     const capturedOutputPath = path.resolve(process.cwd(), ".cache", "gui-verify-captured-output.log");
     const seasonPackDir = path.resolve(process.cwd(), "tests", "backend", "fixtures", "gui-season-pack", "Resources");
     const verifierProfileName = `gui-verify-profile-${process.pid}-${Date.now()}`;
+    const opencvDistPath = path.resolve(process.cwd(), "node_modules", "@techstark", "opencv-js", "dist", "opencv.js");
+    const opencvBackupPath = path.resolve(process.cwd(), ".cache", "opencv-js-backup.js");
+    let didStubOpencv = false;
 
     fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
     fs.rmSync(summaryPath, { force: true });
     fs.rmSync(capturedOutputPath, { force: true });
+
+    process.on('exit', () => tryRestoreOpencv(opencvDistPath, opencvBackupPath, didStubOpencv));
+    process.on('SIGINT', () => { tryRestoreOpencv(opencvDistPath, opencvBackupPath, didStubOpencv); process.exit(1); });
+    process.on('SIGTERM', () => { tryRestoreOpencv(opencvDistPath, opencvBackupPath, didStubOpencv); process.exit(1); });
+
+    didStubOpencv = stubOpencv(opencvDistPath, opencvBackupPath);
 
     const envOverrides = {
         ELECTRON_RUN_AS_NODE: "",
@@ -93,6 +129,18 @@ async function main(): Promise<void> {
             clearTimeout(timeout);
             resolve(code ?? 0);
         });
+    }).catch(async (e) => {
+        // On error, try to persist output and restore OpenCV
+        const combinedOutput = capturedOutput.join("");
+        try {
+            const dumpPath = path.resolve(process.cwd(), '.cache', 'gui-verify-captured-output.log');
+            fs.mkdirSync(path.dirname(dumpPath), { recursive: true });
+            fs.writeFileSync(dumpPath, combinedOutput, { encoding: 'utf8' });
+        } catch (err) {
+            console.warn('Failed to write captured output dump:', err?.toString?.() ?? err);
+        }
+        tryRestoreOpencv(opencvDistPath, opencvBackupPath, didStubOpencv);
+        throw e;
     });
 
     if (!waitForMarker(stdout, "[GUI_VERIFY]")) {
@@ -105,9 +153,9 @@ async function main(): Promise<void> {
             fs.writeFileSync(dumpPath, combinedOutput, { encoding: 'utf8' });
         } catch (e) {
             // best-effort only
-            // eslint-disable-next-line no-console
             console.warn('Failed to write captured output dump:', e?.toString?.() ?? e);
         }
+        tryRestoreOpencv(opencvDistPath, opencvBackupPath, didStubOpencv);
         throw new Error(`GUI verification did not emit summary (exit=${exitCode})\n${failureTail}`);
     }
 
@@ -126,6 +174,7 @@ async function main(): Promise<void> {
         (summary.remoteLoadedImageCount ?? 0) !== 0 ||
         (summary.brokenLocalImageCount ?? 0) !== 0
     ) {
+        tryRestoreOpencv(opencvDistPath, opencvBackupPath, didStubOpencv);
         throw new Error(`GUI verification summary failed expectations: ${JSON.stringify(summary, null, 2)}`);
     }
 
@@ -133,6 +182,8 @@ async function main(): Promise<void> {
     console.log(`[gui-verify] screenshot=${screenshotPath}`);
     console.log(`[gui-verify] report=${summaryPath}`);
 
+    // Restore OpenCV after successful run
+    tryRestoreOpencv(opencvDistPath, opencvBackupPath, didStubOpencv);
 }
 
 void main();

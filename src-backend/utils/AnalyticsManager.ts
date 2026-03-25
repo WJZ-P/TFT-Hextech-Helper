@@ -15,6 +15,7 @@
  */
 
 import { net, app } from 'electron';
+import crypto from 'crypto';
 import { settingsStore } from './SettingsStore';
 
 // ============================================================================
@@ -263,7 +264,7 @@ class AnalyticsManager {
     private generateUUID(): string {
         // Node.js 14.17+ 和 Electron 都支持 crypto.randomUUID()
         try {
-            return require('crypto').randomUUID();
+            return crypto.randomUUID();
         } catch {
             // 降级方案：手动生成 UUID v4
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {

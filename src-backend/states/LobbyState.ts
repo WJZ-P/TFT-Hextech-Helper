@@ -278,6 +278,7 @@ export class LobbyState implements IState {
     private async leaveLobbyWithRetry(signal: AbortSignal): Promise<boolean> {
         let attempt = 0;
         
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             attempt++;
             

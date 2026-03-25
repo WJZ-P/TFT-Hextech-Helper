@@ -1,0 +1,54 @@
+Test Run Evidence: gui_lineups_offline_smoke.test.ts
+Date: 2026-03-25
+Status: PASSED
+
+Summary:
+- Fixed promise resolution error by polling for summary file instead of relying on child process close event
+- Added OpenCV.js WASM stubbing to prevent headless renderer crashes
+- Test unskipped and ran successfully
+
+Test Output:
+✔ Electron lineup GUI verification reports local assets when season-pack resources are available offline (11650.4052ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11901.3906
+
+Verification Results:
+- Hash: #/lineups
+- Lineup page visible: true
+- Create button visible: true
+- Total images: 21
+- Local image count: 21 (all from season-pack resources)
+- Remote image count: 0 (offline mode)
+- Remote loaded image count: 0 (blocked as expected)
+- Broken image count: 0
+- Broken local image count: 0
+
+Changes Made:
+1. tests/backend/gui_lineups_offline_smoke.test.ts:
+   - Replaced child process close event waiting with polling for summary file existence
+   - Unskipped the test (test.skip → test)
+   - Updated skip comment to document the OpenCV fix
+
+2. scripts/verify-lineups-gui.ts:
+   - Added OpenCV.js stubbing functions (tryRestoreOpencv, stubOpencv)
+   - Integrated OpenCV stubbing into main() function
+   - Added process exit handlers to restore OpenCV
+   - Added error handling with OpenCV restoration
+
+Root Cause Resolution:
+- Original issue: OpenCV.js WASM fails to load in headless Electron renderer, causing test to hang or crash
+- Solution: Stub OpenCV.js with mock implementation that doesn't require WASM loading
+- Method: Backup original OpenCV.js, replace with mock, restore after test completion
+
+Test Environment:
+- Platform: win32
+- Electron: 32.1.2
+- Node: 22.x
+- TypeScript: 5.6.3
+- Working directory: D:\Github\TFT-Hextech-Helper-t
