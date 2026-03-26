@@ -150,37 +150,60 @@ function parseSmokeOutput(stdout: string): any | null {
 /**
  * 主函数
  */
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
     const args = process.argv.slice(2);
-    
+
     const options: StressTestOptions = {
         rounds: 5,
         recordMetrics: false,
     };
-    
-    // 解析参数
-    for (let i = 0; i < args.length; i += 2) {
-        const key = args[i];
-        const value = args[i + 1];
-        
-        if (key === "--rounds" && value) {
-            options.rounds = parseInt(value);
-        } else if (key === "--scenario" && value) {
-            options.scenario = value;
-        } else if (key === "--output-report" && value) {
-            options.outputReport = value;
-        } else if (key === "--fixture" && value) {
-            options.fixture = value;
-        } else if (key === "--record-metrics") {
+
+    // 解析参数（兼容无值 flag）
+    for (let i = 0; i < args.length; i += 1) {
+        const token = args[i];
+        if (token === "--rounds" && args[i + 1]) {
+            const parsed = Number(args[i + 1]);
+            if (Number.isFinite(parsed) && parsed > 0) options.rounds = Math.trunc(parsed);
+            i += 1;
+            continue;
+        }
+
+        if (token === "--scenario" && args[i + 1]) {
+            options.scenario = args[i + 1];
+            i += 1;
+            continue;
+        }
+
+        if (token === "--output-report" && args[i + 1]) {
+            options.outputReport = args[i + 1];
+            i += 1;
+            continue;
+        }
+
+        if (token === "--fixture" && args[i + 1]) {
+            options.fixture = args[i + 1];
+            i += 1;
+            continue;
+        }
+
+        if (token === "--record-metrics") {
             options.recordMetrics = true;
+            continue;
         }
     }
-    
+
+    // 默认输出路径（若未指定），按任务要求使用 Markdown 为默认输出
+    if (!options.outputReport) {
+        const stamp = new Date().toISOString().replace(/:/g, "-").replace(/\.[0-9]+Z$/, "");
+        options.outputReport = path.join(process.cwd(), "reports", `stress-test-${stamp}.md`);
+    }
+
     logger.info(
         `[StressTest] 开始压力测试：` +
         `轮数=${options.rounds}, ` +
         `场景=${options.scenario || "default"}, ` +
-        `fixture=${options.fixture || "none"}`
+        `fixture=${options.fixture || "none"}, ` +
+        `output=${options.outputReport}`
     );
     
     const report: StressTestReport = {
@@ -216,10 +239,56 @@ async function main(): Promise<void> {
     
     // 安装中断/退出处理，优雅保存中间报告
     let aborted = false;
+    async function writePartialReportAndExit() {
+        try {
+            report.endTime = Date.now();
+            (report as any).perRound = perRoundDetails;
+
+            // finalize memory stats
+            const memStats = memoryMonitor.getStats();
+            if (memStats) {
+                report.timeline.memoryPeak = memStats.maxRss / 1024 / 1024;
+                report.timeline.memoryAvg = memStats.avgRss / 1024 / 1024;
+                report.timeline.memoryGrowthRate = memStats.growthRate;
+            }
+
+            // compute summary partially
+            const avgTime = report.timeline.roundTime.length > 0
+                ? report.timeline.roundTime.reduce((a: number, b: number) => a + b, 0) / report.timeline.roundTime.length
+                : 0;
+            report.summary.avgResponseTime = avgTime;
+            report.summary.maxMemory = report.timeline.memoryPeak;
+            report.summary.passed = report.failedAt.length === 0 && (report.timeline.memoryGrowthRate || 0) < 50;
+
+            // determine paths
+            const { jsonPath, mdPath } = normalizeReportPaths(options.outputReport!);
+
+            await fs.ensureDir(path.dirname(jsonPath));
+            await fs.writeFile(jsonPath, JSON.stringify(report, null, 2), "utf-8");
+            logger.info(`[StressTest] 中间 JSON 报告已保存：${jsonPath}`);
+
+            const md = generateMarkdownReport(report as any, perRoundDetails || []);
+            await fs.writeFile(mdPath, md, "utf-8");
+            logger.info(`[StressTest] 中间 Markdown 报告已保存：${mdPath}`);
+
+            console.log(JSON.stringify(report, null, 2));
+        } catch (e) {
+            logger.error(`[StressTest] 写入中间报告失败: ${String(e)}`);
+        } finally {
+            // ensure exit after flushing
+            setImmediate(() => process.exit(report.failedAt.length > 0 ? 1 : 0));
+        }
+    }
+
     process.on("SIGINT", async () => {
-        if (aborted) return; // second SIGINT -> hard exit
+        if (aborted) {
+            logger.warn("[StressTest] 收到第二次 SIGINT，强制退出");
+            process.exit(1);
+            return;
+        }
         aborted = true;
         logger.warn("[StressTest] 收到 SIGINT，中止后写入中间报告...");
+        await writePartialReportAndExit();
     });
 
     // adapter 用于健康检查/辅助信息采集（不用于直接控制子进程）
@@ -409,6 +478,22 @@ function generateMarkdownReport(report: any, perRound: PerRoundDetail[]): string
     }
 
     return [header, summary, perGameHeader, perGameRows, stageHeader, stageRows, "\n"].join("\n");
+}
+
+/**
+ * Normalize output paths for JSON and Markdown based on the provided outputReport path.
+ * If provided path ends with .json or .md, derive the counterpart; otherwise use .json and .md
+ */
+function normalizeReportPaths(outputReportPath: string): { jsonPath: string; mdPath: string } {
+    const ext = path.extname(outputReportPath).toLowerCase();
+    if (ext === ".json") {
+        return { jsonPath: outputReportPath, mdPath: outputReportPath.replace(/\.json$/i, ".md") };
+    }
+    if (ext === ".md") {
+        return { jsonPath: outputReportPath.replace(/\.md$/i, ".json"), mdPath: outputReportPath };
+    }
+    // default: treat as md
+    return { jsonPath: outputReportPath.replace(/\.md$/i, ".json"), mdPath: outputReportPath };
 }
 
 // 运行
