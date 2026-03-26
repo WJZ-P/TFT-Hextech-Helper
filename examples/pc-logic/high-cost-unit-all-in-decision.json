@@ -1,0 +1,49 @@
+{
+  "description": "High-cost unit all-in decision: decide whether to go all-in on a 5-cost unit or wait to optimize board placement",
+  "state": {
+    "timestamp": 1710000010000,
+    "client": "RIOT_PC",
+    "target": "PC_LOGIC",
+    "stageText": "5-1",
+    "stageType": "PVP",
+    "level": 8,
+    "currentXp": 0,
+    "totalXp": 56,
+    "gold": 12,
+    "hp": 68,
+    "streak": 2,
+    "bench": [
+      { "id": "TFT_Sett_A", "name": "瑟提", "star": 1, "cost": 5, "location": "SLOT_1", "items": ["巨人杀手"], "traits": ["斗士", "先锋"] },
+      { "id": "TFT_Aatrox_A", "name": "亚托克斯", "star": 1, "cost": 5, "location": "SLOT_2", "items": [], "traits": ["战神"] }
+    ],
+    "board": [
+      { "id": "TFT_Yasuo_A", "name": "亚索", "star": 2, "cost": 2, "location": "R4_C1", "items": [], "traits": ["斗士", "剑豪"] },
+      { "id": "TFT_Zed_A", "name": "劫", "star": 1, "cost": 4, "location": "R3_C3", "items": [], "traits": ["刺客"] }
+    ],
+    "shop": [
+      { "slot": 0, "cost": 5, "unit": { "id": "TFT_Sett_Shop", "name": "瑟提", "star": 1, "cost": 5, "items": [], "traits": ["斗士", "先锋"] } },
+      { "slot": 1, "cost": 2, "unit": { "id": "TFT_Yasuo_Shop", "name": "亚索", "star": 1, "cost": 2, "items": [], "traits": ["剑豪"] } },
+      { "slot": 2, "cost": null, "unit": null },
+      { "slot": 3, "cost": null, "unit": null },
+      { "slot": 4, "cost": null, "unit": null }
+    ],
+    "items": []
+  },
+  "context": {
+    "targetPairs": [
+      { "champion": "瑟提", "count": 1, "needed": 2 },
+      { "champion": "亚托克斯", "count": 1, "needed": 1 }
+    ],
+    "strategy": "STANDARD",
+    "gameMode": "PVP",
+    "allInPairThreshold": 1,
+    "upgradeAllInExtraBudget": 10,
+    "maxRollCount": 8,
+    "notes": "Two high-cost units on bench; evaluate immediate all-in purchase of Sett vs saving for optimized positioning and rerolls"
+  },
+  "expectedActions": [
+    { "type": "EVALUATE_ALLIN", "priority": 1, "data": { "unit": "瑟提", "cost": 5, "currentGold": 12, "recommendation": "defer_unless_hp_low_or_defensive_need" } },
+    { "type": "REARRANGE", "priority": 5, "data": { "from": "亚索", "to": "前排", "reason": "temp_stabilize" } },
+    { "type": "SAVE_GOLD", "priority": 8, "data": { "targetGold": 30, "reason": "avoid_allin_now" } }
+  ]
+}

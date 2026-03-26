@@ -1,0 +1,49 @@
+{
+  "description": "Companion fusion pivot: opponent-layed companion forces pivot to main fusion decision",
+  "state": {
+    "timestamp": 1710000005000,
+    "client": "RIOT_PC",
+    "target": "PC_LOGIC",
+    "stageText": "4-5",
+    "stageType": "PVP",
+    "level": 7,
+    "currentXp": 0,
+    "totalXp": 40,
+    "gold": 18,
+    "hp": 48,
+    "streak": 1,
+    "bench": [
+      { "id": "TFT_Kayle_A", "name": "凯尔", "star": 1, "cost": 3, "location": "SLOT_1", "items": [], "traits": ["守护者", "圣光"] },
+      { "id": "TFT_Misfortune_A", "name": "厄运小姐", "star": 1, "cost": 4, "location": "SLOT_2", "items": [], "traits": ["枪手"] }
+    ],
+    "board": [
+      { "id": "TFT_Braum_A", "name": "布隆", "star": 2, "cost": 2, "location": "R4_C1", "items": ["日炎斗篷"], "traits": ["守护者", "骑士"] },
+      { "id": "TFT_Soraka_A", "name": "索拉卡", "star": 1, "cost": 3, "location": "R3_C3", "items": [], "traits": ["召唤师", "圣光"] },
+      { "id": "TFT_Varus_A", "name": "韦鲁斯", "star": 1, "cost": 3, "location": "R3_C4", "items": [], "traits": ["枪手"] }
+    ],
+    "shop": [
+      { "slot": 0, "cost": 3, "unit": { "id": "TFT_Kayle_Shop", "name": "凯尔", "star": 1, "cost": 3, "items": [], "traits": ["守护者", "圣光"] } },
+      { "slot": 1, "cost": 4, "unit": { "id": "TFT_Soraka_Shop", "name": "索拉卡", "star": 1, "cost": 3, "items": [], "traits": ["召唤师", "圣光"] } },
+      { "slot": 2, "cost": 4, "unit": { "id": "TFT_Lulu_A", "name": "璐璐", "star": 1, "cost": 3, "items": [], "traits": ["法师", "仙灵"] } },
+      { "slot": 3, "cost": null, "unit": null },
+      { "slot": 4, "cost": null, "unit": null }
+    ],
+    "items": []
+  },
+  "context": {
+    "targetPairs": [
+      { "champion": "凯尔", "count": 2, "needed": 3 },
+      { "champion": "索拉卡", "count": 1, "needed": 2 }
+    ],
+    "strategy": "STANDARD",
+    "gameMode": "PVP",
+    "stabilizeHpThreshold": 45,
+    "maxRollCount": 5,
+    "notes": "Opponent placed companion (索拉卡) on board; decide whether to pivot focus from Kayle pair to Soraka main fusion"
+  },
+  "expectedActions": [
+    { "type": "EVALUATE_FUSION", "priority": 1, "data": { "from": "凯尔", "to": "索拉卡", "reason": "opponent-companion-boarded", "recommendation": "pivot_if_expected_win_increase" } },
+    { "type": "SELL", "priority": 5, "data": { "unit": "韦鲁斯", "reason": "free_slot_for_pair" } },
+    { "type": "BUY", "priority": 6, "data": { "unit": "凯尔", "count": 1, "reason": "complete_pair_if_not_pivoting" } }
+  ]
+}
