@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { GameStageType } from "../../src-backend/TFTProtocol";
 import { RuleBasedDecisionEngine } from "../../src-backend/core/RuleBasedDecisionEngine";
+import type { FusionPlan } from "../../src-backend/core/RuleBasedDecisionEngine";
 import type { ObservedState, DecisionContext } from "../../src-backend/core/types";
 
 const repoRoot = path.resolve(process.cwd());
@@ -1154,4 +1155,111 @@ test("End-to-end: BUY priority reflects fusion path quality", () => {
     for (const plan of targetBuys) {
         assert.ok(plan.priority >= 90, `Target ${plan.payload.champion} should have priority >= 90`);
     }
+});
+
+// ===== evaluateFusionQuality unit tests (Task B3) =====
+test("RuleBasedDecisionEngine.evaluateFusionQuality - high quality fusion", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const state = buildBaseState();
+
+    const plan: FusionPlan = {
+        champions: ["安妮"],
+        estimatedGoldCost: 3,
+        requiredBenchSlots: 1,
+        roundsToComplete: 3,
+    };
+
+    const score = engine.evaluateFusionQuality(plan, state);
+    // Low cost, ample bench space, shop/owned coverage → maxed score
+    assert.equal(score, 100);
+});
+
+test("RuleBasedDecisionEngine.evaluateFusionQuality - low quality fusion (no bench space, low gold)", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const base = buildBaseState();
+    const state: ObservedState = {
+        ...base,
+        gold: 20,
+        // fill bench to block slots
+        bench: Array.from({ length: 9 }).map((_, i) => ({
+            id: `B${i}`,
+            name: `单位${i}`,
+            star: 1,
+            cost: 1,
+            location: `SLOT_${i}`,
+            items: [],
+            traits: [],
+        })),
+        shop: [
+            { slot: 0, cost: null, unit: null },
+            { slot: 1, cost: null, unit: null },
+            { slot: 2, cost: null, unit: null },
+            { slot: 3, cost: null, unit: null },
+            { slot: 4, cost: null, unit: null },
+        ],
+    };
+
+    const plan: FusionPlan = {
+        champions: ["不存在的单位"],
+        estimatedGoldCost: 50,
+        requiredBenchSlots: 3,
+        roundsToComplete: 3,
+    };
+
+    const score = engine.evaluateFusionQuality(plan, state);
+    // No budget, no bench space, no shop matches → minimal score
+    assert.equal(score, 0);
+});
+
+test("RuleBasedDecisionEngine.evaluateFusionQuality - medium quality fusion", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const base = buildBaseState();
+    const state: ObservedState = {
+        ...base,
+        gold: 35,
+        bench: Array.from({ length: 7 }).map((_, i) => ({
+            id: `B${i}`,
+            name: `单位${i}`,
+            star: 1,
+            cost: 1,
+            location: `SLOT_${i}`,
+            items: [],
+            traits: [],
+        })),
+        shop: [
+            { slot: 0, cost: 3, unit: { id: "TFT_X", name: "X", star: 1, cost: 3, items: [], traits: [] } },
+            { slot: 1, cost: null, unit: null },
+            { slot: 2, cost: null, unit: null },
+            { slot: 3, cost: null, unit: null },
+            { slot: 4, cost: null, unit: null },
+        ],
+    };
+
+    const plan: FusionPlan = {
+        champions: [{ name: "X", copiesNeeded: 2 }],
+        estimatedGoldCost: 10,
+        requiredBenchSlots: 4,
+        roundsToComplete: 3,
+    };
+
+    const score = engine.evaluateFusionQuality(plan, state);
+    // costScore=20, benchScore=15, shopScore=15, synergyBoost ~=0 → total 50
+    assert.equal(score, 50);
+});
+
+test("RuleBasedDecisionEngine.evaluateFusionQuality - missing items penalty reduces score", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const state = buildBaseState();
+
+    const plan: FusionPlan = {
+        champions: ["安妮"],
+        estimatedGoldCost: 3,
+        requiredBenchSlots: 1,
+        requiredItems: ["巨人杀手", "正义之手"], // both missing in base state
+        roundsToComplete: 3,
+    };
+
+    const score = engine.evaluateFusionQuality(plan, state);
+    // High base score (100) minus max item penalty (10) → 90
+    assert.equal(score, 90);
 });
