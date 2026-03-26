@@ -7,8 +7,10 @@ import {
     type TFTEquip,
     type TFTUnit,
 } from "../TFTProtocol";
+import type { TraitData } from "../TFTProtocol";
 import { TFT_16_TRAIT_DATA, TFT_4_TRAIT_DATA } from "../TFTInfo/trait";
 import { UNSELLABLE_BOARD_UNITS } from "../TFTInfo/chess";
+import { resolveChampionAlias } from "./TftNameNormalizer";
 import type { LineupConfig } from "../lineup/LineupTypes";
 import { tftDataService } from "../services/TftDataService";
 import type { TftDataSnapshot } from "./types";
@@ -73,6 +75,22 @@ export class TftDataHub {
         return getChessDataBySeason(resolveSeasonKey(season));
     }
 
+    /**
+     * 查找棋子定义，支持中文名、英文id 或常见别名
+     */
+    public getChampionDefinition(name: string, season?: string): TFTUnit | undefined {
+        if (!name) return undefined;
+        const catalog = this.getChampionCatalogForSeason(season);
+        // Direct lookup by Chinese name
+        if (catalog[name]) return catalog[name];
+
+        // Try resolving aliases / english ids using normalizer
+        const resolved = resolveChampionAlias(name, catalog);
+        if (resolved && catalog[resolved]) return catalog[resolved];
+
+        return undefined;
+    }
+
     public getEquipmentCatalogForSeason(season?: string): Record<string, TFTEquip> {
         return getEquipDataBySeason(resolveSeasonKey(season));
     }
@@ -98,6 +116,44 @@ export class TftDataHub {
 
     public getChampionRange(name: string): number | undefined {
         return getChampionRange(name as any) ?? undefined;
+    }
+
+    /**
+     * 根据羁绊 key（中文名 或 羁绊 id）查找羁绊定义
+     */
+    public getTraitDefinition(traitKey: string, season?: string): TraitData | undefined {
+        if (!traitKey) return undefined;
+        const catalog = this.getTraitCatalogForSeason(season);
+        // direct key (中文名)
+        if ((catalog as Record<string, TraitData>)[traitKey]) {
+            return (catalog as Record<string, TraitData>)[traitKey];
+        }
+
+        // search by id or name fallback
+        for (const trait of Object.values(catalog)) {
+            if (trait.id === traitKey || trait.name === traitKey) return trait;
+        }
+
+        return undefined;
+    }
+
+    /**
+     * 返回指定棋子的所有羁绊激活节点的并集（升序，无重复）
+     */
+    public getTraitBreakpointsForChampion(championName: string, season?: string): number[] {
+        const champ = this.getChampionDefinition(championName, season);
+        if (!champ || !Array.isArray(champ.traits) || champ.traits.length === 0) return [];
+
+        const catalog = this.getTraitCatalogForSeason(season);
+        const numbers = new Set<number>();
+
+        for (const traitKey of champ.traits) {
+            const trait = (catalog as Record<string, TraitData>)[traitKey] ?? this.getTraitDefinition(traitKey, season);
+            if (!trait || !Array.isArray(trait.levels)) continue;
+            for (const n of trait.levels) numbers.add(n);
+        }
+
+        return Array.from(numbers).sort((a, b) => a - b);
     }
 
     /**

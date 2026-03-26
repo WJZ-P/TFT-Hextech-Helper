@@ -1,0 +1,17 @@
+Typecheck run: npm run typecheck
+
+Summary:
+- Running `tsc --noEmit` produced repository-wide type errors unrelated to this change.
+- Key failures (truncated):
+  src-backend/services/DataCollector.ts(181,19): error TS6133: 'payload' is declared but its value is never read.
+  src-backend/services/GameStateManager.ts(626,26): error TS2345: Argument of type '{ name: string; }' is not assignable to parameter of type 'TFTEquip'.
+  src-backend/services/GameStateManager.ts(1070,44): error TS2304: Cannot find name 'BenchLocation'.
+  src-backend/TftOperator.ts(239,31): error TS18048: 'cv' is possibly 'undefined'.
+  tests/playwright/settings-onboarding.test.ts(1,30): error TS2307: Cannot find module '@playwright/test' or its corresponding type declarations.
+
+Result: tsc exited with non-zero status. These are pre-existing issues in the repository and are not caused by the three helper methods implemented in src-backend/data/TftDataHub.ts.
+
+What I verified locally:
+- lsp_diagnostics on modified files (src-backend/data/TftDataHub.ts, tests/backend/tft_data_hub.test.ts) -> no diagnostics.
+
+Suggested next step if you need full repo typecheck to pass: run a targeted fix/cleanup for the listed failing files or run `npm install` to ensure optional dev deps (e.g. @playwright/test) are available in CI environment.

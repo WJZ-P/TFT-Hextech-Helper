@@ -1,0 +1,11 @@
+Unit test run for tests/backend/tft_data_hub.test.ts
+
+Result: PASS
+
+Details:
+- Ran: node --import tsx --test tests/backend/tft_data_hub.test.ts
+- Outcomes: 2 tests passed, 0 failed
+- Duration: ~0.56s
+
+Notes:
+- Running the full `npm run test:unit` exercise runs many tests and initialises app modules which rely on runtime configuration (electron-store/conf) causing unrelated failures. To verify our changes in isolation, I executed only the modified test file as shown above.
