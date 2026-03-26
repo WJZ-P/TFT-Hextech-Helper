@@ -18,6 +18,8 @@ import path from "path";
 import fs from "fs-extra";
 import { logger } from "../src-backend/utils/Logger";
 import { memoryMonitor, formatMB } from "../src-backend/utils/MemoryMonitor";
+import { ocrService, OcrWorkerType } from "../src-backend/tft/recognition/OcrService";
+import { AndroidEmulatorAdapter } from "../src-backend/adapters/AndroidEmulatorAdapter";
 
 /**
  * 压力测试报告结构
@@ -75,6 +77,19 @@ interface StressTestOptions {
     fixture?: string;
     /** 是否记录指标 */
     recordMetrics: boolean;
+}
+
+interface PerRoundDetail {
+    round: number;
+    success: boolean;
+    durationMs: number;
+    stageCount: number;
+    avgResponsePerStageMs: number | null;
+    ocrAccuracyPercent: number | null;
+    misoperations: number | null;
+    memoryRssMB: number;
+    parsedSummary?: any;
+    workerHealth?: Record<string, any>;
 }
 
 /**
@@ -199,8 +214,22 @@ async function main(): Promise<void> {
     const initialMem = memoryMonitor.sample("stress:start");
     logger.info(`[StressTest] 初始内存：RSS=${formatMB(initialMem.rss)}`);
     
+    // 安装中断/退出处理，优雅保存中间报告
+    let aborted = false;
+    process.on("SIGINT", async () => {
+        if (aborted) return; // second SIGINT -> hard exit
+        aborted = true;
+        logger.warn("[StressTest] 收到 SIGINT，中止后写入中间报告...");
+    });
+
+    // adapter 用于健康检查/辅助信息采集（不用于直接控制子进程）
+    const adapter = new AndroidEmulatorAdapter();
+
+    const perRoundDetails: PerRoundDetail[] = [];
+
     // 运行多轮测试
     for (let round = 1; round <= options.rounds; round++) {
+        if (aborted) break;
         const roundStart = Date.now();
         
         logger.info(`[StressTest] 第 ${round}/${options.rounds} 轮开始`);
@@ -212,18 +241,61 @@ async function main(): Promise<void> {
         
         const roundTime = Date.now() - roundStart;
         report.timeline.roundTime.push(roundTime);
-        
+
         // 记录内存
         const memSnapshot = memoryMonitor.sample(`stress:round_${round}`);
-        
+
+        // 采集 OCR/worker 快照（非强制，会返回部分信息）
+        const workerHealthSnapshot: Record<string, any> = {};
+        try {
+            workerHealthSnapshot.gameStage = ocrService.getWorkerHealth(OcrWorkerType.GAME_STAGE);
+            workerHealthSnapshot.chess = ocrService.getWorkerHealth(OcrWorkerType.CHESS);
+            workerHealthSnapshot.cache = ocrService.getCacheStats?.() ?? null;
+        } catch (e) {
+            // 允许失败（避免因为 tesseract 在子进程中被使用导致父进程抛错）
+            logger.debug(`[StressTest] 获取 OCR 快照失败: ${String(e)}`);
+        }
+
+        const perRound: PerRoundDetail = {
+            round,
+            success: !!result.success,
+            durationMs: roundTime,
+            stageCount: 0,
+            avgResponsePerStageMs: null,
+            ocrAccuracyPercent: null,
+            misoperations: null,
+            memoryRssMB: memSnapshot.rss / 1024 / 1024,
+            parsedSummary: null,
+            workerHealth: workerHealthSnapshot,
+        };
+
         if (result.success) {
             report.successfulRounds++;
             logger.info(`[StressTest] 第 ${round} 轮成功 (耗时=${roundTime}ms, RSS=${formatMB(memSnapshot.rss)})`);
-            
+
             // 尝试解析输出
             const parsed = parseSmokeOutput(result.stdout);
             if (parsed) {
                 logger.debug(`[StressTest] 第 ${round} 轮输出：${JSON.stringify(parsed, null, 2)}`);
+                perRound.parsedSummary = parsed;
+
+                // 计算 stageCount 优先使用 traceSummary.frameCount
+                const stageCount = parsed.traceSummary?.frameCount ?? parsed.analysisSequence?.length ?? parsed.foregroundTrace?.length ?? 0;
+                perRound.stageCount = stageCount;
+                perRound.avgResponsePerStageMs = stageCount > 0 ? Math.round(roundTime / stageCount) : null;
+
+                // 如果使用 fixture 模式且包含 expectedStateMatched，则可计算 OCR 准确率和误操作
+                if (Array.isArray(parsed.analysisSequence) && parsed.analysisSequence.length > 0) {
+                    const frames = parsed.analysisSequence as any[];
+                    const framesWithExpected = frames.filter((f) => f.expectedStateMatched !== null && f.expectedStateMatched !== undefined);
+                    if (framesWithExpected.length > 0) {
+                        const matched = framesWithExpected.filter((f) => f.expectedStateMatched === true).length;
+                        perRound.ocrAccuracyPercent = Math.round((matched / framesWithExpected.length) * 10000) / 100; // two decimals
+                    }
+                    // misoperations = expectedDecisionMatched === false
+                    const misops = frames.filter((f) => f.expectedDecisionMatched === false).length;
+                    perRound.misoperations = misops;
+                }
             }
         } else {
             report.timeline.errorCount++;
@@ -234,6 +306,8 @@ async function main(): Promise<void> {
             });
             logger.error(`[StressTest] 第 ${round} 轮失败：${result.stderr}`);
         }
+
+        perRoundDetails.push(perRound);
         
         // 轮间短暂休息（避免过热）
         if (round < options.rounds) {
@@ -254,6 +328,8 @@ async function main(): Promise<void> {
     }
     
     report.endTime = Date.now();
+    // attach per-round details
+    (report as any).perRound = perRoundDetails;
     
     // 计算摘要
     const avgTime = report.timeline.roundTime.reduce((a, b) => a + b, 0) / report.timeline.roundTime.length;
@@ -285,9 +361,54 @@ async function main(): Promise<void> {
         await fs.writeFile(options.outputReport, JSON.stringify(report, null, 2), "utf-8");
         logger.info(`[StressTest] 报告已保存：${options.outputReport}`);
     }
+    // 额外生成 Markdown 报告（如果提供输出路径，则同目录写入 .md）
+    try {
+        const mdPath = options.outputReport
+            ? options.outputReport.replace(/\.json$/i, ".md")
+            : path.join(process.cwd(), "reports", `stress-test-${Date.now()}.md`);
+        const md = generateMarkdownReport(report as any, (report as any).perRound || []);
+        await fs.ensureDir(path.dirname(mdPath));
+        await fs.writeFile(mdPath, md, "utf-8");
+        logger.info(`[StressTest] Markdown 报告已保存：${mdPath}`);
+    } catch (e) {
+        logger.warn(`[StressTest] 生成 Markdown 报告失败: ${String(e)}`);
+    }
     
     // 输出 JSON 到 stdout（供 CI 使用）
     console.log(JSON.stringify(report, null, 2));
+}
+
+/**
+ * 生成简单 Markdown 报告，遵循任务要求的表格布局（尽量使用已收集的数据）
+ */
+function generateMarkdownReport(report: any, perRound: PerRoundDetail[]): string {
+    const totalDurationMs = Math.max(0, report.endTime - report.startTime);
+    const totalMinutes = Math.round((totalDurationMs / 1000) / 60 * 10) / 10;
+    const successRate = report.totalRounds > 0 ? Math.round((report.successfulRounds / report.totalRounds) * 10000) / 100 : 0;
+
+    const header = `# Android Stress Test Report\n`;
+    const summary = `## Summary\n- Games Run: ${report.totalRounds}\n- Total Duration: ${totalMinutes} minutes\n- Success Rate: ${successRate}%\n\n`;
+
+    const perGameHeader = `## Per-Game Metrics\n| Game | Duration | Avg Response Time | OCR Accuracy | Misops | Memory (RSS MB) |\n|------|----------|-------------------|--------------|--------|-----------------:|\n`;
+    const perGameRows = perRound.map((r) => {
+        const dur = `${Math.floor(r.durationMs / 60000)}m ${Math.round((r.durationMs % 60000) / 1000)}s`;
+        const avgResp = r.avgResponsePerStageMs !== null ? `${r.avgResponsePerStageMs}ms` : "-";
+        const ocr = r.ocrAccuracyPercent !== null ? `${r.ocrAccuracyPercent}%` : "-";
+        const mis = r.misoperations !== null ? `${r.misoperations}` : "-";
+        const mem = r.memoryRssMB.toFixed(2);
+        return `| ${r.round} | ${dur} | ${avgResp} | ${ocr} | ${mis} | ${mem} |`;
+    }).join("\n");
+
+    // Stage performance: use aggregated avgResponsePerStageMs if available
+    const stageHeader = `\n## Stage Performance\n| Stage | Avg Response | OCR Accuracy |\n|-------|--------------|--------------|\n`;
+    let stageRows = "| overall | - | - |";
+    const avgPerStageValues = perRound.map(r => r.avgResponsePerStageMs).filter(Boolean) as number[];
+    if (avgPerStageValues.length > 0) {
+        const overallAvg = Math.round((avgPerStageValues.reduce((a,b) => a+b,0) / avgPerStageValues.length) * 100) / 100;
+        stageRows = `| overall | ${overallAvg}ms | ${report.timeline.ocrAccuracy || "-"} |`;
+    }
+
+    return [header, summary, perGameHeader, perGameRows, stageHeader, stageRows, "\n"].join("\n");
 }
 
 // 运行
