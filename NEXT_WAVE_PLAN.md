@@ -5,10 +5,13 @@
 - ✅ 任务卡1：PC转阵/弃牌边界（all 203 tests passing）
 - ✅ 任务卡2：安卓Live长时间稳定性（26 new tests）
 - ✅ 任务卡3审计：StrategyService已零直接静态依赖，gap确认
+- ✅ 任务卡A（TftDataHub 方法补充）：`getChampionDefinition`, `getTraitDefinition`, `getTraitBreakpointsForChampion` 已实现并测试
 
 ---
 
 ## 任务卡 A：TftDataHub 缺失方法补充
+
+**状态：已完成** — 方法已存在且通过测试，无需额外工作。
 
 **目标**  
 基于StrategyService审计结果，补充TftDataHub中掉缺的champion和trait方法，完成数据入口统一。
