@@ -261,6 +261,20 @@ function computeRiskAdjustedScore(
     return Math.min(100, Math.round(baseScore + priorityDelta));
 }
 
+/**
+ * 简单描述用于评估的融合计划类型
+ */
+export interface FusionPlan {
+    champions: Array<string | { name: string; copiesNeeded?: number }>;
+    requiredItems?: string[];
+    /** 估算总花费（可选） */
+    estimatedGoldCost?: number;
+    /** 计划执行时需要的备战席格子数（可选） */
+    requiredBenchSlots?: number;
+    /** 预计可以完成该计划的回合数（默认 3） */
+    roundsToComplete?: number;
+}
+
 export class RuleBasedDecisionEngine implements DecisionEngine {
     public generatePlan(state: ObservedState, context: DecisionContext = {}): ActionPlan[] {
         const plans: ActionPlan[] = [];
@@ -573,5 +587,93 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
         } catch (e) {
             return false;
         }
+    }
+
+    /**
+     * Evaluate fusion plan quality (0-100)
+     * @param fusionPlan - Plan describing what to fuse
+     * @param currentState - Current game state
+     * @returns Quality score (0-100, higher = better)
+     *
+     * This is a lightweight heuristic evaluator used to rank fusion/upgrade plans.
+     * It considers: estimated gold cost (vs. soft budget), bench space impact, shop
+     * availability (current shop + estimated rounds), and required items.
+     *
+     * NOTE: keep this pure - it only scores a given plan, it does not mutate state
+     */
+    public evaluateFusionQuality(fusionPlan: FusionPlan, currentState: ObservedState): number {
+        const parsed = parseStage(currentState.stageText);
+
+        // 1) Cost consideration (0-40)
+        const estCost = fusionPlan.estimatedGoldCost ?? Math.max(1, fusionPlan.champions.length * 3);
+        const economyFloor = computeEconomyFloor(currentState, {} as DecisionContext, parsed);
+        const softBudget = Math.max(0, currentState.gold - economyFloor);
+        const costScore = Math.round(40 * Math.min(1, softBudget / Math.max(1, estCost)));
+
+        // 2) Bench impact (0-30)
+        const requiredSlots = fusionPlan.requiredBenchSlots ?? fusionPlan.champions.length;
+        const freeSlots = Math.max(0, 9 - (currentState.bench?.length ?? 0));
+        const benchRatio = Math.min(1, freeSlots / Math.max(1, requiredSlots));
+        const benchScore = Math.round(30 * benchRatio);
+
+        // 3) Shop / availability (0-30)
+        const targetCounts = new Map<string, number>();
+        for (const entry of fusionPlan.champions) {
+            if (typeof entry === "string") {
+                targetCounts.set(entry, (targetCounts.get(entry) ?? 0) + 1);
+            } else {
+                const name = entry.name;
+                const copies = entry.copiesNeeded ?? 1;
+                targetCounts.set(name, (targetCounts.get(name) ?? 0) + copies);
+            }
+        }
+
+        const ownedCounts = countOwnedUnits([...(currentState.board ?? []), ...(currentState.bench ?? [])]);
+        let remainingNeeded = 0;
+        for (const [name, need] of targetCounts.entries()) {
+            const owned = ownedCounts.get(name) ?? 0;
+            remainingNeeded += Math.max(0, need - owned);
+        }
+
+        let shopMatches = 0;
+        for (const offer of currentState.shop ?? []) {
+            if (offer.unit && targetCounts.has(offer.unit.name)) {
+                shopMatches += 1;
+            }
+        }
+
+        const roundsToComplete = Math.max(1, fusionPlan.roundsToComplete ?? 3);
+        // More rounds -> easier to find pieces; cap at 3 for normalization
+        const roundsFactor = Math.min(1, roundsToComplete / 3);
+
+        let shopProbability = 0;
+        if (remainingNeeded <= 0) {
+            shopProbability = 1;
+        } else {
+            shopProbability = Math.min(1, shopMatches / remainingNeeded) * roundsFactor;
+        }
+        const shopScore = Math.round(30 * shopProbability);
+
+        // 4) Items requirement penalty (0-10)
+        let itemPenalty = 0;
+        if (fusionPlan.requiredItems && fusionPlan.requiredItems.length > 0) {
+            const have = new Set(currentState.items ?? []);
+            let missing = 0;
+            for (const it of fusionPlan.requiredItems) {
+                if (!have.has(it)) missing += 1;
+            }
+            itemPenalty = Math.min(10, missing * 5);
+        }
+
+        // 5) Small synergy boost based on current board/bench synergy with targets (0-10)
+        const targetNames = new Set(Array.from(targetCounts.keys()));
+        const pathEval = evaluateFusionPath(currentState.board ?? [], currentState.bench ?? [], currentState.shop ?? [], targetNames);
+        // synergyCount is already a small integer; unitStrength can be large - combine conservatively
+        const synergyBoost = Math.min(10, pathEval.synergyCount * 2 + Math.floor((pathEval.unitStrength ?? 0) / 15));
+
+        // Aggregate
+        let score = costScore + benchScore + shopScore - itemPenalty + synergyBoost;
+        score = Math.max(0, Math.min(100, Math.round(score)));
+        return score;
     }
 }
