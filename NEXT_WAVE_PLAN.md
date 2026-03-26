@@ -6,6 +6,7 @@
 - ✅ 任务卡2：安卓Live长时间稳定性（26 new tests）
 - ✅ 任务卡3审计：StrategyService已零直接静态依赖，gap确认
 - ✅ 任务卡A（TftDataHub 方法补充）：`getChampionDefinition`, `getTraitDefinition`, `getTraitBreakpointsForChampion` 已实现并测试
+- ✅ 任务卡C3：Android稳定边界文档 - `docs/ANDROID_STABILITY_LIMITS.md` 已创建（2026-03-25）
 
 ---
 
