@@ -100,3 +100,38 @@ test("TftDataHub champion/trait helpers", () => {
     assert.equal(hub.getChampionDefinition("不存在的棋子"), undefined);
     assert.deepEqual(hub.getTraitBreakpointsForChampion("不存在的棋子"), []);
 });
+
+test("TftDataHub equipment helpers - getEquipmentNameById", () => {
+    const hub = new TftDataHub();
+    // Known equipment id -> name
+    assert.equal(hub.getEquipmentNameById("91840"), "鬼索的狂暴之刃");
+    // Unknown id -> undefined
+    assert.equal(hub.getEquipmentNameById("00000"), undefined);
+});
+
+test("TftDataHub equipment helpers - isWearableEquipment", () => {
+    const hub = new TftDataHub();
+    assert.equal(hub.isWearableEquipment("鬼索的狂暴之刃"), true);
+    // Special tool with equipId "-1" should not be wearable
+    assert.equal(hub.isWearableEquipment("装备拆卸器"), false);
+});
+
+test("TftDataHub equipment helpers - getEquipmentComponents", () => {
+    const hub = new TftDataHub();
+    // Base component returns itself
+    assert.deepEqual(hub.getEquipmentComponents("暴风之剑"), ["暴风之剑"]);
+    // Composite item returns its two components in order
+    assert.deepEqual(hub.getEquipmentComponents("鬼索的狂暴之刃"), ["反曲之弓", "无用大棒"]);
+});
+
+test("TftDataHub equipment helpers - getEquipmentRoleHint", () => {
+    const hub = new TftDataHub();
+    // Single backline base component
+    assert.equal(hub.getEquipmentRoleHint("暴风之剑"), "backline");
+    // Single frontline base component
+    assert.equal(hub.getEquipmentRoleHint("锁子甲"), "frontline");
+    // Mixed components -> any
+    assert.equal(hub.getEquipmentRoleHint("斯特拉克的挑战护手"), "any");
+    // Two back components -> backline
+    assert.equal(hub.getEquipmentRoleHint("鬼索的狂暴之刃"), "backline");
+});
