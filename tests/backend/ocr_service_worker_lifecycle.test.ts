@@ -51,6 +51,11 @@ class MockOcrService {
     private workers: Map<string, any> = new Map();
     private workerHealth: Map<string, WorkerHealthMeta> = new Map();
     private now: number = Date.now();
+    // Deduplication map and toggle for tests
+    private dedupEnabled: boolean = false;
+    private dedupMap: Map<string, Promise<string>> = new Map();
+    // Optimized mode flag for tests that simulate worker rebuilds
+    private optimizedMode: boolean = false;
 
     /** For testing: override current time */
     setTime(time: number): void {
@@ -60,6 +65,34 @@ class MockOcrService {
     /** For testing: advance time by milliseconds */
     advanceTime(ms: number): void {
         this.now += ms;
+    }
+
+    /** For testing: enable/disable deduplication behaviour */
+    enableDedup(enabled: boolean): void {
+        this.dedupEnabled = enabled;
+    }
+
+    /** For testing: simulate toggling optimized mode which rebuilds workers */
+    async setOptimizedMode(enabled: boolean): Promise<void> {
+        if (this.optimizedMode === enabled) return;
+        this.optimizedMode = enabled;
+
+        // For simplicity, rebuild all existing workers: terminate and replace
+        for (const [type, oldWorker] of this.workers.entries()) {
+            try {
+                await oldWorker.terminate();
+            } catch (err) {
+                // ignore termination errors in tests
+            }
+
+            const newWorker = this.createWorker();
+            this.workers.set(type, newWorker);
+            this.workerHealth.set(type, {
+                createdAt: this.now,
+                recognitionCount: 0,
+                lastUsedAt: this.now,
+            });
+        }
     }
 
     private createWorker(): any {
@@ -83,6 +116,33 @@ class MockOcrService {
     }
 
     async recognize(imageBuffer: Buffer, type: string): Promise<string> {
+        // If dedup is enabled, return the same promise for concurrent identical buffers
+        if (this.dedupEnabled) {
+            const key = imageBuffer.toString("base64");
+            const existing = this.dedupMap.get(key);
+            if (existing) return existing;
+
+            const p = (async () => {
+                await this.recycleIfNeeded(type);
+                const worker = await this.getWorker(type);
+                const result = await worker.recognize(imageBuffer);
+
+                // Update health
+                const meta = this.workerHealth.get(type);
+                if (meta) {
+                    meta.recognitionCount++;
+                    meta.lastUsedAt = this.now;
+                }
+
+                return result.data.text.trim();
+            })();
+
+            this.dedupMap.set(key, p);
+            p.finally(() => this.dedupMap.delete(key));
+            return p;
+        }
+
+        // Default behaviour
         await this.recycleIfNeeded(type);
         const worker = await this.getWorker(type);
         const result = await worker.recognize(imageBuffer);
@@ -178,7 +238,8 @@ test.describe("OcrService worker lifecycle", () => {
         const service = new MockOcrService();
         service.setTime(1000);
         
-        const firstWorker = await service.getWorker("GAME_STAGE");
+        // Create first worker (not used directly, but needed for test setup)
+        await service.getWorker("GAME_STAGE");
         
         // Simulate 500 recognitions
         for (let i = 0; i < WORKER_RECYCLE_CONFIG.MAX_RECOGNITIONS; i++) {
@@ -201,7 +262,8 @@ test.describe("OcrService worker lifecycle", () => {
         const service = new MockOcrService();
         service.setTime(1000);
         
-        const firstWorker = await service.getWorker("GAME_STAGE");
+        // Create first worker (not used directly, but needed for test setup)
+        await service.getWorker("GAME_STAGE");
         
         // Advance time past 30 minutes
         service.advanceTime(WORKER_RECYCLE_CONFIG.MAX_LIFETIME_MS + 1000);
@@ -256,6 +318,44 @@ test.describe("OcrService worker lifecycle", () => {
         
         assert.equal(stageHealth?.recognitionCount, 2);
         assert.equal(chessHealth?.recognitionCount, 1);
+    });
+
+    test("setOptimizedMode triggers worker rebuilds", async () => {
+        const service = new MockOcrService();
+        service.setTime(1000);
+
+        // Prewarm a worker
+        await service.getWorker("GAME_STAGE");
+        const beforeHealth = service.getWorkerHealth("GAME_STAGE");
+        assert.ok(beforeHealth);
+        assert.equal(beforeHealth?.recognitionCount, 0);
+
+        // Switch optimized mode on
+        await service.setOptimizedMode(true);
+
+        // After toggling, health should reflect a new createdAt and reset count
+        const afterHealth = service.getWorkerHealth("GAME_STAGE");
+        assert.ok(afterHealth);
+        assert.equal(afterHealth?.recognitionCount, 0);
+        assert.ok(afterHealth!.createdAt >= 1000);
+    });
+
+    test("deduplicates concurrent recognize calls with same buffer", async () => {
+        const service = new MockOcrService();
+        service.enableDedup(true);
+
+        // Start two concurrent recognitions with identical buffer
+        const buf = Buffer.from("same-data");
+
+        const p1 = service.recognize(buf, "GAME_STAGE");
+        const p2 = service.recognize(buf, "GAME_STAGE");
+
+        const results = await Promise.all([p1, p2]);
+        assert.equal(results[0], results[1]);
+
+        // Recognition count should be 1 due to dedup
+        const health = service.getWorkerHealth("GAME_STAGE");
+        assert.equal(health?.recognitionCount, 1);
     });
 });
 
