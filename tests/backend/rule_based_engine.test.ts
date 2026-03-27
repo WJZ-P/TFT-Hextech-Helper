@@ -1263,3 +1263,37 @@ test("RuleBasedDecisionEngine.evaluateFusionQuality - missing items penalty redu
     // High base score (100) minus max item penalty (10) → 90
     assert.equal(score, 90);
 });
+
+// === New tests for importStrategy / exportStrategy ===
+test("RuleBasedDecisionEngine.importStrategy rejects malformed JSON (additional)", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const ctx: DecisionContext = {};
+    const ok = engine.importStrategy("{ not: 'json'", ctx);
+    assert.equal(ok, false, "malformed JSON should be rejected (additional test)");
+});
+
+test("RuleBasedDecisionEngine.importStrategy applies hints to DecisionContext correctly", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const ctx: DecisionContext = {};
+
+    // ROLL with high priority should suggest increasing maxRollCount to at least 3
+    const strategy = { planType: "ROLL", priority: 90, reason: "aggressive roll" };
+    const ok = engine.importStrategy(JSON.stringify(strategy), ctx);
+    assert.equal(ok, true, "valid ROLL strategy should be accepted");
+    assert.ok(typeof ctx.maxRollCount === "number" && ctx.maxRollCount >= 3, "import should set or bump maxRollCount >= 3");
+});
+
+test("RuleBasedDecisionEngine.exportStrategy returns parseable JSON with expected shape", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const state = buildBaseState();
+    const ctx: DecisionContext = {};
+
+    const json = engine.exportStrategy(state, ctx);
+    assert.equal(typeof json, "string", "exportStrategy should return a string");
+
+    const parsed = JSON.parse(json);
+    assert.ok(parsed && typeof parsed === "object", "exported string should parse to an object");
+    assert.ok(typeof parsed.planType === "string", "exported strategy should include planType string");
+    assert.ok(typeof parsed.priority === "number", "exported strategy should include numeric priority");
+    assert.ok(typeof parsed.reason === "string", "exported strategy should include reason string");
+});
