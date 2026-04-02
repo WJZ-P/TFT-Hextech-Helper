@@ -431,7 +431,7 @@ async function waitForEmulatorContent(
     captureAttempts: CaptureAttemptTraceEntry[];
 }> {
     const startedAt = Date.now();
-    let initialProbe = await probeRenderableWindowContent(initialWindow);
+    const initialProbe = await probeRenderableWindowContent(initialWindow);
     let lastScreenshot = initialProbe.screenshot;
     let lastClassification = await classifyScreenshotOrUnknown(lastScreenshot);
     let lastObservation = normalizeAndroidForegroundObservation(lastClassification);

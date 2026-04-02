@@ -16,8 +16,11 @@ import { windowHelper, type WindowInfo } from "./utils/WindowHelper";
 import { Region } from "@nut-tree-fork/nut-js";
 import path from "path";
 import fs from "fs-extra";
-import sharp from "sharp";
+// import sharp from "sharp";
 import type * as OpencvType from "@techstark/opencv-js";
+
+// Type alias for cv namespace usage in type annotations
+type CvMat = OpencvType.Mat;
 
 // Prefer a preinstalled global cv (set by electron preload during tests). If
 // absent, we'll dynamically import the heavy @techstark/opencv-js package at
@@ -235,6 +238,7 @@ class TftOperator {
     }
 
     private canUseOpenCvNow(): boolean {
+        if (!cv) return false;
         try {
             const probe = new cv.Mat(1, 1, cv.CV_8UC1);
             probe.delete();
@@ -355,7 +359,17 @@ class TftOperator {
     private readonly benchEmptyDiffThreshold = 6;
 
     /** OpenCV 是否已初始化 */
-    private isOpenCVReady = false;
+    private _isOpenCVReady = false;
+
+    /** Getter for isOpenCVReady - tracks if OpenCV is initialized */
+    public get isOpenCVReady(): boolean {
+        return this._isOpenCVReady;
+    }
+
+    /** Setter for isOpenCVReady */
+    public set isOpenCVReady(value: boolean) {
+        this._isOpenCVReady = value;
+    }
 
     /** 
      * 上一次随机走位的方向
@@ -368,17 +382,18 @@ class TftOperator {
     // ========== 路径 Getter ==========
 
 
-    private get failChampionTemplatePath(): string {
-        return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/英雄备份");
-    }
+    // TODO: uncomment when champion template saving is implemented
+    // private get failChampionTemplatePath(): string {
+    //     return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/英雄备份");
+    // }
 
-    private get equipTemplatePath(): string {
-        return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/equipment");
-    }
+    // private get equipTemplatePath(): string {
+    //     return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/equipment");
+    // }
 
-    private get starLevelTemplatePath(): string {
-        return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/starLevel");
-    }
+    // private get starLevelTemplatePath(): string {
+    //     return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/starLevel");
+    // }
 
     private get benchSlotSnapshotPath(): string {
         return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/benchSlot");
@@ -812,7 +827,7 @@ class TftOperator {
         for (const [slotName, regionDef] of Object.entries(activeEquipmentRegions)) {
             const targetRegion = screenCapture.toAbsoluteRegion(regionDef);
 
-            let targetMat: cv.Mat | null = null;
+            let targetMat: CvMat | null = null;
 
             try {
                 targetMat = await screenCapture.captureRegionAsMat(targetRegion);
@@ -874,7 +889,7 @@ class TftOperator {
             // 将相对坐标转换为屏幕绝对坐标
             const targetRegion = screenCapture.toAbsoluteRegion(regionDef);
 
-            let targetMat: cv.Mat | null = null;
+            let targetMat: CvMat | null = null;
 
             try {
                 // 截取装备槽位区域的图像
@@ -932,7 +947,9 @@ class TftOperator {
         const processedPng = await screenCapture.captureRegionAsPng(region, false);
         const mat = await screenCapture.pngBufferToMat(processedPng);
         if (mat.channels() > 1) {
-            cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
+            if (cv) {
+                cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
+            }
         }
 
         // matchChampion 内部会先检测空槽，空槽返回 "empty"
@@ -1350,25 +1367,33 @@ class TftOperator {
      * @param tmpl 空槽模板 (RGBA 格式的 cv.Mat)
      * @returns 平均像素差值 (RGB 三通道均值)
      */
-    private async calculateSlotDifference(region: Region, tmpl: cv.Mat): Promise<number> {
+    private async calculateSlotDifference(region: Region, tmpl: CvMat): Promise<number> {
         // 截取当前槽位 1x 原图 (RGBA)
         const pngBuffer = await screenCapture.captureRegionAsPng(region, false);
         let mat = await screenCapture.pngBufferToMat(pngBuffer);
 
         // 确保通道数一致：都转为 RGBA
         if (mat.channels() === 3) {
-            cv.cvtColor(mat, mat, cv.COLOR_RGB2RGBA);
+            if (cv) {
+                cv.cvtColor(mat, mat, cv.COLOR_RGB2RGBA);
+            }
         }
 
         // 尺寸对齐：如果当前图尺寸与模板不同，按模板尺寸缩放
         if (mat.cols !== tmpl.cols || mat.rows !== tmpl.rows) {
-            const resized = new cv.Mat();
-            cv.resize(mat, resized, new cv.Size(tmpl.cols, tmpl.rows), 0, 0, cv.INTER_AREA);
-            mat.delete();
-            mat = resized;
+            if (cv) {
+                const resized = new cv.Mat();
+                cv.resize(mat, resized, new cv.Size(tmpl.cols, tmpl.rows), 0, 0, cv.INTER_AREA);
+                mat.delete();
+                mat = resized;
+            }
         }
 
         // 计算绝对差值并求均值 (RGBA 四通道取平均)
+        if (!cv) {
+            mat.delete();
+            return 0;
+        }
         const diff = new cv.Mat();
         cv.absdiff(mat, tmpl, diff);
         const meanScalar = cv.mean(diff); // [R_mean, G_mean, B_mean, A_mean]
@@ -1698,7 +1723,9 @@ class TftOperator {
 
             try {
                 if (mat.channels() > 1) {
-                    cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
+                    if (cv) {
+                        cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
+                    }
                 }
 
                 const templateMatch = templateMatcher.matchChampionDetailed(mat);
@@ -2089,30 +2116,30 @@ class TftOperator {
      * @param mat OpenCV Mat 对象
      * @param channels 通道数
      */
-    private async saveFailedImage(
-        type: string,
-        slot: string,
-        mat: cv.Mat,
-        channels: 3 | 4
-    ): Promise<void> {
-        try {
-            const fileName = `${type}_${slot}_${Date.now()}.png`;
-            const pngBuffer = await sharp(mat.data, {
-                raw: {
-                    width: mat.cols,
-                    height: mat.rows,
-                    channels,
-                },
-            })
-                .png()
-                .toBuffer();
-
-            fs.writeFileSync(path.join(this.equipTemplatePath, fileName), pngBuffer);
-            logger.info(`[TftOperator] 已保存失败样本: ${fileName}`);
-        } catch (e) {
-            logger.error(`[TftOperator] 保存失败样本出错: ${e}`);
-        }
-    }
+    // private async saveFailedImage(
+    //     type: string,
+    //     slot: string,
+    //     mat: CvMat,
+    //     channels: 3 | 4
+    // ): Promise<void> {
+    //     try {
+    //         const fileName = `${type}_${slot}_${Date.now()}.png`;
+    //         const pngBuffer = await sharp(mat.data, {
+    //             raw: {
+    //                 width: mat.cols,
+    //                 height: mat.rows,
+    //                 channels,
+    //             },
+    //         })
+    //             .png()
+    //             .toBuffer();
+    //
+    //         fs.writeFileSync(path.join(this.equipTemplatePath, fileName), pngBuffer);
+    //         logger.info(`[TftOperator] 已保存失败样本: ${fileName}`);
+    //     } catch (e) {
+    //         logger.error(`[TftOperator] 保存失败样本出错: ${e}`);
+    //     }
+    // }
 
     /**
      * 获取当前等级信息

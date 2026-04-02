@@ -9,8 +9,6 @@ import {
   Box,
   MobileStepper,
   IconButton,
-  Card,
-  CardContent,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';

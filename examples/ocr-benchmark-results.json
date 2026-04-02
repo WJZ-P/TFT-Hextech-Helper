@@ -1,0 +1,26 @@
+[
+  {
+    "recording": "Recording 1 (20260322)",
+    "totalFrames": 0,
+    "validFrames": 0,
+    "accuracy": 0,
+    "correct": 0,
+    "averageConfidence": 0
+  },
+  {
+    "recording": "Recording 2 (20260323)",
+    "totalFrames": 0,
+    "validFrames": 0,
+    "accuracy": 0,
+    "correct": 0,
+    "averageConfidence": 0
+  },
+  {
+    "recording": "Recording 3 (20260323-2)",
+    "totalFrames": 0,
+    "validFrames": 0,
+    "accuracy": 0,
+    "correct": 0,
+    "averageConfidence": 0
+  }
+]

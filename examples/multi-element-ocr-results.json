@@ -1,0 +1,36 @@
+{
+  "frames": {
+    "stage": {
+      "detected": 2,
+      "total": 2
+    },
+    "gold": {
+      "detected": 0,
+      "total": 2
+    },
+    "level": {
+      "detected": 1,
+      "total": 2
+    },
+    "xp": {
+      "detected": 1,
+      "total": 2
+    },
+    "hp": {
+      "detected": 0,
+      "total": 2
+    },
+    "shop_cards": {
+      "detected": 2,
+      "total": 10
+    },
+    "bench_champs": {
+      "detected": 2,
+      "total": 2
+    },
+    "equipment_slots": {
+      "has_items": 10,
+      "total": 10
+    }
+  }
+}

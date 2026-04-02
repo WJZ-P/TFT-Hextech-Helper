@@ -1,0 +1,162 @@
+# Test Coverage Report - Partial Analysis
+
+**Date**: 2026-03-26
+**Analysis Method**: Coverage run on rule_based_engine.test.ts only (full suite times out)
+
+---
+
+## Coverage Summary (rule_based_engine.test.ts coverage)
+
+### Overall Metrics
+- **Statements**: 97.37%
+- **Branches**: 84.76%
+- **Functions**: 58.06%
+- **Lines**: 97.37%
+
+### Key Files Analysis
+
+#### src-backend/TFTProtocol.ts
+- **Statements**: 91.61%
+- **Branches**: 100%
+- **Functions**: 8.33% ⚠️ LOW
+- **Lines**: 91.61%
+- **Uncovered Lines**: Multiple ranges (893-946, 956-963, 972-978)
+
+**Analysis**: High line coverage but very low function coverage. Many functions not tested.
+
+#### src-backend/TFTInfo/* files
+- **All files**: 100% coverage
+- **chess.ts**: 100%
+- **equip.ts**: 100%  
+- **trait.ts**: 100%
+
+**Analysis**: These data files are well-tested through indirect usage.
+
+#### src-backend/core/RuleBasedDecisionEngine.ts
+- **Statements**: 89.54%
+- **Branches**: 84.15%
+- **Functions**: 89.47%
+- **Lines**: 89.54%
+- **Uncovered Lines**: Multiple ranges including 500-501, 529-538, 545-590
+
+**Analysis**: Good coverage overall. Some decision branches and helper functions not covered.
+
+---
+
+## Files Likely with 0% Coverage
+
+Based on codebase structure and test file inventory, these files likely have minimal or no test coverage:
+
+### Critical Backend Files (High Priority)
+1. **src-backend/TftOperator.ts** - Complex operator with many methods, OpenCV dependencies
+2. **src-backend/services/StrategyService.ts** - Large file (3513 lines) with business logic
+3. **src-backend/services/GameStateManager.ts** - Game state management
+4. **src-backend/services/DataCollector.ts** - Telemetry collection (has TODOs)
+5. **src-backend/adapters/AndroidEmulatorAdapter.ts** - Platform adapter
+
+### Electron Main Process (Medium Priority)
+6. **electron/main.ts** - Main process bootstrap
+7. **electron/preload.ts** - Preload bridge
+
+### Renderer Components (Lower Priority)
+8. **src/components/pages/** - Various UI pages
+9. **src/stores/** - Renderer-side stores
+
+### Utility Files (Medium Priority)
+10. **src-backend/utils/OverlayBridge.ts** - Overlay communication
+11. **src-backend/utils/ToastBridge.ts** - Toast notifications
+
+---
+
+## Functions with No Tests (Estimated)
+
+### High-Value Functions Needing Tests
+1. **TftOperator methods** - OCR processing, template matching, state detection
+2. **StrategyService decision logic** - Lineup building, economy decisions
+3. **DataCollector reporting** - Telemetry upload (has TODO)
+4. **AndroidEmulatorAdapter** - Platform-specific operations
+5. **SettingsStore** - Configuration management (causing test failures)
+
+### Medium-Value Functions
+1. **OverlayBridge/ToastBridge** - IPC communication
+2. **Renderer stores** - State management
+3. **UI component logic** - User interactions
+
+---
+
+## Coverage Gaps Analysis
+
+### Gap 1: Function Coverage (58.06% overall)
+- Many functions exist but aren't called by tests
+- Focus on: StrategyService, TftOperator, DataCollector
+
+### Gap 2: Branch Coverage (84.76% overall)
+- Some decision branches not tested
+- Focus on: error conditions, edge cases, fallback paths
+
+### Gap 3: Integration Coverage
+- Full flow tests (start → play → end) missing
+- Cross-module interaction tests limited
+
+### Gap 4: Platform-Specific Coverage
+- Android adapter tests failing
+- PC adapter tests may be incomplete
+- Electron main process untested
+
+---
+
+## Prioritized Recommendations
+
+### Priority 1: Critical Business Logic (Immediate)
+1. **StrategyService** - Core decision engine, needs comprehensive tests
+2. **TftOperator** - OCR and automation, critical for functionality
+3. **DataCollector** - Telemetry, has implementation TODOs
+
+### Priority 2: Platform Adapters (Short-term)
+1. **AndroidEmulatorAdapter** - Fix SettingsStore issue first
+2. **PCLogicAdapter** - Ensure PC automation works
+3. **Electron main/preload** - Basic smoke tests
+
+### Priority 3: UI and Integration (Medium-term)
+1. **Renderer stores** - State management
+2. **UI components** - User-facing features
+3. **End-to-end flows** - Complete user journeys
+
+### Priority 4: Utilities and Helpers (Long-term)
+1. **Overlay/Toast bridges** - IPC communication
+2. **Utility functions** - Helper methods
+3. **Legacy code** - If still in use
+
+---
+
+## Evidence from Sample Coverage Run
+
+**Test File**: rule_based_engine.test.ts
+**Tests**: 54 passing
+**Coverage Output**: Attached separately
+
+**Key Insight**: Good coverage for core decision logic (89.54% statements), but lower function coverage (58.06% overall) indicates many helper functions and utilities lack direct tests.
+
+---
+
+## Next Steps
+
+1. **Save this report** to evidence file
+2. **Run coverage on more test files** to get broader picture
+3. **Focus on critical gaps** identified above
+4. **Create targeted tests** for uncovered functions
+5. **Update documentation** with coverage metrics
+
+---
+
+## Appendix: Test File Inventory
+
+**Total Test Files**: 46 files
+**Total Test Declarations**: 342 (from static scan)
+
+**Key Test Files**:
+- rule_based_engine.test.ts - 54 tests (well-covered)
+- ocr_service_worker_lifecycle.test.ts - 16 tests
+- tft_operator_stage_confirmation.test.ts - 10 tests
+- tft_data_hub.test.ts - variable tests
+- Various Android test files - many failing due to SettingsStore

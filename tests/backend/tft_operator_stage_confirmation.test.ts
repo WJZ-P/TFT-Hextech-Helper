@@ -13,7 +13,7 @@ import assert from "node:assert/strict";
  */
 function normalizeStageText(stageText: string): string | null {
     const cleaned = stageText.replace(/\s+/g, '').trim();
-    const match = cleaned.match(/^(\d)[\-\.](\d)$/);
+    const match = cleaned.match(/^(\d)[-.](\d)$/);
     if (!match) return null;
 
     let stage = parseInt(match[1]);

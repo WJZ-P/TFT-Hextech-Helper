@@ -55,7 +55,7 @@ test("ocr: benchmark optimized vs baseline (params + cache)", { timeout: 300000 
 
     // Run multiple passes to simulate repeated frames (caching benefits)
     const REPS = 4;
-    let baselineStart = Date.now();
+    const baselineStart = Date.now();
     const baselineResults: Map<string, string> = new Map();
     for (const sample of samples) {
         const variants = await buildAndroidStageOcrVariants(sample.buffer).catch(() => [] as any);
@@ -87,7 +87,7 @@ test("ocr: benchmark optimized vs baseline (params + cache)", { timeout: 300000 
     await ocrService.prewarmWorkers();
 
     // param-only: still prevent cache to measure engine parameter impact
-    let optStart = Date.now();
+    const optStart = Date.now();
     const optResults: Map<string, string> = new Map();
     for (const sample of samples) {
         const variants = await buildAndroidStageOcrVariants(sample.buffer).catch(() => [] as any);

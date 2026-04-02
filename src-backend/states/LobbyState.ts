@@ -380,7 +380,7 @@ export class LobbyState implements IState {
              */
             const onReadyCheck = (eventData: LCUWebSocketMessage) => {
                 const now = Date.now();
-                if (eventData.data?.state === "InProgress" && now - lastAcceptTime >= 100) {
+                if ((eventData.data as { state?: string })?.state === "InProgress" && now - lastAcceptTime >= 100) {
                     lastAcceptTime = now;
                     
                     // 找到对局后，取消超时定时器（不再需要超时退出）
@@ -401,7 +401,7 @@ export class LobbyState implements IState {
              * 监听"游戏阶段变化"事件
              */
             const onGameflowPhase = (eventData: LCUWebSocketMessage) => {
-                const phase = eventData.data?.phase as GameFlowPhase | undefined;
+                const phase = (eventData.data as { phase?: GameFlowPhase })?.phase;
                 //  这个EventData.data 内容太多了。主要是跟对局相关的信息。
                 //logger.debug(`[LobbyState] 游戏阶段: ${JSON.stringify(eventData, null, 2)}`);
                 logger.info(`[LobbyState] 监听到游戏阶段: ${phase}`);

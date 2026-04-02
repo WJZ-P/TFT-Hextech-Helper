@@ -1,0 +1,47 @@
+{
+  "startTime": 1774512821223,
+  "endTime": 1774512887915,
+  "totalRounds": 1,
+  "successfulRounds": 0,
+  "failedAt": [
+    {
+      "round": 1,
+      "stage": "round_1",
+      "reason": "(node:43496) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n"
+    }
+  ],
+  "timeline": {
+    "roundTime": [
+      66658
+    ],
+    "ocrAccuracy": 0,
+    "memoryPeak": 121.2578125,
+    "memoryAvg": 104.69401041666667,
+    "memoryGrowthRate": 25.82894203486015,
+    "errorCount": 1
+  },
+  "summary": {
+    "passed": false,
+    "avgResponseTime": 66658,
+    "maxMemory": 121.2578125,
+    "recommendation": "压力测试失败：1 轮出错，建议检查 Worker 回收机制"
+  },
+  "perRound": [
+    {
+      "round": 1,
+      "success": false,
+      "durationMs": 66658,
+      "stageCount": 0,
+      "avgResponsePerStageMs": null,
+      "ocrAccuracyPercent": null,
+      "misoperations": null,
+      "memoryRssMB": 96.3671875,
+      "parsedSummary": null,
+      "workerHealth": {
+        "cache": {
+          "entries": 0
+        }
+      }
+    }
+  ]
+}

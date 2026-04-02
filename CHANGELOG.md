@@ -1,6 +1,39 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+## [1.2.0] - 2026-03-23
+
+### Features
+- feat(ui): polish overlay contrast and clarify error messages
+- feat(ui): add F1 shortcut and FAB trigger for help modal
+- feat(ui): create help modal component
+- feat(analytics): add strategy effectiveness reporting
+- feat(ui): add onboarding tour for new users
+- feat(telemetry): add win/loss tracking to DataCollector
+- feat(strategy): add JSON export/import functionality
+- feat(phase3): add OCR retry, data deletion
+- feat(beta): add beta opt-in toggle and feedback mechanism
+- feat(test): add tests for DataCollector
+- feat: implement Android unknown stage guard and enhance decision engine for target pair all-in strategy
+- feat: enhance GUI verification with dynamic profile naming and improved output handling
+- feat: add 3-2 winstreak tempo sample and GUI verification scripts
+- feat: add multi-card wave 2 plans, decisions, issues, learnings, and asset metadata
+- feat: add GUI verification report generation script
+- feat: Enhance TFT data handling with season pack support and OCR corrections
+
+### Performance
+- perf(ocr): implement caching and parameter optimization
+
+### Fixes
+- fix(strategy): fix test runner syntax in strategy_json.test.ts
+- fix: update image counts and paths in JSON files for asset management
+- fix(android-ocr): close shop-open 5-1 stage recognition regression via threshold-110 variant
+- fix: update timestamps in JSON files and enhance avatar resolution logic for S16 champions
+- fix: change TftDataService import from barrel to specific modules to avoid loading heavy native deps
+
+### Docs
+- docs: finalize release documentation (README, troubleshooting)
+- docs: add DEVELOPER_GUIDE.md
+- docs: update README Phase 3 features and add JSDoc annotations
 
 ## [1.5.0] - 2026-02-21
 - 新增排队超时自动重排功能：普通模式下排队超过指定分钟数未匹配成功时，自动退出房间并重新排队，避免长时间卡在排队状态。

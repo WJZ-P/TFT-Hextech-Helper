@@ -94,8 +94,8 @@ export interface BoardUnit {
     tftUnit: TFTUnit;
     /** 棋子星级 (-1 表示未识别，1-4 为正常星级) */
     starLevel: -1 | 1 | 2 | 3 | 4;
-    /** 棋子携带的装备列表 */
-    equips: TFTEquip[];
+    /** 棋子携带的装备列表 (partial objects allowed for runtime updates) */
+    equips: (TFTEquip | { name: string })[];
 }
 
 /**
@@ -109,8 +109,8 @@ export interface BenchUnit {
     tftUnit: TFTUnit;
     /** 棋子星级 (-1 表示未识别，1-4 为正常星级) */
     starLevel: -1 | 1 | 2 | 3 | 4;
-    /** 棋子携带的装备列表 */
-    equips: TFTEquip[];
+    /** 棋子携带的装备列表 (partial objects allowed for runtime updates) */
+    equips: (TFTEquip | { name: string })[];
 }
 
 // ============================================================================

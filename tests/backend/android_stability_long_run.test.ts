@@ -13,7 +13,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFile } from "child_process";
-import path from "path";
 import { memoryMonitor } from "../../src-backend/utils/MemoryMonitor";
 
 /**
@@ -30,7 +29,7 @@ async function runStressTest(rounds: number, scenario?: string): Promise<any> {
         execFile("node", args, {
             cwd: process.cwd(),
             timeout: 300000, // 5 minutes
-        }, (error, stdout, stderr) => {
+        }, (error, stdout, _stderr) => {
             if (error) {
                 reject(error);
                 return;

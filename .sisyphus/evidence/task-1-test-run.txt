@@ -1,0 +1,198 @@
+Test Run Output - Partial (timeout after 180s)
+Run Date: 2026-03-26T02:47:09Z
+Command: npm run test:unit
+Timeout: 180s
+
+[OUTPUT START]
+
+✔ android capture surface detects fully black smoke frames (68.1934ms)
+✔ android capture surface keeps real rendered TFT content out of black-surface diagnosis (131.0911ms)
+✖ android emulator adapter can be imported from node cli context (13852.265ms)
+✖ tft operator can bootstrap templates even when OpenCV finished before operator import (2421.922ms)
+✖ android emulator diagnose CLI reports summary and interesting entries (13928.2237ms)
+
+[... TemplateLoader logs omitted for brevity ...]
+
+✖ android equipment matcher recognizes real-device recurve bow crop without fixture fallback (15080.7691ms)
+✖ android foreground compare CLI reports zero diff for identical fixtures (14053.265ms)
+✖ android foreground compare CLI surfaces state and decision diffs between fixtures (2763.7202ms)
+✔ android foreground fixture scaffold CLI creates replay schema from screenshots (1610.5354ms)
+✔ android foreground ingest CLI creates fixture, manifest, and crops for real-capture drafts (3099.5386ms)
+✔ android foreground progression waits on BlueStacks boot screens (11.7181ms)
+✔ android foreground progression waits on unknown non-game windows (0.4731ms)
+✔ android foreground progression taps verified real update CTA on first frame (4.354ms)
+✔ android foreground progression does not spam update taps on repeated identical frames (0.5366ms)
+✔ android foreground progression blocks login-required frontend screens (0.4424ms)
+✔ android foreground progression prepares a synthetic lobby start action (0.7882ms)
+✔ android foreground progression dismisses open lobby side menu before queueing (0.3486ms)
+✔ android foreground progression does not spam lobby side-menu dismiss clicks (0.497ms)
+✔ android foreground progression resumes canonical lobby flow after side menu closes (54.8834ms)
+✔ android foreground progression retries queue via synthetic cancel action after timeout (0.7932ms)
+✔ android foreground progression prepares accept-ready action (0.3759ms)
+✔ android foreground progression keeps waiting during in-game transition until live HUD arrives (0.3662ms)
+✔ android foreground progression reports ready once live HUD is available (0.3559ms)
+
+[... OCR logs omitted for brevity ...]
+
+✔ android HUD gold OCR recognizes real-device 2-5 / 5-1 / 5-2 frames (20324.0397ms)
+✔ android HUD XP OCR can derive level info from real-device 2-5 / 5-1 / 5-2 frames (13153.5234ms)
+✔ android HUD self HP can be matched from self nameplate and scoreboard OCR (12168.348ms)
+✔ android stage OCR recognizes opening, shop-open, and topbar variant crops from real-device samples (12110.0835ms)
+
+[... More tests ...]
+
+✖ android live smoke CLI can analyze update-ready screenshots (13497.4344ms)
+✖ android live smoke CLI can analyze login-required screenshots (2010.4756ms)
+✖ android live smoke CLI can analyze live HUD screenshots (1882.7562ms)
+✖ android live smoke CLI treats augment overlay screenshots as live content (1730.5412ms)
+✖ android live smoke CLI treats shop-open live HUD screenshots as ready live content (1693.8397ms)
+✖ android live smoke CLI can analyze unknown non-game screenshots (1733.9577ms)
+✖ android live smoke CLI reports black capture surfaces for black screenshots (1738.0887ms)
+✖ android live smoke CLI reports visible capture surfaces for side-menu lobby screenshots (1734.1531ms)
+✖ android live smoke CLI emits lobby recovery for side-menu-open screenshot (1737.0307ms)
+✖ android live smoke CLI can replay screenshot sequences for progression QA (1641.8817ms)
+✖ android live smoke CLI can replay synthetic frontend flow fixtures (1599.1502ms)
+✖ android live smoke CLI can replay queue-timeout fallback fixtures (1617.5098ms)
+✖ android live smoke CLI can replay verified real frontend flow fixtures (1638.3366ms)
+✖ android recognition replay CLI passes bundled fixtures (13558.5344ms)
+
+[... More tests ...]
+
+✔ extractLikelyStageText repairs noisy android stage OCR (20.4903ms)
+✔ extractLikelyXpText rejects impossible OCR and keeps legal android XP text (1.4959ms)
+✔ resolveChampionNameFromText accepts exact and near-miss android OCR (73.3088ms)
+✔ selectBestStageText prefers majority support across android scan windows (1.0716ms)
+✔ android recording extractor CLI lists bundled presets (6890.7917ms)
+✔ AndroidActionPlanner allocates unique AUTO_SLOT targets across consecutive move actions (3.4284ms)
+✔ AndroidSimulationRunner emits buy, move, equip, and roll steps for a midgame reroll state (3.8244ms)
+✔ AndroidSimulationRunner loads bundled offline scenarios (99.3318ms)
+
+[... Android long-run stability tests ...]
+
+✖ 5 consecutive rounds complete without crash (24097.1961ms)
+✖ OCR accuracy >= 94% across 5 rounds (12304.3864ms)
+✖ handles 2+ consecutive low-confidence OCR without state corruption (6972.3201ms)
+✖ Android long-run stability (43388.5206ms)
+
+[... Memory growth tests ...]
+
+✔ memory growth < 10MB per round (ideal) (11974.4027ms)
+✔ memory growth <= 15MB per round (acceptable) (11816.1389ms)
+✔ Memory growth rate validation (23792.0856ms)
+
+[... More tests ...]
+
+✖ android static snapshot replay validates bundled real-device lineup fixtures via CLI (13495.7833ms)
+
+[... Window classifier tests ...]
+
+✔ android window classifier detects BlueStacks boot splash (713.6808ms)
+✔ android window classifier detects TFT frontend/update screen (398.5207ms)
+✔ android window classifier blocks login-required frontend screens (345.7944ms)
+✔ android window classifier keeps real TFT frames out of boot state (4564.6216ms)
+✔ android window classifier rejects unrelated desktop screenshots (832.0172ms)
+✔ android window classifier detects real ready-check accept state (2297.6422ms)
+✔ android window classifier detects real queue state (2279.6791ms)
+✔ android window classifier detects real lobby state (1649.9768ms)
+✔ android window classifier detects side-menu-open lobby as recoverable lobby (954.8512ms)
+✔ android window classifier detects post-accept and loading transition states (3728.7287ms)
+
+[... SettingsStore error ...]
+
+file:///D:/Github/TFT-Hextech-Helper-t/node_modules/conf/dist/source/index.js:518
+                throw new Error('Please specify the `projectName` option.');
+                      ^
+
+Error: Please specify the `projectName` option.
+    at #prepareOptions (file:///D:/Github/TFT-Hextech-Helper-t/node_modules/conf/dist/source/index.js:518:23)
+    at new Conf (file:///D:/Github/TFT-Hextech-Helper-t/node_modules/conf/dist/source/index.js:44:45)
+    at new ElectronStore (file:///D:/Github/TFT-Hextech-Helper-t/node_modules/electron-store/index.js:69:3)
+    at new SettingsStore (D:\Github\TFT-Hextech-Helper-t\src-backend\utils\SettingsStore.ts:152:22)
+    at SettingsStore.getInstance (D:\Github\TFT-Hextech-Helper-t\src-backend\utils\SettingsStore.ts:114:38)
+    at <anonymous> (D:\Github\TFT-Hextech-Helper-t\src-backend\utils\SettingsStore.ts:220:44)
+    at ModuleJob.run (node:internal/esm/module_job:430:25)
+    at async onImport.tracePromise.__proto__ (node:internal/tracePromise:41:45)
+    at async asyncRunEntryPointWithESMLoader (node:internal/module_job:495:11)
+
+Node.js v24.13.1
+✖ tests\backend\android_window_helper_diagnostics.test.ts (15016.1716ms)
+
+[... DataCollector tests ...]
+
+✔ recordDecision returns false when collection is disabled (6.5561ms)
+✔ recordDecision anonymizes fields and enqueues when enabled (6.067ms)
+✔ flush without endpoint keeps local queue (local-only storage) (1.7106ms)
+✔ flush with endpoint clears queue and returns true (1.2122ms)
+✔ updateConfig disabling clears queue immediately (0.9235ms)
+✔ getWinRate returns NaN when no matches recorded (2.9122ms)
+✔ recordMatchOutcome records outcomes and computes win rate with default window (1.3797ms)
+✔ getWinRate respects windowSize smaller than history length (0.3652ms)
+
+[... More tests ...]
+
+✔ android unknown-stage guard resets immediately when a valid stage is seen (3.0393ms)
+✔ android unknown-stage guard resets immediately when HUD signal is still readable (0.4225ms)
+✔ android unknown-stage guard ignores a short burst of missing HUD signals (0.3003ms)
+✔ android unknown-stage guard only ends after sustained missing HUD and sustained unknown stage (0.3186ms)
+✔ Electron lineup GUI verification reports local assets when season-pack resources are available offline (524.6132ms)
+✔ season-pack image sync copies assets and maps local image URLs without overwriting existing files (349.543ms)
+✔ JinChan season pack loader maps a real-main-branch-shaped Resources root into snapshot data (38.9075ms)
+✔ JinChan season pack loader supports passing the HeroDatas directory directly and skips incomplete seasons (3.7081ms)
+✔ JinChan season pack location resolver keeps actual Resources-root correction lookup semantics (1.8025ms)
+
+[... Multi-resolution adaptation tests ...]
+
+✔ scaleRegionToResolution converts 1024x768 to 720p correctly (3.6511ms)
+✔ scaleRegionToResolution converts 1024x768 to 1080p correctly (0.4536ms)
+✔ scaleRegionToResolution converts 1024x768 to 1440p correctly (0.3172ms)
+✔ scalePointToResolution works for game slot coordinates (0.3211ms)
+✔ getResolutionScaleFactor returns correct ratios (0.4437ms)
+✔ Android stage region scales correctly across resolutions (0.3816ms)
+✔ HUD digit region maintains readable size across resolutions (0.4263ms)
+✔ BASE_RESOLUTION matches original design coordinates (0.256ms)
+✔ Multi-resolution adaptation (9ms)
+
+[... OCR benchmark ...]
+
+✔ ocr: benchmark optimized vs baseline (params + cache) (91080.894ms)
+
+[OUTPUT END - TRUNCATED DUE TO TIMEOUT]
+
+## Summary of Partial Run
+
+From the visible output, I can count:
+
+### Passing Tests (✔): ~50+
+- android capture surface tests (2)
+- android foreground progression tests (14)
+- android HUD OCR tests (4)
+- android action planner tests (1)
+- mouse controller tests (1)
+- OCR utility tests (4)
+- Android simulation tests (2)
+- Memory growth tests (2)
+- Window classifier tests (10)
+- DataCollector tests (5)
+- Android unknown-stage guard tests (4)
+- Season pack tests (4)
+- Multi-resolution adaptation tests (8)
+- OCR benchmark test (1)
+
+### Failing Tests (✖): ~20+
+- android emulator adapter tests (3)
+- android equipment matcher tests (1)
+- android foreground compare CLI tests (2)
+- android live smoke CLI tests (13)
+- android recognition replay CLI tests (1)
+- Android long-run stability tests (3)
+- android static snapshot replay tests (1)
+- android_window_helper_diagnostics.test.ts (1 - SettingsStore error)
+
+### Key Observations:
+1. Many Android tests fail due to SettingsStore error: "Please specify the `projectName` option"
+2. Some tests timeout or take very long (OCR tests, stability tests)
+3. The test runner itself times out after 180s
+4. The SettingsStore error appears to be environmental (missing configuration)
+
+### Test Count Estimate:
+Based on visible output: ~70+ tests run (50+ pass, 20+ fail)

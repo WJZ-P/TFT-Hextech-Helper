@@ -11,7 +11,7 @@
  * - 支持游戏结束后重置，准备下一局
  */
 
-import { BenchUnit, BoardUnit, IdentifiedEquip, BoardLocation } from "../TftOperator";
+import { BenchUnit, BoardUnit, IdentifiedEquip, BoardLocation, BenchLocation } from "../TftOperator";
 import { logger } from "../utils/Logger";
 import { TFTUnit, GameStageType, fightBoardSlotPoint, ChampionKey } from "../TFTProtocol";
 

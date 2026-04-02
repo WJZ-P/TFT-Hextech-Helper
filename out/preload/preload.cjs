@@ -55,6 +55,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["HEX_TOGGLE_STOP_AFTER_GAME"] = "hex-toggle-stop-after-game";
   IpcChannel2["SETTINGS_GET"] = "settings-get";
   IpcChannel2["SETTINGS_SET"] = "settings-set";
+  IpcChannel2["DATA_DELETE_ALL"] = "data-delete-all";
   IpcChannel2["UTIL_IS_ELEVATED"] = "util-is-elevated";
   IpcChannel2["STATS_GET"] = "stats-get";
   IpcChannel2["STATS_UPDATED"] = "stats-updated";
@@ -146,7 +147,11 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", exposedIpcRenderer);
 const ipcApi = {
   on: (channel, callback) => {
     const listener = (_event, ...args) => {
-      callback(...args);
+      try {
+        callback(...args);
+      } catch (err) {
+        console.error("[Preload] ipc.on callback error:", err);
+      }
     };
     electron.ipcRenderer.on(channel, listener);
     return () => {

@@ -376,7 +376,7 @@ export class GameRunningState implements IState {
              *              - WaitingForStats: 游戏窗口已关闭，等待统计数据
              */
             const onGameflowPhase = (eventData: LCUWebSocketMessage) => {
-                const phase = eventData.data?.phase as GameFlowPhase | undefined;
+                const phase = (eventData.data as { phase?: GameFlowPhase })?.phase;
                 logger.info(`[GameRunningState] 监听到游戏阶段: ${phase}`);
 
                 // 游戏结束的两种状态都表示对局已结束

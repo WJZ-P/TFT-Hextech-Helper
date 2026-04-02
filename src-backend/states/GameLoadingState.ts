@@ -324,6 +324,8 @@ export class GameLoadingState implements IState {
      * @description 避免安卓模式仅凭模拟器窗口存在就误判为已进游戏。
      *              使用 InGame API 的 allGameData 作为实际在局指标。
      */
+    // TODO: uncomment when in-game signal detection is implemented
+    /*
     private async hasInGameSignal(): Promise<boolean> {
         try {
             const response = await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);
@@ -337,4 +339,5 @@ export class GameLoadingState implements IState {
             return false;
         }
     }
+    */
 }

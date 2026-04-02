@@ -103,7 +103,7 @@ This layer is intentionally additive. It does not remove static fallbacks; it gi
 
 **Previously migrated (Rounds 1-2):** All `TFT_16_EQUIP_DATA` accesses migrated; `isBaseComponentEquipment()`, `getEquipmentRoleHint()`, `isWearableEquipment()` added to `TftDataHub`.
 
-**Remaining architectural gap (not addressed this round):** `getChampionDefinition(name)`, `getTraitDefinition(name, traitKey)`, and `getTraitBreakpoints(unit)` do not yet have `TftDataHub` wrappers. These would require champion definition or trait rule lookups that are currently handled inline in StrategyService.
+**Architectural gap addressed (2026-03-25):** `getChampionDefinition(name)`, `getTraitDefinition(traitKey)`, and `getTraitBreakpointsForChampion(championName)` have been implemented in `TftDataHub` as part of Task A (NEXT_WAVE_PLAN). These methods now provide champion definition and trait rule lookups that were previously handled inline in StrategyService.
 
 ### Image Syncer
 

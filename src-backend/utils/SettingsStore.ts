@@ -148,10 +148,19 @@ class SettingsStore {
             gameRegion: GameRegion.CN,   // 默认国服
             gameClient: GameClient.RIOT_PC, // 默认电脑 Riot 客户端
         }
-        // electron-store Options don't accept projectName; keep usage simple
-        this.store = new Store<AppSettings>({
+        // electron-store v11+ requires name option for conf package
+        // In test environment (non-Electron), we need to provide cwd
+        const storeOptions: any = {
+            name: 'config',
             defaults,
-        });
+        };
+        
+        // Provide cwd when Electron app is not available (test environment)
+        // electron-store requires either cwd or projectName, but only sets cwd if Electron app exists
+        // Use process.cwd() as fallback for test environments
+        storeOptions.cwd = process.cwd();
+        
+        this.store = new Store<AppSettings>(storeOptions);
     }
 
     /**

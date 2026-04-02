@@ -1,0 +1,32 @@
+{
+  "5": {
+    "path": "examples\\templates\\digits\\digit_5.png",
+    "samples": 3,
+    "std": 117.30531135216586
+  },
+  "1": {
+    "path": "examples\\templates\\digits\\digit_1.png",
+    "samples": 2,
+    "std": 110.90025350075
+  },
+  "6": {
+    "path": "examples\\templates\\digits\\digit_6.png",
+    "samples": 1,
+    "std": 90.72451123470167
+  },
+  "9": {
+    "path": "examples\\templates\\digits\\digit_9.png",
+    "samples": 1,
+    "std": 102.54603620236291
+  },
+  "4": {
+    "path": "examples\\templates\\digits\\digit_4.png",
+    "samples": 5,
+    "std": 98.3335579566211
+  },
+  "2": {
+    "path": "examples\\templates\\digits\\digit_2.png",
+    "samples": 2,
+    "std": 96.94875035769346
+  }
+}

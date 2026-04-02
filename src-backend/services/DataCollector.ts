@@ -74,12 +74,12 @@ class DataCollectorService {
     /** 最大批量上报大小 */
     private readonly MAX_BATCH_SIZE = 50;
 
-    /** 设备 ID 哈希（启动时生成） */
-    private deviceIdHash: string = "";
+    /** 设备 ID 哈希（启动时生成） - TODO: implement telemetry upload to use this */
+    // private _deviceIdHash: string = "";
 
     private constructor() {
         // 生成匿名设备 ID
-        this.deviceIdHash = this.generateDeviceHash();
+        // this._deviceIdHash = this.generateDeviceHash();
     }
 
     public static getInstance(): DataCollectorService {
@@ -178,15 +178,14 @@ class DataCollectorService {
         }
 
         try {
-            const payload: BatchPayload = {
-                deviceIdHash: this.deviceIdHash,
-                count: this.queue.length,
-                decisions: [...this.queue],
-                appVersion: "1.5.0", // 从 package.json 动态获取
-                tzOffset: new Date().getTimezoneOffset(),
-            };
-
-            // TODO: 实际上报逻辑
+            // TODO: 实际上报逻辑 - payload preparation
+            // const payload: BatchPayload = {
+            //     deviceIdHash: this.deviceIdHash,
+            //     count: this.queue.length,
+            //     decisions: [...this.queue],
+            //     appVersion: "1.5.0",
+            //     tzOffset: new Date().getTimezoneOffset(),
+            // };
             // await fetch(this.config.endpoint, {
             //     method: "POST",
             //     headers: { "Content-Type": "application/json" },
@@ -223,11 +222,12 @@ class DataCollectorService {
         // 发出 telemetry 事件（仅在启用且非 disabled 模式下）
         if (this.config.enabled && this.config.mode !== "disabled") {
             // 使用同样的脱敏/哈希策略记录简要事件
-            const payload = {
-                event: "match_complete",
-                outcome,
-                timestamp: entry.timestamp,
-            };
+            // TODO: implement telemetry upload to use this payload
+            // const _payload = {
+            //     event: "match_complete",
+            //     outcome,
+            //     timestamp: entry.timestamp,
+            // };
 
             // 目前仅记录到本地队列作为匿名事件的一部分
             try {
@@ -281,10 +281,11 @@ class DataCollectorService {
     /**
      * 生成匿名设备 ID 哈希
      */
-    private generateDeviceHash(): string {
-        const seed = `${Date.now()}-${Math.random()}-${navigator.userAgent}`;
-        return this.hashString(seed).substring(0, 16);
-    }
+    // TODO: uncomment when telemetry upload is implemented
+    // private generateDeviceHash(): string {
+    //     const seed = `${Date.now()}-${Math.random()}-${navigator.userAgent}`;
+    //     return this.hashString(seed).substring(0, 16);
+    // }
 
     /**
      * 生成随机 ID

@@ -1,0 +1,377 @@
+{
+  "per_recording": {
+    "screen-recording-20260322": {
+      "total_frames": 159,
+      "tested_frames": 20,
+      "stage": {
+        "correct": 6,
+        "total": 6,
+        "values": [
+          "2-2",
+          "1-5",
+          "2-6",
+          "3-3",
+          "3-3",
+          "3-5"
+        ]
+      },
+      "gold": {
+        "correct": 6,
+        "total": 6,
+        "values": [
+          1,
+          51,
+          52,
+          53,
+          21,
+          28
+        ]
+      },
+      "level": {
+        "correct": 6,
+        "total": 6,
+        "values": [
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      "hp": {
+        "correct": 5,
+        "total": 6,
+        "values": [
+          88,
+          100,
+          95
+        ]
+      },
+      "shop_names": {
+        "detected": 1,
+        "total": 25
+      },
+      "shop_costs": {
+        "correct": 7,
+        "total": 25
+      },
+      "bench": {
+        "detected": 0,
+        "total": 42
+      },
+      "equipment": {
+        "found": 30,
+        "total": 30
+      },
+      "shop_name_examples": [
+        "\u59ff\u6563"
+      ]
+    },
+    "screen-recording-20260323": {
+      "total_frames": 157,
+      "tested_frames": 20,
+      "stage": {
+        "correct": 5,
+        "total": 5,
+        "values": [
+          "1-4",
+          "2-2",
+          "2-6",
+          "3-2",
+          "3-6"
+        ]
+      },
+      "gold": {
+        "correct": 5,
+        "total": 5,
+        "values": [
+          3,
+          8,
+          51,
+          52,
+          24
+        ]
+      },
+      "level": {
+        "correct": 5,
+        "total": 5,
+        "values": [
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      "hp": {
+        "correct": 4,
+        "total": 5,
+        "values": [
+          96,
+          91,
+          100
+        ]
+      },
+      "shop_names": {
+        "detected": 4,
+        "total": 20
+      },
+      "shop_costs": {
+        "correct": 11,
+        "total": 20
+      },
+      "bench": {
+        "detected": 0,
+        "total": 35
+      },
+      "equipment": {
+        "found": 25,
+        "total": 25
+      },
+      "shop_name_examples": [
+        "\u6210\u578b\u9635",
+        "\u4f4e\u914d\u7248",
+        "\u8c46\u8331\u9635\u5352",
+        "\u76bf\u592a"
+      ]
+    },
+    "screen-recording-20260323-2": {
+      "total_frames": 190,
+      "tested_frames": 20,
+      "stage": {
+        "correct": 4,
+        "total": 4,
+        "values": [
+          "2-5",
+          "2-5",
+          "3-3",
+          "3-5"
+        ]
+      },
+      "gold": {
+        "correct": 4,
+        "total": 4,
+        "values": [
+          8,
+          50,
+          52,
+          30
+        ]
+      },
+      "level": {
+        "correct": 4,
+        "total": 4,
+        "values": [
+          1,
+          4,
+          5,
+          6
+        ]
+      },
+      "hp": {
+        "correct": 3,
+        "total": 4,
+        "values": [
+          96,
+          98,
+          100
+        ]
+      },
+      "shop_names": {
+        "detected": 2,
+        "total": 20
+      },
+      "shop_costs": {
+        "correct": 5,
+        "total": 20
+      },
+      "bench": {
+        "detected": 0,
+        "total": 28
+      },
+      "equipment": {
+        "found": 18,
+        "total": 20
+      },
+      "shop_name_examples": [
+        "\u7d27\u4e00",
+        "\u4e00\u4e09"
+      ]
+    },
+    "screen-recording-20260323-3": {
+      "total_frames": 179,
+      "tested_frames": 20,
+      "stage": {
+        "correct": 10,
+        "total": 10,
+        "values": [
+          "3-3",
+          "1-4",
+          "2-1",
+          "2-2",
+          "2-5",
+          "2-6",
+          "2-7",
+          "3-2",
+          "3-3",
+          "3-5"
+        ]
+      },
+      "gold": {
+        "correct": 10,
+        "total": 10,
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          6,
+          50,
+          31
+        ]
+      },
+      "level": {
+        "correct": 10,
+        "total": 10,
+        "values": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "hp": {
+        "correct": 7,
+        "total": 10,
+        "values": [
+          100,
+          93
+        ]
+      },
+      "shop_names": {
+        "detected": 8,
+        "total": 45
+      },
+      "shop_costs": {
+        "correct": 18,
+        "total": 45
+      },
+      "bench": {
+        "detected": 0,
+        "total": 70
+      },
+      "equipment": {
+        "found": 49,
+        "total": 50
+      },
+      "shop_name_examples": [
+        "\u888b\u4e09",
+        "\u4e00\u4e2a\u799a\u5c14\u4eba",
+        "\u9149\u5706",
+        "\u5de8\u6590\u7409\u65af",
+        "\u51ef\u5357",
+        "\u63d0\u83ab",
+        "\u51ef\u7279\u7433",
+        "\u827e\u5c3c\u7ef4\u4e9a"
+      ]
+    },
+    "screen-recording-20260324": {
+      "total_frames": 227,
+      "tested_frames": 20,
+      "stage": {
+        "correct": 5,
+        "total": 5,
+        "values": [
+          "1-3",
+          "1-4",
+          "3-3",
+          "3-1",
+          "3-3"
+        ]
+      },
+      "gold": {
+        "correct": 5,
+        "total": 5,
+        "values": [
+          33,
+          4,
+          5,
+          12,
+          50
+        ]
+      },
+      "level": {
+        "correct": 5,
+        "total": 5,
+        "values": [
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "hp": {
+        "correct": 5,
+        "total": 5,
+        "values": [
+          100,
+          86
+        ]
+      },
+      "shop_names": {
+        "detected": 1,
+        "total": 15
+      },
+      "shop_costs": {
+        "correct": 4,
+        "total": 15
+      },
+      "bench": {
+        "detected": 0,
+        "total": 35
+      },
+      "equipment": {
+        "found": 25,
+        "total": 25
+      },
+      "shop_name_examples": [
+        "\u5df1\u8680"
+      ]
+    }
+  },
+  "totals": {
+    "stage": {
+      "correct": 30,
+      "total": 30
+    },
+    "gold": {
+      "correct": 30,
+      "total": 30
+    },
+    "level": {
+      "correct": 30,
+      "total": 30
+    },
+    "hp": {
+      "correct": 24,
+      "total": 30
+    },
+    "shop_names": {
+      "correct": 16,
+      "total": 125
+    },
+    "shop_costs": {
+      "correct": 45,
+      "total": 125
+    },
+    "bench": {
+      "correct": 0,
+      "total": 210
+    },
+    "equipment": {
+      "correct": 147,
+      "total": 150
+    }
+  },
+  "timestamp": "2026-03-25 05:26:35"
+}
