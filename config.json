@@ -8,7 +8,12 @@
 	"showOverlay": true,
 	"showDebugPage": false,
 	"window": {
-		"bounds": null,
+		"bounds": {
+			"x": 490,
+			"y": 115,
+			"width": 1025,
+			"height": 601
+		},
 		"isMaximized": false
 	},
 	"selectedLineupIds": [],
@@ -24,7 +29,7 @@
 		"enabled": false,
 		"minutes": 5
 	},
-	"analyticsClientId": "",
+	"analyticsClientId": "6c644585-a0c4-4363-a039-fb003aef52a1",
 	"gameRegion": "NA",
 	"gameClient": "ANDROID"
 }
