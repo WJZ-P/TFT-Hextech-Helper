@@ -428,6 +428,23 @@ export const hexSlot = {   //  x+=295
     SLOT_2: { x: 510, y: 410 },
     SLOT_3: { x: 805, y: 410 },
 }
+//  星神选择槽位（S17 星神赛季专属）
+export const starGodSlot = { 
+    SLOT_1: { x: 370, y: 440 },
+    SLOT_2: { x: 650, y: 440 },
+}
+//  大恩赐点击点位（S17 星神赛季专属）
+//  游戏内 4-7 阶段会给玩家一个"大恩赐"奖励，在屏幕底部偏右位置会出现可点击图标
+export const grandBlessingPoint = { x: 790, y: 670 }
+//  小型恩赐装备选择槽位（S17 星神赛季专属）
+//  游戏内 5-4、6-4 阶段会给玩家"小型恩赐"奖励：屏幕下方弹出 4 个装备候选，玩家需四选一
+//  四个槽位水平排列（y 相同，x 依次递增），代表 4 张装备卡牌的点击坐标
+export const minorBlessingSlot = {
+    SLOT_1: { x: 200, y: 700 },
+    SLOT_2: { x: 370, y: 700 },
+    SLOT_3: { x: 540, y: 700 },
+    SLOT_4: { x: 700, y: 700 },
+}
 //  选秀站位，为离自己最近的棋子位置。
 export const sharedDraftPoint = { x: 530, y: 400 }
 
