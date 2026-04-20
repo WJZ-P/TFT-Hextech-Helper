@@ -1,4 +1,4 @@
-import {UnitClass_S16, UnitOrigin_S16, UnitClass_S4_5, UnitOrigin_S4_5} from "./trait.ts";
+import {UnitClass_S16, UnitOrigin_S16, UnitClass_S4_5, UnitOrigin_S4_5, UnitClass_S17, UnitOrigin_S17} from "./trait.ts";
 import {TFTUnit} from "../TFTProtocol.ts";
 
 export const TFT_SPECIAL_CHESS = {
@@ -57,15 +57,15 @@ export const TFT_SPECIAL_CHESS = {
         classes: [],
         attackRange: 1
     },
-    "提伯斯": {
-        displayName: "提伯斯",
-        englishId: "TFT16_AnnieTibbers",
-        price: 0,
-        traits: [UnitClass_S16.Sorcerer],
-        origins: [],
-        classes: [UnitClass_S16.Sorcerer],
-        attackRange: 1
-    },
+    // "提伯斯": {
+    //     displayName: "提伯斯",
+    //     englishId: "TFT16_AnnieTibbers",
+    //     price: 0,
+    //     traits: [UnitClass_S16.Sorcerer],
+    //     origins: [],
+    //     classes: [UnitClass_S16.Sorcerer],
+    //     attackRange: 1
+    // },
 } satisfies Record<string, TFTUnit>;
 
 /**
@@ -74,10 +74,15 @@ export const TFT_SPECIAL_CHESS = {
  *              如果尝试对它们执行 sellUnit，不会有任何效果，反而浪费操作时间并干扰后续逻辑。
  *              - 训练假人：系统赠送的 1 费假人，不可售卖
  *              - 魔像：某些海克斯科技效果生成的单位，不可售卖
+ *              - 迷你黑洞：S17 暗星羁绊场上生成的召唤物，不可售卖
+ *              - 未来战士核心：S17 未来战士羁绊攒经验后在备战席生成的道具单位，
+ *                             虽能上场但不可售卖（出售有专属逻辑：右键点击后会转为经验值）
  */
 export const UNSELLABLE_BOARD_UNITS: ReadonlySet<string> = new Set([
     "训练假人",
     "魔像",
+    "迷你黑洞",
+    "未来战士核心",
 ]);
 
 /**
@@ -1520,4 +1525,690 @@ export const _TFT_4_CHESS_DATA = {
         classes: [UnitClass_S4_5.Mystic],
         attackRange: 5
     },
+} satisfies Record<string, TFTUnit>;
+
+/**
+ * 云顶十七赛季(科幻主题：观星者/幻灵战队/太空律动)的棋子数据
+ * @description
+ * - 包含 1-5 费共 64 个正式英雄 + 8 个 PVE 专属单位（野怪/召唤物/核心）
+ * - 特殊棋子（魔像、训练假人、锻造器等）复用顶部 TFT_SPECIAL_CHESS，这里不再重复定义
+ * - "观星者" 羁绊采用"主羁绊 + 星座分支"设计，但棋子只挂主羁绊 Stargazer，分支由赛季机制切换
+ */
+export const _TFT_17_CHESS_DATA = {
+    //  特殊棋子（魔像、锻造器、训练假人等）跨赛季共用
+    ...TFT_SPECIAL_CHESS,
+
+    // ====================================================================
+    // 1 费棋子 (共 15 个)
+    // ====================================================================
+    "贝蕾亚": {
+        displayName: "贝蕾亚",
+        englishId: "TFT17_Briar",
+        price: 1,
+        traits: [UnitOrigin_S17.AnimaSquad, UnitOrigin_S17.Primordian, UnitClass_S17.Assassin],
+        origins: [UnitOrigin_S17.AnimaSquad, UnitOrigin_S17.Primordian],
+        classes: [UnitClass_S17.Assassin],
+        attackRange: 1
+    },
+    "波比": {
+        displayName: "波比",
+        englishId: "TFT17_Poppy",
+        price: 1,
+        traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.ResistTank],
+        origins: [UnitOrigin_S17.Astronaut],
+        classes: [UnitClass_S17.ResistTank],
+        attackRange: 1
+    },
+    "维迦": {
+        displayName: "维迦",
+        englishId: "TFT17_Veigar",
+        price: 1,
+        traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.APTrait],
+        origins: [UnitOrigin_S17.Astronaut],
+        classes: [UnitClass_S17.APTrait],
+        attackRange: 4
+    },
+    "亚托克斯": {
+        displayName: "亚托克斯",
+        englishId: "TFT17_Aatrox",
+        price: 1,
+        traits: [UnitOrigin_S17.DRX, UnitClass_S17.ResistTank],
+        origins: [UnitOrigin_S17.DRX],
+        classes: [UnitClass_S17.ResistTank],
+        attackRange: 1
+    },
+    "凯特琳": {
+        displayName: "凯特琳",
+        englishId: "TFT17_Caitlyn",
+        price: 1,
+        traits: [UnitOrigin_S17.DRX, UnitClass_S17.Fateweaver],
+        origins: [UnitOrigin_S17.DRX],
+        classes: [UnitClass_S17.Fateweaver],
+        attackRange: 4
+    },
+    "提莫": {
+        displayName: "提莫",
+        englishId: "TFT17_Teemo",
+        price: 1,
+        traits: [UnitOrigin_S17.SpaceGroove, UnitClass_S17.Summon],
+        origins: [UnitOrigin_S17.SpaceGroove],
+        classes: [UnitClass_S17.Summon],
+        attackRange: 4
+    },
+    "内瑟斯": {
+        displayName: "内瑟斯",
+        englishId: "TFT17_Nasus",
+        price: 1,
+        traits: [UnitOrigin_S17.SpaceGroove, UnitClass_S17.ShieldTank],
+        origins: [UnitOrigin_S17.SpaceGroove],
+        classes: [UnitClass_S17.ShieldTank],
+        attackRange: 1
+    },
+    "崔斯特": {
+        displayName: "崔斯特",
+        englishId: "TFT17_TwistedFate",
+        price: 1,
+        traits: [UnitOrigin_S17.Stargazer, UnitClass_S17.Fateweaver],
+        origins: [UnitOrigin_S17.Stargazer],
+        classes: [UnitClass_S17.Fateweaver],
+        attackRange: 4
+    },
+    "泰隆": {
+        displayName: "泰隆",
+        englishId: "TFT17_Talon",
+        price: 1,
+        traits: [UnitOrigin_S17.Stargazer, UnitClass_S17.Assassin],
+        origins: [UnitOrigin_S17.Stargazer],
+        classes: [UnitClass_S17.Assassin],
+        attackRange: 1
+    },
+    "伊泽瑞尔": {
+        displayName: "伊泽瑞尔",
+        englishId: "TFT17_Ezreal",
+        price: 1,
+        traits: [UnitOrigin_S17.Timebreaker, UnitClass_S17.Ranged],
+        origins: [UnitOrigin_S17.Timebreaker],
+        classes: [UnitClass_S17.Ranged],
+        attackRange: 6
+    },
+    "蕾欧娜": {
+        displayName: "蕾欧娜",
+        englishId: "TFT17_Leona",
+        price: 1,
+        traits: [UnitOrigin_S17.Admin, UnitClass_S17.ShieldTank],
+        origins: [UnitOrigin_S17.Admin],
+        classes: [UnitClass_S17.ShieldTank],
+        attackRange: 1
+    },
+    "科加斯": {
+        displayName: "科加斯",
+        englishId: "TFT17_Chogath",
+        price: 1,
+        traits: [UnitOrigin_S17.DarkStar, UnitClass_S17.HPTank],
+        origins: [UnitOrigin_S17.DarkStar],
+        classes: [UnitClass_S17.HPTank],
+        attackRange: 1
+    },
+    "丽桑卓": {
+        displayName: "丽桑卓",
+        englishId: "TFT17_Lissandra",
+        price: 1,
+        traits: [UnitOrigin_S17.DarkStar, UnitClass_S17.Summon, UnitClass_S17.APTrait],
+        origins: [UnitOrigin_S17.DarkStar],
+        classes: [UnitClass_S17.Summon, UnitClass_S17.APTrait],
+        attackRange: 4
+    },
+    "雷克塞": {
+        displayName: "雷克塞",
+        englishId: "TFT17_Reksai",
+        price: 1,
+        traits: [UnitOrigin_S17.Primordian, UnitClass_S17.HPTank],
+        origins: [UnitOrigin_S17.Primordian],
+        classes: [UnitClass_S17.HPTank],
+        attackRange: 1
+    },
+    // 迷你黑洞：暗星羁绊场上生成的召唤物，不可购买
+    "迷你黑洞": {
+        displayName: "迷你黑洞",
+        englishId: "TFT17_DarkStar_FakeUnit",
+        price: 1,
+        traits: [],
+        origins: [],
+        classes: [],
+        attackRange: 0
+    },
+
+    // ====================================================================
+    // 2 费棋子 (共 13 个)
+    // ====================================================================
+    "卑尔维斯": {
+        displayName: "卑尔维斯",
+        englishId: "TFT17_Belveth",
+        price: 2,
+        traits: [UnitOrigin_S17.Primordian, UnitClass_S17.ASTrait, UnitClass_S17.Melee],
+        origins: [UnitOrigin_S17.Primordian],
+        classes: [UnitClass_S17.ASTrait, UnitClass_S17.Melee],
+        attackRange: 2
+    },
+    "阿卡丽": {
+        displayName: "阿卡丽",
+        englishId: "TFT17_Akali",
+        price: 2,
+        traits: [UnitOrigin_S17.DRX, UnitClass_S17.Melee],
+        origins: [UnitOrigin_S17.DRX],
+        classes: [UnitClass_S17.Melee],
+        attackRange: 1
+    },
+    "金克丝": {
+        displayName: "金克丝",
+        englishId: "TFT17_Jinx",
+        price: 2,
+        traits: [UnitOrigin_S17.AnimaSquad, UnitClass_S17.ASTrait],
+        origins: [UnitOrigin_S17.AnimaSquad],
+        classes: [UnitClass_S17.ASTrait],
+        attackRange: 4
+    },
+    "纳尔": {
+        displayName: "纳尔",
+        englishId: "TFT17_Gnar",
+        price: 2,
+        traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.Ranged],
+        origins: [UnitOrigin_S17.Astronaut],
+        classes: [UnitClass_S17.Ranged],
+        attackRange: 6
+    },
+    "派克": {
+        displayName: "派克",
+        englishId: "TFT17_Pyke",
+        price: 2,
+        traits: [UnitOrigin_S17.PsyOps, UnitClass_S17.Flex],
+        origins: [UnitOrigin_S17.PsyOps],
+        classes: [UnitClass_S17.Flex],
+        attackRange: 1
+    },
+    "古拉加斯": {
+        displayName: "古拉加斯",
+        englishId: "TFT17_Gragas",
+        price: 2,
+        traits: [UnitOrigin_S17.PsyOps, UnitClass_S17.HPTank],
+        origins: [UnitOrigin_S17.PsyOps],
+        classes: [UnitClass_S17.HPTank],
+        attackRange: 1
+    },
+    "格温": {
+        displayName: "格温",
+        englishId: "TFT17_Gwen",
+        price: 2,
+        traits: [UnitOrigin_S17.SpaceGroove, UnitClass_S17.Assassin],
+        origins: [UnitOrigin_S17.SpaceGroove],
+        classes: [UnitClass_S17.Assassin],
+        attackRange: 2
+    },
+    "贾克斯": {
+        displayName: "贾克斯",
+        englishId: "TFT17_Jax",
+        price: 2,
+        traits: [UnitOrigin_S17.Stargazer, UnitClass_S17.ResistTank],
+        origins: [UnitOrigin_S17.Stargazer],
+        classes: [UnitClass_S17.ResistTank],
+        attackRange: 1
+    },
+    "米利欧": {
+        displayName: "米利欧",
+        englishId: "TFT17_Milio",
+        price: 2,
+        traits: [UnitOrigin_S17.Timebreaker, UnitClass_S17.Fateweaver],
+        origins: [UnitOrigin_S17.Timebreaker],
+        classes: [UnitClass_S17.Fateweaver],
+        attackRange: 4
+    },
+    "佐伊": {
+        displayName: "佐伊",
+        englishId: "TFT17_Zoe",
+        price: 2,
+        traits: [UnitOrigin_S17.Admin, UnitClass_S17.Mana],
+        origins: [UnitOrigin_S17.Admin],
+        classes: [UnitClass_S17.Mana],
+        attackRange: 4
+    },
+    "小木灵": {
+        displayName: "小木灵",
+        englishId: "TFT17_IvernMinion",
+        price: 2,
+        traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.Summon, UnitClass_S17.Flex],
+        origins: [UnitOrigin_S17.Astronaut],
+        classes: [UnitClass_S17.Summon, UnitClass_S17.Flex],
+        attackRange: 1
+    },
+    "莫德凯撒": {
+        displayName: "莫德凯撒",
+        englishId: "TFT17_Mordekaiser",
+        price: 2,
+        traits: [UnitOrigin_S17.DarkStar, UnitClass_S17.Mana, UnitClass_S17.ShieldTank],
+        origins: [UnitOrigin_S17.DarkStar],
+        classes: [UnitClass_S17.Mana, UnitClass_S17.ShieldTank],
+        attackRange: 1
+    },
+    "潘森": {
+        displayName: "潘森",
+        englishId: "TFT17_Pantheon",
+        price: 2,
+        traits: [UnitOrigin_S17.Timebreaker, UnitClass_S17.HPTank, UnitClass_S17.APTrait],
+        origins: [UnitOrigin_S17.Timebreaker],
+        classes: [UnitClass_S17.HPTank, UnitClass_S17.APTrait],
+        attackRange: 1
+    },
+
+    // ====================================================================
+    // 3 费棋子 (共 13 个)
+    // ====================================================================
+    "厄运小姐": {
+        displayName: "厄运小姐",
+        englishId: "TFT17_MissFortune",
+        price: 3,
+        traits: [UnitOrigin_S17.MissFortune],
+        origins: [UnitOrigin_S17.MissFortune],
+        classes: [],
+        attackRange: 6
+    },
+    "俄洛伊": {
+        displayName: "俄洛伊",
+        englishId: "TFT17_Illaoi",
+        price: 3,
+        traits: [UnitOrigin_S17.AnimaSquad, UnitClass_S17.ShieldTank, UnitClass_S17.Summon],
+        origins: [UnitOrigin_S17.AnimaSquad],
+        classes: [UnitClass_S17.ShieldTank, UnitClass_S17.Summon],
+        attackRange: 1
+    },
+    "阿萝拉": {
+        displayName: "阿萝拉",
+        englishId: "TFT17_Aurora",
+        price: 3,
+        traits: [UnitOrigin_S17.AnimaSquad, UnitClass_S17.Flex],
+        origins: [UnitOrigin_S17.AnimaSquad],
+        classes: [UnitClass_S17.Flex],
+        attackRange: 4
+    },
+    "菲兹": {
+        displayName: "菲兹",
+        englishId: "TFT17_Fizz",
+        price: 3,
+        traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.Assassin],
+        origins: [UnitOrigin_S17.Astronaut],
+        classes: [UnitClass_S17.Assassin],
+        attackRange: 1
+    },
+    "茂凯": {
+        displayName: "茂凯",
+        englishId: "TFT17_Maokai",
+        price: 3,
+        traits: [UnitOrigin_S17.DRX, UnitClass_S17.HPTank],
+        origins: [UnitOrigin_S17.DRX],
+        classes: [UnitClass_S17.HPTank],
+        attackRange: 1
+    },
+    "卡莎": {
+        displayName: "卡莎",
+        englishId: "TFT17_Kaisa",
+        price: 3,
+        traits: [UnitOrigin_S17.DarkStar, UnitClass_S17.Assassin],
+        origins: [UnitOrigin_S17.DarkStar],
+        classes: [UnitClass_S17.Assassin],
+        attackRange: 4
+    },
+    "厄加特": {
+        displayName: "厄加特",
+        englishId: "TFT17_Urgot",
+        price: 3,
+        traits: [UnitOrigin_S17.Mecha, UnitClass_S17.HPTank, UnitClass_S17.Melee],
+        origins: [UnitOrigin_S17.Mecha],
+        classes: [UnitClass_S17.HPTank, UnitClass_S17.Melee],
+        attackRange: 2
+    },
+    "维克托": {
+        displayName: "维克托",
+        englishId: "TFT17_Viktor",
+        price: 3,
+        traits: [UnitOrigin_S17.PsyOps, UnitClass_S17.Mana],
+        origins: [UnitOrigin_S17.PsyOps],
+        classes: [UnitClass_S17.Mana],
+        attackRange: 4
+    },
+    "莎弥拉": {
+        displayName: "莎弥拉",
+        englishId: "TFT17_Samira",
+        price: 3,
+        traits: [UnitOrigin_S17.SpaceGroove, UnitClass_S17.Ranged],
+        origins: [UnitOrigin_S17.SpaceGroove],
+        classes: [UnitClass_S17.Ranged],
+        attackRange: 6
+    },
+    "奥恩": {
+        displayName: "奥恩",
+        englishId: "TFT17_Ornn",
+        price: 3,
+        traits: [UnitOrigin_S17.SpaceGroove, UnitClass_S17.ResistTank],
+        origins: [UnitOrigin_S17.SpaceGroove],
+        classes: [UnitClass_S17.ResistTank],
+        attackRange: 1
+    },
+    "璐璐": {
+        displayName: "璐璐",
+        englishId: "TFT17_Lulu",
+        price: 3,
+        traits: [UnitOrigin_S17.Stargazer, UnitClass_S17.APTrait],
+        origins: [UnitOrigin_S17.Stargazer],
+        classes: [UnitClass_S17.APTrait],
+        attackRange: 4
+    },
+    "黛安娜": {
+        displayName: "黛安娜",
+        englishId: "TFT17_Diana",
+        price: 3,
+        traits: [UnitOrigin_S17.Admin, UnitClass_S17.ASTrait],
+        origins: [UnitOrigin_S17.Admin],
+        classes: [UnitClass_S17.ASTrait],
+        attackRange: 1
+    },
+    "拉亚斯特": {
+        displayName: "拉亚斯特",
+        englishId: "TFT17_Rhaast",
+        price: 3,
+        traits: [UnitOrigin_S17.Rhaast],
+        origins: [UnitOrigin_S17.Rhaast],
+        classes: [],
+        attackRange: 1
+    },
+
+    // ====================================================================
+    // 4 费棋子 (共 13 个)
+    // ====================================================================
+    "拉莫斯": {
+        displayName: "拉莫斯",
+        englishId: "TFT17_Rammus",
+        price: 4,
+        traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.ResistTank],
+        origins: [UnitOrigin_S17.Astronaut],
+        classes: [UnitClass_S17.ResistTank],
+        attackRange: 1
+    },
+    "库奇": {
+        displayName: "库奇",
+        englishId: "TFT17_Corki",
+        price: 4,
+        traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.Fateweaver],
+        origins: [UnitOrigin_S17.Astronaut],
+        classes: [UnitClass_S17.Fateweaver],
+        attackRange: 4
+    },
+    "千珏": {
+        displayName: "千珏",
+        englishId: "TFT17_Kindred",
+        price: 4,
+        traits: [UnitOrigin_S17.DRX, UnitClass_S17.ASTrait],
+        origins: [UnitOrigin_S17.DRX],
+        classes: [UnitClass_S17.ASTrait],
+        attackRange: 6
+    },
+    "卡尔玛": {
+        displayName: "卡尔玛",
+        englishId: "TFT17_Karma",
+        price: 4,
+        traits: [UnitOrigin_S17.DarkStar, UnitClass_S17.Flex],
+        origins: [UnitOrigin_S17.DarkStar],
+        classes: [UnitClass_S17.Flex],
+        attackRange: 4
+    },
+    "奥瑞利安·索尔": {
+        displayName: "奥瑞利安·索尔",
+        englishId: "TFT17_AurelionSol",
+        price: 4,
+        traits: [UnitOrigin_S17.Mecha, UnitClass_S17.Mana],
+        origins: [UnitOrigin_S17.Mecha],
+        classes: [UnitClass_S17.Mana],
+        attackRange: 6
+    },
+    "超级机甲": {
+        displayName: "超级机甲",
+        englishId: "TFT17_Galio",
+        price: 4,
+        traits: [UnitOrigin_S17.Mecha, UnitClass_S17.Flex],
+        origins: [UnitOrigin_S17.Mecha],
+        classes: [UnitClass_S17.Flex],
+        attackRange: 1
+    },
+    "易": {
+        displayName: "易",
+        englishId: "TFT17_MasterYi",
+        price: 4,
+        traits: [UnitOrigin_S17.PsyOps, UnitClass_S17.Melee],
+        origins: [UnitOrigin_S17.PsyOps],
+        classes: [UnitClass_S17.Melee],
+        attackRange: 1
+    },
+    "娜美": {
+        displayName: "娜美",
+        englishId: "TFT17_Nami",
+        price: 4,
+        traits: [UnitOrigin_S17.SpaceGroove, UnitClass_S17.APTrait],
+        origins: [UnitOrigin_S17.SpaceGroove],
+        classes: [UnitClass_S17.APTrait],
+        attackRange: 4
+    },
+    "努努和威朗普": {
+        displayName: "努努和威朗普",
+        englishId: "TFT17_Nunu",
+        price: 4,
+        traits: [UnitOrigin_S17.Stargazer, UnitClass_S17.ShieldTank],
+        origins: [UnitOrigin_S17.Stargazer],
+        classes: [UnitClass_S17.ShieldTank],
+        attackRange: 1
+    },
+    "锐雯": {
+        displayName: "锐雯",
+        englishId: "TFT17_Riven",
+        price: 4,
+        traits: [UnitOrigin_S17.Timebreaker, UnitClass_S17.Assassin],
+        origins: [UnitOrigin_S17.Timebreaker],
+        classes: [UnitClass_S17.Assassin],
+        attackRange: 1
+    },
+    "乐芙兰": {
+        displayName: "乐芙兰",
+        englishId: "TFT17_Leblanc",
+        price: 4,
+        traits: [UnitOrigin_S17.Admin, UnitClass_S17.Summon],
+        origins: [UnitOrigin_S17.Admin],
+        classes: [UnitClass_S17.Summon],
+        attackRange: 4
+    },
+    "霞": {
+        displayName: "霞",
+        englishId: "TFT17_Xayah",
+        price: 4,
+        traits: [UnitOrigin_S17.Stargazer, UnitClass_S17.Ranged],
+        origins: [UnitOrigin_S17.Stargazer],
+        classes: [UnitClass_S17.Ranged],
+        attackRange: 6
+    },
+    "塔姆": {
+        displayName: "塔姆",
+        englishId: "TFT17_TahmKench",
+        price: 4,
+        traits: [UnitOrigin_S17.TahmKench, UnitClass_S17.HPTank],
+        origins: [UnitOrigin_S17.TahmKench],
+        classes: [UnitClass_S17.HPTank],
+        attackRange: 1
+    },
+
+    // ====================================================================
+    // 5 费棋子 (共 10 个)
+    // ====================================================================
+    "巴德": {
+        displayName: "巴德",
+        englishId: "TFT17_Bard",
+        price: 5,
+        traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.Mana],
+        origins: [UnitOrigin_S17.Astronaut],
+        classes: [UnitClass_S17.Mana],
+        attackRange: 4
+    },
+    "菲奥娜": {
+        displayName: "菲奥娜",
+        englishId: "TFT17_Fiora",
+        price: 5,
+        traits: [UnitOrigin_S17.Fiora, UnitOrigin_S17.AnimaSquad, UnitClass_S17.Melee],
+        origins: [UnitOrigin_S17.Fiora, UnitOrigin_S17.AnimaSquad],
+        classes: [UnitClass_S17.Melee],
+        attackRange: 1
+    },
+    "烬": {
+        displayName: "烬",
+        englishId: "TFT17_Jhin",
+        price: 5,
+        traits: [UnitOrigin_S17.DarkStar, UnitOrigin_S17.Jhin, UnitClass_S17.Ranged],
+        origins: [UnitOrigin_S17.DarkStar, UnitOrigin_S17.Jhin],
+        classes: [UnitClass_S17.Ranged],
+        attackRange: 6
+    },
+    "布里茨": {
+        displayName: "布里茨",
+        englishId: "TFT17_Blitzcrank",
+        price: 5,
+        traits: [UnitOrigin_S17.Blitzcrank, UnitOrigin_S17.SpaceGroove, UnitClass_S17.ShieldTank],
+        origins: [UnitOrigin_S17.Blitzcrank, UnitOrigin_S17.SpaceGroove],
+        classes: [UnitClass_S17.ShieldTank],
+        attackRange: 1
+    },
+    "娑娜": {
+        displayName: "娑娜",
+        englishId: "TFT17_Sona",
+        price: 5,
+        traits: [UnitOrigin_S17.Sona, UnitOrigin_S17.PsyOps, UnitClass_S17.Summon],
+        origins: [UnitOrigin_S17.Sona, UnitOrigin_S17.PsyOps],
+        classes: [UnitClass_S17.Summon],
+        attackRange: 4
+    },
+    "薇古丝": {
+        displayName: "薇古丝",
+        englishId: "TFT17_Vex",
+        price: 5,
+        traits: [UnitOrigin_S17.Vex],
+        origins: [UnitOrigin_S17.Vex],
+        classes: [],
+        attackRange: 10
+    },
+    "慎": {
+        displayName: "慎",
+        englishId: "TFT17_Shen",
+        price: 5,
+        traits: [UnitOrigin_S17.Shen, UnitClass_S17.ResistTank],
+        origins: [UnitOrigin_S17.Shen],
+        classes: [UnitClass_S17.ResistTank],
+        attackRange: 1
+    },
+    "劫": {
+        displayName: "劫",
+        englishId: "TFT17_Zed",
+        price: 5,
+        traits: [UnitOrigin_S17.Zed],
+        origins: [UnitOrigin_S17.Zed],
+        classes: [],
+        attackRange: 1
+    },
+    "格雷福斯": {
+        displayName: "格雷福斯",
+        englishId: "TFT17_Graves",
+        price: 5,
+        traits: [UnitOrigin_S17.Graves],
+        origins: [UnitOrigin_S17.Graves],
+        classes: [],
+        attackRange: 4
+    },
+    "莫甘娜": {
+        displayName: "莫甘娜",
+        englishId: "TFT17_Morgana",
+        price: 5,
+        traits: [UnitOrigin_S17.Morgana],
+        origins: [UnitOrigin_S17.Morgana],
+        classes: [],
+        attackRange: 2
+    },
+
+    // ====================================================================
+    // PVE 专属单位 (野怪/召唤物/核心，原始数据 price=11，不进商店)
+    // 这些单位在战斗中作为敌人或召唤物出现，无法被玩家购买/售卖
+    // ====================================================================
+    // "羊咩咩 & 咩咩羊": {
+    //     displayName: "羊咩咩 & 咩咩羊",
+    //     englishId: "TFT17_Bard_Meep",
+    //     price: 0,
+    //     traits: [],
+    //     origins: [],
+    //     classes: [],
+    //     attackRange: 1
+    // },
+    "未来战士核心": {
+        displayName: "未来战士核心",
+        englishId: "TFT17_Timebreaker_Core",
+        price: 0,
+        traits: [],
+        origins: [],
+        classes: [],
+        attackRange: 0
+    },
+    // "星界鱿鱼": {
+    //     displayName: "星界鱿鱼",
+    //     englishId: "TFT17_PVE_Minion",
+    //     price: 0,
+    //     traits: [],
+    //     origins: [],
+    //     classes: [],
+    //     attackRange: 1
+    // },
+    // "星界拆拆怪": {
+    //     displayName: "星界拆拆怪",
+    //     englishId: "TFT17_PVE_Raptor",
+    //     price: 0,
+    //     traits: [],
+    //     origins: [],
+    //     classes: [],
+    //     attackRange: 1
+    // },
+    // "星界格斗怪": {
+    //     displayName: "星界格斗怪",
+    //     englishId: "TFT17_PVE_Krug",
+    //     price: 0,
+    //     traits: [],
+    //     origins: [],
+    //     classes: [],
+    //     attackRange: 1
+    // },
+    // "星界蝶灵": {
+    //     displayName: "星界蝶灵",
+    //     englishId: "TFT17_PVE_Pix",
+    //     price: 0,
+    //     traits: [],
+    //     origins: [],
+    //     classes: [],
+    //     attackRange: 1
+    // },
+    // "星界魔沼蛙": {
+    //     displayName: "星界魔沼蛙",
+    //     englishId: "TFT17_PVE_Gromp",
+    //     price: 0,
+    //     traits: [],
+    //     origins: [],
+    //     classes: [],
+    //     attackRange: 1
+    // },
+    // "星界远古巨龙": {
+    //     displayName: "星界远古巨龙",
+    //     englishId: "TFT17_PVE_ElderDragon",
+    //     price: 0,
+    //     traits: [],
+    //     origins: [],
+    //     classes: [],
+    //     attackRange: 1
+    // },
 } satisfies Record<string, TFTUnit>;

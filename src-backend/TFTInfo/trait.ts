@@ -191,3 +191,131 @@ export const TFT_4_TRAIT_DATA: Record<string, TraitData> = {
     "摄魂使": { id: "10293", name: "摄魂使", type: "classes", levels: [2, 4, 6] },
     "重装战士": { id: "10294", name: "重装战士", type: "classes", levels: [2, 4, 6, 8] },
 };
+
+// =====================================================================================
+// S17: 新赛季 - 科幻主题（观星者/幻灵战队/太空律动等）
+// =====================================================================================
+// 本赛季关键词：宇宙、机甲、观星者、特工队
+// 羁绊划分说明：
+//   - Origins（种族/主题）：代表阵营 / 世界观背景（比如"幻灵战队""暗星""太空律动"）
+//   - Classes（职业/打法）：代表战斗角色定位（比如"挑战者""狙神""堡垒卫士"）
+// 注：S17 有多个"观星者:xxx"分支羁绊（泉水/女猎手/勋章/秀山/蝰蛇/圣坛/野猪），
+//     它们共享主羁绊"观星者"，但各自有独立的 id 和激活节点。
+export enum UnitOrigin_S17 {
+    // === 主力大型羁绊（多激活节点） ===
+    Admin = "法官",              // 10296 自定义律法
+    AnimaSquad = "幻灵战队",     // 10299 连败经济
+    Astronaut = "木灵族",        // 10301 木灵增幅
+    DRX = "新星特攻队",          // 10303 能量激增
+    DarkStar = "暗星",           // 10304 吞噬/变强
+    Mecha = "霸天机甲",          // 10312 机甲变形
+    Primordian = "海魔人",       // 10316 海洋原生
+    PsyOps = "灵能特工",         // 10317 特工系
+    SpaceGroove = "太空律动",    // 10324 律动节奏
+    Timebreaker = "未来战士",    // 10335 时空核心
+
+    // === 观星者系（主羁绊 + 星座分支）===
+    Stargazer = "观星者",                      // 10325 主羁绊
+    StargazerFountain = "观星者:泉水",          // 10326 分支-泉水（治疗）
+    StargazerHuntress = "观星者:女猎手",        // 10327 分支-女猎手（标记）
+    StargazerMedallion = "观星者:勋章",         // 10328 分支-勋章（伤害增幅）
+    StargazerMountain = "观星者:秀山",          // 10329 分支-秀山（多属性）
+    StargazerSerpent = "观星者:蝰蛇",           // 10330 分支-蝰蛇（中毒）
+    StargazerShield = "观星者:圣坛",            // 10331 分支-圣坛（献祭）
+    StargazerWolf = "观星者:野猪",              // 10332 分支-野猪（金币）
+
+    // === 5费/特殊单卡独有羁绊（只有 1 级激活）===
+    Blitzcrank = "汪星机器人",      // 10302 布里茨
+    Fiora = "斗神",                 // 10306 菲奥娜
+    Graves = "军工1号",             // 10308 格雷福斯
+    Jhin = "灭星尊",                // 10310 烬
+    MissFortune = "武装战姬",       // 10314 厄运小姐
+    Morgana = "黑暗魔女",           // 10315 莫甘娜
+    Rhaast = "救世主",              // 10320 瑞亚斯特/卡莎里克
+    Shen = "暮光铁壁",              // 10321 慎
+    Sona = "最高指挥官",            // 10323 娑娜
+    TahmKench = "命运祭司",         // 10334 塔姆
+    Vex = "末日使者",               // 10336 薇古丝
+    Zed = "天煞",                   // 10337 劫
+}
+
+export enum UnitClass_S17 {
+    APTrait = "魔术师",           // 10297 法强-双次施放
+    ASTrait = "挑战者",           // 10298 攻速-冲刺
+    Assassin = "游侠",            // 10300 遁影刺客
+    Fateweaver = "织命人",        // 10305 命运编织
+    Flex = "旅人",                // 10307 万能补位
+    HPTank = "斗士",              // 10309 生命坦克
+    Mana = "神谕",                // 10311 法力/技能流
+    Melee = "狂战士",             // 10313 近战输出
+    Ranged = "狙神",              // 10318 远程狙击
+    ResistTank = "堡垒卫士",      // 10319 抗性坦克
+    ShieldTank = "重装战士",      // 10322 护盾坦克
+    Summon = "牧羊人",            // 10333 召唤系
+}
+
+/**
+ * S17 羁绊详细数据 Map（key 为中文名）
+ * @description
+ * 数据来源：public/TFTInfo/S17/{race,job}.ts
+ * - id：后端用的 raceId/jobId，与 race_color_list 的图标资源对应
+ * - levels：从 race_color_list / job_color_list 的 key 提取（激活节点）
+ * 
+ * ⚠️ 重名冲突提示：
+ * - "斗士"（S17 HPTank, id=10309）与 S16 的"斗士"（id=10220）/S4 的"斗士"（id=10272）同名不同赛季
+ * - "狙神"（S17 Ranged, id=10318）与 S16 的"狙神"（id=10241）同名不同赛季
+ * - "神盾使"（S4 id=10286）S17 里没有同名
+ * 这些羁绊根据当前赛季切换对应的 data Map，不会在同一局游戏中混用，所以安全。
+ */
+export const TFT_17_TRAIT_DATA: Record<string, TraitData> = {
+    // === Origins (origins) ===
+    // 主力大型羁绊
+    "法官": { id: "10296", name: "法官", type: "origins", levels: [2, 3] },
+    "幻灵战队": { id: "10299", name: "幻灵战队", type: "origins", levels: [3, 6] },
+    "木灵族": { id: "10301", name: "木灵族", type: "origins", levels: [3, 5, 7, 10] },
+    "新星特攻队": { id: "10303", name: "新星特攻队", type: "origins", levels: [2, 5] },
+    "暗星": { id: "10304", name: "暗星", type: "origins", levels: [2, 4, 6, 9] },
+    "霸天机甲": { id: "10312", name: "霸天机甲", type: "origins", levels: [3, 4, 6] },
+    "海魔人": { id: "10316", name: "海魔人", type: "origins", levels: [2, 3] },
+    "灵能特工": { id: "10317", name: "灵能特工", type: "origins", levels: [2, 4] },
+    "太空律动": { id: "10324", name: "太空律动", type: "origins", levels: [1, 3, 5, 7, 10] },
+    "未来战士": { id: "10335", name: "未来战士", type: "origins", levels: [2, 3, 4] },
+
+    // 观星者系（主羁绊 + 7 个星座分支）
+    "观星者": { id: "10325", name: "观星者", type: "origins", levels: [3, 5, 7] },
+    "观星者:泉水": { id: "10326", name: "观星者:泉水", type: "origins", levels: [3, 5] },
+    "观星者:女猎手": { id: "10327", name: "观星者:女猎手", type: "origins", levels: [3, 5, 7] },
+    "观星者:勋章": { id: "10328", name: "观星者:勋章", type: "origins", levels: [3] },
+    "观星者:秀山": { id: "10329", name: "观星者:秀山", type: "origins", levels: [3, 4, 5, 6, 7, 8] },
+    "观星者:蝰蛇": { id: "10330", name: "观星者:蝰蛇", type: "origins", levels: [3, 5, 7] },
+    "观星者:圣坛": { id: "10331", name: "观星者:圣坛", type: "origins", levels: [3] },
+    "观星者:野猪": { id: "10332", name: "观星者:野猪", type: "origins", levels: [3, 4, 5, 6] },
+
+    // 5费独有羁绊（全部只有 1 级激活）
+    "汪星机器人": { id: "10302", name: "汪星机器人", type: "origins", levels: [1] },
+    "斗神": { id: "10306", name: "斗神", type: "origins", levels: [1] },
+    "军工1号": { id: "10308", name: "军工1号", type: "origins", levels: [1] },
+    "灭星尊": { id: "10310", name: "灭星尊", type: "origins", levels: [1] },
+    "武装战姬": { id: "10314", name: "武装战姬", type: "origins", levels: [1] },
+    "黑暗魔女": { id: "10315", name: "黑暗魔女", type: "origins", levels: [1] },
+    "救世主": { id: "10320", name: "救世主", type: "origins", levels: [1] },
+    "暮光铁壁": { id: "10321", name: "暮光铁壁", type: "origins", levels: [1] },
+    "最高指挥官": { id: "10323", name: "最高指挥官", type: "origins", levels: [1] },
+    "命运祭司": { id: "10334", name: "命运祭司", type: "origins", levels: [1] },
+    "末日使者": { id: "10336", name: "末日使者", type: "origins", levels: [1] },
+    "天煞": { id: "10337", name: "天煞", type: "origins", levels: [1] },
+
+    // === Classes (classes) ===
+    "魔术师": { id: "10297", name: "魔术师", type: "classes", levels: [2, 4] },
+    "挑战者": { id: "10298", name: "挑战者", type: "classes", levels: [2, 3, 4, 5] },
+    "游侠": { id: "10300", name: "游侠", type: "classes", levels: [2, 3, 4, 5] },
+    "织命人": { id: "10305", name: "织命人", type: "classes", levels: [2, 4] },
+    "旅人": { id: "10307", name: "旅人", type: "classes", levels: [2, 3, 4, 5, 6] },
+    "斗士": { id: "10309", name: "斗士", type: "classes", levels: [2, 4, 6] },
+    "神谕": { id: "10311", name: "神谕", type: "classes", levels: [2, 3, 4, 5] },
+    "狂战士": { id: "10313", name: "狂战士", type: "classes", levels: [2, 4, 6] },
+    "狙神": { id: "10318", name: "狙神", type: "classes", levels: [2, 3, 4] },
+    "堡垒卫士": { id: "10319", name: "堡垒卫士", type: "classes", levels: [2, 4, 6] },
+    "重装战士": { id: "10322", name: "重装战士", type: "classes", levels: [2, 4, 6] },
+    "牧羊人": { id: "10333", name: "牧羊人", type: "classes", levels: [3, 5, 7] },
+};
