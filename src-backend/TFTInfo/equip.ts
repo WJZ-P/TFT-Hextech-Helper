@@ -2456,5 +2456,1330 @@ export const _TFT_4_EQUIP_DATA: Record<string, TFTEquip> = {
         equipId: "91666",
         formula: ""
     },
-} satisfies  Record<string, TFTEquip>
+} satisfies  Record<string, TFTEquip> 
+/**
+ * 云顶十七赛季(科幻主题：观星者/幻灵战队/太空律动)的装备数据
+ * @description 本赛季完整装备表，来源：public/TFTInfo/S17/equip.ts
+ *              - Type 1: 基础散件 (10 个)
+ *              - Type 2: 标准合成装 + 羁绊纹章合成装 (按 type 分类，包含所有纹章)
+ *              - Type 3: 光明装备 (Radiant 版本)
+ *              - Type 4: 羁绊专属装备 (幻灵战队进化装/灵能特工改装件/神器类)
+ *              - Type 5: 独立纹章
+ *              - Type 6: 奥恩神器 (Artifact 类)
+ *              - Type 7: 金鳞龙装备 (Shimmerscale 类)
+ *              - Support: 辅助装 (来自 type=9 中标记了 [辅助装] 的装备)
+ *              - 特殊消耗品(强化果实/装备拆卸器等)复用顶部 specialEquip
+ */
+export const _TFT_17_EQUIP_DATA: Record<string, TFTEquip> = {
+    ...specialEquip,
 
+    // ==========================================
+    // Type 1: 基础散件 (Base Items) (共 10 个)
+    // ==========================================
+    "暴风之剑": {
+        name: "暴风之剑",
+        englishName: "TFT_Item_BFSword",
+        equipId: "92506",
+        formula: ""
+    },
+    "锁子甲": {
+        name: "锁子甲",
+        englishName: "TFT_Item_ChainVest",
+        equipId: "92512",
+        formula: ""
+    },
+    "金锅锅": {
+        name: "金锅锅",
+        englishName: "TFT_Item_FryingPan",
+        equipId: "92531",
+        formula: ""
+    },
+    "巨人腰带": {
+        name: "巨人腰带",
+        englishName: "TFT_Item_GiantsBelt",
+        equipId: "92533",
+        formula: ""
+    },
+    "无用大棒": {
+        name: "无用大棒",
+        englishName: "TFT_Item_NeedlesslyLargeRod",
+        equipId: "92547",
+        formula: ""
+    },
+    "负极斗篷": {
+        name: "负极斗篷",
+        englishName: "TFT_Item_NegatronCloak",
+        equipId: "92548",
+        formula: ""
+    },
+    "反曲之弓": {
+        name: "反曲之弓",
+        englishName: "TFT_Item_RecurveBow",
+        equipId: "92555",
+        formula: ""
+    },
+    "拳套": {
+        name: "拳套",
+        englishName: "TFT_Item_SparringGloves",
+        equipId: "92561",
+        formula: ""
+    },
+    "金铲铲": {
+        name: "金铲铲",
+        englishName: "TFT_Item_Spatula",
+        equipId: "92562",
+        formula: ""
+    },
+    "女神之泪": {
+        name: "女神之泪",
+        englishName: "TFT_Item_TearOfTheGoddess",
+        equipId: "92570",
+        formula: ""
+    },
+
+    // ==========================================
+    // Type 2: 标准合成装备 + 羁绊纹章合成装 (Standard Completed + Emblem Items) (共 55 个)
+    // ==========================================
+    "挑战者纹章": {
+        name: "挑战者纹章",
+        englishName: "TFT17_Item_ASTraitEmblemItem",
+        equipId: "92120",
+        formula: "92531,92555"
+    },
+    "游侠纹章": {
+        name: "游侠纹章",
+        englishName: "TFT17_Item_AssassinTraitEmblemItem",
+        equipId: "92132",
+        formula: "92531,92561"
+    },
+    "木灵族纹章": {
+        name: "木灵族纹章",
+        englishName: "TFT17_Item_AstronautEmblemItem",
+        equipId: "92133",
+        formula: "92562,92512"
+    },
+    "新星特攻队纹章": {
+        name: "新星特攻队纹章",
+        englishName: "TFT17_Item_DRXEmblemItem",
+        equipId: "92134",
+        formula: "92562,92561"
+    },
+    "暗星纹章": {
+        name: "暗星纹章",
+        englishName: "TFT17_Item_DarkStarEmblemItem",
+        equipId: "92135",
+        formula: "92562,92506"
+    },
+    "法官纹章": {
+        name: "法官纹章",
+        englishName: "TFT17_Item_FavoredEmblemItem",
+        equipId: "92136",
+        formula: "92562,92548"
+    },
+    "旅人纹章": {
+        name: "旅人纹章",
+        englishName: "TFT17_Item_FlexTraitEmblemItem",
+        equipId: "92137",
+        formula: "92531,92547"
+    },
+    "斗士纹章": {
+        name: "斗士纹章",
+        englishName: "TFT17_Item_HPTankEmblemItem",
+        equipId: "92138",
+        formula: "92531,92533"
+    },
+    "狂战士纹章": {
+        name: "狂战士纹章",
+        englishName: "TFT17_Item_MeleeTraitEmblemItem",
+        equipId: "92139",
+        formula: "92531,92506"
+    },
+    "海魔人纹章": {
+        name: "海魔人纹章",
+        englishName: "TFT17_Item_PrimordianEmblemItem",
+        equipId: "92143",
+        formula: "92562,92533"
+    },
+    "未来战士纹章": {
+        name: "未来战士纹章",
+        englishName: "TFT17_Item_PulsefireEmblemItem",
+        equipId: "92157",
+        formula: "92562,92555"
+    },
+    "堡垒卫士纹章": {
+        name: "堡垒卫士纹章",
+        englishName: "TFT17_Item_ResistTankEmblemItem",
+        equipId: "92159",
+        formula: "92531,92512"
+    },
+    "重装战士纹章": {
+        name: "重装战士纹章",
+        englishName: "TFT17_Item_ShieldTankEmblemItem",
+        equipId: "92160",
+        formula: "92531,92548"
+    },
+    "太空律动纹章": {
+        name: "太空律动纹章",
+        englishName: "TFT17_Item_SpaceGrooveEmblemItem",
+        equipId: "92161",
+        formula: "92562,92570"
+    },
+    "观星者纹章": {
+        name: "观星者纹章",
+        englishName: "TFT17_Item_StargazerEmblemItem",
+        equipId: "92162",
+        formula: "92562,92547"
+    },
+    "牧羊人纹章": {
+        name: "牧羊人纹章",
+        englishName: "TFT17_Item_SummonTraitEmblemItem",
+        equipId: "92163",
+        formula: "92531,92570"
+    },
+    "适应性头盔": {
+        name: "适应性头盔",
+        englishName: "TFT_Item_AdaptiveHelm",
+        equipId: "92469",
+        formula: "92548,92570"
+    },
+    "大天使之杖": {
+        name: "大天使之杖",
+        englishName: "TFT_Item_ArchangelsStaff",
+        equipId: "92471",
+        formula: "92547,92570"
+    },
+    "饮血剑": {
+        name: "饮血剑",
+        englishName: "TFT_Item_Bloodthirster",
+        equipId: "92509",
+        formula: "92506,92548"
+    },
+    "蓝霸符": {
+        name: "蓝霸符",
+        englishName: "TFT_Item_BlueBuff",
+        equipId: "92510",
+        formula: "92570,92570"
+    },
+    "棘刺背心": {
+        name: "棘刺背心",
+        englishName: "TFT_Item_BrambleVest",
+        equipId: "92511",
+        formula: "92512,92512"
+    },
+    "冕卫": {
+        name: "冕卫",
+        englishName: "TFT_Item_Crownguard",
+        equipId: "92514",
+        formula: "92547,92512"
+    },
+    "死亡之刃": {
+        name: "死亡之刃",
+        englishName: "TFT_Item_Deathblade",
+        equipId: "92515",
+        formula: "92506,92506"
+    },
+    "巨龙之爪": {
+        name: "巨龙之爪",
+        englishName: "TFT_Item_DragonsClaw",
+        equipId: "92526",
+        formula: "92548,92548"
+    },
+    "金铲铲冠冕": {
+        name: "金铲铲冠冕",
+        englishName: "TFT_Item_ForceOfNature",
+        equipId: "92529",
+        formula: "92562,92562"
+    },
+    "圣盾使的誓约": {
+        name: "圣盾使的誓约",
+        englishName: "TFT_Item_FrozenHeart",
+        equipId: "92530",
+        formula: "92570,92512"
+    },
+    "石像鬼石板甲": {
+        name: "石像鬼石板甲",
+        englishName: "TFT_Item_GargoyleStoneplate",
+        equipId: "92532",
+        formula: "92512,92548"
+    },
+    "夜之锋刃": {
+        name: "夜之锋刃",
+        englishName: "TFT_Item_GuardianAngel",
+        equipId: "92535",
+        formula: "92506,92512"
+    },
+    "鬼索的狂暴之刃": {
+        name: "鬼索的狂暴之刃",
+        englishName: "TFT_Item_GuinsoosRageblade",
+        equipId: "92536",
+        formula: "92555,92547"
+    },
+    "海克斯科技枪刃": {
+        name: "海克斯科技枪刃",
+        englishName: "TFT_Item_HextechGunblade",
+        equipId: "92537",
+        formula: "92506,92547"
+    },
+    "无尽之刃": {
+        name: "无尽之刃",
+        englishName: "TFT_Item_InfinityEdge",
+        equipId: "92538",
+        formula: "92506,92561"
+    },
+    "离子火花": {
+        name: "离子火花",
+        englishName: "TFT_Item_IonicSpark",
+        equipId: "92539",
+        formula: "92547,92548"
+    },
+    "珠光护手": {
+        name: "珠光护手",
+        englishName: "TFT_Item_JeweledGauntlet",
+        equipId: "92540",
+        formula: "92547,92561"
+    },
+    "最后的轻语": {
+        name: "最后的轻语",
+        englishName: "TFT_Item_LastWhisper",
+        equipId: "92541",
+        formula: "92555,92561"
+    },
+    "纳什之牙": {
+        name: "纳什之牙",
+        englishName: "TFT_Item_Leviathan",
+        equipId: "92542",
+        formula: "92555,92533"
+    },
+    "巨人杀手": {
+        name: "巨人杀手",
+        englishName: "TFT_Item_MadredsBloodrazor",
+        equipId: "92544",
+        formula: "92506,92555"
+    },
+    "莫雷洛秘典": {
+        name: "莫雷洛秘典",
+        englishName: "TFT_Item_Morellonomicon",
+        equipId: "92546",
+        formula: "92547,92533"
+    },
+    "坚定之心": {
+        name: "坚定之心",
+        englishName: "TFT_Item_NightHarvester",
+        equipId: "92549",
+        formula: "92512,92561"
+    },
+    "强袭者的链枷": {
+        name: "强袭者的链枷",
+        englishName: "TFT_Item_PowerGauntlet",
+        equipId: "92550",
+        formula: "92533,92561"
+    },
+    "水银": {
+        name: "水银",
+        englishName: "TFT_Item_Quicksilver",
+        equipId: "92551",
+        formula: "92561,92548"
+    },
+    "灭世者的死亡之帽": {
+        name: "灭世者的死亡之帽",
+        englishName: "TFT_Item_RabadonsDeathcap",
+        equipId: "92552",
+        formula: "92547,92547"
+    },
+    "红霸符": {
+        name: "红霸符",
+        englishName: "TFT_Item_RapidFireCannon",
+        equipId: "92554",
+        formula: "92555,92555"
+    },
+    "日炎斗篷": {
+        name: "日炎斗篷",
+        englishName: "TFT_Item_RedBuff",
+        equipId: "92556",
+        formula: "92512,92533"
+    },
+    "振奋盔甲": {
+        name: "振奋盔甲",
+        englishName: "TFT_Item_Redemption",
+        equipId: "92557",
+        formula: "92570,92533"
+    },
+    "海妖之怒": {
+        name: "海妖之怒",
+        englishName: "TFT_Item_RunaansHurricane",
+        equipId: "92558",
+        formula: "92548,92555"
+    },
+    "朔极之矛": {
+        name: "朔极之矛",
+        englishName: "TFT_Item_SpearOfShojin",
+        equipId: "92563",
+        formula: "92506,92570"
+    },
+    "薄暮法袍": {
+        name: "薄暮法袍",
+        englishName: "TFT_Item_SpectralGauntlet",
+        equipId: "92564",
+        formula: "92548,92533"
+    },
+    "虚空之杖": {
+        name: "虚空之杖",
+        englishName: "TFT_Item_StatikkShiv",
+        equipId: "92565",
+        formula: "92555,92570"
+    },
+    "斯特拉克的挑战护手": {
+        name: "斯特拉克的挑战护手",
+        englishName: "TFT_Item_SteraksGage",
+        equipId: "92566",
+        formula: "92506,92533"
+    },
+    "金锅铲冠冕": {
+        name: "金锅铲冠冕",
+        englishName: "TFT_Item_TacticiansRing",
+        equipId: "92568",
+        formula: "92562,92531"
+    },
+    "金锅锅冠冕": {
+        name: "金锅锅冠冕",
+        englishName: "TFT_Item_TacticiansScepter",
+        equipId: "92569",
+        formula: "92531,92531"
+    },
+    "窃贼手套": {
+        name: "窃贼手套",
+        englishName: "TFT_Item_ThiefsGloves",
+        equipId: "92571",
+        formula: "92561,92561"
+    },
+    "泰坦的坚决": {
+        name: "泰坦的坚决",
+        englishName: "TFT_Item_TitansResolve",
+        equipId: "92573",
+        formula: "92512,92555"
+    },
+    "正义之手": {
+        name: "正义之手",
+        englishName: "TFT_Item_UnstableConcoction",
+        equipId: "92574",
+        formula: "92570,92561"
+    },
+    "狂徒铠甲": {
+        name: "狂徒铠甲",
+        englishName: "TFT_Item_WarmogsArmor",
+        equipId: "92577",
+        formula: "92533,92533"
+    },
+
+    // ==========================================
+    // Type 3: 光明装备 (Radiant Items) (共 37 个)
+    // ==========================================
+    "光明版适应性头盔": {
+        name: "光明版适应性头盔",
+        englishName: "TFT5_Item_AdaptiveHelmRadiant",
+        equipId: "92310",
+        formula: ""
+    },
+    "光明版大天使之杖": {
+        name: "光明版大天使之杖",
+        englishName: "TFT5_Item_ArchangelsStaffRadiant",
+        equipId: "92311",
+        formula: ""
+    },
+    "光明版饮血剑": {
+        name: "光明版饮血剑",
+        englishName: "TFT5_Item_BloodthirsterRadiant",
+        equipId: "92312",
+        formula: ""
+    },
+    "光明版蓝霸符": {
+        name: "光明版蓝霸符",
+        englishName: "TFT5_Item_BlueBuffRadiant",
+        equipId: "92313",
+        formula: ""
+    },
+    "光明版棘刺背心": {
+        name: "光明版棘刺背心",
+        englishName: "TFT5_Item_BrambleVestRadiant",
+        equipId: "92314",
+        formula: ""
+    },
+    "光明版冕卫": {
+        name: "光明版冕卫",
+        englishName: "TFT5_Item_CrownguardRadiant",
+        equipId: "92315",
+        formula: ""
+    },
+    "光明版死亡之刃": {
+        name: "光明版死亡之刃",
+        englishName: "TFT5_Item_DeathbladeRadiant",
+        equipId: "92316",
+        formula: ""
+    },
+    "光明版巨龙之爪": {
+        name: "光明版巨龙之爪",
+        englishName: "TFT5_Item_DragonsClawRadiant",
+        equipId: "92317",
+        formula: ""
+    },
+    "光明版圣盾使的誓约": {
+        name: "光明版圣盾使的誓约",
+        englishName: "TFT5_Item_FrozenHeartRadiant",
+        equipId: "92318",
+        formula: ""
+    },
+    "光明版石像鬼石板甲": {
+        name: "光明版石像鬼石板甲",
+        englishName: "TFT5_Item_GargoyleStoneplateRadiant",
+        equipId: "92319",
+        formula: ""
+    },
+    "光明版巨人杀手": {
+        name: "光明版巨人杀手",
+        englishName: "TFT5_Item_GiantSlayerRadiant",
+        equipId: "92320",
+        formula: ""
+    },
+    "光明版夜之锋刃": {
+        name: "光明版夜之锋刃",
+        englishName: "TFT5_Item_GuardianAngelRadiant",
+        equipId: "92321",
+        formula: ""
+    },
+    "光明版鬼索的狂暴之刃": {
+        name: "光明版鬼索的狂暴之刃",
+        englishName: "TFT5_Item_GuinsoosRagebladeRadiant",
+        equipId: "92322",
+        formula: ""
+    },
+    "光明版正义之手": {
+        name: "光明版正义之手",
+        englishName: "TFT5_Item_HandOfJusticeRadiant",
+        equipId: "92323",
+        formula: ""
+    },
+    "光明版海克斯科技枪刃": {
+        name: "光明版海克斯科技枪刃",
+        englishName: "TFT5_Item_HextechGunbladeRadiant",
+        equipId: "92324",
+        formula: ""
+    },
+    "光明版无尽之刃": {
+        name: "光明版无尽之刃",
+        englishName: "TFT5_Item_InfinityEdgeRadiant",
+        equipId: "92325",
+        formula: ""
+    },
+    "光明版离子火花": {
+        name: "光明版离子火花",
+        englishName: "TFT5_Item_IonicSparkRadiant",
+        equipId: "92326",
+        formula: ""
+    },
+    "光明版珠光护手": {
+        name: "光明版珠光护手",
+        englishName: "TFT5_Item_JeweledGauntletRadiant",
+        equipId: "92327",
+        formula: ""
+    },
+    "光明版最后的轻语": {
+        name: "光明版最后的轻语",
+        englishName: "TFT5_Item_LastWhisperRadiant",
+        equipId: "92328",
+        formula: ""
+    },
+    "光明版纳什之牙": {
+        name: "光明版纳什之牙",
+        englishName: "TFT5_Item_LeviathanRadiant",
+        equipId: "92329",
+        formula: ""
+    },
+    "光明版莫雷洛秘典": {
+        name: "光明版莫雷洛秘典",
+        englishName: "TFT5_Item_MorellonomiconRadiant",
+        equipId: "92330",
+        formula: ""
+    },
+    "光明版坚定之心": {
+        name: "光明版坚定之心",
+        englishName: "TFT5_Item_NightHarvesterRadiant",
+        equipId: "92331",
+        formula: ""
+    },
+    "光明版水银": {
+        name: "光明版水银",
+        englishName: "TFT5_Item_QuicksilverRadiant",
+        equipId: "92332",
+        formula: ""
+    },
+    "光明版灭世者的死亡之帽": {
+        name: "光明版灭世者的死亡之帽",
+        englishName: "TFT5_Item_RabadonsDeathcapRadiant",
+        equipId: "92333",
+        formula: ""
+    },
+    "光明版红霸符": {
+        name: "光明版红霸符",
+        englishName: "TFT5_Item_RapidFirecannonRadiant",
+        equipId: "92334",
+        formula: ""
+    },
+    "光明版振奋盔甲": {
+        name: "光明版振奋盔甲",
+        englishName: "TFT5_Item_RedemptionRadiant",
+        equipId: "92335",
+        formula: ""
+    },
+    "光明版海妖之怒": {
+        name: "光明版海妖之怒",
+        englishName: "TFT5_Item_RunaansHurricaneRadiant",
+        equipId: "92336",
+        formula: ""
+    },
+    "光明版朔极之矛": {
+        name: "光明版朔极之矛",
+        englishName: "TFT5_Item_SpearOfShojinRadiant",
+        equipId: "92337",
+        formula: ""
+    },
+    "光明版薄暮法袍": {
+        name: "光明版薄暮法袍",
+        englishName: "TFT5_Item_SpectralGauntletRadiant",
+        equipId: "92338",
+        formula: ""
+    },
+    "光明版虚空之杖": {
+        name: "光明版虚空之杖",
+        englishName: "TFT5_Item_StatikkShivRadiant",
+        equipId: "92339",
+        formula: ""
+    },
+    "光明版斯特拉克的挑战护手": {
+        name: "光明版斯特拉克的挑战护手",
+        englishName: "TFT5_Item_SteraksGageRadiant",
+        equipId: "92340",
+        formula: ""
+    },
+    "光明版日炎斗篷": {
+        name: "光明版日炎斗篷",
+        englishName: "TFT5_Item_SunfireCapeRadiant",
+        equipId: "92341",
+        formula: ""
+    },
+    "光明版窃贼手套": {
+        name: "光明版窃贼手套",
+        englishName: "TFT5_Item_ThiefsGlovesRadiant",
+        equipId: "92342",
+        formula: ""
+    },
+    "光明版泰坦的坚决": {
+        name: "光明版泰坦的坚决",
+        englishName: "TFT5_Item_TitansResolveRadiant",
+        equipId: "92343",
+        formula: ""
+    },
+    "光明版强袭者的链枷": {
+        name: "光明版强袭者的链枷",
+        englishName: "TFT5_Item_TrapClawRadiant",
+        equipId: "92344",
+        formula: ""
+    },
+    "光明版狂徒铠甲": {
+        name: "光明版狂徒铠甲",
+        englishName: "TFT5_Item_WarmogsArmorRadiant",
+        equipId: "92345",
+        formula: ""
+    },
+    "兹若特传送门": {
+        name: "兹若特传送门",
+        englishName: "TFT5_Item_ZzRotPortalRadiant",
+        equipId: "92346",
+        formula: ""
+    },
+
+    // ==========================================
+    // Type 4: 羁绊/特殊装备 (幻灵战队进化装 / 灵能特工改装件 / 神器等) (共 44 个)
+    // ==========================================
+    "破损原型": {
+        name: "破损原型",
+        englishName: "TFT17_AnimaSquadItem_Tier0_ClunkyPrototype",
+        equipId: "91924",
+        formula: ""
+    },
+    "泄露原型": {
+        name: "泄露原型",
+        englishName: "TFT17_AnimaSquadItem_Tier0_LeakyPrototype",
+        equipId: "91925",
+        formula: ""
+    },
+    "闪光原型": {
+        name: "闪光原型",
+        englishName: "TFT17_AnimaSquadItem_Tier0_SparkingPrototype",
+        equipId: "91926",
+        formula: ""
+    },
+    "附灵飞弹": {
+        name: "附灵飞弹",
+        englishName: "TFT17_AnimaSquadItem_Tier1_GuidingHex",
+        equipId: "91927",
+        formula: ""
+    },
+    "火箭狂潮": {
+        name: "火箭狂潮",
+        englishName: "TFT17_AnimaSquadItem_Tier1_RocketSwarm",
+        equipId: "91928",
+        formula: ""
+    },
+    "无情砍削": {
+        name: "无情砍削",
+        englishName: "TFT17_AnimaSquadItem_Tier1_SavageSlicer",
+        equipId: "91929",
+        formula: ""
+    },
+    "触手重击": {
+        name: "触手重击",
+        englishName: "TFT17_AnimaSquadItem_Tier1_TentacleSlam",
+        equipId: "91930",
+        formula: ""
+    },
+    "歼灭者": {
+        name: "歼灭者",
+        englishName: "TFT17_AnimaSquadItem_Tier2_Annihilator",
+        equipId: "91931",
+        formula: ""
+    },
+    "战兔十字弩": {
+        name: "战兔十字弩",
+        englishName: "TFT17_AnimaSquadItem_Tier2_BattleBunnyCrossbow",
+        equipId: "91932",
+        formula: ""
+    },
+    "旋风切割器": {
+        name: "旋风切割器",
+        englishName: "TFT17_AnimaSquadItem_Tier2_CyclonicSlicers",
+        equipId: "91933",
+        formula: ""
+    },
+    "回响蝠刃": {
+        name: "回响蝠刃",
+        englishName: "TFT17_AnimaSquadItem_Tier2_EchoingBatblades",
+        equipId: "91934",
+        formula: ""
+    },
+    "冰爆护甲": {
+        name: "冰爆护甲",
+        englishName: "TFT17_AnimaSquadItem_Tier2_IceblastArmor",
+        equipId: "91935",
+        formula: ""
+    },
+    "雌狮之怨": {
+        name: "雌狮之怨",
+        englishName: "TFT17_AnimaSquadItem_Tier2_LionessLament",
+        equipId: "91936",
+        formula: ""
+    },
+    "耀光力场": {
+        name: "耀光力场",
+        englishName: "TFT17_AnimaSquadItem_Tier2_RadiantField",
+        equipId: "91937",
+        formula: ""
+    },
+    "炽烈短弓": {
+        name: "炽烈短弓",
+        englishName: "TFT17_AnimaSquadItem_Tier2_SearingShortbow",
+        equipId: "91938",
+        formula: ""
+    },
+    "UwU魔爆炮": {
+        name: "UwU魔爆炮",
+        englishName: "TFT17_AnimaSquadItem_Tier2_UwuBlaster",
+        equipId: "91939",
+        formula: ""
+    },
+    "幻灵启示录": {
+        name: "幻灵启示录",
+        englishName: "TFT17_AnimaSquadItem_Tier3_Annihilator",
+        equipId: "91940",
+        formula: ""
+    },
+    "战兔至尊弩炮": {
+        name: "战兔至尊弩炮",
+        englishName: "TFT17_AnimaSquadItem_Tier3_BattleBunnyCrossbow",
+        equipId: "91941",
+        formula: ""
+    },
+    "不息气旋": {
+        name: "不息气旋",
+        englishName: "TFT17_AnimaSquadItem_Tier3_CyclonicSlicers",
+        equipId: "91942",
+        formula: ""
+    },
+    "薇恩的炫彩战刃": {
+        name: "薇恩的炫彩战刃",
+        englishName: "TFT17_AnimaSquadItem_Tier3_EchoingBatblades",
+        equipId: "91943",
+        formula: ""
+    },
+    "深度冻结": {
+        name: "深度冻结",
+        englishName: "TFT17_AnimaSquadItem_Tier3_IceblastArmor",
+        equipId: "91944",
+        formula: ""
+    },
+    "猛狮之殇": {
+        name: "猛狮之殇",
+        englishName: "TFT17_AnimaSquadItem_Tier3_LionessLament",
+        equipId: "91945",
+        formula: ""
+    },
+    "日蚀之刻": {
+        name: "日蚀之刻",
+        englishName: "TFT17_AnimaSquadItem_Tier3_RadiantField",
+        equipId: "91946",
+        formula: ""
+    },
+    "进化余烬射击": {
+        name: "进化余烬射击",
+        englishName: "TFT17_AnimaSquadItem_Tier3_SearingShortbow",
+        equipId: "91947",
+        formula: ""
+    },
+    "OwO魔爆炮": {
+        name: "OwO魔爆炮",
+        englishName: "TFT17_AnimaSquadItem_Tier3_UwuBlaster",
+        equipId: "91948",
+        formula: ""
+    },
+    "幻灵合体至尊炮": {
+        name: "幻灵合体至尊炮",
+        englishName: "TFT17_AnimaSquadItem_Tier4_Omniweapon",
+        equipId: "91949",
+        formula: ""
+    },
+    "异常突变": {
+        name: "异常突变",
+        englishName: "TFT17_EkkoOffering_AnomalyItem",
+        equipId: "92046",
+        formula: ""
+    },
+    "阿狸的光环": {
+        name: "阿狸的光环",
+        englishName: "TFT17_Item_Artifact_AhriArtifact",
+        equipId: "92122",
+        formula: ""
+    },
+    "艾克的耐心": {
+        name: "艾克的耐心",
+        englishName: "TFT17_Item_Artifact_EkkoArtifact",
+        equipId: "92123",
+        formula: ""
+    },
+    "伊芙琳的本能": {
+        name: "伊芙琳的本能",
+        englishName: "TFT17_Item_Artifact_EvelynnArtifact",
+        equipId: "92124",
+        formula: ""
+    },
+    "凯尔的崇拜": {
+        name: "凯尔的崇拜",
+        englishName: "TFT17_Item_Artifact_KayleArtifact",
+        equipId: "92125",
+        formula: ""
+    },
+    "凯尔的光明崇拜": {
+        name: "凯尔的光明崇拜",
+        englishName: "TFT17_Item_Artifact_KayleArtifact_Radiant",
+        equipId: "92126",
+        formula: ""
+    },
+    "索拉卡的奇迹": {
+        name: "索拉卡的奇迹",
+        englishName: "TFT17_Item_Artifact_SorakaArtifact",
+        equipId: "92127",
+        formula: ""
+    },
+    "锤石的灯笼": {
+        name: "锤石的灯笼",
+        englishName: "TFT17_Item_Artifact_ThreshLantern",
+        equipId: "92128",
+        formula: ""
+    },
+    "韦鲁斯的执念": {
+        name: "韦鲁斯的执念",
+        englishName: "TFT17_Item_Artifact_VarusArtifact",
+        equipId: "92129",
+        formula: ""
+    },
+    "亚索的剑艺": {
+        name: "亚索的剑艺",
+        englishName: "TFT17_Item_Artifact_YasuoArtifact",
+        equipId: "92130",
+        formula: ""
+    },
+    "基克的阴森先驱": {
+        name: "基克的阴森先驱",
+        englishName: "TFT17_Item_Artifact_ZekesHeraldShadow",
+        equipId: "92131",
+        formula: ""
+    },
+    "恶意软件矩阵": {
+        name: "恶意软件矩阵",
+        englishName: "TFT17_Item_PsyOps_ChemicalCapacitorMod",
+        equipId: "92145",
+        formula: ""
+    },
+    "无人机上行链路": {
+        name: "无人机上行链路",
+        englishName: "TFT17_Item_PsyOps_DroneMod",
+        equipId: "92147",
+        formula: ""
+    },
+    "生物质维护器": {
+        name: "生物质维护器",
+        englishName: "TFT17_Item_PsyOps_GrenadeMod",
+        equipId: "92149",
+        formula: ""
+    },
+    "半导体装置": {
+        name: "半导体装置",
+        englishName: "TFT17_Item_PsyOps_SemiconductorMod",
+        equipId: "92151",
+        formula: ""
+    },
+    "共感植入": {
+        name: "共感植入",
+        englishName: "TFT17_Item_PsyOps_SympatheticImplantMod",
+        equipId: "92153",
+        formula: ""
+    },
+    "锁敌光学设备": {
+        name: "锁敌光学设备",
+        englishName: "TFT17_Item_PsyOps_TargetlockMod",
+        equipId: "92155",
+        formula: ""
+    },
+    "德玛西亚王冠": {
+        name: "德玛西亚王冠",
+        englishName: "TFT9_Item_CrownOfDemacia",
+        equipId: "92358",
+        formula: ""
+    },
+
+    // ==========================================
+    // Type 5: 独立纹章 (Emblems) - 部分特殊羁绊纹章 (共 3 个)
+    // ==========================================
+    "幻灵战队纹章": {
+        name: "幻灵战队纹章",
+        englishName: "TFT17_Item_AnimaSquadEmblemItem",
+        equipId: "92121",
+        formula: ""
+    },
+    "灵能特工纹章": {
+        name: "灵能特工纹章",
+        englishName: "TFT17_Item_PsyOpsEmblemItem",
+        equipId: "92144",
+        formula: ""
+    },
+    "狙神纹章": {
+        name: "狙神纹章",
+        englishName: "TFT17_Item_RangedTraitEmblemItem",
+        equipId: "92158",
+        formula: ""
+    },
+
+    // ==========================================
+    // Type 6: 奥恩神器 (Ornn Artifacts) (共 48 个)
+    // ==========================================
+    "3费：奥恩": {
+        name: "3费：奥恩",
+        englishName: "TFT17_ChampionItem_Chosen_Ornn",
+        equipId: "92006",
+        formula: ""
+    },
+    "死亡之蔑": {
+        name: "死亡之蔑",
+        englishName: "TFT4_Item_OrnnDeathsDefiance",
+        equipId: "92302",
+        formula: ""
+    },
+    "永恒凛冬": {
+        name: "永恒凛冬",
+        englishName: "TFT4_Item_OrnnEternalWinter",
+        equipId: "92303",
+        formula: ""
+    },
+    "三相之力": {
+        name: "三相之力",
+        englishName: "TFT4_Item_OrnnInfinityForce",
+        equipId: "92304",
+        formula: ""
+    },
+    "魔蕴": {
+        name: "魔蕴",
+        englishName: "TFT4_Item_OrnnMuramana",
+        equipId: "92305",
+        formula: ""
+    },
+    "黑曜石切割者": {
+        name: "黑曜石切割者",
+        englishName: "TFT4_Item_OrnnObsidianCleaver",
+        equipId: "92306",
+        formula: ""
+    },
+    "兰顿之兆": {
+        name: "兰顿之兆",
+        englishName: "TFT4_Item_OrnnRanduinsSanctum",
+        equipId: "92307",
+        formula: ""
+    },
+    "金币收集者": {
+        name: "金币收集者",
+        englishName: "TFT4_Item_OrnnTheCollector",
+        equipId: "92308",
+        formula: ""
+    },
+    "中娅悖论": {
+        name: "中娅悖论",
+        englishName: "TFT4_Item_OrnnZhonyasParadox",
+        equipId: "92309",
+        formula: ""
+    },
+    "冥火之拥": {
+        name: "冥火之拥",
+        englishName: "TFT9_Item_OrnnDeathfireGrasp",
+        equipId: "92359",
+        formula: ""
+    },
+    "狙击手的专注": {
+        name: "狙击手的专注",
+        englishName: "TFT9_Item_OrnnHorizonFocus",
+        equipId: "92360",
+        formula: ""
+    },
+    "碎舰者": {
+        name: "碎舰者",
+        englishName: "TFT9_Item_OrnnHullbreaker",
+        equipId: "92361",
+        formula: ""
+    },
+    "铁匠手套": {
+        name: "铁匠手套",
+        englishName: "TFT9_Item_OrnnPrototypeForge",
+        equipId: "92362",
+        formula: ""
+    },
+    "诡术师之镜": {
+        name: "诡术师之镜",
+        englishName: "TFT9_Item_OrnnTrickstersGlass",
+        equipId: "92363",
+        formula: ""
+    },
+    "黎明圣盾": {
+        name: "黎明圣盾",
+        englishName: "TFT_Item_Artifact_AegisOfDawn",
+        equipId: "92472",
+        formula: ""
+    },
+    "黄昏圣盾": {
+        name: "黄昏圣盾",
+        englishName: "TFT_Item_Artifact_AegisOfDusk",
+        equipId: "92473",
+        formula: ""
+    },
+    "枯萎珠宝": {
+        name: "枯萎珠宝",
+        englishName: "TFT_Item_Artifact_BlightingJewel",
+        equipId: "92474",
+        formula: ""
+    },
+    "帽子饮品": {
+        name: "帽子饮品",
+        englishName: "TFT_Item_Artifact_CappaJuice",
+        equipId: "92475",
+        formula: ""
+    },
+    "黑暗吸血鬼节杖": {
+        name: "黑暗吸血鬼节杖",
+        englishName: "TFT_Item_Artifact_CursedVampiricScepter",
+        equipId: "92476",
+        formula: ""
+    },
+    "黎明核心": {
+        name: "黎明核心",
+        englishName: "TFT_Item_Artifact_Dawncore",
+        equipId: "92477",
+        formula: ""
+    },
+    "永恒契约": {
+        name: "永恒契约",
+        englishName: "TFT_Item_Artifact_EternalPact",
+        equipId: "92478",
+        formula: ""
+    },
+    "鱼骨头": {
+        name: "鱼骨头",
+        englishName: "TFT_Item_Artifact_Fishbones",
+        equipId: "92479",
+        formula: ""
+    },
+    "禁忌雕像": {
+        name: "禁忌雕像",
+        englishName: "TFT_Item_Artifact_ForbiddenIdol",
+        equipId: "92480",
+        formula: ""
+    },
+    "恶火小斧": {
+        name: "恶火小斧",
+        englishName: "TFT_Item_Artifact_HellfireHatchet",
+        equipId: "92481",
+        formula: ""
+    },
+    "视界专注": {
+        name: "视界专注",
+        englishName: "TFT_Item_Artifact_HorizonFocus",
+        equipId: "92482",
+        formula: ""
+    },
+    "激发之匣": {
+        name: "激发之匣",
+        englishName: "TFT_Item_Artifact_InnervatingLocket",
+        equipId: "92483",
+        formula: ""
+    },
+    "次级镜像人格面具": {
+        name: "次级镜像人格面具",
+        englishName: "TFT_Item_Artifact_LesserMirroredPersona",
+        equipId: "92484",
+        formula: ""
+    },
+    "巫妖之祸": {
+        name: "巫妖之祸",
+        englishName: "TFT_Item_Artifact_LichBane",
+        equipId: "92485",
+        formula: ""
+    },
+    "光盾徽章": {
+        name: "光盾徽章",
+        englishName: "TFT_Item_Artifact_LightshieldCrest",
+        equipId: "92486",
+        formula: ""
+    },
+    "卢登的激荡": {
+        name: "卢登的激荡",
+        englishName: "TFT_Item_Artifact_LudensTempest",
+        equipId: "92487",
+        formula: ""
+    },
+    "修复型回响": {
+        name: "修复型回响",
+        englishName: "TFT_Item_Artifact_MendingEchoes",
+        equipId: "92488",
+        formula: ""
+    },
+    "镜像人格面具": {
+        name: "镜像人格面具",
+        englishName: "TFT_Item_Artifact_MirroredPersona",
+        equipId: "92489",
+        formula: ""
+    },
+    "连指手套": {
+        name: "连指手套",
+        englishName: "TFT_Item_Artifact_Mittens",
+        equipId: "92490",
+        formula: ""
+    },
+    "烁刃": {
+        name: "烁刃",
+        englishName: "TFT_Item_Artifact_NavoriFlickerblades",
+        equipId: "92491",
+        formula: ""
+    },
+    "暗行者之爪": {
+        name: "暗行者之爪",
+        englishName: "TFT_Item_Artifact_ProwlersClaw",
+        equipId: "92492",
+        formula: ""
+    },
+    "疾射火炮": {
+        name: "疾射火炮",
+        englishName: "TFT_Item_Artifact_RapidFirecannon",
+        equipId: "92493",
+        formula: ""
+    },
+    "探索者的护臂": {
+        name: "探索者的护臂",
+        englishName: "TFT_Item_Artifact_SeekersArmguard",
+        equipId: "92494",
+        formula: ""
+    },
+    "暗影木偶": {
+        name: "暗影木偶",
+        englishName: "TFT_Item_Artifact_ShadowPuppet",
+        equipId: "92495",
+        formula: ""
+    },
+    "密银黎明": {
+        name: "密银黎明",
+        englishName: "TFT_Item_Artifact_SilvermereDawn",
+        equipId: "92496",
+        formula: ""
+    },
+    "幽魂弯刀": {
+        name: "幽魂弯刀",
+        englishName: "TFT_Item_Artifact_SpectralCutlass",
+        equipId: "92497",
+        formula: ""
+    },
+    "斯塔缇克电刃": {
+        name: "斯塔缇克电刃",
+        englishName: "TFT_Item_Artifact_StatikkShiv",
+        equipId: "92498",
+        formula: ""
+    },
+    "迷离风衣": {
+        name: "迷离风衣",
+        englishName: "TFT_Item_Artifact_SuspiciousTrenchCoat",
+        equipId: "92499",
+        formula: ""
+    },
+    "飞升护符": {
+        name: "飞升护符",
+        englishName: "TFT_Item_Artifact_TalismanOfAscension",
+        equipId: "92500",
+        formula: ""
+    },
+    "顽强不屈": {
+        name: "顽强不屈",
+        englishName: "TFT_Item_Artifact_TheIndomitable",
+        equipId: "92501",
+        formula: ""
+    },
+    "巨型九头蛇": {
+        name: "巨型九头蛇",
+        englishName: "TFT_Item_Artifact_TitanicHydra",
+        equipId: "92502",
+        formula: ""
+    },
+    "无终恨意": {
+        name: "无终恨意",
+        englishName: "TFT_Item_Artifact_UnendingDespair",
+        equipId: "92503",
+        formula: ""
+    },
+    "虚空护手": {
+        name: "虚空护手",
+        englishName: "TFT_Item_Artifact_VoidGauntlet",
+        equipId: "92504",
+        formula: ""
+    },
+    "智慧末刃": {
+        name: "智慧末刃",
+        englishName: "TFT_Item_Artifact_WitsEnd",
+        equipId: "92505",
+        formula: ""
+    },
+
+    // ==========================================
+    // Type 7: 金鳞龙装备 (Shimmerscale Items) (共 5 个)
+    // ==========================================
+    "坚定投资器": {
+        name: "坚定投资器",
+        englishName: "TFT7_Item_ShimmerscaleDeterminedInvestor",
+        equipId: "92348",
+        formula: ""
+    },
+    "钻石之手": {
+        name: "钻石之手",
+        englishName: "TFT7_Item_ShimmerscaleDiamondHands",
+        equipId: "92349",
+        formula: ""
+    },
+    "投机者之刃": {
+        name: "投机者之刃",
+        englishName: "TFT7_Item_ShimmerscaleGamblersBlade",
+        equipId: "92350",
+        formula: ""
+    },
+    "无用大宝石": {
+        name: "无用大宝石",
+        englishName: "TFT7_Item_ShimmerscaleHeartOfGold",
+        equipId: "92352",
+        formula: ""
+    },
+    "大亨之铠": {
+        name: "大亨之铠",
+        englishName: "TFT7_Item_ShimmerscaleMogulsMail",
+        equipId: "92354",
+        formula: ""
+    },
+
+    // ==========================================
+    // Type support: 辅助装 (Support Items) - 战斗开始时给友军提供增益 (共 11 个)
+    // ==========================================
+    "军团圣盾": {
+        name: "军团圣盾",
+        englishName: "TFT_Item_AegisOfTheLegion",
+        equipId: "92470",
+        formula: ""
+    },
+    "女妖面纱": {
+        name: "女妖面纱",
+        englishName: "TFT_Item_BansheesVeil",
+        equipId: "92507",
+        formula: ""
+    },
+    "能量圣杯": {
+        name: "能量圣杯",
+        englishName: "TFT_Item_Chalice",
+        equipId: "92513",
+        formula: ""
+    },
+    "永恒烈焰": {
+        name: "永恒烈焰",
+        englishName: "TFT_Item_EternalFlame",
+        equipId: "92528",
+        formula: ""
+    },
+    "钢铁烈阳之匣": {
+        name: "钢铁烈阳之匣",
+        englishName: "TFT_Item_LocketOfTheIronSolari",
+        equipId: "92543",
+        formula: ""
+    },
+    "月石再生器": {
+        name: "月石再生器",
+        englishName: "TFT_Item_Moonstone",
+        equipId: "92545",
+        formula: ""
+    },
+    "殉道美德": {
+        name: "殉道美德",
+        englishName: "TFT_Item_RadiantVirtue",
+        equipId: "92553",
+        formula: ""
+    },
+    "静止法衣": {
+        name: "静止法衣",
+        englishName: "TFT_Item_Shroud",
+        equipId: "92560",
+        formula: ""
+    },
+    "骑士之誓": {
+        name: "骑士之誓",
+        englishName: "TFT_Item_SupportKnightsVow",
+        equipId: "92567",
+        formula: ""
+    },
+    "基克的先驱": {
+        name: "基克的先驱",
+        englishName: "TFT_Item_ZekesHerald",
+        equipId: "92578",
+        formula: ""
+    },
+    "灵风": {
+        name: "灵风",
+        englishName: "TFT_Item_Zephyr",
+        equipId: "92579",
+        formula: ""
+    },
+} satisfies  Record<string, TFTEquip>
