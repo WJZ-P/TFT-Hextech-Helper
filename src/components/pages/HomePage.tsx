@@ -339,36 +339,39 @@ const ModeTogglePill = styled.div<{ theme: ThemeType }>`
 
 /**
  * 赛季选择滑块指示器（竖向滑动）
- * $modeIndex: 0=S16, 1=S4, 2=发条鸟
+ * $modeIndex: 0=S17 星神, 1=发条鸟
  * 通过 top 值变化实现上下滑动
+ *
+ * 实现细节喵：
+ * - 目前只有 2 个模式，所以滑块占一半高度（50%）
+ * - top 用 calc(index * 50% + 2px)，切换时平滑滑动
+ * - S4 瑞兽闹新春已下线，原有新春红金渐变也随之移除
  */
 const ModeToggleIndicator = styled.div<{ theme: ThemeType; $modeIndex: number }>`
   position: absolute;
   left: 2px;
-  top: ${props => `calc(${props.$modeIndex * 33.33}% + 2px)`};
+  top: ${props => `calc(${props.$modeIndex * 50}% + 2px)`};
   width: calc(100% - 4px);
-  height: calc(33.33% - 3px);
+  height: calc(50% - 3px);
   border-radius: 999px;
   background: ${props => {
     switch (props.$modeIndex) {
-      case 1: // S4 瑞兽 - 新春红金渐变
-        return 'linear-gradient(135deg, #e53935 0%, #ff8f00 100%)';
-      case 2: // 发条鸟 - 紫色
+      case 1: // 发条鸟 - 紫色
         return 'linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%)';
-      default: // S16 - 主色蓝
+      default: // S17 星神 - 主色蓝（未来可单独换成星神主题色）
         return `linear-gradient(135deg, ${props.theme.colors.primary} 0%, ${props.theme.colors.primaryHover} 100%)`;
     }
   }};
   transition: top 0.22s ease, background 0.22s ease;
 `;
 
-/** 文本层（在滑块之上），竖向三行 grid 布局 */
+/** 文本层（在滑块之上），竖向两行 grid 布局（S17 / 发条鸟） */
 const ModeToggleTextRow = styled.div`
   position: relative;
   z-index: 1;
   width: 100%;
   display: grid;
-  grid-template-rows: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
   align-items: center;
 `;
 
@@ -1358,7 +1361,7 @@ export const HomePage = () => {
             const hasSelection = (selectedIds || []).some((id: string) => seasonIds.has(id));
             
             if (!hasSelection) {
-                const seasonName = tftMode === TFTMode.S4_RUISHOU ? '瑞兽闹新春' : '英雄联盟传奇';
+                const seasonName = tftMode === TFTMode.S4_RUISHOU ? '瑞兽闹新春' : 'S17 星神';
                 toast.error(`请先在阵容页面选择至少一个【${seasonName}】阵容！`);
                 setHasSelectedLineup(false);
                 return;
@@ -1384,15 +1387,17 @@ export const HomePage = () => {
     };
 
     /**
-     * 切换赛季模式（S16 / S4 瑞兽 / 发条鸟）
+     * 切换赛季模式（S17 星神 / 发条鸟）
      *
-     * 交互说明：
-     * - 上层胶囊：选择赛季（S16 / S4 / 发条鸟）
-     * - S16 选中时，下方显示匹配/排位子选择器
-     * - S4 和发条鸟只支持匹配，切换时自动设置对应模式
+     * 交互说明喵：
+     * - 上层胶囊：选择模式（S17 星神 / 发条鸟的试炼）
+     * - S17 星神选中时，下方显示匹配/排位子选择器
+     * - 发条鸟只支持匹配，切换时自动设置对应模式
      * - 运行中禁止切换
+     *
+     * 注：S4 瑞兽闹新春已下线，保留 TFTMode.S4_RUISHOU 枚举仅作为兼容历史配置用
      */
-    const handleSeasonChange = async (season: 'S16' | 'S4' | 'CLOCKWORK') => {
+    const handleSeasonChange = async (season: 'S16' | 'CLOCKWORK') => {
         if (isRunning) {
             toast.error('运行中无法切换模式');
             return;
@@ -1403,13 +1408,10 @@ export const HomePage = () => {
 
         switch (season) {
             case 'S16':
-                // 切回 S16 时，默认用匹配模式（如果之前已经在 S16 的排位则保持）
+                // 切回 S17 星神时，默认用匹配模式（如果之前已经在排位则保持）
+                // 注：内部枚举仍叫 NORMAL/RANK，保持与后端约定不变
                 newMode = (tftMode === TFTMode.RANK) ? TFTMode.RANK : TFTMode.NORMAL;
-                toastMsg = '已切换到 S16 英雄联盟传奇';
-                break;
-            case 'S4':
-                newMode = TFTMode.S4_RUISHOU;
-                toastMsg = '已切换到 S4 瑞兽闹新春';
+                toastMsg = '已切换到 S17 星神';
                 break;
             case 'CLOCKWORK':
                 newMode = TFTMode.CLOCKWORK_TRAILS;
@@ -1444,21 +1446,17 @@ export const HomePage = () => {
     };
 
     /**
-     * 三个游戏模式的详情描述（hover 浮窗内容）
+     * 两个游戏模式的详情描述（hover 浮窗内容）
      * 每个模式包含：标签（赛季信息）、标题颜色、简短描述
+     *
+     * 注：S4 瑞兽闹新春已下线，这里移除对应描述
      */
     const modeDescriptions = {
         S16: {
-            tag: '赛季 S16',
-            title: '英雄联盟传奇',
+            tag: '赛季 S17',
+            title: 'S17 星神',
             titleColor: undefined,  // 使用默认主色（蓝色）
-            desc: '当前主赛季，支持匹配和排位两种模式。包含完整的自动下棋、阵容推荐和海克斯选择功能。用于刷峡谷和云顶的宝典，云顶通行证。',
-        },
-        S4: {
-            tag: '回归赛季 S4',
-            title: '瑞兽闹新春',
-            titleColor: '#e53935',  // 新春红色
-            desc: '经典回归赛季，仅支持匹配模式。棋子和羁绊与 S16 不同，需要选择对应的瑞兽阵容。用于刷回归赛季奖励。',
+            desc: '当前主赛季「星神」，支持匹配和排位两种模式。包含完整的自动下棋、阵容推荐和海克斯选择功能。用于刷峡谷和云顶的宝典，云顶通行证。',
         },
         CLOCKWORK: {
             tag: '特殊玩法',
@@ -1497,50 +1495,71 @@ export const HomePage = () => {
         // currentTarget 是绑定事件的 ModeLabelWrapper 元素
         const labelRect = e.currentTarget.getBoundingClientRect();
 
-        // 浮窗默认位置：label 右侧 8px，垂直居中
-        let tooltipLeft = labelRect.right + 8;
-        // 预估浮窗尺寸（首次渲染前没有 ref，用经验值）
-        const estimatedWidth = 230;
-        const estimatedHeight = 100;
+        /**
+         * 通用的浮窗定位计算函数喵：
+         * 传入"当前认为的浮窗尺寸"，返回 { top, left, arrowTop }。
+         *
+         * 为什么要单独抽出来？
+         * - 第一次调用时浮窗还没渲染，没法从 DOM 取真实尺寸 → 用估计值快速定位
+         * - 第二次调用（rAF 回调）时浮窗已经挂到 DOM，用 getBoundingClientRect 拿真实尺寸 → 精准修正
+         * 两次调用逻辑完全一样，只是尺寸参数不同，所以抽成闭包
+         */
+        const computePosition = (width: number, height: number) => {
+            // 浮窗默认位置：label 右侧 8px，垂直居中
+            let left = labelRect.right + 8;
+            // 浮窗顶部 = label 垂直中心 - 浮窗高度的一半
+            let top = labelRect.top + labelRect.height / 2 - height / 2;
+            // 默认箭头居中指向 label
+            let arrow = '50%';
 
-        // 浮窗顶部 = label 垂直中心 - 浮窗高度的一半
-        let tooltipTop = labelRect.top + labelRect.height / 2 - estimatedHeight / 2;
+            const padding = 8; // 距离视口边缘的安全距离
 
-        // 用于记录箭头应该指向的 Y 百分比
-        let newArrowTop = '50%';
+            // === 右边界检测：超出视口则改为出现在 label 左侧 ===
+            if (left + width > window.innerWidth - padding) {
+                left = labelRect.left - width - 8;
+            }
 
-        const padding = 8; // 距离视口边缘的安全距离
+            // === 下边界检测：超出底部则上移，箭头跟着 label 走 ===
+            if (top + height > window.innerHeight - padding) {
+                const overflow = (top + height) - (window.innerHeight - padding);
+                top -= overflow;
+                const labelCenterY = labelRect.top + labelRect.height / 2;
+                const arrowPercent = ((labelCenterY - top) / height) * 100;
+                arrow = `${Math.min(90, Math.max(10, arrowPercent))}%`;
+            }
 
-        // === 右边界检测 ===
-        // 如果浮窗右边缘超出视口宽度，改为出现在 label 左侧
-        if (tooltipLeft + estimatedWidth > window.innerWidth - padding) {
-            tooltipLeft = labelRect.left - estimatedWidth - 8;
-        }
+            // === 上边界检测：超出顶部则下移，箭头跟着 label 走 ===
+            if (top < padding) {
+                top = padding;
+                const labelCenterY = labelRect.top + labelRect.height / 2;
+                const arrowPercent = ((labelCenterY - top) / height) * 100;
+                arrow = `${Math.min(90, Math.max(10, arrowPercent))}%`;
+            }
 
-        // === 下边界检测 ===
-        // 如果浮窗底部超出视口高度，往上移
-        if (tooltipTop + estimatedHeight > window.innerHeight - padding) {
-            const overflow = (tooltipTop + estimatedHeight) - (window.innerHeight - padding);
-            tooltipTop -= overflow;
-            // 箭头要跟着 label 中心走：计算 label 中心相对于浮窗新位置的百分比
-            const labelCenterY = labelRect.top + labelRect.height / 2;
-            const arrowPercent = ((labelCenterY - tooltipTop) / estimatedHeight) * 100;
-            // clamp 到 10%~90%，避免箭头跑到浮窗边缘外
-            newArrowTop = `${Math.min(90, Math.max(10, arrowPercent))}%`;
-        }
+            return { top, left, arrowTop: arrow };
+        };
 
-        // === 上边界检测 ===
-        // 如果浮窗顶部超出视口顶部，往下移
-        if (tooltipTop < padding) {
-            tooltipTop = padding;
-            const labelCenterY = labelRect.top + labelRect.height / 2;
-            const arrowPercent = ((labelCenterY - tooltipTop) / estimatedHeight) * 100;
-            newArrowTop = `${Math.min(90, Math.max(10, arrowPercent))}%`;
-        }
-
-        setTooltipPos({ top: tooltipTop, left: tooltipLeft });
-        setArrowTop(newArrowTop);
+        // ===== 第一步：用估计值快速定位，先把浮窗显示出来（避免渲染延迟导致的闪烁）=====
+        // 估计值只是"兜底"，真实值会在下一帧用 tooltipRef 修正
+        const estimated = computePosition(230, 100);
+        setTooltipPos({ top: estimated.top, left: estimated.left });
+        setArrowTop(estimated.arrowTop);
         setHoveredMode(modeKey);
+
+        // ===== 第二步：下一帧等浮窗挂到 DOM 后，用真实尺寸二次修正 =====
+        // 为什么用 requestAnimationFrame：
+        // - setHoveredMode 触发 React 重渲染，浮窗此时才进 DOM
+        // - rAF 回调在浏览器下一次绘制前执行，此时 tooltipRef 已经拿到真实 DOM
+        // - 如果用 setTimeout(0) 也能工作，但 rAF 和浏览器帧同步，视觉上更稳
+        requestAnimationFrame(() => {
+            const el = tooltipRef.current;
+            if (!el) return; // 浮窗还没挂上或已经卸载（比如用户快速离开）
+            const rect = el.getBoundingClientRect();
+            // 用真实尺寸重新算一次
+            const real = computePosition(rect.width, rect.height);
+            setTooltipPos({ top: real.top, left: real.left });
+            setArrowTop(real.arrowTop);
+        });
     }, []);
 
     /** 鼠标离开模式标签时：隐藏浮窗 */
@@ -1550,18 +1569,17 @@ export const HomePage = () => {
 
     /**
      * 获取当前赛季对应的索引（用于上层胶囊滑块位置）
-     * 0=S16, 1=S4, 2=发条鸟
+     * 0=S17 星神, 1=发条鸟
      */
     const getSeasonIndex = (): number => {
         switch (tftMode) {
             case TFTMode.NORMAL:
             case TFTMode.RANK:
-                return 0; // S16
-            case TFTMode.S4_RUISHOU:
-                return 1; // S4
+                return 0; // S17 星神（内部枚举名仍保留 NORMAL/RANK）
             case TFTMode.CLOCKWORK_TRAILS:
-                return 2; // 发条鸟
+                return 1; // 发条鸟
             default:
+                // S4_RUISHOU 已下线，遇到历史配置兜底回 S17
                 return 0;
         }
     };
@@ -1630,7 +1648,7 @@ export const HomePage = () => {
                                 <ModeTogglePill>
                                     <ModeToggleIndicator $modeIndex={getSeasonIndex()} />
                                     <ModeToggleTextRow>
-                                        {/* S16 英雄联盟传奇 */}
+                                        {/* S17 星神（内部枚举 NORMAL/RANK） */}
                                         <ModeLabelWrapper
                                             onMouseEnter={(e) => handleModeMouseEnter('S16', e)}
                                             onMouseLeave={handleModeMouseLeave}
@@ -1639,19 +1657,7 @@ export const HomePage = () => {
                                                 $active={isS16Season}
                                                 onClick={() => handleSeasonChange('S16')}
                                             >
-                                                英雄联盟传奇
-                                            </ModeToggleLabel>
-                                        </ModeLabelWrapper>
-                                        {/* S4 瑞兽闹新春 */}
-                                        <ModeLabelWrapper
-                                            onMouseEnter={(e) => handleModeMouseEnter('S4', e)}
-                                            onMouseLeave={handleModeMouseLeave}
-                                        >
-                                            <ModeToggleLabel
-                                                $active={tftMode === TFTMode.S4_RUISHOU}
-                                                onClick={() => handleSeasonChange('S4')}
-                                            >
-                                                瑞兽闹新春
+                                                S17 星神
                                             </ModeToggleLabel>
                                         </ModeLabelWrapper>
                                         {/* 发条鸟的试炼 */}
@@ -1840,7 +1846,7 @@ export const HomePage = () => {
                         ) : (needsLineup && !hasSelectedLineup) ? (
                             <>
                                 <BlockIcon />
-                                未选择{tftMode === TFTMode.S4_RUISHOU ? '瑞兽' : '云顶'}阵容
+                                未选择云顶阵容
                             </>
                         ) : isRunning ? (
                             <>

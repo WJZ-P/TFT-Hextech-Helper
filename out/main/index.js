@@ -8872,6 +8872,54 @@ const TFT_4_TRAIT_DATA = {
   "摄魂使": { id: "10293", name: "摄魂使", type: "classes", levels: [2, 4, 6] },
   "重装战士": { id: "10294", name: "重装战士", type: "classes", levels: [2, 4, 6, 8] }
 };
+var UnitOrigin_S17 = /* @__PURE__ */ ((UnitOrigin_S172) => {
+  UnitOrigin_S172["Admin"] = "法官";
+  UnitOrigin_S172["AnimaSquad"] = "幻灵战队";
+  UnitOrigin_S172["Astronaut"] = "木灵族";
+  UnitOrigin_S172["DRX"] = "新星特攻队";
+  UnitOrigin_S172["DarkStar"] = "暗星";
+  UnitOrigin_S172["Mecha"] = "霸天机甲";
+  UnitOrigin_S172["Primordian"] = "海魔人";
+  UnitOrigin_S172["PsyOps"] = "灵能特工";
+  UnitOrigin_S172["SpaceGroove"] = "太空律动";
+  UnitOrigin_S172["Timebreaker"] = "未来战士";
+  UnitOrigin_S172["Stargazer"] = "观星者";
+  UnitOrigin_S172["StargazerFountain"] = "观星者:泉水";
+  UnitOrigin_S172["StargazerHuntress"] = "观星者:女猎手";
+  UnitOrigin_S172["StargazerMedallion"] = "观星者:勋章";
+  UnitOrigin_S172["StargazerMountain"] = "观星者:秀山";
+  UnitOrigin_S172["StargazerSerpent"] = "观星者:蝰蛇";
+  UnitOrigin_S172["StargazerShield"] = "观星者:圣坛";
+  UnitOrigin_S172["StargazerWolf"] = "观星者:野猪";
+  UnitOrigin_S172["Blitzcrank"] = "汪星机器人";
+  UnitOrigin_S172["Fiora"] = "斗神";
+  UnitOrigin_S172["Graves"] = "军工1号";
+  UnitOrigin_S172["Jhin"] = "灭星尊";
+  UnitOrigin_S172["MissFortune"] = "武装战姬";
+  UnitOrigin_S172["Morgana"] = "黑暗魔女";
+  UnitOrigin_S172["Rhaast"] = "救世主";
+  UnitOrigin_S172["Shen"] = "暮光铁壁";
+  UnitOrigin_S172["Sona"] = "最高指挥官";
+  UnitOrigin_S172["TahmKench"] = "命运祭司";
+  UnitOrigin_S172["Vex"] = "末日使者";
+  UnitOrigin_S172["Zed"] = "天煞";
+  return UnitOrigin_S172;
+})(UnitOrigin_S17 || {});
+var UnitClass_S17 = /* @__PURE__ */ ((UnitClass_S172) => {
+  UnitClass_S172["APTrait"] = "魔术师";
+  UnitClass_S172["ASTrait"] = "挑战者";
+  UnitClass_S172["Assassin"] = "游侠";
+  UnitClass_S172["Fateweaver"] = "织命人";
+  UnitClass_S172["Flex"] = "旅人";
+  UnitClass_S172["HPTank"] = "斗士";
+  UnitClass_S172["Mana"] = "神谕";
+  UnitClass_S172["Melee"] = "狂战士";
+  UnitClass_S172["Ranged"] = "狙神";
+  UnitClass_S172["ResistTank"] = "堡垒卫士";
+  UnitClass_S172["ShieldTank"] = "重装战士";
+  UnitClass_S172["Summon"] = "牧羊人";
+  return UnitClass_S172;
+})(UnitClass_S17 || {});
 const TFT_SPECIAL_CHESS = {
   //  特殊的棋子，比如基础装备锻造器，这种不属于英雄
   "基础装备锻造器": {
@@ -8932,20 +8980,22 @@ const TFT_SPECIAL_CHESS = {
     origins: [],
     classes: [],
     attackRange: 1
-  },
-  "提伯斯": {
-    displayName: "提伯斯",
-    englishId: "TFT16_AnnieTibbers",
-    price: 0,
-    traits: [UnitClass_S16.Sorcerer],
-    origins: [],
-    classes: [UnitClass_S16.Sorcerer],
-    attackRange: 1
   }
+  // "提伯斯": {
+  //     displayName: "提伯斯",
+  //     englishId: "TFT16_AnnieTibbers",
+  //     price: 0,
+  //     traits: [UnitClass_S16.Sorcerer],
+  //     origins: [],
+  //     classes: [UnitClass_S16.Sorcerer],
+  //     attackRange: 1
+  // },
 };
 const UNSELLABLE_BOARD_UNITS = /* @__PURE__ */ new Set([
   "训练假人",
-  "魔像"
+  "魔像",
+  "迷你黑洞",
+  "未来战士核心"
 ]);
 const _TFT_16_CHESS_DATA = {
   //  特殊棋子
@@ -10357,6 +10407,332 @@ const _TFT_4_CHESS_DATA = {
     attackRange: 5
   }
 };
+({
+  // ====================================================================
+  // 1 费棋子 (共 15 个)
+  // ====================================================================
+  "贝蕾亚": {
+    traits: [UnitOrigin_S17.AnimaSquad, UnitOrigin_S17.Primordian, UnitClass_S17.Assassin],
+    origins: [UnitOrigin_S17.AnimaSquad, UnitOrigin_S17.Primordian],
+    classes: [UnitClass_S17.Assassin]
+  },
+  "波比": {
+    traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.ResistTank],
+    origins: [UnitOrigin_S17.Astronaut],
+    classes: [UnitClass_S17.ResistTank]
+  },
+  "维迦": {
+    traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.APTrait],
+    origins: [UnitOrigin_S17.Astronaut],
+    classes: [UnitClass_S17.APTrait]
+  },
+  "亚托克斯": {
+    traits: [UnitOrigin_S17.DRX, UnitClass_S17.ResistTank],
+    origins: [UnitOrigin_S17.DRX],
+    classes: [UnitClass_S17.ResistTank]
+  },
+  "凯特琳": {
+    traits: [UnitOrigin_S17.DRX, UnitClass_S17.Fateweaver],
+    origins: [UnitOrigin_S17.DRX],
+    classes: [UnitClass_S17.Fateweaver]
+  },
+  "提莫": {
+    traits: [UnitOrigin_S17.SpaceGroove, UnitClass_S17.Summon],
+    origins: [UnitOrigin_S17.SpaceGroove],
+    classes: [UnitClass_S17.Summon]
+  },
+  "内瑟斯": {
+    traits: [UnitOrigin_S17.SpaceGroove, UnitClass_S17.ShieldTank],
+    origins: [UnitOrigin_S17.SpaceGroove],
+    classes: [UnitClass_S17.ShieldTank]
+  },
+  "崔斯特": {
+    traits: [UnitOrigin_S17.Stargazer, UnitClass_S17.Fateweaver],
+    origins: [UnitOrigin_S17.Stargazer],
+    classes: [UnitClass_S17.Fateweaver]
+  },
+  "泰隆": {
+    traits: [UnitOrigin_S17.Stargazer, UnitClass_S17.Assassin],
+    origins: [UnitOrigin_S17.Stargazer],
+    classes: [UnitClass_S17.Assassin]
+  },
+  "伊泽瑞尔": {
+    traits: [UnitOrigin_S17.Timebreaker, UnitClass_S17.Ranged],
+    origins: [UnitOrigin_S17.Timebreaker],
+    classes: [UnitClass_S17.Ranged]
+  },
+  "蕾欧娜": {
+    traits: [UnitOrigin_S17.Admin, UnitClass_S17.ShieldTank],
+    origins: [UnitOrigin_S17.Admin],
+    classes: [UnitClass_S17.ShieldTank]
+  },
+  "科加斯": {
+    traits: [UnitOrigin_S17.DarkStar, UnitClass_S17.HPTank],
+    origins: [UnitOrigin_S17.DarkStar],
+    classes: [UnitClass_S17.HPTank]
+  },
+  "丽桑卓": {
+    traits: [UnitOrigin_S17.DarkStar, UnitClass_S17.Summon, UnitClass_S17.APTrait],
+    origins: [UnitOrigin_S17.DarkStar],
+    classes: [UnitClass_S17.Summon, UnitClass_S17.APTrait]
+  },
+  "雷克塞": {
+    traits: [UnitOrigin_S17.Primordian, UnitClass_S17.HPTank],
+    origins: [UnitOrigin_S17.Primordian],
+    classes: [UnitClass_S17.HPTank]
+  },
+  // ====================================================================
+  // 2 费棋子 (共 13 个)
+  // ====================================================================
+  "卑尔维斯": {
+    traits: [UnitOrigin_S17.Primordian, UnitClass_S17.ASTrait, UnitClass_S17.Melee],
+    origins: [UnitOrigin_S17.Primordian],
+    classes: [UnitClass_S17.ASTrait, UnitClass_S17.Melee]
+  },
+  "阿卡丽": {
+    traits: [UnitOrigin_S17.DRX, UnitClass_S17.Melee],
+    origins: [UnitOrigin_S17.DRX],
+    classes: [UnitClass_S17.Melee]
+  },
+  "金克丝": {
+    traits: [UnitOrigin_S17.AnimaSquad, UnitClass_S17.ASTrait],
+    origins: [UnitOrigin_S17.AnimaSquad],
+    classes: [UnitClass_S17.ASTrait]
+  },
+  "纳尔": {
+    traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.Ranged],
+    origins: [UnitOrigin_S17.Astronaut],
+    classes: [UnitClass_S17.Ranged]
+  },
+  "派克": {
+    traits: [UnitOrigin_S17.PsyOps, UnitClass_S17.Flex],
+    origins: [UnitOrigin_S17.PsyOps],
+    classes: [UnitClass_S17.Flex]
+  },
+  "古拉加斯": {
+    traits: [UnitOrigin_S17.PsyOps, UnitClass_S17.HPTank],
+    origins: [UnitOrigin_S17.PsyOps],
+    classes: [UnitClass_S17.HPTank]
+  },
+  "格温": {
+    traits: [UnitOrigin_S17.SpaceGroove, UnitClass_S17.Assassin],
+    origins: [UnitOrigin_S17.SpaceGroove],
+    classes: [UnitClass_S17.Assassin]
+  },
+  "贾克斯": {
+    traits: [UnitOrigin_S17.Stargazer, UnitClass_S17.ResistTank],
+    origins: [UnitOrigin_S17.Stargazer],
+    classes: [UnitClass_S17.ResistTank]
+  },
+  "米利欧": {
+    traits: [UnitOrigin_S17.Timebreaker, UnitClass_S17.Fateweaver],
+    origins: [UnitOrigin_S17.Timebreaker],
+    classes: [UnitClass_S17.Fateweaver]
+  },
+  "佐伊": {
+    traits: [UnitOrigin_S17.Admin, UnitClass_S17.Mana],
+    origins: [UnitOrigin_S17.Admin],
+    classes: [UnitClass_S17.Mana]
+  },
+  "小木灵": {
+    traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.Summon, UnitClass_S17.Flex],
+    origins: [UnitOrigin_S17.Astronaut],
+    classes: [UnitClass_S17.Summon, UnitClass_S17.Flex]
+  },
+  "莫德凯撒": {
+    traits: [UnitOrigin_S17.DarkStar, UnitClass_S17.Mana, UnitClass_S17.ShieldTank],
+    origins: [UnitOrigin_S17.DarkStar],
+    classes: [UnitClass_S17.Mana, UnitClass_S17.ShieldTank]
+  },
+  "潘森": {
+    traits: [UnitOrigin_S17.Timebreaker, UnitClass_S17.HPTank, UnitClass_S17.APTrait],
+    origins: [UnitOrigin_S17.Timebreaker],
+    classes: [UnitClass_S17.HPTank, UnitClass_S17.APTrait]
+  },
+  // ====================================================================
+  // 3 费棋子 (共 13 个)
+  // ====================================================================
+  "厄运小姐": {
+    traits: [UnitOrigin_S17.MissFortune],
+    origins: [UnitOrigin_S17.MissFortune]
+  },
+  "俄洛伊": {
+    traits: [UnitOrigin_S17.AnimaSquad, UnitClass_S17.ShieldTank, UnitClass_S17.Summon],
+    origins: [UnitOrigin_S17.AnimaSquad],
+    classes: [UnitClass_S17.ShieldTank, UnitClass_S17.Summon]
+  },
+  "阿萝拉": {
+    traits: [UnitOrigin_S17.AnimaSquad, UnitClass_S17.Flex],
+    origins: [UnitOrigin_S17.AnimaSquad],
+    classes: [UnitClass_S17.Flex]
+  },
+  "菲兹": {
+    traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.Assassin],
+    origins: [UnitOrigin_S17.Astronaut],
+    classes: [UnitClass_S17.Assassin]
+  },
+  "茂凯": {
+    traits: [UnitOrigin_S17.DRX, UnitClass_S17.HPTank],
+    origins: [UnitOrigin_S17.DRX],
+    classes: [UnitClass_S17.HPTank]
+  },
+  "卡莎": {
+    traits: [UnitOrigin_S17.DarkStar, UnitClass_S17.Assassin],
+    origins: [UnitOrigin_S17.DarkStar],
+    classes: [UnitClass_S17.Assassin]
+  },
+  "厄加特": {
+    traits: [UnitOrigin_S17.Mecha, UnitClass_S17.HPTank, UnitClass_S17.Melee],
+    origins: [UnitOrigin_S17.Mecha],
+    classes: [UnitClass_S17.HPTank, UnitClass_S17.Melee]
+  },
+  "维克托": {
+    traits: [UnitOrigin_S17.PsyOps, UnitClass_S17.Mana],
+    origins: [UnitOrigin_S17.PsyOps],
+    classes: [UnitClass_S17.Mana]
+  },
+  "莎弥拉": {
+    traits: [UnitOrigin_S17.SpaceGroove, UnitClass_S17.Ranged],
+    origins: [UnitOrigin_S17.SpaceGroove],
+    classes: [UnitClass_S17.Ranged]
+  },
+  "奥恩": {
+    traits: [UnitOrigin_S17.SpaceGroove, UnitClass_S17.ResistTank],
+    origins: [UnitOrigin_S17.SpaceGroove],
+    classes: [UnitClass_S17.ResistTank]
+  },
+  "璐璐": {
+    traits: [UnitOrigin_S17.Stargazer, UnitClass_S17.APTrait],
+    origins: [UnitOrigin_S17.Stargazer],
+    classes: [UnitClass_S17.APTrait]
+  },
+  "黛安娜": {
+    traits: [UnitOrigin_S17.Admin, UnitClass_S17.ASTrait],
+    origins: [UnitOrigin_S17.Admin],
+    classes: [UnitClass_S17.ASTrait]
+  },
+  "拉亚斯特": {
+    traits: [UnitOrigin_S17.Rhaast],
+    origins: [UnitOrigin_S17.Rhaast]
+  },
+  // ====================================================================
+  // 4 费棋子 (共 13 个)
+  // ====================================================================
+  "拉莫斯": {
+    traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.ResistTank],
+    origins: [UnitOrigin_S17.Astronaut],
+    classes: [UnitClass_S17.ResistTank]
+  },
+  "库奇": {
+    traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.Fateweaver],
+    origins: [UnitOrigin_S17.Astronaut],
+    classes: [UnitClass_S17.Fateweaver]
+  },
+  "千珏": {
+    traits: [UnitOrigin_S17.DRX, UnitClass_S17.ASTrait],
+    origins: [UnitOrigin_S17.DRX],
+    classes: [UnitClass_S17.ASTrait]
+  },
+  "卡尔玛": {
+    traits: [UnitOrigin_S17.DarkStar, UnitClass_S17.Flex],
+    origins: [UnitOrigin_S17.DarkStar],
+    classes: [UnitClass_S17.Flex]
+  },
+  "奥瑞利安·索尔": {
+    traits: [UnitOrigin_S17.Mecha, UnitClass_S17.Mana],
+    origins: [UnitOrigin_S17.Mecha],
+    classes: [UnitClass_S17.Mana]
+  },
+  "超级机甲": {
+    traits: [UnitOrigin_S17.Mecha, UnitClass_S17.Flex],
+    origins: [UnitOrigin_S17.Mecha],
+    classes: [UnitClass_S17.Flex]
+  },
+  "易": {
+    traits: [UnitOrigin_S17.PsyOps, UnitClass_S17.Melee],
+    origins: [UnitOrigin_S17.PsyOps],
+    classes: [UnitClass_S17.Melee]
+  },
+  "娜美": {
+    traits: [UnitOrigin_S17.SpaceGroove, UnitClass_S17.APTrait],
+    origins: [UnitOrigin_S17.SpaceGroove],
+    classes: [UnitClass_S17.APTrait]
+  },
+  "努努和威朗普": {
+    traits: [UnitOrigin_S17.Stargazer, UnitClass_S17.ShieldTank],
+    origins: [UnitOrigin_S17.Stargazer],
+    classes: [UnitClass_S17.ShieldTank]
+  },
+  "锐雯": {
+    traits: [UnitOrigin_S17.Timebreaker, UnitClass_S17.Assassin],
+    origins: [UnitOrigin_S17.Timebreaker],
+    classes: [UnitClass_S17.Assassin]
+  },
+  "乐芙兰": {
+    traits: [UnitOrigin_S17.Admin, UnitClass_S17.Summon],
+    origins: [UnitOrigin_S17.Admin],
+    classes: [UnitClass_S17.Summon]
+  },
+  "霞": {
+    traits: [UnitOrigin_S17.Stargazer, UnitClass_S17.Ranged],
+    origins: [UnitOrigin_S17.Stargazer],
+    classes: [UnitClass_S17.Ranged]
+  },
+  "塔姆": {
+    traits: [UnitOrigin_S17.TahmKench, UnitClass_S17.HPTank],
+    origins: [UnitOrigin_S17.TahmKench],
+    classes: [UnitClass_S17.HPTank]
+  },
+  // ====================================================================
+  // 5 费棋子 (共 10 个)
+  // ====================================================================
+  "巴德": {
+    traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.Mana],
+    origins: [UnitOrigin_S17.Astronaut],
+    classes: [UnitClass_S17.Mana]
+  },
+  "菲奥娜": {
+    traits: [UnitOrigin_S17.Fiora, UnitOrigin_S17.AnimaSquad, UnitClass_S17.Melee],
+    origins: [UnitOrigin_S17.Fiora, UnitOrigin_S17.AnimaSquad],
+    classes: [UnitClass_S17.Melee]
+  },
+  "烬": {
+    traits: [UnitOrigin_S17.DarkStar, UnitOrigin_S17.Jhin, UnitClass_S17.Ranged],
+    origins: [UnitOrigin_S17.DarkStar, UnitOrigin_S17.Jhin],
+    classes: [UnitClass_S17.Ranged]
+  },
+  "布里茨": {
+    traits: [UnitOrigin_S17.Blitzcrank, UnitOrigin_S17.SpaceGroove, UnitClass_S17.ShieldTank],
+    origins: [UnitOrigin_S17.Blitzcrank, UnitOrigin_S17.SpaceGroove],
+    classes: [UnitClass_S17.ShieldTank]
+  },
+  "娑娜": {
+    traits: [UnitOrigin_S17.Sona, UnitOrigin_S17.PsyOps, UnitClass_S17.Summon],
+    origins: [UnitOrigin_S17.Sona, UnitOrigin_S17.PsyOps],
+    classes: [UnitClass_S17.Summon]
+  },
+  "薇古丝": {
+    traits: [UnitOrigin_S17.Vex],
+    origins: [UnitOrigin_S17.Vex]
+  },
+  "慎": {
+    traits: [UnitOrigin_S17.Shen, UnitClass_S17.ResistTank],
+    origins: [UnitOrigin_S17.Shen],
+    classes: [UnitClass_S17.ResistTank]
+  },
+  "劫": {
+    traits: [UnitOrigin_S17.Zed],
+    origins: [UnitOrigin_S17.Zed]
+  },
+  "格雷福斯": {
+    traits: [UnitOrigin_S17.Graves],
+    origins: [UnitOrigin_S17.Graves]
+  },
+  "莫甘娜": {
+    traits: [UnitOrigin_S17.Morgana],
+    origins: [UnitOrigin_S17.Morgana]
+  }
+});
 var GameStageType = /* @__PURE__ */ ((GameStageType2) => {
   GameStageType2["EARLY_PVE"] = "EARLY_PVE";
   GameStageType2["PVE"] = "PVE";
