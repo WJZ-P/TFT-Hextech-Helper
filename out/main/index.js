@@ -8696,6 +8696,1311 @@ const _TFT_4_EQUIP_DATA = {
     formula: ""
   }
 };
+const _TFT_17_EQUIP_DATA = {
+  ...specialEquip,
+  // ==========================================
+  // Type 1: 基础散件 (Base Items) (共 10 个)
+  // ==========================================
+  "暴风之剑": {
+    name: "暴风之剑",
+    englishName: "TFT_Item_BFSword",
+    equipId: "92506",
+    formula: ""
+  },
+  "锁子甲": {
+    name: "锁子甲",
+    englishName: "TFT_Item_ChainVest",
+    equipId: "92512",
+    formula: ""
+  },
+  "金锅锅": {
+    name: "金锅锅",
+    englishName: "TFT_Item_FryingPan",
+    equipId: "92531",
+    formula: ""
+  },
+  "巨人腰带": {
+    name: "巨人腰带",
+    englishName: "TFT_Item_GiantsBelt",
+    equipId: "92533",
+    formula: ""
+  },
+  "无用大棒": {
+    name: "无用大棒",
+    englishName: "TFT_Item_NeedlesslyLargeRod",
+    equipId: "92547",
+    formula: ""
+  },
+  "负极斗篷": {
+    name: "负极斗篷",
+    englishName: "TFT_Item_NegatronCloak",
+    equipId: "92548",
+    formula: ""
+  },
+  "反曲之弓": {
+    name: "反曲之弓",
+    englishName: "TFT_Item_RecurveBow",
+    equipId: "92555",
+    formula: ""
+  },
+  "拳套": {
+    name: "拳套",
+    englishName: "TFT_Item_SparringGloves",
+    equipId: "92561",
+    formula: ""
+  },
+  "金铲铲": {
+    name: "金铲铲",
+    englishName: "TFT_Item_Spatula",
+    equipId: "92562",
+    formula: ""
+  },
+  "女神之泪": {
+    name: "女神之泪",
+    englishName: "TFT_Item_TearOfTheGoddess",
+    equipId: "92570",
+    formula: ""
+  },
+  // ==========================================
+  // Type 2: 标准合成装备 + 羁绊纹章合成装 (Standard Completed + Emblem Items) (共 55 个)
+  // ==========================================
+  "挑战者纹章": {
+    name: "挑战者纹章",
+    englishName: "TFT17_Item_ASTraitEmblemItem",
+    equipId: "92120",
+    formula: "92531,92555"
+  },
+  "游侠纹章": {
+    name: "游侠纹章",
+    englishName: "TFT17_Item_AssassinTraitEmblemItem",
+    equipId: "92132",
+    formula: "92531,92561"
+  },
+  "木灵族纹章": {
+    name: "木灵族纹章",
+    englishName: "TFT17_Item_AstronautEmblemItem",
+    equipId: "92133",
+    formula: "92562,92512"
+  },
+  "新星特攻队纹章": {
+    name: "新星特攻队纹章",
+    englishName: "TFT17_Item_DRXEmblemItem",
+    equipId: "92134",
+    formula: "92562,92561"
+  },
+  "暗星纹章": {
+    name: "暗星纹章",
+    englishName: "TFT17_Item_DarkStarEmblemItem",
+    equipId: "92135",
+    formula: "92562,92506"
+  },
+  "法官纹章": {
+    name: "法官纹章",
+    englishName: "TFT17_Item_FavoredEmblemItem",
+    equipId: "92136",
+    formula: "92562,92548"
+  },
+  "旅人纹章": {
+    name: "旅人纹章",
+    englishName: "TFT17_Item_FlexTraitEmblemItem",
+    equipId: "92137",
+    formula: "92531,92547"
+  },
+  "斗士纹章": {
+    name: "斗士纹章",
+    englishName: "TFT17_Item_HPTankEmblemItem",
+    equipId: "92138",
+    formula: "92531,92533"
+  },
+  "狂战士纹章": {
+    name: "狂战士纹章",
+    englishName: "TFT17_Item_MeleeTraitEmblemItem",
+    equipId: "92139",
+    formula: "92531,92506"
+  },
+  "海魔人纹章": {
+    name: "海魔人纹章",
+    englishName: "TFT17_Item_PrimordianEmblemItem",
+    equipId: "92143",
+    formula: "92562,92533"
+  },
+  "未来战士纹章": {
+    name: "未来战士纹章",
+    englishName: "TFT17_Item_PulsefireEmblemItem",
+    equipId: "92157",
+    formula: "92562,92555"
+  },
+  "堡垒卫士纹章": {
+    name: "堡垒卫士纹章",
+    englishName: "TFT17_Item_ResistTankEmblemItem",
+    equipId: "92159",
+    formula: "92531,92512"
+  },
+  "重装战士纹章": {
+    name: "重装战士纹章",
+    englishName: "TFT17_Item_ShieldTankEmblemItem",
+    equipId: "92160",
+    formula: "92531,92548"
+  },
+  "太空律动纹章": {
+    name: "太空律动纹章",
+    englishName: "TFT17_Item_SpaceGrooveEmblemItem",
+    equipId: "92161",
+    formula: "92562,92570"
+  },
+  "观星者纹章": {
+    name: "观星者纹章",
+    englishName: "TFT17_Item_StargazerEmblemItem",
+    equipId: "92162",
+    formula: "92562,92547"
+  },
+  "牧羊人纹章": {
+    name: "牧羊人纹章",
+    englishName: "TFT17_Item_SummonTraitEmblemItem",
+    equipId: "92163",
+    formula: "92531,92570"
+  },
+  "适应性头盔": {
+    name: "适应性头盔",
+    englishName: "TFT_Item_AdaptiveHelm",
+    equipId: "92469",
+    formula: "92548,92570"
+  },
+  "大天使之杖": {
+    name: "大天使之杖",
+    englishName: "TFT_Item_ArchangelsStaff",
+    equipId: "92471",
+    formula: "92547,92570"
+  },
+  "饮血剑": {
+    name: "饮血剑",
+    englishName: "TFT_Item_Bloodthirster",
+    equipId: "92509",
+    formula: "92506,92548"
+  },
+  "蓝霸符": {
+    name: "蓝霸符",
+    englishName: "TFT_Item_BlueBuff",
+    equipId: "92510",
+    formula: "92570,92570"
+  },
+  "棘刺背心": {
+    name: "棘刺背心",
+    englishName: "TFT_Item_BrambleVest",
+    equipId: "92511",
+    formula: "92512,92512"
+  },
+  "冕卫": {
+    name: "冕卫",
+    englishName: "TFT_Item_Crownguard",
+    equipId: "92514",
+    formula: "92547,92512"
+  },
+  "死亡之刃": {
+    name: "死亡之刃",
+    englishName: "TFT_Item_Deathblade",
+    equipId: "92515",
+    formula: "92506,92506"
+  },
+  "巨龙之爪": {
+    name: "巨龙之爪",
+    englishName: "TFT_Item_DragonsClaw",
+    equipId: "92526",
+    formula: "92548,92548"
+  },
+  "金铲铲冠冕": {
+    name: "金铲铲冠冕",
+    englishName: "TFT_Item_ForceOfNature",
+    equipId: "92529",
+    formula: "92562,92562"
+  },
+  "圣盾使的誓约": {
+    name: "圣盾使的誓约",
+    englishName: "TFT_Item_FrozenHeart",
+    equipId: "92530",
+    formula: "92570,92512"
+  },
+  "石像鬼石板甲": {
+    name: "石像鬼石板甲",
+    englishName: "TFT_Item_GargoyleStoneplate",
+    equipId: "92532",
+    formula: "92512,92548"
+  },
+  "夜之锋刃": {
+    name: "夜之锋刃",
+    englishName: "TFT_Item_GuardianAngel",
+    equipId: "92535",
+    formula: "92506,92512"
+  },
+  "鬼索的狂暴之刃": {
+    name: "鬼索的狂暴之刃",
+    englishName: "TFT_Item_GuinsoosRageblade",
+    equipId: "92536",
+    formula: "92555,92547"
+  },
+  "海克斯科技枪刃": {
+    name: "海克斯科技枪刃",
+    englishName: "TFT_Item_HextechGunblade",
+    equipId: "92537",
+    formula: "92506,92547"
+  },
+  "无尽之刃": {
+    name: "无尽之刃",
+    englishName: "TFT_Item_InfinityEdge",
+    equipId: "92538",
+    formula: "92506,92561"
+  },
+  "离子火花": {
+    name: "离子火花",
+    englishName: "TFT_Item_IonicSpark",
+    equipId: "92539",
+    formula: "92547,92548"
+  },
+  "珠光护手": {
+    name: "珠光护手",
+    englishName: "TFT_Item_JeweledGauntlet",
+    equipId: "92540",
+    formula: "92547,92561"
+  },
+  "最后的轻语": {
+    name: "最后的轻语",
+    englishName: "TFT_Item_LastWhisper",
+    equipId: "92541",
+    formula: "92555,92561"
+  },
+  "纳什之牙": {
+    name: "纳什之牙",
+    englishName: "TFT_Item_Leviathan",
+    equipId: "92542",
+    formula: "92555,92533"
+  },
+  "巨人杀手": {
+    name: "巨人杀手",
+    englishName: "TFT_Item_MadredsBloodrazor",
+    equipId: "92544",
+    formula: "92506,92555"
+  },
+  "莫雷洛秘典": {
+    name: "莫雷洛秘典",
+    englishName: "TFT_Item_Morellonomicon",
+    equipId: "92546",
+    formula: "92547,92533"
+  },
+  "坚定之心": {
+    name: "坚定之心",
+    englishName: "TFT_Item_NightHarvester",
+    equipId: "92549",
+    formula: "92512,92561"
+  },
+  "强袭者的链枷": {
+    name: "强袭者的链枷",
+    englishName: "TFT_Item_PowerGauntlet",
+    equipId: "92550",
+    formula: "92533,92561"
+  },
+  "水银": {
+    name: "水银",
+    englishName: "TFT_Item_Quicksilver",
+    equipId: "92551",
+    formula: "92561,92548"
+  },
+  "灭世者的死亡之帽": {
+    name: "灭世者的死亡之帽",
+    englishName: "TFT_Item_RabadonsDeathcap",
+    equipId: "92552",
+    formula: "92547,92547"
+  },
+  "红霸符": {
+    name: "红霸符",
+    englishName: "TFT_Item_RapidFireCannon",
+    equipId: "92554",
+    formula: "92555,92555"
+  },
+  "日炎斗篷": {
+    name: "日炎斗篷",
+    englishName: "TFT_Item_RedBuff",
+    equipId: "92556",
+    formula: "92512,92533"
+  },
+  "振奋盔甲": {
+    name: "振奋盔甲",
+    englishName: "TFT_Item_Redemption",
+    equipId: "92557",
+    formula: "92570,92533"
+  },
+  "海妖之怒": {
+    name: "海妖之怒",
+    englishName: "TFT_Item_RunaansHurricane",
+    equipId: "92558",
+    formula: "92548,92555"
+  },
+  "朔极之矛": {
+    name: "朔极之矛",
+    englishName: "TFT_Item_SpearOfShojin",
+    equipId: "92563",
+    formula: "92506,92570"
+  },
+  "薄暮法袍": {
+    name: "薄暮法袍",
+    englishName: "TFT_Item_SpectralGauntlet",
+    equipId: "92564",
+    formula: "92548,92533"
+  },
+  "虚空之杖": {
+    name: "虚空之杖",
+    englishName: "TFT_Item_StatikkShiv",
+    equipId: "92565",
+    formula: "92555,92570"
+  },
+  "斯特拉克的挑战护手": {
+    name: "斯特拉克的挑战护手",
+    englishName: "TFT_Item_SteraksGage",
+    equipId: "92566",
+    formula: "92506,92533"
+  },
+  "金锅铲冠冕": {
+    name: "金锅铲冠冕",
+    englishName: "TFT_Item_TacticiansRing",
+    equipId: "92568",
+    formula: "92562,92531"
+  },
+  "金锅锅冠冕": {
+    name: "金锅锅冠冕",
+    englishName: "TFT_Item_TacticiansScepter",
+    equipId: "92569",
+    formula: "92531,92531"
+  },
+  "窃贼手套": {
+    name: "窃贼手套",
+    englishName: "TFT_Item_ThiefsGloves",
+    equipId: "92571",
+    formula: "92561,92561"
+  },
+  "泰坦的坚决": {
+    name: "泰坦的坚决",
+    englishName: "TFT_Item_TitansResolve",
+    equipId: "92573",
+    formula: "92512,92555"
+  },
+  "正义之手": {
+    name: "正义之手",
+    englishName: "TFT_Item_UnstableConcoction",
+    equipId: "92574",
+    formula: "92570,92561"
+  },
+  "狂徒铠甲": {
+    name: "狂徒铠甲",
+    englishName: "TFT_Item_WarmogsArmor",
+    equipId: "92577",
+    formula: "92533,92533"
+  },
+  // ==========================================
+  // Type 3: 光明装备 (Radiant Items) (共 37 个)
+  // ==========================================
+  "光明版适应性头盔": {
+    name: "光明版适应性头盔",
+    englishName: "TFT5_Item_AdaptiveHelmRadiant",
+    equipId: "92310",
+    formula: ""
+  },
+  "光明版大天使之杖": {
+    name: "光明版大天使之杖",
+    englishName: "TFT5_Item_ArchangelsStaffRadiant",
+    equipId: "92311",
+    formula: ""
+  },
+  "光明版饮血剑": {
+    name: "光明版饮血剑",
+    englishName: "TFT5_Item_BloodthirsterRadiant",
+    equipId: "92312",
+    formula: ""
+  },
+  "光明版蓝霸符": {
+    name: "光明版蓝霸符",
+    englishName: "TFT5_Item_BlueBuffRadiant",
+    equipId: "92313",
+    formula: ""
+  },
+  "光明版棘刺背心": {
+    name: "光明版棘刺背心",
+    englishName: "TFT5_Item_BrambleVestRadiant",
+    equipId: "92314",
+    formula: ""
+  },
+  "光明版冕卫": {
+    name: "光明版冕卫",
+    englishName: "TFT5_Item_CrownguardRadiant",
+    equipId: "92315",
+    formula: ""
+  },
+  "光明版死亡之刃": {
+    name: "光明版死亡之刃",
+    englishName: "TFT5_Item_DeathbladeRadiant",
+    equipId: "92316",
+    formula: ""
+  },
+  "光明版巨龙之爪": {
+    name: "光明版巨龙之爪",
+    englishName: "TFT5_Item_DragonsClawRadiant",
+    equipId: "92317",
+    formula: ""
+  },
+  "光明版圣盾使的誓约": {
+    name: "光明版圣盾使的誓约",
+    englishName: "TFT5_Item_FrozenHeartRadiant",
+    equipId: "92318",
+    formula: ""
+  },
+  "光明版石像鬼石板甲": {
+    name: "光明版石像鬼石板甲",
+    englishName: "TFT5_Item_GargoyleStoneplateRadiant",
+    equipId: "92319",
+    formula: ""
+  },
+  "光明版巨人杀手": {
+    name: "光明版巨人杀手",
+    englishName: "TFT5_Item_GiantSlayerRadiant",
+    equipId: "92320",
+    formula: ""
+  },
+  "光明版夜之锋刃": {
+    name: "光明版夜之锋刃",
+    englishName: "TFT5_Item_GuardianAngelRadiant",
+    equipId: "92321",
+    formula: ""
+  },
+  "光明版鬼索的狂暴之刃": {
+    name: "光明版鬼索的狂暴之刃",
+    englishName: "TFT5_Item_GuinsoosRagebladeRadiant",
+    equipId: "92322",
+    formula: ""
+  },
+  "光明版正义之手": {
+    name: "光明版正义之手",
+    englishName: "TFT5_Item_HandOfJusticeRadiant",
+    equipId: "92323",
+    formula: ""
+  },
+  "光明版海克斯科技枪刃": {
+    name: "光明版海克斯科技枪刃",
+    englishName: "TFT5_Item_HextechGunbladeRadiant",
+    equipId: "92324",
+    formula: ""
+  },
+  "光明版无尽之刃": {
+    name: "光明版无尽之刃",
+    englishName: "TFT5_Item_InfinityEdgeRadiant",
+    equipId: "92325",
+    formula: ""
+  },
+  "光明版离子火花": {
+    name: "光明版离子火花",
+    englishName: "TFT5_Item_IonicSparkRadiant",
+    equipId: "92326",
+    formula: ""
+  },
+  "光明版珠光护手": {
+    name: "光明版珠光护手",
+    englishName: "TFT5_Item_JeweledGauntletRadiant",
+    equipId: "92327",
+    formula: ""
+  },
+  "光明版最后的轻语": {
+    name: "光明版最后的轻语",
+    englishName: "TFT5_Item_LastWhisperRadiant",
+    equipId: "92328",
+    formula: ""
+  },
+  "光明版纳什之牙": {
+    name: "光明版纳什之牙",
+    englishName: "TFT5_Item_LeviathanRadiant",
+    equipId: "92329",
+    formula: ""
+  },
+  "光明版莫雷洛秘典": {
+    name: "光明版莫雷洛秘典",
+    englishName: "TFT5_Item_MorellonomiconRadiant",
+    equipId: "92330",
+    formula: ""
+  },
+  "光明版坚定之心": {
+    name: "光明版坚定之心",
+    englishName: "TFT5_Item_NightHarvesterRadiant",
+    equipId: "92331",
+    formula: ""
+  },
+  "光明版水银": {
+    name: "光明版水银",
+    englishName: "TFT5_Item_QuicksilverRadiant",
+    equipId: "92332",
+    formula: ""
+  },
+  "光明版灭世者的死亡之帽": {
+    name: "光明版灭世者的死亡之帽",
+    englishName: "TFT5_Item_RabadonsDeathcapRadiant",
+    equipId: "92333",
+    formula: ""
+  },
+  "光明版红霸符": {
+    name: "光明版红霸符",
+    englishName: "TFT5_Item_RapidFirecannonRadiant",
+    equipId: "92334",
+    formula: ""
+  },
+  "光明版振奋盔甲": {
+    name: "光明版振奋盔甲",
+    englishName: "TFT5_Item_RedemptionRadiant",
+    equipId: "92335",
+    formula: ""
+  },
+  "光明版海妖之怒": {
+    name: "光明版海妖之怒",
+    englishName: "TFT5_Item_RunaansHurricaneRadiant",
+    equipId: "92336",
+    formula: ""
+  },
+  "光明版朔极之矛": {
+    name: "光明版朔极之矛",
+    englishName: "TFT5_Item_SpearOfShojinRadiant",
+    equipId: "92337",
+    formula: ""
+  },
+  "光明版薄暮法袍": {
+    name: "光明版薄暮法袍",
+    englishName: "TFT5_Item_SpectralGauntletRadiant",
+    equipId: "92338",
+    formula: ""
+  },
+  "光明版虚空之杖": {
+    name: "光明版虚空之杖",
+    englishName: "TFT5_Item_StatikkShivRadiant",
+    equipId: "92339",
+    formula: ""
+  },
+  "光明版斯特拉克的挑战护手": {
+    name: "光明版斯特拉克的挑战护手",
+    englishName: "TFT5_Item_SteraksGageRadiant",
+    equipId: "92340",
+    formula: ""
+  },
+  "光明版日炎斗篷": {
+    name: "光明版日炎斗篷",
+    englishName: "TFT5_Item_SunfireCapeRadiant",
+    equipId: "92341",
+    formula: ""
+  },
+  "光明版窃贼手套": {
+    name: "光明版窃贼手套",
+    englishName: "TFT5_Item_ThiefsGlovesRadiant",
+    equipId: "92342",
+    formula: ""
+  },
+  "光明版泰坦的坚决": {
+    name: "光明版泰坦的坚决",
+    englishName: "TFT5_Item_TitansResolveRadiant",
+    equipId: "92343",
+    formula: ""
+  },
+  "光明版强袭者的链枷": {
+    name: "光明版强袭者的链枷",
+    englishName: "TFT5_Item_TrapClawRadiant",
+    equipId: "92344",
+    formula: ""
+  },
+  "光明版狂徒铠甲": {
+    name: "光明版狂徒铠甲",
+    englishName: "TFT5_Item_WarmogsArmorRadiant",
+    equipId: "92345",
+    formula: ""
+  },
+  "兹若特传送门": {
+    name: "兹若特传送门",
+    englishName: "TFT5_Item_ZzRotPortalRadiant",
+    equipId: "92346",
+    formula: ""
+  },
+  // ==========================================
+  // Type 4: 羁绊/特殊装备 (幻灵战队进化装 / 灵能特工改装件 / 神器等) (共 44 个)
+  // ==========================================
+  "破损原型": {
+    name: "破损原型",
+    englishName: "TFT17_AnimaSquadItem_Tier0_ClunkyPrototype",
+    equipId: "91924",
+    formula: ""
+  },
+  "泄露原型": {
+    name: "泄露原型",
+    englishName: "TFT17_AnimaSquadItem_Tier0_LeakyPrototype",
+    equipId: "91925",
+    formula: ""
+  },
+  "闪光原型": {
+    name: "闪光原型",
+    englishName: "TFT17_AnimaSquadItem_Tier0_SparkingPrototype",
+    equipId: "91926",
+    formula: ""
+  },
+  "附灵飞弹": {
+    name: "附灵飞弹",
+    englishName: "TFT17_AnimaSquadItem_Tier1_GuidingHex",
+    equipId: "91927",
+    formula: ""
+  },
+  "火箭狂潮": {
+    name: "火箭狂潮",
+    englishName: "TFT17_AnimaSquadItem_Tier1_RocketSwarm",
+    equipId: "91928",
+    formula: ""
+  },
+  "无情砍削": {
+    name: "无情砍削",
+    englishName: "TFT17_AnimaSquadItem_Tier1_SavageSlicer",
+    equipId: "91929",
+    formula: ""
+  },
+  "触手重击": {
+    name: "触手重击",
+    englishName: "TFT17_AnimaSquadItem_Tier1_TentacleSlam",
+    equipId: "91930",
+    formula: ""
+  },
+  "歼灭者": {
+    name: "歼灭者",
+    englishName: "TFT17_AnimaSquadItem_Tier2_Annihilator",
+    equipId: "91931",
+    formula: ""
+  },
+  "战兔十字弩": {
+    name: "战兔十字弩",
+    englishName: "TFT17_AnimaSquadItem_Tier2_BattleBunnyCrossbow",
+    equipId: "91932",
+    formula: ""
+  },
+  "旋风切割器": {
+    name: "旋风切割器",
+    englishName: "TFT17_AnimaSquadItem_Tier2_CyclonicSlicers",
+    equipId: "91933",
+    formula: ""
+  },
+  "回响蝠刃": {
+    name: "回响蝠刃",
+    englishName: "TFT17_AnimaSquadItem_Tier2_EchoingBatblades",
+    equipId: "91934",
+    formula: ""
+  },
+  "冰爆护甲": {
+    name: "冰爆护甲",
+    englishName: "TFT17_AnimaSquadItem_Tier2_IceblastArmor",
+    equipId: "91935",
+    formula: ""
+  },
+  "雌狮之怨": {
+    name: "雌狮之怨",
+    englishName: "TFT17_AnimaSquadItem_Tier2_LionessLament",
+    equipId: "91936",
+    formula: ""
+  },
+  "耀光力场": {
+    name: "耀光力场",
+    englishName: "TFT17_AnimaSquadItem_Tier2_RadiantField",
+    equipId: "91937",
+    formula: ""
+  },
+  "炽烈短弓": {
+    name: "炽烈短弓",
+    englishName: "TFT17_AnimaSquadItem_Tier2_SearingShortbow",
+    equipId: "91938",
+    formula: ""
+  },
+  "UwU魔爆炮": {
+    name: "UwU魔爆炮",
+    englishName: "TFT17_AnimaSquadItem_Tier2_UwuBlaster",
+    equipId: "91939",
+    formula: ""
+  },
+  "幻灵启示录": {
+    name: "幻灵启示录",
+    englishName: "TFT17_AnimaSquadItem_Tier3_Annihilator",
+    equipId: "91940",
+    formula: ""
+  },
+  "战兔至尊弩炮": {
+    name: "战兔至尊弩炮",
+    englishName: "TFT17_AnimaSquadItem_Tier3_BattleBunnyCrossbow",
+    equipId: "91941",
+    formula: ""
+  },
+  "不息气旋": {
+    name: "不息气旋",
+    englishName: "TFT17_AnimaSquadItem_Tier3_CyclonicSlicers",
+    equipId: "91942",
+    formula: ""
+  },
+  "薇恩的炫彩战刃": {
+    name: "薇恩的炫彩战刃",
+    englishName: "TFT17_AnimaSquadItem_Tier3_EchoingBatblades",
+    equipId: "91943",
+    formula: ""
+  },
+  "深度冻结": {
+    name: "深度冻结",
+    englishName: "TFT17_AnimaSquadItem_Tier3_IceblastArmor",
+    equipId: "91944",
+    formula: ""
+  },
+  "猛狮之殇": {
+    name: "猛狮之殇",
+    englishName: "TFT17_AnimaSquadItem_Tier3_LionessLament",
+    equipId: "91945",
+    formula: ""
+  },
+  "日蚀之刻": {
+    name: "日蚀之刻",
+    englishName: "TFT17_AnimaSquadItem_Tier3_RadiantField",
+    equipId: "91946",
+    formula: ""
+  },
+  "进化余烬射击": {
+    name: "进化余烬射击",
+    englishName: "TFT17_AnimaSquadItem_Tier3_SearingShortbow",
+    equipId: "91947",
+    formula: ""
+  },
+  "OwO魔爆炮": {
+    name: "OwO魔爆炮",
+    englishName: "TFT17_AnimaSquadItem_Tier3_UwuBlaster",
+    equipId: "91948",
+    formula: ""
+  },
+  "幻灵合体至尊炮": {
+    name: "幻灵合体至尊炮",
+    englishName: "TFT17_AnimaSquadItem_Tier4_Omniweapon",
+    equipId: "91949",
+    formula: ""
+  },
+  "异常突变": {
+    name: "异常突变",
+    englishName: "TFT17_EkkoOffering_AnomalyItem",
+    equipId: "92046",
+    formula: ""
+  },
+  "阿狸的光环": {
+    name: "阿狸的光环",
+    englishName: "TFT17_Item_Artifact_AhriArtifact",
+    equipId: "92122",
+    formula: ""
+  },
+  "艾克的耐心": {
+    name: "艾克的耐心",
+    englishName: "TFT17_Item_Artifact_EkkoArtifact",
+    equipId: "92123",
+    formula: ""
+  },
+  "伊芙琳的本能": {
+    name: "伊芙琳的本能",
+    englishName: "TFT17_Item_Artifact_EvelynnArtifact",
+    equipId: "92124",
+    formula: ""
+  },
+  "凯尔的崇拜": {
+    name: "凯尔的崇拜",
+    englishName: "TFT17_Item_Artifact_KayleArtifact",
+    equipId: "92125",
+    formula: ""
+  },
+  "凯尔的光明崇拜": {
+    name: "凯尔的光明崇拜",
+    englishName: "TFT17_Item_Artifact_KayleArtifact_Radiant",
+    equipId: "92126",
+    formula: ""
+  },
+  "索拉卡的奇迹": {
+    name: "索拉卡的奇迹",
+    englishName: "TFT17_Item_Artifact_SorakaArtifact",
+    equipId: "92127",
+    formula: ""
+  },
+  "锤石的灯笼": {
+    name: "锤石的灯笼",
+    englishName: "TFT17_Item_Artifact_ThreshLantern",
+    equipId: "92128",
+    formula: ""
+  },
+  "韦鲁斯的执念": {
+    name: "韦鲁斯的执念",
+    englishName: "TFT17_Item_Artifact_VarusArtifact",
+    equipId: "92129",
+    formula: ""
+  },
+  "亚索的剑艺": {
+    name: "亚索的剑艺",
+    englishName: "TFT17_Item_Artifact_YasuoArtifact",
+    equipId: "92130",
+    formula: ""
+  },
+  "基克的阴森先驱": {
+    name: "基克的阴森先驱",
+    englishName: "TFT17_Item_Artifact_ZekesHeraldShadow",
+    equipId: "92131",
+    formula: ""
+  },
+  "恶意软件矩阵": {
+    name: "恶意软件矩阵",
+    englishName: "TFT17_Item_PsyOps_ChemicalCapacitorMod",
+    equipId: "92145",
+    formula: ""
+  },
+  "无人机上行链路": {
+    name: "无人机上行链路",
+    englishName: "TFT17_Item_PsyOps_DroneMod",
+    equipId: "92147",
+    formula: ""
+  },
+  "生物质维护器": {
+    name: "生物质维护器",
+    englishName: "TFT17_Item_PsyOps_GrenadeMod",
+    equipId: "92149",
+    formula: ""
+  },
+  "半导体装置": {
+    name: "半导体装置",
+    englishName: "TFT17_Item_PsyOps_SemiconductorMod",
+    equipId: "92151",
+    formula: ""
+  },
+  "共感植入": {
+    name: "共感植入",
+    englishName: "TFT17_Item_PsyOps_SympatheticImplantMod",
+    equipId: "92153",
+    formula: ""
+  },
+  "锁敌光学设备": {
+    name: "锁敌光学设备",
+    englishName: "TFT17_Item_PsyOps_TargetlockMod",
+    equipId: "92155",
+    formula: ""
+  },
+  "德玛西亚王冠": {
+    name: "德玛西亚王冠",
+    englishName: "TFT9_Item_CrownOfDemacia",
+    equipId: "92358",
+    formula: ""
+  },
+  // ==========================================
+  // Type 5: 独立纹章 (Emblems) - 部分特殊羁绊纹章 (共 3 个)
+  // ==========================================
+  "幻灵战队纹章": {
+    name: "幻灵战队纹章",
+    englishName: "TFT17_Item_AnimaSquadEmblemItem",
+    equipId: "92121",
+    formula: ""
+  },
+  "灵能特工纹章": {
+    name: "灵能特工纹章",
+    englishName: "TFT17_Item_PsyOpsEmblemItem",
+    equipId: "92144",
+    formula: ""
+  },
+  "狙神纹章": {
+    name: "狙神纹章",
+    englishName: "TFT17_Item_RangedTraitEmblemItem",
+    equipId: "92158",
+    formula: ""
+  },
+  // ==========================================
+  // Type 6: 奥恩神器 (Ornn Artifacts) (共 48 个)
+  // ==========================================
+  "3费：奥恩": {
+    name: "3费：奥恩",
+    englishName: "TFT17_ChampionItem_Chosen_Ornn",
+    equipId: "92006",
+    formula: ""
+  },
+  "死亡之蔑": {
+    name: "死亡之蔑",
+    englishName: "TFT4_Item_OrnnDeathsDefiance",
+    equipId: "92302",
+    formula: ""
+  },
+  "永恒凛冬": {
+    name: "永恒凛冬",
+    englishName: "TFT4_Item_OrnnEternalWinter",
+    equipId: "92303",
+    formula: ""
+  },
+  "三相之力": {
+    name: "三相之力",
+    englishName: "TFT4_Item_OrnnInfinityForce",
+    equipId: "92304",
+    formula: ""
+  },
+  "魔蕴": {
+    name: "魔蕴",
+    englishName: "TFT4_Item_OrnnMuramana",
+    equipId: "92305",
+    formula: ""
+  },
+  "黑曜石切割者": {
+    name: "黑曜石切割者",
+    englishName: "TFT4_Item_OrnnObsidianCleaver",
+    equipId: "92306",
+    formula: ""
+  },
+  "兰顿之兆": {
+    name: "兰顿之兆",
+    englishName: "TFT4_Item_OrnnRanduinsSanctum",
+    equipId: "92307",
+    formula: ""
+  },
+  "金币收集者": {
+    name: "金币收集者",
+    englishName: "TFT4_Item_OrnnTheCollector",
+    equipId: "92308",
+    formula: ""
+  },
+  "中娅悖论": {
+    name: "中娅悖论",
+    englishName: "TFT4_Item_OrnnZhonyasParadox",
+    equipId: "92309",
+    formula: ""
+  },
+  "冥火之拥": {
+    name: "冥火之拥",
+    englishName: "TFT9_Item_OrnnDeathfireGrasp",
+    equipId: "92359",
+    formula: ""
+  },
+  "狙击手的专注": {
+    name: "狙击手的专注",
+    englishName: "TFT9_Item_OrnnHorizonFocus",
+    equipId: "92360",
+    formula: ""
+  },
+  "碎舰者": {
+    name: "碎舰者",
+    englishName: "TFT9_Item_OrnnHullbreaker",
+    equipId: "92361",
+    formula: ""
+  },
+  "铁匠手套": {
+    name: "铁匠手套",
+    englishName: "TFT9_Item_OrnnPrototypeForge",
+    equipId: "92362",
+    formula: ""
+  },
+  "诡术师之镜": {
+    name: "诡术师之镜",
+    englishName: "TFT9_Item_OrnnTrickstersGlass",
+    equipId: "92363",
+    formula: ""
+  },
+  "黎明圣盾": {
+    name: "黎明圣盾",
+    englishName: "TFT_Item_Artifact_AegisOfDawn",
+    equipId: "92472",
+    formula: ""
+  },
+  "黄昏圣盾": {
+    name: "黄昏圣盾",
+    englishName: "TFT_Item_Artifact_AegisOfDusk",
+    equipId: "92473",
+    formula: ""
+  },
+  "枯萎珠宝": {
+    name: "枯萎珠宝",
+    englishName: "TFT_Item_Artifact_BlightingJewel",
+    equipId: "92474",
+    formula: ""
+  },
+  "帽子饮品": {
+    name: "帽子饮品",
+    englishName: "TFT_Item_Artifact_CappaJuice",
+    equipId: "92475",
+    formula: ""
+  },
+  "黑暗吸血鬼节杖": {
+    name: "黑暗吸血鬼节杖",
+    englishName: "TFT_Item_Artifact_CursedVampiricScepter",
+    equipId: "92476",
+    formula: ""
+  },
+  "黎明核心": {
+    name: "黎明核心",
+    englishName: "TFT_Item_Artifact_Dawncore",
+    equipId: "92477",
+    formula: ""
+  },
+  "永恒契约": {
+    name: "永恒契约",
+    englishName: "TFT_Item_Artifact_EternalPact",
+    equipId: "92478",
+    formula: ""
+  },
+  "鱼骨头": {
+    name: "鱼骨头",
+    englishName: "TFT_Item_Artifact_Fishbones",
+    equipId: "92479",
+    formula: ""
+  },
+  "禁忌雕像": {
+    name: "禁忌雕像",
+    englishName: "TFT_Item_Artifact_ForbiddenIdol",
+    equipId: "92480",
+    formula: ""
+  },
+  "恶火小斧": {
+    name: "恶火小斧",
+    englishName: "TFT_Item_Artifact_HellfireHatchet",
+    equipId: "92481",
+    formula: ""
+  },
+  "视界专注": {
+    name: "视界专注",
+    englishName: "TFT_Item_Artifact_HorizonFocus",
+    equipId: "92482",
+    formula: ""
+  },
+  "激发之匣": {
+    name: "激发之匣",
+    englishName: "TFT_Item_Artifact_InnervatingLocket",
+    equipId: "92483",
+    formula: ""
+  },
+  "次级镜像人格面具": {
+    name: "次级镜像人格面具",
+    englishName: "TFT_Item_Artifact_LesserMirroredPersona",
+    equipId: "92484",
+    formula: ""
+  },
+  "巫妖之祸": {
+    name: "巫妖之祸",
+    englishName: "TFT_Item_Artifact_LichBane",
+    equipId: "92485",
+    formula: ""
+  },
+  "光盾徽章": {
+    name: "光盾徽章",
+    englishName: "TFT_Item_Artifact_LightshieldCrest",
+    equipId: "92486",
+    formula: ""
+  },
+  "卢登的激荡": {
+    name: "卢登的激荡",
+    englishName: "TFT_Item_Artifact_LudensTempest",
+    equipId: "92487",
+    formula: ""
+  },
+  "修复型回响": {
+    name: "修复型回响",
+    englishName: "TFT_Item_Artifact_MendingEchoes",
+    equipId: "92488",
+    formula: ""
+  },
+  "镜像人格面具": {
+    name: "镜像人格面具",
+    englishName: "TFT_Item_Artifact_MirroredPersona",
+    equipId: "92489",
+    formula: ""
+  },
+  "连指手套": {
+    name: "连指手套",
+    englishName: "TFT_Item_Artifact_Mittens",
+    equipId: "92490",
+    formula: ""
+  },
+  "烁刃": {
+    name: "烁刃",
+    englishName: "TFT_Item_Artifact_NavoriFlickerblades",
+    equipId: "92491",
+    formula: ""
+  },
+  "暗行者之爪": {
+    name: "暗行者之爪",
+    englishName: "TFT_Item_Artifact_ProwlersClaw",
+    equipId: "92492",
+    formula: ""
+  },
+  "疾射火炮": {
+    name: "疾射火炮",
+    englishName: "TFT_Item_Artifact_RapidFirecannon",
+    equipId: "92493",
+    formula: ""
+  },
+  "探索者的护臂": {
+    name: "探索者的护臂",
+    englishName: "TFT_Item_Artifact_SeekersArmguard",
+    equipId: "92494",
+    formula: ""
+  },
+  "暗影木偶": {
+    name: "暗影木偶",
+    englishName: "TFT_Item_Artifact_ShadowPuppet",
+    equipId: "92495",
+    formula: ""
+  },
+  "密银黎明": {
+    name: "密银黎明",
+    englishName: "TFT_Item_Artifact_SilvermereDawn",
+    equipId: "92496",
+    formula: ""
+  },
+  "幽魂弯刀": {
+    name: "幽魂弯刀",
+    englishName: "TFT_Item_Artifact_SpectralCutlass",
+    equipId: "92497",
+    formula: ""
+  },
+  "斯塔缇克电刃": {
+    name: "斯塔缇克电刃",
+    englishName: "TFT_Item_Artifact_StatikkShiv",
+    equipId: "92498",
+    formula: ""
+  },
+  "迷离风衣": {
+    name: "迷离风衣",
+    englishName: "TFT_Item_Artifact_SuspiciousTrenchCoat",
+    equipId: "92499",
+    formula: ""
+  },
+  "飞升护符": {
+    name: "飞升护符",
+    englishName: "TFT_Item_Artifact_TalismanOfAscension",
+    equipId: "92500",
+    formula: ""
+  },
+  "顽强不屈": {
+    name: "顽强不屈",
+    englishName: "TFT_Item_Artifact_TheIndomitable",
+    equipId: "92501",
+    formula: ""
+  },
+  "巨型九头蛇": {
+    name: "巨型九头蛇",
+    englishName: "TFT_Item_Artifact_TitanicHydra",
+    equipId: "92502",
+    formula: ""
+  },
+  "无终恨意": {
+    name: "无终恨意",
+    englishName: "TFT_Item_Artifact_UnendingDespair",
+    equipId: "92503",
+    formula: ""
+  },
+  "虚空护手": {
+    name: "虚空护手",
+    englishName: "TFT_Item_Artifact_VoidGauntlet",
+    equipId: "92504",
+    formula: ""
+  },
+  "智慧末刃": {
+    name: "智慧末刃",
+    englishName: "TFT_Item_Artifact_WitsEnd",
+    equipId: "92505",
+    formula: ""
+  },
+  // ==========================================
+  // Type 7: 金鳞龙装备 (Shimmerscale Items) (共 5 个)
+  // ==========================================
+  "坚定投资器": {
+    name: "坚定投资器",
+    englishName: "TFT7_Item_ShimmerscaleDeterminedInvestor",
+    equipId: "92348",
+    formula: ""
+  },
+  "钻石之手": {
+    name: "钻石之手",
+    englishName: "TFT7_Item_ShimmerscaleDiamondHands",
+    equipId: "92349",
+    formula: ""
+  },
+  "投机者之刃": {
+    name: "投机者之刃",
+    englishName: "TFT7_Item_ShimmerscaleGamblersBlade",
+    equipId: "92350",
+    formula: ""
+  },
+  "无用大宝石": {
+    name: "无用大宝石",
+    englishName: "TFT7_Item_ShimmerscaleHeartOfGold",
+    equipId: "92352",
+    formula: ""
+  },
+  "大亨之铠": {
+    name: "大亨之铠",
+    englishName: "TFT7_Item_ShimmerscaleMogulsMail",
+    equipId: "92354",
+    formula: ""
+  },
+  // ==========================================
+  // Type support: 辅助装 (Support Items) - 战斗开始时给友军提供增益 (共 11 个)
+  // ==========================================
+  "军团圣盾": {
+    name: "军团圣盾",
+    englishName: "TFT_Item_AegisOfTheLegion",
+    equipId: "92470",
+    formula: ""
+  },
+  "女妖面纱": {
+    name: "女妖面纱",
+    englishName: "TFT_Item_BansheesVeil",
+    equipId: "92507",
+    formula: ""
+  },
+  "能量圣杯": {
+    name: "能量圣杯",
+    englishName: "TFT_Item_Chalice",
+    equipId: "92513",
+    formula: ""
+  },
+  "永恒烈焰": {
+    name: "永恒烈焰",
+    englishName: "TFT_Item_EternalFlame",
+    equipId: "92528",
+    formula: ""
+  },
+  "钢铁烈阳之匣": {
+    name: "钢铁烈阳之匣",
+    englishName: "TFT_Item_LocketOfTheIronSolari",
+    equipId: "92543",
+    formula: ""
+  },
+  "月石再生器": {
+    name: "月石再生器",
+    englishName: "TFT_Item_Moonstone",
+    equipId: "92545",
+    formula: ""
+  },
+  "殉道美德": {
+    name: "殉道美德",
+    englishName: "TFT_Item_RadiantVirtue",
+    equipId: "92553",
+    formula: ""
+  },
+  "静止法衣": {
+    name: "静止法衣",
+    englishName: "TFT_Item_Shroud",
+    equipId: "92560",
+    formula: ""
+  },
+  "骑士之誓": {
+    name: "骑士之誓",
+    englishName: "TFT_Item_SupportKnightsVow",
+    equipId: "92567",
+    formula: ""
+  },
+  "基克的先驱": {
+    name: "基克的先驱",
+    englishName: "TFT_Item_ZekesHerald",
+    equipId: "92578",
+    formula: ""
+  },
+  "灵风": {
+    name: "灵风",
+    englishName: "TFT_Item_Zephyr",
+    equipId: "92579",
+    formula: ""
+  }
+};
 var UnitOrigin_S16 = /* @__PURE__ */ ((UnitOrigin_S162) => {
   UnitOrigin_S162["Bilgewater"] = "比尔吉沃特";
   UnitOrigin_S162["Darkin"] = "暗裔";
@@ -8753,61 +10058,6 @@ var UnitClass_S16 = /* @__PURE__ */ ((UnitClass_S162) => {
   UnitClass_S162["Warden"] = "神盾使";
   return UnitClass_S162;
 })(UnitClass_S16 || {});
-const TFT_16_TRAIT_DATA = {
-  // === Origins (origins) ===
-  "铸星龙王": { id: "10216", name: "铸星龙王", type: "origins", levels: [1] },
-  "纳什男爵": { id: "10217", name: "纳什男爵", type: "origins", levels: [1] },
-  "比尔吉沃特": { id: "10218", name: "比尔吉沃特", type: "origins", levels: [3, 5, 7, 10] },
-  "山隐之焰": { id: "10219", name: "山隐之焰", type: "origins", levels: [1] },
-  "星界游神": { id: "10221", name: "星界游神", type: "origins", levels: [1] },
-  "时光守护者": { id: "10222", name: "时光守护者", type: "origins", levels: [1] },
-  "黑暗之女": { id: "10223", name: "黑暗之女", type: "origins", levels: [1] },
-  "暗裔": { id: "10224", name: "暗裔", type: "origins", levels: [1, 2, 3] },
-  "德玛西亚": { id: "10226", name: "德玛西亚", type: "origins", levels: [3, 5, 7, 11] },
-  "沙漠皇帝": { id: "10227", name: "沙漠皇帝", type: "origins", levels: [1] },
-  "以绪塔尔": { id: "10228", name: "以绪塔尔", type: "origins", levels: [3, 5, 7] },
-  "弗雷尔卓德": { id: "10229", name: "弗雷尔卓德", type: "origins", levels: [3, 5, 7] },
-  "河流之王": { id: "10230", name: "河流之王", type: "origins", levels: [1] },
-  "远古恐惧": { id: "10232", name: "远古恐惧", type: "origins", levels: [1] },
-  "正义巨像": { id: "10233", name: "正义巨像", type: "origins", levels: [1] },
-  "海克斯机甲": { id: "10234", name: "海克斯机甲", type: "origins", levels: [1] },
-  "狂野女猎手": { id: "10235", name: "狂野女猎手", type: "origins", levels: [1] },
-  "艾欧尼亚": { id: "10237", name: "艾欧尼亚", type: "origins", levels: [3, 5, 7] },
-  "虚空之女": { id: "10239", name: "虚空之女", type: "origins", levels: [1] },
-  "永猎双子": { id: "10240", name: "永猎双子", type: "origins", levels: [1] },
-  "诺克萨斯": { id: "10243", name: "诺克萨斯", type: "origins", levels: [3, 5, 7, 10] },
-  "皮尔特沃夫": { id: "10244", name: "皮尔特沃夫", type: "origins", levels: [2, 4, 6] },
-  "符文法师": { id: "10246", name: "符文法师", type: "origins", levels: [1] },
-  "暗影岛": { id: "10247", name: "暗影岛", type: "origins", levels: [2, 3, 4, 5] },
-  "恕瑞玛": { id: "10248", name: "恕瑞玛", type: "origins", levels: [2, 3, 4] },
-  "龙血武姬": { id: "10249", name: "龙血武姬", type: "origins", levels: [1] },
-  "系魂圣枪": { id: "10252", name: "系魂圣枪", type: "origins", levels: [1] },
-  "解脱者": { id: "10253", name: "解脱者", type: "origins", levels: [1] },
-  "巨神峰": { id: "10254", name: "巨神峰", type: "origins", levels: [1, 2, 3, 4, 5, 6] },
-  "巨龙卫士": { id: "10255", name: "巨龙卫士", type: "origins", levels: [2] },
-  "光明哨兵": { id: "10256", name: "光明哨兵", type: "origins", levels: [2] },
-  "绝命毒师": { id: "10257", name: "绝命毒师", type: "origins", levels: [2] },
-  "腕豪": { id: "10258", name: "腕豪", type: "origins", levels: [1] },
-  "虚空": { id: "10260", name: "虚空", type: "origins", levels: [2, 4, 6, 9] },
-  "远古巫灵": { id: "10262", name: "远古巫灵", type: "origins", levels: [1] },
-  "约德尔人": { id: "10263", name: "约德尔人", type: "origins", levels: [2, 4, 6, 8] },
-  "不落魔锋": { id: "10264", name: "不落魔锋", type: "origins", levels: [1] },
-  "祖安": { id: "10265", name: "祖安", type: "origins", levels: [3, 5, 7] },
-  "与狼共舞": { id: "10266", name: "与狼共舞", type: "origins", levels: [2] },
-  // === Classes (classes) ===
-  "斗士": { id: "10220", name: "斗士", type: "classes", levels: [2, 4, 6] },
-  "护卫": { id: "10225", name: "护卫", type: "classes", levels: [2, 4, 6] },
-  "枪手": { id: "10231", name: "枪手", type: "classes", levels: [2, 4] },
-  "神谕者": { id: "10236", name: "神谕者", type: "classes", levels: [2, 4] },
-  "主宰": { id: "10238", name: "主宰", type: "classes", levels: [2, 4, 6] },
-  "狙神": { id: "10241", name: "狙神", type: "classes", levels: [2, 3, 4, 5] },
-  "耀光使": { id: "10242", name: "耀光使", type: "classes", levels: [2, 4] },
-  "迅击战士": { id: "10245", name: "迅击战士", type: "classes", levels: [2, 3, 4, 5] },
-  "裁决战士": { id: "10250", name: "裁决战士", type: "classes", levels: [2, 4, 6] },
-  "法师": { id: "10251", name: "法师", type: "classes", levels: [2, 4, 6] },
-  "征服者": { id: "10259", name: "征服者", type: "classes", levels: [2, 3, 4, 5] },
-  "神盾使": { id: "10261", name: "神盾使", type: "classes", levels: [2, 3, 4, 5] }
-};
 var UnitOrigin_S4_5 = /* @__PURE__ */ ((UnitOrigin_S4_52) => {
   UnitOrigin_S4_52["Cultist"] = "腥红之月";
   UnitOrigin_S4_52["Divine"] = "天神";
@@ -8920,6 +10170,55 @@ var UnitClass_S17 = /* @__PURE__ */ ((UnitClass_S172) => {
   UnitClass_S172["Summon"] = "牧羊人";
   return UnitClass_S172;
 })(UnitClass_S17 || {});
+const TFT_17_TRAIT_DATA = {
+  // === Origins (origins) ===
+  // 主力大型羁绊
+  "法官": { id: "10296", name: "法官", type: "origins", levels: [2, 3] },
+  "幻灵战队": { id: "10299", name: "幻灵战队", type: "origins", levels: [3, 6] },
+  "木灵族": { id: "10301", name: "木灵族", type: "origins", levels: [3, 5, 7, 10] },
+  "新星特攻队": { id: "10303", name: "新星特攻队", type: "origins", levels: [2, 5] },
+  "暗星": { id: "10304", name: "暗星", type: "origins", levels: [2, 4, 6, 9] },
+  "霸天机甲": { id: "10312", name: "霸天机甲", type: "origins", levels: [3, 4, 6] },
+  "海魔人": { id: "10316", name: "海魔人", type: "origins", levels: [2, 3] },
+  "灵能特工": { id: "10317", name: "灵能特工", type: "origins", levels: [2, 4] },
+  "太空律动": { id: "10324", name: "太空律动", type: "origins", levels: [1, 3, 5, 7, 10] },
+  "未来战士": { id: "10335", name: "未来战士", type: "origins", levels: [2, 3, 4] },
+  // 观星者系（主羁绊 + 7 个星座分支）
+  "观星者": { id: "10325", name: "观星者", type: "origins", levels: [3, 5, 7] },
+  "观星者:泉水": { id: "10326", name: "观星者:泉水", type: "origins", levels: [3, 5] },
+  "观星者:女猎手": { id: "10327", name: "观星者:女猎手", type: "origins", levels: [3, 5, 7] },
+  "观星者:勋章": { id: "10328", name: "观星者:勋章", type: "origins", levels: [3] },
+  "观星者:秀山": { id: "10329", name: "观星者:秀山", type: "origins", levels: [3, 4, 5, 6, 7, 8] },
+  "观星者:蝰蛇": { id: "10330", name: "观星者:蝰蛇", type: "origins", levels: [3, 5, 7] },
+  "观星者:圣坛": { id: "10331", name: "观星者:圣坛", type: "origins", levels: [3] },
+  "观星者:野猪": { id: "10332", name: "观星者:野猪", type: "origins", levels: [3, 4, 5, 6] },
+  // 5费独有羁绊（全部只有 1 级激活）
+  "汪星机器人": { id: "10302", name: "汪星机器人", type: "origins", levels: [1] },
+  "斗神": { id: "10306", name: "斗神", type: "origins", levels: [1] },
+  "军工1号": { id: "10308", name: "军工1号", type: "origins", levels: [1] },
+  "灭星尊": { id: "10310", name: "灭星尊", type: "origins", levels: [1] },
+  "武装战姬": { id: "10314", name: "武装战姬", type: "origins", levels: [1] },
+  "黑暗魔女": { id: "10315", name: "黑暗魔女", type: "origins", levels: [1] },
+  "救世主": { id: "10320", name: "救世主", type: "origins", levels: [1] },
+  "暮光铁壁": { id: "10321", name: "暮光铁壁", type: "origins", levels: [1] },
+  "最高指挥官": { id: "10323", name: "最高指挥官", type: "origins", levels: [1] },
+  "命运祭司": { id: "10334", name: "命运祭司", type: "origins", levels: [1] },
+  "末日使者": { id: "10336", name: "末日使者", type: "origins", levels: [1] },
+  "天煞": { id: "10337", name: "天煞", type: "origins", levels: [1] },
+  // === Classes (classes) ===
+  "魔术师": { id: "10297", name: "魔术师", type: "classes", levels: [2, 4] },
+  "挑战者": { id: "10298", name: "挑战者", type: "classes", levels: [2, 3, 4, 5] },
+  "游侠": { id: "10300", name: "游侠", type: "classes", levels: [2, 3, 4, 5] },
+  "织命人": { id: "10305", name: "织命人", type: "classes", levels: [2, 4] },
+  "旅人": { id: "10307", name: "旅人", type: "classes", levels: [2, 3, 4, 5, 6] },
+  "斗士": { id: "10309", name: "斗士", type: "classes", levels: [2, 4, 6] },
+  "神谕": { id: "10311", name: "神谕", type: "classes", levels: [2, 3, 4, 5] },
+  "狂战士": { id: "10313", name: "狂战士", type: "classes", levels: [2, 4, 6] },
+  "狙神": { id: "10318", name: "狙神", type: "classes", levels: [2, 3, 4] },
+  "堡垒卫士": { id: "10319", name: "堡垒卫士", type: "classes", levels: [2, 4, 6] },
+  "重装战士": { id: "10322", name: "重装战士", type: "classes", levels: [2, 4, 6] },
+  "牧羊人": { id: "10333", name: "牧羊人", type: "classes", levels: [3, 5, 7] }
+};
 const TFT_SPECIAL_CHESS = {
   //  特殊的棋子，比如基础装备锻造器，这种不属于英雄
   "基础装备锻造器": {
@@ -10407,332 +11706,678 @@ const _TFT_4_CHESS_DATA = {
     attackRange: 5
   }
 };
-({
+const _TFT_17_CHESS_DATA = {
+  //  特殊棋子（魔像、锻造器、训练假人等）跨赛季共用
+  ...TFT_SPECIAL_CHESS,
   // ====================================================================
   // 1 费棋子 (共 15 个)
   // ====================================================================
   "贝蕾亚": {
+    displayName: "贝蕾亚",
+    englishId: "TFT17_Briar",
+    price: 1,
     traits: [UnitOrigin_S17.AnimaSquad, UnitOrigin_S17.Primordian, UnitClass_S17.Assassin],
     origins: [UnitOrigin_S17.AnimaSquad, UnitOrigin_S17.Primordian],
-    classes: [UnitClass_S17.Assassin]
+    classes: [UnitClass_S17.Assassin],
+    attackRange: 1
   },
   "波比": {
+    displayName: "波比",
+    englishId: "TFT17_Poppy",
+    price: 1,
     traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.ResistTank],
     origins: [UnitOrigin_S17.Astronaut],
-    classes: [UnitClass_S17.ResistTank]
+    classes: [UnitClass_S17.ResistTank],
+    attackRange: 1
   },
   "维迦": {
+    displayName: "维迦",
+    englishId: "TFT17_Veigar",
+    price: 1,
     traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.APTrait],
     origins: [UnitOrigin_S17.Astronaut],
-    classes: [UnitClass_S17.APTrait]
+    classes: [UnitClass_S17.APTrait],
+    attackRange: 4
   },
   "亚托克斯": {
+    displayName: "亚托克斯",
+    englishId: "TFT17_Aatrox",
+    price: 1,
     traits: [UnitOrigin_S17.DRX, UnitClass_S17.ResistTank],
     origins: [UnitOrigin_S17.DRX],
-    classes: [UnitClass_S17.ResistTank]
+    classes: [UnitClass_S17.ResistTank],
+    attackRange: 1
   },
   "凯特琳": {
+    displayName: "凯特琳",
+    englishId: "TFT17_Caitlyn",
+    price: 1,
     traits: [UnitOrigin_S17.DRX, UnitClass_S17.Fateweaver],
     origins: [UnitOrigin_S17.DRX],
-    classes: [UnitClass_S17.Fateweaver]
+    classes: [UnitClass_S17.Fateweaver],
+    attackRange: 4
   },
   "提莫": {
+    displayName: "提莫",
+    englishId: "TFT17_Teemo",
+    price: 1,
     traits: [UnitOrigin_S17.SpaceGroove, UnitClass_S17.Summon],
     origins: [UnitOrigin_S17.SpaceGroove],
-    classes: [UnitClass_S17.Summon]
+    classes: [UnitClass_S17.Summon],
+    attackRange: 4
   },
   "内瑟斯": {
+    displayName: "内瑟斯",
+    englishId: "TFT17_Nasus",
+    price: 1,
     traits: [UnitOrigin_S17.SpaceGroove, UnitClass_S17.ShieldTank],
     origins: [UnitOrigin_S17.SpaceGroove],
-    classes: [UnitClass_S17.ShieldTank]
+    classes: [UnitClass_S17.ShieldTank],
+    attackRange: 1
   },
   "崔斯特": {
+    displayName: "崔斯特",
+    englishId: "TFT17_TwistedFate",
+    price: 1,
     traits: [UnitOrigin_S17.Stargazer, UnitClass_S17.Fateweaver],
     origins: [UnitOrigin_S17.Stargazer],
-    classes: [UnitClass_S17.Fateweaver]
+    classes: [UnitClass_S17.Fateweaver],
+    attackRange: 4
   },
   "泰隆": {
+    displayName: "泰隆",
+    englishId: "TFT17_Talon",
+    price: 1,
     traits: [UnitOrigin_S17.Stargazer, UnitClass_S17.Assassin],
     origins: [UnitOrigin_S17.Stargazer],
-    classes: [UnitClass_S17.Assassin]
+    classes: [UnitClass_S17.Assassin],
+    attackRange: 1
   },
   "伊泽瑞尔": {
+    displayName: "伊泽瑞尔",
+    englishId: "TFT17_Ezreal",
+    price: 1,
     traits: [UnitOrigin_S17.Timebreaker, UnitClass_S17.Ranged],
     origins: [UnitOrigin_S17.Timebreaker],
-    classes: [UnitClass_S17.Ranged]
+    classes: [UnitClass_S17.Ranged],
+    attackRange: 6
   },
   "蕾欧娜": {
+    displayName: "蕾欧娜",
+    englishId: "TFT17_Leona",
+    price: 1,
     traits: [UnitOrigin_S17.Admin, UnitClass_S17.ShieldTank],
     origins: [UnitOrigin_S17.Admin],
-    classes: [UnitClass_S17.ShieldTank]
+    classes: [UnitClass_S17.ShieldTank],
+    attackRange: 1
   },
   "科加斯": {
+    displayName: "科加斯",
+    englishId: "TFT17_Chogath",
+    price: 1,
     traits: [UnitOrigin_S17.DarkStar, UnitClass_S17.HPTank],
     origins: [UnitOrigin_S17.DarkStar],
-    classes: [UnitClass_S17.HPTank]
+    classes: [UnitClass_S17.HPTank],
+    attackRange: 1
   },
   "丽桑卓": {
+    displayName: "丽桑卓",
+    englishId: "TFT17_Lissandra",
+    price: 1,
     traits: [UnitOrigin_S17.DarkStar, UnitClass_S17.Summon, UnitClass_S17.APTrait],
     origins: [UnitOrigin_S17.DarkStar],
-    classes: [UnitClass_S17.Summon, UnitClass_S17.APTrait]
+    classes: [UnitClass_S17.Summon, UnitClass_S17.APTrait],
+    attackRange: 4
   },
   "雷克塞": {
+    displayName: "雷克塞",
+    englishId: "TFT17_Reksai",
+    price: 1,
     traits: [UnitOrigin_S17.Primordian, UnitClass_S17.HPTank],
     origins: [UnitOrigin_S17.Primordian],
-    classes: [UnitClass_S17.HPTank]
+    classes: [UnitClass_S17.HPTank],
+    attackRange: 1
+  },
+  // 迷你黑洞：暗星羁绊场上生成的召唤物，不可购买
+  "迷你黑洞": {
+    displayName: "迷你黑洞",
+    englishId: "TFT17_DarkStar_FakeUnit",
+    price: 1,
+    traits: [],
+    origins: [],
+    classes: [],
+    attackRange: 0
   },
   // ====================================================================
   // 2 费棋子 (共 13 个)
   // ====================================================================
   "卑尔维斯": {
+    displayName: "卑尔维斯",
+    englishId: "TFT17_Belveth",
+    price: 2,
     traits: [UnitOrigin_S17.Primordian, UnitClass_S17.ASTrait, UnitClass_S17.Melee],
     origins: [UnitOrigin_S17.Primordian],
-    classes: [UnitClass_S17.ASTrait, UnitClass_S17.Melee]
+    classes: [UnitClass_S17.ASTrait, UnitClass_S17.Melee],
+    attackRange: 2
   },
   "阿卡丽": {
+    displayName: "阿卡丽",
+    englishId: "TFT17_Akali",
+    price: 2,
     traits: [UnitOrigin_S17.DRX, UnitClass_S17.Melee],
     origins: [UnitOrigin_S17.DRX],
-    classes: [UnitClass_S17.Melee]
+    classes: [UnitClass_S17.Melee],
+    attackRange: 1
   },
   "金克丝": {
+    displayName: "金克丝",
+    englishId: "TFT17_Jinx",
+    price: 2,
     traits: [UnitOrigin_S17.AnimaSquad, UnitClass_S17.ASTrait],
     origins: [UnitOrigin_S17.AnimaSquad],
-    classes: [UnitClass_S17.ASTrait]
+    classes: [UnitClass_S17.ASTrait],
+    attackRange: 4
   },
   "纳尔": {
+    displayName: "纳尔",
+    englishId: "TFT17_Gnar",
+    price: 2,
     traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.Ranged],
     origins: [UnitOrigin_S17.Astronaut],
-    classes: [UnitClass_S17.Ranged]
+    classes: [UnitClass_S17.Ranged],
+    attackRange: 6
   },
   "派克": {
+    displayName: "派克",
+    englishId: "TFT17_Pyke",
+    price: 2,
     traits: [UnitOrigin_S17.PsyOps, UnitClass_S17.Flex],
     origins: [UnitOrigin_S17.PsyOps],
-    classes: [UnitClass_S17.Flex]
+    classes: [UnitClass_S17.Flex],
+    attackRange: 1
   },
   "古拉加斯": {
+    displayName: "古拉加斯",
+    englishId: "TFT17_Gragas",
+    price: 2,
     traits: [UnitOrigin_S17.PsyOps, UnitClass_S17.HPTank],
     origins: [UnitOrigin_S17.PsyOps],
-    classes: [UnitClass_S17.HPTank]
+    classes: [UnitClass_S17.HPTank],
+    attackRange: 1
   },
   "格温": {
+    displayName: "格温",
+    englishId: "TFT17_Gwen",
+    price: 2,
     traits: [UnitOrigin_S17.SpaceGroove, UnitClass_S17.Assassin],
     origins: [UnitOrigin_S17.SpaceGroove],
-    classes: [UnitClass_S17.Assassin]
+    classes: [UnitClass_S17.Assassin],
+    attackRange: 2
   },
   "贾克斯": {
+    displayName: "贾克斯",
+    englishId: "TFT17_Jax",
+    price: 2,
     traits: [UnitOrigin_S17.Stargazer, UnitClass_S17.ResistTank],
     origins: [UnitOrigin_S17.Stargazer],
-    classes: [UnitClass_S17.ResistTank]
+    classes: [UnitClass_S17.ResistTank],
+    attackRange: 1
   },
   "米利欧": {
+    displayName: "米利欧",
+    englishId: "TFT17_Milio",
+    price: 2,
     traits: [UnitOrigin_S17.Timebreaker, UnitClass_S17.Fateweaver],
     origins: [UnitOrigin_S17.Timebreaker],
-    classes: [UnitClass_S17.Fateweaver]
+    classes: [UnitClass_S17.Fateweaver],
+    attackRange: 4
   },
   "佐伊": {
+    displayName: "佐伊",
+    englishId: "TFT17_Zoe",
+    price: 2,
     traits: [UnitOrigin_S17.Admin, UnitClass_S17.Mana],
     origins: [UnitOrigin_S17.Admin],
-    classes: [UnitClass_S17.Mana]
+    classes: [UnitClass_S17.Mana],
+    attackRange: 4
   },
   "小木灵": {
+    displayName: "小木灵",
+    englishId: "TFT17_IvernMinion",
+    price: 2,
     traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.Summon, UnitClass_S17.Flex],
     origins: [UnitOrigin_S17.Astronaut],
-    classes: [UnitClass_S17.Summon, UnitClass_S17.Flex]
+    classes: [UnitClass_S17.Summon, UnitClass_S17.Flex],
+    attackRange: 1
   },
   "莫德凯撒": {
+    displayName: "莫德凯撒",
+    englishId: "TFT17_Mordekaiser",
+    price: 2,
     traits: [UnitOrigin_S17.DarkStar, UnitClass_S17.Mana, UnitClass_S17.ShieldTank],
     origins: [UnitOrigin_S17.DarkStar],
-    classes: [UnitClass_S17.Mana, UnitClass_S17.ShieldTank]
+    classes: [UnitClass_S17.Mana, UnitClass_S17.ShieldTank],
+    attackRange: 1
   },
   "潘森": {
+    displayName: "潘森",
+    englishId: "TFT17_Pantheon",
+    price: 2,
     traits: [UnitOrigin_S17.Timebreaker, UnitClass_S17.HPTank, UnitClass_S17.APTrait],
     origins: [UnitOrigin_S17.Timebreaker],
-    classes: [UnitClass_S17.HPTank, UnitClass_S17.APTrait]
+    classes: [UnitClass_S17.HPTank, UnitClass_S17.APTrait],
+    attackRange: 1
   },
   // ====================================================================
   // 3 费棋子 (共 13 个)
   // ====================================================================
   "厄运小姐": {
+    displayName: "厄运小姐",
+    englishId: "TFT17_MissFortune",
+    price: 3,
     traits: [UnitOrigin_S17.MissFortune],
-    origins: [UnitOrigin_S17.MissFortune]
+    origins: [UnitOrigin_S17.MissFortune],
+    classes: [],
+    attackRange: 6
   },
   "俄洛伊": {
+    displayName: "俄洛伊",
+    englishId: "TFT17_Illaoi",
+    price: 3,
     traits: [UnitOrigin_S17.AnimaSquad, UnitClass_S17.ShieldTank, UnitClass_S17.Summon],
     origins: [UnitOrigin_S17.AnimaSquad],
-    classes: [UnitClass_S17.ShieldTank, UnitClass_S17.Summon]
+    classes: [UnitClass_S17.ShieldTank, UnitClass_S17.Summon],
+    attackRange: 1
   },
   "阿萝拉": {
+    displayName: "阿萝拉",
+    englishId: "TFT17_Aurora",
+    price: 3,
     traits: [UnitOrigin_S17.AnimaSquad, UnitClass_S17.Flex],
     origins: [UnitOrigin_S17.AnimaSquad],
-    classes: [UnitClass_S17.Flex]
+    classes: [UnitClass_S17.Flex],
+    attackRange: 4
   },
   "菲兹": {
+    displayName: "菲兹",
+    englishId: "TFT17_Fizz",
+    price: 3,
     traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.Assassin],
     origins: [UnitOrigin_S17.Astronaut],
-    classes: [UnitClass_S17.Assassin]
+    classes: [UnitClass_S17.Assassin],
+    attackRange: 1
   },
   "茂凯": {
+    displayName: "茂凯",
+    englishId: "TFT17_Maokai",
+    price: 3,
     traits: [UnitOrigin_S17.DRX, UnitClass_S17.HPTank],
     origins: [UnitOrigin_S17.DRX],
-    classes: [UnitClass_S17.HPTank]
+    classes: [UnitClass_S17.HPTank],
+    attackRange: 1
   },
   "卡莎": {
+    displayName: "卡莎",
+    englishId: "TFT17_Kaisa",
+    price: 3,
     traits: [UnitOrigin_S17.DarkStar, UnitClass_S17.Assassin],
     origins: [UnitOrigin_S17.DarkStar],
-    classes: [UnitClass_S17.Assassin]
+    classes: [UnitClass_S17.Assassin],
+    attackRange: 4
   },
   "厄加特": {
+    displayName: "厄加特",
+    englishId: "TFT17_Urgot",
+    price: 3,
     traits: [UnitOrigin_S17.Mecha, UnitClass_S17.HPTank, UnitClass_S17.Melee],
     origins: [UnitOrigin_S17.Mecha],
-    classes: [UnitClass_S17.HPTank, UnitClass_S17.Melee]
+    classes: [UnitClass_S17.HPTank, UnitClass_S17.Melee],
+    attackRange: 2
   },
   "维克托": {
+    displayName: "维克托",
+    englishId: "TFT17_Viktor",
+    price: 3,
     traits: [UnitOrigin_S17.PsyOps, UnitClass_S17.Mana],
     origins: [UnitOrigin_S17.PsyOps],
-    classes: [UnitClass_S17.Mana]
+    classes: [UnitClass_S17.Mana],
+    attackRange: 4
   },
   "莎弥拉": {
+    displayName: "莎弥拉",
+    englishId: "TFT17_Samira",
+    price: 3,
     traits: [UnitOrigin_S17.SpaceGroove, UnitClass_S17.Ranged],
     origins: [UnitOrigin_S17.SpaceGroove],
-    classes: [UnitClass_S17.Ranged]
+    classes: [UnitClass_S17.Ranged],
+    attackRange: 6
   },
   "奥恩": {
+    displayName: "奥恩",
+    englishId: "TFT17_Ornn",
+    price: 3,
     traits: [UnitOrigin_S17.SpaceGroove, UnitClass_S17.ResistTank],
     origins: [UnitOrigin_S17.SpaceGroove],
-    classes: [UnitClass_S17.ResistTank]
+    classes: [UnitClass_S17.ResistTank],
+    attackRange: 1
   },
   "璐璐": {
+    displayName: "璐璐",
+    englishId: "TFT17_Lulu",
+    price: 3,
     traits: [UnitOrigin_S17.Stargazer, UnitClass_S17.APTrait],
     origins: [UnitOrigin_S17.Stargazer],
-    classes: [UnitClass_S17.APTrait]
+    classes: [UnitClass_S17.APTrait],
+    attackRange: 4
   },
   "黛安娜": {
+    displayName: "黛安娜",
+    englishId: "TFT17_Diana",
+    price: 3,
     traits: [UnitOrigin_S17.Admin, UnitClass_S17.ASTrait],
     origins: [UnitOrigin_S17.Admin],
-    classes: [UnitClass_S17.ASTrait]
+    classes: [UnitClass_S17.ASTrait],
+    attackRange: 1
   },
   "拉亚斯特": {
+    displayName: "拉亚斯特",
+    englishId: "TFT17_Rhaast",
+    price: 3,
     traits: [UnitOrigin_S17.Rhaast],
-    origins: [UnitOrigin_S17.Rhaast]
+    origins: [UnitOrigin_S17.Rhaast],
+    classes: [],
+    attackRange: 1
   },
   // ====================================================================
   // 4 费棋子 (共 13 个)
   // ====================================================================
   "拉莫斯": {
+    displayName: "拉莫斯",
+    englishId: "TFT17_Rammus",
+    price: 4,
     traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.ResistTank],
     origins: [UnitOrigin_S17.Astronaut],
-    classes: [UnitClass_S17.ResistTank]
+    classes: [UnitClass_S17.ResistTank],
+    attackRange: 1
   },
   "库奇": {
+    displayName: "库奇",
+    englishId: "TFT17_Corki",
+    price: 4,
     traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.Fateweaver],
     origins: [UnitOrigin_S17.Astronaut],
-    classes: [UnitClass_S17.Fateweaver]
+    classes: [UnitClass_S17.Fateweaver],
+    attackRange: 4
   },
   "千珏": {
+    displayName: "千珏",
+    englishId: "TFT17_Kindred",
+    price: 4,
     traits: [UnitOrigin_S17.DRX, UnitClass_S17.ASTrait],
     origins: [UnitOrigin_S17.DRX],
-    classes: [UnitClass_S17.ASTrait]
+    classes: [UnitClass_S17.ASTrait],
+    attackRange: 6
   },
   "卡尔玛": {
+    displayName: "卡尔玛",
+    englishId: "TFT17_Karma",
+    price: 4,
     traits: [UnitOrigin_S17.DarkStar, UnitClass_S17.Flex],
     origins: [UnitOrigin_S17.DarkStar],
-    classes: [UnitClass_S17.Flex]
+    classes: [UnitClass_S17.Flex],
+    attackRange: 4
   },
   "奥瑞利安·索尔": {
+    displayName: "奥瑞利安·索尔",
+    englishId: "TFT17_AurelionSol",
+    price: 4,
     traits: [UnitOrigin_S17.Mecha, UnitClass_S17.Mana],
     origins: [UnitOrigin_S17.Mecha],
-    classes: [UnitClass_S17.Mana]
+    classes: [UnitClass_S17.Mana],
+    attackRange: 6
   },
   "超级机甲": {
+    displayName: "超级机甲",
+    englishId: "TFT17_Galio",
+    price: 4,
     traits: [UnitOrigin_S17.Mecha, UnitClass_S17.Flex],
     origins: [UnitOrigin_S17.Mecha],
-    classes: [UnitClass_S17.Flex]
+    classes: [UnitClass_S17.Flex],
+    attackRange: 1
   },
   "易": {
+    displayName: "易",
+    englishId: "TFT17_MasterYi",
+    price: 4,
     traits: [UnitOrigin_S17.PsyOps, UnitClass_S17.Melee],
     origins: [UnitOrigin_S17.PsyOps],
-    classes: [UnitClass_S17.Melee]
+    classes: [UnitClass_S17.Melee],
+    attackRange: 1
   },
   "娜美": {
+    displayName: "娜美",
+    englishId: "TFT17_Nami",
+    price: 4,
     traits: [UnitOrigin_S17.SpaceGroove, UnitClass_S17.APTrait],
     origins: [UnitOrigin_S17.SpaceGroove],
-    classes: [UnitClass_S17.APTrait]
+    classes: [UnitClass_S17.APTrait],
+    attackRange: 4
   },
   "努努和威朗普": {
+    displayName: "努努和威朗普",
+    englishId: "TFT17_Nunu",
+    price: 4,
     traits: [UnitOrigin_S17.Stargazer, UnitClass_S17.ShieldTank],
     origins: [UnitOrigin_S17.Stargazer],
-    classes: [UnitClass_S17.ShieldTank]
+    classes: [UnitClass_S17.ShieldTank],
+    attackRange: 1
   },
   "锐雯": {
+    displayName: "锐雯",
+    englishId: "TFT17_Riven",
+    price: 4,
     traits: [UnitOrigin_S17.Timebreaker, UnitClass_S17.Assassin],
     origins: [UnitOrigin_S17.Timebreaker],
-    classes: [UnitClass_S17.Assassin]
+    classes: [UnitClass_S17.Assassin],
+    attackRange: 1
   },
   "乐芙兰": {
+    displayName: "乐芙兰",
+    englishId: "TFT17_Leblanc",
+    price: 4,
     traits: [UnitOrigin_S17.Admin, UnitClass_S17.Summon],
     origins: [UnitOrigin_S17.Admin],
-    classes: [UnitClass_S17.Summon]
+    classes: [UnitClass_S17.Summon],
+    attackRange: 4
   },
   "霞": {
+    displayName: "霞",
+    englishId: "TFT17_Xayah",
+    price: 4,
     traits: [UnitOrigin_S17.Stargazer, UnitClass_S17.Ranged],
     origins: [UnitOrigin_S17.Stargazer],
-    classes: [UnitClass_S17.Ranged]
+    classes: [UnitClass_S17.Ranged],
+    attackRange: 6
   },
   "塔姆": {
+    displayName: "塔姆",
+    englishId: "TFT17_TahmKench",
+    price: 4,
     traits: [UnitOrigin_S17.TahmKench, UnitClass_S17.HPTank],
     origins: [UnitOrigin_S17.TahmKench],
-    classes: [UnitClass_S17.HPTank]
+    classes: [UnitClass_S17.HPTank],
+    attackRange: 1
   },
   // ====================================================================
   // 5 费棋子 (共 10 个)
   // ====================================================================
   "巴德": {
+    displayName: "巴德",
+    englishId: "TFT17_Bard",
+    price: 5,
     traits: [UnitOrigin_S17.Astronaut, UnitClass_S17.Mana],
     origins: [UnitOrigin_S17.Astronaut],
-    classes: [UnitClass_S17.Mana]
+    classes: [UnitClass_S17.Mana],
+    attackRange: 4
   },
   "菲奥娜": {
+    displayName: "菲奥娜",
+    englishId: "TFT17_Fiora",
+    price: 5,
     traits: [UnitOrigin_S17.Fiora, UnitOrigin_S17.AnimaSquad, UnitClass_S17.Melee],
     origins: [UnitOrigin_S17.Fiora, UnitOrigin_S17.AnimaSquad],
-    classes: [UnitClass_S17.Melee]
+    classes: [UnitClass_S17.Melee],
+    attackRange: 1
   },
   "烬": {
+    displayName: "烬",
+    englishId: "TFT17_Jhin",
+    price: 5,
     traits: [UnitOrigin_S17.DarkStar, UnitOrigin_S17.Jhin, UnitClass_S17.Ranged],
     origins: [UnitOrigin_S17.DarkStar, UnitOrigin_S17.Jhin],
-    classes: [UnitClass_S17.Ranged]
+    classes: [UnitClass_S17.Ranged],
+    attackRange: 6
   },
   "布里茨": {
+    displayName: "布里茨",
+    englishId: "TFT17_Blitzcrank",
+    price: 5,
     traits: [UnitOrigin_S17.Blitzcrank, UnitOrigin_S17.SpaceGroove, UnitClass_S17.ShieldTank],
     origins: [UnitOrigin_S17.Blitzcrank, UnitOrigin_S17.SpaceGroove],
-    classes: [UnitClass_S17.ShieldTank]
+    classes: [UnitClass_S17.ShieldTank],
+    attackRange: 1
   },
   "娑娜": {
+    displayName: "娑娜",
+    englishId: "TFT17_Sona",
+    price: 5,
     traits: [UnitOrigin_S17.Sona, UnitOrigin_S17.PsyOps, UnitClass_S17.Summon],
     origins: [UnitOrigin_S17.Sona, UnitOrigin_S17.PsyOps],
-    classes: [UnitClass_S17.Summon]
+    classes: [UnitClass_S17.Summon],
+    attackRange: 4
   },
   "薇古丝": {
+    displayName: "薇古丝",
+    englishId: "TFT17_Vex",
+    price: 5,
     traits: [UnitOrigin_S17.Vex],
-    origins: [UnitOrigin_S17.Vex]
+    origins: [UnitOrigin_S17.Vex],
+    classes: [],
+    attackRange: 10
   },
   "慎": {
+    displayName: "慎",
+    englishId: "TFT17_Shen",
+    price: 5,
     traits: [UnitOrigin_S17.Shen, UnitClass_S17.ResistTank],
     origins: [UnitOrigin_S17.Shen],
-    classes: [UnitClass_S17.ResistTank]
+    classes: [UnitClass_S17.ResistTank],
+    attackRange: 1
   },
   "劫": {
+    displayName: "劫",
+    englishId: "TFT17_Zed",
+    price: 5,
     traits: [UnitOrigin_S17.Zed],
-    origins: [UnitOrigin_S17.Zed]
+    origins: [UnitOrigin_S17.Zed],
+    classes: [],
+    attackRange: 1
   },
   "格雷福斯": {
+    displayName: "格雷福斯",
+    englishId: "TFT17_Graves",
+    price: 5,
     traits: [UnitOrigin_S17.Graves],
-    origins: [UnitOrigin_S17.Graves]
+    origins: [UnitOrigin_S17.Graves],
+    classes: [],
+    attackRange: 4
   },
   "莫甘娜": {
+    displayName: "莫甘娜",
+    englishId: "TFT17_Morgana",
+    price: 5,
     traits: [UnitOrigin_S17.Morgana],
-    origins: [UnitOrigin_S17.Morgana]
+    origins: [UnitOrigin_S17.Morgana],
+    classes: [],
+    attackRange: 2
+  },
+  // ====================================================================
+  // PVE 专属单位 (野怪/召唤物/核心，原始数据 price=11，不进商店)
+  // 这些单位在战斗中作为敌人或召唤物出现，无法被玩家购买/售卖
+  // ====================================================================
+  // "羊咩咩 & 咩咩羊": {
+  //     displayName: "羊咩咩 & 咩咩羊",
+  //     englishId: "TFT17_Bard_Meep",
+  //     price: 0,
+  //     traits: [],
+  //     origins: [],
+  //     classes: [],
+  //     attackRange: 1
+  // },
+  "未来战士核心": {
+    displayName: "未来战士核心",
+    englishId: "TFT17_Timebreaker_Core",
+    price: 0,
+    traits: [],
+    origins: [],
+    classes: [],
+    attackRange: 0
   }
-});
+  // "星界鱿鱼": {
+  //     displayName: "星界鱿鱼",
+  //     englishId: "TFT17_PVE_Minion",
+  //     price: 0,
+  //     traits: [],
+  //     origins: [],
+  //     classes: [],
+  //     attackRange: 1
+  // },
+  // "星界拆拆怪": {
+  //     displayName: "星界拆拆怪",
+  //     englishId: "TFT17_PVE_Raptor",
+  //     price: 0,
+  //     traits: [],
+  //     origins: [],
+  //     classes: [],
+  //     attackRange: 1
+  // },
+  // "星界格斗怪": {
+  //     displayName: "星界格斗怪",
+  //     englishId: "TFT17_PVE_Krug",
+  //     price: 0,
+  //     traits: [],
+  //     origins: [],
+  //     classes: [],
+  //     attackRange: 1
+  // },
+  // "星界蝶灵": {
+  //     displayName: "星界蝶灵",
+  //     englishId: "TFT17_PVE_Pix",
+  //     price: 0,
+  //     traits: [],
+  //     origins: [],
+  //     classes: [],
+  //     attackRange: 1
+  // },
+  // "星界魔沼蛙": {
+  //     displayName: "星界魔沼蛙",
+  //     englishId: "TFT17_PVE_Gromp",
+  //     price: 0,
+  //     traits: [],
+  //     origins: [],
+  //     classes: [],
+  //     attackRange: 1
+  // },
+  // "星界远古巨龙": {
+  //     displayName: "星界远古巨龙",
+  //     englishId: "TFT17_PVE_ElderDragon",
+  //     price: 0,
+  //     traits: [],
+  //     origins: [],
+  //     classes: [],
+  //     attackRange: 1
+  // },
+};
 var GameStageType = /* @__PURE__ */ ((GameStageType2) => {
   GameStageType2["EARLY_PVE"] = "EARLY_PVE";
   GameStageType2["PVE"] = "PVE";
@@ -11134,49 +12779,11 @@ var ItemForgeType = /* @__PURE__ */ ((ItemForgeType2) => {
   return ItemForgeType2;
 })(ItemForgeType || {});
 const TFT_16_CHESS_DATA = _TFT_16_CHESS_DATA;
+const TFT_17_CHESS_DATA = _TFT_17_CHESS_DATA;
 const TFT_4_CHESS_DATA = _TFT_4_CHESS_DATA;
 const TFT_16_EQUIP_DATA = _TFT_16_EQUIP_DATA;
+const TFT_17_EQUIP_DATA = _TFT_17_EQUIP_DATA;
 const TFT_4_EQUIP_DATA = _TFT_4_EQUIP_DATA;
-function getChessDataForMode(mode) {
-  switch (mode) {
-    case "S4_RUISHOU":
-      return TFT_4_CHESS_DATA;
-    case "NORMAL":
-    case "RANK":
-    case "CLOCKWORK_TRAILS":
-    default:
-      return TFT_16_CHESS_DATA;
-  }
-}
-function getSeasonTemplateDir(mode) {
-  switch (mode) {
-    case "S4_RUISHOU":
-      return "s4";
-    case "NORMAL":
-    case "RANK":
-    case "CLOCKWORK_TRAILS":
-    default:
-      return "s16";
-  }
-}
-function getChessDataBySeason(season) {
-  switch (season) {
-    case "S4":
-      return TFT_4_CHESS_DATA;
-    case "S16":
-    default:
-      return TFT_16_CHESS_DATA;
-  }
-}
-function getEquipDataBySeason(season) {
-  switch (season) {
-    case "S4":
-      return TFT_4_EQUIP_DATA;
-    case "S16":
-    default:
-      return TFT_16_EQUIP_DATA;
-  }
-}
 const CHAMPION_EN_TO_CN = {};
 for (const [cnName, champion] of Object.entries(TFT_16_CHESS_DATA)) {
   if (champion.englishId) {
@@ -11188,8 +12795,13 @@ for (const [cnName, champion] of Object.entries(TFT_4_CHESS_DATA)) {
     CHAMPION_EN_TO_CN[champion.englishId] = cnName;
   }
 }
+for (const [cnName, champion] of Object.entries(TFT_17_CHESS_DATA)) {
+  if (champion.englishId) {
+    CHAMPION_EN_TO_CN[champion.englishId] = cnName;
+  }
+}
 const EQUIP_EN_TO_CN = {};
-for (const [cnName, equip] of Object.entries(TFT_16_EQUIP_DATA)) {
+for (const [cnName, equip] of Object.entries(TFT_17_EQUIP_DATA)) {
   const englishNames = equip.englishName.split(",");
   for (const enName of englishNames) {
     EQUIP_EN_TO_CN[enName.trim()] = cnName;
@@ -11201,9 +12813,6 @@ const EQUIP_ALIASES = {
   "TFT16_Item_Bilgewater_PileOCitrus": "成堆柑橘"
 };
 Object.assign(EQUIP_EN_TO_CN, EQUIP_ALIASES);
-function getChampionRange(championName) {
-  return (TFT_16_CHESS_DATA[championName] ?? TFT_4_CHESS_DATA[championName])?.attackRange;
-}
 function isStandardChessMode(mode) {
   return mode === "NORMAL" || mode === "RANK" || mode === "S4_RUISHOU";
 }
@@ -11795,11 +13404,11 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-CDKHLTda.js");
+    const ServicesModule = await import("./chunks/index-qKNcah7B.js");
     hexService = ServicesModule.hexService;
-    const TftOperatorModule = await import("./chunks/TftOperator-CHK7LIbj.js").then((n) => n.T);
+    const TftOperatorModule = await import("./chunks/TftOperator-hWvEbEKn.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
-    const LineupModule = await import("./chunks/index-BZspSCi7.js");
+    const LineupModule = await import("./chunks/index-bGCrXB73.js");
     lineupLoader = LineupModule.lineupLoader;
     const GlobalHotkeyManagerModule = await import("./chunks/GlobalHotkeyManager-Cbcy0EP4.js");
     globalHotkeyManager = GlobalHotkeyManagerModule.globalHotkeyManager;
@@ -12042,63 +13651,62 @@ function registerHandler() {
   });
 }
 export {
-  closeOverlay as $,
-  gameStageDisplayTheClockworkTrails as A,
-  clockworkTrailsQuitNowButtonPoint as B,
-  levelRegion as C,
-  coinRegion as D,
-  hexSlot as E,
-  lootRegion as F,
+  analyticsManager as $,
+  itemForgeTooltipRegion as A,
+  gameStageDisplayStageOne as B,
+  gameStageDisplayNormal as C,
+  gameStageDisplayTheClockworkTrails as D,
+  clockworkTrailsQuitNowButtonPoint as E,
+  levelRegion as F,
   GameStageType as G,
-  littleLegendDefaultPoint as H,
+  coinRegion as H,
   ItemForgeType as I,
-  selfWalkAroundPoints as J,
-  equipmentSlot as K,
-  combatPhaseTextRegion as L,
-  getChampionRange as M,
+  hexSlot as J,
+  lootRegion as K,
+  littleLegendDefaultPoint as L,
+  selfWalkAroundPoints as M,
   MAIN_DIST,
-  clockworkTrailsFightButtonPoint as N,
-  TFT_4_TRAIT_DATA as O,
-  TFT_16_TRAIT_DATA as P,
+  equipmentSlot as N,
+  combatPhaseTextRegion as O,
+  clockworkTrailsFightButtonPoint as P,
   sharedDraftPoint as Q,
   GameConfigHelper as R,
   RENDERER_DIST,
   IpcChannel as S,
-  TFTMode as T,
+  TFT_16_CHESS_DATA as T,
   UNSELLABLE_BOARD_UNITS as U,
   LCUManager as V,
   VITE_DEV_SERVER_URL,
-  getSeasonTemplateDir as W,
-  isStandardChessMode as X,
-  LcuEventUri as Y,
-  showOverlay as Z,
-  sendOverlayPlayers as _,
-  getEquipDataBySeason as a,
-  analyticsManager as a0,
-  AnalyticsEvent as a1,
-  getChessDataForMode as b,
-  TFT_16_EQUIP_DATA as c,
-  TFT_16_CHESS_DATA as d,
-  settingsStore as e,
-  fs as f,
-  getChessDataBySeason as g,
-  shopSlotNameRegions as h,
-  equipmentRegion as i,
-  detailEquipRegion as j,
-  shopSlot as k,
+  isStandardChessMode as W,
+  LcuEventUri as X,
+  showOverlay as Y,
+  sendOverlayPlayers as Z,
+  closeOverlay as _,
+  TFT_4_CHESS_DATA as a,
+  AnalyticsEvent as a0,
+  TFT_4_TRAIT_DATA as b,
+  TFT_17_EQUIP_DATA as c,
+  TFTMode as d,
+  TFT_17_CHESS_DATA as e,
+  TFT_17_TRAIT_DATA as f,
+  TFT_4_EQUIP_DATA as g,
+  TFT_16_EQUIP_DATA as h,
+  fs as i,
+  settingsStore as j,
+  shopSlotNameRegions as k,
   logger as l,
-  buyExpPoint as m,
-  benchSlotPoints as n,
-  benchSlotRegion as o,
-  detailChampionNameRegion as p,
-  detailChampionStarRegion as q,
+  equipmentRegion as m,
+  detailEquipRegion as n,
+  shopSlot as o,
+  buyExpPoint as p,
+  benchSlotPoints as q,
   refreshShopPoint as r,
   sleep as s,
-  fightBoardSlotPoint as t,
-  fightBoardSlotRegion as u,
-  clockworkTrailsQuitNowButtonRegion as v,
-  itemForgeTooltipRegionEdge as w,
-  itemForgeTooltipRegion as x,
-  gameStageDisplayStageOne as y,
-  gameStageDisplayNormal as z
+  benchSlotRegion as t,
+  detailChampionNameRegion as u,
+  detailChampionStarRegion as v,
+  fightBoardSlotPoint as w,
+  fightBoardSlotRegion as x,
+  clockworkTrailsQuitNowButtonRegion as y,
+  itemForgeTooltipRegionEdge as z
 };

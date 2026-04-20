@@ -1128,7 +1128,9 @@ export const HomePage = () => {
     const checkHasSelectedLineup = async (mode: TFTMode) => {
         try {
             // 根据模式确定赛季字符串
-            const season = (mode === TFTMode.S4_RUISHOU) ? 'S4' : 'S16';
+            // NORMAL / RANK / CLOCKWORK_TRAILS → 当前主赛季（S17 星神）
+            // S4_RUISHOU → S4 回归赛季
+            const season = (mode === TFTMode.S4_RUISHOU) ? 'S4' : 'S17';
             
             // 并行获取该赛季的阵容列表和已选中的 ID
             const [seasonLineups, selectedIds] = await Promise.all([
@@ -1352,7 +1354,8 @@ export const HomePage = () => {
             // 检查后如果仍然没有选中阵容，阻止操作
             // 注意：这里用最新的 state 值无法直接获取（因为 setState 是异步的）
             // 所以我们直接再做一次内联检查
-            const season = (tftMode === TFTMode.S4_RUISHOU) ? 'S4' : 'S16';
+            // 赛季字符串与 checkHasSelectedLineup 保持一致：非 S4 模式走当前主赛季 S17
+            const season = (tftMode === TFTMode.S4_RUISHOU) ? 'S4' : 'S17';
             const [seasonLineups, selectedIds] = await Promise.all([
                 window.lineup.getAll(season),
                 window.lineup.getSelectedIds(),

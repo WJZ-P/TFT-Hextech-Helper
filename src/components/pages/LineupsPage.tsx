@@ -6,12 +6,16 @@
 import React, {useEffect, useState, useCallback, useMemo, useRef} from 'react';
 import styled from 'styled-components';
 import {ThemeType} from '../../styles/theme';
-import {TFTEquip, TraitData, TFTUnit, getChessDataBySeason, getEquipDataBySeason, UNPURCHASABLE_CHESS} from "../../../src-backend/TFTProtocol";
-// 导入两个赛季的棋子数据，用于获取英雄原画 ID
-import {TFT_16_CHESS} from "../../../public/TFTInfo/S16/chess";
+import {TFTEquip, TraitData, TFTUnit, UNPURCHASABLE_CHESS} from "../../../src-backend/TFTProtocol";
+// 赛季数据统一从 SeasonRegistry 取，不再直接用 TFTProtocol 的 switch 函数（已删除）
+import {getChessDataBySeasonId, getEquipDataBySeasonId, type SeasonId} from "../../../src-backend/TFTInfo/SeasonRegistry";
+// public 目录下的 chess.ts 仅用于获取 chessId（数字 ID）→ 用于腾讯 CDN 图片 URL
+// 注意：S16 的变量名已改成 TEST_TFT_S16_CHESS，S17 的是 TEST_TFT_S17_CHESS
+import {TEST_TFT_S17_CHESS} from "../../../public/TFTInfo/S17/chess";
+import {TEST_TFT_S16_CHESS} from "../../../public/TFTInfo/S16/chess";
 import {TFT_4_CHESS} from "../../../public/TFTInfo/S4/chess";
-import {TFT_16_TRAIT_DATA} from "../../../src-backend/TFTInfo/trait.ts";
-import {TFT_4_TRAIT_DATA} from "../../../src-backend/TFTInfo/trait.ts";
+// 羁绊数据：S17 主赛季 + S4.5 回归 + S16 保留（用于历史阵容兼容）
+import {TFT_16_TRAIT_DATA, TFT_17_TRAIT_DATA, TFT_4_TRAIT_DATA} from "../../../src-backend/TFTInfo/trait.ts";
 import {toast} from "../toast/toast-core.ts";
 
 // ==================== 类型定义 ====================
@@ -75,20 +79,31 @@ interface LineupConfig {
 // ==================== 常量 ====================
 
 /** 赛季选项卡类型 */
-type SeasonTab = 'S16' | 'S4';
+// 阵容页面支持的赛季 Tab
+// - S17 星神：当前主赛季（默认选中）
+// - S16：保留用于加载老阵容（HomePage 的赛季 Tab 已下线，但数据和查表仍保留）
+// - S4 瑞兽闹新春：已从 HomePage 下线，这里也对应不显示 Tab
+// 直接复用 SeasonRegistry 的 SeasonId 类型，避免两套字面量不一致
+type SeasonTab = SeasonId;
 
-/** 赛季 Tab 配置 */
+/** 赛季 Tab 配置：目前只展示 S17 星神（和 HomePage 的模式选择保持一致） */
 const SEASON_TABS: { key: SeasonTab; label: string }[] = [
-    { key: 'S16', label: '英雄联盟传奇' },
-    { key: 'S4', label: '瑞兽闹新春' },
+    { key: 'S17', label: 'S17 星神' },
 ];
 
 /**
- * OP.GG 头像 API 基础 URL
- * 将 {englishId} 替换为英雄英文ID即可获取头像
+ * 头像 API 基础 URL —— 统一使用国内腾讯 CDN
+ *
+ * 设计说明喵：
+ *   早期版本使用 OP.GG 的 CDN 作为主源，按赛季（S4/S16/S17）分别走不同路径，
+ *   出问题时才回退到腾讯源作为兜底。但实际使用发现：
+ *     1. OP.GG 国内访问慢且不稳定，经常第一次加载失败，视觉上会闪烁
+ *     2. 腾讯源其实对所有赛季的英雄都可用（URL 尾部直接是 chessId）
+ *   所以这里统一简化为"只用腾讯源"，不再区分赛季。
+ *
+ *   将 {chessId} 替换为英雄的 chessId（如 "100213"）即可获取头像
  */
-const OPGG_AVATAR_BASE_S16 = 'https://c-tft-api.op.gg/img/set/16/tft-champion/tiles/{englishId}.tft_set16.png?image=q_auto:good,f_webp&v=1765176243';
-const OPGG_AVATAR_BASE_S4 = 'https://c-tft-api.op.gg/img/set/4.5/tft-champion/tiles/{englishId}.tft_set4.5.png?image=q_auto:good,f_webp&v=1765176243';
+const AVATAR_URL_BASE = 'https://game.gtimg.cn/images/lol/act/img/tft/champions/{chessId}.png';
 
 /**
  * 羁绊图标 API 基础 URL
@@ -99,16 +114,69 @@ const TRAIT_ICON_BASE = 'https://game.gtimg.cn/images/lol/act/img/tft';
  * 英雄原画 API 基础 URL
  * 将 {chessId} 替换为英雄的 chessId 即可获取原画
  */
+const SPLASH_ART_BASE_S17 = 'https://game.gtimg.cn/images/lol/tftstore/s17/624x318/{chessId}.jpg';
 const SPLASH_ART_BASE_S16 = 'https://game.gtimg.cn/images/lol/tftstore/s16/624x318/{chessId}.jpg';
 const SPLASH_ART_BASE_S4 = 'https://game.gtimg.cn/images/lol/tftstore/s4/624x318/{chessId}.jpg';
 
 /**
- * 兜底 URL：当 OP.GG 的 CDN 资源不可用时（如老赛季数据缺失），使用腾讯 CDN 兜底
- * 
- * 头像兜底：使用腾讯 TFT 棋子头像接口，URL 末尾是 chessId（如 100170.png）
+ * 按赛季选择对应的 public/TFTInfo chess 列表
+ *
+ * 这些列表来自 public 目录（爬虫抓的原始数据），包含 chessId（数字 ID）字段，
+ * 用于拼接腾讯 CDN 的图片 URL（原画、兜底头像）。
+ *
+ * 注：不要和 SeasonRegistry 的 getChessDataBySeasonId 混淆——
+ *     那个返回的是 src-backend/TFTInfo/chess.ts 的精简结构，没有 chessId 字段
+ *
+ * @param season 赛季 Tab
+ * @returns 包含 { chessId, displayName, ... } 的英雄数组
+ */
+const getPublicChessList = (season: SeasonTab): Array<{ chessId: string; displayName: string; [key: string]: any }> => {
+    switch (season) {
+        case 'S17':
+            return TEST_TFT_S17_CHESS;
+        case 'S16':
+            return TEST_TFT_S16_CHESS;
+        case 'S4':
+            return TFT_4_CHESS;
+    }
+};
+
+// 注：头像 URL 不再按赛季区分（统一用腾讯 CDN + chessId），所以没有 getOpggAvatarBase 这种 helper 了
+
+/**
+ * 按赛季选择原画 URL 模板
+ */
+const getSplashArtBase = (season: SeasonTab): string => {
+    switch (season) {
+        case 'S17':
+            return SPLASH_ART_BASE_S17;
+        case 'S16':
+            return SPLASH_ART_BASE_S16;
+        case 'S4':
+            return SPLASH_ART_BASE_S4;
+    }
+};
+
+/**
+ * 按赛季选择羁绊激活阈值数据
+ */
+const getTraitData = (season: SeasonTab): Record<string, TraitData> => {
+    switch (season) {
+        case 'S17':
+            return TFT_17_TRAIT_DATA;
+        case 'S16':
+            return TFT_16_TRAIT_DATA;
+        case 'S4':
+            return TFT_4_TRAIT_DATA;
+    }
+};
+
+/**
+ * 兜底 URL：原画在不同赛季可能缺失，这里保留一个"万能兜底"原画 URL
+ * 注：头像不再需要兜底——统一用腾讯源已经足够稳定
+ *
  * 原画兜底：使用 s4.5m16 路径下的原画资源
  */
-const FALLBACK_AVATAR_BASE = 'https://game.gtimg.cn/images/lol/act/img/tft/champions/{chessId}.png';
 const FALLBACK_SPLASH_ART_BASE = 'https://game.gtimg.cn/images/lol/tftstore/s4.5m16/624x318/{chessId}.jpg';
 
 // ==================== 样式组件 ====================
@@ -1450,19 +1518,9 @@ interface ChampionAvatarProps {
  * 用于构造腾讯 CDN 的图片 URL
  */
 const getChessId = (cnName: string, season: SeasonTab): string => {
-    const chessList = season === 'S4' ? TFT_4_CHESS : TFT_16_CHESS;
+    const chessList = getPublicChessList(season);
     const chessItem = chessList.find((chess: any) => chess.displayName === cnName);
     return chessItem?.chessId || '';
-};
-
-/**
- * 获取头像的兜底 URL（当 OP.GG 主 URL 加载失败时使用）
- * 使用腾讯 CDN：https://game.gtimg.cn/images/lol/act/img/tft/champions/{chessId}.png
- */
-const getFallbackAvatarUrl = (cnName: string, season: SeasonTab): string => {
-    const chessId = getChessId(cnName, season);
-    if (!chessId) return '';
-    return FALLBACK_AVATAR_BASE.replace('{chessId}', chessId);
 };
 
 /**
@@ -1477,20 +1535,20 @@ const getFallbackSplashUrl = (cnName: string, season: SeasonTab): string => {
 
 /**
  * 根据中文名和赛季获取头像 URL
+ *
+ * 统一用腾讯 CDN：https://game.gtimg.cn/images/lol/act/img/tft/champions/{chessId}.png
+ * 这个源对所有赛季的英雄都有效，所以不再需要按赛季分别走不同路径
+ *
  * @param cnName 棋子中文名
- * @param season 当前赛季标识
+ * @param season 当前赛季标识（用于在对应赛季的棋子列表里查 chessId）
  */
 const getAvatarUrl = (cnName: string, season: SeasonTab): string => {
-    // 根据赛季选择对应的棋子数据集
-    const chessData = getChessDataBySeason(season);
-    const champion = (chessData as Record<string, TFTUnit>)[cnName];
-    if (!champion) {
-        console.warn(`未找到英雄 "${cnName}" 的数据 (${season})`);
+    const chessId = getChessId(cnName, season);
+    if (!chessId) {
+        console.warn(`未找到英雄 "${cnName}" 的 chessId (${season})`);
         return '';
     }
-    const englishId = champion.englishId;
-    const baseUrl = season === 'S4' ? OPGG_AVATAR_BASE_S4 : OPGG_AVATAR_BASE_S16;
-    return baseUrl.replace('{englishId}', englishId);
+    return AVATAR_URL_BASE.replace('{chessId}', chessId);
 };
 
 /**
@@ -1500,13 +1558,13 @@ const getAvatarUrl = (cnName: string, season: SeasonTab): string => {
  */
 const getSplashArtUrl = (cnName: string, season: SeasonTab): string => {
     // 根据赛季选择对应的公开 chess 数据（包含 chessId）
-    const chessList = season === 'S4' ? TFT_4_CHESS : TFT_16_CHESS;
+    const chessList = getPublicChessList(season);
     const chessItem = chessList.find((chess: any) => chess.displayName === cnName);
     if (!chessItem) {
         console.warn(`未找到英雄 "${cnName}" 的原画数据 (${season})`);
         return '';
     }
-    const baseUrl = season === 'S4' ? SPLASH_ART_BASE_S4 : SPLASH_ART_BASE_S16;
+    const baseUrl = getSplashArtBase(season);
     return baseUrl.replace('{chessId}', chessItem.chessId);
 };
 
@@ -1518,7 +1576,7 @@ const getSplashArtUrl = (cnName: string, season: SeasonTab): string => {
  */
 const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion, season}) => {
     const [imgError, setImgError] = useState(false);
-    const [useFallbackAvatar, setUseFallbackAvatar] = useState(false);  // 是否已切换到兜底头像
+    // 注：头像使用单一腾讯源，不再需要"主→备"两级回退状态
     const [isHovered, setIsHovered] = useState(false);  // hover 状态
     const [splashError, setSplashError] = useState(false);  // 原画加载失败状态
     const [useFallbackSplash, setUseFallbackSplash] = useState(false);  // 是否已切换到兜底原画
@@ -1535,34 +1593,25 @@ const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion, seaso
     const avatarRef = React.useRef<HTMLDivElement>(null);
     
     const avatarUrl = getAvatarUrl(champion.name, season);
-    const fallbackAvatarUrl = getFallbackAvatarUrl(champion.name, season);  // 兜底头像 URL
     const splashArtUrl = getSplashArtUrl(champion.name, season);
     const fallbackSplashUrl = getFallbackSplashUrl(champion.name, season);  // 兜底原画 URL
 
-    // S4 赛季 OP.GG 没有对应资源，直接使用兜底 URL 避免加载失败闪烁
-    // S16 正常走：主 URL → 兜底 URL → 占位符
+    // 头像使用单一腾讯源；原画仍保留 S4 直接用兜底的策略（避免 OP.GG 加载失败闪烁）
     const isS4 = season === 'S4';
-    const currentAvatarUrl = (isS4 || useFallbackAvatar) ? fallbackAvatarUrl : avatarUrl;
+    const currentAvatarUrl = avatarUrl;
     const currentSplashUrl = (isS4 || useFallbackSplash) ? fallbackSplashUrl : splashArtUrl;
 
     // 获取英雄费用（根据赛季查找对应数据集）
-    const chessData = getChessDataBySeason(season);
+    const chessData = getChessDataBySeasonId(season);
     const tftUnit = (chessData as Record<string, TFTUnit>)[champion.name];
     const cost = tftUnit ? tftUnit.price : 0;
 
     /**
-     * 头像加载失败的处理：
-     * 第一次失败 → 切换到兜底 URL
-     * 兜底也失败 → 显示文字占位符
+     * 头像加载失败处理：
+     * 头像源是腾讯 CDN，已经很稳定；如果也失败了就直接显示文字占位符
      */
     const handleAvatarError = () => {
-        if (!useFallbackAvatar && fallbackAvatarUrl) {
-            // 主 URL 失败，切换到兜底
-            setUseFallbackAvatar(true);
-        } else {
-            // 兜底也失败，显示占位符
-            setImgError(true);
-        }
+        setImgError(true);
     };
 
     /**
@@ -1711,7 +1760,7 @@ const ChampionAvatarComponent: React.FC<ChampionAvatarProps> = ({champion, seaso
                     const rawItems = champion.items;
                     if (!rawItems) return null;
 
-                    const equipData = getEquipDataBySeason(season) as Record<string, TFTEquip>;
+                    const equipData = getEquipDataBySeasonId(season) as Record<string, TFTEquip>;
                     let equipList: TFTEquip[] = [];
 
                     if (Array.isArray(rawItems)) {
@@ -1755,25 +1804,17 @@ const SmallChampionAvatarComponent: React.FC<{
     level: string;
     idx: number;
 }> = ({ champion, season, lineupId, level, idx }) => {
-    const [useFallback, setUseFallback] = useState(false);
+    // 头像使用单一腾讯源，不再需要 useFallback 状态；加载失败直接隐藏图片即可
     const [imgError, setImgError] = useState(false);
 
-    const chessData = getChessDataBySeason(season);
+    const chessData = getChessDataBySeasonId(season);
     const tftUnit = (chessData as Record<string, TFTUnit>)[champion.name];
     const cost = tftUnit ? tftUnit.price : 0;
 
-    const avatarUrl = getAvatarUrl(champion.name, season);
-    const fallbackUrl = getFallbackAvatarUrl(champion.name, season);
-    // S4 赛季直接用兜底 URL，避免 OP.GG 加载失败导致闪烁
-    const isS4 = season === 'S4';
-    const currentUrl = (isS4 || useFallback) ? fallbackUrl : avatarUrl;
+    const currentUrl = getAvatarUrl(champion.name, season);
 
     const handleError = () => {
-        if (!useFallback && fallbackUrl) {
-            setUseFallback(true);
-        } else {
-            setImgError(true);
-        }
+        setImgError(true);
     };
 
     return (
@@ -1801,8 +1842,8 @@ const LineupsPage: React.FC = () => {
     const [allLineups, setAllLineups] = useState<LineupConfig[]>([]);
     // 加载状态
     const [loading, setLoading] = useState(true);
-    // 当前选中的赛季 Tab
-    const [activeTab, setActiveTab] = useState<SeasonTab>('S16');
+    // 当前选中的赛季 Tab —— 默认 S17 星神（当前主赛季）
+    const [activeTab, setActiveTab] = useState<SeasonTab>('S17');
     // 展开状态：记录每个阵容的展开状态，key 是阵容 id
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
     // 已选中的阵容 ID 集合（所有赛季统一存储）
@@ -1976,7 +2017,7 @@ const LineupsPage: React.FC = () => {
      *          棋子列表的每项包含 name（中文名）和 unit（TFTUnit 数据）
      */
     const groupedChessByCost = useMemo(() => {
-        const chessData = getChessDataBySeason(activeTab) as Record<string, TFTUnit>;
+        const chessData = getChessDataBySeasonId(activeTab) as Record<string, TFTUnit>;
         // 按费用分组，并过滤掉不可购买的棋子（锻造器、魔像、提伯斯等）
         const groups: Record<number, { name: string; unit: TFTUnit }[]> = {};
         for (const [name, unit] of Object.entries(chessData)) {
@@ -2118,14 +2159,10 @@ const LineupsPage: React.FC = () => {
 
     /**
      * 获取棋子头像 URL（用于创建阵容弹窗内）
-     * 复用已有的 getAvatarUrl / getFallbackAvatarUrl 函数
+     * 统一走 getAvatarUrl（单一腾讯源），不再区分 S4 / 其他赛季
      */
     const getChessAvatarForModal = useCallback((chessName: string): string => {
-        // S4 赛季 OP.GG 没有资源，直接用兜底
-        if (activeTab === 'S4') {
-            return getFallbackAvatarUrl(chessName, activeTab);
-        }
-        return getAvatarUrl(chessName, activeTab) || getFallbackAvatarUrl(chessName, activeTab);
+        return getAvatarUrl(chessName, activeTab);
     }, [activeTab]);
 
     /**
@@ -2157,8 +2194,8 @@ const LineupsPage: React.FC = () => {
      */
     const handleSaveCustomLineup = useCallback(async () => {
         try {
-            const chessData = getChessDataBySeason(activeTab) as Record<string, TFTUnit>;
-            const traitData = activeTab === 'S4' ? TFT_4_TRAIT_DATA : TFT_16_TRAIT_DATA;
+            const chessData = getChessDataBySeasonId(activeTab) as Record<string, TFTUnit>;
+            const traitData = getTraitData(activeTab);
 
             /**
              * 计算一组棋子的羁绊激活信息（与 convert-manual-lineup.cjs 中 calculateTraits 对应）
@@ -2326,7 +2363,7 @@ const LineupsPage: React.FC = () => {
      *   纹章、光明装备、奥恩神器等不可由散件直接合成的装备不展示
      */
     const groupedEquips = useMemo(() => {
-        const equipData = getEquipDataBySeason(activeTab) as Record<string, TFTEquip>;
+        const equipData = getEquipDataBySeasonId(activeTab) as Record<string, TFTEquip>;
         const base: { name: string; equip: TFTEquip }[] = [];
         const completed: { name: string; equip: TFTEquip }[] = [];
 
@@ -2371,7 +2408,7 @@ const LineupsPage: React.FC = () => {
         const currentSlot = levelChampions[levelKey][slotIndex];
         setTempEquips(currentSlot ? [...currentSlot.equips] : []);
         // 从当前赛季棋子数据中查找棋子费用（price），用于头像边框颜色
-        const chessData = getChessDataBySeason(activeTab) as Record<string, TFTUnit>;
+        const chessData = getChessDataBySeasonId(activeTab) as Record<string, TFTUnit>;
         const cost = chessData[chessName]?.price ?? 0;
         setEquipEditTarget({ levelKey, slotIndex, chessName, cost });
     }, [levelChampions, activeTab]);
@@ -2501,9 +2538,9 @@ const LineupsPage: React.FC = () => {
         const uniqueChamps = new Set<string>();
 
         // 根据赛季选择对应的棋子数据集
-        const chessData = getChessDataBySeason(season);
+        const chessData = getChessDataBySeasonId(season);
         // 根据赛季选择对应的羁绊数据集
-        const traitData = season === 'S4' ? TFT_4_TRAIT_DATA : TFT_16_TRAIT_DATA;
+        const traitData = getTraitData(season);
 
         champions.forEach(champ => {
             // 同名英雄去重，不重复计算羁绊
@@ -2821,7 +2858,7 @@ const LineupsPage: React.FC = () => {
                 <ModalOverlay>
                     <ModalContent>
                         <ModalHeader>
-                            <ModalTitle>创建自定义阵容（{activeTab === 'S16' ? '英雄联盟传奇' : '瑞兽闹新春'}）</ModalTitle>
+                            <ModalTitle>创建自定义阵容（{SEASON_TABS.find(t => t.key === activeTab)?.label ?? activeTab}）</ModalTitle>
                             <ModalCloseBtn onClick={closeCreateModal}>✕</ModalCloseBtn>
                         </ModalHeader>
 
@@ -2910,10 +2947,10 @@ const LineupsPage: React.FC = () => {
                                                     const isDragOver = dragOverSlot === slotId;
                                                     // 获取该格子棋子的费用（用于边框颜色）
                                                     const chessData = chessName
-                                                        ? (getChessDataBySeason(activeTab) as Record<string, TFTUnit>)[chessName]
+                                                        ? (getChessDataBySeasonId(activeTab) as Record<string, TFTUnit>)[chessName]
                                                         : null;
                                                     const cost = chessData?.price;
-                                                    const equipData = getEquipDataBySeason(activeTab) as Record<string, TFTEquip>;
+                                                    const equipData = getEquipDataBySeasonId(activeTab) as Record<string, TFTEquip>;
 
                                                     return (
                                                         <ChessSlot
@@ -3010,7 +3047,7 @@ const LineupsPage: React.FC = () => {
                                             {[0, 1, 2].map((idx) => {
                                                 const eqName = tempEquips[idx] || null;
                                                 const eqData = eqName
-                                                    ? (getEquipDataBySeason(activeTab) as Record<string, TFTEquip>)[eqName]
+                                                    ? (getEquipDataBySeasonId(activeTab) as Record<string, TFTEquip>)[eqName]
                                                     : null;
                                                 return (
                                                     <EquipSlotBox
