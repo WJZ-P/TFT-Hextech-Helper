@@ -98,6 +98,10 @@ export const UNPURCHASABLE_CHESS: ReadonlySet<string> = new Set([
     "魔像",
     "提伯斯",
 ]);
+
+/**
+ * 云顶十六赛季(英雄联盟传奇)的棋子数据
+ */
 export const _TFT_16_CHESS_DATA = {
     //  特殊棋子
     ...TFT_SPECIAL_CHESS,
