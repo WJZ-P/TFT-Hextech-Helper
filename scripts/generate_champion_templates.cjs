@@ -25,17 +25,31 @@ const LETTER_SPACING = 5;
  *
  * dataVarName: 在 chess.ts 中的变量名（用于正则定位数据区域）
  * outputDir:   模板输出子文件夹名
+ * extraSkip:   该赛季特有的、需要额外跳过的棋子名（数组）
+ *              —— 这里放"不可购买"的场上召唤物 / 羁绊生成道具
+ *              —— 因为这类棋子永远不会出现在商店栏位，无需生成商店识别模板
  */
 const SEASON_CONFIGS = [
     {
         name: 'S16 英雄联盟传奇',
         dataVarName: '_TFT_16_CHESS_DATA',
         outputDir: 's16',
+        extraSkip: [],
     },
     {
         name: 'S4 瑞兽闹新春',
         dataVarName: '_TFT_4_CHESS_DATA',
         outputDir: 's4',
+        extraSkip: [],
+    },
+    {
+        name: 'S17 星神',
+        dataVarName: '_TFT_17_CHESS_DATA',
+        outputDir: 's17',
+        // S17 里不可购买的棋子：
+        //   - 迷你黑洞：暗星羁绊场上召唤物（price=1 但不进商店）
+        //   - 未来战士核心：羁绊攒经验生成的道具（price=0）
+        extraSkip: ['迷你黑洞', '未来战士核心'],
     },
 ];
 
@@ -50,13 +64,14 @@ const SEASON_CONFIGS = [
  * 1. 用 `export const {变量名} = {` 定位数据块开始位置
  * 2. 用 `} satisfies Record<string, TFTUnit>;` 定位数据块结束位置
  * 3. 在这个区间内，正则匹配所有 `"英雄名": {` 格式的 key
- * 4. 过滤掉特殊棋子（锻造器、假人等 price=0 或 price=8 的）
+ * 4. 过滤掉公共特殊棋子（锻造器、假人等）+ 赛季特有的不可购买棋子
  *
  * @param {string} content - chess.ts 文件的完整内容
  * @param {string} varName - 要提取的变量名，如 '_TFT_16_CHESS_DATA'
+ * @param {string[]} extraSkip - 该赛季额外需要跳过的棋子名
  * @returns {string[]} 英雄名称数组（去重后）
  */
-function extractChampionNames(content, varName) {
+function extractChampionNames(content, varName, extraSkip = []) {
     // 定位数据块的起止位置
     const startMarker = `export const ${varName} = {`;
     const startIdx = content.indexOf(startMarker);
@@ -75,18 +90,28 @@ function extractChampionNames(content, varName) {
 
     const block = content.substring(startIdx, endIdx);
 
+    // 把 extraSkip 转成 Set 提高查找性能
+    const skipSet = new Set(extraSkip);
+
     // 提取所有 "xxx": { 格式的 key（英雄名称）
+    // 注意：用非贪婪 [^"]+ 避免跨字段吞字符
+    // 同时需要排除那些被注释掉的行（以 // 开头）
     const names = [];
-    const regex = /"([^"]+)"\s*:\s*\{/g;
+    const regex = /^\s*"([^"]+)"\s*:\s*\{/gm;
     let match;
     while ((match = regex.exec(block)) !== null) {
         const name = match[1];
-        // 过滤掉特殊棋子（锻造器、假人、提伯斯等）
-        // 它们通过 ...TFT_SPECIAL_CHESS 展开进来的
-        // 特征：名字中包含"锻造器"/"假人"/"提伯斯"
+
+        // 过滤掉公共特殊棋子（锻造器、假人、提伯斯等，通过 ...TFT_SPECIAL_CHESS 展开进来）
         if (name.includes('锻造器') || name === '训练假人' || name === '提伯斯') {
             continue;
         }
+
+        // 过滤掉该赛季特有的不可购买棋子（羁绊道具、场上召唤物等）
+        if (skipSet.has(name)) {
+            continue;
+        }
+
         names.push(name);
     }
 
@@ -179,8 +204,8 @@ async function main() {
     for (const season of SEASON_CONFIGS) {
         console.log(`\n======== ${season.name} ========`);
 
-        // 1. 提取英雄名
-        const names = extractChampionNames(content, season.dataVarName);
+        // 1. 提取英雄名（跳过公共特殊棋子 + 该赛季特有的不可购买棋子）
+        const names = extractChampionNames(content, season.dataVarName, season.extraSkip);
         if (names.length === 0) {
             console.warn(`⚠️ ${season.name}: 未提取到任何英雄，跳过`);
             continue;
