@@ -7,7 +7,8 @@
 import Tesseract, { createWorker, PSM } from "tesseract.js";
 import path from "path";
 import { logger } from "../../utils/Logger";
-import { TFTMode, getChessDataForMode } from "../../TFTProtocol";
+import { TFTMode } from "../../TFTProtocol";
+import { getChessDataByMode } from "../../TFTInfo/SeasonRegistry";
 
 /**
  * OCR Worker 类型枚举
@@ -151,7 +152,7 @@ export class OcrService {
      * @param mode 当前 TFT 游戏模式，用于决定加载哪个赛季的棋子白名单
      * @description 内部方法，负责：
      *   1. 销毁旧的 chessWorker（如果存在）
-     *   2. 用 getChessDataForMode(mode) 获取该赛季的棋子数据
+     *   2. 用 getChessDataByMode(mode) 获取该赛季的棋子数据
      *   3. 从棋子名称中提取所有独立汉字作为白名单
      *   4. 创建新的 Tesseract Worker 并应用白名单
      */
@@ -170,7 +171,7 @@ export class OcrService {
         });
 
         // 根据当前赛季获取对应的棋子数据集，构建精准的字符白名单
-        const chessData = getChessDataForMode(mode);
+        const chessData = getChessDataByMode(mode);
         const uniqueChars = [...new Set(Object.keys(chessData).join(""))].join("");
 
         await worker.setParameters({

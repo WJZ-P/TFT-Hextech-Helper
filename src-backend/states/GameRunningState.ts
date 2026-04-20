@@ -30,7 +30,8 @@ import { inGameApi, InGameApiEndpoints } from "../lcu/InGameApi";
 import { showToast, notifyStopAfterGameState, notifyHexRunningState } from "../utils/ToastBridge";
 import { hexService } from "../services/HexService";
 import { settingsStore } from "../utils/SettingsStore";
-import { TFTMode, isStandardChessMode, getSeasonTemplateDir } from "../TFTProtocol";
+import { TFTMode, isStandardChessMode } from "../TFTProtocol";
+import { getSeasonTemplateDirByMode } from "../TFTInfo/SeasonRegistry";
 import { templateLoader } from "../tft";
 import { ocrService } from "../tft/recognition/OcrService";
 import { tftOperator } from "../TftOperator";
@@ -84,7 +85,7 @@ export class GameRunningState implements IState {
         logger.info(`[GameRunningState] 当前游戏模式: ${currentMode}`);
 
         // 2.5 根据当前模式切换英雄模板赛季（加载对应赛季的棋子名称模板）
-        const seasonDir = getSeasonTemplateDir(currentMode);
+        const seasonDir = getSeasonTemplateDirByMode(currentMode);
         await templateLoader.switchSeason(seasonDir);
         logger.debug(`[GameRunningState] 英雄模板已切换到赛季: ${seasonDir}`);
 

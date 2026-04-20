@@ -53,13 +53,13 @@ import {
     ShopSlotIndex,
     refreshShopPoint,
     buyExpPoint,
-    TFT_17_CHESS_DATA,
     TFTEquip,
     TFTMode,
     TFTUnit,
     SimplePoint,
-    getChessDataForMode,
 } from "./TFTProtocol";
+// 赛季数据通过统一管理接口访问
+import { getCurrentChessData, getChessDataByMode } from "./TFTInfo/SeasonRegistry";
 
 
 
@@ -136,9 +136,9 @@ class TftOperator {
     /**
      * 当前赛季对应的棋子数据集
      * 根据 tftMode 自动切换，用于 OCR/模板匹配后查找英雄
-     * 默认使用 S17 星神（当前主赛季），init() 时会通过 getActiveChessData() 动态覆盖
+     * 默认使用当前主赛季（通过 getCurrentChessData 动态获取），init() 时会通过 getActiveChessData() 覆盖
      */
-    private currentChessData: Record<string, TFTUnit> = TFT_17_CHESS_DATA;
+    private currentChessData: Record<string, TFTUnit> = getCurrentChessData();
 
     /**
      * 获取当前模式对应的棋子数据集
@@ -147,7 +147,7 @@ class TftOperator {
      */
     private getActiveChessData(): Record<string, TFTUnit> {
         const mode = settingsStore.get('tftMode') as TFTMode || TFTMode.NORMAL;
-        this.currentChessData = getChessDataForMode(mode);
+        this.currentChessData = getChessDataByMode(mode);
         return this.currentChessData;
     }
 

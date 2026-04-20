@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 import { app } from 'electron';
 import { LineupConfig, ChampionConfig, StageConfig } from './LineupTypes';
-import { getChessDataBySeason, getEquipDataBySeason } from '../TFTProtocol';
+import { getChessDataBySeasonId, getEquipDataBySeasonId, SeasonId, CURRENT_SEASON } from '../TFTInfo/SeasonRegistry';
 import { logger } from '../utils/Logger';
 
 
@@ -135,9 +135,9 @@ class LineupLoader {
         if (!config.stages?.level8) errors.push('缺少 level8 阶段配置（必须）');
         
         // 根据阵容的赛季字段选择对应的棋子数据集和装备数据集
-        // getChessDataBySeason() / getEquipDataBySeason() 集中管理赛季→数据的映射，未来加新赛季只改 TFTProtocol 一处
-        const chessData = getChessDataBySeason(config.season);
-        const equipData = getEquipDataBySeason(config.season);
+        // 通过 SeasonRegistry 统一管理赛季→数据的映射，换赛季只改 CURRENT_SEASON 一处
+        const chessData = getChessDataBySeasonId(config.season as SeasonId);
+        const equipData = getEquipDataBySeasonId(config.season as SeasonId);
 
         // 验证各阶段的棋子配置（4-10 人口，参考 OP.GG 数据范围）
         const stageKeys = ['level4', 'level5', 'level6', 'level7', 'level8', 'level9', 'level10'] as const;
@@ -284,8 +284,8 @@ class LineupLoader {
         config.isUserCreated = true;
 
         // 确定存储目录：按赛季分子目录
-        // 默认兜底为 S17（当前主赛季）。正常情况下前端会传 season，此默认值只用于防御 undefined
-        const season = config.season || 'S17';
+        // 默认兜底为当前主赛季（由 SeasonRegistry.CURRENT_SEASON 决定）。正常情况下前端会传 season，此默认值只用于防御 undefined
+        const season = config.season || CURRENT_SEASON;
         const seasonDir = path.join(this.lineupsDir, season);
         if (!fs.existsSync(seasonDir)) {
             fs.mkdirSync(seasonDir, { recursive: true });
@@ -321,8 +321,8 @@ class LineupLoader {
         }
 
         // 查找并删除对应的 JSON 文件
-        // 兜底同 saveLineup：默认 S17。实际 config.season 应该有值
-        const season = config.season || 'S17';
+        // 兜底同 saveLineup：默认当前主赛季。实际 config.season 应该有值
+        const season = config.season || CURRENT_SEASON;
         const seasonDir = path.join(this.lineupsDir, season);
         const safeName = config.name.replace(/[/\\?%*:|"<>]/g, '-');
         const filePath = path.join(seasonDir, `${safeName}.json`);

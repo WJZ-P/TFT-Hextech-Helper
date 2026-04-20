@@ -10,6 +10,7 @@ import sharp from "sharp";
 import cv from "@techstark/opencv-js";
 import { logger } from "../../utils/Logger";
 import { EQUIP_CATEGORY_PRIORITY, EquipCategory, LootOrbType } from "../types";
+import { getCurrentTemplateDir } from "../../TFTInfo/SeasonRegistry";
 
 /** 支持的图片扩展名 */
 const VALID_IMAGE_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg"];
@@ -68,10 +69,11 @@ export class TemplateLoader {
     private watcherDebounceTimer: NodeJS.Timeout | null = null;
 
     /**
-     * 当前赛季子目录名（如 "s16", "s4"）
+     * 当前赛季子目录名（如 "s17", "s4"）
      * 决定 loadChampionTemplates() 加载哪个子文件夹的模板
+     * 默认跟随 SeasonRegistry.CURRENT_SEASON，运行时由 switchSeason() 动态切换
      */
-    private currentSeasonDir: string = 's16';
+    private currentSeasonDir: string = getCurrentTemplateDir();
 
     /** 文件监听器引用（切换赛季时需要先关闭旧的监听器） */
     private championWatcher: fs.FSWatcher | null = null;
