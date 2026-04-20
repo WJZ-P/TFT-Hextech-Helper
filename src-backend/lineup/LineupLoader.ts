@@ -284,7 +284,8 @@ class LineupLoader {
         config.isUserCreated = true;
 
         // 确定存储目录：按赛季分子目录
-        const season = config.season || 'S16';
+        // 默认兜底为 S17（当前主赛季）。正常情况下前端会传 season，此默认值只用于防御 undefined
+        const season = config.season || 'S17';
         const seasonDir = path.join(this.lineupsDir, season);
         if (!fs.existsSync(seasonDir)) {
             fs.mkdirSync(seasonDir, { recursive: true });
@@ -320,7 +321,8 @@ class LineupLoader {
         }
 
         // 查找并删除对应的 JSON 文件
-        const season = config.season || 'S16';
+        // 兜底同 saveLineup：默认 S17。实际 config.season 应该有值
+        const season = config.season || 'S17';
         const seasonDir = path.join(this.lineupsDir, season);
         const safeName = config.name.replace(/[/\\?%*:|"<>]/g, '-');
         const filePath = path.join(seasonDir, `${safeName}.json`);

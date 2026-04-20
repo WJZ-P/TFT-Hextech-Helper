@@ -1,7 +1,7 @@
 //  定义一下棋子相关的一些协议，包含棋子单位信息，各种位置信息和约定各种枚举值
 
-import {_TFT_16_EQUIP_DATA, _TFT_4_EQUIP_DATA} from "./TFTInfo/equip.ts";
-import {_TFT_16_CHESS_DATA, _TFT_4_CHESS_DATA, UNPURCHASABLE_CHESS} from "./TFTInfo/chess.ts";
+import {_TFT_16_EQUIP_DATA, _TFT_4_EQUIP_DATA, _TFT_17_EQUIP_DATA} from "./TFTInfo/equip.ts";
+import {_TFT_16_CHESS_DATA, _TFT_4_CHESS_DATA, _TFT_17_CHESS_DATA, UNPURCHASABLE_CHESS} from "./TFTInfo/chess.ts";
 
 /**
  * 游戏阶段的具体类型
@@ -537,6 +537,9 @@ export enum ItemForgeType {
 
 export const TFT_16_CHESS_DATA: Record<keyof typeof _TFT_16_CHESS_DATA, TFTUnit> = _TFT_16_CHESS_DATA;
 
+/** S17 星神赛季棋子数据（当前主赛季） */
+export const TFT_17_CHESS_DATA: Record<keyof typeof _TFT_17_CHESS_DATA, TFTUnit> = _TFT_17_CHESS_DATA;
+
 /** S4 瑞兽闹新春赛季棋子数据（含特殊棋子） */
 export const TFT_4_CHESS_DATA: Record<keyof typeof _TFT_4_CHESS_DATA, TFTUnit> = _TFT_4_CHESS_DATA;
 
@@ -548,16 +551,22 @@ export { UNPURCHASABLE_CHESS };
 
 export const TFT_16_EQUIP_DATA: Record<keyof typeof _TFT_16_EQUIP_DATA, TFTEquip> = _TFT_16_EQUIP_DATA;
 
+/** S17 星神赛季装备数据（当前主赛季） */
+export const TFT_17_EQUIP_DATA: Record<keyof typeof _TFT_17_EQUIP_DATA, TFTEquip> = _TFT_17_EQUIP_DATA;
+
 /** S4 瑞兽闹新春赛季装备数据 */
 export const TFT_4_EQUIP_DATA: Record<keyof typeof _TFT_4_EQUIP_DATA, TFTEquip> = _TFT_4_EQUIP_DATA;
 
 /**
  * 根据当前赛季模式获取对应的棋子数据集
  *
- * 这是多赛季支持的核心函数：
- * - S16（NORMAL / RANK）→ TFT_16_CHESS_DATA
- * - S4（S4_RUISHOU）→ TFT_4_CHESS_DATA
- * - CLOCKWORK_TRAILS（发条鸟）→ TFT_16_CHESS_DATA（发条鸟用的是当前赛季的棋子）
+ * 这是多赛季支持的核心函数喵：
+ * - NORMAL / RANK（当前主赛季）→ TFT_17_CHESS_DATA（S17 星神）
+ * - S4_RUISHOU（回归赛季）→ TFT_4_CHESS_DATA
+ * - CLOCKWORK_TRAILS（发条鸟）→ TFT_17_CHESS_DATA（发条鸟用的是当前赛季的棋子）
+ *
+ * ⚠️ 历史说明：S16 数据仍保留导出（TFT_16_CHESS_DATA），但已不参与运行时识别；
+ *              如未来 S16 需要回归或测试，可在此处加回对应 case
  *
  * @param mode 当前 TFT 模式
  * @returns 对应赛季的棋子数据 Record
@@ -570,7 +579,7 @@ export function getChessDataForMode(mode: TFTMode): Record<string, TFTUnit> {
         case TFTMode.RANK:
         case TFTMode.CLOCKWORK_TRAILS:
         default:
-            return TFT_16_CHESS_DATA;
+            return TFT_17_CHESS_DATA;
     }
 }
 
@@ -579,7 +588,7 @@ export function getChessDataForMode(mode: TFTMode): Record<string, TFTUnit> {
  * 用于 TemplateLoader 加载对应赛季的英雄名称模板
  *
  * @param mode 当前 TFT 模式
- * @returns 子目录名，如 "s16", "s4"
+ * @returns 子目录名，如 "s17", "s4"
  */
 export function getSeasonTemplateDir(mode: TFTMode): string {
     switch (mode) {
@@ -589,7 +598,7 @@ export function getSeasonTemplateDir(mode: TFTMode): string {
         case TFTMode.RANK:
         case TFTMode.CLOCKWORK_TRAILS:
         default:
-            return 's16';
+            return 's17';
     }
 }
 
@@ -602,16 +611,18 @@ export function getSeasonTemplateDir(mode: TFTMode): string {
  * 
  * 未来新增赛季时，只需在此处添加一个 case 即可
  *
- * @param season 阵容配置中的赛季标识，如 "S4", "S16"
- * @returns 对应赛季的棋子数据 Record
+ * @param season 阵容配置中的赛季标识，如 "S4", "S16", "S17"
+ * @returns 对应赛季的棋子数据 Record（默认/未指定 → S17）
  */
 export function getChessDataBySeason(season?: string): Record<string, TFTUnit> {
     switch (season) {
         case 'S4':
             return TFT_4_CHESS_DATA;
         case 'S16':
-        default:
             return TFT_16_CHESS_DATA;
+        case 'S17':
+        default:
+            return TFT_17_CHESS_DATA;
     }
 }
 
@@ -620,16 +631,18 @@ export function getChessDataBySeason(season?: string): Record<string, TFTUnit> {
  * 
  * 与 getChessDataBySeason() 配套使用，用于阵容配置中装备名称的验证
  * 
- * @param season 赛季标识，如 "S4", "S16"
- * @returns 对应赛季的装备数据 Record
+ * @param season 赛季标识，如 "S4", "S16", "S17"
+ * @returns 对应赛季的装备数据 Record（默认/未指定 → S17）
  */
 export function getEquipDataBySeason(season?: string): Record<string, TFTEquip> {
     switch (season) {
         case 'S4':
             return TFT_4_EQUIP_DATA;
         case 'S16':
-        default:
             return TFT_16_EQUIP_DATA;
+        case 'S17':
+        default:
+            return TFT_17_EQUIP_DATA;
     }
 }
 
@@ -638,11 +651,10 @@ export function getEquipDataBySeason(season?: string): Record<string, TFTEquip> 
 // ==========================================
 
 // 合并所有赛季的棋子名称为联合类型，确保任何赛季的棋子名都能通过类型检查
-export type ChampionKey = keyof typeof TFT_16_CHESS_DATA | keyof typeof TFT_4_CHESS_DATA;
-export type ChampionEnglishId =
-    | typeof _TFT_16_CHESS_DATA[keyof typeof _TFT_16_CHESS_DATA]['englishId']
-    | typeof _TFT_4_CHESS_DATA[keyof typeof _TFT_4_CHESS_DATA]['englishId'];
-export type EquipKey = keyof typeof TFT_16_EQUIP_DATA | keyof typeof TFT_4_EQUIP_DATA;
+// 把 S17 放最前面——它是当前主赛季，TS 提示时会优先匹配
+export type ChampionKey = keyof typeof TFT_17_CHESS_DATA | keyof typeof TFT_16_CHESS_DATA | keyof typeof TFT_4_CHESS_DATA;
+export type ChampionEnglishId = typeof _TFT_17_CHESS_DATA[keyof typeof _TFT_17_CHESS_DATA]['englishId'];
+export type EquipKey = keyof typeof TFT_17_EQUIP_DATA | keyof typeof TFT_16_EQUIP_DATA | keyof typeof TFT_4_EQUIP_DATA;
 
 // ==========================================
 // 英文ID到中文名的映射表 (自动从数据生成，用于解析 OP.GG 等外部数据)
@@ -650,11 +662,12 @@ export type EquipKey = keyof typeof TFT_16_EQUIP_DATA | keyof typeof TFT_4_EQUIP
 
 /**
  * 英雄英文ID到中文名的映射
- * @example "TFT16_Graves" -> "格雷福斯"
+ * @example "TFT17_Jhin" -> "烬"
  */
 export const CHAMPION_EN_TO_CN = {} as Record<ChampionEnglishId, ChampionKey>;
 
 // 自动从所有赛季的棋子数据生成英文到中文的映射
+// 注：如果不同赛季有同英文 ID 的英雄（极少见），后注册的会覆盖前面的，因此把当前赛季 S17 放最后
 for (const [cnName, champion] of Object.entries(TFT_16_CHESS_DATA)) {
     if (champion.englishId) {
         CHAMPION_EN_TO_CN[champion.englishId as ChampionEnglishId] = cnName as ChampionKey;
@@ -665,17 +678,24 @@ for (const [cnName, champion] of Object.entries(TFT_4_CHESS_DATA)) {
         CHAMPION_EN_TO_CN[champion.englishId as ChampionEnglishId] = cnName as ChampionKey;
     }
 }
+for (const [cnName, champion] of Object.entries(TFT_17_CHESS_DATA)) {
+    if (champion.englishId) {
+        CHAMPION_EN_TO_CN[champion.englishId as ChampionEnglishId] = cnName as ChampionKey;
+    }
+}
 
 
 /**
  * 装备英文ID到中文名的映射
  * @example "TFT_Item_InfinityEdge" -> "无尽之刃"
+ *
+ * 说明喵：装备的 englishName 可能在多个赛季出现（因为基础散件跨赛季复用），
+ *   所以同名 key 会被后写的覆盖。这里按"S16 → S17"顺序写入，S17 优先
  */
 export const EQUIP_EN_TO_CN: Record<string, EquipKey> = {};
 
-// 自动从 TFT_16_EQUIP_DATA 生成英文到中文的映射
-for (const [cnName, equip] of Object.entries(TFT_16_EQUIP_DATA)) {
-    // englishName 可能包含逗号分隔的多个名称
+// 只写 S17 的装备，S16已经没有了。
+for (const [cnName, equip] of Object.entries(TFT_17_EQUIP_DATA)) {
     const englishNames = equip.englishName.split(',');
     for (const enName of englishNames) {
         EQUIP_EN_TO_CN[enName.trim()] = cnName as EquipKey;
@@ -704,7 +724,9 @@ export interface LineupUnit {
  */
 export function isMeleeChampion(championName: ChampionKey): boolean {
     // 依次查找所有赛季的棋子数据，找到即返回
-    const champion = (TFT_16_CHESS_DATA as Record<string, TFTUnit>)[championName]
+    // 查找顺序：S17（当前赛季）→ S16 → S4
+    const champion = (TFT_17_CHESS_DATA as Record<string, TFTUnit>)[championName]
+        ?? (TFT_16_CHESS_DATA as Record<string, TFTUnit>)[championName]
         ?? (TFT_4_CHESS_DATA as Record<string, TFTUnit>)[championName];
     // 射程 <= 2 视为近战（包括格雷福斯这种短程枪手）
     return champion !== undefined && champion.attackRange <= 2;
@@ -716,7 +738,8 @@ export function isMeleeChampion(championName: ChampionKey): boolean {
  * @returns true 表示远程，false 表示近战
  */
 export function isRangedChampion(championName: ChampionKey): boolean {
-    const champion = (TFT_16_CHESS_DATA as Record<string, TFTUnit>)[championName]
+    const champion = (TFT_17_CHESS_DATA as Record<string, TFTUnit>)[championName]
+        ?? (TFT_16_CHESS_DATA as Record<string, TFTUnit>)[championName]
         ?? (TFT_4_CHESS_DATA as Record<string, TFTUnit>)[championName];
     // 射程 >= 4 视为远程
     return champion !== undefined && champion.attackRange >= 4;
@@ -729,7 +752,8 @@ export function isRangedChampion(championName: ChampionKey): boolean {
  */
 export function getChampionRange(championName: ChampionKey): number | undefined {
     // 依次查找所有赛季的数据，确保任何赛季的棋子都能查到射程
-    return ((TFT_16_CHESS_DATA as Record<string, TFTUnit>)[championName]
+    return ((TFT_17_CHESS_DATA as Record<string, TFTUnit>)[championName]
+        ?? (TFT_16_CHESS_DATA as Record<string, TFTUnit>)[championName]
         ?? (TFT_4_CHESS_DATA as Record<string, TFTUnit>)[championName])?.attackRange;
 }
 

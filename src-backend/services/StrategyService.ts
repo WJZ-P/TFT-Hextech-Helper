@@ -24,7 +24,7 @@ import {
     getChampionRange,
     ChampionKey,
     ShopSlotIndex,
-    TFT_16_EQUIP_DATA,
+    TFT_17_EQUIP_DATA,
     EquipKey,
     sharedDraftPoint,
     hexSlot,
@@ -37,7 +37,9 @@ import {gameStageMonitor, GameStageEvent} from "./GameStageMonitor";
 import {settingsStore} from "../utils/SettingsStore";
 import {lineupLoader} from "../lineup";
 import {LineupConfig, StageConfig, ChampionConfig} from "../lineup/LineupTypes";
-import {TFT_16_TRAIT_DATA} from "../TFTInfo/trait";
+// 羁绊数据：当前只用 S17（主赛季）和 S4.5（发条鸟）；S16 的 TFT_16_TRAIT_DATA 仍然存在于 trait.ts，
+// 未来若需要 S16 回归模式，可在此处补充 import 并在 getTraitDataForMode 内加 case
+import {TFT_17_TRAIT_DATA} from "../TFTInfo/trait";
 import {TFT_4_TRAIT_DATA} from "../TFTInfo/trait";
 import {UNSELLABLE_BOARD_UNITS} from "../TFTInfo/chess";
 import {mouseController, MouseButtonType, BenchUnit, BenchLocation, BoardUnit, BoardLocation} from "../tft";
@@ -432,7 +434,7 @@ export class StrategyService {
      * TODO: 实现特殊道具的使用策略（拆卸器/金拆/重铸器等），并加入更严格的目标选择与安全保护。
      */
     private isWearableEquipmentName(itemName: string): boolean {
-        const data = TFT_16_EQUIP_DATA[itemName as EquipKey];
+        const data = TFT_17_EQUIP_DATA[itemName as EquipKey];
 
         // 未知物品：为了安全，默认按"不可穿戴"处理，避免误把道具当装备拖到棋子身上。
         if (!data) {
@@ -451,7 +453,7 @@ export class StrategyService {
     /**
      * 推断：装备更适合"前排"还是"后排"
      * @description
-     * 我们没有直接的"装备类型标签"（坦装/输出装），但可以利用 `TFT_16_EQUIP_DATA.formula`：
+     * 我们没有直接的"装备类型标签"（坦装/输出装），但可以利用 `TFT_17_EQUIP_DATA.formula`：
      * - 基础散件：formula 为空
      * - 成装：formula 是 "散件ID1,散件ID2"
      *
@@ -463,7 +465,7 @@ export class StrategyService {
      * TODO: 后续可以结合"阵容配置的前排/后排位"或"英雄定位(主C/主T)"做更准确的分配。
      */
     private getEquipmentRolePreference(itemName: string): 'frontline' | 'backline' | 'any' {
-        const data = TFT_16_EQUIP_DATA[itemName as EquipKey];
+        const data = TFT_17_EQUIP_DATA[itemName as EquipKey];
         if (!data) return 'any';
 
         // 取组成它的散件名（成装取 2 个散件；散件本身返回自己）
@@ -512,7 +514,7 @@ export class StrategyService {
      * - 成装：返回 [散件1, 散件2]
      */
     private getComponentNamesOfItem(itemName: string): string[] {
-        const equip = TFT_16_EQUIP_DATA[itemName as EquipKey];
+        const equip = TFT_17_EQUIP_DATA[itemName as EquipKey];
         if (!equip) return [];
 
         const formula = (equip.formula ?? '').trim();
@@ -652,7 +654,7 @@ export class StrategyService {
         // 2) 如果背包里有"散件"，就允许执行装备策略（散件先上，拉即时战力）
         //    这里用 formula 是否为空来粗略判断"基础散件"（暴风大剑/反曲弓/女神泪等）
         const component = wearableEquipments.find(e => {
-            const data = TFT_16_EQUIP_DATA[e.name as EquipKey];
+            const data = TFT_17_EQUIP_DATA[e.name as EquipKey];
             return data && (data.formula ?? "") === "";
         });
         if (component) {
@@ -1873,13 +1875,19 @@ export class StrategyService {
     /**
      * 根据当前游戏模式获取羁绊激活阈值数据
      * @returns 羁绊名 → TraitData 的映射表
+     *
+     * 映射规则喵：
+     * - CLOCKWORK_TRAILS（发条鸟）→ S4.5 羁绊数据（发条鸟用 S4.5 的羁绊规则）
+     * - NORMAL / RANK（当前主赛季）→ S17 星神羁绊数据
+     * - S4_RUISHOU（回归赛季）→ 也用 S17（目前策略只关心当前主赛季与发条鸟）
+     *
+     * 注：S16 的羁绊数据仍保留（TFT_16_TRAIT_DATA），如需回归可在此加 case
      */
     private getTraitDataForMode(): Record<string, import("../TFTProtocol").TraitData> {
-        // S16(标准模式) 和 S4.5(发条迷城等) 使用不同的羁绊数据
         if (this.gameMode === TFTMode.CLOCKWORK_TRAILS) {
             return TFT_4_TRAIT_DATA;
         }
-        return TFT_16_TRAIT_DATA;
+        return TFT_17_TRAIT_DATA;
     }
 
     /**
@@ -2911,7 +2919,7 @@ export class StrategyService {
             if (!actionTaken) {
                 // 2.1 优先选择一个"基础散件"（formula 为空）；没有散件就随便取一个可穿戴装备
                 const component = equipments.find(e => {
-                    const data = TFT_16_EQUIP_DATA[e.name as EquipKey];
+                    const data = TFT_17_EQUIP_DATA[e.name as EquipKey];
                     return data && (data.formula ?? "") === "";
                 });
 
@@ -2996,7 +3004,7 @@ export class StrategyService {
      * @returns 如果可以合成，返回两个散件的名称；否则返回 null
      */
     private checkSynthesis(targetItemName: string, bag: Map<string, number>): { component1: string, component2: string } | null {
-        const targetEquip = TFT_16_EQUIP_DATA[targetItemName as EquipKey];
+        const targetEquip = TFT_17_EQUIP_DATA[targetItemName as EquipKey];
         if (!targetEquip || !targetEquip.formula) return null;
 
         // 解析配方 ID
@@ -3029,9 +3037,9 @@ export class StrategyService {
      * 根据 ID 查找装备名称
      */
     private findEquipNameById(id: string): string | undefined {
-        for (const key in TFT_16_EQUIP_DATA) {
-            if (TFT_16_EQUIP_DATA[key].equipId === id) {
-                return TFT_16_EQUIP_DATA[key].name;
+        for (const key in TFT_17_EQUIP_DATA) {
+            if (TFT_17_EQUIP_DATA[key].equipId === id) {
+                return TFT_17_EQUIP_DATA[key].name;
             }
         }
         return undefined;

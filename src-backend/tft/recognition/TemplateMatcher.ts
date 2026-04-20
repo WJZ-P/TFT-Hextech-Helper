@@ -10,7 +10,7 @@ import fs from "fs-extra";
 import sharp from "sharp";
 import {logger} from "../../utils/Logger";
 import {IdentifiedEquip, EquipCategory, EQUIP_CATEGORY_PRIORITY, LootOrb, LootOrbType} from "../types";
-import {TFT_16_EQUIP_DATA} from "../../TFTProtocol";
+import {TFT_17_EQUIP_DATA} from "../../TFTProtocol";
 import {templateLoader} from "./TemplateLoader";
 
 /**
@@ -141,8 +141,8 @@ export class TemplateMatcher {
                         const result = cv.minMaxLoc(resultMat, mask);
 
                         if (result.maxVal >= MATCH_THRESHOLDS.EQUIP) {
-                            // 从数据集中查找装备信息
-                            const equipData = Object.values(TFT_16_EQUIP_DATA).find(
+                            // 从数据集中查找装备信息（S17 为当前赛季）
+                            const equipData = Object.values(TFT_17_EQUIP_DATA).find(
                                 (e) => e.englishName.toLowerCase() === templateName.toLowerCase()
                             );
 

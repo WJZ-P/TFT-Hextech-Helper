@@ -53,7 +53,7 @@ import {
     ShopSlotIndex,
     refreshShopPoint,
     buyExpPoint,
-    TFT_16_CHESS_DATA,
+    TFT_17_CHESS_DATA,
     TFTEquip,
     TFTMode,
     TFTUnit,
@@ -136,8 +136,9 @@ class TftOperator {
     /**
      * 当前赛季对应的棋子数据集
      * 根据 tftMode 自动切换，用于 OCR/模板匹配后查找英雄
+     * 默认使用 S17 星神（当前主赛季），init() 时会通过 getActiveChessData() 动态覆盖
      */
-    private currentChessData: Record<string, TFTUnit> = TFT_16_CHESS_DATA;
+    private currentChessData: Record<string, TFTUnit> = TFT_17_CHESS_DATA;
 
     /**
      * 获取当前模式对应的棋子数据集
