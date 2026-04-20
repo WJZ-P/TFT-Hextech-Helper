@@ -1,0 +1,720 @@
+{
+  "id": "1661f05dc94cfcc6eb851520ef449f65",
+  "name": "新星特攻队 易",
+  "season": "S17",
+  "finalComp": {
+    "champions": [
+      {
+        "name": "亚托克斯",
+        "isCore": false,
+        "starTarget": 2
+      },
+      {
+        "name": "阿卡丽",
+        "isCore": false,
+        "starTarget": 2
+      },
+      {
+        "name": "卑尔维斯",
+        "isCore": false,
+        "starTarget": 2
+      },
+      {
+        "name": "茂凯",
+        "isCore": false,
+        "starTarget": 2
+      },
+      {
+        "name": "千珏",
+        "isCore": true,
+        "items": [
+          "鬼索的狂暴之刃",
+          "强袭者的链枷",
+          "海妖之怒"
+        ],
+        "starTarget": 2
+      },
+      {
+        "name": "易",
+        "isCore": true,
+        "items": [
+          "新星特攻队纹章",
+          "夜之锋刃",
+          "巨人杀手"
+        ],
+        "starTarget": 2
+      },
+      {
+        "name": "塔姆",
+        "isCore": true,
+        "items": [
+          "坚定之心",
+          "日炎斗篷",
+          "振奋盔甲"
+        ],
+        "starTarget": 2
+      },
+      {
+        "name": "菲奥娜",
+        "isCore": false,
+        "items": [
+          "夜之锋刃",
+          "斯特拉克的挑战护手",
+          "正义之手"
+        ],
+        "starTarget": 2
+      },
+      {
+        "name": "慎",
+        "isCore": false,
+        "starTarget": 2
+      }
+    ],
+    "traits": [
+      {
+        "key": "TFT17_FioraUniqueTrait",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT17_ShenUniqueTrait",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT17_TahmKenchUniqueTrait",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT17_DRX",
+        "style": 4,
+        "numUnits": 5
+      },
+      {
+        "key": "TFT17_MeleeTrait",
+        "style": 3,
+        "numUnits": 4
+      },
+      {
+        "key": "TFT17_ResistTank",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT17_ASTrait",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT17_HPTank",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT17_Primordian",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT17_AnimaSquad",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT17_PsyOps",
+        "style": 0,
+        "numUnits": 1
+      }
+    ]
+  },
+  "stages": {
+    "level4": {
+      "champions": [
+        {
+          "name": "亚托克斯",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "凯特琳",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "泰隆",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "崔斯特",
+          "isCore": false,
+          "position": "R1_C1"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_DRX",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_Fateweaver",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_ResistTank",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_AssassinTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_Stargazer",
+          "style": 0,
+          "numUnits": 2
+        }
+      ]
+    },
+    "level5": {
+      "champions": [
+        {
+          "name": "亚托克斯",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "凯特琳",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "泰隆",
+          "isCore": false,
+          "position": "R3_C2"
+        },
+        {
+          "name": "崔斯特",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "贾克斯",
+          "isCore": false,
+          "position": "R4_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_DRX",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_ResistTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_Fateweaver",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_Stargazer",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_AssassinTrait",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level6": {
+      "champions": [
+        {
+          "name": "亚托克斯",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "贝蕾亚",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "雷克塞",
+          "isCore": false,
+          "position": "R4_C2"
+        },
+        {
+          "name": "阿卡丽",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "卑尔维斯",
+          "isCore": false,
+          "position": "R3_C1"
+        },
+        {
+          "name": "茂凯",
+          "isCore": false,
+          "position": "R4_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_Primordian",
+          "style": 4,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_HPTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_MeleeTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_DRX",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_ResistTank",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_AnimaSquad",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_AssassinTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_ASTrait",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level7": {
+      "champions": [
+        {
+          "name": "亚托克斯",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "贝蕾亚",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "凯特琳",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "雷克塞",
+          "isCore": false,
+          "position": "R4_C2"
+        },
+        {
+          "name": "阿卡丽",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "卑尔维斯",
+          "isCore": false,
+          "position": "R3_C1"
+        },
+        {
+          "name": "茂凯",
+          "isCore": false,
+          "position": "R4_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_Primordian",
+          "style": 4,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_HPTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_MeleeTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_DRX",
+          "style": 1,
+          "numUnits": 4
+        },
+        {
+          "key": "TFT17_ResistTank",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_AnimaSquad",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_AssassinTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_Fateweaver",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_ASTrait",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level8": {
+      "champions": [
+        {
+          "name": "亚托克斯",
+          "isCore": false,
+          "position": "R3_C3"
+        },
+        {
+          "name": "凯特琳",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "阿卡丽",
+          "isCore": false,
+          "position": "R3_C2"
+        },
+        {
+          "name": "卑尔维斯",
+          "isCore": false,
+          "position": "R3_C1"
+        },
+        {
+          "name": "茂凯",
+          "isCore": false,
+          "position": "R3_C5"
+        },
+        {
+          "name": "千珏",
+          "isCore": false,
+          "position": "R1_C7"
+        },
+        {
+          "name": "易",
+          "isCore": false,
+          "position": "R3_C6"
+        },
+        {
+          "name": "塔姆",
+          "isCore": false,
+          "position": "R4_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_TahmKenchUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_DRX",
+          "style": 4,
+          "numUnits": 5
+        },
+        {
+          "key": "TFT17_ASTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_HPTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_MeleeTrait",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_ResistTank",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_Fateweaver",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_Primordian",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_PsyOps",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level9": {
+      "champions": [
+        {
+          "name": "亚托克斯",
+          "isCore": false,
+          "position": "R4_C7"
+        },
+        {
+          "name": "阿卡丽",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "卑尔维斯",
+          "isCore": false,
+          "position": "R2_C3"
+        },
+        {
+          "name": "茂凯",
+          "isCore": false,
+          "position": "R4_C6"
+        },
+        {
+          "name": "千珏",
+          "isCore": false,
+          "position": "R2_C2"
+        },
+        {
+          "name": "易",
+          "isCore": false,
+          "position": "R3_C3"
+        },
+        {
+          "name": "塔姆",
+          "isCore": false,
+          "position": "R4_C2"
+        },
+        {
+          "name": "菲奥娜",
+          "isCore": false,
+          "position": "R3_C1"
+        },
+        {
+          "name": "慎",
+          "isCore": false,
+          "position": "R4_C3"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_TahmKenchUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_FioraUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_ShenUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_MeleeTrait",
+          "style": 3,
+          "numUnits": 4
+        },
+        {
+          "key": "TFT17_ResistTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_ASTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_HPTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_DRX",
+          "style": 1,
+          "numUnits": 4
+        },
+        {
+          "key": "TFT17_Primordian",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_PsyOps",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_AnimaSquad",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level10": {
+      "champions": [
+        {
+          "name": "亚托克斯",
+          "isCore": false,
+          "position": "R3_C2"
+        },
+        {
+          "name": "凯特琳",
+          "isCore": false,
+          "position": "R1_C7"
+        },
+        {
+          "name": "阿卡丽",
+          "isCore": false,
+          "position": "R3_C6"
+        },
+        {
+          "name": "卑尔维斯",
+          "isCore": false,
+          "position": "R3_C3"
+        },
+        {
+          "name": "茂凯",
+          "isCore": false,
+          "position": "R3_C4"
+        },
+        {
+          "name": "千珏",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "易",
+          "isCore": false,
+          "position": "R3_C1"
+        },
+        {
+          "name": "塔姆",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "菲奥娜",
+          "isCore": false,
+          "position": "R3_C5"
+        },
+        {
+          "name": "娑娜",
+          "isCore": false,
+          "position": "R1_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_TahmKenchUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_FioraUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_SonaUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_DRX",
+          "style": 4,
+          "numUnits": 5
+        },
+        {
+          "key": "TFT17_MeleeTrait",
+          "style": 3,
+          "numUnits": 4
+        },
+        {
+          "key": "TFT17_ASTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_HPTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_PsyOps",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_ResistTank",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_Fateweaver",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_Primordian",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_AnimaSquad",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_SummonTrait",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    }
+  }
+}

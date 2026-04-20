@@ -1,0 +1,723 @@
+{
+  "id": "93c7798217775960e22bec90afb55206",
+  "name": "霸天机甲 超级机甲",
+  "season": "S17",
+  "finalComp": {
+    "champions": [
+      {
+        "name": "厄加特",
+        "isCore": false,
+        "position": "R3_C6",
+        "starTarget": 2
+      },
+      {
+        "name": "奥瑞利安·索尔",
+        "isCore": true,
+        "items": [
+          "珠光护手",
+          "灭世者的死亡之帽",
+          "虚空之杖"
+        ],
+        "position": "R1_C1",
+        "starTarget": 2
+      },
+      {
+        "name": "超级机甲",
+        "isCore": true,
+        "items": [
+          "石像鬼石板甲",
+          "斯特拉克的挑战护手",
+          "泰坦的坚决"
+        ],
+        "position": "R4_C4",
+        "starTarget": 2
+      },
+      {
+        "name": "卡尔玛",
+        "isCore": false,
+        "position": "R1_C7",
+        "starTarget": 2
+      },
+      {
+        "name": "塔姆",
+        "isCore": false,
+        "position": "R4_C5",
+        "starTarget": 2
+      },
+      {
+        "name": "巴德",
+        "isCore": false,
+        "items": [
+          "莫雷洛秘典",
+          "朔极之矛",
+          "虚空之杖"
+        ],
+        "position": "R1_C2",
+        "starTarget": 2
+      },
+      {
+        "name": "菲奥娜",
+        "isCore": true,
+        "items": [
+          "饮血剑",
+          "斯特拉克的挑战护手",
+          "泰坦的坚决"
+        ],
+        "position": "R3_C2",
+        "starTarget": 2
+      },
+      {
+        "name": "莫甘娜",
+        "isCore": false,
+        "position": "R1_C3",
+        "starTarget": 2
+      }
+    ],
+    "traits": [
+      {
+        "key": "TFT17_FioraUniqueTrait",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT17_MorganaUniqueTrait",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT17_TahmKenchUniqueTrait",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT17_ManaTrait",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT17_MeleeTrait",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT17_FlexTrait",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT17_HPTank",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT17_Mecha",
+        "style": 1,
+        "numUnits": 3
+      },
+      {
+        "key": "TFT17_Astronaut",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT17_AnimaSquad",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT17_DarkStar",
+        "style": 0,
+        "numUnits": 1
+      }
+    ]
+  },
+  "stages": {
+    "level4": {
+      "champions": [
+        {
+          "name": "贝蕾亚",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "雷克塞",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "卑尔维斯",
+          "isCore": false,
+          "position": "R3_C3"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_Primordian",
+          "style": 4,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_AnimaSquad",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_AssassinTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_HPTank",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_ASTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_MeleeTrait",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level5": {
+      "champions": [
+        {
+          "name": "贝蕾亚",
+          "isCore": false,
+          "position": "R4_C2"
+        },
+        {
+          "name": "伊泽瑞尔",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "雷克塞",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "卑尔维斯",
+          "isCore": false,
+          "position": "R3_C2"
+        },
+        {
+          "name": "潘森",
+          "isCore": false,
+          "position": "R4_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_Primordian",
+          "style": 4,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_Timebreaker",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_HPTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_AnimaSquad",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_AssassinTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_RangedTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_ASTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_MeleeTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_APTrait",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level6": {
+      "champions": [
+        {
+          "name": "贝蕾亚",
+          "isCore": false,
+          "position": "R3_C6"
+        },
+        {
+          "name": "雷克塞",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "卑尔维斯",
+          "isCore": false,
+          "position": "R3_C7"
+        },
+        {
+          "name": "米利欧",
+          "isCore": false,
+          "position": "R1_C7"
+        },
+        {
+          "name": "潘森",
+          "isCore": false,
+          "position": "R3_C4"
+        },
+        {
+          "name": "厄加特",
+          "isCore": false,
+          "position": "R3_C5"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_Primordian",
+          "style": 4,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_MeleeTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_Timebreaker",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_HPTank",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_AnimaSquad",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_AssassinTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_ASTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_Fateweaver",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_APTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_Mecha",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level7": {
+      "champions": [
+        {
+          "name": "丽桑卓",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "小木灵",
+          "isCore": false,
+          "position": "R4_C6"
+        },
+        {
+          "name": "莫德凯撒",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "派克",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "俄洛伊",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "拉亚斯特",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "娜美",
+          "isCore": false,
+          "position": "R1_C2"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_RhaastUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_SpaceGroove",
+          "style": 1,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_DarkStar",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_APTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_FlexTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_ShieldTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_SummonTrait",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_Astronaut",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_ManaTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_PsyOps",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_AnimaSquad",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level8": {
+      "champions": [
+        {
+          "name": "厄加特",
+          "isCore": false,
+          "position": "R1_C4"
+        },
+        {
+          "name": "奥瑞利安·索尔",
+          "isCore": false,
+          "position": "R1_C7"
+        },
+        {
+          "name": "超级机甲",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "卡尔玛",
+          "isCore": false,
+          "position": "R1_C5"
+        },
+        {
+          "name": "塔姆",
+          "isCore": false,
+          "position": "R2_C3"
+        },
+        {
+          "name": "菲奥娜",
+          "isCore": false,
+          "position": "R1_C3"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_TahmKenchUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_FioraUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_HPTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_MeleeTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_FlexTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_Mecha",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_ManaTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_DarkStar",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_AnimaSquad",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level9": {
+      "champions": [
+        {
+          "name": "厄加特",
+          "isCore": false,
+          "position": "R1_C4"
+        },
+        {
+          "name": "奥瑞利安·索尔",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "超级机甲",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "卡尔玛",
+          "isCore": false,
+          "position": "R1_C7"
+        },
+        {
+          "name": "塔姆",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "巴德",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "菲奥娜",
+          "isCore": false,
+          "position": "R1_C3"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_TahmKenchUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_FioraUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_HPTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_MeleeTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_ManaTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_FlexTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_Mecha",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_DarkStar",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_Astronaut",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_AnimaSquad",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level10": {
+      "champions": [
+        {
+          "name": "厄加特",
+          "isCore": false,
+          "position": "R1_C4"
+        },
+        {
+          "name": "奥瑞利安·索尔",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "超级机甲",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "卡尔玛",
+          "isCore": false,
+          "position": "R1_C7"
+        },
+        {
+          "name": "塔姆",
+          "isCore": false,
+          "position": "R2_C3"
+        },
+        {
+          "name": "巴德",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "菲奥娜",
+          "isCore": false,
+          "position": "R1_C3"
+        },
+        {
+          "name": "烬",
+          "isCore": false,
+          "position": "R1_C6"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_TahmKenchUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_FioraUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_JhinUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_HPTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_MeleeTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_ManaTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_FlexTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_DarkStar",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_Mecha",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_Astronaut",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_AnimaSquad",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_RangedTrait",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    }
+  }
+}

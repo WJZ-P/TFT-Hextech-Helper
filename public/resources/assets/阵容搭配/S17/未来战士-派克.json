@@ -1,0 +1,6630 @@
+{
+    "id": "891660b4308cb17ba09910c726f89532",
+    "name": {
+        "ar_AE": "ÙƒØ§Ø³Ø± Ø§Ù„Ø²Ù…Ù† Ø¨Ø§ÙŠÙƒ",
+        "cs_CZ": "NiÄitel Äasu Pyke",
+        "de_DE": "Zeitbrecher Pyke",
+        "el_GR": "Î§ÏÎ¿Î½Î¿Î¸ÏÎ±ÏÏƒÏ„Î·Ï‚ Î Î¬Î¹Îº",
+        "en_AU": "Timebreaker Pyke",
+        "en_GB": "Timebreaker Pyke",
+        "en_PH": "Timebreaker Pyke",
+        "en_SG": "Timebreaker Pyke",
+        "en_US": "Timebreaker Pyke",
+        "es_AR": "Rompetiempo Pyke",
+        "es_ES": "Disruptor temporal Pyke",
+        "es_MX": "Rompetiempo Pyke",
+        "fr_FR": "Brise-temps Pyke",
+        "hu_HU": "IdÅ‘tÃ¶rÅ‘ Pyke",
+        "it_IT": "Spezzatempo Pyke",
+        "ja_JP": "ã‚¿ã‚¤ãƒ ãƒ–ãƒ¬ãƒ¼ã‚«ãƒ¼ ãƒ‘ã‚¤ã‚¯",
+        "ko_KR": "ì‹œê°„ ê· ì—´ìž íŒŒì´í¬",
+        "pl_PL": "Åamacze Czasu Pyke",
+        "pt_BR": "Rasga-tempo Pyke",
+        "ro_RO": "FrÃ¢ngÄƒtor al timpului Pyke",
+        "ru_RU": "Ð Ð°Ð·Ñ€ÑƒÑˆÐ¸Ñ‚ÐµÐ»ÑŒ Ð²Ñ€ÐµÐ¼ÐµÐ½Ð¸ ÐŸÐ°Ð¹Ðº",
+        "th_TH": "Timebreaker Pyke",
+        "tr_TR": "ZamankÄ±ran Pyke",
+        "vi_VN": "Thá»i KhÃ´ng Pyke",
+        "zh_CN": "æœªæ¥æˆ˜å£« æ´¾å…‹",
+        "zh_MY": "ç ´æ—¶è€… æ´¾å…‹",
+        "zh_TW": "æ™‚é–“ç ´å£žè€… æ´¾å…‹"
+    },
+    "cost": 60,
+    "teamCode": "0203103501403d02502d01903c000000TFTSet17",
+    "units": [
+        {
+            "key": "TFT17_Gragas",
+            "items": [],
+            "tier": 3,
+            "cell": {
+                "x": 1,
+                "y": 4
+            },
+            "isCore": false,
+            "priority": null
+        },
+        {
+            "key": "TFT17_Gwen",
+            "items": [
+                "TFT_Item_JeweledGauntlet",
+                "TFT_Item_Leviathan",
+                "TFT_Item_UnstableConcoction"
+            ],
+            "tier": 3,
+            "cell": {
+                "x": 1,
+                "y": 3
+            },
+            "isCore": true,
+            "priority": 2
+        },
+        {
+            "key": "TFT17_IvernMinion",
+            "items": [],
+            "tier": 3,
+            "cell": {
+                "x": 4,
+                "y": 4
+            },
+            "isCore": false,
+            "priority": null
+        },
+        {
+            "key": "TFT17_Milio",
+            "items": [
+                "TFT_Item_JeweledGauntlet",
+                "TFT_Item_Leviathan",
+                "TFT_Item_SpearOfShojin"
+            ],
+            "tier": 3,
+            "cell": {
+                "x": 1,
+                "y": 1
+            },
+            "isCore": false,
+            "priority": null
+        },
+        {
+            "key": "TFT17_Pantheon",
+            "items": [
+                "TFT_Item_DragonsClaw",
+                "TFT_Item_NightHarvester",
+                "TFT_Item_RedBuff"
+            ],
+            "tier": 3,
+            "cell": {
+                "x": 7,
+                "y": 4
+            },
+            "isCore": true,
+            "priority": 3
+        },
+        {
+            "key": "TFT17_Pyke",
+            "items": [
+                "TFT_Item_GuardianAngel",
+                "TFT_Item_InfinityEdge",
+                "TFT_Item_UnstableConcoction"
+            ],
+            "tier": 3,
+            "cell": {
+                "x": 6,
+                "y": 1
+            },
+            "isCore": true,
+            "priority": 1
+        },
+        {
+            "key": "TFT17_Corki",
+            "items": [],
+            "tier": 2,
+            "cell": {
+                "x": 7,
+                "y": 1
+            },
+            "isCore": false,
+            "priority": null
+        },
+        {
+            "key": "TFT17_Riven",
+            "items": [],
+            "tier": 2,
+            "cell": {
+                "x": 1,
+                "y": 2
+            },
+            "isCore": false,
+            "priority": null
+        }
+    ],
+    "traits": [
+        {
+            "key": "TFT17_Timebreaker",
+            "style": 3,
+            "numUnits": 3
+        },
+        {
+            "key": "TFT17_SpaceGroove",
+            "style": 1,
+            "numUnits": 1
+        },
+        {
+            "key": "TFT17_Fateweaver",
+            "style": 1,
+            "numUnits": 2
+        },
+        {
+            "key": "TFT17_PsyOps",
+            "style": 1,
+            "numUnits": 2
+        },
+        {
+            "key": "TFT17_HPTank",
+            "style": 1,
+            "numUnits": 2
+        },
+        {
+            "key": "TFT17_AssassinTrait",
+            "style": 1,
+            "numUnits": 2
+        },
+        {
+            "key": "TFT17_FlexTrait",
+            "style": 1,
+            "numUnits": 2
+        },
+        {
+            "key": "TFT17_SummonTrait",
+            "style": 0,
+            "numUnits": 1
+        },
+        {
+            "key": "TFT17_APTrait",
+            "style": 0,
+            "numUnits": 1
+        },
+        {
+            "key": "TFT17_Astronaut",
+            "style": 0,
+            "numUnits": 2
+        }
+    ],
+    "badge": [],
+    "stat": {
+        "originHash": "891660b4308cb17ba09910c726f89532",
+        "labelNumber": 23,
+        "opTier": "B",
+        "opScore": 0.12770769622833839,
+        "deck": {
+            "totalCount": 125568,
+            "compsCount": 211,
+            "avgPlacement": 3.74,
+            "winCount": 14,
+            "top4Count": 146,
+            "winRate": 0.0664,
+            "top4Rate": 0.6919,
+            "pickRate": 0.0016803644240570845
+        },
+        "label": {
+            "totalCount": 125568,
+            "compsCount": 211,
+            "avgPlacement": 3.74,
+            "winCount": 14,
+            "top4Count": 146,
+            "winRate": 0.0664,
+            "top4Rate": 0.6919,
+            "pickRate": 0.0016803644240570845
+        },
+        "representative": true
+    },
+    "buildUp": [
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "48c0dce438c5154f2dd0e9fcbd4a6dd3",
+            "level": "4",
+            "units": [
+                {
+                    "characterId": "TFT17_Ezreal",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_RangedTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 154,
+            "win": 63,
+            "lose": 60
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "1635fa87d8c1532c34a3100aa1e7e706",
+            "level": "4",
+            "units": [
+                {
+                    "characterId": "TFT17_Ezreal",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_RangedTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 126,
+            "win": 51,
+            "lose": 54
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "34113a368e783bf60c6907b0684a58f5",
+            "level": "4",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 60,
+            "win": 24,
+            "lose": 27
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "83999fcd579df0f0bb5f00b549dbc736",
+            "level": "4",
+            "units": [
+                {
+                    "characterId": "TFT17_Ezreal",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_RangedTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 52,
+            "win": 16,
+            "lose": 27
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "4ad37c9aad30ff22c9b7b2872eeee660",
+            "level": "4",
+            "units": [
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 52,
+            "win": 21,
+            "lose": 20
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "21ab245d4afb68963c355b273ab26029",
+            "level": "4",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 19,
+            "win": 3,
+            "lose": 9
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "c3f65463cdaacb818362b1c94a4cdace",
+            "level": "4",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 14,
+            "win": 7,
+            "lose": 6
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "70a49047f17d24ea0a9c23323463f3d7",
+            "level": "4",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 14,
+            "win": 7,
+            "lose": 5
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "e4a3c9bb9763d11f5181be5f2bf38b0c",
+            "level": "4",
+            "units": [
+                {
+                    "characterId": "TFT17_Ezreal",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Poppy",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_RangedTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_ResistTank",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 2
+                }
+            ],
+            "play": 11,
+            "win": 7,
+            "lose": 2
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "2068060f9f33d1d1905f803e55ad28cc",
+            "level": "4",
+            "units": [
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 10,
+            "win": 6,
+            "lose": 3
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "4762c0004298da3da9a0e8e338a276be",
+            "level": "5",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 119,
+            "win": 56,
+            "lose": 48
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "b130a99a4104e58e71d1d402cbae2a0b",
+            "level": "5",
+            "units": [
+                {
+                    "characterId": "TFT17_Ezreal",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_RangedTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 67,
+            "win": 29,
+            "lose": 31
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "2edf63b0d9c457740cae34af9d01b74d",
+            "level": "5",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 56,
+            "win": 21,
+            "lose": 22
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "726e1496eff4b741a46237c1ef515955",
+            "level": "5",
+            "units": [
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 40,
+            "win": 19,
+            "lose": 13
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "bed056d4cfc88d0854111670a666d026",
+            "level": "5",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 2
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 34,
+            "win": 10,
+            "lose": 20
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "a2539bb19f2e41826429a70c6890ec77",
+            "level": "5",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 30,
+            "win": 10,
+            "lose": 13
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "e124f188151bf3a9a940b32e398ed15b",
+            "level": "5",
+            "units": [
+                {
+                    "characterId": "TFT17_Briar",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_RekSai",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Primordian",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AnimaSquad",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 20,
+            "win": 12,
+            "lose": 6
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "787583747274171ca65bc44a9d415afc",
+            "level": "5",
+            "units": [
+                {
+                    "characterId": "TFT17_Ezreal",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 3
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_RangedTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 11,
+            "win": 7,
+            "lose": 4
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "8551342f8851169d42088ac714849f29",
+            "level": "5",
+            "units": [
+                {
+                    "characterId": "TFT17_Ezreal",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 3
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_RangedTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 10,
+            "win": 2,
+            "lose": 5
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "6d01594cc97ee0dec32badec9d6e3130",
+            "level": "5",
+            "units": [
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Mordekaiser",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 3
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_DarkStar",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_ManaTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_ShieldTank",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 5,
+            "win": 2,
+            "lose": 2
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "f837dc5577275d2e634df7cc923bee52",
+            "level": "6",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 1465,
+            "win": 594,
+            "lose": 580
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "c8c15c132776062cbe9fafb3da02a30a",
+            "level": "6",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Riven",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 82,
+            "win": 45,
+            "lose": 22
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "f0b4f54e4cb2486d03b150fe8729e45d",
+            "level": "6",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Riven",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 2
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 50,
+            "win": 19,
+            "lose": 23
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "f349b243128ee0963fccb421b0c4a82f",
+            "level": "6",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Riven",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 2
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 48,
+            "win": 19,
+            "lose": 23
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "c2661beae7cd221e58456ff7b6bedb30",
+            "level": "6",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Corki",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 2
+                }
+            ],
+            "play": 43,
+            "win": 18,
+            "lose": 20
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "6bdc1cb2ba9cf3c11b40d9961c867b39",
+            "level": "6",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Corki",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 40,
+            "win": 20,
+            "lose": 16
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "55d3150ac740b2e0098fdb456ea53f3a",
+            "level": "6",
+            "units": [
+                {
+                    "characterId": "TFT17_Ezreal",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_RangedTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 25,
+            "win": 10,
+            "lose": 11
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "a642a9bc673c4086a862a35cfa5c49d2",
+            "level": "6",
+            "units": [
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Riven",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 2
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 13,
+            "win": 6,
+            "lose": 3
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "47166fe3c20080572376b1d71f27318f",
+            "level": "7",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Riven",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 2
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 512,
+            "win": 231,
+            "lose": 237
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "96cfb792020cd9c7c74721fc227ac3f1",
+            "level": "7",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Corki",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 2
+                }
+            ],
+            "play": 274,
+            "win": 111,
+            "lose": 143
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "ab4a73f89cf7d541bbd4b3f8db6012c6",
+            "level": "7",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Corki",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Riven",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 28,
+            "win": 12,
+            "lose": 12
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "515f73ec0ee7ae764cf7da6390dde6fe",
+            "level": "7",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Corki",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Riven",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 2
+                }
+            ],
+            "play": 15,
+            "win": 6,
+            "lose": 9
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "a22b30f82cca1a601c24fd38a3fdcddd",
+            "level": "7",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 2
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Fizz",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 2
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 2
+                }
+            ],
+            "play": 10,
+            "win": 2,
+            "lose": 7
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "748780e7037e033d0da3925147cd3945",
+            "level": "7",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 2
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Karma",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_DarkStar",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 7,
+            "win": 4,
+            "lose": 3
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "f8359b7e129b26db3a7776eea0deb581",
+            "level": "7",
+            "units": [
+                {
+                    "characterId": "TFT17_Talon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Stargazer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 6,
+            "win": 3,
+            "lose": 2
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "4664ca68d844c6eb98aa72967c5c2b76",
+            "level": "7",
+            "units": [
+                {
+                    "characterId": "TFT17_Briar",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AnimaSquad",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Primordian",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 5,
+            "win": 1,
+            "lose": 4
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "891660b4308cb17ba09910c726f89532",
+            "level": "8",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Corki",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Riven",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 2
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 2
+                }
+            ],
+            "play": 353,
+            "win": 149,
+            "lose": 188
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "a8583fe9aecf5d8e6ae76b605be5cdae",
+            "level": "8",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Galio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 2
+                    }
+                },
+                {
+                    "characterId": "TFT17_Riven",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 2
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Mecha",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 10,
+            "win": 4,
+            "lose": 6
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "51a7943d88b8c322eebf7918f9c34225",
+            "level": "8",
+            "units": [
+                {
+                    "characterId": "TFT17_TwistedFate",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 2
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Riven",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 3
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Stargazer",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 5,
+            "win": 1,
+            "lose": 4
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "02c6ce194b83cb5f4f54b334b6d93aa9",
+            "level": "8",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Riven",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Morgana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_MorganaUniqueTrait",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 4,
+            "win": 1,
+            "lose": 3
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "b970733381397025b4f6ddd5b8a803eb",
+            "level": "8",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Riven",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 2
+                    }
+                },
+                {
+                    "characterId": "TFT17_TahmKench",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_TahmKenchUniqueTrait",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 4,
+            "win": 0,
+            "lose": 2
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "e80f61b55c2a7cf895c69212f73e6786",
+            "level": "8",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Corki",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Bard",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_ManaTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 4,
+            "win": 1,
+            "lose": 2
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "1c227ad8749faa797d61b604304c00af",
+            "level": "8",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 2
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Riven",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 2
+                    }
+                },
+                {
+                    "characterId": "TFT17_Blitzcrank",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_BlitzcrankUniqueTrait",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_ShieldTank",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 2,
+            "win": 2,
+            "lose": 0
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "cfaa798751f9a33b77b20784f9e2a235",
+            "level": "8",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 2
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Corki",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Morgana",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_MorganaUniqueTrait",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 2
+                }
+            ],
+            "play": 2,
+            "win": 2,
+            "lose": 0
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "1b5212a512a35ac14925a009c5bab0ce",
+            "level": "8",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 2
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Aurora",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Riven",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_AnimaSquad",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 2,
+            "win": 1,
+            "lose": 1
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "43b96de00deedc1bac57bdcc3b00ea69",
+            "level": "9",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Corki",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Riven",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 2
+                    }
+                },
+                {
+                    "characterId": "TFT17_Bard",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 1
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 1,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_ManaTrait",
+                    "style": 0,
+                    "numUnits": 1
+                }
+            ],
+            "play": 15,
+            "win": 2,
+            "lose": 11
+        },
+        {
+            "finalDeckId": "891660b4308cb17ba09910c726f89532",
+            "deckId": "8a9f255a48b5d8b36c229519fc8f0270",
+            "level": "9",
+            "units": [
+                {
+                    "characterId": "TFT17_Gragas",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 5,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Gwen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_IvernMinion",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 6,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Milio",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 7,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pantheon",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Pyke",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_Corki",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 1,
+                        "y": 1
+                    }
+                },
+                {
+                    "characterId": "TFT17_Riven",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 2,
+                        "y": 4
+                    }
+                },
+                {
+                    "characterId": "TFT17_Shen",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 4,
+                        "y": 3
+                    }
+                },
+                {
+                    "characterId": "TFT17_ShenProp",
+                    "items": [
+                        null,
+                        null,
+                        null
+                    ],
+                    "cell": {
+                        "x": 3,
+                        "y": 3
+                    }
+                }
+            ],
+            "traits": [
+                {
+                    "key": "TFT17_ShenUniqueTrait",
+                    "style": 4,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Timebreaker",
+                    "style": 3,
+                    "numUnits": 3
+                },
+                {
+                    "key": "TFT17_SpaceGroove",
+                    "style": 1,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_PsyOps",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_HPTank",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_AssassinTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_FlexTrait",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_Fateweaver",
+                    "style": 1,
+                    "numUnits": 2
+                },
+                {
+                    "key": "TFT17_SummonTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_APTrait",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_ResistTank",
+                    "style": 0,
+                    "numUnits": 1
+                },
+                {
+                    "key": "TFT17_Astronaut",
+                    "style": 0,
+                    "numUnits": 2
+                }
+            ],
+            "play": 4,
+            "win": 1,
+            "lose": 2
+        }
+    ],
+    "early": {
+        "finalDeckId": "891660b4308cb17ba09910c726f89532",
+        "deckId": "4762c0004298da3da9a0e8e338a276be",
+        "level": "5",
+        "units": [
+            {
+                "characterId": "TFT17_Gragas",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 5,
+                    "y": 4
+                }
+            },
+            {
+                "characterId": "TFT17_IvernMinion",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 4,
+                    "y": 4
+                }
+            },
+            {
+                "characterId": "TFT17_Milio",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 1,
+                    "y": 1
+                }
+            },
+            {
+                "characterId": "TFT17_Pantheon",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 3,
+                    "y": 4
+                }
+            },
+            {
+                "characterId": "TFT17_Pyke",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 2,
+                    "y": 4
+                }
+            }
+        ],
+        "traits": [
+            {
+                "key": "TFT17_PsyOps",
+                "style": 1,
+                "numUnits": 2
+            },
+            {
+                "key": "TFT17_HPTank",
+                "style": 1,
+                "numUnits": 2
+            },
+            {
+                "key": "TFT17_FlexTrait",
+                "style": 1,
+                "numUnits": 2
+            },
+            {
+                "key": "TFT17_Timebreaker",
+                "style": 1,
+                "numUnits": 2
+            },
+            {
+                "key": "TFT17_Astronaut",
+                "style": 0,
+                "numUnits": 1
+            },
+            {
+                "key": "TFT17_SummonTrait",
+                "style": 0,
+                "numUnits": 1
+            },
+            {
+                "key": "TFT17_Fateweaver",
+                "style": 0,
+                "numUnits": 1
+            },
+            {
+                "key": "TFT17_APTrait",
+                "style": 0,
+                "numUnits": 1
+            }
+        ],
+        "play": 119,
+        "win": 56,
+        "lose": 48
+    },
+    "middle": {
+        "finalDeckId": "891660b4308cb17ba09910c726f89532",
+        "deckId": "47166fe3c20080572376b1d71f27318f",
+        "level": "7",
+        "units": [
+            {
+                "characterId": "TFT17_Gragas",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 1,
+                    "y": 4
+                }
+            },
+            {
+                "characterId": "TFT17_Gwen",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 1,
+                    "y": 3
+                }
+            },
+            {
+                "characterId": "TFT17_IvernMinion",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 4,
+                    "y": 4
+                }
+            },
+            {
+                "characterId": "TFT17_Milio",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 1,
+                    "y": 1
+                }
+            },
+            {
+                "characterId": "TFT17_Pantheon",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 7,
+                    "y": 4
+                }
+            },
+            {
+                "characterId": "TFT17_Pyke",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 6,
+                    "y": 1
+                }
+            },
+            {
+                "characterId": "TFT17_Riven",
+                "items": [
+                    null,
+                    null,
+                    null
+                ],
+                "cell": {
+                    "x": 1,
+                    "y": 2
+                }
+            }
+        ],
+        "traits": [
+            {
+                "key": "TFT17_Timebreaker",
+                "style": 3,
+                "numUnits": 3
+            },
+            {
+                "key": "TFT17_SpaceGroove",
+                "style": 1,
+                "numUnits": 1
+            },
+            {
+                "key": "TFT17_PsyOps",
+                "style": 1,
+                "numUnits": 2
+            },
+            {
+                "key": "TFT17_HPTank",
+                "style": 1,
+                "numUnits": 2
+            },
+            {
+                "key": "TFT17_AssassinTrait",
+                "style": 1,
+                "numUnits": 2
+            },
+            {
+                "key": "TFT17_FlexTrait",
+                "style": 1,
+                "numUnits": 2
+            },
+            {
+                "key": "TFT17_Astronaut",
+                "style": 0,
+                "numUnits": 1
+            },
+            {
+                "key": "TFT17_SummonTrait",
+                "style": 0,
+                "numUnits": 1
+            },
+            {
+                "key": "TFT17_Fateweaver",
+                "style": 0,
+                "numUnits": 1
+            },
+            {
+                "key": "TFT17_APTrait",
+                "style": 0,
+                "numUnits": 1
+            }
+        ],
+        "play": 512,
+        "win": 231,
+        "lose": 237
+    },
+    "similarDecks": []
+}

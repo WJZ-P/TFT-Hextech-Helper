@@ -1,0 +1,649 @@
+{
+  "id": "51a1bed59fb199915e50421efbec6fde",
+  "name": "木灵族 薇古丝",
+  "season": "S17",
+  "finalComp": {
+    "champions": [
+      {
+        "name": "小木灵",
+        "isCore": false,
+        "starTarget": 2
+      },
+      {
+        "name": "莫德凯撒",
+        "isCore": false,
+        "starTarget": 2
+      },
+      {
+        "name": "拉亚斯特",
+        "isCore": false,
+        "starTarget": 2
+      },
+      {
+        "name": "卡尔玛",
+        "isCore": false,
+        "starTarget": 2
+      },
+      {
+        "name": "拉莫斯",
+        "isCore": false,
+        "items": [
+          "冕卫",
+          "坚定之心",
+          "狂徒铠甲"
+        ],
+        "starTarget": 2
+      },
+      {
+        "name": "巴德",
+        "isCore": true,
+        "items": [
+          "莫雷洛秘典",
+          "朔极之矛",
+          "虚空之杖"
+        ],
+        "starTarget": 2
+      },
+      {
+        "name": "布里茨",
+        "isCore": true,
+        "items": [
+          "珠光护手",
+          "灭世者的死亡之帽",
+          "正义之手"
+        ],
+        "starTarget": 2
+      },
+      {
+        "name": "慎",
+        "isCore": false,
+        "starTarget": 2
+      },
+      {
+        "name": "薇古丝",
+        "isCore": true,
+        "items": [
+          "鬼索的狂暴之刃",
+          "巨人杀手",
+          "虚空之杖"
+        ],
+        "starTarget": 2
+      }
+    ],
+    "traits": [
+      {
+        "key": "TFT17_BlitzcrankUniqueTrait",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT17_RhaastUniqueTrait",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT17_ShenUniqueTrait",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT17_VexUniqueTrait",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT17_SpaceGroove",
+        "style": 1,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT17_ManaTrait",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT17_ShieldTank",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT17_FlexTrait",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT17_DarkStar",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT17_ResistTank",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT17_Astronaut",
+        "style": 1,
+        "numUnits": 3
+      },
+      {
+        "key": "TFT17_SummonTrait",
+        "style": 0,
+        "numUnits": 1
+      }
+    ]
+  },
+  "stages": {
+    "level4": {
+      "champions": [
+        {
+          "name": "波比",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "泰隆",
+          "isCore": false,
+          "position": "R3_C2"
+        },
+        {
+          "name": "崔斯特",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "贾克斯",
+          "isCore": false,
+          "position": "R4_C3"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_ResistTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_Stargazer",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_Astronaut",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_AssassinTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_Fateweaver",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level5": {
+      "champions": [
+        {
+          "name": "科加斯",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "伊泽瑞尔",
+          "isCore": false,
+          "position": "R1_C7"
+        },
+        {
+          "name": "蕾欧娜",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "莫德凯撒",
+          "isCore": false,
+          "position": "R4_C2"
+        },
+        {
+          "name": "潘森",
+          "isCore": false,
+          "position": "R4_C5"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_DarkStar",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_HPTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_Timebreaker",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_ShieldTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_RangedTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_ADMIN",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_ManaTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_APTrait",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level6": {
+      "champions": [
+        {
+          "name": "丽桑卓",
+          "isCore": false,
+          "position": "R1_C5"
+        },
+        {
+          "name": "小木灵",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "莫德凯撒",
+          "isCore": false,
+          "position": "R4_C2"
+        },
+        {
+          "name": "派克",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "俄洛伊",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "维克托",
+          "isCore": false,
+          "position": "R1_C7"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_DarkStar",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_FlexTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_ManaTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_ShieldTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_PsyOps",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_SummonTrait",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_APTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_Astronaut",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_AnimaSquad",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level7": {
+      "champions": [
+        {
+          "name": "丽桑卓",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "小木灵",
+          "isCore": false,
+          "position": "R4_C6"
+        },
+        {
+          "name": "莫德凯撒",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "派克",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "俄洛伊",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "拉亚斯特",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "维克托",
+          "isCore": false,
+          "position": "R1_C1"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_RhaastUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_DarkStar",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_FlexTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_ManaTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_ShieldTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_PsyOps",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_SummonTrait",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_APTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_Astronaut",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_AnimaSquad",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level8": {
+      "champions": [
+        {
+          "name": "小木灵",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "莫德凯撒",
+          "isCore": false,
+          "position": "R4_C2"
+        },
+        {
+          "name": "拉亚斯特",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "卡尔玛",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "拉莫斯",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "布里茨",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "慎",
+          "isCore": false,
+          "position": "R2_C6"
+        },
+        {
+          "name": "薇古丝",
+          "isCore": false,
+          "position": "R1_C7"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_RhaastUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_BlitzcrankUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_ShenUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_VexUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_SpaceGroove",
+          "style": 1,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_FlexTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_DarkStar",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_ShieldTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_ResistTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_SummonTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_ManaTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_Astronaut",
+          "style": 0,
+          "numUnits": 2
+        }
+      ]
+    },
+    "level9": {
+      "champions": [
+        {
+          "name": "小木灵",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "莫德凯撒",
+          "isCore": false,
+          "position": "R4_C2"
+        },
+        {
+          "name": "拉亚斯特",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "卡尔玛",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "拉莫斯",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "巴德",
+          "isCore": false,
+          "position": "R1_C5"
+        },
+        {
+          "name": "布里茨",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "慎",
+          "isCore": false,
+          "position": "R2_C6"
+        },
+        {
+          "name": "薇古丝",
+          "isCore": false,
+          "position": "R1_C7"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_RhaastUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_BlitzcrankUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_ShenUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_VexUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_SpaceGroove",
+          "style": 1,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_FlexTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_DarkStar",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_ManaTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_ShieldTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_ResistTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_Astronaut",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_SummonTrait",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    }
+  }
+}

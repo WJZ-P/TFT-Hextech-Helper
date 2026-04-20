@@ -1,0 +1,637 @@
+{
+  "id": "891660b4308cb17ba09910c726f89532",
+  "name": "未来战士 派克",
+  "season": "S17",
+  "finalComp": {
+    "champions": [
+      {
+        "name": "古拉加斯",
+        "isCore": false,
+        "position": "R4_C1",
+        "starTarget": 3
+      },
+      {
+        "name": "格温",
+        "isCore": true,
+        "items": [
+          "珠光护手",
+          "纳什之牙",
+          "正义之手"
+        ],
+        "position": "R3_C1",
+        "starTarget": 3
+      },
+      {
+        "name": "小木灵",
+        "isCore": false,
+        "position": "R4_C4",
+        "starTarget": 3
+      },
+      {
+        "name": "米利欧",
+        "isCore": false,
+        "items": [
+          "珠光护手",
+          "纳什之牙",
+          "朔极之矛"
+        ],
+        "position": "R1_C1",
+        "starTarget": 3
+      },
+      {
+        "name": "潘森",
+        "isCore": true,
+        "items": [
+          "巨龙之爪",
+          "坚定之心",
+          "日炎斗篷"
+        ],
+        "position": "R4_C7",
+        "starTarget": 3
+      },
+      {
+        "name": "派克",
+        "isCore": true,
+        "items": [
+          "夜之锋刃",
+          "无尽之刃",
+          "正义之手"
+        ],
+        "position": "R1_C6",
+        "starTarget": 3
+      },
+      {
+        "name": "库奇",
+        "isCore": false,
+        "position": "R1_C7",
+        "starTarget": 2
+      },
+      {
+        "name": "锐雯",
+        "isCore": false,
+        "position": "R2_C1",
+        "starTarget": 2
+      }
+    ],
+    "traits": [
+      {
+        "key": "TFT17_Timebreaker",
+        "style": 3,
+        "numUnits": 3
+      },
+      {
+        "key": "TFT17_SpaceGroove",
+        "style": 1,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT17_Fateweaver",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT17_PsyOps",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT17_HPTank",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT17_AssassinTrait",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT17_FlexTrait",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "TFT17_SummonTrait",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT17_APTrait",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "TFT17_Astronaut",
+        "style": 0,
+        "numUnits": 2
+      }
+    ]
+  },
+  "stages": {
+    "level4": {
+      "champions": [
+        {
+          "name": "伊泽瑞尔",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "古拉加斯",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "米利欧",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "潘森",
+          "isCore": false,
+          "position": "R4_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_Timebreaker",
+          "style": 3,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_HPTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_RangedTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_PsyOps",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_Fateweaver",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_APTrait",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level5": {
+      "champions": [
+        {
+          "name": "古拉加斯",
+          "isCore": false,
+          "position": "R4_C5"
+        },
+        {
+          "name": "小木灵",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "米利欧",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "潘森",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "派克",
+          "isCore": false,
+          "position": "R4_C2"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_PsyOps",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_HPTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_FlexTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_Timebreaker",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_Astronaut",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_SummonTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_Fateweaver",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_APTrait",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level6": {
+      "champions": [
+        {
+          "name": "古拉加斯",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "格温",
+          "isCore": false,
+          "position": "R3_C1"
+        },
+        {
+          "name": "小木灵",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "米利欧",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "潘森",
+          "isCore": false,
+          "position": "R4_C7"
+        },
+        {
+          "name": "派克",
+          "isCore": false,
+          "position": "R1_C6"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_SpaceGroove",
+          "style": 1,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_PsyOps",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_HPTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_FlexTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_Timebreaker",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_AssassinTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_Astronaut",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_SummonTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_Fateweaver",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_APTrait",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level7": {
+      "champions": [
+        {
+          "name": "古拉加斯",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "格温",
+          "isCore": false,
+          "position": "R3_C1"
+        },
+        {
+          "name": "小木灵",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "米利欧",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "潘森",
+          "isCore": false,
+          "position": "R4_C7"
+        },
+        {
+          "name": "派克",
+          "isCore": false,
+          "position": "R1_C6"
+        },
+        {
+          "name": "锐雯",
+          "isCore": false,
+          "position": "R2_C1"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_Timebreaker",
+          "style": 3,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_SpaceGroove",
+          "style": 1,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_PsyOps",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_HPTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_AssassinTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_FlexTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_Astronaut",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_SummonTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_Fateweaver",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_APTrait",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level8": {
+      "champions": [
+        {
+          "name": "古拉加斯",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "格温",
+          "isCore": false,
+          "position": "R3_C1"
+        },
+        {
+          "name": "小木灵",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "米利欧",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "潘森",
+          "isCore": false,
+          "position": "R4_C7"
+        },
+        {
+          "name": "派克",
+          "isCore": false,
+          "position": "R1_C6"
+        },
+        {
+          "name": "库奇",
+          "isCore": false,
+          "position": "R1_C7"
+        },
+        {
+          "name": "锐雯",
+          "isCore": false,
+          "position": "R2_C1"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_Timebreaker",
+          "style": 3,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_SpaceGroove",
+          "style": 1,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_PsyOps",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_HPTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_AssassinTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_FlexTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_Fateweaver",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_SummonTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_APTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_Astronaut",
+          "style": 0,
+          "numUnits": 2
+        }
+      ]
+    },
+    "level9": {
+      "champions": [
+        {
+          "name": "古拉加斯",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "格温",
+          "isCore": false,
+          "position": "R3_C1"
+        },
+        {
+          "name": "小木灵",
+          "isCore": false,
+          "position": "R4_C4"
+        },
+        {
+          "name": "米利欧",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "潘森",
+          "isCore": false,
+          "position": "R4_C7"
+        },
+        {
+          "name": "派克",
+          "isCore": false,
+          "position": "R1_C6"
+        },
+        {
+          "name": "库奇",
+          "isCore": false,
+          "position": "R1_C7"
+        },
+        {
+          "name": "锐雯",
+          "isCore": false,
+          "position": "R2_C1"
+        },
+        {
+          "name": "巴德",
+          "isCore": false,
+          "position": "R1_C2"
+        }
+      ],
+      "traits": [
+        {
+          "key": "TFT17_Timebreaker",
+          "style": 3,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_SpaceGroove",
+          "style": 1,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_PsyOps",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_HPTank",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_AssassinTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_FlexTrait",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_Fateweaver",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "TFT17_Astronaut",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "TFT17_SummonTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_APTrait",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "TFT17_ManaTrait",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    }
+  }
+}
