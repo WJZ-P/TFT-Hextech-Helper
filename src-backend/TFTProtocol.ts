@@ -467,8 +467,8 @@ export const gameStageDisplayNormal = {
 }
 //  发条鸟的战斗阶段，布局跟其他的都不一样，因为发条鸟一个大阶段有10场
 export const gameStageDisplayTheClockworkTrails = {
-    leftTop: { x: 337, y: 6 },
-    rightBottom: { x: 366, y: 22 }
+    leftTop: { x: 324, y: 6 },
+    rightBottom: { x: 354, y: 22 }
 }
 //  发条鸟模式右下角战斗按钮
 export const clockworkTrailsFightButtonPoint = {

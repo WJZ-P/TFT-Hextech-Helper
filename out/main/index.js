@@ -10279,6 +10279,21 @@ const TFT_SPECIAL_CHESS = {
     origins: [],
     classes: [],
     attackRange: 1
+  },
+  // 【S17】未来战士核心（备战席内显示名为"时空核心"）
+  // - 由 S17 未来战士羁绊攒经验后在备战席自动生成
+  // - 不可购买、不可用作上场战斗的英雄棋子
+  // - 唯一可执行的操作就是"出售"，出售后返还 2 经验值
+  // - 与锻造器一样：右键时不显示英雄详情面板，而是在鼠标点击位置弹出浮窗
+  //   所以归类到"右键弹浮窗"的特殊棋子分组里
+  "未来战士核心": {
+    displayName: "未来战士核心",
+    englishId: "TFT17_Timebreaker_Core",
+    price: 0,
+    traits: [],
+    origins: [],
+    classes: [],
+    attackRange: 0
   }
   // "提伯斯": {
   //     displayName: "提伯斯",
@@ -12300,7 +12315,7 @@ const _TFT_17_CHESS_DATA = {
     origins: [UnitOrigin_S17.Morgana],
     classes: [],
     attackRange: 2
-  },
+  }
   // ====================================================================
   // PVE 专属单位 (野怪/召唤物/核心，原始数据 price=11，不进商店)
   // 这些单位在战斗中作为敌人或召唤物出现，无法被玩家购买/售卖
@@ -12314,15 +12329,8 @@ const _TFT_17_CHESS_DATA = {
   //     classes: [],
   //     attackRange: 1
   // },
-  "未来战士核心": {
-    displayName: "未来战士核心",
-    englishId: "TFT17_Timebreaker_Core",
-    price: 0,
-    traits: [],
-    origins: [],
-    classes: [],
-    attackRange: 0
-  }
+  // 【已迁移】"未来战士核心" 已移至 TFT_SPECIAL_CHESS（特殊棋子分组），
+  // 通过 _TFT_17_CHESS_DATA 顶部的 ...TFT_SPECIAL_CHESS 自动包含进来
   // "星界鱿鱼": {
   //     displayName: "星界鱿鱼",
   //     englishId: "TFT17_PVE_Minion",
@@ -12383,6 +12391,9 @@ var GameStageType = /* @__PURE__ */ ((GameStageType2) => {
   GameStageType2["PVE"] = "PVE";
   GameStageType2["CAROUSEL"] = "CAROUSEL";
   GameStageType2["AUGMENT"] = "AUGMENT";
+  GameStageType2["STAR_GOD_CHOOSE"] = "STAR_GOD_CHOOSE";
+  GameStageType2["GRAND_BLESSING"] = "GRAND_BLESSING";
+  GameStageType2["MINOR_BLESSING"] = "MINOR_BLESSING";
   GameStageType2["PVP"] = "PVP";
   GameStageType2["UNKNOWN"] = "UNKNOWN";
   return GameStageType2;
@@ -12741,6 +12752,17 @@ const hexSlot = {
   SLOT_2: { x: 510, y: 410 },
   SLOT_3: { x: 805, y: 410 }
 };
+const starGodSlot = {
+  SLOT_1: { x: 370, y: 440 },
+  SLOT_2: { x: 650, y: 440 }
+};
+const grandBlessingPoint = { x: 790, y: 670 };
+const minorBlessingSlot = {
+  SLOT_1: { x: 200, y: 700 },
+  SLOT_2: { x: 370, y: 700 },
+  SLOT_3: { x: 540, y: 700 },
+  SLOT_4: { x: 700, y: 700 }
+};
 const sharedDraftPoint = { x: 530, y: 400 };
 const gameStageDisplayStageOne = {
   leftTop: { x: 411, y: 6 },
@@ -12751,8 +12773,8 @@ const gameStageDisplayNormal = {
   rightBottom: { x: 403, y: 22 }
 };
 const gameStageDisplayTheClockworkTrails = {
-  leftTop: { x: 337, y: 6 },
-  rightBottom: { x: 366, y: 22 }
+  leftTop: { x: 324, y: 6 },
+  rightBottom: { x: 354, y: 22 }
 };
 const clockworkTrailsFightButtonPoint = {
   x: 955,
@@ -12776,6 +12798,7 @@ var ItemForgeType = /* @__PURE__ */ ((ItemForgeType2) => {
   ItemForgeType2["COMPLETED"] = "COMPLETED";
   ItemForgeType2["ARTIFACT"] = "ARTIFACT";
   ItemForgeType2["SUPPORT"] = "SUPPORT";
+  ItemForgeType2["TIMEBREAKER_CORE"] = "TIMEBREAKER_CORE";
   return ItemForgeType2;
 })(ItemForgeType || {});
 const TFT_16_CHESS_DATA = _TFT_16_CHESS_DATA;
@@ -13404,9 +13427,9 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-qKNcah7B.js");
+    const ServicesModule = await import("./chunks/index-BihQ9x99.js");
     hexService = ServicesModule.hexService;
-    const TftOperatorModule = await import("./chunks/TftOperator-hWvEbEKn.js").then((n) => n.T);
+    const TftOperatorModule = await import("./chunks/TftOperator-DVERg1ZX.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
     const LineupModule = await import("./chunks/index-bGCrXB73.js");
     lineupLoader = LineupModule.lineupLoader;
@@ -13651,7 +13674,7 @@ function registerHandler() {
   });
 }
 export {
-  analyticsManager as $,
+  showOverlay as $,
   itemForgeTooltipRegion as A,
   gameStageDisplayStageOne as B,
   gameStageDisplayNormal as C,
@@ -13670,20 +13693,23 @@ export {
   combatPhaseTextRegion as O,
   clockworkTrailsFightButtonPoint as P,
   sharedDraftPoint as Q,
-  GameConfigHelper as R,
+  minorBlessingSlot as R,
   RENDERER_DIST,
-  IpcChannel as S,
+  grandBlessingPoint as S,
   TFT_16_CHESS_DATA as T,
   UNSELLABLE_BOARD_UNITS as U,
-  LCUManager as V,
+  starGodSlot as V,
   VITE_DEV_SERVER_URL,
-  isStandardChessMode as W,
-  LcuEventUri as X,
-  showOverlay as Y,
-  sendOverlayPlayers as Z,
-  closeOverlay as _,
+  GameConfigHelper as W,
+  IpcChannel as X,
+  LCUManager as Y,
+  isStandardChessMode as Z,
+  LcuEventUri as _,
   TFT_4_CHESS_DATA as a,
-  AnalyticsEvent as a0,
+  sendOverlayPlayers as a0,
+  closeOverlay as a1,
+  analyticsManager as a2,
+  AnalyticsEvent as a3,
   TFT_4_TRAIT_DATA as b,
   TFT_17_EQUIP_DATA as c,
   TFTMode as d,

@@ -39,6 +39,7 @@ import {
     getChessDataByMode,
     getTraitDataS4,
     getChampionRange,
+    CURRENT_SEASON,
 } from "../TFTInfo/SeasonRegistry";
 import {gameStateManager} from "./GameStateManager";
 import {gameStageMonitor, GameStageEvent} from "./GameStageMonitor";
@@ -847,10 +848,51 @@ export class StrategyService {
             return false;
         }
 
+        // 2.5 【赛季白名单过滤】只保留属于当前赛季 (CURRENT_SEASON) 的阵容
+        //
+        // 背景：settingsStore.selectedLineupIds 是一个扁平的字符串数组，不带赛季信息，
+        //       前端允许用户"跨赛季 Tab"累计勾选；赛季切换后，老赛季的阵容 ID
+        //       仍然残留在 selectedLineupIds 中，会被上面的 getLineup() 成功找回，
+        //       然后混入匹配算法。
+        //
+        // 风险：老赛季阵容的 level4 棋子名可能与当前赛季重名（比如"薇恩"两赛季都有，
+        //       但羁绊完全不同），会让 calculateLineupMatchScore 误锁定错误阵容，
+        //       导致整局运营方向出错。
+        //
+        // 修复：在进入"单阵容锁定 / 多阵容 PENDING"之前，直接剔除非当前赛季的阵容，
+        //       用户在 LineupsPage 上的历史勾选状态仍然保留（不碰 settingsStore），
+        //       只是本局不参与决策。
+        const validLineups: LineupConfig[] = [];
+        const skippedBySeason: string[] = [];
+
+        for (const lineup of lineups) {
+            if (lineup.season !== CURRENT_SEASON) {
+                // 收集被跳过的阵容名+赛季，用于一次性输出友好日志
+                skippedBySeason.push(`${lineup.name}(${lineup.season ?? '未知赛季'})`);
+                continue;
+            }
+            validLineups.push(lineup);
+        }
+
+        if (skippedBySeason.length > 0) {
+            logger.warn(
+                `[StrategyService] 已跳过 ${skippedBySeason.length} 个非当前赛季(${CURRENT_SEASON})阵容: ` +
+                skippedBySeason.join(', ')
+            );
+        }
+
+        if (validLineups.length === 0) {
+            logger.error(
+                `[StrategyService] 所有选中阵容都不属于当前赛季 ${CURRENT_SEASON}，` +
+                `请到阵容页面重新勾选 ${CURRENT_SEASON} 赛季的阵容`
+            );
+            return false;
+        }
+
         // 3. 根据阵容数量决定状态
-        if (lineups.length === 1) {
+        if (validLineups.length === 1) {
             // 单阵容：直接锁定
-            this.currentLineup = lineups[0];
+            this.currentLineup = validLineups[0];
             this.selectionState = LineupSelectionState.LOCKED;
             logger.info(`[StrategyService] 单阵容模式，已锁定: ${this.currentLineup.name}`);
 
@@ -858,10 +900,10 @@ export class StrategyService {
             this.updateTargetChampions(4);
         } else {
             // 多阵容：进入待定状态
-            this.candidateLineups = lineups;
+            this.candidateLineups = validLineups;
             this.selectionState = LineupSelectionState.PENDING;
             logger.info(
-                `[StrategyService] 多阵容模式，候选阵容: ${lineups.map(l => l.name).join(', ')}，` +
+                `[StrategyService] 多阵容模式，候选阵容: ${validLineups.map(l => l.name).join(', ')}，` +
                 `等待第一个 PVP 阶段进行匹配...`
             );
         }
