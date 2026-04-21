@@ -11,9 +11,12 @@
  * - 支持游戏结束后重置，准备下一局
  */
 
-import { BenchUnit, BoardUnit, IdentifiedEquip, BoardLocation } from "../TftOperator";
+import { BenchUnit, BoardUnit, IdentifiedEquip, BoardLocation, BenchLocation } from "../TftOperator";
 import { logger } from "../utils/Logger";
-import { TFTUnit, GameStageType, fightBoardSlotPoint, ChampionKey } from "../TFTProtocol";
+import { TFTUnit, GameStageType, fightBoardSlotPoint, ChampionKey, TFTEquip } from "../TFTProtocol";
+// 通过统一的赛季管理接口拿当前赛季的装备字典，
+// 用于在 addEquipToUnit 里根据装备中文名补全完整的 TFTEquip 对象
+import { getCurrentEquipData } from "../TFTInfo/SeasonRegistry";
 
 // ============================================================================
 // 类型定义
@@ -623,7 +626,25 @@ export class GameStateManager {
         }
 
         // 添加装备到棋子身上
-        unit.equips.push({ name: equipName });
+        // 注意：unit.equips 的元素类型是完整的 TFTEquip（包含 englishName / equipId / formula），
+        //       所以不能只 push { name }。这里从当前赛季的装备字典里查一条完整记录再 push。
+        //       若字典里没这个装备名（理论上不会发生，除非 equip.ts 漏收录），
+        //       就构造一个"最小合法"的 TFTEquip 占位，保证运行时不崩；
+        //       但会打 warn 日志提示修数据。
+        const equipDict = getCurrentEquipData() as Record<string, TFTEquip>;
+        const fullEquip: TFTEquip = equipDict[equipName] ?? {
+            name: equipName,
+            englishName: "",
+            equipId: "",
+            formula: "",
+        };
+        if (!equipDict[equipName]) {
+            logger.warn(
+                `[GameStateManager] 装备字典中找不到 "${equipName}"，` +
+                `已使用占位对象，请检查 equip.ts 是否收录该装备`
+            );
+        }
+        unit.equips.push(fullEquip);
 
         logger.debug(
             `[GameStateManager] 棋子 ${unit.tftUnit.displayName} 装备添加: ${equipName} ` +
@@ -926,6 +947,21 @@ export class GameStateManager {
     public findItemForges(): BenchUnit[] {
         return this.getBenchUnits().filter(
             (unit): unit is BenchUnit => unit !== null && unit.tftUnit.displayName.includes('锻造器')
+        );
+    }
+
+    /**
+     * 查找备战席上的所有"未来战士核心"（备战席内显示名为"时空核心"）
+     * @returns 时空核心 BenchUnit 数组
+     * @description S17 未来战士羁绊会在备战席自动生成"时空核心"道具单位：
+     *              - 不可购买、不可上场战斗
+     *              - 唯一可执行操作：出售（可获得 2 经验值）
+     *              - 与锻造器一样属于"右键弹浮窗"的特殊单位
+     *              StrategyService 在 handleItemForges 流程中会专门处理它们
+     */
+    public findTimebreakerCores(): BenchUnit[] {
+        return this.getBenchUnits().filter(
+            (unit): unit is BenchUnit => unit !== null && unit.tftUnit.displayName === '未来战士核心'
         );
     }
 

@@ -575,7 +575,7 @@ export class StrategyService {
         if (role === 'any') return true;
 
         const name = unit.tftUnit.displayName;
-        const range = getChampionRange(name) ?? 1;
+        const range = getChampionRange(name as ChampionKey) ?? 1;
         const isMelee = range <= 2;
 
         return role === 'frontline' ? isMelee : !isMelee;
@@ -2310,7 +2310,7 @@ export class StrategyService {
         await tftOperator.selfResetPosition();
 
         try {
-            // 0. 处理锻造器（优先处理，腾出备战席空间）
+            // 0. 处理"右键弹浮窗"特殊单位（锻造器选装备 + 时空核心卖经验，腾出备战席空间）
             await this.handleItemForges();
 
             // 1. 获取已有棋子和目标棋子
@@ -2391,41 +2391,87 @@ export class StrategyService {
     }
 
     /**
-     * 处理备战席中的锻造器
-     * @description 检查备战席是否有锻造器，如果有则打开并选择中间的装备
-     *              锻造器是特殊单位，占用备战席位置但不能上场
-     *              及时处理可以：
-     *              1. 腾出备战席空间，方便购买棋子
-     *              2. 获得装备，可以立即用于后续的装备策略
+     * 处理备战席中的"右键弹浮窗"特殊单位
+     * @description 包含两类需要在常规运营前优先处理的特殊单位：
      *
-     *              策略：固定选择中间的装备，免去复杂的装备识别和评估
+     *              ① 锻造器（基础/成装/神器/辅助）
+     *                 - 占用备战席位置但不能上场战斗
+     *                 - 处理方式：右键打开 → 固定选中间的装备
+     *                 - 收益：腾位置 + 拿装备
+     *
+     *              ② 【S17】时空核心（chess.ts 内部名 "未来战士核心"）
+     *                 - S17 未来战士羁绊在备战席自动生成的道具单位
+     *                 - 不可上场战斗，唯一可行的操作就是出售
+     *                 - 处理方式：直接调用 sellUnit 卖掉
+     *                 - 收益：腾位置 + 获得 2 经验值（注意是经验值不是金币）
+     *
+     *              策略：
+     *              - 锻造器：固定选择中间的装备，免去复杂的装备识别和评估
+     *              - 时空核心：无脑卖出（拿经验比留着占位置更划算）
      */
     private async handleItemForges(): Promise<void> {
         // 查找备战席中的所有锻造器
         const forges = gameStateManager.findItemForges();
+        // 查找备战席中的所有"未来战士核心"（备战席内显示名为"时空核心"）
+        // 它和锻造器一样属于"右键弹浮窗"的特殊单位，统一在这里处理
+        const timebreakerCores = gameStateManager.findTimebreakerCores();
 
-        if (forges.length === 0) {
-            // logger.debug("[StrategyService] 备战席没有锻造器");
+        if (forges.length === 0 && timebreakerCores.length === 0) {
+            // logger.debug("[StrategyService] 备战席没有锻造器或时空核心");
             return;
         }
 
-        logger.info(`[StrategyService] 发现 ${forges.length} 个锻造器: ${forges.map(f => f.tftUnit.displayName).join(', ')}`);
+        // === Part 1: 处理锻造器（开 forge 选装备） ===
+        if (forges.length > 0) {
+            logger.info(`[StrategyService] 发现 ${forges.length} 个锻造器: ${forges.map(f => f.tftUnit.displayName).join(', ')}`);
 
-        // 依次处理每个锻造器
-        for (const forge of forges) {
-            logger.info(`[StrategyService] 处理锻造器: ${forge.tftUnit.displayName} (${forge.location})`);
+            // 依次处理每个锻造器
+            for (const forge of forges) {
+                logger.info(`[StrategyService] 处理锻造器: ${forge.tftUnit.displayName} (${forge.location})`);
 
-            // 打开锻造器并选择装备
-            await tftOperator.openItemForge(forge);
+                // 打开锻造器并选择装备
+                await tftOperator.openItemForge(forge);
 
-            // 等待一下，确保选择完成
-            await sleep(200);
+                // 等待一下，确保选择完成
+                await sleep(200);
+            }
+
+            // 处理完锻造器后，刷新装备栏状态（因为获得了新装备）
+            await this.updateEquipStateFromScreen();
+
+            logger.info(`[StrategyService] 锻造器处理完成，已获得 ${forges.length} 件装备`);
         }
 
-        // 处理完锻造器后，刷新装备栏状态（因为获得了新装备）
-        await this.updateEquipStateFromScreen();
+        // === Part 2: 处理时空核心（直接卖出换 2 经验） ===
+        // 注意：时空核心的"出售返还"机制和普通棋子不一样：
+        //   - 普通棋子：卖出 → 返还 = 棋子价格的金币
+        //   - 时空核心：卖出 → 返还 = 2 经验值（金币不变）
+        // 所以这里只更新备战席状态，不调用 updateGold
+        if (timebreakerCores.length > 0) {
+            logger.info(`[StrategyService] 发现 ${timebreakerCores.length} 个时空核心，准备卖出换经验`);
 
-        logger.info(`[StrategyService] 锻造器处理完成，已获得 ${forges.length} 件装备`);
+            for (const core of timebreakerCores) {
+                logger.info(`[StrategyService] 卖出时空核心: ${core.location} (出售返还经验值)`);
+
+                // 1) 真正执行卖出（拖到商店中间位置）
+                await tftOperator.sellUnit(core.location);
+
+                // 2) 同步更新本地状态：清空备战席对应槽位
+                //    location 形如 "SLOT_1" ~ "SLOT_9"，要解析出索引（0-based）
+                //    例：SLOT_3 → "3" → 3 → -1 → index = 2
+                const slotIndex = parseInt(core.location.slice(-1)) - 1;
+                gameStateManager.setBenchSlotEmpty(slotIndex);
+
+                // 3) ⚠️ 不调用 updateGold：时空核心出售不返还金币而是经验值
+                //    经验值会在下一次 updateLevelStateFromScreen() 时从屏幕重新读取，
+                //    无需在这里手动同步（避免出现"经验涨了等级表却没刷新"的脏数据）
+
+                // 4) 给游戏一点反应时间，避免连续卖多个时空核心动作粘连
+                await sleep(150);
+            }
+
+            logger.info(`[StrategyService] 时空核心售出成功。`);
+        }
     }
 
     /**
@@ -2827,7 +2873,7 @@ export class StrategyService {
 
         for (const unit of boardUnits) {
             const name = unit.tftUnit.displayName;
-            const range = getChampionRange(name) ?? 1;
+            const range = getChampionRange(name as ChampionKey) ?? 1;
             const isMelee = range <= 2;
             const currentRow = parseInt(unit.location.split('_')[0].replace('R', ''));
 
@@ -3548,7 +3594,7 @@ export class StrategyService {
      */
     private findBestPositionForUnit(unit: { tftUnit: TFTUnit }): BoardLocation | undefined {
         const championName = unit.tftUnit.displayName;
-        const range = getChampionRange(championName) ?? 1;
+        const range = getChampionRange(championName as ChampionKey) ?? 1;
 
         // 判断是近战还是远程
         const isMelee = range <= 2;

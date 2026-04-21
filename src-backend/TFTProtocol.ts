@@ -532,19 +532,23 @@ export interface TraitData {
 }
 
 /**
- * 锻造器类型枚举
- * @description 用于区分不同类型的锻造器
+ * 备战席"右键弹浮窗"的特殊单位类型枚举
+ * @description 这些单位的共同点：右键时不显示英雄详情面板，
+ *              而是在鼠标点击位置附近弹出浮窗，必须靠 OCR 浮窗文字来识别。
+ *              虽然枚举名沿用历史名称 ItemForgeType（最早只有锻造器），
+ *              但 S17 加入了"未来战士核心"后，这里实际涵盖了所有"右键弹浮窗"的特殊单位。
  *
- * | 类型      | 中文名           | 说明                     |
- * |-----------|-----------------|--------------------------|
- * | NONE      | -               | 不是锻造器               |
- * | BASIC     | 基础装备锻造器   | 可以选择基础散件         |
- * | COMPLETED | 成装锻造器       | 可以选择完整装备         |
- * | ARTIFACT  | 神器装备锻造器   | 可以选择神器装备（奥恩） |
- * | SUPPORT   | 辅助装锻造器     | 可以选择辅助装备         |
+ * | 类型              | 中文名           | 说明                                          |
+ * |-------------------|-----------------|-----------------------------------------------|
+ * | NONE              | -               | 不是任何特殊单位                              |
+ * | BASIC             | 基础装备锻造器   | 可以选择基础散件                              |
+ * | COMPLETED         | 成装锻造器       | 可以选择完整装备                              |
+ * | ARTIFACT          | 神器装备锻造器   | 可以选择神器装备（奥恩）                      |
+ * | SUPPORT           | 辅助装锻造器     | 可以选择辅助装备                              |
+ * | TIMEBREAKER_CORE  | 未来战士核心     | S17 未来战士羁绊产物，备战席内显示为"时空核心"，出售返还 2 经验 |
  */
 export enum ItemForgeType {
-    /** 不是锻造器 */
+    /** 不是右键弹浮窗的特殊单位 */
     NONE = 'NONE',
     /** 基础装备锻造器 - 可以选择基础散件 */
     BASIC = 'BASIC',
@@ -554,6 +558,8 @@ export enum ItemForgeType {
     ARTIFACT = 'ARTIFACT',
     /** 辅助装锻造器 - 可以选择辅助装备 */
     SUPPORT = 'SUPPORT',
+    /** 【S17】未来战士核心 - 备战席显示"时空核心"，出售即可获得 2 经验 */
+    TIMEBREAKER_CORE = 'TIMEBREAKER_CORE',
 }
 
 export const TFT_16_CHESS_DATA: Record<keyof typeof _TFT_16_CHESS_DATA, TFTUnit> = _TFT_16_CHESS_DATA;

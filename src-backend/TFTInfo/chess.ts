@@ -57,6 +57,21 @@ export const TFT_SPECIAL_CHESS = {
         classes: [],
         attackRange: 1
     },
+    // 【S17】未来战士核心（备战席内显示名为"时空核心"）
+    // - 由 S17 未来战士羁绊攒经验后在备战席自动生成
+    // - 不可购买、不可用作上场战斗的英雄棋子
+    // - 唯一可执行的操作就是"出售"，出售后返还 2 经验值
+    // - 与锻造器一样：右键时不显示英雄详情面板，而是在鼠标点击位置弹出浮窗
+    //   所以归类到"右键弹浮窗"的特殊棋子分组里
+    "未来战士核心": {
+        displayName: "未来战士核心",
+        englishId: "TFT17_Timebreaker_Core",
+        price: 0,
+        traits: [],
+        origins: [],
+        classes: [],
+        attackRange: 0
+    },
     // "提伯斯": {
     //     displayName: "提伯斯",
     //     englishId: "TFT16_AnnieTibbers",
@@ -2148,15 +2163,8 @@ export const _TFT_17_CHESS_DATA = {
     //     classes: [],
     //     attackRange: 1
     // },
-    "未来战士核心": {
-        displayName: "未来战士核心",
-        englishId: "TFT17_Timebreaker_Core",
-        price: 0,
-        traits: [],
-        origins: [],
-        classes: [],
-        attackRange: 0
-    },
+    // 【已迁移】"未来战士核心" 已移至 TFT_SPECIAL_CHESS（特殊棋子分组），
+    // 通过 _TFT_17_CHESS_DATA 顶部的 ...TFT_SPECIAL_CHESS 自动包含进来
     // "星界鱿鱼": {
     //     displayName: "星界鱿鱼",
     //     englishId: "TFT17_PVE_Minion",

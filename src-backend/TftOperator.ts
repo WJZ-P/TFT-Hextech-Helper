@@ -728,18 +728,24 @@ class TftOperator {
                 await sleep(10); // 等待 UI 渲染完成（右键后游戏会立即刷新 UI，10ms 足够）
                 
                 if (forgeType !== ItemForgeType.NONE) {
-                    // 根据锻造器类型选择对应的棋子数据
-                    const forgeUnit = forgeType === ItemForgeType.COMPLETED 
-                        ? chessData.成装锻造器
-                        : chessData.基础装备锻造器;
-                    const forgeName = forgeType === ItemForgeType.COMPLETED ? "成装锻造器" : "基础装备锻造器";
-                    
+                    // 根据特殊单位类型选择对应的 chessData 中的单位定义
+                    // 注意：未来战士核心也走这个分支（它和锻造器一样都是"右键弹浮窗"特殊单位）
+                    const forgeUnit = this.resolveSpecialUnitByForgeType(forgeType, chessData);
+                    const forgeName = forgeUnit?.displayName ?? `未知(${forgeType})`;
+
+                    if (!forgeUnit) {
+                        // 理论不会到这里：除非 chess.ts 里没有对应的特殊单位定义
+                        logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] 识别为 ${forgeType} 但 chessData 中无对应定义`);
+                        benchUnits.push(null);
+                        continue;
+                    }
+
                     logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别为${forgeName}`);
-                    // 锻造器作为特殊单位处理
+                    // 锻造器/时空核心 作为特殊单位处理
                     benchUnits.push({
                         location: benchSlot as BenchLocation,
                         tftUnit: forgeUnit,
-                        starLevel: -1,  // 锻造器无星级
+                        starLevel: -1,  // 特殊单位无星级
                         equips: [],
                     });
                 } else {
@@ -1144,10 +1150,21 @@ class TftOperator {
 
         logger.debug(`[TftOperator] 锻造器浮窗 OCR 结果: "${cleanText}"`);
 
-        // 判断锻造器类型
+        // 判断特殊单位类型
         // 注意：判断顺序很重要，更具体的关键词要放在前面
         // 使用模糊匹配，因为 OCR 可能有误差
-        
+
+        // 0. 【S17】时空核心（未来战士核心）判断
+        //    "时空"是独特关键词，且在所有特殊单位中最特殊（不是锻造器）
+        //    放最前面是为了在 OCR 部分误识别时（如把"时空"识别成"成空"）也能优先命中
+        const isTimebreakerCore = cleanText.includes("时空核心") ||
+                                  cleanText.includes("时空");
+
+        if (isTimebreakerCore) {
+            logger.debug(`[TftOperator] 识别为时空核心（未来战士核心）`);
+            return ItemForgeType.TIMEBREAKER_CORE;
+        }
+
         // 1. 成装锻造器判断（"成装"是独特关键词）
         const isCompletedForge = cleanText.includes("成装锻造器") ||
                                  cleanText.includes("成装锻造") ||
@@ -1197,6 +1214,46 @@ class TftOperator {
         logger.warn(`[TftOperator] 锻造器识别失败(槽位${slotIndex})`, true);
 
         return ItemForgeType.NONE;
+    }
+
+    /**
+     * 根据 ItemForgeType 把识别结果映射为 chessData 中的 TFTUnit 实例
+     * @param forgeType 浮窗 OCR 识别出的类型（必须是非 NONE）
+     * @param chessData 当前赛季的棋子数据集（一般是 getActiveChessData() 的返回）
+     * @returns 匹配到的 TFTUnit；若 chessData 中找不到对应键则返回 null
+     *
+     * @description
+     * 设计意图：
+     *   - 把"枚举类型 → chessData 字段名"的映射集中到一处
+     *   - 上层调用代码不需要再写 if/switch，只关心"拿到一个 TFTUnit"
+     *   - 未来要新增"右键弹浮窗"的特殊单位（比如某个赛季又出新核心），
+     *     只需在这张映射表里加一行，OCR 关键词加一段，上层完全不用动
+     *
+     * 注意 chessData[字段名] 的写法：
+     *   chessData 的类型是 Record<string, TFTUnit>，所以下标访问总能编译通过；
+     *   但运行时若 chess.ts 里漏定义了对应中文键，会拿到 undefined。
+     *   所以这里返回 TFTUnit | null，让调用方做兜底处理。
+     */
+    private resolveSpecialUnitByForgeType(
+        forgeType: ItemForgeType,
+        chessData: Record<string, TFTUnit>
+    ): TFTUnit | null {
+        // 映射表：枚举值 → chess.ts 里 TFT_SPECIAL_CHESS 对应的中文键名
+        // 用 Record<ItemForgeType, ...> 让 TS 帮我们检查"枚举是否穷尽覆盖"
+        // 这样以后 enum 加新成员，这张表会立即报错提醒
+        const FORGE_TYPE_TO_CHESS_KEY: Record<ItemForgeType, string | null> = {
+            [ItemForgeType.NONE]: null,                        // 占位：上层不应传 NONE 进来
+            [ItemForgeType.BASIC]: "基础装备锻造器",
+            [ItemForgeType.COMPLETED]: "成装锻造器",
+            [ItemForgeType.ARTIFACT]: "神器装备锻造器",
+            [ItemForgeType.SUPPORT]: "辅助装锻造器",
+            [ItemForgeType.TIMEBREAKER_CORE]: "未来战士核心",  // 备战席显示"时空核心"
+        };
+
+        const chessKey = FORGE_TYPE_TO_CHESS_KEY[forgeType];
+        if (!chessKey) return null;
+
+        return chessData[chessKey] ?? null;
     }
 
     /**
