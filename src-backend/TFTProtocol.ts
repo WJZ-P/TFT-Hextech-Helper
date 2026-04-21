@@ -8,12 +8,16 @@ import {_TFT_16_CHESS_DATA, _TFT_4_CHESS_DATA, _TFT_17_CHESS_DATA, UNPURCHASABLE
  * 这里的分类决定了我们的 AI 应该采取什么策略
  */
 export enum GameStageType {
-    EARLY_PVE = 'EARLY_PVE', // 第一阶段 (1-1 ~ 1-4)，内部根据回合号判断具体策略
-    PVE = 'PVE',             // 打野怪/小兵 (x-7 野怪回合)
-    CAROUSEL = 'CAROUSEL',   // 选秀环节 (x-4)
-    AUGMENT = 'AUGMENT',     // 海克斯强化选择环节 (2-1, 3-2, 4-2)
-    PVP = 'PVP',             // 正常的玩家对战 (其他回合)
-    UNKNOWN = 'UNKNOWN'      // 无法识别或不在游戏内
+    EARLY_PVE = 'EARLY_PVE',               // 第一阶段 (1-1 ~ 1-4)，内部根据回合号判断具体策略
+    PVE = 'PVE',                           // 打野怪/小兵 (x-7 野怪回合，S17 中 4-7 除外)
+    /** @deprecated S17 已下线，请使用 STAR_GOD_CHOOSE 或 MINOR_BLESSING */
+    CAROUSEL = 'CAROUSEL',                 // 【已废弃，S17 下线】选秀环节 (x-4)
+    AUGMENT = 'AUGMENT',                   // 海克斯强化选择环节 (2-1, 3-2, 4-2)
+    STAR_GOD_CHOOSE = 'STAR_GOD_CHOOSE',   // 【S17 新增】星神选择 (2-4, 3-4, 4-4)，2 选 1
+    GRAND_BLESSING = 'GRAND_BLESSING',     // 【S17 新增】大恩赐 (4-7)，右下角点击按钮
+    MINOR_BLESSING = 'MINOR_BLESSING',     // 【S17 新增】小恩赐 (5-4, 6-4, 7-4)，4 选 1
+    PVP = 'PVP',                           // 正常的玩家对战 (其他回合)
+    UNKNOWN = 'UNKNOWN'                    // 无法识别或不在游戏内
 }
 
 /**

@@ -26,6 +26,9 @@ import {
     EquipKey,
     sharedDraftPoint,
     hexSlot,
+    starGodSlot,
+    grandBlessingPoint,
+    minorBlessingSlot,
     TFTMode,
     clockworkTrailsFightButtonPoint,
 } from "../TFTProtocol";
@@ -312,10 +315,19 @@ export class StrategyService {
                 await this.handlePVP();
                 break;
             case GameStageType.CAROUSEL:
+                // 【已废弃】S17 已下线选秀，保留分支仅为向后兼容旧存档/异常识别
                 await this.handleCarousel();
                 break;
             case GameStageType.AUGMENT:
                 await this.handleAugment();
+                break;
+            // ====== S17 星神赛季新增阶段 ======
+            // 三种阶段的骨架逻辑完全一致（等待 → 点击 → 刷新 → 运营），
+            // 唯一差别就是"点哪里"，所以合并到同一个 handler 并通过入参区分
+            case GameStageType.STAR_GOD_CHOOSE:  // 星神选择 (2-4, 3-4, 4-4)：2 选 1
+            case GameStageType.GRAND_BLESSING:   // 大恩赐 (4-7)：点右下角按钮
+            case GameStageType.MINOR_BLESSING:   // 小恩赐 (5-4, 6-4, 7-4)：4 选 1
+                await this.handleStarGodChoose(type);
                 break;
             case GameStageType.UNKNOWN:
             default:
@@ -364,6 +376,13 @@ export class StrategyService {
                 // 海克斯阶段选完强化后就是普通 PVP 战斗，共用同一个处理器
                 await this.handlePVPFighting();
                 break;
+            // 【S17 新增阶段均不进入战斗】不在 switch 中列出，自动落入 default：
+            //   - STAR_GOD_CHOOSE (2-4/3-4/4-4)：选完星神直接进入下一回合，无战斗
+            //   - GRAND_BLESSING  (4-7)        ：点完大恩赐按钮直接进入下一回合，无战斗
+            //     （注意：4-7 虽然大阶段编号为 4、round=7，但 S17 已改制，
+            //      不再是 PVE 野怪回合，而是纯粹的"领取大恩赐"事件回合）
+            //   - MINOR_BLESSING  (5-4/6-4/7-4)：选完装备直接进入下一回合，无战斗
+            //   这些阶段不会触发 onFightingStart，即便触发也无需额外处理。
             default:
                 logger.debug(`[StrategyService] 战斗阶段：当前阶段类型 ${currentStageType} 无需特殊处理`);
                 break;
@@ -391,6 +410,10 @@ export class StrategyService {
      * - CAROUSEL（选秀）：界面完全不同，刷新无意义
      * - AUGMENT（海克斯）：界面被三个海克斯挡住，必须先选完再刷新
      *   （handleAugment 内部会自行调用 refreshGameState）
+     * - 【S17】STAR_GOD_CHOOSE（星神选择）：界面被星神选项挡住
+     * - 【S17】GRAND_BLESSING（大恩赐）：进入 4-7 瞬间会有按钮弹出，界面也不稳定
+     * - 【S17】MINOR_BLESSING（小恩赐）：界面被 4 个装备选项挡住
+     *   上述 3 个新阶段均由各自 handler 自行在选完后刷新
      */
     private shouldRefreshStateOnStageChange(stageType: GameStageType): boolean {
         // 1-1、1-2 回合：商店未开放，不需要刷新
@@ -408,6 +431,17 @@ export class StrategyService {
         // 海克斯阶段：界面被海克斯选项挡住，由 handleAugment 自行刷新
         if (stageType === GameStageType.AUGMENT) {
             logger.debug("[StrategyService] 跳过刷新：AUGMENT（海克斯阶段，由 handler 自行刷新）");
+            return false;
+        }
+
+        // 【S17】星神选择 / 大恩赐 / 小恩赐：界面均被选项/按钮挡住
+        // 统一由各自 handler 在完成点击后自行调用 refreshGameState
+        if (
+            stageType === GameStageType.STAR_GOD_CHOOSE ||
+            stageType === GameStageType.GRAND_BLESSING ||
+            stageType === GameStageType.MINOR_BLESSING
+        ) {
+            logger.debug(`[StrategyService] 跳过刷新：${stageType}（S17 新增阶段，由 handler 自行刷新）`);
             return false;
         }
 
@@ -3184,6 +3218,94 @@ export class StrategyService {
         await this.refreshGameState();
 
         // 5. 执行通用运营策略（海克斯选完后就是正常 PVP 准备阶段）
+        await this.executeCommonStrategy();
+    }
+
+    // ============================================================
+    // ⭐ S17 星神赛季新增阶段处理器
+    // ============================================================
+
+    /**
+     * 统一处理 S17 星神赛季的 3 种事件回合
+     * @param stageType 当前阶段类型，必须是以下三种之一：
+     *                  - GameStageType.STAR_GOD_CHOOSE : 星神选择 (2-4, 3-4, 4-4)，从 2 个槽位中 2 选 1
+     *                  - GameStageType.GRAND_BLESSING  : 大恩赐 (4-7)，直接点击右下角按钮
+     *                  - GameStageType.MINOR_BLESSING  : 小恩赐 (5-4, 6-4, 7-4)，从 4 个装备中 4 选 1
+     *
+     * @description
+     * 三种阶段的外壳流程完全一致：
+     *   1. sleep(800) 等待界面/选项完全显示
+     *   2. 根据 stageType 决定"点哪里"（唯一差别点）
+     *   3. sleep(500) 等待选择动画完成
+     *   4. refreshGameState() 刷新游戏状态
+     *   5. executeCommonStrategy() 选完后进入正常 PVP 准备阶段
+     *
+     * 目前的"点哪里"占位策略：
+     *   - STAR_GOD_CHOOSE: 从 starGodSlot 中随机 2 选 1
+     *   - GRAND_BLESSING : 直接点击 grandBlessingPoint (790, 670)
+     *   - MINOR_BLESSING : 从 minorBlessingSlot 中随机 4 选 1
+     *
+     * 后续优化方向（待指导）：
+     *   - OCR 识别选项内容，按阵容/已选历史等做有策略的选择
+     *   - 大恩赐点击按钮后若有二级选项界面，需补充识别与选择逻辑
+     */
+    private async handleStarGodChoose(stageType: GameStageType): Promise<void> {
+        logger.info(`[StrategyService] S17 事件回合 [${stageType}]：等待选项加载...`);
+
+        // 1. 等待界面/选项完全显示
+        await sleep(800);
+
+        // 2. 根据阶段类型决定点击目标（唯一的业务差异点）
+        //    注意：switch 的 case 里直接调用 clickAt + 打日志，
+        //    而不是先把目标点存进一个变量再统一点击——
+        //    因为大恩赐是单点坐标，星神/小恩赐是从一组槽位中随机挑，
+        //    两种结构不同，直接分开更清晰。
+        switch (stageType) {
+            case GameStageType.STAR_GOD_CHOOSE: {
+                // 星神选择：从 starGodSlot 中随机 2 选 1
+                const slotKeys = Object.keys(starGodSlot) as (keyof typeof starGodSlot)[];
+                const selectedKey = slotKeys[Math.floor(Math.random() * slotKeys.length)];
+                const selectedPoint = starGodSlot[selectedKey];
+                logger.info(
+                    `[StrategyService] 星神选择（随机）：选中 ${selectedKey} @ (${selectedPoint.x}, ${selectedPoint.y})`
+                );
+                await mouseController.clickAt(selectedPoint, MouseButtonType.LEFT);
+                break;
+            }
+            case GameStageType.GRAND_BLESSING: {
+                // 大恩赐：直接点击右下角按钮（无候选槽位）
+                //    grandBlessingPoint = { x: 790, y: 670 }
+                logger.info(
+                    `[StrategyService] 大恩赐：点击右下角按钮 @ (${grandBlessingPoint.x}, ${grandBlessingPoint.y})`
+                );
+                await mouseController.clickAt(grandBlessingPoint, MouseButtonType.LEFT);
+                break;
+            }
+            case GameStageType.MINOR_BLESSING: {
+                // 小恩赐：从 minorBlessingSlot 中随机 4 选 1
+                const slotKeys = Object.keys(minorBlessingSlot) as (keyof typeof minorBlessingSlot)[];
+                const selectedKey = slotKeys[Math.floor(Math.random() * slotKeys.length)];
+                const selectedPoint = minorBlessingSlot[selectedKey];
+                logger.info(
+                    `[StrategyService] 小恩赐（随机）：选中 ${selectedKey} @ (${selectedPoint.x}, ${selectedPoint.y})`
+                );
+                await mouseController.clickAt(selectedPoint, MouseButtonType.LEFT);
+                break;
+            }
+            default:
+                // 防御式编程：理论上不会进入这里，因为 onStageChange 的 switch
+                // 只会把上述 3 种类型分发进来；但万一以后有人误调用，打个 warn 留痕
+                logger.warn(`[StrategyService] handleStarGodChoose 收到非预期阶段类型: ${stageType}，跳过点击`);
+                return;
+        }
+
+        // 3. 等待选择动画完成
+        await sleep(500);
+
+        // 4. 刷新游戏状态（选项消失后，商店/棋盘等可重新识别）
+        await this.refreshGameState();
+
+        // 5. 选完后进入正常备战阶段，可以正常运营
         await this.executeCommonStrategy();
     }
 
