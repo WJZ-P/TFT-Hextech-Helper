@@ -160,11 +160,11 @@ $results = New-Object System.Collections.Generic.List[object]
   [void][NativeWindowQuery]::GetClassName($hWnd, $classBuilder, $classBuilder.Capacity)
   $rect = New-Object NativeWindowQuery+RECT
   [void][NativeWindowQuery]::GetWindowRect($hWnd, [ref]$rect)
-  $pid = 0
-  [void][NativeWindowQuery]::GetWindowThreadProcessId($hWnd, [ref]$pid)
+  $windowProcessId = 0
+  [void][NativeWindowQuery]::GetWindowThreadProcessId($hWnd, [ref]$windowProcessId)
   $processName = $null
   try {
-    if ($pid -gt 0) { $processName = (Get-Process -Id $pid -ErrorAction Stop).ProcessName }
+    if ($windowProcessId -gt 0) { $processName = (Get-Process -Id $windowProcessId -ErrorAction Stop).ProcessName }
   } catch {}
   $results.Add([pscustomobject]@{
     title = $titleBuilder.ToString();
@@ -179,6 +179,187 @@ $results = New-Object System.Collections.Generic.List[object]
   return $true
 }, [IntPtr]::Zero) | Out-Null
 $results | ConvertTo-Json -Depth 4 -Compress
+`;
+
+const POWERSHELL_ANDROID_WINDOW_RESTORE_SCRIPT = `
+$signature = @"
+using System;
+using System.Text;
+using System.Runtime.InteropServices;
+public static class NativeAndroidWindowRestore {
+  public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+  [DllImport("user32.dll")] public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+  [DllImport("user32.dll", SetLastError=true)] public static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
+  [DllImport("user32.dll", SetLastError=true)] public static extern int GetWindowTextLength(IntPtr hWnd);
+  [DllImport("user32.dll", SetLastError=true, CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr hWnd, StringBuilder className, int maxCount);
+  [DllImport("user32.dll", SetLastError=true)] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+  [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hWnd);
+  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+}
+"@
+Add-Type $signature -ErrorAction SilentlyContinue
+$results = New-Object System.Collections.Generic.List[object]
+$restored = 0
+$activated = 0
+$pattern = 'bluestacks|app player|hd-player|hd-frontend|bstk|mumu|ldplayer|nox|teamfight|tft|金铲|云顶'
+[NativeAndroidWindowRestore]::EnumWindows({
+  param($hWnd, $lParam)
+  $length = [NativeAndroidWindowRestore]::GetWindowTextLength($hWnd)
+  $titleBuilder = New-Object System.Text.StringBuilder ($length + 1)
+  [void][NativeAndroidWindowRestore]::GetWindowText($hWnd, $titleBuilder, $titleBuilder.Capacity)
+  $classBuilder = New-Object System.Text.StringBuilder 512
+  [void][NativeAndroidWindowRestore]::GetClassName($hWnd, $classBuilder, $classBuilder.Capacity)
+  $windowProcessId = 0
+  [void][NativeAndroidWindowRestore]::GetWindowThreadProcessId($hWnd, [ref]$windowProcessId)
+  $processName = $null
+  try {
+    if ($windowProcessId -gt 0) { $processName = (Get-Process -Id $windowProcessId -ErrorAction Stop).ProcessName }
+  } catch {}
+  $title = $titleBuilder.ToString()
+  $className = $classBuilder.ToString()
+  $joined = (($title, $className, $processName) -join ' ').ToLowerInvariant()
+  if ($joined -notmatch $pattern) { return $true }
+  if ($joined -match 'tft-hextech-helper|hextech helper|notificationareaiconwindowclass') { return $true }
+  $didRestore = [NativeAndroidWindowRestore]::ShowWindow($hWnd, 9)
+  if ($didRestore) { $script:restored += 1 }
+  $didActivate = [NativeAndroidWindowRestore]::SetForegroundWindow($hWnd)
+  if ($didActivate) { $script:activated += 1 }
+  $results.Add([pscustomobject]@{
+    title = $title;
+    className = $className;
+    processName = $processName;
+    restored = $didRestore;
+    activated = $didActivate;
+    visible = [NativeAndroidWindowRestore]::IsWindowVisible($hWnd)
+  }) | Out-Null
+  return $true
+}, [IntPtr]::Zero) | Out-Null
+[pscustomobject]@{
+  restoredCount = $restored;
+  activatedCount = $activated;
+  matchedCount = $results.Count;
+  windows = $results
+} | ConvertTo-Json -Depth 4 -Compress
+`;
+
+const POWERSHELL_ANDROID_WINDOW_BOUNDS_SCRIPT = `
+$minWidth = __MIN_WIDTH__
+$minHeight = __MIN_HEIGHT__
+$targetWidth = __TARGET_WIDTH__
+$targetHeight = __TARGET_HEIGHT__
+$targetLeft = __TARGET_LEFT__
+$targetTop = __TARGET_TOP__
+$forceBounds = $env:TFT_ANDROID_FORCE_WINDOW_BOUNDS -eq '1'
+$signature = @"
+using System;
+using System.Text;
+using System.Runtime.InteropServices;
+public static class NativeAndroidWindowBounds {
+  public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+  [DllImport("user32.dll")] public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+  [DllImport("user32.dll", SetLastError=true)] public static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
+  [DllImport("user32.dll", SetLastError=true)] public static extern int GetWindowTextLength(IntPtr hWnd);
+  [DllImport("user32.dll", SetLastError=true, CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr hWnd, StringBuilder className, int maxCount);
+  [DllImport("user32.dll", SetLastError=true)] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+  [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hWnd);
+  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT rect);
+  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+  [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+  [DllImport("user32.dll")] public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
+  [DllImport("user32.dll")] public static extern bool SetWindowPlacement(IntPtr hWnd, ref WINDOWPLACEMENT lpwndpl);
+  [StructLayout(LayoutKind.Sequential)] public struct POINT { public int X; public int Y; }
+  [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
+  [StructLayout(LayoutKind.Sequential)] public struct WINDOWPLACEMENT {
+    public int length;
+    public int flags;
+    public int showCmd;
+    public POINT ptMinPosition;
+    public POINT ptMaxPosition;
+    public RECT rcNormalPosition;
+  }
+}
+"@
+Add-Type $signature -ErrorAction SilentlyContinue
+$results = New-Object System.Collections.Generic.List[object]
+$matched = 0
+$resized = 0
+$activated = 0
+$restored = 0
+$includePattern = 'bluestacks app player|teamfight tactics|tft|金铲|云顶|mumu|ldplayer|nox'
+$excludePattern = 'tft-hextech-helper|hextech helper|notificationareaiconwindowclass|keymap overlay|bluestacks-services|service|helper'
+[NativeAndroidWindowBounds]::EnumWindows({
+  param($hWnd, $lParam)
+  if (-not [NativeAndroidWindowBounds]::IsWindowVisible($hWnd)) { return $true }
+  $length = [NativeAndroidWindowBounds]::GetWindowTextLength($hWnd)
+  $titleBuilder = New-Object System.Text.StringBuilder ($length + 1)
+  [void][NativeAndroidWindowBounds]::GetWindowText($hWnd, $titleBuilder, $titleBuilder.Capacity)
+  $classBuilder = New-Object System.Text.StringBuilder 512
+  [void][NativeAndroidWindowBounds]::GetClassName($hWnd, $classBuilder, $classBuilder.Capacity)
+  $windowProcessId = 0
+  [void][NativeAndroidWindowBounds]::GetWindowThreadProcessId($hWnd, [ref]$windowProcessId)
+  $processName = $null
+  try {
+    if ($windowProcessId -gt 0) { $processName = (Get-Process -Id $windowProcessId -ErrorAction Stop).ProcessName }
+  } catch {}
+  $title = $titleBuilder.ToString()
+  $className = $classBuilder.ToString()
+  $joined = (($title, $className, $processName) -join ' ').ToLowerInvariant()
+  if ($joined -notmatch $includePattern) { return $true }
+  if ($joined -match $excludePattern) { return $true }
+  $rect = New-Object NativeAndroidWindowBounds+RECT
+  [void][NativeAndroidWindowBounds]::GetWindowRect($hWnd, [ref]$rect)
+  $width = $rect.Right - $rect.Left
+  $height = $rect.Bottom - $rect.Top
+  $script:matched += 1
+  $didRestore = [NativeAndroidWindowBounds]::ShowWindow($hWnd, 9)
+  if ($didRestore) { $script:restored += 1 }
+  $didResize = $false
+  # Do not treat secondary-monitor coordinates as broken. Some valid BlueStacks
+  # placements have large X values or negative Y values. Only resize genuinely
+  # undersized windows unless forced through TFT_ANDROID_FORCE_WINDOW_BOUNDS=1.
+  $needsBoundsFix = $forceBounds -or $width -lt $minWidth -or $height -lt $minHeight
+  if ($needsBoundsFix) {
+    # SetWindowPlacement breaks Windows snap/edge docking more reliably than SetWindowPos alone.
+    $placement = New-Object NativeAndroidWindowBounds+WINDOWPLACEMENT
+    $placement.length = [Runtime.InteropServices.Marshal]::SizeOf([type][NativeAndroidWindowBounds+WINDOWPLACEMENT])
+    $placement.flags = 0
+    $placement.showCmd = 1
+    $placement.ptMinPosition = New-Object NativeAndroidWindowBounds+POINT
+    $placement.ptMaxPosition = New-Object NativeAndroidWindowBounds+POINT
+    $placement.rcNormalPosition = New-Object NativeAndroidWindowBounds+RECT
+    $placement.rcNormalPosition.Left = $targetLeft
+    $placement.rcNormalPosition.Top = $targetTop
+    $placement.rcNormalPosition.Right = $targetLeft + $targetWidth
+    $placement.rcNormalPosition.Bottom = $targetTop + $targetHeight
+    $didPlacement = [NativeAndroidWindowBounds]::SetWindowPlacement($hWnd, [ref]$placement)
+    $didMove = [NativeAndroidWindowBounds]::MoveWindow($hWnd, $targetLeft, $targetTop, $targetWidth, $targetHeight, $true)
+    $didSetPos = [NativeAndroidWindowBounds]::SetWindowPos($hWnd, [IntPtr]::Zero, $targetLeft, $targetTop, $targetWidth, $targetHeight, 0x0040)
+    $didResize = $didPlacement -or $didMove -or $didSetPos
+    if ($didResize) { $script:resized += 1 }
+  }
+  $didActivate = [NativeAndroidWindowBounds]::SetForegroundWindow($hWnd)
+  if ($didActivate) { $script:activated += 1 }
+  $results.Add([pscustomobject]@{
+    title = $title;
+    className = $className;
+    processName = $processName;
+    width = $width;
+    height = $height;
+    restored = $didRestore;
+    resized = $didResize;
+    activated = $didActivate
+  }) | Out-Null
+  return $true
+}, [IntPtr]::Zero) | Out-Null
+[pscustomobject]@{
+  matchedCount = $matched;
+  restoredCount = $restored;
+  resizedCount = $resized;
+  activatedCount = $activated;
+  windows = $results
+} | ConvertTo-Json -Depth 4 -Compress
 `;
 
 const POWERSHELL_NATIVE_CHILD_WINDOW_ENUM_TEMPLATE = `
@@ -219,10 +400,10 @@ $results = New-Object System.Collections.Generic.List[object]
     [void][NativeChildWindowQuery]::GetClassName($childHwnd, $classBuilder, $classBuilder.Capacity)
     $childRect = New-Object NativeChildWindowQuery+RECT
     [void][NativeChildWindowQuery]::GetWindowRect($childHwnd, [ref]$childRect)
-    $pid = 0
-    [void][NativeChildWindowQuery]::GetWindowThreadProcessId($childHwnd, [ref]$pid)
+    $windowProcessId = 0
+    [void][NativeChildWindowQuery]::GetWindowThreadProcessId($childHwnd, [ref]$windowProcessId)
     $processName = $null
-    try { if ($pid -gt 0) { $processName = (Get-Process -Id $pid -ErrorAction Stop).ProcessName } } catch {}
+    try { if ($windowProcessId -gt 0) { $processName = (Get-Process -Id $windowProcessId -ErrorAction Stop).ProcessName } } catch {}
     $results.Add([pscustomobject]@{
       title = $childTitleBuilder.ToString();
       className = $classBuilder.ToString();
@@ -448,8 +629,10 @@ export function analyzeWindowCandidates(
 
             let withActiveBonus = score;
             if (activeTitleMatch) {
-                withActiveBonus += 600;
-                if (activeWindow) {
+                // Android emulators may expose smaller active child surfaces with the same title.
+                // Do not let that active hint outrank the larger player window used for coordinates.
+                withActiveBonus += isAndroidClient ? 0 : 600;
+                if (!isAndroidClient && activeWindow) {
                     const delta =
                         Math.abs(info.left - activeWindow.left) +
                         Math.abs(info.top - activeWindow.top) +
@@ -731,6 +914,126 @@ class WindowHelper {
             logger.info(`[WindowHelper] 已通过 AppActivate 聚焦窗口: "${title}"`);
             return true;
         } catch {
+            return false;
+        }
+    }
+
+    /**
+     * 尝试恢复并聚焦安卓模拟器窗口。
+     * @description BlueStacks 在切换页面/队列/全屏焦点变化时偶尔会被系统报告为离屏或最小化。
+     *              这里只恢复匹配安卓模拟器进程/标题的窗口，不改变截图坐标模型。
+     */
+    public async restoreAndroidEmulatorWindows(): Promise<boolean> {
+        try {
+            const encoded = Buffer.from(POWERSHELL_ANDROID_WINDOW_RESTORE_SCRIPT, "utf16le").toString("base64");
+            const { stdout } = await execFileAsync("powershell.exe", [
+                "-NoProfile",
+                "-EncodedCommand",
+                encoded,
+            ]);
+            const trimmed = stdout.trim();
+            if (!trimmed) {
+                logger.warn("[WindowHelper] 安卓模拟器窗口恢复无输出");
+                return false;
+            }
+            const parsed = JSON.parse(trimmed) as {
+                restoredCount?: number;
+                activatedCount?: number;
+                matchedCount?: number;
+            };
+            const restoredCount = parsed.restoredCount ?? 0;
+            const activatedCount = parsed.activatedCount ?? 0;
+            const matchedCount = parsed.matchedCount ?? 0;
+            if (matchedCount > 0) {
+                logger.info(
+                    `[WindowHelper] 安卓模拟器窗口恢复尝试: matched=${matchedCount}, ` +
+                    `restored=${restoredCount}, activated=${activatedCount}`
+                );
+            }
+            return restoredCount > 0 || activatedCount > 0;
+        } catch (error: unknown) {
+            logger.warn(`[WindowHelper] 安卓模拟器窗口恢复失败: ${error instanceof Error ? error.message : String(error)}`);
+            return false;
+        }
+    }
+
+    /**
+     * 恢复并放大安卓模拟器窗口到稳定识别尺寸。
+     * @description live smoke/自动化入口经常遇到模拟器被拖成小窗，普通窗口枚举会因此被
+     *              size gate 拒绝。这里仅处理可见的模拟器主窗口，不碰 services/helper 子窗。
+     */
+    public async ensureAndroidEmulatorWindowBounds(
+        minWidth = 850,
+        minHeight = 450,
+        targetWidth = 1060,
+        targetHeight = 750,
+        targetLeft = 60,
+        targetTop = 60
+    ): Promise<boolean> {
+        try {
+            const script = POWERSHELL_ANDROID_WINDOW_BOUNDS_SCRIPT
+                .replace(/__MIN_WIDTH__/g, String(minWidth))
+                .replace(/__MIN_HEIGHT__/g, String(minHeight))
+                .replace(/__TARGET_WIDTH__/g, String(targetWidth))
+                .replace(/__TARGET_HEIGHT__/g, String(targetHeight))
+                .replace(/__TARGET_LEFT__/g, String(targetLeft))
+                .replace(/__TARGET_TOP__/g, String(targetTop));
+            const encoded = Buffer.from(script, "utf16le").toString("base64");
+            const { stdout } = await execFileAsync("powershell.exe", [
+                "-NoProfile",
+                "-EncodedCommand",
+                encoded,
+            ]);
+            const trimmed = stdout.trim();
+            if (!trimmed) {
+                logger.warn("[WindowHelper] 安卓模拟器窗口尺寸修复无输出");
+                return false;
+            }
+            const parsed = JSON.parse(trimmed) as {
+                matchedCount?: number;
+                restoredCount?: number;
+                resizedCount?: number;
+                activatedCount?: number;
+            };
+            const matchedCount = parsed.matchedCount ?? 0;
+            const restoredCount = parsed.restoredCount ?? 0;
+            const resizedCount = parsed.resizedCount ?? 0;
+            const activatedCount = parsed.activatedCount ?? 0;
+            if (matchedCount > 0) {
+                logger.info(
+                    `[WindowHelper] 安卓模拟器窗口尺寸检查: matched=${matchedCount}, ` +
+                    `restored=${restoredCount}, resized=${resizedCount}, activated=${activatedCount}`
+                );
+            }
+            return matchedCount > 0;
+        } catch (error: unknown) {
+            logger.warn(`[WindowHelper] 安卓模拟器窗口尺寸修复失败: ${error instanceof Error ? error.message : String(error)}`);
+            return false;
+        }
+    }
+
+    /**
+     * 关闭会覆盖截图的 Windows 系统级前台层。
+     * @description Task View/虚拟桌面切换层会让截图看起来是桌面而不是模拟器。
+     *              只在明确检测到系统覆盖层标题时发送 Esc，避免干扰游戏内弹窗。
+     */
+    public async dismissWindowsSystemOverlays(): Promise<boolean> {
+        const activeWindow = await this.getActiveWindowSnapshot();
+        const title = activeWindow?.title.toLowerCase() ?? "";
+        if (!title.includes("task view")) {
+            return false;
+        }
+
+        try {
+            await execFileAsync("powershell.exe", [
+                "-NoProfile",
+                "-Command",
+                "$ws = New-Object -ComObject WScript.Shell; $ws.SendKeys('{ESC}')",
+            ]);
+            logger.info(`[WindowHelper] 已关闭 Windows 系统覆盖层: "${activeWindow?.title ?? ""}"`);
+            return true;
+        } catch (error: unknown) {
+            logger.warn(`[WindowHelper] 关闭 Windows 系统覆盖层失败: ${error instanceof Error ? error.message : String(error)}`);
             return false;
         }
     }

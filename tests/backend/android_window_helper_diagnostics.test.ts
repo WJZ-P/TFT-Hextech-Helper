@@ -60,3 +60,27 @@ test("window diagnostics injects active fallback for hinted emulator window titl
     assert.equal(report.selected?.title, "BlueStacks App Player");
     assert.equal(report.entries.some((entry) => entry.injectedActiveFallback), true);
 });
+
+test("window diagnostics keeps larger Android player window over active child surfaces", () => {
+    const windows: WindowInfo[] = [
+        {
+            title: "BlueStacks App Player",
+            left: 450,
+            top: 351,
+            width: 996,
+            height: 482,
+        },
+        {
+            title: "BlueStacks App Player",
+            left: 852,
+            top: 470,
+            width: 684,
+            height: 349,
+        },
+    ];
+
+    const report = analyzeWindowCandidates(windows, GameClient.ANDROID, windows[1] ?? null);
+
+    assert.equal(report.selected?.left, 450);
+    assert.equal(report.selected?.width, 996);
+});

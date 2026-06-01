@@ -5,13 +5,17 @@ export type AndroidWindowScreenState =
     | "BLUESTACKS_BOOT"
     | "TFT_FRONTEND"
     | "LOBBY"
+    | "MODE_SELECT"
+    | "CONFIRM_MODAL"
     | "QUEUE"
     | "ACCEPT_READY"
     | "IN_GAME_TRANSITION"
     | "LIVE_CONTENT"
+    | "GAME_OVER"
     | "UNKNOWN";
 export type AndroidFrontendVariant = "UPDATE_READY" | "LOGIN_REQUIRED";
-export type AndroidLobbyVariant = "DEFAULT" | "SIDE_MENU_OPEN";
+export type AndroidLobbyVariant = "DEFAULT" | "ROOM" | "SIDE_MENU_OPEN";
+export type AndroidConfirmModalVariant = "RECOVERABLE_CONFIRM" | "NETWORK_ERROR";
 
 export interface AndroidWindowClassification {
     state: AndroidWindowScreenState;
@@ -33,22 +37,40 @@ export interface AndroidWindowClassification {
     sideMenuDarkRatio?: number;
     sideMenuGoldRatio?: number;
     sideDismissDarkRatio?: number;
+    roomBackGoldRatio?: number;
+    roomBackDarkRatio?: number;
+    modeSelectGoldRatio?: number;
+    modeSelectBlueRatio?: number;
+    modeSelectDarkRatio?: number;
+    gameOverReplayBlueRatio?: number;
+    gameOverRowsDarkRatio?: number;
     frontendVariant?: AndroidFrontendVariant;
     lobbyVariant?: AndroidLobbyVariant;
+    confirmModalVariant?: AndroidConfirmModalVariant;
     primaryActionPoint?: SimplePoint;
     startQueuePoint?: SimplePoint;
+    selectGameModePoint?: SimplePoint;
+    confirmModalPoint?: SimplePoint;
     cancelQueuePoint?: SimplePoint;
     acceptReadyPoint?: SimplePoint;
     dismissOverlayPoint?: SimplePoint;
+    leaveRoomPoint?: SimplePoint;
     loginSecondaryGoldRatio?: number;
     progressDarkRatio?: number;
 }
 
 const UPDATE_PRIMARY_ACTION_POINT: SimplePoint = { x: 0.5, y: 0.545 };
-const START_QUEUE_ACTION_POINT: SimplePoint = { x: 0.84, y: 0.90 };
+const START_QUEUE_ACTION_POINT: SimplePoint = { x: 0.87, y: 0.90 };
+const SELECT_GAME_MODE_ACTION_POINT: SimplePoint = { x: 0.35, y: 0.66 };
+const CONFIRM_MODAL_ACTION_POINT: SimplePoint = { x: 0.50, y: 0.62 };
+const NETWORK_CONFIRM_MODAL_ACTION_POINT: SimplePoint = { x: 0.50, y: 0.62 };
 const CANCEL_QUEUE_ACTION_POINT: SimplePoint = { x: 0.83, y: 0.90 };
-const ACCEPT_READY_ACTION_POINT: SimplePoint = { x: 0.51, y: 0.68 };
+const ACCEPT_READY_ACTION_POINT: SimplePoint = { x: 0.59, y: 0.78 };
 const DISMISS_OVERLAY_ACTION_POINT: SimplePoint = { x: 0.78, y: 0.52 };
+
+function getLeaveRoomActionPoint(width: number, height: number): SimplePoint {
+    return width / Math.max(1, height) > 1.90 ? { x: 0.24, y: 0.14 } : { x: 0.08, y: 0.06 };
+}
 
 function isGoldLoginPixel(red: number, green: number, blue: number): boolean {
     return red > 150 && green > 100 && green < 220 && blue < 140 && red > green;
@@ -153,6 +175,20 @@ export async function classifyAndroidWindowScreenshot(
         height: Math.max(1, Math.round(height * 0.50)),
     };
 
+    const roomBackRegion = {
+        left: 0,
+        top: 0,
+        width: Math.max(1, Math.round(width * 0.32)),
+        height: Math.max(1, Math.round(height * 0.18)),
+    };
+
+    const modeSelectRegion = {
+        left: Math.max(0, Math.round(width * 0.02)),
+        top: Math.max(0, Math.round(height * 0.36)),
+        width: Math.max(1, Math.round(width * 0.94)),
+        height: Math.max(1, Math.round(height * 0.48)),
+    };
+
     const { data, info } = await sharp(screenshot)
         .extract(blueRegion)
         .raw()
@@ -213,6 +249,36 @@ export async function classifyAndroidWindowScreenshot(
         .raw()
         .toBuffer({ resolveWithObject: true });
 
+    const roomBackBuffer = await sharp(screenshot)
+        .extract(roomBackRegion)
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+
+    const modeSelectBuffer = await sharp(screenshot)
+        .extract(modeSelectRegion)
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+
+    const gameOverReplayBuffer = await sharp(screenshot)
+        .extract({
+            left: Math.max(0, Math.round(width * 0.77)),
+            top: Math.max(0, Math.round(height * 0.78)),
+            width: Math.max(1, Math.round(width * 0.20)),
+            height: Math.max(1, Math.round(height * 0.14)),
+        })
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+
+    const gameOverRowsBuffer = await sharp(screenshot)
+        .extract({
+            left: Math.max(0, Math.round(width * 0.22)),
+            top: Math.max(0, Math.round(height * 0.18)),
+            width: Math.max(1, Math.round(width * 0.42)),
+            height: Math.max(1, Math.round(height * 0.72)),
+        })
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+
     let blueDominant = 0;
     let brightBlue = 0;
     let brightWhite = 0;
@@ -233,6 +299,14 @@ export async function classifyAndroidWindowScreenshot(
     let sideMenuDark = 0;
     let sideMenuGold = 0;
     let sideDismissDark = 0;
+    let roomBackGold = 0;
+    let roomBackDark = 0;
+    let modeSelectGold = 0;
+    let modeSelectBlue = 0;
+    let modeSelectDark = 0;
+    let gameOverReplayBlue = 0;
+    let gameOverReplayGold = 0;
+    let gameOverRowsDark = 0;
 
     for (let index = 0; index < data.length; index += info.channels) {
         const red = data[index];
@@ -373,6 +447,58 @@ export async function classifyAndroidWindowScreenshot(
         }
     }
 
+    for (let index = 0; index < roomBackBuffer.data.length; index += roomBackBuffer.info.channels) {
+        const red = roomBackBuffer.data[index];
+        const green = roomBackBuffer.data[index + 1];
+        const blue = roomBackBuffer.data[index + 2];
+
+        if (isGoldLoginPixel(red, green, blue)) {
+            roomBackGold += 1;
+        }
+        if (isDarkProgressPixel(red, green, blue)) {
+            roomBackDark += 1;
+        }
+    }
+
+    for (let index = 0; index < modeSelectBuffer.data.length; index += modeSelectBuffer.info.channels) {
+        const red = modeSelectBuffer.data[index];
+        const green = modeSelectBuffer.data[index + 1];
+        const blue = modeSelectBuffer.data[index + 2];
+
+        if (isGoldLoginPixel(red, green, blue)) {
+            modeSelectGold += 1;
+        }
+        if (blue > 150 && green > 80 && red < 120) {
+            modeSelectBlue += 1;
+        }
+        if (isDarkProgressPixel(red, green, blue)) {
+            modeSelectDark += 1;
+        }
+    }
+
+    for (let index = 0; index < gameOverReplayBuffer.data.length; index += gameOverReplayBuffer.info.channels) {
+        const red = gameOverReplayBuffer.data[index];
+        const green = gameOverReplayBuffer.data[index + 1];
+        const blue = gameOverReplayBuffer.data[index + 2];
+
+        if (blue > 150 && green > 80 && red < 140) {
+            gameOverReplayBlue += 1;
+        }
+        if (isGoldLoginPixel(red, green, blue)) {
+            gameOverReplayGold += 1;
+        }
+    }
+
+    for (let index = 0; index < gameOverRowsBuffer.data.length; index += gameOverRowsBuffer.info.channels) {
+        const red = gameOverRowsBuffer.data[index];
+        const green = gameOverRowsBuffer.data[index + 1];
+        const blue = gameOverRowsBuffer.data[index + 2];
+
+        if (isDarkProgressPixel(red, green, blue)) {
+            gameOverRowsDark += 1;
+        }
+    }
+
     const liveHudGoldBuffer = await sharp(screenshot)
         .extract({
             left: Math.max(0, Math.round(width * 0.80)),
@@ -425,6 +551,10 @@ export async function classifyAndroidWindowScreenshot(
     const transitionCenterPixelCount = Math.max(1, transitionCenterBuffer.info.width * transitionCenterBuffer.info.height);
     const sideMenuPixelCount = Math.max(1, sideMenuBuffer.info.width * sideMenuBuffer.info.height);
     const sideDismissPixelCount = Math.max(1, sideDismissBuffer.info.width * sideDismissBuffer.info.height);
+    const roomBackPixelCount = Math.max(1, roomBackBuffer.info.width * roomBackBuffer.info.height);
+    const modeSelectPixelCount = Math.max(1, modeSelectBuffer.info.width * modeSelectBuffer.info.height);
+    const gameOverReplayPixelCount = Math.max(1, gameOverReplayBuffer.info.width * gameOverReplayBuffer.info.height);
+    const gameOverRowsPixelCount = Math.max(1, gameOverRowsBuffer.info.width * gameOverRowsBuffer.info.height);
     const liveHudGoldPixelCount = Math.max(1, liveHudGoldBuffer.info.width * liveHudGoldBuffer.info.height);
     const liveHudScorePixelCount = Math.max(1, liveHudScoreBuffer.info.width * liveHudScoreBuffer.info.height);
     const blueDominantRatio = blueDominant / pixelCount;
@@ -445,17 +575,29 @@ export async function classifyAndroidWindowScreenshot(
     const sideMenuDarkRatio = sideMenuDark / sideMenuPixelCount;
     const sideMenuGoldRatio = sideMenuGold / sideMenuPixelCount;
     const sideDismissDarkRatio = sideDismissDark / sideDismissPixelCount;
+    const roomBackGoldRatio = roomBackGold / roomBackPixelCount;
+    const roomBackDarkRatio = roomBackDark / roomBackPixelCount;
+    const modeSelectGoldRatio = modeSelectGold / modeSelectPixelCount;
+    const modeSelectBlueRatio = modeSelectBlue / modeSelectPixelCount;
+    const modeSelectDarkRatio = modeSelectDark / modeSelectPixelCount;
+    const gameOverReplayBlueRatio = gameOverReplayBlue / gameOverReplayPixelCount;
+    const gameOverReplayGoldRatio = gameOverReplayGold / gameOverReplayPixelCount;
+    const gameOverRowsDarkRatio = gameOverRowsDark / gameOverRowsPixelCount;
     const liveHudGoldSignalRatio = liveHudGoldSignal / liveHudGoldPixelCount;
     const liveHudScoreSignalRatio = liveHudScoreSignal / liveHudScorePixelCount;
 
     let state: AndroidWindowScreenState = "UNKNOWN";
     let frontendVariant: AndroidFrontendVariant | undefined;
     let lobbyVariant: AndroidLobbyVariant | undefined;
+    let confirmModalVariant: AndroidConfirmModalVariant | undefined;
     let primaryActionPoint: SimplePoint | undefined;
     let startQueuePoint: SimplePoint | undefined;
+    let selectGameModePoint: SimplePoint | undefined;
+    let confirmModalPoint: SimplePoint | undefined;
     let cancelQueuePoint: SimplePoint | undefined;
     let acceptReadyPoint: SimplePoint | undefined;
     let dismissOverlayPoint: SimplePoint | undefined;
+    let leaveRoomPoint: SimplePoint | undefined;
 
     if (brightBlueRatio > 0.18) {
         state = "BLUESTACKS_BOOT";
@@ -467,12 +609,51 @@ export async function classifyAndroidWindowScreenshot(
             frontendVariant = "UPDATE_READY";
             primaryActionPoint = UPDATE_PRIMARY_ACTION_POINT;
         }
-    } else if (acceptModalDarkRatio > 0.38 && acceptButtonBlueRatio > 0.04 && acceptButtonDarkRatio < 0.65) {
+    } else if (
+        acceptModalDarkRatio > 0.50 &&
+        acceptButtonBlueRatio > 0.02 &&
+        acceptButtonDarkRatio < 0.72 &&
+        transitionCenterDarkRatio > 0.55 &&
+        modeSelectBlueRatio < 0.04
+    ) {
         state = "ACCEPT_READY";
         acceptReadyPoint = ACCEPT_READY_ACTION_POINT;
     } else if (queueCancelDarkRatio > 0.60 && queueStatusGoldRatio > 0.035 && queueStatusDarkRatio > 0.15 && queueStatusDarkRatio < 0.45) {
         state = "QUEUE";
         cancelQueuePoint = CANCEL_QUEUE_ACTION_POINT;
+    } else if (
+        queueCancelDarkRatio > 0.55 &&
+        queueStatusGoldRatio > 0.015 &&
+        queueStatusDarkRatio > 0.35 &&
+        queueStatusDarkRatio < 0.70 &&
+        lobbyStartBlueRatio < 0.05 &&
+        acceptButtonBlueRatio < 0.01
+    ) {
+        state = "QUEUE";
+        cancelQueuePoint = CANCEL_QUEUE_ACTION_POINT;
+    } else if (
+        modeSelectGoldRatio > 0.04 &&
+        modeSelectBlueRatio > 0.04 &&
+        modeSelectDarkRatio > 0.30 &&
+        lobbyStartBlueRatio < 0.05
+    ) {
+        state = "MODE_SELECT";
+        selectGameModePoint = SELECT_GAME_MODE_ACTION_POINT;
+        startQueuePoint = START_QUEUE_ACTION_POINT;
+    } else if (
+        acceptModalDarkRatio > 0.85 &&
+        transitionCenterDarkRatio > 0.80 &&
+        lobbyStartBlueRatio < 0.05 &&
+        acceptButtonBlueRatio < 0.02 &&
+        modeSelectGoldRatio < 0.02 &&
+        modeSelectBlueRatio < 0.04 &&
+        loginSecondaryGoldRatio > 0.01
+    ) {
+        state = "CONFIRM_MODAL";
+        confirmModalVariant = loginSecondaryGoldRatio < 0.011 ? "NETWORK_ERROR" : "RECOVERABLE_CONFIRM";
+        confirmModalPoint = confirmModalVariant === "NETWORK_ERROR"
+            ? NETWORK_CONFIRM_MODAL_ACTION_POINT
+            : CONFIRM_MODAL_ACTION_POINT;
     } else if (
         sideMenuDarkRatio > 0.30 &&
         sideMenuGoldRatio > 0.02 &&
@@ -485,9 +666,14 @@ export async function classifyAndroidWindowScreenshot(
         state = "LOBBY";
         lobbyVariant = "SIDE_MENU_OPEN";
         dismissOverlayPoint = DISMISS_OVERLAY_ACTION_POINT;
-    } else if (lobbyStartBlueRatio > 0.30 && lobbyStartDarkRatio < 0.20) {
+    } else if (lobbyStartBlueRatio > 0.25 && lobbyStartDarkRatio < 0.20) {
         state = "LOBBY";
-        lobbyVariant = "DEFAULT";
+        if (roomBackGoldRatio > 0.018 && roomBackDarkRatio > 0.50) {
+            lobbyVariant = "ROOM";
+            leaveRoomPoint = getLeaveRoomActionPoint(width, height);
+        } else {
+            lobbyVariant = "DEFAULT";
+        }
         startQueuePoint = START_QUEUE_ACTION_POINT;
     } else if (
         (transitionCenterGoldRatio > 0.10 && transitionCenterDarkRatio < 0.12) ||
@@ -498,10 +684,42 @@ export async function classifyAndroidWindowScreenshot(
             transitionCenterGoldRatio > 0.03 &&
             transitionCenterDarkRatio > 0.65 &&
             progressDarkRatio > 0.90
+        ) ||
+        (
+            lobbyStartBlueRatio < 0.02 &&
+            acceptModalDarkRatio < 0.35 &&
+            transitionCenterGoldRatio > 0.045 &&
+            transitionCenterDarkRatio > 0.12 &&
+            transitionCenterDarkRatio < 0.30 &&
+            modeSelectBlueRatio > 0.03 &&
+            modeSelectBlueRatio < 0.06 &&
+            brightWhiteRatio > 0.005
         )
     ) {
         state = "IN_GAME_TRANSITION";
-    } else if (liveHudGoldSignalRatio > 0.10 || liveHudScoreSignalRatio > 0.10) {
+    } else if (
+        gameOverReplayBlueRatio > 0.06 &&
+        gameOverReplayGoldRatio < 0.08 &&
+        gameOverRowsDarkRatio > 0.35 &&
+        gameOverRowsDarkRatio < 0.55 &&
+        acceptModalDarkRatio < 0.50 &&
+        transitionCenterDarkRatio > 0.30 &&
+        lobbyStartBlueRatio < 0.18 &&
+        progressDarkRatio > 0.52
+    ) {
+        state = "GAME_OVER";
+    } else if (
+        liveHudGoldSignalRatio > 0.10 ||
+        liveHudScoreSignalRatio > 0.10 ||
+        (
+            liveHudGoldSignalRatio > 0.02 &&
+            liveHudScoreSignalRatio > 0.035 &&
+            acceptModalDarkRatio < 0.45 &&
+            transitionCenterDarkRatio > 0.25 &&
+            queueCancelDarkRatio < 0.50 &&
+            lobbyStartBlueRatio < 0.05
+        )
+    ) {
         state = "LIVE_CONTENT";
     }
 
@@ -525,13 +743,24 @@ export async function classifyAndroidWindowScreenshot(
         sideMenuDarkRatio,
         sideMenuGoldRatio,
         sideDismissDarkRatio,
+        roomBackGoldRatio,
+        roomBackDarkRatio,
+        modeSelectGoldRatio,
+        modeSelectBlueRatio,
+        modeSelectDarkRatio,
+        gameOverReplayBlueRatio,
+        gameOverRowsDarkRatio,
         frontendVariant,
         lobbyVariant,
+        confirmModalVariant,
         primaryActionPoint,
         startQueuePoint,
+        selectGameModePoint,
+        confirmModalPoint,
         cancelQueuePoint,
         acceptReadyPoint,
         dismissOverlayPoint,
+        leaveRoomPoint,
         loginSecondaryGoldRatio,
         progressDarkRatio,
     };
