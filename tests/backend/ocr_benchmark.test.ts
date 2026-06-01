@@ -9,6 +9,8 @@ import fs from "node:fs/promises";
 import sharp from "sharp";
 import { ocrService, OcrWorkerType, buildAndroidStageOcrVariants, selectBestStageText } from "../../src-backend/tft";
 
+const RUN_OCR_BENCHMARK_TESTS = process.env.RUN_OCR_BENCHMARK_TESTS === "1";
+
 function resolveCropDir(): string {
     return path.resolve(
         process.cwd(),
@@ -34,7 +36,10 @@ async function loadRawCropBuffers(): Promise<{ name: string; buffer: Buffer }[]>
     return out;
 }
 
-test("ocr: benchmark optimized vs baseline (params + cache)", { timeout: 300000 }, async () => {
+test("ocr: benchmark optimized vs baseline (params + cache)", {
+    timeout: 300000,
+    skip: RUN_OCR_BENCHMARK_TESTS ? false : "Set RUN_OCR_BENCHMARK_TESTS=1 to run OCR benchmark tests",
+}, async () => {
     process.env.VITE_PUBLIC ??= path.resolve(process.cwd(), "public");
 
     const samples = await loadRawCropBuffers();

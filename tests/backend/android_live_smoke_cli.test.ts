@@ -124,6 +124,86 @@ test("android live smoke CLI can analyze live HUD screenshots", { timeout: 12000
     assert.equal(parsed.foregroundDecision?.kind, "READY");
 });
 
+test("android live smoke CLI can analyze mode-selection screenshots", { timeout: 120000 }, async () => {
+    const screenshotPath = path.join(
+        repoRoot,
+        "examples",
+        "recordings",
+        "android-foreground-na-captures",
+        "pending-real-captures",
+        "mode-select",
+        "na_mode_select_01.png"
+    );
+
+    const { stdout } = await execFileAsync(
+        process.execPath,
+        [tsxCli, "scripts/run-android-live-smoke.ts", "--screenshot", screenshotPath],
+        {
+            cwd: repoRoot,
+            windowsHide: true,
+        }
+    );
+
+    const parsed = JSON.parse(stdout.slice(stdout.indexOf("{"))) as {
+        verificationGate: {
+            readyToClassify: boolean;
+            readyToClick: boolean;
+            currentState: string;
+        };
+        contentClassification: {
+            state: string;
+        };
+        foregroundDecision: {
+            kind: string;
+            targetPoint?: { x: number; y: number };
+        } | null;
+    };
+
+    assert.equal(parsed.verificationGate.readyToClassify, true);
+    assert.equal(parsed.verificationGate.readyToClick, true);
+    assert.equal(parsed.verificationGate.currentState, "MODE_SELECT");
+    assert.equal(parsed.contentClassification.state, "MODE_SELECT");
+    assert.equal(parsed.foregroundDecision?.kind, "TAP_SELECT_GAME_MODE");
+    assert.deepEqual(parsed.foregroundDecision?.targetPoint, { x: 0.79, y: 0.72 });
+});
+
+test("android live smoke CLI can analyze recoverable confirmation modal screenshots", { timeout: 120000 }, async () => {
+    const screenshotPath = path.join(
+        repoRoot,
+        "examples",
+        "recordings",
+        "android-foreground-na-captures",
+        "pending-real-captures",
+        "confirm-modal",
+        "na_ready_declined_room_modal_02.png"
+    );
+
+    const { stdout } = await execFileAsync(
+        process.execPath,
+        [tsxCli, "scripts/run-android-live-smoke.ts", "--screenshot", screenshotPath],
+        {
+            cwd: repoRoot,
+            windowsHide: true,
+        }
+    );
+
+    const parsed = JSON.parse(stdout.slice(stdout.indexOf("{"))) as {
+        verificationGate: {
+            readyToClick: boolean;
+            currentState: string;
+        };
+        foregroundDecision: {
+            kind: string;
+            targetPoint?: { x: number; y: number };
+        } | null;
+    };
+
+    assert.equal(parsed.verificationGate.readyToClick, true);
+    assert.equal(parsed.verificationGate.currentState, "CONFIRM_MODAL");
+    assert.equal(parsed.foregroundDecision?.kind, "TAP_CONFIRM_MODAL");
+    assert.deepEqual(parsed.foregroundDecision?.targetPoint, { x: 0.59, y: 0.69 });
+});
+
 test("android live smoke CLI treats augment overlay screenshots as live content", { timeout: 120000 }, async () => {
     const screenshotPath = path.join(
         repoRoot,
@@ -158,44 +238,57 @@ test("android live smoke CLI treats augment overlay screenshots as live content"
 });
 
 test("android live smoke CLI treats shop-open live HUD screenshots as ready live content", { timeout: 120000 }, async () => {
-    const screenshotPath = path.join(
-        repoRoot,
-        "examples",
-        "recordings",
-        "derived",
-        "android-real-recording-20260315-ionia",
-        "frames",
-        "recording-shop-5-1.png"
-    );
+    const screenshotPaths = [
+        path.join(
+            repoRoot,
+            "examples",
+            "recordings",
+            "derived",
+            "android-real-recording-20260315-ionia",
+            "frames",
+            "recording-shop-5-1.png"
+        ),
+        path.join(
+            repoRoot,
+            "examples",
+            "recordings",
+            "android-foreground-na-captures",
+            "pending-real-captures",
+            "live-content",
+            "na_live_shop_open_small_window_01.png"
+        ),
+    ];
 
-    const { stdout } = await execFileAsync(
-        process.execPath,
-        [tsxCli, "scripts/run-android-live-smoke.ts", "--screenshot", screenshotPath],
-        {
-            cwd: repoRoot,
-            windowsHide: true,
-        }
-    );
+    for (const screenshotPath of screenshotPaths) {
+        const { stdout } = await execFileAsync(
+            process.execPath,
+            [tsxCli, "scripts/run-android-live-smoke.ts", "--screenshot", screenshotPath],
+            {
+                cwd: repoRoot,
+                windowsHide: true,
+            }
+        );
 
-    const parsed = JSON.parse(stdout.slice(stdout.indexOf("{"))) as {
-        verificationGate: {
-            readyToClassify: boolean;
-            readyToClick: boolean;
-            blockerType: string | null;
+        const parsed = JSON.parse(stdout.slice(stdout.indexOf("{"))) as {
+            verificationGate: {
+                readyToClassify: boolean;
+                readyToClick: boolean;
+                blockerType: string | null;
+            };
+            contentClassification: {
+                state: string;
+            };
+            foregroundDecision: {
+                kind: string;
+            } | null;
         };
-        contentClassification: {
-            state: string;
-        };
-        foregroundDecision: {
-            kind: string;
-        } | null;
-    };
 
-    assert.equal(parsed.verificationGate.readyToClassify, true);
-    assert.equal(parsed.verificationGate.readyToClick, true);
-    assert.equal(parsed.verificationGate.blockerType, null);
-    assert.equal(parsed.contentClassification.state, "LIVE_CONTENT");
-    assert.equal(parsed.foregroundDecision?.kind, "READY");
+        assert.equal(parsed.verificationGate.readyToClassify, true, screenshotPath);
+        assert.equal(parsed.verificationGate.readyToClick, true, screenshotPath);
+        assert.equal(parsed.verificationGate.blockerType, null, screenshotPath);
+        assert.equal(parsed.contentClassification.state, "LIVE_CONTENT", screenshotPath);
+        assert.equal(parsed.foregroundDecision?.kind, "READY", screenshotPath);
+    }
 });
 
 test("android live smoke CLI can analyze unknown non-game screenshots", { timeout: 120000 }, async () => {
@@ -352,6 +445,68 @@ test("android live smoke CLI emits lobby recovery for side-menu-open screenshot"
     assert.match(parsed.foregroundDecision?.reason ?? "", /dismissing overlay/i);
 });
 
+test("android live smoke CLI backs off room start retries after repeated start failures", { timeout: 120000 }, async () => {
+    const screenshotPath = path.join(
+        repoRoot,
+        "examples",
+        "recordings",
+        "android-foreground-na-captures",
+        "pending-real-captures",
+        "lobby",
+        "na_room_start_blocked_01.png"
+    );
+
+    const { stdout } = await execFileAsync(
+        process.execPath,
+        [
+            tsxCli,
+            "scripts/run-android-live-smoke.ts",
+            "--screenshot",
+            screenshotPath,
+            "--screenshot",
+            screenshotPath,
+            "--screenshot",
+            screenshotPath,
+            "--screenshot",
+            screenshotPath,
+            "--screenshot",
+            screenshotPath,
+        ],
+        {
+            cwd: repoRoot,
+            windowsHide: true,
+        }
+    );
+
+    const parsed = JSON.parse(stdout.slice(stdout.indexOf("{"))) as {
+        contentClassification: {
+            state: string;
+            lobbyVariant?: string;
+        };
+        foregroundObservation: {
+            actionPoints?: Record<string, { x: number; y: number }>;
+        } | null;
+        foregroundDecision: {
+            kind: string;
+            targetPoint?: { x: number; y: number };
+        } | null;
+        analysisSequence: Array<{
+            foregroundDecision: {
+                kind: string;
+            };
+        }>;
+    };
+
+    assert.equal(parsed.contentClassification.state, "LOBBY");
+    assert.equal(parsed.contentClassification.lobbyVariant, "ROOM");
+    assert.deepEqual(parsed.foregroundObservation?.actionPoints?.LEAVE_ROOM, { x: 0.24, y: 0.14 });
+    assert.deepEqual(
+        parsed.analysisSequence.map((entry) => entry.foregroundDecision.kind),
+        ["TAP_START_QUEUE", "TAP_START_QUEUE", "TAP_START_QUEUE", "WAIT", "TAP_START_QUEUE"]
+    );
+    assert.equal(parsed.foregroundDecision?.kind, "TAP_START_QUEUE");
+});
+
 test("android live smoke CLI can replay screenshot sequences for progression QA", { timeout: 120000 }, async () => {
     const screenshotPath = path.join(
         repoRoot,
@@ -494,9 +649,9 @@ test("android live smoke CLI can replay queue-timeout fallback fixtures", { time
     assert.equal(parsed.allExpectedMatched, true);
     assert.deepEqual(
         parsed.analysisSequence.map((entry) => entry.foregroundDecision.kind),
-        ["WAIT", "WAIT", "WAIT", "WAIT", "WAIT", "TAP_CANCEL_QUEUE"]
+        ["WAIT", "WAIT", "WAIT", "WAIT", "WAIT", "WAIT"]
     );
-    assert.equal(parsed.foregroundDecision?.kind, "TAP_CANCEL_QUEUE");
+    assert.equal(parsed.foregroundDecision?.kind, "WAIT");
 });
 
 test("android live smoke CLI can replay verified real frontend flow fixtures", { timeout: 120000 }, async () => {

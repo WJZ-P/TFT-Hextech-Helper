@@ -32,6 +32,10 @@ class Mat {
         return this._deleted;
     }
 
+    channels() {
+        return Mat.channelsFromType(this.type);
+    }
+
     delete() {
         this._deleted = true;
         // free data

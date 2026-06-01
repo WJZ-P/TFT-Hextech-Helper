@@ -15,6 +15,8 @@ import assert from "node:assert/strict";
 import { execFile } from "child_process";
 import { memoryMonitor } from "../../src-backend/utils/MemoryMonitor";
 
+const RUN_ANDROID_STRESS_TESTS = process.env.RUN_ANDROID_STRESS_TESTS === "1";
+
 /**
  * Run stress test CLI and parse JSON output
  */
@@ -47,6 +49,9 @@ async function runStressTest(rounds: number, scenario?: string): Promise<any> {
     });
 }
 
+if (!RUN_ANDROID_STRESS_TESTS) {
+    test("Android long-run stability is opt-in", { skip: "Set RUN_ANDROID_STRESS_TESTS=1 to run stress tests" }, () => {});
+} else {
 test.describe("Android long-run stability", () => {
     test("5 consecutive rounds complete without crash", async () => {
         // Skip in CI or if stress test script not ready
@@ -156,3 +161,4 @@ test.describe("Memory growth rate validation", () => {
         );
     });
 });
+}

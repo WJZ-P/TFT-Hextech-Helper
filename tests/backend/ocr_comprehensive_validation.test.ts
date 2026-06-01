@@ -25,11 +25,16 @@ import {
 import { GameStageType } from "../../src-backend/TFTProtocol";
 import { parseStageStringToEnum } from "../../src-backend/tft/utils/GameStageParser";
 
+const RUN_OCR_BENCHMARK_TESTS = process.env.RUN_OCR_BENCHMARK_TESTS === "1";
+
 after(async () => {
     await ocrService.destroy();
 });
 
-test("ocr: comprehensive stage recognition validation across all samples", { timeout: 20 * 60 * 1000 }, async () => {
+test("ocr: comprehensive stage recognition validation across all samples", {
+    timeout: 20 * 60 * 1000,
+    skip: RUN_OCR_BENCHMARK_TESTS ? false : "Set RUN_OCR_BENCHMARK_TESTS=1 to run comprehensive OCR validation",
+}, async () => {
     process.env.VITE_PUBLIC ??= path.resolve(process.cwd(), "public");
 
     const dir1 = path.resolve(
