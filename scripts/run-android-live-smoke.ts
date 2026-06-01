@@ -2,7 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import { execFile } from "child_process";
 import { promisify } from "util";
-import { mouseController, MouseButtonType, screenCapture } from "../src-backend/tft";
+import { screenCapture } from "../src-backend/tft";
 import { analyzeAndroidCaptureSurface, type AndroidCaptureSurfaceDiagnostics } from "../src-backend/utils/AndroidCaptureSurface";
 import { classifyAndroidWindowScreenshot, type AndroidWindowClassification } from "../src-backend/utils/AndroidWindowClassifier";
 import { windowHelper, type WindowInfo } from "../src-backend/utils/WindowHelper";
@@ -19,6 +19,8 @@ import {
     planAndroidForegroundProgress,
     type AndroidForegroundDecision,
 } from "../src-backend/services/AndroidForegroundProgression";
+import { androidAdbCapture } from "../src-backend/services/AndroidAdbCapture";
+import { androidInputController } from "../src-backend/services/AndroidInputController";
 import {
     createAndroidForegroundObservationFromFixture,
     normalizeAndroidForegroundObservation,
@@ -29,6 +31,8 @@ import {
 
 const execFileAsync = promisify(execFile);
 const DEFAULT_SHORTCUT_PATH = "C:\\Users\\ASUS\\Desktop\\TFT.lnk";
+const TIMEOUT_GRACE_FRAMES = 3;
+const HARD_TIMEOUT_EXTRA_MS = 15_000;
 
 interface CliArgs {
     shortcutPath: string;
@@ -36,6 +40,7 @@ interface CliArgs {
     waitSeconds: number;
     screenshotPaths: string[];
     fixturePath: string | null;
+    fullObserve: boolean;
 }
 
 interface ForegroundTraceEntry {
@@ -50,7 +55,13 @@ interface ForegroundTraceEntry {
 }
 
 interface CaptureAttemptTraceEntry {
-    source: "selected-window" | "selected-window-retry" | "child-window" | "selected-window-print" | "child-window-print";
+    source:
+        | "selected-window"
+        | "selected-window-retry"
+        | "child-window"
+        | "selected-window-print"
+        | "child-window-print"
+        | "adb-screencap";
     targetWindow: WindowInfo;
     surface: AndroidCaptureSurfaceDiagnostics;
 }
@@ -148,6 +159,7 @@ function parseArgs(argv: string[]): CliArgs {
         waitSeconds: 45,
         screenshotPaths: [],
         fixturePath: null,
+        fullObserve: false,
     };
 
     for (let index = 0; index < argv.length; index += 1) {
@@ -181,6 +193,11 @@ function parseArgs(argv: string[]): CliArgs {
         if (token === "--fixture" && argv[index + 1]) {
             args.fixturePath = path.resolve(argv[index + 1]);
             index += 1;
+            continue;
+        }
+
+        if (token === "--full-observe") {
+            args.fullObserve = true;
         }
     }
 
@@ -189,6 +206,36 @@ function parseArgs(argv: string[]): CliArgs {
 
 function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function captureAdbScreenshot(): Promise<Buffer | null> {
+    return androidAdbCapture.capturePng();
+}
+
+function shouldProcessTimeoutGraceFrame(observation: AndroidForegroundObservation): boolean {
+    return (
+        observation.state === "ACCEPT_READY" ||
+        observation.state === "CONFIRM_MODAL" ||
+        observation.state === "IN_GAME_TRANSITION"
+    );
+}
+
+function buildLiveProgressSignature(observation: AndroidForegroundObservation): string {
+    const actionPointKeys = Object.keys(observation.actionPoints ?? {}).sort();
+    const actionPointSignature = actionPointKeys
+        .map((key) => {
+            const point = observation.actionPoints?.[key as keyof NonNullable<AndroidForegroundObservation["actionPoints"]>];
+            return point ? `${key}:${point.x},${point.y}` : `${key}:none`;
+        })
+        .join("|");
+    const raw = observation.rawClassification;
+    return [
+        observation.state,
+        raw?.state ?? "",
+        raw?.frontendVariant ?? "",
+        raw?.lobbyVariant ?? "",
+        actionPointSignature,
+    ].join(":");
 }
 
 async function launchShortcut(shortcutPath: string): Promise<void> {
@@ -201,9 +248,19 @@ async function launchShortcut(shortcutPath: string): Promise<void> {
 
 async function waitForAndroidWindow(timeoutMs: number) {
     const startedAt = Date.now();
+    await windowHelper.ensureAndroidEmulatorWindowBounds();
+    await windowHelper.dismissWindowsSystemOverlays();
     let candidates = await windowHelper.findLOLWindows(GameClient.ANDROID);
 
     while (Date.now() - startedAt < timeoutMs) {
+        if (candidates.length > 0) {
+            return candidates;
+        }
+
+        await windowHelper.restoreAndroidEmulatorWindows();
+        await windowHelper.ensureAndroidEmulatorWindowBounds();
+        await windowHelper.dismissWindowsSystemOverlays();
+        candidates = await windowHelper.findLOLWindows(GameClient.ANDROID);
         if (candidates.length > 0) {
             return candidates;
         }
@@ -257,6 +314,22 @@ async function persistWindowScreenshot(screenshot: Buffer): Promise<string> {
     return outputPath;
 }
 
+async function findRestoredAndroidWindow(): Promise<WindowInfo | null> {
+    await windowHelper.ensureAndroidEmulatorWindowBounds();
+    await windowHelper.dismissWindowsSystemOverlays();
+    let windowInfo = await windowHelper.findLOLWindow(GameClient.ANDROID);
+    if (windowInfo) {
+        return windowInfo;
+    }
+
+    await windowHelper.restoreAndroidEmulatorWindows();
+    await windowHelper.ensureAndroidEmulatorWindowBounds();
+    await windowHelper.dismissWindowsSystemOverlays();
+    await sleep(1000);
+    windowInfo = await windowHelper.findLOLWindow(GameClient.ANDROID);
+    return windowInfo;
+}
+
 function scoreChildCaptureTarget(parent: { left: number; top: number; width: number; height: number }, child: { left: number; top: number; width: number; height: number; visible?: boolean }): number {
     const overlapLeft = Math.max(parent.left, child.left);
     const overlapTop = Math.max(parent.top, child.top);
@@ -284,6 +357,31 @@ async function probeRenderableWindowContent(
     attempts: CaptureAttemptTraceEntry[];
 }> {
     const attempts: CaptureAttemptTraceEntry[] = [];
+
+    const adbFirstResult = await tryCaptureWindowContent(
+        "adb-screencap",
+        focusWindow,
+        async () => {
+            const screenshot = await captureAdbScreenshot();
+            if (!screenshot) {
+                throw new Error("ADB executable or attached emulator was not available");
+            }
+            return screenshot;
+        }
+    );
+    attempts.push({
+        source: "adb-screencap",
+        targetWindow: focusWindow,
+        surface: adbFirstResult.surface,
+    });
+    if (adbFirstResult.screenshot && adbFirstResult.surface.state !== "BLACK_SURFACE") {
+        return {
+            captureWindow: focusWindow,
+            screenshot: adbFirstResult.screenshot,
+            surface: adbFirstResult.surface,
+            attempts,
+        };
+    }
 
     const topLevelResult = await tryCaptureWindowContent(
         "selected-window",
@@ -409,6 +507,31 @@ async function probeRenderableWindowContent(
         }
     }
 
+    const adbResult = await tryCaptureWindowContent(
+        "adb-screencap",
+        focusWindow,
+        async () => {
+            const screenshot = await captureAdbScreenshot();
+            if (!screenshot) {
+                throw new Error("ADB executable or attached emulator was not available");
+            }
+            return screenshot;
+        }
+    );
+    attempts.push({
+        source: "adb-screencap",
+        targetWindow: focusWindow,
+        surface: adbResult.surface,
+    });
+    if (adbResult.screenshot && adbResult.surface.state !== "BLACK_SURFACE") {
+        return {
+            captureWindow: focusWindow,
+            screenshot: adbResult.screenshot,
+            surface: adbResult.surface,
+            attempts,
+        };
+    }
+
     const fallbackScreenshot = retryResult.screenshot ?? topLevelResult.screenshot ?? Buffer.alloc(0);
     return {
         captureWindow: focusWindow,
@@ -431,6 +554,7 @@ async function waitForEmulatorContent(
     captureAttempts: CaptureAttemptTraceEntry[];
 }> {
     const startedAt = Date.now();
+    const hardTimeoutMs = Math.max(timeoutMs + HARD_TIMEOUT_EXTRA_MS, Math.floor(timeoutMs * 1.5));
     const initialProbe = await probeRenderableWindowContent(initialWindow);
     let lastScreenshot = initialProbe.screenshot;
     let lastClassification = await classifyScreenshotOrUnknown(lastScreenshot);
@@ -441,6 +565,10 @@ async function waitForEmulatorContent(
     const foregroundTrace: ForegroundTraceEntry[] = [];
     let captureSurface = initialProbe.surface;
     let captureAttempts = initialProbe.attempts;
+    let timeoutGraceFrames = 0;
+    let lastProgressSignature = buildLiveProgressSignature(lastObservation);
+    let lastProgressAt = Date.now();
+    let liveTapAttempts = 0;
 
     const isTapDecision = (
         decision: AndroidForegroundDecision
@@ -448,13 +576,53 @@ async function waitForEmulatorContent(
         return (
             decision.kind === "TAP_PRIMARY_CTA" ||
             decision.kind === "TAP_DISMISS_OVERLAY" ||
+            decision.kind === "TAP_SELECT_GAME_MODE" ||
+            decision.kind === "TAP_CONFIRM_MODAL" ||
             decision.kind === "TAP_START_QUEUE" ||
+            decision.kind === "TAP_LEAVE_ROOM" ||
             decision.kind === "TAP_ACCEPT_READY" ||
             decision.kind === "TAP_CANCEL_QUEUE"
         );
     };
 
-    while (lastObservation.state !== "LIVE_CONTENT" && Date.now() - startedAt < timeoutMs) {
+    const buildRepeatedTapBlocker = (): string => {
+        if (lastObservation.state === "CONFIRM_MODAL") {
+            if (lastObservation.rawClassification?.confirmModalVariant === "NETWORK_ERROR") {
+                return "Network-error confirmation modal remained after two click attempts; manual emulator network/account recovery is required";
+            }
+
+            return "Confirmation modal remained after two click attempts; manual recovery is required before retrying automation";
+        }
+
+        return "Foreground tap target remained unchanged after two click attempts";
+    };
+
+    while (lastObservation.state !== "LIVE_CONTENT") {
+        if (Date.now() - startedAt >= hardTimeoutMs) {
+            foregroundDecision = {
+                kind: "BLOCKED",
+                reason: `Android foreground live smoke reached hard runtime cap (${hardTimeoutMs}ms) after continued progress`,
+            };
+            foregroundTrace.push({
+                state: lastObservation.state,
+                verification: lastObservation.verification,
+                decisionKind: foregroundDecision.kind,
+                decisionReason: foregroundDecision.reason,
+                clickEligible: false,
+                clicked: false,
+                blocker: foregroundDecision.reason,
+                targetPoint: null,
+            });
+            break;
+        }
+
+        if (Date.now() - lastProgressAt >= timeoutMs) {
+            if (!shouldProcessTimeoutGraceFrame(lastObservation) || timeoutGraceFrames >= TIMEOUT_GRACE_FRAMES) {
+                break;
+            }
+            timeoutGraceFrames += 1;
+        }
+
         if (captureSurface.state === "BLACK_SURFACE") {
             foregroundDecision = {
                 kind: "WAIT",
@@ -496,14 +664,41 @@ async function waitForEmulatorContent(
         }
 
         if (clickEligible) {
+            if (liveTapAttempts >= 2) {
+                blocker = buildRepeatedTapBlocker();
+                foregroundDecision = {
+                    kind: "BLOCKED",
+                    reason: blocker,
+                };
+                foregroundTrace.push({
+                    state: lastObservation.state,
+                    verification: lastObservation.verification,
+                    decisionKind: foregroundDecision.kind,
+                    decisionReason: foregroundDecision.reason,
+                    clickEligible,
+                    clicked,
+                    blocker,
+                    targetPoint: decision.targetPoint,
+                });
+                break;
+            }
+
             await windowHelper.focusWindow(lastWindowInfo);
-            mouseController.setGameWindowOrigin(
-                { x: lastWindowInfo.left, y: lastWindowInfo.top },
-                { width: lastWindowInfo.width, height: lastWindowInfo.height },
-                true
-            );
-            await mouseController.clickAt(decision.targetPoint, MouseButtonType.LEFT);
-            clicked = true;
+            await windowHelper.dismissWindowsSystemOverlays();
+            const tapResult = await androidInputController.tapRelative(decision.targetPoint, lastWindowInfo);
+            clicked = tapResult.ok;
+            if (!clicked) {
+                blocker = tapResult.reason;
+            } else if (tapResult.channel === "window-mouse") {
+                blocker =
+                    `ADB tap unavailable; used副屏窗口鼠标点击 ` +
+                    `(${tapResult.absolutePoint?.x ?? "?"},${tapResult.absolutePoint?.y ?? "?"})`;
+            }
+            lastProgressAt = Date.now();
+            timeoutGraceFrames = 0;
+            if (clicked) {
+                liveTapAttempts += 1;
+            }
             foregroundTrace.push({
                 state: lastObservation.state,
                 verification: lastObservation.verification,
@@ -514,6 +709,13 @@ async function waitForEmulatorContent(
                 blocker,
                 targetPoint: decision.targetPoint,
             });
+            if (!clicked) {
+                foregroundDecision = {
+                    kind: "BLOCKED",
+                    reason: blocker ?? "Android tap target was detected, but no host input channel could click it",
+                };
+                break;
+            }
             await sleep(3000);
         } else {
             foregroundTrace.push({
@@ -530,7 +732,16 @@ async function waitForEmulatorContent(
         }
         }
 
-        const refreshedWindow = await windowHelper.findLOLWindow(GameClient.ANDROID) ?? lastWindowInfo;
+        const refreshedWindow = await findRestoredAndroidWindow();
+        if (!refreshedWindow) {
+            captureSurface = buildCaptureFailureSurface("未检测到安卓模拟器窗口，等待窗口恢复后再继续前台流程");
+            captureAttempts = [];
+            lastScreenshot = Buffer.alloc(0);
+            lastClassification = await classifyScreenshotOrUnknown(lastScreenshot);
+            lastObservation = normalizeAndroidForegroundObservation(lastClassification);
+            await sleep(2000);
+            continue;
+        }
         const probe = await probeRenderableWindowContent(refreshedWindow);
         lastWindowInfo = probe.captureWindow;
         lastScreenshot = probe.screenshot;
@@ -538,6 +749,13 @@ async function waitForEmulatorContent(
         captureAttempts = probe.attempts;
         lastClassification = await classifyScreenshotOrUnknown(lastScreenshot);
         lastObservation = normalizeAndroidForegroundObservation(lastClassification);
+        const progressSignature = buildLiveProgressSignature(lastObservation);
+        if (progressSignature !== lastProgressSignature) {
+            lastProgressSignature = progressSignature;
+            lastProgressAt = Date.now();
+            timeoutGraceFrames = 0;
+            liveTapAttempts = 0;
+        }
     }
 
     if (lastObservation.state === "LIVE_CONTENT") {
@@ -817,16 +1035,38 @@ async function main(): Promise<void> {
     }
 
     await windowHelper.focusWindow(detectedWindow);
+    await windowHelper.dismissWindowsSystemOverlays();
     await sleep(1500);
 
+    const { AndroidEmulatorAdapter } = await import("../src-backend/adapters/AndroidEmulatorAdapter");
+    const safeObserve = !args.fullObserve;
+    const adapter = new AndroidEmulatorAdapter({
+        safeObserve,
+        stageReadAttempts: 4,
+    });
+    const health = await adapter.healthCheck();
+
     const activeWindow = await windowHelper.findLOLWindow(GameClient.ANDROID) ?? detectedWindow;
-    const contentProbe = await waitForEmulatorContent(activeWindow, Math.min(args.waitSeconds * 1000, 90000));
+    const contentProbe = health.ok
+        ? await waitForEmulatorContent(activeWindow, args.waitSeconds * 1000)
+        : await (async () => {
+            const probe = await probeRenderableWindowContent(activeWindow);
+            const classification = await classifyScreenshotOrUnknown(probe.screenshot);
+            return {
+                screenshot: probe.screenshot,
+                classification,
+                windowInfo: probe.captureWindow,
+                foregroundDecision: {
+                    kind: "BLOCKED" as const,
+                    reason: health.detail ?? "安卓模拟器窗口健康检查未通过",
+                },
+                foregroundTrace: [],
+                captureSurface: probe.surface,
+                captureAttempts: probe.attempts,
+            };
+        })();
     const screenshotPath = await persistWindowScreenshot(contentProbe.screenshot);
     const captureRecovery = buildCaptureRecoverySummary(contentProbe.captureSurface, contentProbe.captureAttempts);
-
-    const { AndroidEmulatorAdapter } = await import("../src-backend/adapters/AndroidEmulatorAdapter");
-    const adapter = new AndroidEmulatorAdapter();
-    const health = await adapter.healthCheck();
 
     let observedSummary: ReturnType<typeof summarizeState> | null = null;
     let observeError: string | null = null;
@@ -836,6 +1076,9 @@ async function main(): Promise<void> {
         process.exitCode = 1;
     } else if (contentProbe.captureSurface.state === "DIM_SURFACE") {
         observeError = contentProbe.captureSurface.blockerReason ?? "检测到异常偏暗表面，当前渲染内容不稳定";
+        process.exitCode = 1;
+    } else if (!health.ok) {
+        observeError = health.detail ?? "安卓模拟器窗口健康检查未通过";
         process.exitCode = 1;
     } else if (contentProbe.classification.state !== "LIVE_CONTENT") {
         observeError =
@@ -878,6 +1121,7 @@ async function main(): Promise<void> {
         contentClassification: contentProbe.classification,
         foregroundDecision: contentProbe.foregroundDecision,
         foregroundTrace: contentProbe.foregroundTrace,
+        safeObserve,
         captureSurface: contentProbe.captureSurface,
         captureAttempts: contentProbe.captureAttempts,
         observedSummary,

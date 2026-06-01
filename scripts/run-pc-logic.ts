@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import { pcLogicRunner } from "../src-backend/services/PcLogicRunner";
 import type { DecisionContext, ObservedState } from "../src-backend/core/types";
 
 function printUsage(): void {
@@ -10,6 +9,9 @@ function printUsage(): void {
 }
 
 async function main(): Promise<void> {
+    // Keep stdout machine-readable for CLI replay tests and downstream tools.
+    process.env.TFT_LOG_STDERR = "1";
+
     const [, , ...args] = process.argv;
     const statePathArg = args[0];
     if (!statePathArg) {
@@ -70,6 +72,7 @@ async function main(): Promise<void> {
         }
     }
 
+    const { pcLogicRunner } = await import("../src-backend/services/PcLogicRunner");
     const plans = await pcLogicRunner.planOnce(state, context);
     console.log(JSON.stringify({ plans }, null, 2));
 }

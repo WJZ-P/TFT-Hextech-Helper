@@ -120,7 +120,7 @@ function inferExpectedDecisionKind(state: AndroidForegroundState, frameIndex: nu
         case "LOBBY":
             return frameIndex === 0 ? "WAIT" : frameIndex === 1 ? "TAP_START_QUEUE" : "WAIT";
         case "QUEUE":
-            return frameIndex < 5 ? "WAIT" : "TAP_CANCEL_QUEUE";
+            return "WAIT";
         case "ACCEPT_READY":
             return frameIndex === 0 ? "TAP_ACCEPT_READY" : "WAIT";
         case "IN_GAME_TRANSITION":
