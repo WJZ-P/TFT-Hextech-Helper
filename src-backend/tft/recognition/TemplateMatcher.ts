@@ -9,6 +9,7 @@ import {logger} from "../../utils/Logger";
 import {IdentifiedEquip, EQUIP_CATEGORY_PRIORITY, LootOrb} from "../types";
 import {TFT_16_EQUIP_DATA} from "../../TFTProtocol";
 import {templateLoader} from "./TemplateLoader";
+import {getMatChannels} from "./OpenCvMatUtils";
 
 /**
  * 匹配阈值配置
@@ -165,14 +166,15 @@ export class TemplateMatcher {
     }
 
     private prepareEquipTargetMat(targetMat: cv.Mat): cv.Mat {
-        if (targetMat.channels() === 3) {
+        const channels = getMatChannels(targetMat);
+        if (channels === 3) {
             return targetMat;
         }
 
         const converted = new cv.Mat();
-        if (targetMat.channels() === 4) {
+        if (channels === 4) {
             cv.cvtColor(targetMat, converted, cv.COLOR_RGBA2RGB);
-        } else if (targetMat.channels() === 1) {
+        } else if (channels === 1) {
             cv.cvtColor(targetMat, converted, cv.COLOR_GRAY2RGB);
         } else {
             targetMat.copyTo(converted);

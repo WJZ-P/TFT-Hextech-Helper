@@ -28,6 +28,9 @@ export class ScreenCapture {
     /** 坐标缩放（用于安卓模拟器非 1024x768 窗口） */
     private scaleX = 1;
     private scaleY = 1;
+    private windowWidth = 1024;
+    private windowHeight = 768;
+    private frameCaptureProvider: (() => Promise<Buffer | null>) | null = null;
 
     private static readonly BASE_WIDTH = 1024;
     private static readonly BASE_HEIGHT = 768;
@@ -57,10 +60,23 @@ export class ScreenCapture {
         if (useScale && windowSize && windowSize.width > 0 && windowSize.height > 0) {
             this.scaleX = windowSize.width / ScreenCapture.BASE_WIDTH;
             this.scaleY = windowSize.height / ScreenCapture.BASE_HEIGHT;
+            this.windowWidth = windowSize.width;
+            this.windowHeight = windowSize.height;
         } else {
             this.scaleX = 1;
             this.scaleY = 1;
+            this.windowWidth = windowSize?.width ?? ScreenCapture.BASE_WIDTH;
+            this.windowHeight = windowSize?.height ?? ScreenCapture.BASE_HEIGHT;
         }
+    }
+
+    /**
+     * 设置整帧截图源。
+     * @description 安卓模拟器在多显示器/被遮挡时，Windows 截图可能失败；此钩子允许使用
+     *              ADB screencap 作为整帧来源，再按当前窗口比例裁剪各个 OCR/模板区域。
+     */
+    public setFrameCaptureProvider(provider: (() => Promise<Buffer | null>) | null): void {
+        this.frameCaptureProvider = provider;
     }
 
     /**
@@ -181,6 +197,11 @@ export class ScreenCapture {
      * @returns PNG 格式的 Buffer
      */
     public async captureRegionAsPng(region: Region, forOCR: boolean = true): Promise<Buffer> {
+        const frameCrop = await this.captureRegionFromFrameProvider(region, forOCR);
+        if (frameCrop) {
+            return frameCrop;
+        }
+
         const screenshot = await nutScreen.grabRegion(region);
 
         // nut-js 返回 BGRA，需要先转换为 RGBA，否则颜色会偏/颠倒
@@ -240,6 +261,13 @@ export class ScreenCapture {
      * @returns OpenCV Mat 对象 (RGB 3 通道)
      */
     public async captureRegionAsMat(region: Region): Promise<cv.Mat> {
+        const frameCrop = await this.captureRegionFromFrameProvider(region, false);
+        if (frameCrop) {
+            const mat = await this.pngBufferToMat(frameCrop);
+            cv.cvtColor(mat, mat, cv.COLOR_RGBA2RGB);
+            return mat;
+        }
+
         const screenshot = await nutScreen.grabRegion(region);
 
         // 创建 4 通道 Mat
@@ -275,13 +303,70 @@ export class ScreenCapture {
             .raw()
             .toBuffer({ resolveWithObject: true });
 
-        const mat = cv.matFromImageData({
+        const imageData = {
             data: new Uint8Array(data),
             width: info.width,
             height: info.height,
-        });
+        };
+        const matFromImageData = (cv as typeof cv & {
+            matFromImageData?: (data: typeof imageData) => cv.Mat;
+        }).matFromImageData;
+
+        if (typeof matFromImageData === "function") {
+            return matFromImageData(imageData);
+        }
+
+        // Some OpenCV.js builds and our lightweight test mock do not expose
+        // matFromImageData. The raw buffer is already RGBA, so constructing a
+        // CV_8UC4 Mat directly is equivalent for the template/diff paths.
+        const mat = new cv.Mat(info.height, info.width, cv.CV_8UC4);
+        mat.data.set(imageData.data);
 
         return mat;
+    }
+
+    private async captureRegionFromFrameProvider(region: Region, forOCR: boolean): Promise<Buffer | null> {
+        if (!this.frameCaptureProvider || !this.gameWindowOrigin) {
+            return null;
+        }
+
+        const frame = await this.frameCaptureProvider();
+        if (!frame) {
+            return null;
+        }
+
+        const metadata = await sharp(frame).metadata();
+        const frameWidth = metadata.width ?? 0;
+        const frameHeight = metadata.height ?? 0;
+        if (frameWidth <= 0 || frameHeight <= 0) {
+            return null;
+        }
+
+        const relativeLeft = (region.left - this.gameWindowOrigin.x) / Math.max(1, this.windowWidth);
+        const relativeTop = (region.top - this.gameWindowOrigin.y) / Math.max(1, this.windowHeight);
+        const relativeWidth = region.width / Math.max(1, this.windowWidth);
+        const relativeHeight = region.height / Math.max(1, this.windowHeight);
+
+        const left = Math.max(0, Math.min(frameWidth - 1, Math.round(relativeLeft * frameWidth)));
+        const top = Math.max(0, Math.min(frameHeight - 1, Math.round(relativeTop * frameHeight)));
+        const width = Math.max(1, Math.min(frameWidth - left, Math.round(relativeWidth * frameWidth)));
+        const height = Math.max(1, Math.min(frameHeight - top, Math.round(relativeHeight * frameHeight)));
+
+        let pipeline = sharp(frame).extract({ left, top, width, height });
+        if (forOCR) {
+            pipeline = pipeline
+                .resize({
+                    width: Math.round(width * 3),
+                    height: Math.round(height * 3),
+                    kernel: "lanczos3",
+                })
+                .grayscale()
+                .normalize()
+                .threshold(160)
+                .sharpen();
+        }
+
+        return pipeline.png().toBuffer();
     }
 
     /**
