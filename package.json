@@ -23,8 +23,12 @@
     "android:ocr": "tsx scripts/run-android-recognition-replay.ts",
     "android:smoke": "tsx scripts/run-android-live-smoke.ts",
     "android:verify-live": "tsx scripts/run-android-live-smoke.ts",
+    "android:auto": "tsx scripts/run-android-automation-loop.ts",
+    "android:input": "tsx scripts/diagnose-android-input.ts",
     "android:stress": "tsx scripts/run-android-stress-test.ts",
     "android:extract": "tsx scripts/extract-android-recording-fixtures.ts",
+    "android:app:catalog": "tsx scripts/build-android-season-catalog.ts",
+    "android:app:items": "tsx scripts/diagnose-android-item-icons.ts",
     "data:refresh": "tsx scripts/refresh-tft-data.ts",
     "state:convert": "tsx scripts/convert-liveclient-to-observed.ts",
     "postinstall": "electron-builder install-app-deps",
@@ -32,7 +36,8 @@
     "dist": "electron-vite build && electron-builder --win --mac --linux",
     "dist:win": "electron-vite build && electron-builder --win",
     "dist:mac": "electron-vite build && electron-builder --mac",
-    "dist:linux": "electron-vite build && electron-builder --linux"
+    "dist:linux": "electron-vite build && electron-builder --linux",
+    "android:app:doctor": "tsx scripts/check-android-app-env.ts"
   },
   "dependencies": {
     "@electron-toolkit/utils": "^4.0.0",

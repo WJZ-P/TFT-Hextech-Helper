@@ -41,9 +41,31 @@ session-ses_304d.md
 
 # Ignore all Electron/Chromium session cache and profile data
 .cache/
+.sisyphus/
 session-ses_2fae.md
 # Ignore all session data files
 session-*.md
 
 # Coverage reports
 coverage/
+
+# Generated Android/OCR artifacts and large local recordings
+reports/
+tmp/
+examples/recordings/*.mp4
+examples/recordings/derived/*/frames/
+examples/recordings/derived/*/crops/
+examples/recordings/smoke/android-live-smoke-*.png
+examples/*ocr-results*.json
+examples/ocr-benchmark*.json
+examples/ocr_test_output.txt
+
+# Generated season-pack resource metadata
+public/resources/season-packs/**/*.json
+examples/recordings/smoke/android-window-diagnose-*.png
+
+# Android native prototype build outputs
+android-app/.gradle/
+android-app/build/
+android-app/app/build/
+android-app/local.properties

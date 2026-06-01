@@ -126,7 +126,7 @@
           }
         }
       },
-      "expectedDecisionKind": "TAP_CANCEL_QUEUE"
+      "expectedDecisionKind": "WAIT"
     }
   ]
 }

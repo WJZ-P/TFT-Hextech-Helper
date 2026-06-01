@@ -88,7 +88,7 @@
           }
         }
       },
-      "expectedDecisionKind": "WAIT"
+      "expectedDecisionKind": "TAP_START_QUEUE"
     },
     {
       "id": "lobby-2",
