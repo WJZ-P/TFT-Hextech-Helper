@@ -2339,9 +2339,9 @@ class TftOperator {
             const gameClient = settingsStore.get('gameClient') as GameClient;
             if (gameClient === GameClient.ANDROID) {
                 const androidGold = await this.getAndroidCoinCount();
-                if (androidGold !== null) {
-                    return androidGold;
-                }
+                // 安卓 dry-run / live observe 必须保持非破坏性。旧的 PC 兜底会点击海克斯和商店槽位，
+                // 金币 OCR 失败时可能误买棋子；安卓端宁可返回 null，由上层进入 WAIT/PAUSE。
+                return androidGold;
             }
 
             // 1. 计算金币区域的绝对坐标

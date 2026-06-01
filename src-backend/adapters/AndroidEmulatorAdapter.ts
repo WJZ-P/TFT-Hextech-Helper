@@ -1,13 +1,27 @@
 import { fightBoardSlotPoint, GameStageType, hexSlot } from "../TFTProtocol";
 import { tftOperator } from "../TftOperator";
+import { androidAdbCapture } from "../services/AndroidAdbCapture";
 import type { BenchLocation, BoardLocation } from "../tft";
-import { mouseController, MouseButtonType } from "../tft";
+import { mouseController, MouseButtonType, screenCapture } from "../tft";
 import { sleep } from "../utils/HelperTools";
 import { logger } from "../utils/Logger";
 import { GameClient } from "../utils/SettingsStore";
+import { classifyAndroidWindowScreenshot } from "../utils/AndroidWindowClassifier";
 import { windowHelper } from "../utils/WindowHelper";
 import { normalizeRuntimeState } from "../core/StateNormalizer";
 import type { ActionPlan, AdapterHealth, GameAdapter, ObservedState, PlatformTarget } from "../core/types";
+import { shouldReadShopDuringAndroidObserve } from "./AndroidObservePolicy";
+
+export interface AndroidEmulatorAdapterOptions {
+    safeObserve?: boolean;
+    stageReadAttempts?: number;
+    stageReadRetryDelayMs?: number;
+    minWindowWidth?: number;
+    minWindowHeight?: number;
+}
+
+const DEFAULT_MIN_RELIABLE_ANDROID_WINDOW_WIDTH = 850;
+const DEFAULT_MIN_RELIABLE_ANDROID_WINDOW_HEIGHT = 450;
 
 function isBoardLocation(value: unknown): value is BoardLocation {
     return typeof value === "string" && /^R[1-4]_C[1-7]$/.test(value);
@@ -51,7 +65,14 @@ export class AndroidEmulatorAdapter implements GameAdapter {
     public readonly target: PlatformTarget = "ANDROID_EMULATOR";
     private attached = false;
 
+    constructor(private readonly options: AndroidEmulatorAdapterOptions = {}) {}
+
     public async attach(): Promise<void> {
+        screenCapture.setFrameCaptureProvider(() => androidAdbCapture.capturePng());
+        await windowHelper.ensureAndroidEmulatorWindowBounds(
+            this.options.minWindowWidth ?? DEFAULT_MIN_RELIABLE_ANDROID_WINDOW_WIDTH,
+            this.options.minWindowHeight ?? DEFAULT_MIN_RELIABLE_ANDROID_WINDOW_HEIGHT
+        );
         const win = await windowHelper.findLOLWindow(GameClient.ANDROID);
         if (!win) {
             throw new Error("未找到安卓模拟器窗口");
@@ -67,19 +88,47 @@ export class AndroidEmulatorAdapter implements GameAdapter {
     }
 
     public async observe(): Promise<ObservedState> {
+        const foregroundState = await this.readForegroundState();
+        if (foregroundState && foregroundState.state !== "LIVE_CONTENT") {
+            return normalizeRuntimeState({
+                client: GameClient.ANDROID,
+                target: this.target,
+                stageText: "",
+                stageType: GameStageType.UNKNOWN,
+                level: 1,
+                currentXp: 0,
+                totalXp: 0,
+                gold: 0,
+                shopUnits: [],
+                benchUnits: [],
+                boardUnits: [],
+                equipments: [],
+                metadata: {
+                    hasValidStage: false,
+                    foregroundState: foregroundState.state,
+                    foregroundReason: foregroundState.reason,
+                },
+            });
+        }
+
         if (!this.attached) {
             await this.attach();
         }
 
-        const [stageResult, levelInfo, gold, shopUnits, benchUnits, boardUnits, equips] = await Promise.all([
-            tftOperator.getGameStage(),
+        const readShop = shouldReadShopDuringAndroidObserve(this.options);
+        const [stageResult, levelInfo, gold, shopUnits] = await Promise.all([
+            this.readConfirmedStage(),
             tftOperator.getLevelInfo(),
             tftOperator.getCoinCount(),
-            tftOperator.getShopInfo(),
-            tftOperator.getBenchInfo(),
-            tftOperator.getFightBoardInfo(),
-            tftOperator.getEquipInfo(),
+            readShop ? tftOperator.getShopInfo() : Promise.resolve([]),
         ]);
+        const [benchUnits, boardUnits, equips] = this.options.safeObserve
+            ? [[], [], []]
+            : await Promise.all([
+                tftOperator.getBenchInfo(),
+                tftOperator.getFightBoardInfo(),
+                tftOperator.getEquipInfo(),
+            ]);
 
         // Live stability note: stageResult.type may be UNKNOWN when OCR crops fall outside expected
         // regions due to emulator resolution mismatch, shop-open UI shift, or frame timing.
@@ -128,6 +177,43 @@ export class AndroidEmulatorAdapter implements GameAdapter {
                 hasValidStage: stageResult.type !== GameStageType.UNKNOWN,
             },
         });
+    }
+
+    private async readForegroundState(): Promise<{ state: string; reason: string | null } | null> {
+        try {
+            const screenshot = await androidAdbCapture.capturePng();
+            if (!screenshot) {
+                return null;
+            }
+            const classification = await classifyAndroidWindowScreenshot(screenshot);
+            return {
+                state: classification.state,
+                reason: classification.state === "LIVE_CONTENT"
+                    ? "Live HUD detected"
+                    : `Android foreground is ${classification.state}`,
+            };
+        } catch (error: unknown) {
+            logger.warn(`[AndroidEmulatorAdapter] 前台状态预检查失败: ${error instanceof Error ? error.message : String(error)}`);
+            return null;
+        }
+    }
+
+    private async readConfirmedStage() {
+        const attempts = Math.max(1, Math.trunc(this.options.stageReadAttempts ?? 1));
+        const retryDelayMs = Math.max(0, Math.trunc(this.options.stageReadRetryDelayMs ?? 150));
+        let latest = await tftOperator.getGameStage();
+
+        for (let attempt = 1; attempt < attempts; attempt += 1) {
+            if (latest.type !== GameStageType.UNKNOWN && latest.stageText) {
+                return latest;
+            }
+            if (retryDelayMs > 0) {
+                await sleep(retryDelayMs);
+            }
+            latest = await tftOperator.getGameStage();
+        }
+
+        return latest;
     }
 
     public async execute(actions: ActionPlan[]): Promise<void> {
@@ -213,11 +299,26 @@ export class AndroidEmulatorAdapter implements GameAdapter {
     }
 
     public async healthCheck(): Promise<AdapterHealth> {
+        screenCapture.setFrameCaptureProvider(() => androidAdbCapture.capturePng());
+        await windowHelper.ensureAndroidEmulatorWindowBounds(
+            this.options.minWindowWidth ?? DEFAULT_MIN_RELIABLE_ANDROID_WINDOW_WIDTH,
+            this.options.minWindowHeight ?? DEFAULT_MIN_RELIABLE_ANDROID_WINDOW_HEIGHT
+        );
         const win = await windowHelper.findLOLWindow(GameClient.ANDROID);
         if (!win) {
             return {
                 ok: false,
                 detail: "未检测到安卓模拟器窗口",
+            };
+        }
+        const minWidth = this.options.minWindowWidth ?? DEFAULT_MIN_RELIABLE_ANDROID_WINDOW_WIDTH;
+        const minHeight = this.options.minWindowHeight ?? DEFAULT_MIN_RELIABLE_ANDROID_WINDOW_HEIGHT;
+        if (win.width < minWidth || win.height < minHeight) {
+            return {
+                ok: false,
+                detail:
+                    `安卓模拟器窗口过小: ${win.width}x${win.height}，` +
+                    `至少需要 ${minWidth}x${minHeight} 才能稳定识别 HUD/OCR`,
             };
         }
         return {

@@ -6,6 +6,8 @@ export type AndroidForegroundState =
     | "UPDATE_READY"
     | "LOGIN_REQUIRED"
     | "LOBBY"
+    | "MODE_SELECT"
+    | "CONFIRM_MODAL"
     | "QUEUE"
     | "ACCEPT_READY"
     | "IN_GAME_TRANSITION"
@@ -14,16 +16,27 @@ export type AndroidForegroundState =
 
 export type AndroidForegroundVerification = "VERIFIED_REAL" | "REAL_CAPTURE_DRAFT" | "SYNTHETIC_PLACEHOLDER";
 export type AndroidForegroundSource = "SCREENSHOT_CLASSIFIER" | "SMOKE_FIXTURE";
-export type AndroidForegroundActionPointKey = "PRIMARY_CTA" | "START_QUEUE" | "ACCEPT_READY" | "CANCEL_QUEUE" | "DISMISS_OVERLAY";
+export type AndroidForegroundActionPointKey =
+    | "PRIMARY_CTA"
+    | "START_QUEUE"
+    | "SELECT_GAME_MODE"
+    | "CONFIRM_MODAL"
+    | "ACCEPT_READY"
+    | "CANCEL_QUEUE"
+    | "DISMISS_OVERLAY"
+    | "LEAVE_ROOM";
 export type AndroidForegroundDecisionKind =
     | "WAIT"
     | "BLOCKED"
     | "READY"
     | "TAP_PRIMARY_CTA"
+    | "TAP_SELECT_GAME_MODE"
+    | "TAP_CONFIRM_MODAL"
     | "TAP_START_QUEUE"
     | "TAP_ACCEPT_READY"
     | "TAP_CANCEL_QUEUE"
-    | "TAP_DISMISS_OVERLAY";
+    | "TAP_DISMISS_OVERLAY"
+    | "TAP_LEAVE_ROOM";
 
 export interface AndroidForegroundObservation {
     state: AndroidForegroundState;
@@ -142,6 +155,21 @@ export function normalizeAndroidForegroundObservation(
             };
         }
 
+        if (classification.lobbyVariant === "ROOM") {
+            return {
+                state: "LOBBY",
+                verification: "VERIFIED_REAL",
+                source: "SCREENSHOT_CLASSIFIER",
+                reason: "Lobby room detected from room back button plus start-game CTA",
+                anchors: ["lobby-room", "room-back-cta", "start-queue-cta"],
+                actionPoints: {
+                    ...(classification.startQueuePoint ? { START_QUEUE: { ...classification.startQueuePoint } } : {}),
+                    ...(classification.leaveRoomPoint ? { LEAVE_ROOM: { ...classification.leaveRoomPoint } } : {}),
+                },
+                rawClassification: classification,
+            };
+        }
+
         return {
             state: "LOBBY",
             verification: "VERIFIED_REAL",
@@ -152,6 +180,41 @@ export function normalizeAndroidForegroundObservation(
                 ? { START_QUEUE: { ...classification.startQueuePoint } }
                 : undefined,
             rawClassification: classification,
+        };
+    }
+
+    if (classification.state === "MODE_SELECT") {
+        return {
+            state: "MODE_SELECT",
+            verification: "VERIFIED_REAL",
+            source: "SCREENSHOT_CLASSIFIER",
+            reason: "Mode-selection carousel detected after tapping start; select a TFT mode before queueing",
+            anchors: ["mode-card-carousel", "dimmed-lobby-backdrop"],
+            actionPoints: {
+                ...(classification.selectGameModePoint ? { SELECT_GAME_MODE: { ...classification.selectGameModePoint } } : {}),
+                ...(classification.startQueuePoint ? { START_QUEUE: { ...classification.startQueuePoint } } : {}),
+            },
+            rawClassification: classification,
+        };
+    }
+
+    if (classification.state === "CONFIRM_MODAL") {
+        const isNetworkErrorModal = classification.confirmModalVariant === "NETWORK_ERROR";
+        return {
+            state: "CONFIRM_MODAL",
+            verification: "VERIFIED_REAL",
+            source: "SCREENSHOT_CLASSIFIER",
+            reason: isNetworkErrorModal
+                ? "Network-error confirmation modal detected; dismiss it only after emulator network/account recovery"
+                : "Recoverable foreground confirmation modal detected; dismiss it before retrying queue",
+            anchors: isNetworkErrorModal
+                ? ["network-error-modal", "modal-confirm-cta"]
+                : ["foreground-confirm-modal", "modal-confirm-cta"],
+            actionPoints: classification.confirmModalPoint
+                ? { CONFIRM_MODAL: { ...classification.confirmModalPoint } }
+                : undefined,
+            rawClassification: classification,
+            note: isNetworkErrorModal ? "External network/account state may need manual recovery before automation can continue." : undefined,
         };
     }
 

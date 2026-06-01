@@ -10,6 +10,7 @@ export interface AndroidForegroundProgressState {
     lastSignature: string | null;
     stableCount: number;
     actionedSignatures: Partial<Record<AndroidForegroundDecisionKind, string>>;
+    actionAttempts: Partial<Record<AndroidForegroundDecisionKind, number>>;
 }
 
 export type AndroidForegroundDecision =
@@ -18,7 +19,10 @@ export type AndroidForegroundDecision =
     | { kind: "READY"; reason: string }
     | { kind: "TAP_PRIMARY_CTA"; reason: string; targetPoint: SimplePoint }
     | { kind: "TAP_DISMISS_OVERLAY"; reason: string; targetPoint: SimplePoint }
+    | { kind: "TAP_SELECT_GAME_MODE"; reason: string; targetPoint: SimplePoint }
+    | { kind: "TAP_CONFIRM_MODAL"; reason: string; targetPoint: SimplePoint }
     | { kind: "TAP_START_QUEUE"; reason: string; targetPoint: SimplePoint }
+    | { kind: "TAP_LEAVE_ROOM"; reason: string; targetPoint: SimplePoint }
     | { kind: "TAP_ACCEPT_READY"; reason: string; targetPoint: SimplePoint }
     | { kind: "TAP_CANCEL_QUEUE"; reason: string; targetPoint: SimplePoint };
 
@@ -30,14 +34,16 @@ export interface AndroidForegroundProgressResult {
 const REQUIRED_STABLE_UPDATE_FRAMES = 2;
 const REQUIRED_STABLE_LOBBY_FRAMES = 2;
 const REQUIRED_STABLE_QUEUE_FRAMES = 2;
-const QUEUE_TIMEOUT_FRAMES = 6;
+const QUEUE_LONG_WAIT_FRAMES = 6;
 const IN_GAME_TRANSITION_TIMEOUT_FRAMES = 6;
+const MAX_TRANSIENT_ACTION_ATTEMPTS = 3;
 
 export function createInitialAndroidForegroundProgressState(): AndroidForegroundProgressState {
     return {
         lastSignature: null,
         stableCount: 0,
         actionedSignatures: {},
+        actionAttempts: {},
     };
 }
 
@@ -59,16 +65,25 @@ function buildNextState(
 ): AndroidForegroundProgressState {
     const signature = buildSignature(observation);
     const stableCount = previousState.lastSignature === signature ? previousState.stableCount + 1 : 1;
+    const actionedSignatures = previousState.lastSignature === signature ? previousState.actionedSignatures : {};
+    const actionAttempts = previousState.lastSignature === signature ? previousState.actionAttempts : {};
+    const currentAttempts = actionedDecisionKind ? (actionAttempts[actionedDecisionKind] ?? 0) : 0;
 
     return {
         lastSignature: signature,
         stableCount,
         actionedSignatures: actionedDecisionKind
             ? {
-                ...previousState.actionedSignatures,
+                ...actionedSignatures,
                 [actionedDecisionKind]: signature,
             }
-            : previousState.actionedSignatures,
+            : actionedSignatures,
+        actionAttempts: actionedDecisionKind
+            ? {
+                ...actionAttempts,
+                [actionedDecisionKind]: currentAttempts + 1,
+            }
+            : actionAttempts,
     };
 }
 
@@ -77,6 +92,14 @@ function alreadyActioned(
     nextState: AndroidForegroundProgressState
 ): boolean {
     return Boolean(nextState.lastSignature && nextState.actionedSignatures[decisionKind] === nextState.lastSignature);
+}
+
+function shouldRetryTransientAction(
+    decisionKind: AndroidForegroundDecisionKind,
+    nextState: AndroidForegroundProgressState
+): boolean {
+    const attempts = nextState.actionAttempts[decisionKind] ?? 0;
+    return attempts > 0 && attempts < MAX_TRANSIENT_ACTION_ATTEMPTS && nextState.stableCount > attempts;
 }
 
 function getActionPoint(
@@ -90,6 +113,15 @@ function waitDecision(reason: string, nextState: AndroidForegroundProgressState)
     return {
         decision: { kind: "WAIT", reason },
         nextState,
+    };
+}
+
+function resetActionCooldown(nextState: AndroidForegroundProgressState): AndroidForegroundProgressState {
+    return {
+        ...nextState,
+        stableCount: 0,
+        actionedSignatures: {},
+        actionAttempts: {},
     };
 }
 
@@ -176,47 +208,126 @@ export function planAndroidForegroundProgress(
             return waitDecision("Lobby detected, waiting for a verified or synthetic start-queue action point", nextState);
         }
 
-        if (nextState.stableCount < REQUIRED_STABLE_LOBBY_FRAMES) {
+        const requiredStableLobbyFrames = observation.verification === "VERIFIED_REAL"
+            ? 1
+            : REQUIRED_STABLE_LOBBY_FRAMES;
+        if (nextState.stableCount < requiredStableLobbyFrames) {
             return waitDecision("Waiting for a stable lobby before tapping start queue", nextState);
         }
 
-        if (alreadyActioned("TAP_START_QUEUE", nextState)) {
-            return waitDecision("Lobby tap already issued; waiting for queue or ready-check transition", nextState);
+        if (alreadyActioned("TAP_START_QUEUE", nextState) && !shouldRetryTransientAction("TAP_START_QUEUE", nextState)) {
+            const leaveRoomPoint = getActionPoint(observation, "LEAVE_ROOM");
+            if (leaveRoomPoint) {
+                return waitDecision(
+                    "Lobby room start-match tap did not transition; waiting for queue cooldown before retrying start",
+                    resetActionCooldown(nextState)
+                );
+            }
+
+            return {
+                decision: {
+                    kind: "BLOCKED",
+                    reason: "Lobby start-match tap did not transition after retry cap; manual room reset is required",
+                },
+                nextState,
+            };
         }
 
         return {
             decision: {
                 kind: "TAP_START_QUEUE",
-                reason: `Lobby start-match action prepared (${observation.verification})`,
+                reason: alreadyActioned("TAP_START_QUEUE", nextState)
+                    ? `Lobby is still present; retrying start-match tap (${observation.verification})`
+                    : `Lobby start-match action prepared (${observation.verification})`,
                 targetPoint: startQueuePoint,
             },
             nextState: buildNextState(observation, previousState, "TAP_START_QUEUE"),
         };
     }
 
-    if (observation.state === "QUEUE") {
-        const cancelQueuePoint = getActionPoint(observation, "CANCEL_QUEUE");
+    if (observation.state === "MODE_SELECT") {
+        const selectGameModePoint = getActionPoint(observation, "SELECT_GAME_MODE");
+        const startQueuePoint = getActionPoint(observation, "START_QUEUE");
 
+        if (!selectGameModePoint) {
+            return waitDecision("Mode-selection screen detected, but no game-mode action point is available", nextState);
+        }
+
+        if (!alreadyActioned("TAP_SELECT_GAME_MODE", nextState)) {
+            return {
+                decision: {
+                    kind: "TAP_SELECT_GAME_MODE",
+                    reason: `Mode-selection screen detected; selecting the preferred TFT mode (${observation.verification})`,
+                    targetPoint: selectGameModePoint,
+                },
+                nextState: buildNextState(observation, previousState, "TAP_SELECT_GAME_MODE"),
+            };
+        }
+
+        if (startQueuePoint && !alreadyActioned("TAP_START_QUEUE", nextState)) {
+            return {
+                decision: {
+                    kind: "TAP_START_QUEUE",
+                    reason: `Preferred mode already selected; tapping start from mode-selection screen (${observation.verification})`,
+                    targetPoint: startQueuePoint,
+                },
+                nextState: buildNextState(observation, previousState, "TAP_START_QUEUE"),
+            };
+        }
+
+        return waitDecision("Mode-selection actions already issued; waiting for queue or ready-check transition", nextState);
+    }
+
+    if (observation.state === "CONFIRM_MODAL") {
+        const confirmModalPoint = getActionPoint(observation, "CONFIRM_MODAL");
+        const isNetworkErrorModal = observation.rawClassification?.confirmModalVariant === "NETWORK_ERROR";
+        if (!confirmModalPoint) {
+            return waitDecision(
+                isNetworkErrorModal
+                    ? "Network confirmation modal detected, but no confirm action point is available"
+                    : "Recoverable confirmation modal detected, but no confirm action point is available",
+                nextState
+            );
+        }
+
+        if (alreadyActioned("TAP_CONFIRM_MODAL", nextState) && !shouldRetryTransientAction("TAP_CONFIRM_MODAL", nextState)) {
+            return {
+                decision: {
+                    kind: "BLOCKED",
+                    reason: isNetworkErrorModal
+                        ? "Network confirmation modal did not dismiss after retry cap; manual emulator network/account recovery is required"
+                        : "Confirmation modal did not dismiss after retry cap; manual/network recovery is required",
+                },
+                nextState,
+            };
+        }
+
+        return {
+            decision: {
+                kind: "TAP_CONFIRM_MODAL",
+                reason: isNetworkErrorModal
+                    ? alreadyActioned("TAP_CONFIRM_MODAL", nextState)
+                        ? `Network confirmation modal still present; retrying dismiss (${observation.verification})`
+                        : `Network confirmation modal detected; dismissing it once before blocking if it persists (${observation.verification})`
+                    : alreadyActioned("TAP_CONFIRM_MODAL", nextState)
+                        ? `Recoverable foreground confirmation modal still present; retrying dismiss (${observation.verification})`
+                        : `Recoverable foreground confirmation modal detected; dismissing it (${observation.verification})`,
+                targetPoint: confirmModalPoint,
+            },
+            nextState: buildNextState(observation, previousState, "TAP_CONFIRM_MODAL"),
+        };
+    }
+
+    if (observation.state === "QUEUE") {
         if (nextState.stableCount < REQUIRED_STABLE_QUEUE_FRAMES) {
             return waitDecision("Queue detected; waiting for a stable matchmaking state", nextState);
         }
 
-        if (nextState.stableCount < QUEUE_TIMEOUT_FRAMES) {
+        if (nextState.stableCount < QUEUE_LONG_WAIT_FRAMES) {
             return waitDecision("Queue is active; polling for ready-check or live transition", nextState);
         }
 
-        if (cancelQueuePoint && !alreadyActioned("TAP_CANCEL_QUEUE", nextState)) {
-            return {
-                decision: {
-                    kind: "TAP_CANCEL_QUEUE",
-                    reason: `Queue timeout reached; issuing one cancel/retry placeholder action (${observation.verification})`,
-                    targetPoint: cancelQueuePoint,
-                },
-                nextState: buildNextState(observation, previousState, "TAP_CANCEL_QUEUE"),
-            };
-        }
-
-        return waitDecision("Queue timeout reached; awaiting recovery or fresh fixture evidence", nextState);
+        return waitDecision("Queue wait is long; keeping matchmaking active and waiting for ready-check", nextState);
     }
 
     if (observation.state === "ACCEPT_READY") {
@@ -225,14 +336,16 @@ export function planAndroidForegroundProgress(
             return waitDecision("Ready-check detected, but no accept action point is available", nextState);
         }
 
-        if (alreadyActioned("TAP_ACCEPT_READY", nextState)) {
+        if (alreadyActioned("TAP_ACCEPT_READY", nextState) && !shouldRetryTransientAction("TAP_ACCEPT_READY", nextState)) {
             return waitDecision("Ready-check accept already issued; waiting for in-game transition", nextState);
         }
 
         return {
             decision: {
                 kind: "TAP_ACCEPT_READY",
-                reason: `Ready-check accept action prepared (${observation.verification})`,
+                reason: alreadyActioned("TAP_ACCEPT_READY", nextState)
+                    ? `Ready-check is still present; retrying accept (${observation.verification})`
+                    : `Ready-check accept action prepared (${observation.verification})`,
                 targetPoint: acceptPoint,
             },
             nextState: buildNextState(observation, previousState, "TAP_ACCEPT_READY"),
