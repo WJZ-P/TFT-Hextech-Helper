@@ -89,6 +89,20 @@ class Logger {
         this.initFileLogging();
     }
 
+    private writeConsole(message: string, level: LogLevel | "info" = "info"): void {
+        if (process.env.TFT_LOG_STDERR === "1") {
+            console.error(message);
+            return;
+        }
+
+        if (level === "error") {
+            console.error(message);
+            return;
+        }
+
+        console.log(message);
+    }
+
     /**
      * 初始化 Logger
      * @param window Electron BrowserWindow 实例，用于向前端推送日志
@@ -128,7 +142,7 @@ class Logger {
             fs.ensureDirSync(logsDir);
             this.updateLogFilePath(logsDir);
             
-            console.log(`[Logger] 日志文件路径: ${this.logFilePath}`);
+            this.writeConsole(`[Logger] 日志文件路径: ${this.logFilePath}`);
             
             // 清理7天前的日志文件
             this.cleanOldLogs(logsDir, 7);
@@ -165,7 +179,7 @@ class Logger {
                 const stat = fs.statSync(filePath);
                 if (now - stat.mtime.getTime() > maxAge) {
                     fs.removeSync(filePath);
-                    console.log(`[Logger] 清理旧日志: ${file}`);
+                    this.writeConsole(`[Logger] 清理旧日志: ${file}`);
                 }
             });
         } catch (error) {
@@ -325,7 +339,7 @@ class Logger {
         const fullMessage = `${timestamp}${levelTag} ${message}`;
 
         // 后端控制台输出 (带颜色)
-        console.log(`${color}${fullMessage}${COLOR_RESET}`);
+        this.writeConsole(`${color}${fullMessage}${COLOR_RESET}`, level);
 
         // 写入文件（不带颜色码）
         this.writeToFile(fullMessage);
