@@ -1,0 +1,189 @@
+[Logger] 日志文件路径: C:\Users\ASUS\AppData\Roaming\tft-hextech-helper\logs\tft-2026-05-15.log
+[32m[04:40:37.430][INFO]  [WindowHelper] 安卓模拟器窗口尺寸检查: matched=1, restored=1, resized=1, activated=0[0m
+[36m[04:40:42.047][DEBUG] [WindowHelper] 找到 221 个窗口[0m
+[36m[04:40:42.051][DEBUG] [WindowHelper] 当前激活窗口: "stellar project lynx - northeast freight demo readiness" (507x646)[0m
+[32m[04:40:42.060][INFO]  [WindowHelper] 安卓候选窗口: "BlueStacks App Player"(1562x750, score=274.6)[0m
+[33m[04:40:42.066][WARN]  [WindowHelper] 未找到可聚焦窗口: "BlueStacks App Player"[0m
+[32m[04:40:42.572][INFO]  [WindowHelper] 已通过 AppActivate 聚焦窗口: "BlueStacks App Player"[0m
+[32m[04:40:44.220][INFO]  [TemplateLoader] 开始初始化模板加载器...[0m
+[32m[04:40:44.222][INFO]  [TemplateLoader] 空槽位模板创建成功[0m
+[32m[04:40:44.223][INFO]  [TemplateLoader] 开始加载装备模板...[0m
+[32m[04:40:44.230][INFO]  [TemplateLoader] 开始加载英雄模板...[0m
+[32m[04:40:44.233][INFO]  [TemplateLoader] 开始加载星级模板...[0m
+[32m[04:40:44.237][INFO]  [TemplateLoader] 开始加载备战席槽位模板...[0m
+[32m[04:40:44.239][INFO]  [TemplateLoader] 开始加载棋盘槽位模板...[0m
+[32m[04:40:44.243][INFO]  [TemplateLoader] 开始加载战利品球模板...[0m
+[32m[04:40:44.246][INFO]  [TemplateLoader] 开始加载按钮模板...[0m
+[32m[04:40:44.261][INFO]  [TemplateLoader] 加载战利品球模板: normal (11x19)[0m
+[32m[04:40:44.264][INFO]  [TemplateLoader] 加载按钮模板: clockwork_quit_button (65x15)[0m
+[32m[04:40:44.265][INFO]  [TemplateLoader] 按钮模板加载完成，共 1 个[0m
+[32m[04:40:44.273][INFO]  [TemplateLoader] 加载战利品球模板: blue (15x28)[0m
+[32m[04:40:44.275][INFO]  [TemplateLoader] 星级模板加载完成，共 3 个[0m
+[32m[04:40:44.281][INFO]  [TemplateLoader] 加载战利品球模板: gold (17x28)[0m
+[32m[04:40:44.282][INFO]  [TemplateLoader] 战利品球模板加载完成，共 3 个[0m
+[32m[04:40:44.314][INFO]  [TemplateLoader] 备战席槽位模板加载完成，共 9 个[0m
+[32m[04:40:44.331][INFO]  [TemplateLoader] 加载 [component] 模板: 11 个[0m
+[32m[04:40:44.360][INFO]  [TemplateLoader] 加载 [special] 模板: 5 个[0m
+[32m[04:40:44.406][INFO]  [TemplateLoader] 棋盘槽位模板加载完成，共 28 个[0m
+[32m[04:40:44.622][INFO]  [TemplateLoader] 加载 [core] 模板: 40 个[0m
+[32m[04:40:44.879][INFO]  [TemplateLoader] 加载 [emblem] 模板: 50 个[0m
+[32m[04:40:45.063][INFO]  [TemplateLoader] 加载 [artifact] 模板: 31 个[0m
+[32m[04:40:45.158][INFO]  [TemplateLoader] 英雄模板加载完成，共 96 个[0m
+[32m[04:40:45.240][INFO]  [TemplateLoader] 加载 [radiant] 模板: 36 个[0m
+[32m[04:40:45.241][INFO]  [TemplateLoader] 装备模板加载完成[0m
+[36m[04:40:45.243][DEBUG] [TemplateLoader] 英雄模板文件监听已启动 (s16)[0m
+[32m[04:40:45.244][INFO]  [TemplateLoader] 模板加载器初始化完成[0m
+[36m[04:40:45.245][DEBUG] [TemplateLoader] 赛季未变化 (s16)，跳过切换[0m
+[32m[04:40:46.386][INFO]  [WindowHelper] 安卓模拟器窗口尺寸检查: matched=1, restored=1, resized=1, activated=0[0m
+[36m[04:40:50.483][DEBUG] [WindowHelper] 找到 221 个窗口[0m
+[36m[04:40:50.485][DEBUG] [WindowHelper] 当前激活窗口: "stellar project lynx - northeast freight demo readiness" (507x646)[0m
+[32m[04:40:50.489][INFO]  [WindowHelper] 安卓候选窗口: "BlueStacks App Player"(1562x750, score=274.6)[0m
+[32m[04:40:50.490][INFO]  [WindowHelper] 找到 LOL 窗口: "BlueStacks App Player" 位置: (1720, -154) 尺寸: 1562x750[0m
+[36m[04:40:54.483][DEBUG] [WindowHelper] 找到 221 个窗口[0m
+[36m[04:40:54.486][DEBUG] [WindowHelper] 当前激活窗口: "stellar project lynx - northeast freight demo readiness" (507x646)[0m
+[32m[04:40:54.490][INFO]  [WindowHelper] 安卓候选窗口: "BlueStacks App Player"(1562x750, score=274.6)[0m
+[32m[04:40:54.491][INFO]  [WindowHelper] 找到 LOL 窗口: "BlueStacks App Player" 位置: (1720, -154) 尺寸: 1562x750[0m
+[32m[04:41:02.717][INFO]  [WindowHelper] 安卓模拟器窗口尺寸检查: matched=1, restored=1, resized=1, activated=0[0m
+[36m[04:41:06.314][DEBUG] [WindowHelper] 找到 221 个窗口[0m
+[36m[04:41:06.315][DEBUG] [WindowHelper] 当前激活窗口: "stellar project lynx - northeast freight demo readiness" (507x646)[0m
+[32m[04:41:06.319][INFO]  [WindowHelper] 安卓候选窗口: "BlueStacks App Player"(1562x750, score=274.6)[0m
+[32m[04:41:06.320][INFO]  [WindowHelper] 找到 LOL 窗口: "BlueStacks App Player" 位置: (1720, -154) 尺寸: 1562x750[0m
+{
+  "launchedShortcut": false,
+  "shortcutPath": "C:\\Users\\ASUS\\Desktop\\TFT.lnk",
+  "waitSeconds": 6,
+  "detectedWindow": {
+    "title": "BlueStacks App Player",
+    "left": 1720,
+    "top": -154,
+    "width": 1562,
+    "height": 750,
+    "source": "native",
+    "className": "Qt672QWindowIcon",
+    "processName": "HD-Player",
+    "visible": true
+  },
+  "focusedWindow": {
+    "title": "BlueStacks App Player",
+    "left": 1720,
+    "top": -154,
+    "width": 1562,
+    "height": 750,
+    "source": "native",
+    "className": "Qt672QWindowIcon",
+    "processName": "HD-Player",
+    "visible": true
+  },
+  "candidateCount": 1,
+  "health": {
+    "ok": true,
+    "detail": "窗口已就绪: BlueStacks App Player"
+  },
+  "screenshotPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\smoke\\android-live-smoke-1778838069935.png",
+  "verificationGate": {
+    "readyToClassify": true,
+    "readyToClick": true,
+    "blockerType": "STATE_NOT_READY",
+    "blockerReason": "模拟器已进入 TFT 前台界面，但还未进入可读 HUD 的对局画面",
+    "currentState": "LOBBY"
+  },
+  "captureRecovery": {
+    "finalSurfaceState": "VISIBLE_CONTENT",
+    "blockerReason": null,
+    "attemptedSources": [
+      "adb-screencap"
+    ],
+    "recoveredFromBlackSurface": false,
+    "firstVisibleSource": "adb-screencap"
+  },
+  "contentClassification": {
+    "state": "LOBBY",
+    "brightBlueRatio": 0.122582015788179,
+    "blueDominantRatio": 0.3421182100767046,
+    "brightWhiteRatio": 0.007515268321986384,
+    "liveHudGoldSignalRatio": 0.15022222222222223,
+    "liveHudScoreSignalRatio": 0.09290203168044077,
+    "lobbyStartBlueRatio": 0.493542687218974,
+    "lobbyStartDarkRatio": 0.1293761043513238,
+    "queueStatusGoldRatio": 0.10222559799382716,
+    "queueStatusDarkRatio": 0.015914351851851853,
+    "queueCancelDarkRatio": 0.11825260491768334,
+    "acceptModalDarkRatio": 0.036548725895316804,
+    "acceptButtonBlueRatio": 0.09156781634386214,
+    "acceptButtonDarkRatio": 0.015354902336794237,
+    "transitionCenterGoldRatio": 0.037147429186731674,
+    "transitionCenterDarkRatio": 0.0280336792988963,
+    "sideMenuDarkRatio": 0.07158275447922281,
+    "sideMenuGoldRatio": 0.0181754263092955,
+    "sideDismissDarkRatio": 0.027928883744855967,
+    "roomBackGoldRatio": 0.04225292991705564,
+    "roomBackDarkRatio": 0.33741059135632495,
+    "modeSelectGoldRatio": 0.029053786671515203,
+    "modeSelectBlueRatio": 0.09521599161488359,
+    "modeSelectDarkRatio": 0.026250548134204642,
+    "gameOverReplayBlueRatio": 0.2927876655629139,
+    "gameOverRowsDarkRatio": 0.06534379046610575,
+    "lobbyVariant": "DEFAULT",
+    "startQueuePoint": {
+      "x": 0.87,
+      "y": 0.9
+    },
+    "loginSecondaryGoldRatio": 0.06570650254754579,
+    "progressDarkRatio": 0.4249204042081949
+  },
+  "foregroundDecision": {
+    "kind": "WAIT",
+    "reason": "Waiting for a stable lobby before tapping start queue"
+  },
+  "foregroundTrace": [
+    {
+      "state": "LOBBY",
+      "verification": "VERIFIED_REAL",
+      "decisionKind": "WAIT",
+      "decisionReason": "Waiting for a stable lobby before tapping start queue",
+      "clickEligible": false,
+      "clicked": false,
+      "blocker": null,
+      "targetPoint": null
+    }
+  ],
+  "safeObserve": true,
+  "captureSurface": {
+    "state": "VISIBLE_CONTENT",
+    "meanBrightness": 94.08143897629776,
+    "darkPixelRatio": 0.00008825231481481481,
+    "nonBlackPixelRatio": 0.9999918016975309,
+    "brightPixelRatio": 0.08594376929012346,
+    "lumaStdDev": 52.4488461570478,
+    "isUniform": false,
+    "blockerReason": null
+  },
+  "captureAttempts": [
+    {
+      "source": "adb-screencap",
+      "targetWindow": {
+        "title": "BlueStacks App Player",
+        "left": 1720,
+        "top": -154,
+        "width": 1562,
+        "height": 750,
+        "source": "native",
+        "className": "Qt672QWindowIcon",
+        "processName": "HD-Player",
+        "visible": true
+      },
+      "surface": {
+        "state": "VISIBLE_CONTENT",
+        "meanBrightness": 94.08143897629776,
+        "darkPixelRatio": 0.00008825231481481481,
+        "nonBlackPixelRatio": 0.9999918016975309,
+        "brightPixelRatio": 0.08594376929012346,
+        "lumaStdDev": 52.4488461570478,
+        "isUniform": false,
+        "blockerReason": null
+      }
+    }
+  ],
+  "observedSummary": null,
+  "observeError": "模拟器已进入 TFT 前台界面，但还未进入可读 HUD 的对局画面"
+}

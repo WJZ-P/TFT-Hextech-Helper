@@ -24,6 +24,7 @@ export type AndroidForegroundDecision =
     | { kind: "TAP_START_QUEUE"; reason: string; targetPoint: SimplePoint }
     | { kind: "TAP_LEAVE_ROOM"; reason: string; targetPoint: SimplePoint }
     | { kind: "TAP_ACCEPT_READY"; reason: string; targetPoint: SimplePoint }
+    | { kind: "TAP_GAME_OVER_EXIT"; reason: string; targetPoint: SimplePoint }
     | { kind: "TAP_CANCEL_QUEUE"; reason: string; targetPoint: SimplePoint };
 
 export interface AndroidForegroundProgressResult {
@@ -156,6 +157,38 @@ export function planAndroidForegroundProgress(
                 reason: "Android TFT is on a login-required screen; automation will not click through credentials",
             },
             nextState,
+        };
+    }
+
+    if (observation.state === "NETWORK_ERROR") {
+        return {
+            decision: {
+                kind: "BLOCKED",
+                reason: "Android TFT is on a Riot network/account error screen; manual session recovery is required before automation can continue",
+            },
+            nextState,
+        };
+    }
+
+    if (observation.state === "GAME_OVER") {
+        const exitPoint = getActionPoint(observation, "GAME_OVER_EXIT");
+        if (!exitPoint) {
+            return waitDecision("Game-over/result screen detected, but no safe exit action point is available", nextState);
+        }
+
+        if (alreadyActioned("TAP_GAME_OVER_EXIT", nextState) && !shouldRetryTransientAction("TAP_GAME_OVER_EXIT", nextState)) {
+            return waitDecision("Game-over/result exit already issued; waiting for lobby or post-game transition", nextState);
+        }
+
+        return {
+            decision: {
+                kind: "TAP_GAME_OVER_EXIT",
+                reason: alreadyActioned("TAP_GAME_OVER_EXIT", nextState)
+                    ? `Game-over/result screen is still present; retrying exit (${observation.verification})`
+                    : `Game-over/result screen detected; exiting before next normal-match queue (${observation.verification})`,
+                targetPoint: exitPoint,
+            },
+            nextState: buildNextState(observation, previousState, "TAP_GAME_OVER_EXIT"),
         };
     }
 

@@ -30,7 +30,7 @@ import {
 } from "../tft";
 import { templateLoader } from "../tft/recognition/TemplateLoader";
 import { templateMatcher } from "../tft/recognition/TemplateMatcher";
-import { getMatChannels } from "../tft/recognition/OpenCvMatUtils";
+import { getMatChannels, resizeOpenCvMat } from "../tft/recognition/OpenCvMatUtils";
 import type {
     AndroidRecognitionChampionFixture,
     AndroidRecognitionChampionResult,
@@ -407,7 +407,10 @@ async function calculateSlotDifference(
 
         if (mat.cols !== templateMat.cols || mat.rows !== templateMat.rows) {
             const resized = new cv.Mat();
-            cv.resize(mat, resized, new cv.Size(templateMat.cols, templateMat.rows), 0, 0, cv.INTER_AREA);
+            if (!resizeOpenCvMat(cv, mat, resized, templateMat.cols, templateMat.rows, cv.INTER_AREA)) {
+                resized.delete();
+                return 255;
+            }
             mat.delete();
             mat = resized;
         }

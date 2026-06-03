@@ -1,0 +1,227 @@
+[Logger] 日志文件路径: C:\Users\ASUS\AppData\Roaming\tft-hextech-helper\logs\tft-2026-05-15.log
+[32m[06:29:02.037][INFO]  [WindowHelper] 安卓模拟器窗口尺寸检查: matched=1, restored=1, resized=0, activated=0[0m
+[36m[06:29:05.895][DEBUG] [WindowHelper] 找到 231 个窗口[0m
+[36m[06:29:05.900][DEBUG] [WindowHelper] 当前激活窗口: "evaluate ai agent interaction with tools | stellar ai - google chrome" (862x699)[0m
+[32m[06:29:05.906][INFO]  [WindowHelper] 安卓候选窗口: "BlueStacks App Player"(1562x797, score=275.6)[0m
+[33m[06:29:05.911][WARN]  [WindowHelper] 未找到可聚焦窗口: "BlueStacks App Player"[0m
+[32m[06:29:06.308][INFO]  [WindowHelper] 已通过 AppActivate 聚焦窗口: "BlueStacks App Player"[0m
+[32m[06:29:07.859][INFO]  [TemplateLoader] 开始初始化模板加载器...[0m
+[32m[06:29:07.861][INFO]  [TemplateLoader] 空槽位模板创建成功[0m
+[32m[06:29:07.862][INFO]  [TemplateLoader] 开始加载装备模板...[0m
+[32m[06:29:07.867][INFO]  [TemplateLoader] 开始加载英雄模板...[0m
+[32m[06:29:07.870][INFO]  [TemplateLoader] 开始加载星级模板...[0m
+[32m[06:29:07.872][INFO]  [TemplateLoader] 开始加载备战席槽位模板...[0m
+[32m[06:29:07.875][INFO]  [TemplateLoader] 开始加载棋盘槽位模板...[0m
+[32m[06:29:07.877][INFO]  [TemplateLoader] 开始加载战利品球模板...[0m
+[32m[06:29:07.879][INFO]  [TemplateLoader] 开始加载按钮模板...[0m
+[32m[06:29:07.889][INFO]  [TemplateLoader] 加载战利品球模板: normal (11x19)[0m
+[32m[06:29:07.891][INFO]  [TemplateLoader] 加载按钮模板: clockwork_quit_button (65x15)[0m
+[32m[06:29:07.892][INFO]  [TemplateLoader] 按钮模板加载完成，共 1 个[0m
+[32m[06:29:07.897][INFO]  [TemplateLoader] 加载战利品球模板: blue (15x28)[0m
+[32m[06:29:07.899][INFO]  [TemplateLoader] 星级模板加载完成，共 3 个[0m
+[32m[06:29:07.903][INFO]  [TemplateLoader] 加载战利品球模板: gold (17x28)[0m
+[32m[06:29:07.904][INFO]  [TemplateLoader] 战利品球模板加载完成，共 3 个[0m
+[32m[06:29:07.935][INFO]  [TemplateLoader] 备战席槽位模板加载完成，共 9 个[0m
+[32m[06:29:07.946][INFO]  [TemplateLoader] 加载 [component] 模板: 11 个[0m
+[32m[06:29:07.967][INFO]  [TemplateLoader] 加载 [special] 模板: 5 个[0m
+[32m[06:29:07.996][INFO]  [TemplateLoader] 棋盘槽位模板加载完成，共 28 个[0m
+[32m[06:29:08.162][INFO]  [TemplateLoader] 加载 [core] 模板: 40 个[0m
+[32m[06:29:08.354][INFO]  [TemplateLoader] 加载 [emblem] 模板: 50 个[0m
+[32m[06:29:08.510][INFO]  [TemplateLoader] 加载 [artifact] 模板: 31 个[0m
+[32m[06:29:08.571][INFO]  [TemplateLoader] 英雄模板加载完成，共 96 个[0m
+[32m[06:29:08.654][INFO]  [TemplateLoader] 加载 [radiant] 模板: 36 个[0m
+[32m[06:29:08.655][INFO]  [TemplateLoader] 装备模板加载完成[0m
+[36m[06:29:08.657][DEBUG] [TemplateLoader] 英雄模板文件监听已启动 (s16)[0m
+[32m[06:29:08.658][INFO]  [TemplateLoader] 模板加载器初始化完成[0m
+[36m[06:29:08.658][DEBUG] [TemplateLoader] 赛季未变化 (s16)，跳过切换[0m
+[32m[06:29:08.947][INFO]  [WindowHelper] 安卓模拟器窗口尺寸检查: matched=1, restored=1, resized=0, activated=0[0m
+[36m[06:29:12.565][DEBUG] [WindowHelper] 找到 231 个窗口[0m
+[36m[06:29:12.566][DEBUG] [WindowHelper] 当前激活窗口: "stellar project lynx - northeast freight demo readiness" (507x646)[0m
+[32m[06:29:12.569][INFO]  [WindowHelper] 安卓候选窗口: "BlueStacks App Player"(1562x797, score=275.6)[0m
+[32m[06:29:12.570][INFO]  [WindowHelper] 找到 LOL 窗口: "BlueStacks App Player" 位置: (1720, -154) 尺寸: 1562x797[0m
+[36m[06:29:15.344][DEBUG] [WindowHelper] 找到 231 个窗口[0m
+[36m[06:29:15.346][DEBUG] [WindowHelper] 当前激活窗口: "stellar project lynx - northeast freight demo readiness" (507x646)[0m
+[32m[06:29:15.349][INFO]  [WindowHelper] 安卓候选窗口: "BlueStacks App Player"(1562x797, score=275.6)[0m
+[32m[06:29:15.349][INFO]  [WindowHelper] 找到 LOL 窗口: "BlueStacks App Player" 位置: (1720, -154) 尺寸: 1562x797[0m
+[33m[06:29:17.230][WARN]  [WindowHelper] 未找到可聚焦窗口: "BlueStacks App Player"[0m
+[32m[06:29:17.562][INFO]  [WindowHelper] 已通过 AppActivate 聚焦窗口: "BlueStacks App Player"[0m
+[32m[06:29:22.188][INFO]  [WindowHelper] 安卓模拟器窗口尺寸检查: matched=1, restored=1, resized=0, activated=1[0m
+[36m[06:29:24.925][DEBUG] [WindowHelper] 找到 231 个窗口[0m
+[36m[06:29:24.925][DEBUG] [WindowHelper] 当前激活窗口: "bluestacks app player" (0x643)[0m
+[32m[06:29:24.927][INFO]  [WindowHelper] 安卓候选窗口: "BlueStacks App Player"(1562x797, score=275.6)[0m
+[32m[06:29:24.927][INFO]  [WindowHelper] 找到 LOL 窗口: "BlueStacks App Player" 位置: (1720, -154) 尺寸: 1562x797[0m
+[33m[06:29:26.652][WARN]  [WindowHelper] 未找到可聚焦窗口: "BlueStacks App Player"[0m
+[32m[06:29:26.966][INFO]  [WindowHelper] 已通过 AppActivate 聚焦窗口: "BlueStacks App Player"[0m
+[32m[06:29:31.379][INFO]  [WindowHelper] 安卓模拟器窗口尺寸检查: matched=1, restored=1, resized=0, activated=1[0m
+[36m[06:29:34.040][DEBUG] [WindowHelper] 找到 231 个窗口[0m
+[36m[06:29:34.043][DEBUG] [WindowHelper] 当前激活窗口: "bluestacks app player" (0x643)[0m
+[32m[06:29:34.045][INFO]  [WindowHelper] 安卓候选窗口: "BlueStacks App Player"(1562x797, score=275.6)[0m
+[32m[06:29:34.045][INFO]  [WindowHelper] 找到 LOL 窗口: "BlueStacks App Player" 位置: (1720, -154) 尺寸: 1562x797[0m
+{
+  "launchedShortcut": false,
+  "shortcutPath": "C:\\Users\\ASUS\\Desktop\\TFT.lnk",
+  "waitSeconds": 18,
+  "detectedWindow": {
+    "title": "BlueStacks App Player",
+    "left": 1720,
+    "top": -154,
+    "width": 1562,
+    "height": 797,
+    "source": "native",
+    "className": "Qt672QWindowIcon",
+    "processName": "HD-Player",
+    "visible": true
+  },
+  "focusedWindow": {
+    "title": "BlueStacks App Player",
+    "left": 1720,
+    "top": -154,
+    "width": 1562,
+    "height": 797,
+    "source": "native",
+    "className": "Qt672QWindowIcon",
+    "processName": "HD-Player",
+    "visible": true
+  },
+  "candidateCount": 1,
+  "health": {
+    "ok": true,
+    "detail": "窗口已就绪: BlueStacks App Player"
+  },
+  "screenshotPath": "D:\\Github\\TFT-Hextech-Helper-t\\examples\\recordings\\smoke\\android-live-smoke-1778844575538.png",
+  "verificationGate": {
+    "readyToClassify": true,
+    "readyToClick": false,
+    "blockerType": "BLOCKED_STATE",
+    "blockerReason": "Network-error confirmation modal remained after two click attempts; manual emulator network/account recovery is required",
+    "currentState": "CONFIRM_MODAL"
+  },
+  "captureRecovery": {
+    "finalSurfaceState": "VISIBLE_CONTENT",
+    "blockerReason": null,
+    "attemptedSources": [
+      "adb-screencap"
+    ],
+    "recoveredFromBlackSurface": false,
+    "firstVisibleSource": "adb-screencap"
+  },
+  "contentClassification": {
+    "state": "CONFIRM_MODAL",
+    "brightBlueRatio": 0,
+    "blueDominantRatio": 0,
+    "brightWhiteRatio": 0,
+    "liveHudGoldSignalRatio": 0,
+    "liveHudScoreSignalRatio": 0,
+    "lobbyStartBlueRatio": 0,
+    "lobbyStartDarkRatio": 0.7585439082903565,
+    "queueStatusGoldRatio": 0,
+    "queueStatusDarkRatio": 0.9553674768518519,
+    "queueCancelDarkRatio": 0.7868418742868607,
+    "acceptModalDarkRatio": 0.9385072314049587,
+    "acceptButtonBlueRatio": 0,
+    "acceptButtonDarkRatio": 0.9088978988028381,
+    "transitionCenterGoldRatio": 0.0030254538928603477,
+    "transitionCenterDarkRatio": 0.9535997367870068,
+    "sideMenuDarkRatio": 0.9920483364840871,
+    "sideMenuGoldRatio": 0.000031461940627214305,
+    "sideDismissDarkRatio": 0.989988425925926,
+    "roomBackGoldRatio": 0,
+    "roomBackDarkRatio": 0.9817740689747809,
+    "modeSelectGoldRatio": 0.002163659504379726,
+    "modeSelectBlueRatio": 0,
+    "modeSelectDarkRatio": 0.9741216483598755,
+    "gameOverReplayBlueRatio": 0,
+    "gameOverRowsDarkRatio": 0.9553812345710513,
+    "confirmModalVariant": "NETWORK_ERROR",
+    "confirmModalPoint": {
+      "x": 0.57,
+      "y": 0.62
+    },
+    "loginSecondaryGoldRatio": 0.01273772890077183,
+    "progressDarkRatio": 0.9450442967884828
+  },
+  "foregroundDecision": {
+    "kind": "BLOCKED",
+    "reason": "Network-error confirmation modal remained after two click attempts; manual emulator network/account recovery is required"
+  },
+  "foregroundTrace": [
+    {
+      "state": "CONFIRM_MODAL",
+      "verification": "VERIFIED_REAL",
+      "decisionKind": "TAP_CONFIRM_MODAL",
+      "decisionReason": "Network confirmation modal detected; dismissing it once before blocking if it persists (VERIFIED_REAL)",
+      "clickEligible": true,
+      "clicked": true,
+      "blocker": "ADB tap unavailable; used副屏窗口鼠标点击 (2594,311)",
+      "targetPoint": {
+        "x": 0.57,
+        "y": 0.62
+      }
+    },
+    {
+      "state": "CONFIRM_MODAL",
+      "verification": "VERIFIED_REAL",
+      "decisionKind": "TAP_CONFIRM_MODAL",
+      "decisionReason": "Network confirmation modal still present; retrying dismiss (VERIFIED_REAL)",
+      "clickEligible": true,
+      "clicked": true,
+      "blocker": "ADB tap unavailable; used副屏窗口鼠标点击 (2594,311)",
+      "targetPoint": {
+        "x": 0.57,
+        "y": 0.62
+      }
+    },
+    {
+      "state": "CONFIRM_MODAL",
+      "verification": "VERIFIED_REAL",
+      "decisionKind": "BLOCKED",
+      "decisionReason": "Network-error confirmation modal remained after two click attempts; manual emulator network/account recovery is required",
+      "clickEligible": true,
+      "clicked": false,
+      "blocker": "Network-error confirmation modal remained after two click attempts; manual emulator network/account recovery is required",
+      "targetPoint": {
+        "x": 0.57,
+        "y": 0.62
+      }
+    }
+  ],
+  "safeObserve": true,
+  "captureSurface": {
+    "state": "VISIBLE_CONTENT",
+    "meanBrightness": 34.0325817227502,
+    "darkPixelRatio": 0.0011265432098765433,
+    "nonBlackPixelRatio": 0.9999980709876544,
+    "brightPixelRatio": 0.0027951388888888887,
+    "lumaStdDev": 16.674326222175388,
+    "isUniform": false,
+    "blockerReason": null
+  },
+  "captureAttempts": [
+    {
+      "source": "adb-screencap",
+      "targetWindow": {
+        "title": "BlueStacks App Player",
+        "left": 1720,
+        "top": -154,
+        "width": 1562,
+        "height": 797,
+        "source": "native",
+        "className": "Qt672QWindowIcon",
+        "processName": "HD-Player",
+        "visible": true
+      },
+      "surface": {
+        "state": "VISIBLE_CONTENT",
+        "meanBrightness": 34.0325817227502,
+        "darkPixelRatio": 0.0011265432098765433,
+        "nonBlackPixelRatio": 0.9999980709876544,
+        "brightPixelRatio": 0.0027951388888888887,
+        "lumaStdDev": 16.674326222175388,
+        "isUniform": false,
+        "blockerReason": null
+      }
+    }
+  ],
+  "observedSummary": null,
+  "observeError": "Network-error confirmation modal remained after two click attempts; manual emulator network/account recovery is required"
+}

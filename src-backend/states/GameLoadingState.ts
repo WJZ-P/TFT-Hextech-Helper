@@ -115,6 +115,7 @@ export class GameLoadingState implements IState {
             progressResult.decision.kind === "TAP_START_QUEUE" ||
             progressResult.decision.kind === "TAP_LEAVE_ROOM" ||
             progressResult.decision.kind === "TAP_ACCEPT_READY" ||
+            progressResult.decision.kind === "TAP_GAME_OVER_EXIT" ||
             progressResult.decision.kind === "TAP_CANCEL_QUEUE"
         ) {
             logger.info(

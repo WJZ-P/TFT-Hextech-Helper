@@ -79,6 +79,16 @@ test("android foreground progression blocks login-required frontend screens", ()
     assert.match(result.decision.reason, /login/i);
 });
 
+test("android foreground progression blocks Riot network error frontend screens", () => {
+    const result = planAndroidForegroundProgress(
+        createObservation({ state: "NETWORK_ERROR" }),
+        createInitialAndroidForegroundProgressState()
+    );
+
+    assert.equal(result.decision.kind, "BLOCKED");
+    assert.match(result.decision.reason, /network\/account/i);
+});
+
 test("android foreground progression prepares a synthetic lobby start action", () => {
     const observation = createObservation({
         state: "LOBBY",
@@ -291,6 +301,26 @@ test("android foreground progression labels network confirmation modal retries",
     assert.match(second.decision.reason, /Network confirmation modal still present/);
     assert.equal(fourth.decision.kind, "BLOCKED");
     assert.match(fourth.decision.reason, /network\/account recovery/i);
+});
+
+test("android foreground progression exits game-over result screens with a retry cap", () => {
+    const observation = createObservation({
+        state: "GAME_OVER",
+        actionPoints: { GAME_OVER_EXIT: { x: 0.50, y: 0.625 } },
+    });
+
+    const first = planAndroidForegroundProgress(observation, createInitialAndroidForegroundProgressState());
+    const second = planAndroidForegroundProgress(observation, first.nextState);
+    const third = planAndroidForegroundProgress(observation, second.nextState);
+    const fourth = planAndroidForegroundProgress(observation, third.nextState);
+
+    assert.equal(first.decision.kind, "TAP_GAME_OVER_EXIT");
+    assert.deepEqual(first.decision.targetPoint, { x: 0.50, y: 0.625 });
+    assert.equal(second.decision.kind, "TAP_GAME_OVER_EXIT");
+    assert.match(second.decision.reason, /retrying exit/i);
+    assert.equal(third.decision.kind, "TAP_GAME_OVER_EXIT");
+    assert.equal(fourth.decision.kind, "WAIT");
+    assert.match(fourth.decision.reason, /exit already issued/i);
 });
 
 test("android foreground progression keeps long queue active instead of cancelling live matchmaking", () => {

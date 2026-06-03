@@ -9,7 +9,7 @@ import {logger} from "../../utils/Logger";
 import {IdentifiedEquip, EQUIP_CATEGORY_PRIORITY, LootOrb} from "../types";
 import {TFT_16_EQUIP_DATA} from "../../TFTProtocol";
 import {templateLoader} from "./TemplateLoader";
-import {getMatChannels} from "./OpenCvMatUtils";
+import {convertOpenCvMatType, getMatChannels, getMatType, resizeOpenCvMat} from "./OpenCvMatUtils";
 
 /**
  * 匹配阈值配置
@@ -47,6 +47,29 @@ interface EquipTemplateCandidate {
     variantLabel: string;
 }
 
+type MatWithData = cv.Mat & {
+    data?: Uint8Array | Uint8ClampedArray | Float32Array | Float64Array;
+};
+
+function calculateMatStdDevFromData(targetMat: cv.Mat): number | null {
+    const data = (targetMat as MatWithData).data;
+    if (!data || data.length === 0) {
+        return null;
+    }
+
+    let sum = 0;
+    let squareSum = 0;
+    for (let index = 0; index < data.length; index += 1) {
+        const value = data[index] ?? 0;
+        sum += value;
+        squareSum += value * value;
+    }
+
+    const mean = sum / data.length;
+    const variance = Math.max(0, (squareSum / data.length) - mean * mean);
+    return Math.sqrt(variance);
+}
+
 /**
  * 模板匹配器
  * @description 单例模式，提供各种模板匹配功能
@@ -82,11 +105,24 @@ export class TemplateMatcher {
      * @returns 是否为空槽位
      */
     public isEmptySlot(targetMat: cv.Mat): boolean {
+        const dataDeviation = calculateMatStdDevFromData(targetMat);
+        if (dataDeviation !== null) {
+            return dataDeviation < MATCH_THRESHOLDS.EMPTY_SLOT_STDDEV;
+        }
+
+        const meanStdDev = (cv as typeof cv & {
+            meanStdDev?: (src: cv.Mat, mean: cv.Mat, stddev: cv.Mat) => void;
+        }).meanStdDev;
+        if (typeof meanStdDev !== "function") {
+            logger.warn("[TemplateMatcher] OpenCV meanStdDev unavailable; treating slot as non-empty");
+            return false;
+        }
+
         const mean = new cv.Mat();
         const stddev = new cv.Mat();
 
         try {
-            cv.meanStdDev(targetMat, mean, stddev);
+            meanStdDev(targetMat, mean, stddev);
             const deviation = stddev.doubleAt(0, 0);
             return deviation < MATCH_THRESHOLDS.EMPTY_SLOT_STDDEV;
         } finally {
@@ -227,7 +263,9 @@ export class TemplateMatcher {
         const resized = new cv.Mat();
 
         try {
-            cv.resize(roi, resized, new cv.Size(24, 24), 0, 0, cv.INTER_AREA);
+            if (!resizeOpenCvMat(cv, roi, resized, 24, 24, cv.INTER_AREA)) {
+                roi.copyTo(resized);
+            }
             return {
                 label: profile.label,
                 mat: resized,
@@ -357,25 +395,31 @@ export class TemplateMatcher {
         const resultMat = new cv.Mat();
 
         try {
-            preparedTarget = targetMat;
+            preparedTarget = this.prepareChampionTargetMat(targetMat);
 
             // 安卓商店名字条通常只有 30px 左右高，模板高度是 35px。
             // 先把目标图等比放大到至少 35px，避免大量模板因为尺寸不足直接被跳过。
             const MIN_TEMPLATE_HEIGHT = 35;
-            if (targetMat.rows < MIN_TEMPLATE_HEIGHT) {
-                preparedTarget = new cv.Mat();
-                const scale = MIN_TEMPLATE_HEIGHT / targetMat.rows;
-                cv.resize(
-                    targetMat,
+            if (preparedTarget.rows < MIN_TEMPLATE_HEIGHT) {
+                const scale = MIN_TEMPLATE_HEIGHT / preparedTarget.rows;
+                const resizedTarget = new cv.Mat();
+                const didResize = resizeOpenCvMat(
+                    cv,
                     preparedTarget,
-                    new cv.Size(
-                        Math.max(1, Math.round(targetMat.cols * scale)),
-                        MIN_TEMPLATE_HEIGHT
-                    ),
-                    0,
-                    0,
+                    resizedTarget,
+                    Math.max(1, Math.round(preparedTarget.cols * scale)),
+                    MIN_TEMPLATE_HEIGHT,
                     cv.INTER_CUBIC
                 );
+                if (didResize) {
+                    if (preparedTarget !== targetMat && !preparedTarget.isDeleted()) {
+                        preparedTarget.delete();
+                    }
+                    preparedTarget = resizedTarget;
+                } else {
+                    resizedTarget.delete();
+                    logger.warn("[TemplateMatcher] OpenCV resize unavailable; using original champion name strip");
+                }
             }
 
             let bestMatchName: string | null = null;
@@ -389,8 +433,10 @@ export class TemplateMatcher {
                 }
 
                 // 通道检查 (防止崩溃)
-                if (templateMat.type() !== preparedTarget.type()) {
-                    logger.warn(`[TemplateMatcher] 通道类型不匹配: ${name} (${templateMat.type()}) vs 目标 (${preparedTarget.type()})`);
+                const templateType = getMatType(templateMat);
+                const targetType = getMatType(preparedTarget);
+                if (templateType !== targetType) {
+                    logger.warn(`[TemplateMatcher] 通道类型不匹配: ${name} (${templateType}) vs 目标 (${targetType})`);
                     continue;
                 }
 
@@ -430,6 +476,35 @@ export class TemplateMatcher {
             mask.delete();
             resultMat.delete();
         }
+    }
+
+    private prepareChampionTargetMat(targetMat: cv.Mat): cv.Mat {
+        let prepared = targetMat;
+        const channels = getMatChannels(prepared);
+        if (channels > 1) {
+            const gray = new cv.Mat();
+            if (channels === 4) {
+                cv.cvtColor(prepared, gray, cv.COLOR_RGBA2GRAY);
+            } else {
+                cv.cvtColor(prepared, gray, cv.COLOR_RGB2GRAY);
+            }
+            prepared = gray;
+        }
+
+        if (getMatType(prepared) === cv.CV_8UC1) {
+            return prepared;
+        }
+
+        const converted = new cv.Mat();
+        if (convertOpenCvMatType(prepared, converted, cv.CV_8UC1)) {
+            if (prepared !== targetMat && !prepared.isDeleted()) {
+                prepared.delete();
+            }
+            return converted;
+        }
+
+        converted.delete();
+        return prepared;
     }
 
     /**
@@ -516,27 +591,43 @@ export class TemplateMatcher {
         const results: LootOrb[] = [];
         const mask = new cv.Mat();
         const resultMat = new cv.Mat();
+        const preparedTarget = new cv.Mat();
 
         try {
+            const targetChannels = getMatChannels(targetMat);
+            if (targetChannels === 1) {
+                targetMat.copyTo(preparedTarget);
+            } else if (targetChannels === 3) {
+                cv.cvtColor(targetMat, preparedTarget, cv.COLOR_RGB2GRAY);
+            } else if (targetChannels === 4) {
+                cv.cvtColor(targetMat, preparedTarget, cv.COLOR_RGBA2GRAY);
+            } else {
+                logger.warn(`[TemplateMatcher] 战利品目标通道数不支持: ${targetChannels}`);
+                return [];
+            }
+
             // 遍历每种类型的模板
             for (const [orbType, templateMat] of lootOrbTemplates) {
                 // 尺寸检查
-                if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) {
+                if (templateMat.rows > preparedTarget.rows || templateMat.cols > preparedTarget.cols) {
                     logger.debug(`[TemplateMatcher] 战利品模板尺寸过大: ${orbType}`);
                     continue;
                 }
 
-                // 通道检查
-                if (templateMat.type() !== targetMat.type()) {
+                // 通道检查。部分 OpenCV.js Mat 的 type() 数值在 ADB frame-provider 路径会漂移，
+                // 但模板和目标都已准备成单通道时仍可安全尝试 matchTemplate。
+                const templateChannels = getMatChannels(templateMat);
+                const targetChannels = getMatChannels(preparedTarget);
+                if (templateChannels !== targetChannels) {
                     logger.warn(
                         `[TemplateMatcher] 战利品模板通道不匹配: ${orbType} ` +
-                        `(模板: ${templateMat.type()}, 目标: ${targetMat.type()})`
+                        `(模板: ${templateChannels}, 目标: ${targetChannels})`
                     );
                     continue;
                 }
 
                 // 执行模板匹配
-                cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
+                cv.matchTemplate(preparedTarget, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
 
                 // 多目标检测：循环查找所有超过阈值的匹配点
                 const templateWidth = templateMat.cols;
@@ -595,6 +686,7 @@ export class TemplateMatcher {
         } finally {
             mask.delete();
             resultMat.delete();
+            preparedTarget.delete();
         }
     }
 
@@ -623,10 +715,12 @@ export class TemplateMatcher {
         }
 
         // 通道检查
-        if (templateMat.type() !== targetMat.type()) {
+        const templateType = getMatType(templateMat);
+        const targetType = getMatType(targetMat);
+        if (templateType !== targetType) {
             logger.warn(
                 `[TemplateMatcher] 按钮模板通道不匹配: ${buttonName} ` +
-                `(模板: ${templateMat.type()}, 目标: ${targetMat.type()})`
+                `(模板: ${templateType}, 目标: ${targetType})`
             );
             return { matched: false, confidence: 0 };
         }

@@ -83,6 +83,50 @@ test("RuleBasedDecisionEngine generates buy/move/level actions for standard PVP 
     assert.ok(plans.some((plan) => plan.type === "EQUIP"));
 });
 
+test("RuleBasedDecisionEngine prioritizes loot pickup when Android observe reports loot orbs", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const state: ObservedState = {
+        ...buildBaseState(),
+        client: "ANDROID" as any,
+        target: "ANDROID_EMULATOR",
+        metadata: {
+            lootOrbs: [
+                { x: 520, y: 180, type: "blue", confidence: 0.91 },
+                { x: 610, y: 250, type: "gold", confidence: 0.93 },
+            ],
+        },
+    };
+
+    const plans = engine.generatePlan(state);
+    const lootPlan = plans.find((plan) => plan.type === "PICK_LOOT");
+
+    assert.equal(lootPlan?.priority, 110);
+    assert.equal(lootPlan?.payload.count, 2);
+    assert.equal(lootPlan?.payload.x, 520);
+    assert.equal(plans[0]?.type, "PICK_LOOT");
+});
+
+test("RuleBasedDecisionEngine preserves direct android augment choice point", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const state: ObservedState = {
+        ...buildBaseState(),
+        client: "ANDROID" as any,
+        target: "ANDROID_EMULATOR",
+        stageText: "augment-choice",
+        stageType: GameStageType.AUGMENT,
+        metadata: {
+            augmentChoiceVisible: true,
+            augmentChoicePoint: { x: 0.35, y: 0.54 },
+        },
+    };
+
+    const plans = engine.generatePlan(state);
+    const augmentPlan = plans.find((plan) => plan.type === "PICK_AUGMENT");
+
+    assert.equal(augmentPlan?.payload.x, 0.35);
+    assert.equal(augmentPlan?.payload.y, 0.54);
+});
+
 test("RuleBasedDecisionEngine emits NOOP when no profitable action exists", () => {
     const engine = new RuleBasedDecisionEngine();
     const state: ObservedState = {
@@ -205,6 +249,63 @@ test("RuleBasedDecisionEngine follows standard level 7 timing on 4-1 for healthy
     });
 
     assert.ok(plans.some((plan) => plan.type === "LEVEL_UP" && /4-1/.test(plan.reason)));
+});
+
+test("RuleBasedDecisionEngine converts excess stage-3 economy into levels when population lags", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const state: ObservedState = {
+        ...buildBaseState(),
+        stageText: "3-6",
+        stageType: GameStageType.PVP,
+        level: 6,
+        gold: 99,
+        hp: 70,
+        board: [],
+        shop: [],
+    };
+
+    const plans = engine.generatePlan(state);
+    const levelPlan = plans.find((plan) => plan.type === "LEVEL_UP" && /经济溢出/.test(plan.reason));
+
+    assert.equal(levelPlan?.payload.count, 2);
+});
+
+test("RuleBasedDecisionEngine levels from excess economy when Android stage OCR is unavailable", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const state: ObservedState = {
+        ...buildBaseState(),
+        stageText: "",
+        stageType: GameStageType.UNKNOWN,
+        level: 5,
+        gold: 67,
+        hp: 70,
+        board: [],
+        shop: [],
+    };
+
+    const plans = engine.generatePlan(state);
+    const levelPlan = plans.find((plan) => plan.type === "LEVEL_UP" && /OCR/.test(plan.reason));
+
+    assert.equal(levelPlan?.payload.count, 1);
+});
+
+test("RuleBasedDecisionEngine levels in late game when population is badly behind", () => {
+    const engine = new RuleBasedDecisionEngine();
+    const state: ObservedState = {
+        ...buildBaseState(),
+        stageText: "5-3",
+        stageType: GameStageType.PVP,
+        level: 6,
+        gold: 27,
+        hp: 18,
+        board: [],
+        shop: [],
+    };
+
+    const plans = engine.generatePlan(state);
+    const levelPlan = plans.find((plan) => plan.type === "LEVEL_UP" && /人口明显落后/.test(plan.reason));
+
+    assert.equal(levelPlan?.payload.count, 1);
 });
 
 // 真人运营在3-2偏弱阵容时会D牌找升星，避免被打穿血量

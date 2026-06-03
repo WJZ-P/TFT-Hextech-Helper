@@ -41,6 +41,18 @@ export interface OcrVariant {
     buffer: Buffer;
 }
 
+interface VisualDigitComponent {
+    left: number;
+    top: number;
+    right: number;
+    bottom: number;
+    area: number;
+    width: number;
+    height: number;
+    centerY: number;
+    points: Array<[number, number]>;
+}
+
 export type ChampionOcrProfile = "SHOP" | "DETAIL";
 
 export interface ChampionTextResolution {
@@ -240,6 +252,62 @@ export async function buildAndroidStageOcrVariants(rawBuffer: Buffer): Promise<O
             }),
         },
     ];
+}
+
+export async function parseAndroidStageVisualFromFrame(frameBuffer: Buffer): Promise<string> {
+    const metadata = await sharp(frameBuffer).metadata();
+    const frameWidth = metadata.width ?? 0;
+    const frameHeight = metadata.height ?? 0;
+    if (frameWidth <= 0 || frameHeight <= 0) {
+        return "";
+    }
+
+    const cropLeft = Math.round(frameWidth * 0.28);
+    const cropTop = 0;
+    const cropWidth = Math.max(1, Math.round(frameWidth * 0.16));
+    const cropHeight = Math.max(1, Math.round(frameHeight * 0.08));
+    const scale = 5;
+    const { data, info } = await sharp(frameBuffer)
+        .extract({
+            left: cropLeft,
+            top: cropTop,
+            width: Math.min(cropWidth, frameWidth - cropLeft),
+            height: Math.min(cropHeight, frameHeight - cropTop),
+        })
+        .resize({
+            width: cropWidth * scale,
+            height: cropHeight * scale,
+            kernel: "nearest",
+        })
+        .removeAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+
+    const foreground = new Uint8Array(info.width * info.height);
+    for (let offset = 0, pixelIndex = 0; offset < data.length; offset += info.channels, pixelIndex += 1) {
+        const red = data[offset];
+        const green = data[offset + 1];
+        const blue = data[offset + 2];
+        foreground[pixelIndex] = red >= 175 && green >= 175 && blue >= 150 ? 1 : 0;
+    }
+
+    const digitComponents = findVisualDigitComponents(foreground, info.width, info.height)
+        .filter((component) => component.centerY <= info.height * 0.50)
+        .sort((left, right) => left.left - right.left);
+    const digitHeight = Math.max(...digitComponents.map((component) => component.height), 0);
+    if (digitHeight <= 0) {
+        return "";
+    }
+
+    const tokens = digitComponents.map((component) => {
+        if (component.height < digitHeight * 0.45 && component.width >= digitHeight * 0.18) {
+            return "-";
+        }
+        const digit = classifyVisualDigit(component);
+        return digit === null ? "" : String(digit);
+    }).join("");
+    const match = tokens.match(/([1-7])-([1-7])/);
+    return match ? `${match[1]}-${match[2]}` : "";
 }
 
 export async function buildAndroidHudDigitVariants(rawBuffer: Buffer): Promise<OcrVariant[]> {
@@ -646,6 +714,124 @@ export function selectBestStageText(candidates: StageOcrCandidate[]): StageOcrSe
 
     return bestSelection;
 }
+
+function findVisualDigitComponents(foreground: Uint8Array, width: number, height: number): VisualDigitComponent[] {
+    const visited = new Uint8Array(foreground.length);
+    const result: VisualDigitComponent[] = [];
+    const queue: number[] = [];
+
+    for (let index = 0; index < foreground.length; index += 1) {
+        if (!foreground[index] || visited[index]) {
+            continue;
+        }
+        visited[index] = 1;
+        queue.length = 0;
+        queue.push(index);
+        let head = 0;
+        let left = width;
+        let right = 0;
+        let top = height;
+        let bottom = 0;
+        let area = 0;
+        const points: Array<[number, number]> = [];
+
+        while (head < queue.length) {
+            const current = queue[head];
+            head += 1;
+            const x = current % width;
+            const y = Math.floor(current / width);
+            area += 1;
+            left = Math.min(left, x);
+            right = Math.max(right, x);
+            top = Math.min(top, y);
+            bottom = Math.max(bottom, y);
+            points.push([x, y]);
+
+            addVisualNeighbor(current - 1, x > 0, foreground, visited, queue);
+            addVisualNeighbor(current + 1, x < width - 1, foreground, visited, queue);
+            addVisualNeighbor(current - width, y > 0, foreground, visited, queue);
+            addVisualNeighbor(current + width, y < height - 1, foreground, visited, queue);
+        }
+
+        const componentWidth = right - left + 1;
+        const componentHeight = bottom - top + 1;
+        if (area >= 80 && componentWidth >= 6 && componentHeight >= 12) {
+            result.push({
+                left,
+                top,
+                right,
+                bottom,
+                area,
+                width: componentWidth,
+                height: componentHeight,
+                centerY: (top + bottom) / 2,
+                points,
+            });
+        }
+    }
+
+    return result;
+}
+
+function addVisualNeighbor(
+    index: number,
+    enabled: boolean,
+    foreground: Uint8Array,
+    visited: Uint8Array,
+    queue: number[]
+): void {
+    if (enabled && foreground[index] && !visited[index]) {
+        visited[index] = 1;
+        queue.push(index);
+    }
+}
+
+function classifyVisualDigit(component: VisualDigitComponent): number | null {
+    if (component.width / Math.max(1, component.height) <= 0.50) {
+        return 1;
+    }
+
+    const densities = [
+        visualRegionDensity(component, 0.20, 0.00, 0.80, 0.18),
+        visualRegionDensity(component, 0.00, 0.18, 0.38, 0.48),
+        visualRegionDensity(component, 0.62, 0.18, 1.00, 0.48),
+        visualRegionDensity(component, 0.20, 0.40, 0.80, 0.62),
+        visualRegionDensity(component, 0.00, 0.52, 0.38, 0.82),
+        visualRegionDensity(component, 0.62, 0.52, 1.00, 0.82),
+        visualRegionDensity(component, 0.20, 0.82, 0.80, 1.00),
+    ];
+    const observed = densities.map((density) => density >= 0.35);
+    const match = VISUAL_DIGIT_SEGMENTS
+        .map(([digit, expected]) => ({
+            digit,
+            distance: expected.reduce((count, value, index) => count + (value === observed[index] ? 0 : 1), 0),
+        }))
+        .sort((left, right) => left.distance - right.distance)[0];
+    return match && match.distance <= 2 ? match.digit : null;
+}
+
+function visualRegionDensity(component: VisualDigitComponent, x0: number, y0: number, x1: number, y1: number): number {
+    const minX = component.left + Math.trunc(component.width * x0);
+    const maxX = component.left + Math.trunc(component.width * x1);
+    const minY = component.top + Math.trunc(component.height * y0);
+    const maxY = component.top + Math.trunc(component.height * y1);
+    const regionArea = Math.max(1, maxX - minX) * Math.max(1, maxY - minY);
+    const count = component.points.filter(([x, y]) => x >= minX && x <= maxX && y >= minY && y <= maxY).length;
+    return count / regionArea;
+}
+
+const VISUAL_DIGIT_SEGMENTS: Array<[number, boolean[]]> = [
+    [0, [true, true, true, false, true, true, true]],
+    [1, [false, false, true, false, false, true, false]],
+    [2, [true, false, true, true, true, false, true]],
+    [3, [true, false, true, true, false, true, true]],
+    [4, [false, true, true, true, false, true, false]],
+    [5, [true, true, false, true, false, true, true]],
+    [6, [true, true, false, true, true, true, true]],
+    [7, [true, false, true, false, false, true, false]],
+    [8, [true, true, true, true, true, true, true]],
+    [9, [true, true, true, true, false, true, true]],
+];
 
 function longestCommonSubsequenceLength(left: string, right: string): number {
     const rows = left.length + 1;

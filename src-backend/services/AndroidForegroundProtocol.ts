@@ -5,12 +5,14 @@ export type AndroidForegroundState =
     | "BLUESTACKS_BOOT"
     | "UPDATE_READY"
     | "LOGIN_REQUIRED"
+    | "NETWORK_ERROR"
     | "LOBBY"
     | "MODE_SELECT"
     | "CONFIRM_MODAL"
     | "QUEUE"
     | "ACCEPT_READY"
     | "IN_GAME_TRANSITION"
+    | "GAME_OVER"
     | "LIVE_CONTENT"
     | "UNKNOWN";
 
@@ -22,6 +24,7 @@ export type AndroidForegroundActionPointKey =
     | "SELECT_GAME_MODE"
     | "CONFIRM_MODAL"
     | "ACCEPT_READY"
+    | "GAME_OVER_EXIT"
     | "CANCEL_QUEUE"
     | "DISMISS_OVERLAY"
     | "LEAVE_ROOM";
@@ -34,6 +37,7 @@ export type AndroidForegroundDecisionKind =
     | "TAP_CONFIRM_MODAL"
     | "TAP_START_QUEUE"
     | "TAP_ACCEPT_READY"
+    | "TAP_GAME_OVER_EXIT"
     | "TAP_CANCEL_QUEUE"
     | "TAP_DISMISS_OVERLAY"
     | "TAP_LEAVE_ROOM";
@@ -110,6 +114,20 @@ export function normalizeAndroidForegroundObservation(
             source: "SCREENSHOT_CLASSIFIER",
             reason: "Live HUD signal detected from gold or scoreboard regions",
             anchors: ["hud-gold-region", "scoreboard-region"],
+            rawClassification: classification,
+        };
+    }
+
+    if (classification.state === "GAME_OVER") {
+        return {
+            state: "GAME_OVER",
+            verification: "VERIFIED_REAL",
+            source: "SCREENSHOT_CLASSIFIER",
+            reason: "Game-over or placement result screen detected; exit before starting the next normal-match queue",
+            anchors: ["game-over-result", "placement-exit-cta"],
+            actionPoints: classification.gameOverExitPoint
+                ? { GAME_OVER_EXIT: { ...classification.gameOverExitPoint } }
+                : undefined,
             rawClassification: classification,
         };
     }
@@ -230,6 +248,18 @@ export function normalizeAndroidForegroundObservation(
     }
 
     if (classification.state === "TFT_FRONTEND") {
+        if (classification.frontendVariant === "NETWORK_ERROR") {
+            return {
+                state: "NETWORK_ERROR",
+                verification: "VERIFIED_REAL",
+                source: "SCREENSHOT_CLASSIFIER",
+                reason: "Riot network or refresh-token error frontend detected; automation will not click retry blindly",
+                anchors: ["riot-error-page", "try-again-cta"],
+                rawClassification: classification,
+                note: "External Riot account/session or network recovery is required before normal-match training can continue.",
+            };
+        }
+
         if (classification.frontendVariant === "LOGIN_REQUIRED") {
             return {
                 state: "LOGIN_REQUIRED",

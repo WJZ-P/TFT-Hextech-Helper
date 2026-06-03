@@ -312,9 +312,39 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
             tick += 1;
         };
 
-        if (state.stageType === GameStageType.AUGMENT && state.augments && state.augments.length > 0) {
-            const selected = [...state.augments].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0];
+        const lootOrbs = Array.isArray(state.metadata?.lootOrbs) ? state.metadata.lootOrbs : [];
+        if (lootOrbs.length > 0) {
+            const firstOrb = lootOrbs.find((orb): orb is { x: number; y: number; type?: string } => {
+                if (!orb || typeof orb !== "object") {
+                    return false;
+                }
+                const candidate = orb as Record<string, unknown>;
+                return typeof candidate.x === "number" && typeof candidate.y === "number";
+            });
+            addPlan("PICK_LOOT", 110, `检测到 ${lootOrbs.length} 个战利品球，优先拾取避免漏球`, {
+                count: lootOrbs.length,
+                ...(firstOrb ? { x: firstOrb.x, y: firstOrb.y, lootType: firstOrb.type ?? "unknown" } : {}),
+            });
+        }
+
+        if (state.stageType === GameStageType.UNKNOWN && state.level >= 1 && state.level < 8 && state.gold >= 60) {
+            const count = state.gold >= 90 ? 2 : 1;
+            addPlan("LEVEL_UP", 88, "阶段 OCR 暂不可用但经济明显溢出，先升人口避免空转", { count });
+        }
+
+        if (state.stageType === GameStageType.AUGMENT) {
+            const selected = state.augments && state.augments.length > 0
+                ? [...state.augments].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0]
+                : { slot: 2 };
+            const choicePoint = state.metadata?.augmentChoicePoint;
+            const directPoint = choicePoint && typeof choicePoint === "object"
+                ? choicePoint as Record<string, unknown>
+                : null;
             addPlan("PICK_AUGMENT", 100, "进入海克斯回合，优先选择评分最高的强化", { slot: selected.slot });
+            if (directPoint && typeof directPoint.x === "number" && typeof directPoint.y === "number") {
+                plans[plans.length - 1].payload.x = directPoint.x;
+                plans[plans.length - 1].payload.y = directPoint.y;
+            }
         }
 
         // 关键回合升人口节奏（参考自动运营常见节奏：2-1/2-5/3-2/4-2/5-1）
@@ -335,8 +365,17 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
             } else if ((isKeyRound(parsed, 4, 2) || isKeyRound(parsed, 4, 5)) && state.level < 8 && hp > hpThreshold + 4 && state.gold >= 20 && state.gold < 30) {
                 // 中期小 D 没能立刻扭转质量时，血量仍安全就该转回升人口恢复节奏，避免继续无脑 D 空经济。
                 addPlan("LEVEL_UP", 86, "中期小D后血量仍安全，转向升人口恢复运营节奏", { count: 1 });
+            } else if (parsed && parsed.stage === 3 && parsed.round >= 5 && state.level < 7 && state.gold >= 50) {
+                const count = state.gold >= 70 ? 2 : 1;
+                addPlan("LEVEL_UP", 89, "3 阶段后半经济溢出，补人口避免高金币空转", { count });
+            } else if (parsed && parsed.stage === 4 && state.level < 8 && state.gold >= 45) {
+                const count = state.gold >= 70 ? 3 : 2;
+                addPlan("LEVEL_UP", 90, "4 阶段经济溢出且人口落后，优先拉人口转化战力", { count });
             } else if (isKeyRound(parsed, 5, 1) && state.level < 9 && hp > hpThreshold + 10 && state.gold >= 40) {
                 addPlan("LEVEL_UP", 87, "5-1 仍然健康且经济够用，优先贪升级而不是提前 D 牌", { count: 1 });
+            } else if (parsed && parsed.stage >= 5 && state.level < 8 && state.gold >= 20) {
+                const count = state.gold >= 50 ? 3 : state.gold >= 32 ? 2 : 1;
+                addPlan("LEVEL_UP", 88, "后期人口明显落后，先把金币转化为上场单位", { count });
             } else if (parsed && parsed.stage >= 5 && state.level < 9 && state.gold >= 50 && hp > hpThreshold) {
                 addPlan("LEVEL_UP", 78, "后期经济充足且血量健康，准备上 9 提升上限", { count: 1 });
             }

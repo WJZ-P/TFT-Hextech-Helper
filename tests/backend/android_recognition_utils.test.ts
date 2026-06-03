@@ -1,8 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
 import {
+    extractLikelyHudNumber,
     extractLikelyXpText,
     extractLikelyStageText,
+    parseAndroidStageVisualFromFrame,
     resolveChampionNameFromText,
     selectBestStageText,
 } from "../../src-backend/tft";
@@ -23,6 +26,18 @@ test("extractLikelyXpText rejects impossible OCR and keeps legal android XP text
     assert.equal(extractLikelyXpText("58/60"), "58/60");
     assert.equal(extractLikelyXpText("42/10"), "");
     assert.equal(extractLikelyXpText("98/60"), "");
+});
+
+test("extractLikelyHudNumber keeps 100-plus android gold when enabled", () => {
+    assert.equal(extractLikelyHudNumber("108", { min: 0, max: 200, maxDigits: 3 }), "108");
+    assert.equal(extractLikelyHudNumber("110", { min: 0, max: 200, maxDigits: 3 }), "110");
+    assert.equal(extractLikelyHudNumber("6761", { min: 0, max: 200, maxDigits: 3 }), "67");
+});
+
+test("parseAndroidStageVisualFromFrame reads live shop stage when OCR is noisy", async () => {
+    const frame = await fs.readFile("reports/goal-continue-20260603-after-classifier-live.png");
+
+    assert.equal(await parseAndroidStageVisualFromFrame(frame), "3-1");
 });
 
 test("resolveChampionNameFromText accepts exact and near-miss android OCR", () => {

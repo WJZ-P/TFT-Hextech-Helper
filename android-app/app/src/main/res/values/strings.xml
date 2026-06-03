@@ -1,0 +1,5 @@
+﻿<resources>
+    <string name="app_name">TFT Hextech Android</string>
+    <string name="accessibility_service_label">TFT Hextech Input Service</string>
+    <string name="accessibility_service_description">Executes approved TFT helper gestures after you enable automation.</string>
+</resources>

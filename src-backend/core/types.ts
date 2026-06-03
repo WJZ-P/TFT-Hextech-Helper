@@ -11,6 +11,7 @@ export type ActionType =
     | "MOVE"
     | "EQUIP"
     | "PICK_AUGMENT"
+    | "PICK_LOOT"
     | "NOOP";
 
 export interface ObservedUnit {

@@ -18,6 +18,7 @@ import path from "path";
 import fs from "fs-extra";
 // import sharp from "sharp";
 import type * as OpencvType from "@techstark/opencv-js";
+import { getMatChannels, resizeOpenCvMat } from "./tft/recognition/OpenCvMatUtils";
 
 // Type alias for cv namespace usage in type annotations
 type CvMat = OpencvType.Mat;
@@ -104,6 +105,7 @@ import {
     normalizePlayerNameOcrText,
     ocrService,
     OcrWorkerType,
+    parseAndroidStageVisualFromFrame,
     resolveChampionNameFromText,
     selectBestPlayerNameCandidate,
     selectBestStageText,
@@ -768,6 +770,80 @@ class TftOperator {
     }
 
     /**
+     * 安卓 AutoV1 安全观察用的轻量阶段读取。
+     * 只读取顶部少量小区域，要求至少两个 OCR 候选一致；不走旧的多窗口兜底和历史确认，
+     * 避免 live tick 被阶段 OCR 长时间占住。
+     */
+    public async getAndroidGameStageFast(): Promise<GameStageResult> {
+        await this.ensureInitialized();
+
+        const gameClient = settingsStore.get('gameClient') as GameClient;
+        if (gameClient !== GameClient.ANDROID) {
+            return this.getGameStage();
+        }
+
+        try {
+            const attempts = [
+                { label: "normal", region: this.getStageAbsoluteRegion(false, false) },
+                { label: "shop-open", region: this.getStageAbsoluteRegion(false, true) },
+                {
+                    label: "tight",
+                    region: screenCapture.toAbsoluteRegion({
+                        leftTop: { x: 0.321, y: 0.00 },
+                        rightBottom: { x: 0.411, y: 0.055 },
+                    }),
+                },
+            ];
+            const candidates: Array<{ text: string; rawText: string; label: string }> = [];
+
+            for (const attempt of attempts) {
+                const rawPng = await screenCapture.captureRegionAsPng(attempt.region, false);
+                const rawText = await ocrService.recognize(rawPng, OcrWorkerType.GAME_STAGE);
+                const extracted = this.extractLikelyStageText(rawText);
+                if (!extracted || !isValidStageFormat(extracted) || !this.isReasonableStage(extracted)) {
+                    continue;
+                }
+                candidates.push({
+                    text: extracted,
+                    rawText,
+                    label: `${attempt.label}/raw`,
+                });
+            }
+
+            const selection = selectBestStageText(candidates);
+            if (!selection.text || selection.support < 2) {
+                if (selection.text) {
+                    logger.debug(`[TftOperator] 安卓快速阶段候选支持不足: ${selection.text} support=${selection.support}`);
+                }
+                const framePng = await screenCapture.captureGameRegionAsPng({
+                    leftTop: { x: 0, y: 0 },
+                    rightBottom: { x: 1, y: 1 },
+                }, false);
+                const visualStage = await parseAndroidStageVisualFromFrame(framePng);
+                if (visualStage && isValidStageFormat(visualStage) && this.isReasonableStage(visualStage)) {
+                    const visualStageType = parseStageStringToEnum(visualStage);
+                    if (visualStageType !== GameStageType.UNKNOWN) {
+                        logger.debug(`[TftOperator] 安卓快速阶段视觉兜底命中: ${visualStage}`);
+                        return { type: visualStageType, stageText: visualStage };
+                    }
+                }
+                return { type: GameStageType.UNKNOWN, stageText: "" };
+            }
+
+            const stageType = parseStageStringToEnum(selection.text);
+            if (stageType === GameStageType.UNKNOWN) {
+                return { type: GameStageType.UNKNOWN, stageText: "" };
+            }
+
+            logger.debug(`[TftOperator] 安卓快速阶段识别命中: ${selection.text} support=${selection.support}`);
+            return { type: stageType, stageText: selection.text };
+        } catch (error: unknown) {
+            logger.warn(`[TftOperator] 安卓快速阶段识别异常: ${error instanceof Error ? error.message : String(error)}`);
+            return { type: GameStageType.UNKNOWN, stageText: "" };
+        }
+    }
+
+    /**
      * 获取当前商店的所有棋子信息
      * @description 扫描商店 5 个槽位，通过 OCR + 模板匹配识别棋子
      * @returns 商店中的棋子数组 (空槽位为 null)
@@ -946,7 +1022,7 @@ class TftOperator {
         // 截图并转为灰度图
         const processedPng = await screenCapture.captureRegionAsPng(region, false);
         const mat = await screenCapture.pngBufferToMat(processedPng);
-        if (mat.channels() > 1) {
+        if (getMatChannels(mat) > 1) {
             if (cv) {
                 cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
             }
@@ -1373,7 +1449,7 @@ class TftOperator {
         let mat = await screenCapture.pngBufferToMat(pngBuffer);
 
         // 确保通道数一致：都转为 RGBA
-        if (mat.channels() === 3) {
+        if (getMatChannels(mat) === 3) {
             if (cv) {
                 cv.cvtColor(mat, mat, cv.COLOR_RGB2RGBA);
             }
@@ -1383,7 +1459,11 @@ class TftOperator {
         if (mat.cols !== tmpl.cols || mat.rows !== tmpl.rows) {
             if (cv) {
                 const resized = new cv.Mat();
-                cv.resize(mat, resized, new cv.Size(tmpl.cols, tmpl.rows), 0, 0, cv.INTER_AREA);
+                if (!resizeOpenCvMat(cv, mat, resized, tmpl.cols, tmpl.rows, cv.INTER_AREA)) {
+                    resized.delete();
+                    mat.delete();
+                    return 255;
+                }
                 mat.delete();
                 mat = resized;
             }
@@ -1722,7 +1802,7 @@ class TftOperator {
             const mat = await screenCapture.pngBufferToMat(templateBuffer);
 
             try {
-                if (mat.channels() > 1) {
+                if (getMatChannels(mat) > 1) {
                     if (cv) {
                         cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
                     }
@@ -2399,7 +2479,7 @@ class TftOperator {
 
         for (const variant of variants) {
             const rawText = await ocrService.recognize(variant.buffer, OcrWorkerType.HUD_DIGITS);
-            const normalizedText = extractLikelyHudNumber(rawText, { min: 0, max: 99, maxDigits: 2 });
+            const normalizedText = extractLikelyHudNumber(rawText, { min: 0, max: 200, maxDigits: 3 });
             if (normalizedText) {
                 candidates.push(normalizedText);
             }

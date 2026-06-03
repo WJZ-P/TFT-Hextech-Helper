@@ -20,6 +20,7 @@ export type AndroidOperationKind =
     | "MOVE_BOARD_TO_BENCH"
     | "EQUIP_TO_BOARD"
     | "PICK_AUGMENT"
+    | "PICK_LOOT"
     | "NOOP"
     | "UNSUPPORTED";
 
@@ -67,6 +68,18 @@ function parseInteger(value: unknown): number | null {
         return null;
     }
     return Math.trunc(parsed);
+}
+
+function parseNormalizedPoint(rawX: unknown, rawY: unknown): SimplePoint | null {
+    const x = Number(rawX);
+    const y = Number(rawY);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        return null;
+    }
+    if (x < 0 || x > 1 || y < 0 || y > 1) {
+        return null;
+    }
+    return { x, y };
 }
 
 function normalizeShopSlot(rawValue: unknown): number | null {
@@ -299,6 +312,7 @@ export function buildAndroidExecutionPlan(
                 break;
             }
             case "PICK_AUGMENT": {
+                const directPoint = parseNormalizedPoint(action.payload.x, action.payload.y);
                 const slot = Math.max(1, Math.min(3, parseInteger(action.payload.slot) ?? 2));
                 const slotKey = `SLOT_${slot}` as keyof typeof hexSlot;
                 pushStep({
@@ -308,7 +322,24 @@ export function buildAndroidExecutionPlan(
                     reason: action.reason,
                     priority: action.priority,
                     slot,
-                    targetPoint: buildPoint(slotKey, hexSlot[slotKey]),
+                    targetPoint: directPoint
+                        ? buildPoint("AUGMENT_CHOICE_HINT", directPoint)
+                        : buildPoint(slotKey, hexSlot[slotKey]),
+                });
+                break;
+            }
+            case "PICK_LOOT": {
+                const x = parseInteger(action.payload.x);
+                const y = parseInteger(action.payload.y);
+                pushStep({
+                    kind: "PICK_LOOT",
+                    actionType: action.type,
+                    description: "优先拾取场上战利品球",
+                    reason: action.reason,
+                    priority: action.priority,
+                    targetPoint: x !== null && y !== null
+                        ? buildPoint("LOOT_ORB_HINT", { x, y })
+                        : undefined,
                 });
                 break;
             }
