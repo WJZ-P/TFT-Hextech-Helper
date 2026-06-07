@@ -35,5 +35,7 @@ test("TftDataService loads OCR corrections from snapshot refreshes", async () =>
 
     assert.equal(ocrCorrectionService.applyCorrections("2—1", "stage"), "2-1");
     assert.equal(ocrCorrectionService.applyCorrections("梦欧娜", "shop"), "蕾欧娜");
+    assert.equal(ocrCorrectionService.applyCorrections("伊瑞尔", "shop"), "伊泽瑞尔");
+    assert.equal(ocrCorrectionService.applyCorrections("丽桑蛙", "shop"), "丽桑卓");
     ocrCorrectionService.clearCorrections();
 });

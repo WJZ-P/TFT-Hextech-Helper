@@ -5,6 +5,8 @@ export const BUILTIN_OCR_CORRECTIONS: TftOcrCorrectionEntry[] = [
     { incorrect: "梦欧娜", correct: "蕾欧娜", context: "shop" },
     { incorrect: "套欧娜", correct: "蕾欧娜", context: "shop" },
     { incorrect: "营欧娜", correct: "蕾欧娜", context: "shop" },
+    { incorrect: "伊瑞尔", correct: "伊泽瑞尔", context: "shop" },
+    { incorrect: "丽桑蛙", correct: "丽桑卓", context: "shop" },
     { incorrect: "卡宝尔", correct: "卡密尔", context: "shop" },
     { incorrect: "卡室尔", correct: "卡密尔", context: "shop" },
 ];

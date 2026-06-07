@@ -1,4 +1,10 @@
-import { fightBoardSlotPoint, GameStageType, hexSlot, type GameStageResult, type SimplePoint } from "../TFTProtocol";
+import {
+    fightBoardSlotPoint,
+    GameStageType,
+    hexSlot,
+    type GameStageResult,
+    type SimplePoint,
+} from "../TFTProtocol";
 import { tftOperator } from "../TftOperator";
 import { androidAdbCapture } from "../services/AndroidAdbCapture";
 import type { BenchLocation, BoardLocation, LootOrb } from "../tft";
@@ -12,7 +18,14 @@ import { windowHelper } from "../utils/WindowHelper";
 import { normalizeRuntimeState } from "../core/StateNormalizer";
 import type { ActionPlan, AdapterHealth, GameAdapter, ObservedState, PlatformTarget } from "../core/types";
 import { detectAndroidLootOrbsFromScreenshot } from "../utils/AndroidLootOrbDetector";
-import { shouldReadShopDuringAndroidObserve } from "./AndroidObservePolicy";
+import {
+    shouldReadShopDuringAndroidObserve,
+    shouldUseShopTemplateFallbackDuringAndroidObserve,
+} from "./AndroidObservePolicy";
+import { isLikelyOpponentBoardViewForHud, isLikelyOpponentBoardViewForLoot } from "./AndroidOpponentBoardView";
+import { buildAndroidSafeObserveAutoDeploySwipes } from "./AndroidAutoDeployPoints";
+import { androidBuyExpPoint, androidRefreshShopPoint, androidShopSlotPoints } from "./AndroidShopControls";
+import { sortAndroidActionsForExecution } from "./AndroidActionPlanner";
 
 export interface AndroidEmulatorAdapterOptions {
     safeObserve?: boolean;
@@ -26,6 +39,7 @@ export interface AndroidEmulatorAdapterOptions {
 
 const DEFAULT_MIN_RELIABLE_ANDROID_WINDOW_WIDTH = 850;
 const DEFAULT_MIN_RELIABLE_ANDROID_WINDOW_HEIGHT = 450;
+const ANDROID_SCOREBOARD_SELF_ROW_POINT: SimplePoint = { x: 0.93, y: 0.80 };
 
 function isBoardLocation(value: unknown): value is BoardLocation {
     return typeof value === "string" && /^R[1-4]_C[1-7]$/.test(value);
@@ -80,6 +94,10 @@ function normalizeBuySlotIndex(rawSlot: number): number {
 export class AndroidEmulatorAdapter implements GameAdapter {
     public readonly target: PlatformTarget = "ANDROID_EMULATOR";
     private attached = false;
+    private lastLiveHud: {
+        levelInfo?: { level: number; currentXp: number; totalXp: number };
+        gold?: number;
+    } | null = null;
 
     constructor(private readonly options: AndroidEmulatorAdapterOptions = {}) {}
 
@@ -130,6 +148,7 @@ export class AndroidEmulatorAdapter implements GameAdapter {
         }
 
         if (foregroundState && foregroundState.state !== "LIVE_CONTENT") {
+            this.lastLiveHud = null;
             return normalizeRuntimeState({
                 client: GameClient.ANDROID,
                 target: this.target,
@@ -151,25 +170,40 @@ export class AndroidEmulatorAdapter implements GameAdapter {
             });
         }
 
+        await this.returnToOwnBoardBeforeHudReadIfNeeded();
+
         if (!this.attached) {
             await this.attach();
         }
 
         const readShop = shouldReadShopDuringAndroidObserve(this.options);
+        const useShopTemplateFallback = shouldUseShopTemplateFallbackDuringAndroidObserve(this.options);
         const stageResult = await this.readConfirmedStage();
-        const [levelInfo, gold, shopUnits] = await Promise.all([
-            tftOperator.getLevelInfo(),
-            tftOperator.getCoinCount(),
-            readShop ? this.readObservedComponent("shop", () => tftOperator.getShopInfo(), []) : Promise.resolve([]),
-        ]);
-        const lootOrbs = await this.readLootOrbs(stageResult, levelInfo, gold);
-        const [benchUnits, boardUnits, equips] = this.options.safeObserve
-            ? [[], [], []]
-            : await Promise.all([
-                this.readObservedComponent("bench", () => tftOperator.getBenchInfo(), []),
-                this.readObservedComponent("board", () => tftOperator.getFightBoardInfo(), []),
-                this.readObservedComponent("equip", () => tftOperator.getEquipInfo(), []),
-            ]);
+        const levelInfo = await tftOperator.getLevelInfo();
+        const gold = await tftOperator.getCoinCount();
+        const effectiveLevelInfo = levelInfo ?? this.lastLiveHud?.levelInfo ?? null;
+        const effectiveGold = gold ?? this.lastLiveHud?.gold ?? null;
+        if (!levelInfo && effectiveLevelInfo) {
+            logger.debug(`[AndroidEmulatorAdapter] 沿用上一帧安卓等级: Lv.${effectiveLevelInfo.level}, 经验 ${effectiveLevelInfo.currentXp}/${effectiveLevelInfo.totalXp}`);
+        }
+        if (gold === null && effectiveGold !== null) {
+            logger.debug(`[AndroidEmulatorAdapter] 沿用上一帧安卓金币: ${effectiveGold}`);
+        }
+        const shopUnits = readShop
+            ? await this.readObservedComponent("shop", () => tftOperator.getShopInfo({
+                templateFallback: useShopTemplateFallback,
+            }), [])
+            : [];
+        const lootOrbs = await this.readLootOrbs(stageResult, effectiveLevelInfo, effectiveGold);
+        const benchUnits = this.options.safeObserve
+            ? []
+            : await this.readObservedComponent("bench", () => tftOperator.getBenchInfo(), []);
+        const boardUnits = this.options.safeObserve
+            ? []
+            : await this.readObservedComponent("board", () => tftOperator.getFightBoardInfo(), []);
+        const equips = this.options.safeObserve
+            ? []
+            : await this.readObservedComponent("equip", () => tftOperator.getEquipInfo(), []);
 
         // Live stability note: stageResult.type may be UNKNOWN when OCR crops fall outside expected
         // regions due to emulator resolution mismatch, shop-open UI shift, or frame timing.
@@ -201,15 +235,15 @@ export class AndroidEmulatorAdapter implements GameAdapter {
             );
         }
 
-        return normalizeRuntimeState({
+        const state = normalizeRuntimeState({
             client: GameClient.ANDROID,
             target: this.target,
             stageText: stageResult.stageText,
             stageType: stageResult.type,
-            level: levelInfo?.level ?? 1,
-            currentXp: levelInfo?.currentXp ?? 0,
-            totalXp: levelInfo?.totalXp ?? 0,
-            gold: gold ?? 0,
+            level: effectiveLevelInfo?.level ?? 1,
+            currentXp: effectiveLevelInfo?.currentXp ?? 0,
+            totalXp: effectiveLevelInfo?.totalXp ?? 0,
+            gold: effectiveGold ?? 0,
             shopUnits,
             benchUnits,
             boardUnits,
@@ -219,6 +253,13 @@ export class AndroidEmulatorAdapter implements GameAdapter {
                 lootOrbs,
             },
         });
+        if (levelInfo || gold !== null) {
+            this.lastLiveHud = {
+                levelInfo: levelInfo ?? this.lastLiveHud?.levelInfo,
+                gold: gold ?? this.lastLiveHud?.gold,
+            };
+        }
+        return state;
     }
 
     private async readForegroundState(): Promise<{
@@ -347,6 +388,7 @@ export class AndroidEmulatorAdapter implements GameAdapter {
     }
 
     private async pickUpLootOrbs(maxCount: number = 4): Promise<void> {
+        await this.returnToOwnBoardBeforeLootIfNeeded();
         const lootOrbs = await this.readLootOrbs();
         if (lootOrbs.length === 0) {
             logger.info("[AndroidEmulatorAdapter] PICK_LOOT 未检测到可拾取战利品球");
@@ -375,14 +417,66 @@ export class AndroidEmulatorAdapter implements GameAdapter {
         logger.info(`[AndroidEmulatorAdapter] PICK_LOOT 准备拾取 ${sortedOrbs.length}/${lootOrbs.length} 个战利品球`);
         for (const orb of sortedOrbs) {
             logger.info(`[AndroidEmulatorAdapter] PICK_LOOT ${orb.type} (${orb.x}, ${orb.y})`);
-            await mouseController.clickAt({ x: orb.x, y: orb.y }, MouseButtonType.RIGHT);
+            const tapped = await androidAdbCapture.tapRelative({ x: orb.x, y: orb.y });
+            if (!tapped) {
+                await mouseController.clickAt({ x: orb.x, y: orb.y }, MouseButtonType.RIGHT);
+            }
             await sleep(900);
         }
-        await tftOperator.selfResetPosition();
+    }
+
+    private async returnToOwnBoardBeforeLootIfNeeded(): Promise<boolean> {
+        try {
+            const screenshot = await androidAdbCapture.capturePng();
+            if (!screenshot) {
+                return false;
+            }
+            const classification = await classifyAndroidWindowScreenshot(screenshot);
+            if (!isLikelyOpponentBoardViewForLoot(classification)) {
+                return false;
+            }
+            const tapped = await androidAdbCapture.tapRelative(ANDROID_SCOREBOARD_SELF_ROW_POINT);
+            logger.info(
+                `[AndroidEmulatorAdapter] PICK_LOOT 检测到右侧玩家列表视角，先返回自己棋盘 tapped=${tapped}`
+            );
+            if (tapped) {
+                await sleep(1200);
+            }
+            return tapped;
+        } catch (error: unknown) {
+            logger.warn(`[AndroidEmulatorAdapter] 返回自己棋盘检查失败: ${error instanceof Error ? error.message : String(error)}`);
+            return false;
+        }
+    }
+
+    private async returnToOwnBoardBeforeHudReadIfNeeded(): Promise<boolean> {
+        try {
+            const screenshot = await androidAdbCapture.capturePng();
+            if (!screenshot) {
+                return false;
+            }
+            const classification = await classifyAndroidWindowScreenshot(screenshot);
+            if (!isLikelyOpponentBoardViewForHud(classification)) {
+                return false;
+            }
+            const tapped = await androidAdbCapture.tapRelative(ANDROID_SCOREBOARD_SELF_ROW_POINT);
+            logger.info(
+                `[AndroidEmulatorAdapter] HUD 读取前检测到右侧玩家列表视角，先返回自己棋盘 tapped=${tapped}`
+            );
+            if (tapped) {
+                await sleep(1200);
+            }
+            return tapped;
+        } catch (error: unknown) {
+            logger.warn(`[AndroidEmulatorAdapter] HUD 读取前返回自己棋盘检查失败: ${error instanceof Error ? error.message : String(error)}`);
+            return false;
+        }
     }
 
     public async execute(actions: ActionPlan[]): Promise<void> {
-        const sorted = [...actions].sort((a, b) => b.priority - a.priority || a.tick - b.tick);
+        const sorted = sortAndroidActionsForExecution(actions);
+        let buyActionsExecuted = 0;
+        let levelUpClicksExecuted = 0;
 
         for (const action of sorted) {
             switch (action.type) {
@@ -393,23 +487,39 @@ export class AndroidEmulatorAdapter implements GameAdapter {
                     }
                     const slot = normalizeBuySlotIndex(rawSlot);
                     if (slot >= 1 && slot <= 5) {
-                        await tftOperator.buyAtSlot(slot);
+                        const slotKey = `SHOP_SLOT_${slot}` as keyof typeof androidShopSlotPoints;
+                        const targetPoint = androidShopSlotPoints[slotKey];
+                        const tapped = await androidAdbCapture.tapRelative(targetPoint);
+                        if (!tapped) {
+                            await tftOperator.buyAtSlot(slot);
+                        }
+                        buyActionsExecuted += 1;
+                        await sleep(80);
                     }
                     break;
                 }
                 case "ROLL": {
                     const count = Math.min(3, Math.max(1, parseSlotIndex(action.payload.count) ?? 1));
                     for (let i = 0; i < count; i += 1) {
-                        await tftOperator.refreshShop();
-                        await sleep(50);
+                        logger.info(`[AndroidEmulatorAdapter] ADB 刷新商店 ${i + 1}/${count}`);
+                        const tapped = await androidAdbCapture.tapRelative(androidRefreshShopPoint);
+                        if (!tapped) {
+                            await tftOperator.refreshShop();
+                        }
+                        await sleep(120);
                     }
                     break;
                 }
                 case "LEVEL_UP": {
-                    const count = Math.min(3, Math.max(1, parseSlotIndex(action.payload.count) ?? 1));
+                    const count = Math.min(6, Math.max(1, parseSlotIndex(action.payload.count) ?? 1));
                     for (let i = 0; i < count; i += 1) {
-                        await tftOperator.buyExperience();
-                        await sleep(50);
+                        logger.info(`[AndroidEmulatorAdapter] ADB 购买经验值 ${i + 1}/${count}`);
+                        const tapped = await androidAdbCapture.tapRelative(androidBuyExpPoint);
+                        if (!tapped) {
+                            await tftOperator.buyExperience();
+                        }
+                        levelUpClicksExecuted += 1;
+                        await sleep(120);
                     }
                     break;
                 }
@@ -452,12 +562,20 @@ export class AndroidEmulatorAdapter implements GameAdapter {
                 case "PICK_AUGMENT": {
                     const directPoint = parseNormalizedPoint(action.payload.x, action.payload.y);
                     if (directPoint) {
-                        await mouseController.clickAt(directPoint, MouseButtonType.LEFT);
+                        const tapped = await androidAdbCapture.tapRelative(directPoint);
+                        if (!tapped) {
+                            await mouseController.clickAt(directPoint, MouseButtonType.LEFT);
+                        }
+                        await sleep(1800);
                         break;
                     }
                     const slot = Math.max(1, Math.min(3, parseSlotIndex(action.payload.slot) ?? 2));
                     const slotKey = `SLOT_${slot}` as keyof typeof hexSlot;
-                    await mouseController.clickAt(hexSlot[slotKey], MouseButtonType.LEFT);
+                    const tapped = await androidAdbCapture.tapRelative(hexSlot[slotKey]);
+                    if (!tapped) {
+                        await mouseController.clickAt(hexSlot[slotKey], MouseButtonType.LEFT);
+                    }
+                    await sleep(1800);
                     break;
                 }
                 case "PICK_LOOT": {
@@ -470,6 +588,40 @@ export class AndroidEmulatorAdapter implements GameAdapter {
                 default:
                     break;
             }
+        }
+
+        if (
+            this.options.safeObserve === true &&
+            (buyActionsExecuted > 0 || levelUpClicksExecuted > 0) &&
+            !sorted.some((action) => action.type === "MOVE")
+        ) {
+            await this.autoDeployLikelyBenchUnitsAfterEconomyAction(buyActionsExecuted, levelUpClicksExecuted);
+        }
+    }
+
+    private async autoDeployLikelyBenchUnitsAfterEconomyAction(
+        buyActionsExecuted: number,
+        levelUpClicksExecuted: number
+    ): Promise<void> {
+        const swipes = buildAndroidSafeObserveAutoDeploySwipes(
+            Math.max(buyActionsExecuted, levelUpClicksExecuted)
+        );
+
+        logger.info(
+            `[AndroidEmulatorAdapter] safeObserve 经济动作后盲上场 ${swipes.length} 个候选备战席槽位，` +
+            `避免升人口/买棋子后空人口或闲置: buy=${buyActionsExecuted}, xp=${levelUpClicksExecuted}`
+        );
+
+        for (const swipe of swipes) {
+            const moved = await androidAdbCapture.swipeRelative(
+                swipe.fromPoint,
+                swipe.toPoint,
+                450
+            );
+            if (!moved) {
+                await tftOperator.moveBenchToBoard(swipe.fromBench, swipe.toBoard);
+            }
+            await sleep(120);
         }
     }
 

@@ -39,6 +39,61 @@ test("android loot orb detector finds current white and blue question orbs", asy
     assert.ok(orbs.some((orb) => orb.type === "blue"));
 });
 
+test("android loot orb detector finds shop-obscured blue question orbs", async () => {
+    const screenshot = await fs.readFile(path.resolve(
+        process.cwd(),
+        "reports",
+        "goal-continue-20260603-current-hud-inconsistent.png"
+    ));
+
+    const orbs = await detectAndroidLootOrbsFromScreenshot(screenshot);
+
+    assert.ok(orbs.length >= 1);
+    assert.ok(orbs.every((orb) => orb.type === "blue"));
+    assert.ok(orbs.some((orb) => orb.y > 0.55));
+});
+
+test("android loot orb detector ignores shop-open board texture and odds panel", async () => {
+    const screenshot = await fs.readFile(path.resolve(
+        process.cwd(),
+        "reports",
+        "goal-continue-20260603-heartbeat-current-safe-pull.png"
+    ));
+
+    const orbs = await detectAndroidLootOrbsFromScreenshot(screenshot);
+
+    assert.equal(orbs.length, 0);
+});
+
+test("android loot orb detector finds panel-open blue question orbs", async () => {
+    const screenshot = await fs.readFile(path.resolve(
+        process.cwd(),
+        "reports",
+        "goal-continue-20260603-after-augment-fix.png"
+    ));
+
+    const orbs = await detectAndroidLootOrbsFromScreenshot(screenshot);
+
+    assert.ok(orbs.length >= 3);
+    assert.ok(orbs.every((orb) => orb.type === "blue"));
+    assert.ok(orbs.some((orb) => orb.x > 0.70 && orb.y < 0.50));
+});
+
+test("android loot orb detector finds dark-board blue question orbs", async () => {
+    const screenshot = await fs.readFile(path.resolve(
+        process.cwd(),
+        "reports",
+        "goal-continue-20260603-heartbeat-after-loot-fp-run-timeout.png"
+    ));
+
+    const orbs = await detectAndroidLootOrbsFromScreenshot(screenshot);
+
+    assert.ok(orbs.length >= 2);
+    assert.ok(orbs.every((orb) => orb.type === "blue"));
+    assert.ok(orbs.some((orb) => orb.x > 0.70 && orb.y > 0.54));
+    assert.ok(orbs.some((orb) => orb.x < 0.60 && orb.y > 0.60));
+});
+
 test("android loot orb detector ignores ordinary shop and board colors", async () => {
     const fixtureNames = [
         "na_live_shop_2_1_no_augment_no_loot_01.png",

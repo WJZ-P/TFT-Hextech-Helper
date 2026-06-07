@@ -118,6 +118,17 @@ export function normalizeAndroidForegroundObservation(
         };
     }
 
+    if (classification.augmentChoiceVisible) {
+        return {
+            state: "LIVE_CONTENT",
+            verification: "VERIFIED_REAL",
+            source: "SCREENSHOT_CLASSIFIER",
+            reason: "Live augment or encounter choice overlay detected",
+            anchors: ["augment-choice-overlay"],
+            rawClassification: classification,
+        };
+    }
+
     if (classification.state === "GAME_OVER") {
         return {
             state: "GAME_OVER",
@@ -162,12 +173,17 @@ export function normalizeAndroidForegroundObservation(
 
     if (classification.state === "LOBBY") {
         if (classification.dismissOverlayPoint) {
+            const isSettingsOverlay = classification.lobbyVariant === "SETTINGS_OPEN";
             return {
                 state: "LOBBY",
                 verification: "VERIFIED_REAL",
                 source: "SCREENSHOT_CLASSIFIER",
-                reason: "Lobby detected with side menu open; recover by dismissing the overlay before queueing",
-                anchors: ["side-menu-overlay", "lobby-backdrop"],
+                reason: isSettingsOverlay
+                    ? "Settings panel detected; recover by dismissing the overlay before queueing"
+                    : "Lobby detected with side menu open; recover by dismissing the overlay before queueing",
+                anchors: isSettingsOverlay
+                    ? ["settings-panel", "lobby-backdrop"]
+                    : ["side-menu-overlay", "lobby-backdrop"],
                 actionPoints: { DISMISS_OVERLAY: { ...classification.dismissOverlayPoint } },
                 rawClassification: classification,
             };

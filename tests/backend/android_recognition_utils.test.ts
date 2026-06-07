@@ -40,6 +40,12 @@ test("parseAndroidStageVisualFromFrame reads live shop stage when OCR is noisy",
     assert.equal(await parseAndroidStageVisualFromFrame(frame), "3-1");
 });
 
+test("parseAndroidStageVisualFromFrame reads live stage-four shop combat", async () => {
+    const frame = await fs.readFile("reports/goal-current-20260604-after-stage32-one-tick/current.png");
+
+    assert.equal(await parseAndroidStageVisualFromFrame(frame), "4-1");
+});
+
 test("resolveChampionNameFromText accepts exact and near-miss android OCR", () => {
     const exact = resolveChampionNameFromText("德莱文", chessData);
     const fuzzy = resolveChampionNameFromText("特琳", chessData);

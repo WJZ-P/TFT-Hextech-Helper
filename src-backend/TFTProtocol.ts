@@ -140,31 +140,37 @@ export const androidDetailChampionNameRegion = {
 // 安卓真机商店卡牌中的名称区域（基于 2026-03-15 真机录屏校准）
 export const androidShopSlotNameRegions = {
     SLOT_1: {
-        leftTop: { x: 0.250, y: 0.326 },
-        rightBottom: { x: 0.322, y: 0.383 }
+        leftTop: { x: 0.135, y: 0.350 },
+        rightBottom: { x: 0.225, y: 0.405 }
     },
     SLOT_2: {
-        leftTop: { x: 0.385, y: 0.323 },
-        rightBottom: { x: 0.478, y: 0.387 }
+        leftTop: { x: 0.305, y: 0.350 },
+        rightBottom: { x: 0.420, y: 0.405 }
     },
     SLOT_3: {
-        leftTop: { x: 0.525, y: 0.323 },
-        rightBottom: { x: 0.617, y: 0.387 }
+        leftTop: { x: 0.480, y: 0.350 },
+        rightBottom: { x: 0.550, y: 0.405 }
     },
     SLOT_4: {
-        leftTop: { x: 0.663, y: 0.323 },
-        rightBottom: { x: 0.778, y: 0.387 }
+        leftTop: { x: 0.655, y: 0.350 },
+        rightBottom: { x: 0.735, y: 0.405 }
     },
     SLOT_5: {
-        leftTop: { x: 0.808, y: 0.326 },
-        rightBottom: { x: 0.873, y: 0.383 }
+        leftTop: { x: 0.825, y: 0.350 },
+        rightBottom: { x: 0.900, y: 0.405 }
     },
 }
 
 // 安卓真机 HUD 金币数字区域（基于 2026-03-15 真机录屏校准）
 export const androidHudGoldTextRegion = {
-    leftTop: { x: 0.9019, y: 0.7833 },
-    rightBottom: { x: 0.9577, y: 0.9125 }
+    leftTop: { x: 0.6500, y: 0.0000 },
+    rightBottom: { x: 0.7000, y: 0.0550 }
+}
+
+// 安卓真机商店打开时右下角金币数字区域
+export const androidHudBottomGoldTextRegion = {
+    leftTop: { x: 0.9100, y: 0.8500 },
+    rightBottom: { x: 0.9850, y: 0.9700 }
 }
 
 // 安卓真机 HUD 经验文本区域（基于 2026-03-15 真机录屏校准）

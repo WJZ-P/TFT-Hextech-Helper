@@ -4,6 +4,7 @@ export interface TftChampionData {
     englishId?: string;
     cost: number;
     traits: string[];
+    attackRange?: number;
     imageUrl?: string;
 }
 

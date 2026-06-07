@@ -23,6 +23,16 @@ import { getMatChannels, resizeOpenCvMat } from "./tft/recognition/OpenCvMatUtil
 // Type alias for cv namespace usage in type annotations
 type CvMat = OpencvType.Mat;
 
+interface ShopInfoOptions {
+    templateFallback?: boolean;
+}
+
+interface AndroidGoldOcrCandidate {
+    text: string;
+    count: number;
+    region: string;
+}
+
 // Prefer a preinstalled global cv (set by electron preload during tests). If
 // absent, we'll dynamically import the heavy @techstark/opencv-js package at
 // runtime except when running the GUI verification harness (TFT_GUI_VERIFY=1)
@@ -33,6 +43,7 @@ let cv: typeof OpencvType | undefined = (globalThis as unknown as Record<string,
 
 // 协议层导入
 import {
+    androidHudBottomGoldTextRegion,
     androidHudGoldTextRegion,
     androidHudXpTextRegion,
     androidScoreboardRegion,
@@ -118,6 +129,7 @@ import {
     isValidStageFormat,
 } from "./tft";
 import { settingsStore, GameClient } from "./utils/SettingsStore";
+import { tftDataService } from "./services/TftDataService";
 import type {
     IdentifiedEquip,
     BenchUnit,
@@ -235,8 +247,51 @@ class TftOperator {
      */
     private getActiveChessData(): Record<string, TFTUnit> {
         const mode = settingsStore.get('tftMode') as TFTMode || TFTMode.NORMAL;
-        this.currentChessData = getChessDataForMode(mode);
+        const baseChessData = getChessDataForMode(mode);
+        const gameClient = settingsStore.get('gameClient') as GameClient;
+
+        if (gameClient !== GameClient.ANDROID || mode === TFTMode.S4_RUISHOU) {
+            this.currentChessData = baseChessData;
+            return this.currentChessData;
+        }
+
+        this.currentChessData = {
+            ...baseChessData,
+            ...this.getAndroidSnapshotChessData(),
+        };
         return this.currentChessData;
+    }
+
+    private getAndroidSnapshotChessData(): Record<string, TFTUnit> {
+        try {
+            const snapshot = tftDataService.getSnapshot();
+            const result: Record<string, TFTUnit> = {};
+
+            for (const champion of snapshot.champions) {
+                const displayName = champion.name?.trim();
+                if (!displayName) {
+                    continue;
+                }
+
+                result[displayName] = {
+                    displayName,
+                    englishId: champion.englishId ?? champion.id,
+                    price: champion.cost,
+                    traits: champion.traits ?? [],
+                    origins: champion.traits ?? [],
+                    classes: [],
+                    attackRange: champion.attackRange ?? 1,
+                };
+            }
+
+            return result;
+        } catch (error: unknown) {
+            logger.warn(
+                `[TftOperator] 安卓动态棋子数据读取失败，回退静态表: ` +
+                `${error instanceof Error ? error.message : String(error)}`
+            );
+            return {};
+        }
     }
 
     private canUseOpenCvNow(): boolean {
@@ -848,11 +903,12 @@ class TftOperator {
      * @description 扫描商店 5 个槽位，通过 OCR + 模板匹配识别棋子
      * @returns 商店中的棋子数组 (空槽位为 null)
      */
-    public async getShopInfo(): Promise<(TFTUnit | null)[]> {
+    public async getShopInfo(options: ShopInfoOptions = {}): Promise<(TFTUnit | null)[]> {
         logger.info("[TftOperator] 正在扫描商店中的 5 个槽位...");
         const shopUnits: (TFTUnit | null)[] = [];
         // 获取当前赛季对应的棋子数据集
         const chessData = this.getActiveChessData();
+        const useTemplateFallback = options.templateFallback ?? true;
 
         for (let i = 1; i <= 5; i++) {
             const slotKey = `SLOT_${i}` as keyof typeof shopSlotNameRegions;
@@ -861,7 +917,8 @@ class TftOperator {
                 region,
                 chessData,
                 "SHOP",
-                `商店槽位 ${i}`
+                `商店槽位 ${i}`,
+                useTemplateFallback
             );
             const cleanName = recognition.cleanName;
             const tftUnit = recognition.unit;
@@ -1768,7 +1825,8 @@ class TftOperator {
         region: Region,
         chessData: Record<string, TFTUnit>,
         profile: "SHOP" | "DETAIL",
-        label: string
+        label: string,
+        useTemplateFallback: boolean = true
     ): Promise<{ unit: TFTUnit | null; cleanName: string; source: "OCR" | "TEMPLATE" | "NONE" }> {
         const rawPng = await screenCapture.captureRegionAsPng(region, false);
         const variants = await buildChampionOcrVariants(rawPng, profile);
@@ -1797,7 +1855,7 @@ class TftOperator {
             }
         }
 
-        if (templateLoader.isReady()) {
+        if (useTemplateFallback && templateLoader.isReady()) {
             const templateBuffer = variants.find((variant) => variant.label.includes("gray"))?.buffer ?? rawPng;
             const mat = await screenCapture.pngBufferToMat(templateBuffer);
 
@@ -2306,8 +2364,8 @@ class TftOperator {
      */
     private tryFixMisrecognizedXp(text: string): { level: number; currentXp: number; totalXp: number } | null {
         // TFT 各等级升级所需经验（totalXp 的所有合法值）
-        // 等级3=2, 等级4=6, 等级5=10, 等级6=20, 等级7=36, 等级8=60, 等级9=68, 等级10=68
-        const VALID_TOTAL_XP = new Set([2, 6, 10, 20, 36, 60, 68]);
+        // 等级3=2, 等级4=6, 等级5=10/18/20, 等级7=36, 等级8=60, 等级9=68, 等级10=68
+        const VALID_TOTAL_XP = new Set([2, 6, 10, 18, 20, 36, 60, 68]);
         
         // "/" 可能被误识别的字符（斜杠形状类似 1、7，有时也会识别成 0）
         const SLASH_MISRECOGNIZED_CHARS = ['1', '7', '0'];
@@ -2472,14 +2530,46 @@ class TftOperator {
     }
 
     private async getAndroidCoinCount(): Promise<number | null> {
-        const absoluteRegion = screenCapture.toAbsoluteRegion(androidHudGoldTextRegion);
+        const topHudCandidates = await this.readAndroidGoldCandidates("top-hud", androidHudGoldTextRegion);
+        const bottomBadgeCandidates = await this.readAndroidGoldCandidates(
+            "bottom-badge",
+            androidHudBottomGoldTextRegion
+        );
+
+        const bottomBest = bottomBadgeCandidates.find((candidate) => candidate.count >= 2);
+        const topBest = topHudCandidates[0];
+        const best = bottomBest ?? topBest ?? bottomBadgeCandidates[0];
+
+        if (!best) {
+            return null;
+        }
+
+        const coinCount = parseInt(best.text, 10);
+        if (!Number.isFinite(coinCount)) {
+            return null;
+        }
+
+        logger.info(`[TftOperator] 安卓金币识别成功: ${coinCount} (${best.region}, support=${best.count})`);
+        return coinCount;
+    }
+
+    private async readAndroidGoldCandidates(
+        label: string,
+        region: typeof androidHudGoldTextRegion
+    ): Promise<AndroidGoldOcrCandidate[]> {
+        const absoluteRegion = screenCapture.toAbsoluteRegion(region);
         const rawPng = await screenCapture.captureRegionAsPng(absoluteRegion, false);
         const variants = await buildAndroidHudDigitVariants(rawPng);
         const candidates: string[] = [];
 
         for (const variant of variants) {
             const rawText = await ocrService.recognize(variant.buffer, OcrWorkerType.HUD_DIGITS);
-            const normalizedText = extractLikelyHudNumber(rawText, { min: 0, max: 200, maxDigits: 3 });
+            const normalizedText = extractLikelyHudNumber(rawText, {
+                min: 0,
+                max: 200,
+                maxDigits: 3,
+                preferSuffix: true,
+            });
             if (normalizedText) {
                 candidates.push(normalizedText);
             }
@@ -2492,19 +2582,9 @@ class TftOperator {
 
         const best = [...grouped.entries()]
             .sort((left, right) => right[1] - left[1])
-            .map(([text]) => text)[0];
+            .map(([text, count]) => ({ text, count, region: label }));
 
-        if (!best) {
-            return null;
-        }
-
-        const coinCount = parseInt(best, 10);
-        if (!Number.isFinite(coinCount)) {
-            return null;
-        }
-
-        logger.info(`[TftOperator] 安卓金币识别成功: ${coinCount}`);
-        return coinCount;
+        return best;
     }
 
     public async getSelfHp(): Promise<number | null> {

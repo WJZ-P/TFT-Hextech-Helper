@@ -30,6 +30,10 @@ function classifyLootPixel(red: number, green: number, blue: number): PixelClass
         return { matched: true, type: "blue" };
     }
 
+    if (blue > 85 && green > 55 && red < 130 && blue > red + 25 && blue > green + 5) {
+        return { matched: true, type: "blue" };
+    }
+
     if (red > 145 && green > 105 && green < 230 && blue < 130 && red > blue + 55) {
         return { matched: true, type: "gold" };
     }
@@ -216,12 +220,16 @@ export async function detectAndroidLootOrbsFromScreenshot(screenshot: Buffer): P
             };
         })
         .filter((orb) => {
+            const purePurpleBoardTexture =
+                orb.type === "blue" &&
+                orb.darkRatio <= 0.01 &&
+                orb.purpleRatio >= 0.90;
             const likelyProbabilityTriangle =
                 orb.y < 0.53 &&
                 orb.width <= 10 &&
                 orb.height <= 8 &&
                 orb.darkRatio > 0.45;
-            const lowPurpleLootSignal = orb.darkRatio >= 0.04 && orb.purpleRatio <= 0.35;
+            const lowPurpleLootSignal = orb.darkRatio >= 0.04 && orb.darkRatio <= 0.32 && orb.purpleRatio <= 0.35;
             const roundBlueLootSignal =
                 orb.confidence >= 0.45 &&
                 orb.y >= 0.53 &&
@@ -235,6 +243,33 @@ export async function detectAndroidLootOrbsFromScreenshot(screenshot: Buffer): P
                 orb.height >= 9 &&
                 orb.darkRatio <= 0.10 &&
                 orb.purpleRatio >= 0.50;
+            const partiallyOccludedBlueQuestionSignal =
+                orb.confidence >= 0.18 &&
+                orb.y >= 0.55 &&
+                orb.width >= 5 &&
+                orb.height >= 8 &&
+                orb.darkRatio <= 0.08 &&
+                orb.purpleRatio >= 0.60;
+            const topObscuredBlueQuestionSignal =
+                orb.confidence >= 0.24 &&
+                orb.x >= 0.62 &&
+                orb.x <= 0.76 &&
+                orb.y >= 0.46 &&
+                orb.y <= 0.52 &&
+                orb.width >= 12 &&
+                orb.height >= 12 &&
+                orb.darkRatio >= 0.45 &&
+                orb.purpleRatio >= 0.25;
+            const darkBoardBlueQuestionSignal =
+                orb.confidence >= 0.17 &&
+                orb.x >= 0.40 &&
+                orb.y >= 0.54 &&
+                orb.y <= 0.74 &&
+                orb.width >= 5 &&
+                orb.height >= 7 &&
+                orb.darkRatio >= 0.45 &&
+                orb.darkRatio <= 0.65 &&
+                orb.purpleRatio <= 0.08;
             const whiteQuestionSignal =
                 orb.type === "normal" &&
                 orb.confidence >= 0.55 &&
@@ -248,14 +283,22 @@ export async function detectAndroidLootOrbsFromScreenshot(screenshot: Buffer): P
                 orb.x <= 0.80 &&
                 orb.y >= 0.44 &&
                 orb.y <= 0.78 &&
-                !likelyProbabilityTriangle &&
+                !purePurpleBoardTexture &&
+                (!likelyProbabilityTriangle || topObscuredBlueQuestionSignal) &&
                 (
                     (
                         orb.type === "blue" &&
                         (
-                            (orb.confidence >= 0.25 && lowPurpleLootSignal) ||
+                            (
+                                orb.confidence >= 0.25 &&
+                                lowPurpleLootSignal &&
+                                (orb.y >= 0.53 || (orb.width >= 12 && orb.height >= 12))
+                            ) ||
                             roundBlueLootSignal ||
-                            smallBlueQuestionSignal
+                            smallBlueQuestionSignal ||
+                            partiallyOccludedBlueQuestionSignal ||
+                            topObscuredBlueQuestionSignal ||
+                            darkBoardBlueQuestionSignal
                         )
                     ) ||
                     whiteQuestionSignal

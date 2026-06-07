@@ -45,6 +45,14 @@ test("TftDataProvider falls back to local snapshot when remote endpoints fail", 
     assert.ok(snapshot.champions.length > 0);
     assert.ok(snapshot.items.length > 0);
     assert.ok(snapshot.traits.length > 0);
+    assert.ok(
+        snapshot.champions.some((champion) => champion.name === "伊泽瑞尔"),
+        "fallback should include checked-in public current-set champions"
+    );
+    assert.equal(
+        snapshot.champions.find((champion) => champion.name === "纳尔")?.attackRange,
+        5
+    );
 });
 
 test("TftDataProvider maps remote champion/item/lineup payloads into snapshot", async () => {
@@ -59,6 +67,7 @@ test("TftDataProvider maps remote champion/item/lineup payloads into snapshot", 
                     price: "3",
                     races: "虚空",
                     jobs: "狙神",
+                    attackRange: "4",
                     imagePath: "//example.com/champ.png",
                 },
             ],
@@ -133,6 +142,7 @@ test("TftDataProvider maps remote champion/item/lineup payloads into snapshot", 
 
     assert.equal(snapshot.source, "remote");
     assert.equal(snapshot.champions[0]?.name, "测试英雄");
+    assert.equal(snapshot.champions[0]?.attackRange, 4);
     assert.equal(snapshot.items[0]?.name, "测试装备");
     assert.equal(snapshot.lineups[0]?.name, "测试阵容");
     assert.deepEqual(snapshot.lineups[0]?.coreChampions, ["测试英雄"]);

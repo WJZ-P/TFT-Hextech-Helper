@@ -354,6 +354,56 @@ export async function buildAndroidHudDigitVariants(rawBuffer: Buffer): Promise<O
     ];
 }
 
+export async function parseAndroidHudNumberVisualFromCrop(
+    rawBuffer: Buffer,
+    options?: {
+        maxDigits?: number;
+    }
+): Promise<string> {
+    const metadata = await sharp(rawBuffer).metadata();
+    const cropWidth = metadata.width ?? 0;
+    const cropHeight = metadata.height ?? 0;
+    if (cropWidth <= 0 || cropHeight <= 0) {
+        return "";
+    }
+
+    const scale = 8;
+    const { data, info } = await sharp(rawBuffer)
+        .resize({
+            width: cropWidth * scale,
+            height: cropHeight * scale,
+            kernel: "nearest",
+        })
+        .removeAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+
+    const foreground = new Uint8Array(info.width * info.height);
+    for (let offset = 0, pixelIndex = 0; offset < data.length; offset += info.channels, pixelIndex += 1) {
+        const red = data[offset];
+        const green = data[offset + 1];
+        const blue = data[offset + 2];
+        foreground[pixelIndex] = red >= 170 && green >= 170 && blue >= 170 ? 1 : 0;
+    }
+
+    const digitComponents = findVisualDigitComponents(foreground, info.width, info.height)
+        .filter((component) =>
+            component.centerY >= info.height * 0.20 &&
+            component.centerY <= info.height * 0.85 &&
+            component.height >= info.height * 0.32 &&
+            component.left >= info.width * 0.20
+        )
+        .sort((left, right) => left.left - right.left);
+
+    const maxDigits = options?.maxDigits ?? 3;
+    const digits = digitComponents
+        .map((component) => classifyVisualDigit(component))
+        .filter((digit): digit is number => digit !== null)
+        .join("");
+
+    return digits.slice(0, maxDigits);
+}
+
 export async function buildAndroidPlayerNameOcrVariants(rawBuffer: Buffer): Promise<OcrVariant[]> {
     return [
         { label: "player-name/raw", buffer: rawBuffer },
@@ -495,6 +545,7 @@ export function extractLikelyHudNumber(
         min?: number;
         max?: number;
         maxDigits?: number;
+        preferSuffix?: boolean;
     }
 ): string {
     const digits = normalizeHudDigitRawText(rawText).replace(/\D/g, "");
@@ -512,8 +563,13 @@ export function extractLikelyHudNumber(
     }
 
     for (let length = Math.min(maxDigits, digits.length); length >= 1; length -= 1) {
-        candidates.add(digits.slice(0, length));
-        candidates.add(digits.slice(-length));
+        if (options?.preferSuffix === true) {
+            candidates.add(digits.slice(-length));
+            candidates.add(digits.slice(0, length));
+        } else {
+            candidates.add(digits.slice(0, length));
+            candidates.add(digits.slice(-length));
+        }
     }
 
     for (const candidate of candidates) {
@@ -535,7 +591,7 @@ export function extractLikelyXpText(rawText: string): string {
         return "";
     }
 
-    const validTotals = [2, 6, 10, 20, 36, 60, 68, 76, 84];
+    const validTotals = [2, 6, 10, 18, 20, 36, 60, 68, 76, 84];
 
     const directMatch = normalized.match(/(\d{1,2})\/(\d{1,2})/);
     if (directMatch) {
@@ -579,6 +635,7 @@ export function inferLevelFromXpTotal(totalXp: number): number | null {
         [2, 2],
         [6, 3],
         [10, 4],
+        [18, 5],
         [20, 5],
         [36, 6],
         [60, 7],
@@ -801,6 +858,18 @@ function classifyVisualDigit(component: VisualDigitComponent): number | null {
         visualRegionDensity(component, 0.20, 0.82, 0.80, 1.00),
     ];
     const observed = densities.map((density) => density >= 0.35);
+    if (
+        observed[0] &&
+        !observed[1] &&
+        observed[2] &&
+        observed[3] &&
+        observed[4] &&
+        observed[5] &&
+        observed[6] &&
+        densities[6] < 0.42
+    ) {
+        return 4;
+    }
     const match = VISUAL_DIGIT_SEGMENTS
         .map(([digit, expected]) => ({
             digit,

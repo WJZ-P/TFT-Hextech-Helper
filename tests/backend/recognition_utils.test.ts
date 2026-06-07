@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import type { TFTUnit } from "../../src-backend/TFTProtocol";
 import { ocrCorrectionService } from "../../src-backend/tft/recognition/OcrCorrectionService";
 import {
+    extractLikelyHudNumber,
     extractLikelyStageText,
     resolveChampionNameFromText,
 } from "../../src-backend/tft/recognition/RecognitionUtils";
@@ -52,6 +53,12 @@ test("RecognitionUtils supports basic English champion aliases without breaking 
 
     assert.equal(result.name, "蕾欧娜");
     assert.equal(result.strategy, "EXACT");
+});
+
+test("RecognitionUtils can prefer suffix digits for noisy Android gold OCR", () => {
+    assert.equal(extractLikelyHudNumber("910", { min: 0, max: 200, maxDigits: 3, preferSuffix: true }), "10");
+    assert.equal(extractLikelyHudNumber("9121", { min: 0, max: 200, maxDigits: 3, preferSuffix: true }), "121");
+    assert.equal(extractLikelyHudNumber("910", { min: 0, max: 200, maxDigits: 3 }), "91");
 });
 
 test("TftNameNormalizer resolves English champion alias Ekko to 艾克", () => {

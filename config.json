@@ -9,10 +9,10 @@
 	"showDebugPage": false,
 	"window": {
 		"bounds": {
-			"x": 490,
-			"y": 115,
-			"width": 1025,
-			"height": 601
+			"x": -74,
+			"y": 155,
+			"width": 1029,
+			"height": 605
 		},
 		"isMaximized": false
 	},

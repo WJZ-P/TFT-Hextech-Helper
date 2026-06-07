@@ -210,6 +210,23 @@ function sleep(ms: number): Promise<void> {
 
 async function tapForegroundDecision(decision: AndroidForegroundDecision & { targetPoint: { x: number; y: number } }): Promise<boolean> {
     const tapped = await androidAdbCapture.tapRelative(decision.targetPoint);
+    if (decision.kind === "TAP_DISMISS_OVERLAY") {
+        await sleep(500);
+        const screenshot = await androidAdbCapture.capturePng();
+        if (screenshot) {
+            const classification = await classifyAndroidWindowScreenshot(screenshot);
+            if (classification.state === "LOBBY" && classification.lobbyVariant === "SETTINGS_OPEN") {
+                const backed = await androidAdbCapture.pressBack();
+                process.stderr.write(
+                    `[android:auto] foreground TAP_DISMISS_OVERLAY settings panel still present; ` +
+                    `pressed BACK fallback=${backed}\n`
+                );
+                return backed || tapped;
+            }
+        }
+        return tapped;
+    }
+
     if (decision.kind !== "TAP_GAME_OVER_EXIT") {
         return tapped;
     }
@@ -224,6 +241,19 @@ async function tapForegroundDecision(decision: AndroidForegroundDecision & { tar
     for (const point of retryPoints) {
         await sleep(250);
         anyTapped = (await androidAdbCapture.tapRelative(point)) || anyTapped;
+    }
+
+    await sleep(500);
+    const screenshot = await androidAdbCapture.capturePng();
+    if (screenshot) {
+        const classification = await classifyAndroidWindowScreenshot(screenshot);
+        const point = classification.gameOverExitPoint;
+        if (classification.state === "GAME_OVER" && point && point.x < 0.70) {
+            process.stderr.write(
+                `[android:auto] foreground TAP_GAME_OVER_EXIT center CTA still present; ` +
+                `retrying result CTA without BACK fallback\n`
+            );
+        }
     }
     return anyTapped;
 }
@@ -300,6 +330,29 @@ function writeStdout(payload: string): Promise<void> {
     });
 }
 
+function formatPlanSummary(plans: ActionPlan[]): string {
+    if (plans.length === 0) {
+        return "none";
+    }
+    return plans
+        .slice(0, 8)
+        .map((plan) => `${plan.type}@${plan.priority}:${JSON.stringify(plan.payload)}`)
+        .join(",");
+}
+
+function formatTraceSummary(result: { trace: { before: { stageText: string; stageType: string; level: number; currentXp: number; totalXp: number; gold: number; hp: number | null; shopSignature: string } } }): string {
+    const before = result.trace.before;
+    return [
+        `stage=${before.stageText || "unknown"}`,
+        `type=${before.stageType}`,
+        `level=${before.level}`,
+        `xp=${before.currentXp}/${before.totalXp}`,
+        `gold=${before.gold}`,
+        `hp=${before.hp ?? "unknown"}`,
+        `shop=${before.shopSignature || "empty"}`,
+    ].join(" ");
+}
+
 async function loadFixtureState(statePath: string): Promise<ObservedState> {
     const payload = JSON.parse(await fs.readFile(statePath, "utf8")) as {
         state?: ObservedState;
@@ -312,6 +365,16 @@ async function main(): Promise<void> {
     const { AndroidAutomationLoop } = await import("../src-backend/services/AndroidAutomationLoop");
 
     const fixtureState = args.statePath ? await loadFixtureState(args.statePath) : null;
+    if (!fixtureState) {
+        const { tftDataService } = await import("../src-backend/services/TftDataService");
+        await tftDataService.refresh(false).catch((error: unknown) => {
+            process.stderr.write(
+                `[android:auto] TFT data refresh failed; using local fallback: ` +
+                `${error instanceof Error ? error.message : String(error)}\n`
+            );
+        });
+    }
+
     const adapter = fixtureState ? new FixtureAndroidAdapter([fixtureState]) : undefined;
     const safeObserve = args.safeObserve ?? true;
     const liveAdapter = adapter
@@ -339,6 +402,10 @@ async function main(): Promise<void> {
         const result = await loop.runOnce();
         results.push(result);
         process.stderr.write(`[android:auto] tick ${tick + 1}/${args.ticks} ${result.status}: ${result.reason}\n`);
+        process.stderr.write(
+            `[android:auto] tick ${tick + 1}/${args.ticks} trace ${formatTraceSummary(result)} ` +
+            `plans=${formatPlanSummary(result.plans)}\n`
+        );
 
         if (result.status === "PAUSED" && shouldStopAfterPausedResult(result.reason)) {
             process.stderr.write(

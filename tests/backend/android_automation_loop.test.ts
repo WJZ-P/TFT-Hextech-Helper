@@ -226,6 +226,39 @@ test("AndroidAutomationLoop allows level-only maintenance on excess economy when
     assert.equal(result.verification?.ok, true);
 });
 
+test("AndroidAutomationLoop preserves level maintenance with loot when unknown-stage economy is excessive", async () => {
+    const before = buildState({
+        stageText: "",
+        stageType: GameStageType.UNKNOWN,
+        level: 5,
+        currentXp: 16,
+        totalXp: 20,
+        gold: 94,
+        metadata: {
+            hasValidStage: false,
+            lootOrbs: [{ x: 0.67, y: 0.68, type: "blue" }],
+        },
+    });
+    const after = buildState({
+        ...before,
+        currentXp: 20,
+        gold: 90,
+    });
+    const adapter = new FakeAdapter([before, after]);
+    const loop = new AndroidAutomationLoop({
+        adapter,
+        engine: new StaticEngine([pickLootAction(), buyAction(), levelUpAction()]),
+        dryRun: false,
+    });
+
+    const result = await loop.runOnce();
+
+    assert.equal(result.status, "EXECUTED");
+    assert.equal(adapter.executeCalls.length, 1);
+    assert.deepEqual(adapter.executeCalls[0]?.map((action) => action.type), ["PICK_LOOT", "LEVEL_UP"]);
+    assert.equal(result.verification?.ok, true);
+});
+
 test("AndroidAutomationLoop blocks early level-only maintenance when stage OCR is unknown", async () => {
     const before = buildState({
         stageText: "",
@@ -270,6 +303,132 @@ test("AndroidAutomationLoop skips execution when HUD is inconsistent with stage"
     assert.equal(result.status, "SKIPPED");
     assert.match(result.reason, /HUD/i);
     assert.equal(adapter.executeCalls.length, 0);
+});
+
+test("AndroidAutomationLoop allows level-only maintenance on high-gold unreliable PVP HUD", async () => {
+    const before = buildState({
+        stageText: "3-5",
+        stageType: GameStageType.PVP,
+        level: 1,
+        currentXp: 0,
+        totalXp: 0,
+        gold: 98,
+        metadata: { hasValidStage: true },
+    });
+    const after = buildState({
+        ...before,
+        gold: 90,
+    });
+    const adapter = new FakeAdapter([before, after]);
+    const loop = new AndroidAutomationLoop({
+        adapter,
+        engine: new StaticEngine([buyAction(), levelUpAction()]),
+        dryRun: false,
+    });
+
+    const result = await loop.runOnce();
+
+    assert.equal(result.status, "EXECUTED");
+    assert.equal(adapter.executeCalls.length, 1);
+    assert.deepEqual(adapter.executeCalls[0]?.map((action) => action.type), ["LEVEL_UP"]);
+    assert.equal(result.verification?.ok, true);
+});
+
+test("AndroidAutomationLoop keeps stage-3 level maintenance when Android HUD level is unreliable", async () => {
+    const before = buildState({
+        stageText: "3-2",
+        stageType: GameStageType.PVP,
+        level: 1,
+        currentXp: 0,
+        totalXp: 0,
+        gold: 29,
+        metadata: {
+            hasValidStage: true,
+            lootOrbs: [{ x: 0.52, y: 0.58, type: "blue" }],
+        },
+    });
+    const after = buildState({
+        ...before,
+        gold: 25,
+    });
+    const adapter = new FakeAdapter([before, after]);
+    const loop = new AndroidAutomationLoop({
+        adapter,
+        engine: new StaticEngine([levelUpAction(), pickLootAction(), buyAction()]),
+        dryRun: false,
+    });
+
+    const result = await loop.runOnce();
+
+    assert.equal(result.status, "EXECUTED");
+    assert.equal(adapter.executeCalls.length, 1);
+    assert.deepEqual(adapter.executeCalls[0]?.map((action) => action.type), ["LEVEL_UP", "PICK_LOOT"]);
+    assert.equal(result.verification?.ok, true);
+});
+
+test("AndroidAutomationLoop keeps 2-5 tempo level when Android HUD level is unreliable", async () => {
+    const before = buildState({
+        stageText: "2-5",
+        stageType: GameStageType.PVP,
+        level: 1,
+        currentXp: 0,
+        totalXp: 0,
+        gold: 21,
+        metadata: {
+            hasValidStage: true,
+            lootOrbs: [{ x: 0.52, y: 0.58, type: "blue" }],
+        },
+    });
+    const after = buildState({
+        ...before,
+        gold: 17,
+    });
+    const adapter = new FakeAdapter([before, after]);
+    const loop = new AndroidAutomationLoop({
+        adapter,
+        engine: new StaticEngine([levelUpAction(), pickLootAction(), buyAction()]),
+        dryRun: false,
+    });
+
+    const result = await loop.runOnce();
+
+    assert.equal(result.status, "EXECUTED");
+    assert.equal(adapter.executeCalls.length, 1);
+    assert.deepEqual(adapter.executeCalls[0]?.map((action) => action.type), ["LEVEL_UP", "PICK_LOOT"]);
+    assert.equal(result.verification?.ok, true);
+});
+
+test("AndroidAutomationLoop allows safe maintenance when level OCR is blank but stage is valid", async () => {
+    const before = buildState({
+        stageText: "2-3",
+        stageType: GameStageType.PVP,
+        level: 1,
+        currentXp: 0,
+        totalXp: 0,
+        gold: 16,
+        metadata: {
+            hasValidStage: true,
+            lootOrbs: [{ x: 0.52, y: 0.58, type: "blue" }],
+        },
+    });
+    const after = buildState({
+        ...before,
+        gold: 14,
+        shop: [],
+    });
+    const adapter = new FakeAdapter([before, after]);
+    const loop = new AndroidAutomationLoop({
+        adapter,
+        engine: new StaticEngine([levelUpAction(), pickLootAction(), buyAction()]),
+        dryRun: false,
+    });
+
+    const result = await loop.runOnce();
+
+    assert.equal(result.status, "EXECUTED");
+    assert.equal(adapter.executeCalls.length, 1);
+    assert.deepEqual(adapter.executeCalls[0]?.map((action) => action.type), ["PICK_LOOT", "BUY"]);
+    assert.equal(result.verification?.ok, true);
 });
 
 test("AndroidAutomationLoop dry-run returns execution plan without clicking", async () => {

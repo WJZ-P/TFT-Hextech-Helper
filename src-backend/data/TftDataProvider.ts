@@ -28,6 +28,7 @@ const DEFAULT_CACHE_FILE = path.join(process.cwd(), ".cache", "tft-data-snapshot
 const DEFAULT_SEASON_PACK_DIR = process.env.TFT_SEASON_PACK_DIR
     ? path.resolve(process.env.TFT_SEASON_PACK_DIR)
     : path.join(process.cwd(), "season-packs");
+const LOCAL_PUBLIC_SEASON_DIRS = ["S16"];
 
 const QQ_DATA_BASE = "https://game.gtimg.cn/images/lol/act/img/tft/js";
 const LINEUP_BASE = "https://game.gtimg.cn/images/lol/act/tftzlkauto/json/lineupJson";
@@ -179,7 +180,10 @@ export class TftDataProvider {
         const jobList = this.readDataArray(jobResponse.data);
         const lineupList = this.readLineupArray(lineupResponse.data);
 
-        const champions = chessList.map((raw) => this.mapChampion(raw));
+        const champions = this.mergeChampionSnapshots(
+            chessList.map((raw) => this.mapChampion(raw)),
+            this.loadLocalPublicChampions()
+        );
         const items = equipList.map((raw) => this.mapItem(raw));
         const traits = [
             ...raceList.map((raw) => this.mapTrait(raw, "origins")),
@@ -219,9 +223,19 @@ export class TftDataProvider {
 
     private buildFallbackSnapshot(): TftDataSnapshot {
         const championMap = new Map<string, TftChampionData>();
+        const championNameSet = new Set<string>();
+        for (const champion of this.loadLocalPublicChampions()) {
+            const id = champion.englishId || champion.id || champion.name;
+            if (championMap.has(id) || championNameSet.has(champion.name)) {
+                continue;
+            }
+            championMap.set(id, champion);
+            championNameSet.add(champion.name);
+        }
+
         for (const unit of [...Object.values(TFT_16_CHESS_DATA), ...Object.values(TFT_4_CHESS_DATA)]) {
             const id = unit.englishId || unit.displayName;
-            if (championMap.has(id)) {
+            if (championMap.has(id) || championNameSet.has(unit.displayName)) {
                 continue;
             }
             championMap.set(id, {
@@ -230,7 +244,9 @@ export class TftDataProvider {
                 englishId: unit.englishId,
                 cost: unit.price,
                 traits: unit.traits ?? [],
+                attackRange: unit.attackRange,
             });
+            championNameSet.add(unit.displayName);
         }
 
         const itemMap = new Map<string, TftItemData>();
@@ -279,6 +295,101 @@ export class TftDataProvider {
             traits: [...traitMap.values()],
             lineups: this.loadLocalLineups(),
         };
+    }
+
+    private loadLocalPublicChampions(): TftChampionData[] {
+        const publicRoot = process.env.VITE_PUBLIC
+            ? path.resolve(process.env.VITE_PUBLIC)
+            : path.join(process.cwd(), "public");
+        const champions: TftChampionData[] = [];
+
+        for (const seasonDir of LOCAL_PUBLIC_SEASON_DIRS) {
+            const filePath = path.join(publicRoot, "TFTInfo", seasonDir, "chess.ts");
+            if (!fs.existsSync(filePath)) {
+                continue;
+            }
+
+            try {
+                const parsed = this.readLocalTsArray(fs.readFileSync(filePath, "utf8"));
+                champions.push(...parsed.map((raw) => this.mapChampion(raw)));
+            } catch (error: unknown) {
+                logger.warn(
+                    `[TftDataProvider] 本地 public 棋子数据加载失败 ${filePath}: ` +
+                    `${error instanceof Error ? error.message : String(error)}`
+                );
+            }
+        }
+
+        return champions;
+    }
+
+    private mergeChampionSnapshots(
+        primary: TftChampionData[],
+        fallback: TftChampionData[]
+    ): TftChampionData[] {
+        const byName = new Map<string, TftChampionData>();
+
+        for (const champion of primary) {
+            byName.set(champion.name, champion);
+        }
+
+        for (const champion of fallback) {
+            byName.set(champion.name, champion);
+        }
+
+        return [...byName.values()];
+    }
+
+    private readLocalTsArray(content: string): Record<string, unknown>[] {
+        const arrayStart = content.indexOf("[");
+        if (arrayStart < 0) {
+            return [];
+        }
+
+        let arrayEnd = -1;
+        let depth = 0;
+        let inString = false;
+        let escaped = false;
+
+        for (let index = arrayStart; index < content.length; index += 1) {
+            const char = content[index];
+
+            if (inString) {
+                if (escaped) {
+                    escaped = false;
+                } else if (char === "\\") {
+                    escaped = true;
+                } else if (char === "\"") {
+                    inString = false;
+                }
+                continue;
+            }
+
+            if (char === "\"") {
+                inString = true;
+                continue;
+            }
+
+            if (char === "[") {
+                depth += 1;
+                continue;
+            }
+
+            if (char === "]") {
+                depth -= 1;
+                if (depth === 0) {
+                    arrayEnd = index;
+                    break;
+                }
+            }
+        }
+
+        if (arrayEnd <= arrayStart) {
+            return [];
+        }
+
+        const parsed = JSON.parse(content.slice(arrayStart, arrayEnd + 1));
+        return Array.isArray(parsed) ? parsed as Record<string, unknown>[] : [];
     }
 
     private loadLocalLineups(): TftLineupData[] {
@@ -406,6 +517,7 @@ export class TftDataProvider {
             englishId,
             cost: this.readNumber(raw, ["price", "cost"]),
             traits,
+            attackRange: this.readNumber(raw, ["attackRange"]),
             imageUrl: normalizeUrl(
                 this.readString(raw, [
                     "imagePath",

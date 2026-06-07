@@ -63,6 +63,21 @@ function isKeyRound(parsed: ParsedStage | null, stage: number, round: number): b
     return parsed.stage === stage && parsed.round === round;
 }
 
+function isCanonicalAugmentRound(parsed: ParsedStage | null): boolean {
+    return (
+        isKeyRound(parsed, 2, 1) ||
+        isKeyRound(parsed, 3, 2) ||
+        isKeyRound(parsed, 4, 2)
+    );
+}
+
+function xpClicksToNextLevel(state: ObservedState, fallback = 1, maxClicks = 6): number {
+    if (state.totalXp > 0 && state.currentXp >= 0 && state.currentXp < state.totalXp) {
+        return Math.max(1, Math.min(maxClicks, Math.ceil((state.totalXp - state.currentXp) / 4)));
+    }
+    return Math.max(1, Math.min(maxClicks, fallback));
+}
+
 function isBenchOverflowed(state: ObservedState): boolean {
     // ObservedState 只记录有单位的槽位，9 格满员时长度通常会接近 9。
     return state.bench.length >= 9;
@@ -328,48 +343,119 @@ export class RuleBasedDecisionEngine implements DecisionEngine {
         }
 
         if (state.stageType === GameStageType.UNKNOWN && state.level >= 1 && state.level < 8 && state.gold >= 60) {
-            const count = state.gold >= 90 ? 2 : 1;
-            addPlan("LEVEL_UP", 88, "阶段 OCR 暂不可用但经济明显溢出，先升人口避免空转", { count });
+            const count = state.gold >= 90 ? xpClicksToNextLevel(state, 4, 6) : 1;
+            addPlan("LEVEL_UP", state.gold >= 90 ? 112 : 88, "阶段 OCR 暂不可用但经济明显溢出，先升人口避免空转", {
+                count: state.gold >= 110 ? Math.max(count, 5) : count,
+            });
         }
 
-        if (state.stageType === GameStageType.AUGMENT) {
-            const selected = state.augments && state.augments.length > 0
-                ? [...state.augments].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0]
-                : { slot: 2 };
             const choicePoint = state.metadata?.augmentChoicePoint;
             const directPoint = choicePoint && typeof choicePoint === "object"
                 ? choicePoint as Record<string, unknown>
                 : null;
-            addPlan("PICK_AUGMENT", 100, "进入海克斯回合，优先选择评分最高的强化", { slot: selected.slot });
-            if (directPoint && typeof directPoint.x === "number" && typeof directPoint.y === "number") {
-                plans[plans.length - 1].payload.x = directPoint.x;
-                plans[plans.length - 1].payload.y = directPoint.y;
+        if (state.stageType === GameStageType.AUGMENT) {
+            const selected = state.augments && state.augments.length > 0
+                ? [...state.augments].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0]
+                : { slot: 2 };
+            const hasShopUnits = state.shop.some((offer) => Boolean(offer.unit));
+            const hasDirectAugmentChoice =
+                state.stageText === "augment-choice" ||
+                state.metadata?.augmentChoiceVisible === true ||
+                (directPoint && typeof directPoint.x === "number" && typeof directPoint.y === "number");
+            const shouldUseAndroidCanonicalAugmentFallback =
+                state.target === "ANDROID_EMULATOR" &&
+                isCanonicalAugmentRound(parsed) &&
+                state.level <= 1 &&
+                !hasShopUnits &&
+                state.gold <= 30;
+            const shouldUseAndroidSafeObserveCanonicalAugmentFallback =
+                state.target === "ANDROID_EMULATOR" &&
+                isCanonicalAugmentRound(parsed) &&
+                !hasShopUnits &&
+                state.board.length === 0 &&
+                state.bench.length === 0;
+            const shouldPickAugment =
+                state.target !== "ANDROID_EMULATOR" ||
+                hasDirectAugmentChoice ||
+                isKeyRound(parsed, 2, 1) ||
+                shouldUseAndroidSafeObserveCanonicalAugmentFallback ||
+                shouldUseAndroidCanonicalAugmentFallback;
+            if (shouldPickAugment) {
+                addPlan("PICK_AUGMENT", 120, "进入海克斯回合，优先选择评分最高的强化", { slot: selected.slot });
+                if (directPoint && typeof directPoint.x === "number" && typeof directPoint.y === "number") {
+                    plans[plans.length - 1].payload.x = directPoint.x;
+                    plans[plans.length - 1].payload.y = directPoint.y;
+                }
+            }
+            if (parsed && parsed.stage >= 3 && state.level >= 4 && state.level < 7 && state.gold >= 50) {
+                const count = xpClicksToNextLevel(state, state.gold >= 90 ? 4 : 2, 6);
+                addPlan("LEVEL_UP", 112, "海克斯回合经济溢出，选完强化后立刻补人口转化战力", {
+                    count: state.gold >= 110 ? Math.max(count, 5) : count,
+                });
+            } else if (
+                parsed &&
+                parsed.stage >= 3 &&
+                state.target === "ANDROID_EMULATOR" &&
+                state.level <= 1 &&
+                state.gold >= 24
+            ) {
+                addPlan("LEVEL_UP", 112, "安卓 HUD 人口 OCR 失真但 3 阶段经济足够，选完强化后补一次人口", { count: 1 });
+            }
+            if (
+                parsed &&
+                parsed.stage >= 3 &&
+                state.target === "ANDROID_EMULATOR" &&
+                state.metadata?.augmentChoiceVisible !== true &&
+                state.level >= 5 &&
+                state.gold >= 50
+            ) {
+                const count = state.gold >= 90 ? 3 : 2;
+                addPlan("ROLL", 86, "安卓海克斯后经济过高，补人口后立刻小D转化场面质量", { count });
             }
         }
 
         // 关键回合升人口节奏（参考自动运营常见节奏：2-1/2-5/3-2/4-2/5-1）
         if (state.stageType === GameStageType.PVP) {
-            if (isKeyRound(parsed, 2, 1) && state.level < 4 && state.gold >= 4) {
+            if (parsed && parsed.stage <= 2 && state.level < 6 && state.gold >= 80) {
+                addPlan("LEVEL_UP", 112, "前中期经济异常溢出，优先升 6 转化战力", {
+                    count: xpClicksToNextLevel(state, state.gold >= 100 ? 3 : 2, 6),
+                });
+            } else if (isKeyRound(parsed, 2, 1) && state.level < 4 && state.gold >= 4) {
                 addPlan("LEVEL_UP", 96, "2-1 关键节奏，优先升人口保连胜或稳血", { count: 1 });
             } else if (isKeyRound(parsed, 2, 5) && state.level < 5 && state.gold >= 4) {
                 addPlan("LEVEL_UP", 94, "2-5 节奏点，提前补人口提升战力", { count: 1 });
             } else if (isKeyRound(parsed, 3, 2) && state.level < 6 && state.gold >= (mustStabilize ? 16 : shouldProtectWinStreak ? 20 : 24)) {
-                addPlan("LEVEL_UP", 90, "3-2 中期节奏，优先上 6 进入中期运营", { count: 1 });
+                addPlan("LEVEL_UP", 112, "3-2 中期节奏，优先上 6 进入中期运营", { count: xpClicksToNextLevel(state, state.gold >= 50 ? 2 : 1, 6) });
+            } else if (parsed && parsed.stage === 3 && state.level < 6 && state.gold >= 48) {
+                const count = xpClicksToNextLevel(state, state.gold >= 80 ? 3 : 1, 6);
+                addPlan("LEVEL_UP", 112, "3 阶段经济异常溢出，提前上 6 防止金币空转", {
+                    count: state.gold >= 110 ? Math.max(count, 5) : count,
+                });
+            } else if (parsed && parsed.stage === 3 && state.level < 7 && state.gold >= 80) {
+                addPlan("LEVEL_UP", 111, "3 阶段经济异常溢出，继续补人口转化战力", { count: xpClicksToNextLevel(state, 3, 6) });
             } else if (isKeyRound(parsed, 4, 1) && state.level < 7 && state.gold >= (mustStabilize ? 12 : 16)) {
-                addPlan("LEVEL_UP", 91, "4-1 标准节奏，优先上 7 稳住中后期战力", { count: 1 });
+                const extremeAndroidBank = state.target === "ANDROID_EMULATOR" && state.gold >= 90;
+                addPlan(
+                    "LEVEL_UP",
+                    extremeAndroidBank ? 112 : 91,
+                    extremeAndroidBank
+                        ? "4-1 经济异常溢出，先完整上 7 防止金币空转"
+                        : "4-1 标准节奏，优先上 7 稳住中后期战力",
+                    { count: xpClicksToNextLevel(state, extremeAndroidBank ? 4 : 1, extremeAndroidBank ? 10 : 6) }
+                );
             } else if (isKeyRound(parsed, 4, 2) && state.level < 8 && state.gold >= 20) {
-                const count = state.gold >= 40 ? 2 : 1;
+                const count = Math.max(state.gold >= 40 ? 2 : 1, xpClicksToNextLevel(state, 1, 6));
                 addPlan("LEVEL_UP", 92, "4-2 关键转折，优先冲 8 寻找高费核心", { count });
             } else if (isKeyRound(parsed, 4, 5) && state.level < 8 && hp > hpThreshold + 10 && state.gold >= 30) {
-                addPlan("LEVEL_UP", 88, "4-5 血量健康且经济充足，先贪人口拉上限", { count: 1 });
+                addPlan("LEVEL_UP", 88, "4-5 血量健康且经济充足，先贪人口拉上限", { count: xpClicksToNextLevel(state, 1, 6) });
             } else if ((isKeyRound(parsed, 4, 2) || isKeyRound(parsed, 4, 5)) && state.level < 8 && hp > hpThreshold + 4 && state.gold >= 20 && state.gold < 30) {
                 // 中期小 D 没能立刻扭转质量时，血量仍安全就该转回升人口恢复节奏，避免继续无脑 D 空经济。
                 addPlan("LEVEL_UP", 86, "中期小D后血量仍安全，转向升人口恢复运营节奏", { count: 1 });
             } else if (parsed && parsed.stage === 3 && parsed.round >= 5 && state.level < 7 && state.gold >= 50) {
-                const count = state.gold >= 70 ? 2 : 1;
+                const count = Math.max(state.gold >= 70 ? 2 : 1, xpClicksToNextLevel(state, 1, 6));
                 addPlan("LEVEL_UP", 89, "3 阶段后半经济溢出，补人口避免高金币空转", { count });
             } else if (parsed && parsed.stage === 4 && state.level < 8 && state.gold >= 45) {
-                const count = state.gold >= 70 ? 3 : 2;
+                const count = Math.max(state.gold >= 70 ? 3 : 2, xpClicksToNextLevel(state, 2, 6));
                 addPlan("LEVEL_UP", 90, "4 阶段经济溢出且人口落后，优先拉人口转化战力", { count });
             } else if (isKeyRound(parsed, 5, 1) && state.level < 9 && hp > hpThreshold + 10 && state.gold >= 40) {
                 addPlan("LEVEL_UP", 87, "5-1 仍然健康且经济够用，优先贪升级而不是提前 D 牌", { count: 1 });

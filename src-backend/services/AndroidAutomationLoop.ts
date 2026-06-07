@@ -92,13 +92,61 @@ function hasExcessEconomyForLevelMaintenance(state: ObservedState): boolean {
     return state.level >= 5 && state.level < 8 && state.gold >= 60;
 }
 
+function hasUnreliableHudExcessEconomyForLevelMaintenance(state: ObservedState): boolean {
+    const parsed = parseStage(state.stageText);
+    if (
+        parsed !== null &&
+        parsed.stage === 2 &&
+        parsed.round >= 5 &&
+        state.stageType === GameStageType.PVP &&
+        state.level <= 1 &&
+        state.gold >= 4
+    ) {
+        return true;
+    }
+
+    return (
+        parsed !== null &&
+        parsed.stage >= 3 &&
+        (state.stageType === GameStageType.PVP || state.stageType === GameStageType.AUGMENT) &&
+        state.level <= 1 &&
+        state.gold >= 24
+    );
+}
+
+function hasUnreliableHudSafeMaintenance(state: ObservedState): boolean {
+    return (
+        hasValidAndroidStage(state) &&
+        !hasReliableAndroidHud(state) &&
+        (
+            state.stageType === GameStageType.EARLY_PVE ||
+            state.stageType === GameStageType.PVE ||
+            state.stageType === GameStageType.AUGMENT ||
+            state.stageType === GameStageType.PVP
+        )
+    );
+}
+
+function isSafeUnreliableHudAction(action: ActionPlan): boolean {
+    return action.type === "PICK_AUGMENT" || action.type === "PICK_LOOT" || action.type === "BUY";
+}
+
+function isUnreliableHudLevelMaintenanceAction(action: ActionPlan): boolean {
+    return action.type === "LEVEL_UP" || action.type === "PICK_AUGMENT" || action.type === "PICK_LOOT";
+}
+
 function parseStageNumber(stageText: string): number | null {
+    return parseStage(stageText)?.stage ?? null;
+}
+
+function parseStage(stageText: string): { stage: number; round: number } | null {
     const match = stageText.match(/^(\d+)-(\d+)$/);
     if (!match) {
         return null;
     }
     const stage = Number(match[1]);
-    return Number.isFinite(stage) ? stage : null;
+    const round = Number(match[2]);
+    return Number.isFinite(stage) && Number.isFinite(round) ? { stage, round } : null;
 }
 
 function hasReliableAndroidHud(state: ObservedState): boolean {
@@ -213,8 +261,14 @@ export class AndroidAutomationLoop {
         const allowLootOnlyMaintenance = !hasValidAndroidStage(beforeState) && hasObservedLootOrbs(beforeState);
         const allowLevelOnlyMaintenance =
             !hasValidAndroidStage(beforeState) &&
-            !allowLootOnlyMaintenance &&
             hasExcessEconomyForLevelMaintenance(beforeState);
+        const allowUnreliableHudLevelOnlyMaintenance =
+            hasValidAndroidStage(beforeState) &&
+            !hasReliableAndroidHud(beforeState) &&
+            hasUnreliableHudExcessEconomyForLevelMaintenance(beforeState);
+        const allowUnreliableHudSafeMaintenance =
+            !allowUnreliableHudLevelOnlyMaintenance &&
+            hasUnreliableHudSafeMaintenance(beforeState);
         if (!hasValidAndroidStage(beforeState) && !allowLootOnlyMaintenance && !allowLevelOnlyMaintenance) {
             const foregroundState = beforeState.metadata?.foregroundState;
             const foregroundReason = beforeState.metadata?.foregroundReason;
@@ -231,7 +285,12 @@ export class AndroidAutomationLoop {
             });
         }
 
-        if (!allowLootOnlyMaintenance && !hasReliableAndroidHud(beforeState)) {
+        if (
+            !allowLootOnlyMaintenance &&
+            !allowUnreliableHudLevelOnlyMaintenance &&
+            !allowUnreliableHudSafeMaintenance &&
+            !hasReliableAndroidHud(beforeState)
+        ) {
             return this.buildResult({
                 status: "SKIPPED",
                 reason: "Android HUD is inconsistent with stage; execution skipped",
@@ -244,10 +303,16 @@ export class AndroidAutomationLoop {
         }
 
         const generatedPlans = this.engine.generatePlan(beforeState, this.context);
-        const plans = allowLootOnlyMaintenance
+        const plans = allowLootOnlyMaintenance && allowLevelOnlyMaintenance
+            ? generatedPlans.filter((plan) => plan.type === "PICK_LOOT" || plan.type === "LEVEL_UP")
+            : allowLootOnlyMaintenance
             ? generatedPlans.filter((plan) => plan.type === "PICK_LOOT")
-            : allowLevelOnlyMaintenance
+              : allowLevelOnlyMaintenance
               ? generatedPlans.filter((plan) => plan.type === "LEVEL_UP")
+              : allowUnreliableHudLevelOnlyMaintenance
+              ? generatedPlans.filter(isUnreliableHudLevelMaintenanceAction)
+              : allowUnreliableHudSafeMaintenance
+              ? generatedPlans.filter(isSafeUnreliableHudAction)
               : generatedPlans;
         const executionPlan = buildAndroidExecutionPlan(plans, beforeState);
         const executablePlans = plans.filter(isExecutableAction);

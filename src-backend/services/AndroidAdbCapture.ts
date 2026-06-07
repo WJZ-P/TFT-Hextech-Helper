@@ -100,6 +100,10 @@ export class AndroidAdbCapture {
         ], "滑动");
     }
 
+    public async pressBack(): Promise<boolean> {
+        return this.runInputCommand(["keyevent", "4"], "返回键");
+    }
+
     private async resolvePoint(point: SimplePoint): Promise<{ x: number; y: number } | null> {
         const size = await this.resolveFrameSize();
         if (!size) {

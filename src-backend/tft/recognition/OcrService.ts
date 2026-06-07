@@ -20,6 +20,7 @@ import path from "path";
 import { logger } from "../../utils/Logger";
 import { TFTMode, getChessDataForMode } from "../../TFTProtocol";
 import { memoryMonitor } from "../../utils/MemoryMonitor";
+import { tftDataService } from "../../services/TftDataService";
 
 /**
  * OCR Worker 类型枚举
@@ -486,9 +487,10 @@ export class OcrService {
             cachePath: this.langPath,
         });
 
-        // 根据当前赛季获取对应的棋子数据集，构建精准的字符白名单
+        // 根据当前赛季和动态快照获取棋子数据集，构建精准的字符白名单
         const chessData = getChessDataForMode(mode);
-        const uniqueChars = [...new Set(Object.keys(chessData).join(""))].join("");
+        const dynamicChampionNames = this.getDynamicChampionWhitelistText();
+        const uniqueChars = [...new Set(`${Object.keys(chessData).join("")}${dynamicChampionNames}`)].join("");
 
         await worker.setParameters({
             tessedit_char_whitelist: uniqueChars,
@@ -499,6 +501,21 @@ export class OcrService {
         this.chessWorker = worker;
         this.currentChessMode = mode;
         logger.info(`[OcrService] 棋子名称识别 Worker 准备就绪 (白名单字符数: ${uniqueChars.length})`);
+    }
+
+    private getDynamicChampionWhitelistText(): string {
+        try {
+            return tftDataService.getSnapshot().champions
+                .map((champion) => champion.name)
+                .filter((name) => typeof name === "string" && name.length > 0)
+                .join("");
+        } catch (error: unknown) {
+            logger.warn(
+                `[OcrService] 动态棋子白名单读取失败，使用静态白名单: ` +
+                `${error instanceof Error ? error.message : String(error)}`
+            );
+            return "";
+        }
     }
 
     /**

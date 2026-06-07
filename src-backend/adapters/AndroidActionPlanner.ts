@@ -1,15 +1,13 @@
 import {
     androidEquipmentSlot,
     benchSlotPoints,
-    buyExpPoint,
     fightBoardSlotPoint,
     hexSlot,
-    refreshShopPoint,
-    shopSlot,
     type SimplePoint,
 } from "../TFTProtocol";
 import type { ActionPlan, ObservedState } from "../core/types";
 import type { BenchLocation, BoardLocation } from "../tft";
+import { androidBuyExpPoint, androidRefreshShopPoint, androidShopSlotPoints } from "./AndroidShopControls";
 
 export type AndroidOperationKind =
     | "BUY_SLOT"
@@ -154,7 +152,15 @@ function resolveTargetBoardLocation(rawValue: unknown, occupiedBoard: Set<BoardL
 }
 
 export function sortAndroidActionsForExecution(actions: ActionPlan[]): ActionPlan[] {
-    return [...actions].sort((a, b) => b.priority - a.priority || a.tick - b.tick);
+    return [...actions].sort((a, b) => {
+        if (a.type === "BUY" && b.type === "ROLL") {
+            return -1;
+        }
+        if (a.type === "ROLL" && b.type === "BUY") {
+            return 1;
+        }
+        return b.priority - a.priority || a.tick - b.tick;
+    });
 }
 
 export function buildAndroidExecutionPlan(
@@ -182,7 +188,7 @@ export function buildAndroidExecutionPlan(
                     break;
                 }
 
-                const slotKey = `SHOP_SLOT_${slot}` as keyof typeof shopSlot;
+                const slotKey = `SHOP_SLOT_${slot}` as keyof typeof androidShopSlotPoints;
                 pushStep({
                     kind: "BUY_SLOT",
                     actionType: action.type,
@@ -190,7 +196,7 @@ export function buildAndroidExecutionPlan(
                     reason: action.reason,
                     priority: action.priority,
                     slot,
-                    targetPoint: buildPoint(slotKey, shopSlot[slotKey]),
+                    targetPoint: buildPoint(slotKey, androidShopSlotPoints[slotKey]),
                 });
                 break;
             }
@@ -203,13 +209,13 @@ export function buildAndroidExecutionPlan(
                         description: `刷新商店 ${i + 1}/${count}`,
                         reason: action.reason,
                         priority: action.priority,
-                        targetPoint: buildPoint("REFRESH_SHOP", refreshShopPoint),
+                        targetPoint: buildPoint("REFRESH_SHOP", androidRefreshShopPoint),
                     });
                 }
                 break;
             }
             case "LEVEL_UP": {
-                const count = Math.min(3, Math.max(1, parseInteger(action.payload.count) ?? 1));
+                const count = Math.min(6, Math.max(1, parseInteger(action.payload.count) ?? 1));
                 for (let i = 0; i < count; i += 1) {
                     pushStep({
                         kind: "BUY_XP",
@@ -217,7 +223,7 @@ export function buildAndroidExecutionPlan(
                         description: `购买经验 ${i + 1}/${count}`,
                         reason: action.reason,
                         priority: action.priority,
-                        targetPoint: buildPoint("BUY_EXP", buyExpPoint),
+                        targetPoint: buildPoint("BUY_EXP", androidBuyExpPoint),
                     });
                 }
                 break;
