@@ -1,6 +1,6 @@
 # TFT-Hextech-Helper —— 云顶之弈挂机小助手
 
-# 十月份更新适配云顶最新架构S18，目前暂不可用
+# 目前支持最新的星神版本
 
 <!-- PROJECT SHIELDS -->
 
