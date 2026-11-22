@@ -10,7 +10,7 @@ import sharp from "sharp";
 import cv from "@techstark/opencv-js";
 import { logger } from "../../utils/Logger";
 import { EQUIP_CATEGORY_PRIORITY, EquipCategory, LootOrbType } from "../types";
-import { getCurrentTemplateDir } from "../../TFTInfo/SeasonRegistry";
+import { getCurrentTemplateDir, getCurrentEquipData } from "../../TFTInfo/SeasonRegistry";
 
 /** 支持的图片扩展名 */
 const VALID_IMAGE_EXTENSIONS = [".png", ".webp", ".jpg", ".jpeg"];
@@ -296,7 +296,11 @@ export class TemplateLoader {
 
     /**
      * 加载装备模板
-     * @description 按分类加载装备图片，统一缩放到 24x24，移除 Alpha 通道
+     * @description 按分类加载装备图片，统一缩放到 24x24，移除 Alpha 通道。
+     *              装备图片目录里保留着各个赛季的图标，这里只加载当前赛季装备表里有的
+     *              （文件名 = 装备表里的 englishName，不区分大小写），
+     *              其他赛季的图标即使匹配上也查不到装备数据，加载了只会拖慢匹配。
+     *              trait / zap 目录不在 EQUIP_CATEGORY_PRIORITY 里，不会加载。
      */
     private async loadEquipTemplates(): Promise<void> {
         // 清理旧模板
@@ -304,6 +308,12 @@ export class TemplateLoader {
 
         logger.info("[TemplateLoader] 开始加载装备模板...");
         const TEMPLATE_SIZE = 24;
+
+        // 当前赛季装备表里的图标文件名
+        const seasonTemplateNames = new Set(
+            Object.values(getCurrentEquipData()).map(equip => equip.englishName.toLowerCase())
+        );
+        let skippedCount = 0;
 
         for (const category of EQUIP_CATEGORY_PRIORITY) {
             const resourcePath = path.join(this.equipTemplatePath, category);
@@ -324,6 +334,11 @@ export class TemplateLoader {
                 const filePath = path.join(resourcePath, file);
                 const templateName = path.parse(file).name;
 
+                if (!seasonTemplateNames.has(templateName.toLowerCase())) {
+                    skippedCount++;
+                    continue;
+                }
+
                 try {
                     const mat = await this.loadImageAsMat(filePath, {
                         ensureAlpha: false,
@@ -343,7 +358,7 @@ export class TemplateLoader {
             this.equipTemplates.set(category, categoryMap);
         }
 
-        logger.info("[TemplateLoader] 装备模板加载完成");
+        logger.info(`[TemplateLoader] 装备模板加载完成（跳过 ${skippedCount} 个非当前赛季的图标）`);
     }
 
     /**

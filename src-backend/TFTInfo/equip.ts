@@ -3783,3 +3783,1005 @@ export const _TFT_17_EQUIP_DATA: Record<string, TFTEquip> = {
         formula: ""
     },
 } satisfies  Record<string, TFTEquip>
+
+// <generated:S18-equip>
+/**
+ * 云顶十八赛季（自然之力）的装备数据
+ * @description 由 scripts/generate_s18_equip_data.cjs 生成，请勿手改（重跑脚本会整段替换）。
+ *              来源：https://game.gtimg.cn/images/lol/act/img/tft/js/equip.js（season=2026.S18 version=16.22）
+ *              englishName 是装备图标模板的文件名：和老赛季同图的装备直接复用老图（注释里标了 S18 资源名），
+ *              S18 新增的装备以 S18 资源名（DA_xxx）命名。
+ *              S18 法杖类道具（type 9，zaps/wands）不是装备，只保留在原始数据 public/TFTInfo/S18/equip.ts 里。
+ */
+export const _TFT_18_EQUIP_DATA: Record<string, TFTEquip> = {
+    // ==========================================
+    // Type 1: 基础散件 (Base Items) (共 10 个)
+    // ==========================================
+    "暴风大剑": {   // S18 资源名 DA_Component_BFSword
+        name: "暴风大剑",
+        englishName: "TFT_Item_BFSword",
+        equipId: "93054",
+        formula: ""
+    },
+    "锁子甲": {   // S18 资源名 DA_Component_ChainVest
+        name: "锁子甲",
+        englishName: "TFT_Item_ChainVest",
+        equipId: "93055",
+        formula: ""
+    },
+    "金锅锅": {   // S18 资源名 DA_Component_FryingPan
+        name: "金锅锅",
+        englishName: "TFT_Item_Frying_pan",
+        equipId: "93056",
+        formula: ""
+    },
+    "巨人腰带": {   // S18 资源名 DA_Component_GiantsBelt
+        name: "巨人腰带",
+        englishName: "TFT_Item_GiantsBelt",
+        equipId: "93057",
+        formula: ""
+    },
+    "无用大棒": {   // S18 资源名 DA_Component_NeedlesslyLargeRod
+        name: "无用大棒",
+        englishName: "TFT_Item_NeedlesslyLargeRod",
+        equipId: "93058",
+        formula: ""
+    },
+    "负极斗篷": {   // S18 资源名 DA_Component_NegatronCloak
+        name: "负极斗篷",
+        englishName: "TFT_Item_NegatronCloak",
+        equipId: "93059",
+        formula: ""
+    },
+    "反曲之弓": {   // S18 资源名 DA_Component_RecurveBow
+        name: "反曲之弓",
+        englishName: "TFT_Item_RecurveBow",
+        equipId: "93060",
+        formula: ""
+    },
+    "拳套": {   // S18 资源名 DA_Component_SparringGloves
+        name: "拳套",
+        englishName: "TFT_Item_SparringGloves",
+        equipId: "93061",
+        formula: ""
+    },
+    "金铲铲": {   // S18 资源名 DA_Component_Spatula
+        name: "金铲铲",
+        englishName: "TFT_Item_Spatula",
+        equipId: "93062",
+        formula: ""
+    },
+    "女神之泪": {   // S18 资源名 DA_Component_TearOfTheGoddess
+        name: "女神之泪",
+        englishName: "TFT_Item_TearOfTheGoddess",
+        equipId: "93063",
+        formula: ""
+    },
+
+    // ==========================================
+    // Type 2: 标准合成装备 (Standard Completed Items) (共 39 个)
+    // ==========================================
+    "适应性头盔": {   // S18 资源名 DA_AdaptiveHelm
+        name: "适应性头盔",
+        englishName: "TFT_Item_AdaptiveHelm",
+        equipId: "92966",
+        formula: "DA_Component_TearOfTheGoddess,DA_Component_NegatronCloak"
+    },
+    "大天使之杖": {   // S18 资源名 DA_ArchangelsStaff
+        name: "大天使之杖",
+        englishName: "TFT_Item_ArchangelsStaff",
+        equipId: "92972",
+        formula: "DA_Component_NeedlesslyLargeRod,DA_Component_TearOfTheGoddess"
+    },
+    "饮血剑": {   // S18 资源名 DA_Bloodthirster
+        name: "饮血剑",
+        englishName: "TFT_Item_Bloodthirster",
+        equipId: "93030",
+        formula: "DA_Component_BFSword,DA_Component_NegatronCloak"
+    },
+    "蓝霸符": {   // S18 资源名 DA_BlueBuff
+        name: "蓝霸符",
+        englishName: "TFT_Item_BlueBuff",
+        equipId: "93032",
+        formula: "DA_Component_TearOfTheGoddess,DA_Component_TearOfTheGoddess"
+    },
+    "棘刺背心": {   // S18 资源名 DA_BrambleVest
+        name: "棘刺背心",
+        englishName: "TFT_Item_BrambleVest",
+        equipId: "93040",
+        formula: "DA_Component_ChainVest,DA_Component_ChainVest"
+    },
+    "冕卫": {   // S18 资源名 DA_Crownguard
+        name: "冕卫",
+        englishName: "TFT_Item_Crownguard",
+        equipId: "93068",
+        formula: "DA_Component_NeedlesslyLargeRod,DA_Component_ChainVest"
+    },
+    "死亡之刃": {   // S18 资源名 DA_Deathblade
+        name: "死亡之刃",
+        englishName: "TFT_Item_Deathblade",
+        equipId: "93074",
+        formula: "DA_Component_BFSword,DA_Component_BFSword"
+    },
+    "巨龙之爪": {   // S18 资源名 DA_DragonsClaw
+        name: "巨龙之爪",
+        englishName: "TFT_Item_DragonsClaw",
+        equipId: "93089",
+        formula: "DA_Component_NegatronCloak,DA_Component_NegatronCloak"
+    },
+    "夜之锋刃": {   // S18 资源名 DA_EdgeOfNight
+        name: "夜之锋刃",
+        englishName: "TFT_Item_GuardianAngel",
+        equipId: "93091",
+        formula: "DA_Component_BFSword,DA_Component_ChainVest"
+    },
+    "薄暮法袍": {   // S18 资源名 DA_Evenshroud
+        name: "薄暮法袍",
+        englishName: "TFT_Item_SpectralGauntlet",
+        equipId: "93095",
+        formula: "DA_Component_NegatronCloak,DA_Component_GiantsBelt"
+    },
+    "石像鬼石板甲": {   // S18 资源名 DA_GargoyleStoneplate
+        name: "石像鬼石板甲",
+        englishName: "TFT_Item_GargoyleStoneplate",
+        equipId: "93109",
+        formula: "DA_Component_ChainVest,DA_Component_NegatronCloak"
+    },
+    "巨人杀手": {   // S18 资源名 DA_GiantSlayer
+        name: "巨人杀手",
+        englishName: "TFT_Item_MadredsBloodrazor",
+        equipId: "93111",
+        formula: "DA_Component_RecurveBow,DA_Component_BFSword"
+    },
+    "鬼索的狂暴之刃": {   // S18 资源名 DA_GuinsoosRageblade
+        name: "鬼索的狂暴之刃",
+        englishName: "TFT_Item_GuinsoosRageblade",
+        equipId: "93124",
+        formula: "DA_Component_RecurveBow,DA_Component_NeedlesslyLargeRod"
+    },
+    "正义之手": {   // S18 资源名 DA_HandOfJustice
+        name: "正义之手",
+        englishName: "TFT_Item_UnstableConcoction",
+        equipId: "93128",
+        formula: "DA_Component_TearOfTheGoddess,DA_Component_SparringGloves"
+    },
+    "海克斯科技枪刃": {   // S18 资源名 DA_HextechGunblade
+        name: "海克斯科技枪刃",
+        englishName: "TFT_Item_HextechGunblade",
+        equipId: "93139",
+        formula: "DA_Component_BFSword,DA_Component_NeedlesslyLargeRod"
+    },
+    "无尽之刃": {   // S18 资源名 DA_InfinityEdge
+        name: "无尽之刃",
+        englishName: "TFT_Item_InfinityEdge",
+        equipId: "93153",
+        formula: "DA_Component_BFSword,DA_Component_SparringGloves"
+    },
+    "离子火花": {   // S18 资源名 DA_IonicSpark
+        name: "离子火花",
+        englishName: "TFT_Item_IonicSpark",
+        equipId: "93155",
+        formula: "DA_Component_NeedlesslyLargeRod,DA_Component_NegatronCloak"
+    },
+    "珠光护手": {   // S18 资源名 DA_JeweledGauntlet
+        name: "珠光护手",
+        englishName: "TFT_Item_JeweledGauntlet",
+        equipId: "93162",
+        formula: "DA_Component_SparringGloves,DA_Component_NeedlesslyLargeRod"
+    },
+    "海妖之怒": {   // S18 资源名 DA_KrakensFury
+        name: "海妖之怒",
+        englishName: "TFT_Item_RunaansHurricane",
+        equipId: "93176",
+        formula: "DA_Component_RecurveBow,DA_Component_NegatronCloak"
+    },
+    "最后的轻语": {   // S18 资源名 DA_LastWhisper
+        name: "最后的轻语",
+        englishName: "TFT_Item_LastWhisper",
+        equipId: "93178",
+        formula: "DA_Component_RecurveBow,DA_Component_SparringGloves"
+    },
+    "莫雷洛秘典": {   // S18 资源名 DA_Morellonomicon
+        name: "莫雷洛秘典",
+        englishName: "TFT_Item_Morellonomicon",
+        equipId: "93209",
+        formula: "DA_Component_GiantsBelt,DA_Component_NeedlesslyLargeRod"
+    },
+    "纳什之牙": {   // S18 资源名 DA_NashorsTooth
+        name: "纳什之牙",
+        englishName: "TFT_Item_Leviathan",
+        equipId: "93211",
+        formula: "DA_Component_RecurveBow,DA_Component_GiantsBelt"
+    },
+    "圣盾使的誓约": {   // S18 资源名 DA_ProtectorsVow
+        name: "圣盾使的誓约",
+        englishName: "TFT_Item_FrozenHeart",
+        equipId: "93242",
+        formula: "DA_Component_ChainVest,DA_Component_TearOfTheGoddess"
+    },
+    "水银": {   // S18 资源名 DA_Quicksilver
+        name: "水银",
+        englishName: "TFT_Item_Quicksilver",
+        equipId: "93246",
+        formula: "DA_Component_NegatronCloak,DA_Component_SparringGloves"
+    },
+    "灭世者的死亡之帽": {   // S18 资源名 DA_RabadonsDeathcap
+        name: "灭世者的死亡之帽",
+        englishName: "TFT_Item_RabadonsDeathcap",
+        equipId: "93248",
+        formula: "DA_Component_NeedlesslyLargeRod,DA_Component_NeedlesslyLargeRod"
+    },
+    "红霸符": {   // S18 资源名 DA_RedBuff
+        name: "红霸符",
+        englishName: "TFT_Item_RapidFireCannon",
+        equipId: "93253",
+        formula: "DA_Component_RecurveBow,DA_Component_RecurveBow"
+    },
+    "朔极之矛": {   // S18 资源名 DA_SpearOfShojin
+        name: "朔极之矛",
+        englishName: "TFT_Item_SpearOfShojin",
+        equipId: "93284",
+        formula: "DA_Component_TearOfTheGoddess,DA_Component_BFSword"
+    },
+    "振奋盔甲": {   // S18 资源名 DA_SpiritVisage
+        name: "振奋盔甲",
+        englishName: "TFT_Item_Redemption",
+        equipId: "93287",
+        formula: "DA_Component_GiantsBelt,DA_Component_TearOfTheGoddess"
+    },
+    "坚定之心": {   // S18 资源名 DA_SteadfastHeart
+        name: "坚定之心",
+        englishName: "TFT_Item_NightHarvester",
+        equipId: "93294",
+        formula: "DA_Component_ChainVest,DA_Component_SparringGloves"
+    },
+    "斯特拉克的挑战护手": {   // S18 资源名 DA_SteraksGage
+        name: "斯特拉克的挑战护手",
+        englishName: "TFT_Item_SteraksGage",
+        equipId: "93298",
+        formula: "DA_Component_BFSword,DA_Component_GiantsBelt"
+    },
+    "强袭者的链枷": {   // S18 资源名 DA_StrikersFlail
+        name: "强袭者的链枷",
+        englishName: "TFT_Item_PowerGauntlet",
+        equipId: "93300",
+        formula: "DA_Component_GiantsBelt,DA_Component_SparringGloves"
+    },
+    "日炎斗篷": {   // S18 资源名 DA_SunfireCape
+        name: "日炎斗篷",
+        englishName: "TFT_Item_RedBuff",
+        equipId: "93302",
+        formula: "DA_Component_ChainVest,DA_Component_GiantsBelt"
+    },
+    "金锅铲冠冕": {   // S18 资源名 DA_TacticiansCape
+        name: "金锅铲冠冕",
+        englishName: "TFT_Item_TacticiansRing",
+        equipId: "93304",
+        formula: "DA_Component_Spatula,DA_Component_FryingPan"
+    },
+    "金铲铲冠冕": {   // S18 资源名 DA_TacticiansCrown
+        name: "金铲铲冠冕",
+        englishName: "TFT_Item_ForceOfNature",
+        equipId: "93305",
+        formula: "DA_Component_Spatula,DA_Component_Spatula"
+    },
+    "金锅锅冠冕": {   // S18 资源名 DA_TacticiansShield
+        name: "金锅锅冠冕",
+        englishName: "TFT_Item_TacticiansScepter",
+        equipId: "93306",
+        formula: "DA_Component_FryingPan,DA_Component_FryingPan"
+    },
+    "窃贼手套": {   // S18 资源名 DA_ThiefsGloves
+        name: "窃贼手套",
+        englishName: "TFT_Item_ThiefsGloves",
+        equipId: "93309",
+        formula: "DA_Component_SparringGloves,DA_Component_SparringGloves"
+    },
+    "泰坦的坚决": {   // S18 资源名 DA_TitansResolve
+        name: "泰坦的坚决",
+        englishName: "TFT_Item_TitansResolve",
+        equipId: "93321",
+        formula: "DA_Component_RecurveBow,DA_Component_ChainVest"
+    },
+    "虚空之杖": {   // S18 资源名 DA_VoidStaff
+        name: "虚空之杖",
+        englishName: "TFT_Item_StatikkShiv",
+        equipId: "93332",
+        formula: "DA_Component_RecurveBow,DA_Component_TearOfTheGoddess"
+    },
+    "狂徒铠甲": {   // S18 资源名 DA_WarmogsArmor
+        name: "狂徒铠甲",
+        englishName: "TFT_Item_WarmogsArmor",
+        equipId: "93334",
+        formula: "DA_Component_GiantsBelt,DA_Component_GiantsBelt"
+    },
+
+    // ==========================================
+    // Type 2 / 5: 羁绊纹章 (Emblems) (共 23 个)
+    // ==========================================
+    "黑荆棘纹章": {
+        name: "黑荆棘纹章",
+        englishName: "DA_18_EmblemBlackthorn",
+        equipId: "92863",
+        formula: "DA_Component_Spatula,DA_Component_GiantsBelt"
+    },
+    "灵魂莲华纹章": {
+        name: "灵魂莲华纹章",
+        englishName: "DA_18_EmblemBlossom",
+        equipId: "92864",
+        formula: "DA_Component_Spatula,DA_Component_NeedlesslyLargeRod"
+    },
+    "斗士纹章": {   // S18 资源名 DA_18_EmblemBrawler
+        name: "斗士纹章",
+        englishName: "TFT17_Item_HPTankEmblemItem",
+        equipId: "92865",
+        formula: "DA_Component_FryingPan,DA_Component_GiantsBelt"
+    },
+    "魔女纹章": {
+        name: "魔女纹章",
+        englishName: "DA_18_EmblemCoven",
+        equipId: "92866",
+        formula: ""
+    },
+    "护卫纹章": {
+        name: "护卫纹章",
+        englishName: "DA_18_EmblemDefender",
+        equipId: "92867",
+        formula: ""
+    },
+    "永恒之森纹章": {
+        name: "永恒之森纹章",
+        englishName: "DA_18_EmblemElderwood",
+        equipId: "92868",
+        formula: "DA_Component_Spatula,DA_Component_ChainVest"
+    },
+    "裁决使纹章": {
+        name: "裁决使纹章",
+        englishName: "DA_18_EmblemExecutioner",
+        equipId: "92869",
+        formula: "DA_Component_FryingPan,DA_Component_SparringGloves"
+    },
+    "花仙子纹章": {
+        name: "花仙子纹章",
+        englishName: "DA_18_EmblemFae",
+        equipId: "92870",
+        formula: "DA_Component_Spatula,DA_Component_BFSword"
+    },
+    "绝命花妖纹章": {
+        name: "绝命花妖纹章",
+        englishName: "DA_18_EmblemFloraFatalis",
+        equipId: "92871",
+        formula: ""
+    },
+    "绝命花妖纹章_92872": {   // S18 资源名 DA_18_EmblemFloraFatalisAugment
+        name: "绝命花妖纹章",
+        englishName: "DA_18_EmblemFloraFatalis",
+        equipId: "92872",
+        formula: ""
+    },
+    "猎人纹章": {
+        name: "猎人纹章",
+        englishName: "DA_18_EmblemHunter",
+        equipId: "92873",
+        formula: "DA_Component_FryingPan,DA_Component_BFSword"
+    },
+    "地狱火纹章": {
+        name: "地狱火纹章",
+        englishName: "DA_18_EmblemInferno",
+        equipId: "92874",
+        formula: "DA_Component_Spatula,DA_Component_RecurveBow"
+    },
+    "神谕纹章": {
+        name: "神谕纹章",
+        englishName: "DA_18_EmblemInvoker",
+        equipId: "92875",
+        formula: "DA_Component_FryingPan,DA_Component_TearOfTheGoddess"
+    },
+    "主宰纹章": {
+        name: "主宰纹章",
+        englishName: "DA_18_EmblemJuggernaut",
+        equipId: "92876",
+        formula: ""
+    },
+    "月蚀骑士纹章": {
+        name: "月蚀骑士纹章",
+        englishName: "DA_18_EmblemLunar",
+        equipId: "92877",
+        formula: "DA_Component_Spatula,DA_Component_TearOfTheGoddess"
+    },
+    "野兽之灵纹章": {
+        name: "野兽之灵纹章",
+        englishName: "DA_18_EmblemPrimal",
+        equipId: "92878",
+        formula: "DA_Component_Spatula,DA_Component_SparringGloves"
+    },
+    "迅捷射手纹章": {
+        name: "迅捷射手纹章",
+        englishName: "DA_18_EmblemRapidfire",
+        equipId: "92879",
+        formula: "DA_Component_FryingPan,DA_Component_RecurveBow"
+    },
+    "狂战士纹章": {
+        name: "狂战士纹章",
+        englishName: "DA_18_EmblemSlayer",
+        equipId: "92880",
+        formula: "DA_Component_FryingPan,DA_Component_NegatronCloak"
+    },
+    "法师纹章": {
+        name: "法师纹章",
+        englishName: "DA_18_EmblemSpellweaver",
+        equipId: "92881",
+        formula: "DA_Component_FryingPan,DA_Component_NeedlesslyLargeRod"
+    },
+    "约德尔人和朋友纹章": {
+        name: "约德尔人和朋友纹章",
+        englishName: "DA_18_EmblemSprykin",
+        equipId: "92882",
+        formula: "DA_Component_Spatula,DA_Component_NegatronCloak"
+    },
+    "重装战士纹章": {   // S18 资源名 DA_18_EmblemVanguard
+        name: "重装战士纹章",
+        englishName: "TFT17_Item_ShieldTankEmblemItem",
+        equipId: "92883",
+        formula: "DA_Component_FryingPan,DA_Component_ChainVest"
+    },
+    "幻影纹章": {
+        name: "幻影纹章",
+        englishName: "DA_PhantomEmblem18",
+        equipId: "93226",
+        formula: ""
+    },
+    "幻影纹章_93227": {   // S18 资源名 DA_PhantomEmblemUpgrade18
+        name: "幻影纹章",
+        englishName: "DA_PhantomEmblem18",
+        equipId: "93227",
+        formula: ""
+    },
+
+    // ==========================================
+    // Type 3: 光明装备 (Radiant Items) (共 42 个)
+    // ==========================================
+    "光明化": {
+        name: "光明化",
+        englishName: "DA_18_Radiantize",
+        equipId: "92940",
+        formula: ""
+    },
+    "光明化_92941": {   // S18 资源名 DA_18_Radiantize_Upgrade
+        name: "光明化",
+        englishName: "DA_18_Radiantize",
+        equipId: "92941",
+        formula: ""
+    },
+    "光明版适应性头盔": {   // S18 资源名 DA_AdaptiveHelm_Radiant
+        name: "光明版适应性头盔",
+        englishName: "TFT5_Item_AdaptiveHelmRadiant",
+        equipId: "92967",
+        formula: ""
+    },
+    "光明版大天使之杖": {   // S18 资源名 DA_ArchangelsStaffRadiant
+        name: "光明版大天使之杖",
+        englishName: "TFT5_Item_ArchangelsStaffRadiant",
+        equipId: "92973",
+        formula: ""
+    },
+    "光明版爆炸药水": {
+        name: "光明版爆炸药水",
+        englishName: "DA_BlastPotion18_Radiant",
+        equipId: "93023",
+        formula: ""
+    },
+    "光明版饮血剑": {   // S18 资源名 DA_BloodthirsterRadiant
+        name: "光明版饮血剑",
+        englishName: "TFT5_Item_BloodthirsterRadiant",
+        equipId: "93031",
+        formula: ""
+    },
+    "光明版蓝霸符": {   // S18 资源名 DA_BlueBuffRadiant
+        name: "光明版蓝霸符",
+        englishName: "TFT5_Item_BlueBuffRadiant",
+        equipId: "93033",
+        formula: ""
+    },
+    "光明版棘刺背心": {   // S18 资源名 DA_BrambleVestRadiant
+        name: "光明版棘刺背心",
+        englishName: "TFT5_Item_BrambleVestRadiant",
+        equipId: "93041",
+        formula: ""
+    },
+    "光明版冕卫": {   // S18 资源名 DA_CrownguardRadiant
+        name: "光明版冕卫",
+        englishName: "TFT5_Item_CrownguardRadiant",
+        equipId: "93069",
+        formula: ""
+    },
+    "光明版死亡之刃": {   // S18 资源名 DA_DeathbladeRadiant
+        name: "光明版死亡之刃",
+        englishName: "TFT5_Item_DeathbladeRadiant",
+        equipId: "93075",
+        formula: ""
+    },
+    "光明版巨龙之爪": {   // S18 资源名 DA_DragonsClawRadiant
+        name: "光明版巨龙之爪",
+        englishName: "TFT5_Item_DragonsClawRadiant",
+        equipId: "93090",
+        formula: ""
+    },
+    "光明版夜之锋刃": {   // S18 资源名 DA_EdgeOfNightRadiant
+        name: "光明版夜之锋刃",
+        englishName: "TFT5_Item_GuardianAngelRadiant",
+        equipId: "93092",
+        formula: ""
+    },
+    "光明版薄暮法袍": {   // S18 资源名 DA_EvenshroudRadiant
+        name: "光明版薄暮法袍",
+        englishName: "TFT5_Item_SpectralGauntletRadiant",
+        equipId: "93096",
+        formula: ""
+    },
+    "光明版石像鬼石板甲": {   // S18 资源名 DA_GargoyleStoneplate_Radiant
+        name: "光明版石像鬼石板甲",
+        englishName: "TFT5_Item_GargoyleStoneplateRadiant",
+        equipId: "93110",
+        formula: ""
+    },
+    "光明版巨人杀手": {   // S18 资源名 DA_GiantSlayer_Radiant
+        name: "光明版巨人杀手",
+        englishName: "TFT5_Item_GiantSlayerRadiant",
+        equipId: "93112",
+        formula: ""
+    },
+    "光明版鬼索的狂暴之刃": {   // S18 资源名 DA_GuinsoosRagebladeRadiant
+        name: "光明版鬼索的狂暴之刃",
+        englishName: "TFT5_Item_GuinsoosRagebladeRadiant",
+        equipId: "93125",
+        formula: ""
+    },
+    "光明版正义之手": {   // S18 资源名 DA_HandOfJusticeRadiant
+        name: "光明版正义之手",
+        englishName: "TFT5_Item_HandOfJusticeRadiant",
+        equipId: "93129",
+        formula: ""
+    },
+    "光明版生命药水": {
+        name: "光明版生命药水",
+        englishName: "DA_HealthPotion18_Radiant",
+        equipId: "93133",
+        formula: ""
+    },
+    "光明版海克斯科技枪刃": {   // S18 资源名 DA_HextechGunbladeRadiant
+        name: "光明版海克斯科技枪刃",
+        englishName: "TFT5_Item_HextechGunbladeRadiant",
+        equipId: "93140",
+        formula: ""
+    },
+    "光明版无尽之刃": {   // S18 资源名 DA_InfinityEdgeRadiant
+        name: "光明版无尽之刃",
+        englishName: "TFT5_Item_InfinityEdgeRadiant",
+        equipId: "93154",
+        formula: ""
+    },
+    "光明版离子火花": {   // S18 资源名 DA_IonicSparkRadiant
+        name: "光明版离子火花",
+        englishName: "TFT5_Item_IonicSparkRadiant",
+        equipId: "93156",
+        formula: ""
+    },
+    "光明版珠光护手": {   // S18 资源名 DA_JeweledGauntletRadiant
+        name: "光明版珠光护手",
+        englishName: "TFT5_Item_JeweledGauntletRadiant",
+        equipId: "93163",
+        formula: ""
+    },
+    "光明版海妖之怒": {   // S18 资源名 DA_KrakensFury_Radiant
+        name: "光明版海妖之怒",
+        englishName: "TFT5_Item_RunaansHurricaneRadiant",
+        equipId: "93177",
+        formula: ""
+    },
+    "光明版最后的轻语": {   // S18 资源名 DA_LastWhisperRadiant
+        name: "光明版最后的轻语",
+        englishName: "TFT5_Item_LastWhisperRadiant",
+        equipId: "93179",
+        formula: ""
+    },
+    "光明版法力药水": {
+        name: "光明版法力药水",
+        englishName: "DA_ManaPotion18_Radiant",
+        equipId: "93193",
+        formula: ""
+    },
+    "光明版莫雷洛秘典": {   // S18 资源名 DA_MorellonomiconRadiant
+        name: "光明版莫雷洛秘典",
+        englishName: "TFT5_Item_MorellonomiconRadiant",
+        equipId: "93210",
+        formula: ""
+    },
+    "光明版纳什之牙": {   // S18 资源名 DA_NashorsToothRadiant
+        name: "光明版纳什之牙",
+        englishName: "TFT5_Item_LeviathanRadiant",
+        equipId: "93212",
+        formula: ""
+    },
+    "光明版圣盾使的誓约": {   // S18 资源名 DA_ProtectorsVowRadiant
+        name: "光明版圣盾使的誓约",
+        englishName: "TFT5_Item_FrozenHeartRadiant",
+        equipId: "93243",
+        formula: ""
+    },
+    "光明版水银": {   // S18 资源名 DA_QuicksilverRadiant
+        name: "光明版水银",
+        englishName: "TFT5_Item_QuicksilverRadiant",
+        equipId: "93247",
+        formula: ""
+    },
+    "光明版灭世者的死亡之帽": {   // S18 资源名 DA_RabadonsDeathcap_Radiant
+        name: "光明版灭世者的死亡之帽",
+        englishName: "TFT5_Item_RabadonsDeathcapRadiant",
+        equipId: "93249",
+        formula: ""
+    },
+    "光明版幸运装备宝箱": {
+        name: "光明版幸运装备宝箱",
+        englishName: "DA_RadiantLuckyItemChest",
+        equipId: "93250",
+        formula: ""
+    },
+    "光明版红霸符": {   // S18 资源名 DA_RedBuffRadiant
+        name: "光明版红霸符",
+        englishName: "TFT5_Item_RapidFirecannonRadiant",
+        equipId: "93254",
+        formula: ""
+    },
+    "光明版朔极之矛": {   // S18 资源名 DA_SpearOfShojinRadiant
+        name: "光明版朔极之矛",
+        englishName: "TFT5_Item_SpearOfShojinRadiant",
+        equipId: "93285",
+        formula: ""
+    },
+    "光明版振奋盔甲": {   // S18 资源名 DA_SpiritVisage_Radiant
+        name: "光明版振奋盔甲",
+        englishName: "TFT5_Item_RedemptionRadiant",
+        equipId: "93288",
+        formula: ""
+    },
+    "光明版坚定之心": {   // S18 资源名 DA_SteadfastHeartRadiant
+        name: "光明版坚定之心",
+        englishName: "TFT5_Item_NightHarvesterRadiant",
+        equipId: "93295",
+        formula: ""
+    },
+    "光明版斯特拉克的挑战护手": {   // S18 资源名 DA_SteraksGageRadiant
+        name: "光明版斯特拉克的挑战护手",
+        englishName: "TFT5_Item_SteraksGageRadiant",
+        equipId: "93299",
+        formula: ""
+    },
+    "光明版强袭者的链枷": {   // S18 资源名 DA_StrikersFlailRadiant
+        name: "光明版强袭者的链枷",
+        englishName: "TFT5_Item_TrapClawRadiant",
+        equipId: "93301",
+        formula: ""
+    },
+    "光明版日炎斗篷": {   // S18 资源名 DA_SunfireCape_Radiant
+        name: "光明版日炎斗篷",
+        englishName: "TFT5_Item_SunfireCapeRadiant",
+        equipId: "93303",
+        formula: ""
+    },
+    "光明版窃贼手套": {   // S18 资源名 DA_ThiefsGlovesRadiant
+        name: "光明版窃贼手套",
+        englishName: "TFT5_Item_ThiefsGlovesRadiant",
+        equipId: "93310",
+        formula: ""
+    },
+    "光明版泰坦的坚决": {   // S18 资源名 DA_TitansResolve_Radiant
+        name: "光明版泰坦的坚决",
+        englishName: "TFT5_Item_TitansResolveRadiant",
+        equipId: "93322",
+        formula: ""
+    },
+    "光明版虚空之杖": {
+        name: "光明版虚空之杖",
+        englishName: "DA_VoidStaffRadiant",
+        equipId: "93333",
+        formula: ""
+    },
+    "光明版狂徒铠甲": {   // S18 资源名 DA_WarmogsArmorRadiant
+        name: "光明版狂徒铠甲",
+        englishName: "TFT5_Item_WarmogsArmorRadiant",
+        equipId: "93335",
+        formula: ""
+    },
+
+    // ==========================================
+    // Type 6 / 7: 奥恩神器 / 金鳞龙装备 (Artifacts) (共 31 个)
+    // ==========================================
+    "黎明圣盾": {
+        name: "黎明圣盾",
+        englishName: "DA_Artifact_AegisOfDawn",
+        equipId: "92975",
+        formula: ""
+    },
+    "黄昏圣盾": {
+        name: "黄昏圣盾",
+        englishName: "DA_Artifact_AegisOfDusk",
+        equipId: "92976",
+        formula: ""
+    },
+    "枯萎珠宝": {   // S18 资源名 DA_Artifact_BlightingJewel
+        name: "枯萎珠宝",
+        englishName: "TFT_Item_Artifact_BlightingJewel",
+        equipId: "92977",
+        formula: ""
+    },
+    "黎明核心": {   // S18 资源名 DA_Artifact_Dawncore
+        name: "黎明核心",
+        englishName: "TFT_Item_Artifact_Dawncore",
+        equipId: "92978",
+        formula: ""
+    },
+    "死亡之蔑": {   // S18 资源名 DA_Artifact_DeathsDefiance
+        name: "死亡之蔑",
+        englishName: "TFT4_Item_OrnnDeathsDefiance",
+        equipId: "92979",
+        formula: ""
+    },
+    "永恒契约": {
+        name: "永恒契约",
+        englishName: "DA_Artifact_EternalPact",
+        equipId: "92980",
+        formula: ""
+    },
+    "鱼骨头": {   // S18 资源名 DA_Artifact_Fishbones
+        name: "鱼骨头",
+        englishName: "TFT_Item_Artifact_Fishbones",
+        equipId: "92981",
+        formula: ""
+    },
+    "禁忌雕像": {
+        name: "禁忌雕像",
+        englishName: "DA_Artifact_ForbiddenIdol",
+        equipId: "92982",
+        formula: ""
+    },
+    "投机者之刃": {   // S18 资源名 DA_Artifact_GamblersBlade
+        name: "投机者之刃",
+        englishName: "TFT7_Item_ShimmerscaleGamblersBlade",
+        equipId: "92983",
+        formula: ""
+    },
+    "金币收集者": {   // S18 资源名 DA_Artifact_GoldCollector
+        name: "金币收集者",
+        englishName: "TFT4_Item_OrnnTheCollector",
+        equipId: "92984",
+        formula: ""
+    },
+    "恶火小斧": {
+        name: "恶火小斧",
+        englishName: "DA_Artifact_HellfireHatchet",
+        equipId: "92985",
+        formula: ""
+    },
+    "视界专注": {   // S18 资源名 DA_Artifact_HorizonFocus
+        name: "视界专注",
+        englishName: "TFT_Item_Artifact_HorizonFocus",
+        equipId: "92986",
+        formula: ""
+    },
+    "碎舰者": {   // S18 资源名 DA_Artifact_Hullcrusher
+        name: "碎舰者",
+        englishName: "TFT9_Item_OrnnHullbreaker",
+        equipId: "92987",
+        formula: ""
+    },
+    "三相之力": {   // S18 资源名 DA_Artifact_InfinityForce
+        name: "三相之力",
+        englishName: "TFT4_Item_OrnnInfinityForce",
+        equipId: "92988",
+        formula: ""
+    },
+    "巫妖之祸": {   // S18 资源名 DA_Artifact_LichBane
+        name: "巫妖之祸",
+        englishName: "TFT_Item_Artifact_LichBane",
+        equipId: "92989",
+        formula: ""
+    },
+    "光盾徽章": {   // S18 资源名 DA_Artifact_LightshieldCrest
+        name: "光盾徽章",
+        englishName: "TFT_Item_Artifact_LightshieldCrest",
+        equipId: "92990",
+        formula: ""
+    },
+    "卢登的激荡": {
+        name: "卢登的激荡",
+        englishName: "DA_Artifact_LudensTempest",
+        equipId: "92991",
+        formula: ""
+    },
+    "魔蕴": {   // S18 资源名 DA_Artifact_Manazane
+        name: "魔蕴",
+        englishName: "TFT4_Item_OrnnMuramana",
+        equipId: "92992",
+        formula: ""
+    },
+    "连指手套": {   // S18 资源名 DA_Artifact_Mittens
+        name: "连指手套",
+        englishName: "TFT_Item_Artifact_Mittens",
+        equipId: "92993",
+        formula: ""
+    },
+    "大亨之铠": {   // S18 资源名 DA_Artifact_MogulsMail
+        name: "大亨之铠",
+        englishName: "TFT7_Item_ShimmerscaleMogulsMail",
+        equipId: "92994",
+        formula: ""
+    },
+    "烁刃": {   // S18 资源名 DA_Artifact_NavoriFlickerblade
+        name: "烁刃",
+        englishName: "TFT_Item_Artifact_NavoriFlickerblades",
+        equipId: "92995",
+        formula: ""
+    },
+    "疾射火炮": {   // S18 资源名 DA_Artifact_RapidFireCannon
+        name: "疾射火炮",
+        englishName: "TFT_Item_Artifact_RapidFirecannon",
+        equipId: "92996",
+        formula: ""
+    },
+    "探索者的护臂": {   // S18 资源名 DA_Artifact_SeekersArmguard
+        name: "探索者的护臂",
+        englishName: "TFT_Item_Artifact_SeekersArmguard",
+        equipId: "92997",
+        formula: ""
+    },
+    "密银黎明": {   // S18 资源名 DA_Artifact_SilvermereDawn
+        name: "密银黎明",
+        englishName: "TFT_Item_Artifact_SilvermereDawn",
+        equipId: "92998",
+        formula: ""
+    },
+    "斯塔缇克电刃": {   // S18 资源名 DA_Artifact_StatikkShiv
+        name: "斯塔缇克电刃",
+        englishName: "TFT_Item_Artifact_StatikkShiv",
+        equipId: "92999",
+        formula: ""
+    },
+    "顽强不屈": {   // S18 资源名 DA_Artifact_TheIndomitable
+        name: "顽强不屈",
+        englishName: "TFT_Item_Artifact_TheIndomitable",
+        equipId: "93000",
+        formula: ""
+    },
+    "巨型九头蛇": {   // S18 资源名 DA_Artifact_TitanicHydra
+        name: "巨型九头蛇",
+        englishName: "TFT_Item_Artifact_TitanicHydra",
+        equipId: "93001",
+        formula: ""
+    },
+    "虚空护手": {
+        name: "虚空护手",
+        englishName: "DA_Artifact_VoidGauntlet",
+        equipId: "93002",
+        formula: ""
+    },
+    "智慧末刃": {   // S18 资源名 DA_Artifact_WitsEnd
+        name: "智慧末刃",
+        englishName: "TFT_Item_Artifact_WitsEnd",
+        equipId: "93003",
+        formula: ""
+    },
+    "中娅悖论": {   // S18 资源名 DA_Artifact_ZhonyasParadox
+        name: "中娅悖论",
+        englishName: "TFT4_Item_OrnnZhonyasParadox",
+        equipId: "93004",
+        formula: ""
+    },
+    "飞升护符": {   // S18 资源名 DA_Item_Artifact_TalismanOfAscension
+        name: "飞升护符",
+        englishName: "TFT_Item_Artifact_TalismanOfAscension",
+        equipId: "93161",
+        formula: ""
+    },
+
+    // ==========================================
+    // Type 9: 特殊道具 (拆卸器 / 复制器 / 药水 / 补剂等消耗品，equipId 记为 -1) (共 16 个)
+    // ==========================================
+    "法术加成补剂": {   // 真实 equipId 92965
+        name: "法术加成补剂",
+        englishName: "DA_AbilityBooster18",
+        equipId: "-1",
+        formula: ""
+    },
+    "护甲和魔抗补剂": {   // 真实 equipId 92974
+        name: "护甲和魔抗补剂",
+        englishName: "DA_ArmorMRBooster18",
+        equipId: "-1",
+        formula: ""
+    },
+    "物理加成补剂": {   // 真实 equipId 93007
+        name: "物理加成补剂",
+        englishName: "DA_AttackBooster18",
+        equipId: "-1",
+        formula: ""
+    },
+    "爆炸药水": {   // 真实 equipId 93021
+        name: "爆炸药水",
+        englishName: "DA_BlastPotion18",
+        equipId: "-1",
+        formula: ""
+    },
+    "英雄复制器": {   // 真实 equipId 93064
+        name: "英雄复制器",
+        englishName: "DA_Consumable_ChampionDuplicator",
+        equipId: "-1",
+        formula: ""
+    },
+    "金制拆卸器": {   // S18 资源名 DA_Consumable_GoldenItemRemover，真实 equipId 93065
+        name: "金制拆卸器",
+        englishName: "TFT_Item_GoldenItemRemover",
+        equipId: "-1",
+        formula: ""
+    },
+    "装备拆卸器": {   // 真实 equipId 93066
+        name: "装备拆卸器",
+        englishName: "DA_Consumable_ItemRemover",
+        equipId: "-1",
+        formula: ""
+    },
+    "次级英雄复制器": {   // 真实 equipId 93067
+        name: "次级英雄复制器",
+        englishName: "DA_Consumable_LesserChampionDuplicator",
+        equipId: "-1",
+        formula: ""
+    },
+    "生命值补剂": {   // 真实 equipId 93130
+        name: "生命值补剂",
+        englishName: "DA_HealthBooster18",
+        equipId: "-1",
+        formula: ""
+    },
+    "生命药水": {   // 真实 equipId 93131
+        name: "生命药水",
+        englishName: "DA_HealthPotion18",
+        equipId: "-1",
+        formula: ""
+    },
+    "幸运装备宝箱": {   // 真实 equipId 93190
+        name: "幸运装备宝箱",
+        englishName: "DA_LuckyItemChest",
+        equipId: "-1",
+        formula: ""
+    },
+    "法力药水": {   // 真实 equipId 93191
+        name: "法力药水",
+        englishName: "DA_ManaPotion18",
+        equipId: "-1",
+        formula: ""
+    },
+    "法力回复补剂": {   // 真实 equipId 93195
+        name: "法力回复补剂",
+        englishName: "DA_ManaRegenBooster18",
+        equipId: "-1",
+        formula: ""
+    },
+    "杰作升级": {   // 真实 equipId 93202
+        name: "杰作升级",
+        englishName: "DA_MasterworkUpgrade",
+        equipId: "-1",
+        formula: ""
+    },
+    "装备重铸器": {   // S18 资源名 DA_Reforger，真实 equipId 93255
+        name: "装备重铸器",
+        englishName: "TFT_Item_Reforger",
+        equipId: "-1",
+        formula: ""
+    },
+    "攻击速度补剂": {   // 真实 equipId 93286
+        name: "攻击速度补剂",
+        englishName: "DA_SpeedBooster18",
+        equipId: "-1",
+        formula: ""
+    },
+} satisfies Record<string, TFTEquip>
+// </generated:S18-equip>

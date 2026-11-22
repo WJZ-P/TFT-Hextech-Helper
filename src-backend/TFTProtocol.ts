@@ -1,6 +1,6 @@
 //  定义一下棋子相关的一些协议，包含棋子单位信息，各种位置信息和约定各种枚举值
 
-import {_TFT_16_EQUIP_DATA, _TFT_4_EQUIP_DATA, _TFT_17_EQUIP_DATA} from "./TFTInfo/equip.ts";
+import {_TFT_16_EQUIP_DATA, _TFT_4_EQUIP_DATA, _TFT_17_EQUIP_DATA, _TFT_18_EQUIP_DATA} from "./TFTInfo/equip.ts";
 import {_TFT_16_CHESS_DATA, _TFT_4_CHESS_DATA, _TFT_17_CHESS_DATA, UNPURCHASABLE_CHESS} from "./TFTInfo/chess.ts";
 
 /**
@@ -581,6 +581,9 @@ export const TFT_16_EQUIP_DATA: Record<keyof typeof _TFT_16_EQUIP_DATA, TFTEquip
 /** S17 星神赛季装备数据（当前主赛季） */
 export const TFT_17_EQUIP_DATA: Record<keyof typeof _TFT_17_EQUIP_DATA, TFTEquip> = _TFT_17_EQUIP_DATA;
 
+/** S18 自然之力赛季装备数据（虚幻客户端） */
+export const TFT_18_EQUIP_DATA: Record<keyof typeof _TFT_18_EQUIP_DATA, TFTEquip> = _TFT_18_EQUIP_DATA;
+
 /** S4 瑞兽闹新春赛季装备数据 */
 export const TFT_4_EQUIP_DATA: Record<keyof typeof _TFT_4_EQUIP_DATA, TFTEquip> = _TFT_4_EQUIP_DATA;
 
@@ -601,7 +604,7 @@ export const TFT_4_EQUIP_DATA: Record<keyof typeof _TFT_4_EQUIP_DATA, TFTEquip> 
 // 把 S17 放最前面——它是当前主赛季，TS 提示时会优先匹配
 export type ChampionKey = keyof typeof TFT_17_CHESS_DATA | keyof typeof TFT_16_CHESS_DATA | keyof typeof TFT_4_CHESS_DATA;
 export type ChampionEnglishId = typeof _TFT_17_CHESS_DATA[keyof typeof _TFT_17_CHESS_DATA]['englishId'];
-export type EquipKey = keyof typeof TFT_17_EQUIP_DATA | keyof typeof TFT_16_EQUIP_DATA | keyof typeof TFT_4_EQUIP_DATA;
+export type EquipKey = keyof typeof TFT_17_EQUIP_DATA | keyof typeof TFT_18_EQUIP_DATA | keyof typeof TFT_16_EQUIP_DATA | keyof typeof TFT_4_EQUIP_DATA;
 
 // ==========================================
 // 英文ID到中文名的映射表 (自动从数据生成，用于解析 OP.GG 等外部数据)

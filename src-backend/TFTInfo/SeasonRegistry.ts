@@ -28,6 +28,7 @@ import {
     TFT_4_EQUIP_DATA,
     TFT_16_EQUIP_DATA,
     TFT_17_EQUIP_DATA,
+    TFT_18_EQUIP_DATA,
     TFTUnit,
     ChampionKey,
 } from "../TFTProtocol.ts";
@@ -154,6 +155,15 @@ export function getChessDataS4() {
 /** 获取 S17 装备数据（字面量类型精确） */
 export function getEquipDataS17() {
     return TFT_17_EQUIP_DATA;
+}
+
+/**
+ * 获取 S18 装备数据
+ * 注：S18 的棋子、羁绊数据还没有接入，所以暂未注册为赛季；
+ *     等 SeasonId 加上 'S18' 后，在 getCurrentEquipData() 里加 case 'S18': return getEquipDataS18();
+ */
+export function getEquipDataS18() {
+    return TFT_18_EQUIP_DATA;
 }
 
 /** 获取 S16 装备数据 */
