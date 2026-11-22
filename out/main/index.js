@@ -1,9 +1,9 @@
 import { app, net, BrowserWindow, dialog, shell, ipcMain } from "electron";
 import * as path from "path";
 import path__default from "path";
-import cp, { exec as exec$1 } from "child_process";
 import * as fs$2 from "fs";
 import fs__default from "fs";
+import cp, { execFile, exec as exec$1 } from "child_process";
 import * as os from "os";
 import os__default from "os";
 import { EventEmitter } from "events";
@@ -5680,491 +5680,145 @@ class LCUManager extends EventEmitter {
     });
   }
 }
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-function debounce(func, delay) {
-  let timeoutId = null;
-  return (...args) => {
-    if (timeoutId) clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => {
-      func(...args);
-    }, delay);
-  };
-}
+const TFT_SAVED_DIR = path__default.join(process.env.LOCALAPPDATA || path__default.join(app.getPath("home"), "AppData", "Local"), "TFT", "Saved");
+const BACKUP_ITEMS = [path__default.join("Config", "WindowsClient"), "SaveGames"];
+const KEY_FILE = path__default.join("Config", "WindowsClient", "GameUserSettings.ini");
+const TFT_PROCESS_EXE = "TFTTencentClient-Win64-Shipping.exe";
 class GameConfigHelper {
   static instance;
-  // 实例的属性，用来存储路径信息
-  installPath;
-  gameConfigPath;
-  /** 主备份路径（软件根目录下）—— 用于用户手动备份/恢复 */
+  /** 主备份路径（软件根目录下） */
   primaryBackupPath;
-  /** 备用备份路径（C盘 userData，作为兜底）—— 用于用户手动备份/恢复 */
+  /** 备用备份路径（C盘 userData，作为兜底） */
   fallbackBackupPath;
-  /** 当前实际使用的手动备份路径 */
+  /** 当前实际使用的备份路径 */
   currentBackupPath;
-  /** 临时备份路径 —— 仅用于挂机启动/结束时的自动备份恢复，与用户手动备份完全隔离 */
-  tempBackupPath;
-  tftConfigPath;
-  // 预设的云顶设置
-  isTFTConfig = false;
-  /** TFT 下棋配置中 game.cfg 的 MD5 哈希值（在 applyTFTConfig 时记录） */
-  tftConfigHash = "";
-  /** 文件监听器实例，用于长期守护恢复后的配置不被 LOL 客户端覆盖 */
-  configWatcher = null;
-  /** 防抖定时器，避免短时间内触发多次恢复 */
-  watcherDebounceTimer = null;
-  /** 守护期间允许的最大自动恢复次数，防止无限循环 */
-  MAX_GUARD_RESTORES = 1;
-  /** 守护期间已执行的自动恢复次数 */
-  guardRestoreCount = 0;
-  constructor(installPath) {
-    if (!installPath) {
-      throw new Error("初始化失败，必须提供一个有效的游戏安装路径！");
-    }
-    this.installPath = installPath;
-    this.gameConfigPath = path__default.join(this.installPath, "Game", "Config");
+  constructor() {
     if (app.isPackaged) {
-      this.primaryBackupPath = path__default.join(process.resourcesPath, "GameConfig", "UserConfig");
+      this.primaryBackupPath = path__default.join(process.resourcesPath, "GameConfig", "TFTUserConfig");
     } else {
-      this.primaryBackupPath = path__default.join(app.getAppPath(), "public", "GameConfig", "UserConfig");
+      this.primaryBackupPath = path__default.join(app.getAppPath(), "public", "GameConfig", "TFTUserConfig");
     }
-    this.fallbackBackupPath = path__default.join(app.getPath("userData"), "GameConfigBackup");
+    this.fallbackBackupPath = path__default.join(app.getPath("userData"), "TFTConfigBackup");
     this.currentBackupPath = this.primaryBackupPath;
-    if (app.isPackaged) {
-      this.tempBackupPath = path__default.join(process.resourcesPath, "GameConfig", "TempConfig");
-    } else {
-      this.tempBackupPath = path__default.join(app.getAppPath(), "public", "GameConfig", "TempConfig");
-    }
-    if (app.isPackaged) {
-      this.tftConfigPath = path__default.join(process.resourcesPath, "GameConfig", "TFTConfig");
-    } else {
-      this.tftConfigPath = path__default.join(app.getAppPath(), "public", "GameConfig", "TFTConfig");
-    }
-    logger.debug(`[ConfigHelper] 游戏设置目录已设定: ${this.gameConfigPath}`);
-    logger.debug(`[ConfigHelper] 手动备份主路径: ${this.primaryBackupPath}`);
-    logger.debug(`[ConfigHelper] 手动备份兜底路径: ${this.fallbackBackupPath}`);
-    logger.debug(`[ConfigHelper] 临时备份路径: ${this.tempBackupPath}`);
-    logger.debug(`[ConfigHelper] 预设云顶之弈设置目录: ${this.tftConfigPath}`);
-    this.initTftConfigHash();
+    logger.debug(`[ConfigHelper] 云顶之弈设置目录: ${TFT_SAVED_DIR}`);
+    logger.debug(`[ConfigHelper] 备份主路径: ${this.primaryBackupPath}`);
+    logger.debug(`[ConfigHelper] 备份兜底路径: ${this.fallbackBackupPath}`);
   }
   /**
-   * 预计算 TFT 下棋配置 game.cfg 的哈希值
-   * 这个哈希在整个软件生命周期内不会变化（TFT 配置是预设的固定文件）
+   * 初始化（应用启动时调用一次）
    */
-  async initTftConfigHash() {
-    try {
-      const tftGameCfg = path__default.join(this.tftConfigPath, "game.cfg");
-      if (await fs.pathExists(tftGameCfg)) {
-        this.tftConfigHash = await this.getFileHash(tftGameCfg);
-        logger.debug(`[ConfigHelper] TFT 配置哈希: ${this.tftConfigHash}`);
-      }
-    } catch (err) {
-      logger.warn(`[ConfigHelper] 计算 TFT 配置哈希失败: ${err}`);
-    }
-  }
-  /**
-   * @param installPath 游戏安装目录
-   */
-  static init(installPath) {
+  static init() {
     if (GameConfigHelper.instance) {
       console.warn("[GameConfigHelper] GameConfigHelper 已被初始化过！");
       return;
     }
-    GameConfigHelper.instance = new GameConfigHelper(installPath);
+    GameConfigHelper.instance = new GameConfigHelper();
   }
   static getInstance() {
     if (!GameConfigHelper.instance) {
-      console.error("[GameConfigHelper]GameConfigHelper 还没有被初始化！请先在程序入口调用 init(installPath) 方法。");
+      console.error("[GameConfigHelper] GameConfigHelper 还没有被初始化！请先在程序入口调用 init() 方法。");
       return null;
     }
     return GameConfigHelper.instance;
   }
   // --- 核心功能方法 (Core Function Methods) ---
   /**
-   * 备份当前的游戏设置
-   * @description 把游戏目录的 Config 文件夹完整地拷贝到备份目录
-   *              优先使用软件根目录，失败则使用 C 盘 userData 作为兜底
-   * 
-   * 安全检查：备份前会检测当前游戏配置是否为 TFT 下棋配置
-   * 如果是，说明上次恢复失败了，此时不应该备份（否则会用错误配置覆盖正确备份）
-   * 
-   * @returns true 表示备份成功, false 表示备份失败或被拒绝
+   * 备份当前的云顶之弈设置
+   * @description 把设置文件拷贝到备份目录，优先使用软件根目录，失败则使用 C 盘 userData 作为兜底。
+   *              客户端运行中也可以备份（备份的是客户端上次写回的设置）。
+   * @returns true 表示备份成功, false 表示备份失败
    */
   static async backup() {
     const instance = GameConfigHelper.getInstance();
-    if (!instance) {
+    if (!instance) return false;
+    if (!await fs.pathExists(path__default.join(TFT_SAVED_DIR, KEY_FILE))) {
+      logger.error(`备份失败！找不到云顶之弈设置文件：${path__default.join(TFT_SAVED_DIR, KEY_FILE)}（客户端至少要启动过一次）`);
       return false;
     }
-    const sourceExists = await fs.pathExists(instance.gameConfigPath);
-    if (!sourceExists) {
-      logger.error(`备份失败！找不到游戏设置目录：${instance.gameConfigPath}`);
-      return false;
-    }
-    const isTftConfig = await instance.isCurrentConfigTFT();
-    if (isTftConfig) {
-      logger.error(`[ConfigHelper] 备份被拒绝！当前游戏配置与 TFT 下棋配置一致，说明上次恢复失败`);
-      logger.error(`[ConfigHelper] 将使用已有的备份进行恢复...`);
-      await GameConfigHelper.restore(3, 1500);
-      return false;
-    }
-    try {
-      await fs.ensureDir(instance.primaryBackupPath);
-      await fs.copy(instance.gameConfigPath, instance.primaryBackupPath);
-      instance.currentBackupPath = instance.primaryBackupPath;
-      instance.isTFTConfig = false;
-      logger.info(`设置备份成功！路径: ${instance.primaryBackupPath}`);
-      return true;
-    } catch (primaryErr) {
-      logger.warn(`主备份路径写入失败: ${primaryErr}，尝试使用兜底路径...`);
-    }
-    try {
-      await fs.ensureDir(instance.fallbackBackupPath);
-      await fs.copy(instance.gameConfigPath, instance.fallbackBackupPath);
-      instance.currentBackupPath = instance.fallbackBackupPath;
-      instance.isTFTConfig = false;
-      logger.info(`设置备份成功（使用兜底路径）！路径: ${instance.fallbackBackupPath}`);
-      return true;
-    } catch (fallbackErr) {
-      logger.error(`备份失败！主路径和兜底路径均不可用: ${fallbackErr}`);
-      return false;
-    }
-  }
-  /**
-   * 检测当前游戏配置是否为 TFT 下棋配置
-   * 
-   * 通过比对当前 game.cfg 的哈希值和预设 TFT 配置的哈希值来判断
-   * 如果一致，说明当前游戏还在用我们的低分辨率挂机配置
-   * 
-   * @returns true 表示当前配置是 TFT 下棋配置
-   */
-  async isCurrentConfigTFT() {
-    if (!this.tftConfigHash) return false;
-    try {
-      const currentGameCfg = path__default.join(this.gameConfigPath, "game.cfg");
-      if (!await fs.pathExists(currentGameCfg)) return false;
-      const currentHash = await this.getFileHash(currentGameCfg);
-      const isTft = currentHash === this.tftConfigHash;
-      if (isTft) {
-        logger.warn(`[ConfigHelper] 当前 game.cfg 哈希 (${currentHash}) 与 TFT 配置完全一致！`);
+    for (const target of [instance.primaryBackupPath, instance.fallbackBackupPath]) {
+      try {
+        await instance.copyItems(TFT_SAVED_DIR, target);
+        instance.currentBackupPath = target;
+        logger.info(`云顶之弈设置备份成功！路径: ${target}`);
+        return true;
+      } catch (err) {
+        logger.warn(`备份路径写入失败: ${target}，原因: ${err}`);
       }
-      return isTft;
-    } catch (err) {
-      logger.warn(`[ConfigHelper] 检测 TFT 配置失败: ${err}`);
-      return false;
     }
+    logger.error(`备份失败！主路径和兜底路径均不可用`);
+    return false;
   }
   /**
-   * 应用预设的云顶设置
-   * @description 用 TFTConfig 完全覆盖游戏配置目录
-   *              会先清空目标目录，确保没有残留文件
+   * 从备份恢复云顶之弈设置
+   * @description 客户端运行中会拒绝恢复：它退出时会把内存里的设置写回文件，恢复的内容会被覆盖。
+   *              会自动检测备份文件存在于哪个路径（当前路径、主路径或兜底路径）。
+   * @returns true 表示恢复成功
    */
-  static async applyTFTConfig() {
+  static async restore() {
     const instance = GameConfigHelper.getInstance();
-    if (!instance) {
-      logger.error("[GameConfigHelper] applyTFTConfig 错误：尚未初始化！");
-      return false;
-    }
-    const pathExist = await fs.pathExists(instance.tftConfigPath);
-    if (!pathExist) {
-      logger.error(`应用云顶设置失败！找不到设置目录：${instance.tftConfigPath}`);
-      return false;
-    }
-    try {
-      await fs.copy(instance.tftConfigPath, instance.gameConfigPath);
-      instance.isTFTConfig = true;
-      logger.info("[GameConfigHelper] 云顶挂机游戏设置应用成功！");
-      return true;
-    } catch (e) {
-      logger.error(`[GameConfigHelper] 云顶设置应用失败: ${e}`);
-      return false;
-    }
-  }
-  /**
-   * 从备份恢复游戏设置
-   * @description 把我们备份的 Config 文件夹拷贝回游戏目录
-   *              会自动检测备份文件存在于哪个路径（主路径或兜底路径）
-   * @param retryCount 重试次数，默认 3 次
-   * @param retryDelay 重试间隔（毫秒），默认 1000ms
-   */
-  static async restore(retryCount = 3, retryDelay = 1e3) {
-    const instance = GameConfigHelper.getInstance();
-    if (!instance) {
-      console.log("[GameConfigHelper] restore错误。尚未初始化！");
+    if (!instance) return false;
+    if (await GameConfigHelper.isTftClientRunning()) {
+      logger.error(`恢复失败！云顶之弈客户端正在运行，请先关闭客户端再恢复设置（否则客户端退出时会覆盖恢复的设置）`);
       return false;
     }
     let backupPath = null;
-    if (await fs.pathExists(instance.currentBackupPath)) {
-      backupPath = instance.currentBackupPath;
-    } else if (await fs.pathExists(instance.primaryBackupPath)) {
-      backupPath = instance.primaryBackupPath;
-    } else if (await fs.pathExists(instance.fallbackBackupPath)) {
-      backupPath = instance.fallbackBackupPath;
+    for (const candidate of [instance.currentBackupPath, instance.primaryBackupPath, instance.fallbackBackupPath]) {
+      if (await fs.pathExists(path__default.join(candidate, KEY_FILE))) {
+        backupPath = candidate;
+        break;
+      }
     }
     if (!backupPath) {
-      logger.error(`恢复设置失败！找不到备份目录（已检查主路径和兜底路径）`);
-      return false;
-    }
-    logger.debug(`[GameConfigHelper] 从备份恢复设置，备份路径: ${backupPath}`);
-    for (let attempt = 1; attempt <= retryCount; attempt++) {
-      try {
-        await fs.copy(backupPath, instance.gameConfigPath);
-        instance.isTFTConfig = false;
-        const verified = await instance.verifyRestore(backupPath);
-        if (verified) {
-          logger.info(`[GameConfigHelper] 设置恢复成功，文件验证通过！`);
-        } else {
-          logger.warn(`[GameConfigHelper] 设置恢复完成，但文件验证不一致！可能被外部程序覆盖`);
-          if (attempt < retryCount) {
-            logger.info(`[GameConfigHelper] 将在 ${retryDelay}ms 后重试...`);
-            await sleep(retryDelay);
-            continue;
-          }
-        }
-        return true;
-      } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
-        const isFileLocked = errMsg.includes("EBUSY") || errMsg.includes("EPERM") || errMsg.includes("resource busy");
-        if (attempt < retryCount && isFileLocked) {
-          logger.warn(`[GameConfigHelper] 配置文件被占用，${retryDelay}ms 后重试 (${attempt}/${retryCount})...`);
-          await sleep(retryDelay);
-        } else {
-          logger.error(`[GameConfigHelper] 恢复设置失败 (尝试 ${attempt}/${retryCount}): ${errMsg}`);
-          if (attempt === retryCount) {
-            return false;
-          }
-        }
-      }
-    }
-    return false;
-  }
-  /**
-   * 临时备份当前游戏配置（挂机启动时调用）
-   * @description 与用户手动备份完全隔离，写入 TempConfig/ 目录。
-   *              每次挂机启动都会覆盖上一次的临时备份，保证恢复的是最新状态。
-   *              即使临时备份失败也不影响用户手动备份的数据安全。
-   * 
-   * 安全检查逻辑与 backup() 一致：如果当前配置就是 TFT 挂机配置，
-   * 说明上次恢复失败，拒绝备份并尝试从临时备份恢复。
-   * 
-   * @returns true 表示备份成功
-   */
-  static async tempBackup() {
-    const instance = GameConfigHelper.getInstance();
-    if (!instance) return false;
-    const sourceExists = await fs.pathExists(instance.gameConfigPath);
-    if (!sourceExists) {
-      logger.error(`[ConfigHelper] 临时备份失败！找不到游戏设置目录：${instance.gameConfigPath}`);
-      return false;
-    }
-    const isTftConfig = await instance.isCurrentConfigTFT();
-    if (isTftConfig) {
-      logger.error(`[ConfigHelper] 临时备份被拒绝！当前配置是 TFT 挂机配置，上次恢复可能失败`);
-      logger.error(`[ConfigHelper] 尝试从临时备份恢复...`);
-      await GameConfigHelper.tempRestore(3, 1500);
+      logger.error(`恢复失败！找不到备份（已检查主路径和兜底路径），请先备份一次`);
       return false;
     }
     try {
-      await fs.ensureDir(instance.tempBackupPath);
-      await fs.copy(instance.gameConfigPath, instance.tempBackupPath);
-      instance.isTFTConfig = false;
-      logger.info(`[ConfigHelper] 临时备份成功！路径: ${instance.tempBackupPath}`);
-      return true;
+      await instance.copyItems(backupPath, TFT_SAVED_DIR);
     } catch (err) {
-      logger.error(`[ConfigHelper] 临时备份失败: ${err}`);
+      logger.error(`恢复失败！写入云顶之弈设置目录出错: ${err}`);
       return false;
     }
-  }
-  /**
-   * 从临时备份恢复游戏配置（挂机结束时调用）
-   * @description 只从 TempConfig/ 目录读取，不会影响 UserConfig/ 中的用户手动备份。
-   *              带重试机制，防止 LOL 客户端占用文件。
-   * 
-   * @param retryCount 重试次数，默认 3 次
-   * @param retryDelay 重试间隔（毫秒），默认 1000ms
-   * @returns true 表示恢复成功
-   */
-  static async tempRestore(retryCount = 3, retryDelay = 1e3) {
-    const instance = GameConfigHelper.getInstance();
-    if (!instance) {
-      logger.error("[ConfigHelper] tempRestore 错误：尚未初始化！");
+    const [backupHash, currentHash] = await Promise.all([
+      instance.getFileHash(path__default.join(backupPath, KEY_FILE)),
+      instance.getFileHash(path__default.join(TFT_SAVED_DIR, KEY_FILE))
+    ]);
+    if (backupHash !== currentHash) {
+      logger.error(`恢复后校验失败！GameUserSettings.ini 与备份不一致`);
       return false;
     }
-    if (!await fs.pathExists(instance.tempBackupPath)) {
-      logger.error(`[ConfigHelper] 临时恢复失败！找不到临时备份目录: ${instance.tempBackupPath}`);
-      logger.warn(`[ConfigHelper] 降级：尝试从用户手动备份恢复...`);
-      return GameConfigHelper.restore(retryCount, retryDelay);
-    }
-    logger.debug(`[ConfigHelper] 从临时备份恢复设置，路径: ${instance.tempBackupPath}`);
-    for (let attempt = 1; attempt <= retryCount; attempt++) {
-      try {
-        await fs.copy(instance.tempBackupPath, instance.gameConfigPath);
-        instance.isTFTConfig = false;
-        const verified = await instance.verifyRestore(instance.tempBackupPath);
-        if (verified) {
-          logger.info(`[ConfigHelper] 临时恢复成功，文件验证通过！`);
-        } else {
-          logger.warn(`[ConfigHelper] 临时恢复完成，但文件验证不一致！`);
-          if (attempt < retryCount) {
-            logger.info(`[ConfigHelper] 将在 ${retryDelay}ms 后重试...`);
-            await sleep(retryDelay);
-            continue;
-          }
-        }
-        return true;
-      } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
-        const isFileLocked = errMsg.includes("EBUSY") || errMsg.includes("EPERM") || errMsg.includes("resource busy");
-        if (attempt < retryCount && isFileLocked) {
-          logger.warn(`[ConfigHelper] 文件被占用，${retryDelay}ms 后重试 (${attempt}/${retryCount})...`);
-          await sleep(retryDelay);
-        } else {
-          logger.error(`[ConfigHelper] 临时恢复失败 (${attempt}/${retryCount}): ${errMsg}`);
-          if (attempt === retryCount) return false;
-        }
-      }
-    }
-    return false;
+    logger.info(`云顶之弈设置恢复成功！来源: ${backupPath}`);
+    return true;
   }
   /**
-   * 验证恢复结果：对比备份目录和游戏配置目录中的关键文件哈希值
-   * 
-   * 只对比最关键的 game.cfg 文件，因为它包含分辨率、画质等核心设置
-   * 使用 MD5 哈希快速比较文件内容是否一致
-   * 
-   * @param backupPath 备份目录路径
-   * @returns true 表示恢复后的文件与备份一致
+   * 云顶之弈客户端是否正在运行
    */
-  async verifyRestore(backupPath) {
-    const keyFile = "game.cfg";
-    const backupFile = path__default.join(backupPath, keyFile);
-    const gameFile = path__default.join(this.gameConfigPath, keyFile);
-    try {
-      const [backupExists, gameExists] = await Promise.all([
-        fs.pathExists(backupFile),
-        fs.pathExists(gameFile)
-      ]);
-      if (!backupExists || !gameExists) {
-        logger.warn(`[ConfigGuard] 验证跳过：文件不存在 (备份: ${backupExists}, 游戏: ${gameExists})`);
-        return true;
-      }
-      const [backupHash, gameHash] = await Promise.all([
-        this.getFileHash(backupFile),
-        this.getFileHash(gameFile)
-      ]);
-      const match = backupHash === gameHash;
-      if (!match) {
-        logger.warn(`[ConfigGuard] game.cfg 哈希不匹配！备份: ${backupHash}, 游戏: ${gameHash}`);
-      }
-      return match;
-    } catch (err) {
-      logger.warn(`[ConfigGuard] 验证过程出错: ${err}`);
-      return true;
+  static isTftClientRunning() {
+    return new Promise((resolve) => {
+      execFile("tasklist", ["/FI", `IMAGENAME eq ${TFT_PROCESS_EXE}`, "/FO", "CSV", "/NH"], { windowsHide: true }, (err, stdout) => {
+        resolve(!err && stdout.toLowerCase().includes(TFT_PROCESS_EXE.toLowerCase()));
+      });
+    });
+  }
+  /**
+   * 把 BACKUP_ITEMS 中存在的子目录从 fromRoot 拷贝到 toRoot（保持相对路径）
+   */
+  async copyItems(fromRoot, toRoot) {
+    for (const item of BACKUP_ITEMS) {
+      const source = path__default.join(fromRoot, item);
+      if (!await fs.pathExists(source)) continue;
+      const target = path__default.join(toRoot, item);
+      await fs.ensureDir(target);
+      await fs.copy(source, target, { overwrite: true });
     }
   }
   /**
    * 计算文件的 MD5 哈希值
-   * 
-   * crypto.createHash('md5') 创建一个哈希计算器
-   * digest('hex') 将计算结果转为十六进制字符串（如 "d41d8cd98f00b204e9800998ecf8427e"）
-   * 
    * @param filePath 文件路径
    * @returns 文件的 MD5 哈希字符串
    */
   async getFileHash(filePath) {
     const content = await fs.readFile(filePath);
     return crypto.createHash("md5").update(content).digest("hex");
-  }
-  /**
-   * 启动长期配置守护监听器
-   * 
-   * 在 restore 成功后调用，持续监听游戏配置目录的文件变化。
-   * 守护跟随软件生命周期运行，直到以下情况之一才停止：
-   *   1. 调用 stopConfigGuard()（下次开始挂机前、软件退出时）
-   *   2. 达到最大自动恢复次数（防止无限互相覆盖）
-   * 
-   * 守护逻辑：
-   *   检测到 game.cfg 被修改 → 计算哈希 → 如果变成了 TFT 下棋配置 → 自动从临时备份恢复
-   *   这样就能应对"中途退出软件功能 → 游戏结束 → LOL 写入下棋配置"的场景
-   */
-  static startConfigGuard() {
-    const instance = GameConfigHelper.getInstance();
-    if (!instance) return;
-    GameConfigHelper.stopConfigGuard();
-    instance.guardRestoreCount = 0;
-    logger.info(`[ConfigGuard] 启动长期配置守护（跟随软件生命周期）`);
-    try {
-      instance.configWatcher = fs.watch(
-        instance.gameConfigPath,
-        { recursive: true },
-        (_eventType, filename) => {
-          if (!filename || !filename.toLowerCase().includes("game.cfg")) return;
-          if (instance.isTFTConfig) return;
-          if (instance.guardRestoreCount >= instance.MAX_GUARD_RESTORES) {
-            logger.warn(`[ConfigGuard] 已达最大自动恢复次数 (${instance.MAX_GUARD_RESTORES})，停止守护`);
-            GameConfigHelper.stopConfigGuard();
-            return;
-          }
-          if (instance.watcherDebounceTimer) {
-            clearTimeout(instance.watcherDebounceTimer);
-          }
-          instance.watcherDebounceTimer = setTimeout(async () => {
-            const isTftNow = await instance.isCurrentConfigTFT();
-            if (isTftNow) {
-              instance.guardRestoreCount++;
-              logger.warn(`[ConfigGuard] 检测到配置被改为 TFT 下棋配置！自动恢复中... (第 ${instance.guardRestoreCount} 次)`);
-              let backupPath = null;
-              if (await fs.pathExists(instance.tempBackupPath)) {
-                backupPath = instance.tempBackupPath;
-              } else if (await fs.pathExists(instance.currentBackupPath)) {
-                backupPath = instance.currentBackupPath;
-              } else if (await fs.pathExists(instance.primaryBackupPath)) {
-                backupPath = instance.primaryBackupPath;
-              } else if (await fs.pathExists(instance.fallbackBackupPath)) {
-                backupPath = instance.fallbackBackupPath;
-              }
-              if (!backupPath) {
-                logger.error(`[ConfigGuard] 找不到任何备份目录，无法恢复`);
-                return;
-              }
-              try {
-                await fs.copy(backupPath, instance.gameConfigPath);
-                const verified = await instance.verifyRestore(backupPath);
-                if (verified) {
-                  logger.info(`[ConfigGuard] 自动恢复成功，用户配置已还原`);
-                } else {
-                  logger.warn(`[ConfigGuard] 自动恢复后验证仍不一致`);
-                }
-              } catch (err) {
-                logger.error(`[ConfigGuard] 自动恢复失败: ${err}`);
-              }
-            }
-          }, 1e3);
-        }
-      );
-    } catch (err) {
-      logger.error(`[ConfigGuard] 启动监听失败: ${err}`);
-    }
-  }
-  /**
-   * 停止配置守护监听器
-   * 在以下时机调用：
-   *   - 下次开始挂机前（StartState）
-   *   - 软件退出时（will-quit）
-   *   - 达到最大恢复次数时（自动停止）
-   */
-  static stopConfigGuard() {
-    const instance = GameConfigHelper.getInstance();
-    if (!instance) return;
-    if (instance.configWatcher) {
-      instance.configWatcher.close();
-      instance.configWatcher = null;
-      logger.info(`[ConfigGuard] 配置守护已停止`);
-    }
-    if (instance.watcherDebounceTimer) {
-      clearTimeout(instance.watcherDebounceTimer);
-      instance.watcherDebounceTimer = null;
-    }
   }
 }
 var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
@@ -6227,6 +5881,17 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["OVERLAY_SHOW"] = "overlay-show";
   IpcChannel2["OVERLAY_CLOSE"] = "overlay-close";
   IpcChannel2["OVERLAY_UPDATE_PLAYERS"] = "overlay-update-players";
+  IpcChannel2["DEBUG_SCREENSHOT_GET_STATE"] = "debug-screenshot-get-state";
+  IpcChannel2["DEBUG_SCREENSHOT_SET_HOTKEY_ENABLED"] = "debug-screenshot-set-hotkey-enabled";
+  IpcChannel2["DEBUG_SCREENSHOT_CAPTURE"] = "debug-screenshot-capture";
+  IpcChannel2["DEBUG_SCREENSHOT_OPEN_DIR"] = "debug-screenshot-open-dir";
+  IpcChannel2["DEBUG_SCREENSHOT_TAKEN"] = "debug-screenshot-taken";
+  IpcChannel2["TFT_GET_WINDOW_MODE"] = "tft-get-window-mode";
+  IpcChannel2["WINDOW_MINIMIZE"] = "window-minimize";
+  IpcChannel2["WINDOW_TOGGLE_MAXIMIZE"] = "window-toggle-maximize";
+  IpcChannel2["WINDOW_CLOSE"] = "window-close";
+  IpcChannel2["WINDOW_IS_MAXIMIZED"] = "window-is-maximized";
+  IpcChannel2["WINDOW_MAXIMIZED_CHANGED"] = "window-maximized-changed";
   return IpcChannel2;
 })(IpcChannel || {});
 const specialEquip = {
@@ -12404,7 +12069,6 @@ var TFTMode = /* @__PURE__ */ ((TFTMode2) => {
   TFTMode2["RANK"] = "RANK";
   TFTMode2["CLOCKWORK_TRAILS"] = "CLOCKWORK_TRAILS";
   TFTMode2["S4_RUISHOU"] = "S4_RUISHOU";
-  TFTMode2["S17_XINGSHEN"] = "S17_XINGSHEN";
   return TFTMode2;
 })(TFTMode || {});
 const levelRegion = {
@@ -12838,7 +12502,7 @@ const EQUIP_ALIASES = {
 };
 Object.assign(EQUIP_EN_TO_CN, EQUIP_ALIASES);
 function isStandardChessMode(mode) {
-  return mode === "NORMAL" || mode === "RANK" || mode === "S4_RUISHOU" || mode === "S17_XINGSHEN";
+  return mode === "NORMAL" || mode === "RANK" || mode === "S4_RUISHOU";
 }
 var LogMode = /* @__PURE__ */ ((LogMode2) => {
   LogMode2["SIMPLE"] = "SIMPLE";
@@ -12858,8 +12522,8 @@ class SettingsStore {
     const defaults = {
       isFirstLaunch: true,
       //  首次启动默认为 true，用户确认后设为 false
-      tftMode: TFTMode.S17_XINGSHEN,
-      //  默认是星神匹配（目前唯一已适配的模式）
+      tftMode: TFTMode.NORMAL,
+      //  默认是主赛季匹配模式
       logMode: LogMode.SIMPLE,
       //  默认是简略日志模式
       logAutoCleanThreshold: 500,
@@ -12872,6 +12536,8 @@ class SettingsStore {
       //  默认显示游戏浮窗
       showDebugPage: false,
       //  默认隐藏调试页面
+      debugScreenshotHotkeyEnabled: true,
+      //  默认启用截图快捷键（只在开发版注册）
       window: {
         bounds: null,
         //  第一次启动，默认为null
@@ -12947,6 +12613,18 @@ class SettingsStore {
   }
 }
 const settingsStore = SettingsStore.getInstance();
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+function debounce(func, delay) {
+  let timeoutId = null;
+  return (...args) => {
+    if (timeoutId) clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      func(...args);
+    }, delay);
+  };
+}
 const GA_MEASUREMENT_ID = "G-NBEKXB38M4";
 const GA_API_SECRET = "OIxU8BZSTYKfCOo9YNLzqg";
 const GA_ENDPOINT = `https://www.google-analytics.com/mp/collect?measurement_id=${GA_MEASUREMENT_ID}&api_secret=${GA_API_SECRET}`;
@@ -13201,6 +12879,8 @@ let hexService;
 let tftOperator;
 let lineupLoader;
 let globalHotkeyManager;
+let tftWindowCapture;
+let tftWindowLocator;
 process.env.APP_ROOT = path__default.join(__dirname, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
 const MAIN_DIST = path__default.join(process.env.APP_ROOT, "dist-electron");
@@ -13253,6 +12933,48 @@ function registerStopAfterGameHotkey(accelerator) {
     currentStopAfterGameHotkey = accelerator;
   }
   return success;
+}
+const DEBUG_SCREENSHOT_HOTKEY = "F3";
+let currentDebugScreenshotHotkey = null;
+function getDebugScreenshotDir() {
+  return path__default.join(process.env.VITE_PUBLIC || ".", "resources/debug/tft_window_snapshots");
+}
+async function captureTftWindow() {
+  try {
+    const data = await tftWindowCapture.capture(getDebugScreenshotDir());
+    return { data };
+  } catch (e) {
+    logger.warn(`[Main] TFT 窗口截图失败: ${e.message}`);
+    return { error: e.message };
+  }
+}
+function setDebugScreenshotHotkey(enabled) {
+  if (currentDebugScreenshotHotkey) {
+    const takenByOthers = currentDebugScreenshotHotkey === currentToggleHotkey || currentDebugScreenshotHotkey === currentStopAfterGameHotkey;
+    if (!takenByOthers) {
+      globalHotkeyManager.unregister(currentDebugScreenshotHotkey);
+    }
+    currentDebugScreenshotHotkey = null;
+  }
+  if (!enabled) {
+    return { success: true };
+  }
+  if (!is.dev) {
+    return { success: false, error: "截图快捷键仅在开发版可用" };
+  }
+  if (DEBUG_SCREENSHOT_HOTKEY === currentToggleHotkey || DEBUG_SCREENSHOT_HOTKEY === currentStopAfterGameHotkey) {
+    return { success: false, error: `${DEBUG_SCREENSHOT_HOTKEY} 已被其他快捷键占用，请先在设置页改绑` };
+  }
+  const success = globalHotkeyManager.register(DEBUG_SCREENSHOT_HOTKEY, async () => {
+    console.log(`🎮 [Main] 快捷键 ${DEBUG_SCREENSHOT_HOTKEY} 被触发，截取 TFT 窗口`);
+    const result = await captureTftWindow();
+    win?.webContents.send(IpcChannel.DEBUG_SCREENSHOT_TAKEN, result);
+  });
+  if (!success) {
+    return { success: false, error: `${DEBUG_SCREENSHOT_HOTKEY} 注册失败` };
+  }
+  currentDebugScreenshotHotkey = DEBUG_SCREENSHOT_HOTKEY;
+  return { success: true };
 }
 const OVERLAY_WIDTH = 160;
 function createOverlayWindow(gameWindowInfo) {
@@ -13328,6 +13050,10 @@ function createWindow() {
     icon: path__default.join(process.env.VITE_PUBLIC, "icon.png"),
     //  窗口左上角的图标
     autoHideMenuBar: true,
+    frame: false,
+    //  无边框：标题栏由渲染进程自绘（src/components/TitleBar.tsx）
+    backgroundColor: "#121B27",
+    //  和主题背景色一致，避免启动时白屏闪烁
     webPreferences: {
       preload: path__default.join(__dirname, "../preload/preload.cjs"),
       // 指定preload文件
@@ -13343,6 +13069,8 @@ function createWindow() {
       settingsStore.set("window.bounds", win?.getBounds());
     }
   }, 500);
+  win.on("maximize", () => win?.webContents.send(IpcChannel.WINDOW_MAXIMIZED_CHANGED, true));
+  win.on("unmaximize", () => win?.webContents.send(IpcChannel.WINDOW_MAXIMIZED_CHANGED, false));
   win.on("resize", debouncedSaveBounds);
   win.on("move", debouncedSaveBounds);
   win.on("close", () => {
@@ -13381,15 +13109,14 @@ app.on("will-quit", async (event) => {
     globalHotkeyManager.stop();
   }
   closeOverlayWindow();
-  if (hexService && hexService.isRunning) {
+  if (hexService && hexService.isRunning && tftWindowLocator) {
     event.preventDefault();
-    console.log("🔄 [Main] 检测到程序正在运行，正在恢复游戏设置...");
-    GameConfigHelper.stopConfigGuard();
+    console.log("🔄 [Main] 检测到程序正在运行，正在还原游戏窗口大小...");
     try {
-      await GameConfigHelper.restore();
-      console.log("✅ [Main] 游戏设置已恢复");
+      await tftWindowLocator.restoreWindowSize();
+      console.log("✅ [Main] 游戏窗口大小已还原");
     } catch (error) {
-      console.error("❌ [Main] 恢复设置失败:", error);
+      console.error("❌ [Main] 还原游戏窗口大小失败:", error);
     } finally {
       console.log("👋 [Main] 正在退出程序...");
       app.exit(0);
@@ -13428,14 +13155,18 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-DWUrFzGb.js");
+    const ServicesModule = await import("./chunks/index-DlkIkCBc.js");
     hexService = ServicesModule.hexService;
-    const TftOperatorModule = await import("./chunks/TftOperator-DUS_e-Zl.js").then((n) => n.T);
+    const TftOperatorModule = await import("./chunks/TftOperator-dZ2q2E1G.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
-    const LineupModule = await import("./chunks/index-DSBe4eF5.js");
+    const LineupModule = await import("./chunks/index-bGCrXB73.js");
     lineupLoader = LineupModule.lineupLoader;
     const GlobalHotkeyManagerModule = await import("./chunks/GlobalHotkeyManager-Cbcy0EP4.js");
     globalHotkeyManager = GlobalHotkeyManagerModule.globalHotkeyManager;
+    const TftWindowCaptureModule = await import("./chunks/TftWindowCapture-C10K6JbC.js");
+    tftWindowCapture = TftWindowCaptureModule.tftWindowCapture;
+    const TftWindowLocatorModule = await import("./chunks/TftWindowLocator-EOZPzjkt.js");
+    tftWindowLocator = TftWindowLocatorModule.tftWindowLocator;
     console.log("✅ [Main] 业务模块加载完成");
   } catch (error) {
     console.error("❌ [Main] 业务模块加载失败:", error);
@@ -13467,8 +13198,15 @@ app.whenReady().then(async () => {
   registerToggleHotkey(savedHotkey);
   const savedStopAfterGameHotkey = settingsStore.get("stopAfterGameHotkeyAccelerator");
   registerStopAfterGameHotkey(savedStopAfterGameHotkey);
+  if (is.dev && settingsStore.get("debugScreenshotHotkeyEnabled")) {
+    const result = setDebugScreenshotHotkey(true);
+    if (!result.success) {
+      console.warn(`⚠️ [Main] TFT 窗口截图快捷键未注册: ${result.error}`);
+    }
+  }
 });
 function init() {
+  GameConfigHelper.init();
   logger.init(win);
   const logMode = settingsStore.get("logMode");
   logger.setMinLevel(logMode === "DETAILED" ? "debug" : "info");
@@ -13476,7 +13214,6 @@ function init() {
   connector.on("connect", (data) => {
     console.log("LOL客户端已登录！", data);
     const lcuManager = LCUManager.init(data);
-    GameConfigHelper.init(data.installDirectory);
     lcuManager.start();
     lcuManager.on("connect", async () => {
       win?.webContents.send(IpcChannel.LCU_CONNECT);
@@ -13634,6 +13371,50 @@ function registerHandler() {
     sendOverlayPlayerData(players);
     return true;
   });
+  ipcMain.handle(IpcChannel.DEBUG_SCREENSHOT_GET_STATE, async () => ({
+    available: is.dev,
+    hotkey: DEBUG_SCREENSHOT_HOTKEY,
+    hotkeyEnabled: settingsStore.get("debugScreenshotHotkeyEnabled"),
+    hotkeyRegistered: currentDebugScreenshotHotkey !== null,
+    saveDir: getDebugScreenshotDir()
+  }));
+  ipcMain.handle(IpcChannel.DEBUG_SCREENSHOT_SET_HOTKEY_ENABLED, async (_event, enabled) => {
+    const result = setDebugScreenshotHotkey(enabled);
+    if (result.success) {
+      settingsStore.set("debugScreenshotHotkeyEnabled", enabled);
+    }
+    return result;
+  });
+  ipcMain.handle(IpcChannel.DEBUG_SCREENSHOT_CAPTURE, async () => {
+    if (!is.dev) {
+      return { error: "TFT 窗口截图仅在开发版可用" };
+    }
+    return captureTftWindow();
+  });
+  ipcMain.handle(IpcChannel.DEBUG_SCREENSHOT_OPEN_DIR, async () => {
+    const dir = getDebugScreenshotDir();
+    fs__default.mkdirSync(dir, { recursive: true });
+    const error = await shell.openPath(dir);
+    return error ? { error } : { data: dir };
+  });
+  ipcMain.handle(IpcChannel.TFT_GET_WINDOW_MODE, async () => {
+    try {
+      return { found: true, ...await tftWindowLocator.getWindowMode() };
+    } catch (e) {
+      return { found: false, error: e.message };
+    }
+  });
+  ipcMain.handle(IpcChannel.WINDOW_MINIMIZE, async () => win?.minimize());
+  ipcMain.handle(IpcChannel.WINDOW_TOGGLE_MAXIMIZE, async () => {
+    if (!win) return;
+    if (win.isMaximized()) {
+      win.unmaximize();
+    } else {
+      win.maximize();
+    }
+  });
+  ipcMain.handle(IpcChannel.WINDOW_CLOSE, async () => win?.close());
+  ipcMain.handle(IpcChannel.WINDOW_IS_MAXIMIZED, async () => win?.isMaximized() ?? false);
   ipcMain.handle(IpcChannel.UTIL_IS_ELEVATED, async () => {
     return new Promise((resolve) => {
       exec$1("net session", (error) => {
@@ -13675,7 +13456,7 @@ function registerHandler() {
   });
 }
 export {
-  showOverlay as $,
+  sendOverlayPlayers as $,
   itemForgeTooltipRegion as A,
   gameStageDisplayStageOne as B,
   gameStageDisplayNormal as C,
@@ -13701,16 +13482,15 @@ export {
   UNSELLABLE_BOARD_UNITS as U,
   starGodSlot as V,
   VITE_DEV_SERVER_URL,
-  GameConfigHelper as W,
-  IpcChannel as X,
-  LCUManager as Y,
-  isStandardChessMode as Z,
-  LcuEventUri as _,
+  IpcChannel as W,
+  LCUManager as X,
+  isStandardChessMode as Y,
+  LcuEventUri as Z,
+  showOverlay as _,
   TFT_4_CHESS_DATA as a,
-  sendOverlayPlayers as a0,
-  closeOverlay as a1,
-  analyticsManager as a2,
-  AnalyticsEvent as a3,
+  closeOverlay as a0,
+  analyticsManager as a1,
+  AnalyticsEvent as a2,
   TFT_4_TRAIT_DATA as b,
   TFT_17_EQUIP_DATA as c,
   TFTMode as d,

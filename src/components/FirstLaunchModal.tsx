@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { ThemeType } from '../styles/theme';
+import { hextechButtonGhost, hextechButtonGold } from '../styles/hextech';
 import CloseIcon from '@mui/icons-material/Close';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 
@@ -11,11 +12,11 @@ import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 /** 遮罩层 - 覆盖整个屏幕 */
 const Overlay = styled.div<{ $isVisible: boolean }>`
     position: fixed;
-    top: 0;
+    top: ${props => props.theme.titleBarHeight}px;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: ${props => props.theme.colors.overlayBg};
     display: flex;
     align-items: center;
     justify-content: center;
@@ -25,16 +26,21 @@ const Overlay = styled.div<{ $isVisible: boolean }>`
     transition: opacity 0.3s ease, visibility 0.3s ease;
 `;
 
-/** 弹窗容器 */
+/** 弹窗容器：参考客户端"退出到桌面"弹窗 —— 近黑底板 + 金边 + 内描边 */
 const ModalContainer = styled.div<{ theme: ThemeType; $isVisible: boolean }>`
-    background-color: ${props => props.theme.colors.elementBg};
-    border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    position: relative;
+    background: ${props => props.theme.colors.dialogBg};
+    border: 1px solid ${props => props.theme.colors.gold}b3;
+    border-radius: ${props => props.theme.borderRadius};
+    box-shadow:
+        inset 0 0 0 1px rgba(0, 0, 0, 0.7),
+        inset 0 0 0 3px ${props => props.theme.colors.goldDeep}80,
+        0 20px 60px rgba(0, 0, 0, 0.6);
     max-width: 600px;
     width: 90%;
     max-height: 80vh;
     overflow: hidden;
-    transform: ${props => props.$isVisible ? 'scale(1) translateY(0)' : 'scale(0.9) translateY(20px)'};
+    transform: ${props => props.$isVisible ? 'scale(1) translateY(0)' : 'scale(0.96) translateY(12px)'};
     transition: transform 0.3s ease;
 `;
 
@@ -43,9 +49,8 @@ const ModalHeader = styled.div<{ theme: ThemeType }>`
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 24px;
-    border-bottom: 1px solid ${props => props.theme.colors.border};
-    background: linear-gradient(135deg, ${props => props.theme.colors.primary}20 0%, transparent 100%);
+    padding: 18px 24px 14px;
+    border-bottom: 1px solid ${props => props.theme.colors.goldDeep};
 `;
 
 /** 标题区域 */
@@ -55,52 +60,56 @@ const TitleArea = styled.div`
     gap: 12px;
 `;
 
-/** 标题图标 */
+/** 标题图标：金框菱形 */
 const TitleIcon = styled.div<{ theme: ThemeType }>`
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryHover} 100%);
+    width: 30px;
+    height: 30px;
+    transform: rotate(45deg);
+    border: 1px solid ${props => props.theme.colors.gold};
+    background: ${props => props.theme.colors.primary}26;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: ${props => props.theme.colors.goldBright};
+    margin: 0 4px;
     
     .MuiSvgIcon-root {
-        font-size: 1.4rem;
+        transform: rotate(-45deg);
+        font-size: 1.1rem;
     }
 `;
 
 /** 标题文字 */
 const Title = styled.h2<{ theme: ThemeType }>`
     margin: 0;
-    font-size: 1.3rem;
+    font-size: 1.15rem;
     font-weight: 700;
-    color: ${props => props.theme.colors.text};
+    letter-spacing: 1px;
+    color: ${props => props.theme.colors.goldBright};
 `;
 
 /** 关闭按钮 */
 const CloseButton = styled.button<{ theme: ThemeType }>`
     background: none;
-    border: none;
-    padding: 8px;
+    border: 1px solid transparent;
+    padding: 4px;
     cursor: pointer;
     color: ${props => props.theme.colors.textSecondary};
-    border-radius: 8px;
+    border-radius: ${props => props.theme.borderRadius};
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     
     &:hover {
-        background-color: ${props => props.theme.colors.elementHover};
-        color: ${props => props.theme.colors.text};
+        border-color: ${props => props.theme.colors.goldDim};
+        color: ${props => props.theme.colors.goldBright};
     }
 `;
 
 /** 弹窗内容 */
 const ModalContent = styled.div<{ theme: ThemeType }>`
-    padding: 24px;
+    padding: 20px 24px;
     overflow-y: auto;
     max-height: 50vh;
     text-align: left;  /* 确保内容左对齐 */
@@ -108,10 +117,10 @@ const ModalContent = styled.div<{ theme: ThemeType }>`
 
 /** 说明文字段落 */
 const Paragraph = styled.p<{ theme: ThemeType }>`
-    margin: 0 0 16px 0;
-    font-size: 0.95rem;
+    margin: 0 0 14px 0;
+    font-size: 0.92rem;
     line-height: 1.7;
-    color: ${props => props.theme.colors.text};
+    color: ${props => props.theme.colors.textSecondary};
     text-align: left;  /* 段落左对齐 */
     
     &:last-child {
@@ -121,7 +130,7 @@ const Paragraph = styled.p<{ theme: ThemeType }>`
 
 /** 高亮文字 */
 const Highlight = styled.span<{ theme: ThemeType }>`
-    color: ${props => props.theme.colors.primary};
+    color: ${props => props.theme.colors.accentCyan};
     font-weight: 600;
 `;
 
@@ -131,44 +140,42 @@ const Warning = styled.span<{ theme: ThemeType }>`
     font-weight: 600;
 `;
 
-/** 列表 */
+/** 列表：金色菱形作为项目符号 */
 const List = styled.ul<{ theme: ThemeType }>`
-    margin: 0 0 16px 0;
-    padding-left: 20px;
+    margin: 0 0 14px 0;
+    padding-left: 0;
+    list-style: none;
     text-align: left;  /* 列表左对齐 */
     
     li {
+        position: relative;
+        padding-left: 18px;
         margin-bottom: 8px;
         font-size: 0.9rem;
         line-height: 1.6;
         color: ${props => props.theme.colors.text};
+
+        &::before {
+            content: '';
+            position: absolute;
+            left: 2px;
+            top: 0.6em;
+            width: 6px;
+            height: 6px;
+            transform: rotate(45deg);
+            background: ${props => props.theme.colors.gold};
+        }
     }
 `;
 
-/** GitHub 链接容器 - 放在底部按钮左侧 */
+/** GitHub 链接 - 放在底部按钮左侧（深底金边，对应弹窗里的次要按钮） */
 const GitHubCard = styled.a<{ theme: ThemeType }>`
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    background: linear-gradient(135deg, #24292e 0%, #1a1e22 100%);
-    border-radius: 8px;
+    ${hextechButtonGhost};
     text-decoration: none;
-    color: #ffffff;
-    font-weight: 600;
-    font-size: 0.85rem;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    
-    &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-        background: linear-gradient(135deg, #2d333b 0%, #24292e 100%);
-    }
     
     svg {
-        width: 18px;
-        height: 18px;
+        width: 16px;
+        height: 16px;
         fill: currentColor;
         flex-shrink: 0;
     }
@@ -180,31 +187,14 @@ const ModalFooter = styled.div<{ theme: ThemeType }>`
     justify-content: space-between;  /* 两端对齐 */
     align-items: center;
     gap: 12px;
-    padding: 16px 24px;
-    border-top: 1px solid ${props => props.theme.colors.border};
-    background-color: ${props => props.theme.colors.background};
+    padding: 14px 24px 18px;
+    border-top: 1px solid ${props => props.theme.colors.goldDeep};
 `;
 
-/** 确认按钮 */
+/** 确认按钮（古铜色，对应弹窗里的"✓"） */
 const ConfirmButton = styled.button<{ theme: ThemeType }>`
-    padding: 10px 24px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryHover} 100%);
-    color: ${props => props.theme.colors.textOnPrimary};
-    transition: all 0.2s ease;
-    
-    &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px ${props => props.theme.colors.primary}40;
-    }
-    
-    &:active {
-        transform: translateY(0);
-    }
+    ${hextechButtonGold};
+    padding: 0.6rem 1.6rem;
 `;
 
 // ============================================

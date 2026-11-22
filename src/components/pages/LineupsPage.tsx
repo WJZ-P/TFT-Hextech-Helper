@@ -6,6 +6,7 @@
 import React, {useEffect, useState, useCallback, useMemo, useRef} from 'react';
 import styled from 'styled-components';
 import {ThemeType} from '../../styles/theme';
+import {hextechPanel, hextechSectionTitle, hextechButtonGhost, hextechButtonPrimary, hextechButtonDanger} from "../../styles/hextech.ts";
 import {TFTEquip, TraitData, TFTUnit, UNPURCHASABLE_CHESS} from "../../../src-backend/TFTProtocol";
 // 赛季数据统一从 SeasonRegistry 取，不再直接用 TFTProtocol 的 switch 函数（已删除）
 import {getChessDataBySeasonId, getEquipDataBySeasonId, type SeasonId} from "../../../src-backend/TFTInfo/SeasonRegistry";
@@ -185,10 +186,13 @@ const PageWrapper = styled.div<{ theme: ThemeType }>`
   display: flex;
   flex-direction: column;
   padding: ${props => props.theme.spacing.large};
-  background-color: ${props => props.theme.colors.background};
+  background:
+    radial-gradient(ellipse 80% 35% at 50% 0%, rgba(47, 139, 255, 0.08) 0%, transparent 70%),
+    ${props => props.theme.colors.background};
   color: ${props => props.theme.colors.text};
   height: 100%;
   overflow-y: auto;
+  text-align: left;
 `;
 
 // 阵容卡片容器（垂直列表布局）
@@ -200,11 +204,10 @@ const LineupsList = styled.div`
 
 /** 阵容分栏标题（如 "自定义阵容"、"默认阵容"） */
 const SectionLabel = styled.div<{ theme: ThemeType }>`
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: ${props => props.theme.colors.textSecondary};
-  padding: 4px 2px;
-  border-bottom: 2px solid ${props => props.theme.colors.border};
+  ${hextechSectionTitle};
+  font-size: 1.05rem;
+  padding: 4px 2px 6px;
+  border-bottom: 1px solid ${props => props.theme.colors.goldDeep};
   margin-bottom: -4px;
 `;
 
@@ -213,15 +216,18 @@ const LineupCard = styled.div<{ theme: ThemeType; $expanded?: boolean; $selected
   display: flex;
   align-items: center;
   gap: ${props => props.theme.spacing.small};
-  background-color: ${props => props.$selected 
-    ? 'rgba(59, 130, 246, 0.1)'
-    : props.theme.colors.cardBg};
-  border: 1.5px solid ${props => props.$selected 
-    ? props.theme.colors.primary 
-    : props.theme.colors.border};
-  border-radius: ${props => props.$expanded 
-    ? `${props.theme.borderRadius} ${props.theme.borderRadius} 0 0` 
-    : props.theme.borderRadius};
+  background:
+    ${props => props.$selected
+      ? `linear-gradient(90deg, ${props.theme.colors.primary}26 0%, transparent 60%),`
+      : ''}
+    ${props => props.theme.colors.panelBg};
+  border: 1px solid ${props => props.$selected
+    ? props.theme.colors.accentCyan
+    : props.theme.colors.goldDim};
+  box-shadow: ${props => props.$selected
+    ? `0 0 12px ${props.theme.colors.accentCyan}33, inset 0 0 0 1px rgba(0, 0, 0, 0.5)`
+    : 'inset 0 0 0 1px rgba(0, 0, 0, 0.5)'};
+  border-radius: ${props => props.theme.borderRadius};
   padding: ${props => props.theme.spacing.small};
   cursor: pointer;
   transition: all 0.2s ease-in-out;
@@ -229,8 +235,8 @@ const LineupCard = styled.div<{ theme: ThemeType; $expanded?: boolean; $selected
   /* 未展开时，单独的 hover 效果 */
   ${props => !props.$expanded && `
     &:hover {
-      border-color: ${props.theme.colors.primary};
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border-color: ${props.$selected ? props.theme.colors.accentCyan : props.theme.colors.gold};
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
     }
   `}
 `;
@@ -270,13 +276,16 @@ const DeleteLineupBtn = styled.button<{ theme: ThemeType }>`
 
 /** 删除确认弹窗容器（小型居中弹窗） */
 const ConfirmDialog = styled.div<{ theme: ThemeType }>`
-  background: ${props => props.theme.colors.background};
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: 12px;
+  background: ${props => props.theme.colors.dialogBg};
+  border: 1px solid ${props => props.theme.colors.gold}b3;
+  border-radius: ${props => props.theme.borderRadius};
   padding: 24px;
   width: 360px;
   max-width: 90vw;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 3px ${props => props.theme.colors.goldDeep}80,
+    0 16px 48px rgba(0, 0, 0, 0.6);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -316,24 +325,15 @@ const ConfirmActions = styled.div`
 
 /** 确认弹窗通用按钮 */
 const ConfirmBtn = styled.button<{ theme: ThemeType; $danger?: boolean }>`
+  ${props => props.$danger ? hextechButtonDanger : hextechButtonGhost};
   padding: 8px 20px;
-  border-radius: 6px;
   font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  border: 1px solid ${props => props.$danger ? '#ef4444' : props.theme.colors.border};
-  background: ${props => props.$danger ? '#ef4444' : props.theme.colors.elementBg};
-  color: ${props => props.$danger ? '#fff' : props.theme.colors.text};
-  &:hover {
-    background: ${props => props.$danger ? '#dc2626' : props.theme.colors.border};
-  }
 `;
 
 const CardTitle = styled.h3`
   font-size: 1rem;
   font-weight: 600;
-  color: ${props => props.theme.colors.text};
+  color: ${props => props.theme.colors.goldBright};
 `;
 
 // 箭头图标（展开/收起指示器）
@@ -358,22 +358,23 @@ const CheckboxWrapper = styled.div`
 
 // 自定义复选框样式
 const Checkbox = styled.div<{ $checked: boolean; theme: ThemeType }>`
-  width: 24px;
-  height: 24px;
-  border: 2px solid ${props => props.$checked 
-    ? props.theme.colors.primary 
-    : props.theme.colors.border};
-  border-radius: 4px;
-  background-color: ${props => props.$checked 
-    ? props.theme.colors.primary 
-    : 'transparent'};
+  width: 22px;
+  height: 22px;
+  border: 1px solid ${props => props.$checked
+    ? props.theme.colors.accentCyan
+    : props.theme.colors.goldDim};
+  border-radius: ${props => props.theme.borderRadius};
+  background: ${props => props.$checked
+    ? 'linear-gradient(180deg, #2A7BEA 0%, #1450B8 100%)'
+    : props.theme.colors.sidebarBg};
+  box-shadow: ${props => props.$checked ? `0 0 8px ${props.theme.colors.accentCyan}55` : 'none'};
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
 
   &:hover {
-    border-color: ${props => props.theme.colors.primary};
+    border-color: ${props => props.$checked ? props.theme.colors.accentCyan : props.theme.colors.gold};
   }
 
   /* 选中时显示勾号 */
@@ -394,33 +395,34 @@ const SeasonTabContainer = styled.div`
   display: flex ;
   flex-direction: row ;
   margin-bottom: ${props => props.theme.spacing.medium};
-  background-color: ${props => props.theme.colors.cardBg};
-  border: 1.5px solid ${props => props.theme.colors.border};
-  border-radius: 10px;
+  ${hextechPanel};
   overflow: hidden;
-  min-height: 45px;
+  min-height: 42px;
 `;
 
 /** 单个赛季选项卡 */
 const SeasonTabItem = styled.button<{ $active: boolean; theme: ThemeType }>`
   flex: 1;
-  padding: 10px 24px;
-  font-size: 17px;
-  font-weight: 600;
+  padding: 8px 24px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 2px;
   border: none;
   cursor: pointer;
   transition: all 0.25s ease;
   position: relative;
-  background-color: ${props => props.$active 
-    ? props.theme.colors.primary 
+  background: ${props => props.$active
+    ? `linear-gradient(180deg, ${props.theme.colors.primary}40 0%, ${props.theme.colors.primary}14 100%)`
     : 'transparent'};
-  color: ${props => props.$active 
-    ? '#ffffff' 
+  color: ${props => props.$active
+    ? props.theme.colors.goldBright
     : props.theme.colors.textSecondary};
+  box-shadow: ${props => props.$active ? `inset 0 -2px 0 ${props.theme.colors.accentCyan}` : 'none'};
 
   &:hover {
-    background-color: ${props => props.$active 
-      ? props.theme.colors.primary 
+    color: ${props => props.theme.colors.goldBright};
+    background: ${props => props.$active
+      ? `linear-gradient(180deg, ${props.theme.colors.primary}40 0%, ${props.theme.colors.primary}14 100%)`
       : props.theme.colors.elementHover};
   }
 
@@ -432,7 +434,7 @@ const SeasonTabItem = styled.button<{ $active: boolean; theme: ThemeType }>`
     top: 20%;
     height: 60%;
     width: 1px;
-    background-color: ${props => props.$active ? 'transparent' : props.theme.colors.border};
+    background-color: ${props => props.theme.colors.goldDeep};
   }
 `;
 
@@ -441,11 +443,11 @@ const SelectionInfo = styled.div<{ $hasSelection: boolean; theme: ThemeType }>`
   display: flex;
   align-items: center;
   padding: 8px 12px;
-  background-color: ${props => props.theme.colors.cardBg};
-  border: 1.5px solid ${props => props.$hasSelection 
-    ? props.theme.colors.primary 
-    : props.theme.colors.border};
-  border-radius: 8px;
+  background: ${props => props.theme.colors.panelBg};
+  border: 1px solid ${props => props.$hasSelection
+    ? props.theme.colors.accentCyan
+    : props.theme.colors.goldDim};
+  border-radius: ${props => props.theme.borderRadius};
   margin-bottom: ${props => props.theme.spacing.medium};
   transition: border-color 0.2s ease;
 `;
@@ -459,7 +461,7 @@ const SelectionText = styled.span<{ $hasSelection: boolean; theme: ThemeType }>`
 
 // 当前阵容名称高亮（使用黑色，更醒目）
 const LineupName = styled.strong`
-  color: #000000;
+  color: ${props => props.theme.colors.goldBright};
 `;
 
 // 选择操作按钮容器
@@ -471,19 +473,8 @@ const SelectionActions = styled.div`
 
 // 操作按钮样式
 const ActionButton = styled.button<{ theme: ThemeType }>`
+  ${hextechButtonPrimary};
   padding: 6px 12px;
-  font-size: 14px;
-  font-weight: 800;
-  border: none;
-  border-radius: 4px;
-  background-color: ${props => props.theme.colors.primary};
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    opacity: 0.85;
-  }
 `;
 
 // 内容容器（包裹羁绊列表和英雄列表）
@@ -795,12 +786,13 @@ const LevelRow = styled.div<{ theme: ThemeType }>`
 // 等级标签
 const LevelLabel = styled.div<{ theme: ThemeType }>`
   min-width: 60px;
-  padding: 4px 8px;
-  background-color: ${props => props.theme.colors.primary};
+  padding: 3px 8px;
+  background: linear-gradient(180deg, #2A7BEA 0%, #1450B8 100%);
+  border: 1px solid ${props => props.theme.colors.accentCyan};
   color: white;
   font-size: 14px;
   font-weight: 800;
-  border-radius: 4px;
+  border-radius: ${props => props.theme.borderRadius};
   text-align: center;
   margin-right: ${props => props.theme.spacing.medium};
 `;
@@ -853,11 +845,12 @@ const EmptyState = styled.div`
 /** 弹窗遮罩层 */
 const ModalOverlay = styled.div`
   position: fixed;
-  top: 0;
+  /* 从标题栏下方开始，弹窗打开时窗口仍可拖动/关闭 */
+  top: ${props => props.theme.titleBarHeight}px;
   left: 0;
   width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.55);
+  height: calc(100vh - ${props => props.theme.titleBarHeight}px);
+  background: ${props => props.theme.colors.overlayBg};
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -866,14 +859,17 @@ const ModalOverlay = styled.div`
 
 /** 弹窗主体 */
 const ModalContent = styled.div<{ theme: ThemeType }>`
-  background: ${props => props.theme.colors.background};
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: 12px;
+  background: ${props => props.theme.colors.dialogBg};
+  border: 1px solid ${props => props.theme.colors.gold}b3;
+  border-radius: ${props => props.theme.borderRadius};
   width: 90%;
   height: 90%;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 3px ${props => props.theme.colors.goldDeep}80,
+    0 16px 48px rgba(0, 0, 0, 0.6);
   overflow: hidden;
   position: relative; /* 装备浮窗绝对定位的参照容器 */
 `;
@@ -883,8 +879,8 @@ const ModalHeader = styled.div<{ theme: ThemeType }>`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid ${props => props.theme.colors.border};
+  padding: 14px 20px;
+  border-bottom: 1px solid ${props => props.theme.colors.goldDeep};
   flex-shrink: 0;
 `;
 
@@ -892,7 +888,8 @@ const ModalHeader = styled.div<{ theme: ThemeType }>`
 const ModalTitle = styled.h2<{ theme: ThemeType }>`
   font-size: 1.1rem;
   font-weight: 700;
-  color: ${props => props.theme.colors.text};
+  letter-spacing: 1px;
+  color: ${props => props.theme.colors.goldBright};
   margin: 0;
 `;
 
@@ -1227,28 +1224,15 @@ const ModalFooter = styled.div<{ theme: ThemeType }>`
   justify-content: flex-end;
   gap: 8px;
   padding: 12px 20px;
-  border-top: 1px solid ${props => props.theme.colors.border};
+  border-top: 1px solid ${props => props.theme.colors.goldDeep};
   flex-shrink: 0;
 `;
 
 /** 通用弹窗按钮 */
 const ModalBtn = styled.button<{ theme: ThemeType; $primary?: boolean }>`
+  ${props => props.$primary ? hextechButtonPrimary : hextechButtonGhost};
   padding: 6px 18px;
   font-size: 0.85rem;
-  font-weight: 600;
-  border: 1px solid ${props => props.$primary ? 'transparent' : props.theme.colors.border};
-  border-radius: 6px;
-  background: ${props => props.$primary ? props.theme.colors.primary : props.theme.colors.elementBg};
-  color: ${props => props.$primary ? 'white' : props.theme.colors.text};
-  cursor: pointer;
-  transition: all 0.15s ease;
-  &:hover {
-    opacity: 0.85;
-  }
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
 `;
 
 // ==================== 装备小图标（格子内） ====================
@@ -1285,7 +1269,7 @@ const EquipModalOverlay = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: ${props => props.theme.colors.overlayBg};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1297,12 +1281,14 @@ const EquipModalContent = styled.div<{ theme: ThemeType }>`
   position: relative;
   width: 60%;
   max-height: 90%;
-  background: ${props => props.theme.colors.background};
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: 10px;
+  background: ${props => props.theme.colors.dialogBg};
+  border: 1px solid ${props => props.theme.colors.gold}b3;
+  border-radius: ${props => props.theme.borderRadius};
   display: flex;
   flex-direction: column;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.7),
+    0 12px 40px rgba(0, 0, 0, 0.6);
   overflow: hidden;
 `;
 
@@ -1474,20 +1460,8 @@ const EquipCloseBtn = styled.button<{ theme: ThemeType }>`
 
 /** 创建阵容入口按钮 - 使用描边风格以区分主操作 */
 const CreateLineupBtn = styled.button<{ theme: ThemeType }>`
+  ${hextechButtonGhost};
   padding: 6px 12px;
-  font-size: 14px;
-  font-weight: 800;
-  border: 1.5px solid ${props => props.theme.colors.primary};
-  border-radius: 4px;
-  background: transparent;
-  color: ${props => props.theme.colors.primary};
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: ${props => props.theme.colors.primary};
-    color: white;
-  }
 `;
 
 // 头像加载失败时的占位符

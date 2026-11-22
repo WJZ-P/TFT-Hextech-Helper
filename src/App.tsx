@@ -2,7 +2,7 @@ import './App.css'
 import {router} from "./Router.tsx";
 import {RouterProvider} from "react-router-dom";
 import {ThemeProvider} from "styled-components";
-import {lightTheme} from "./styles/theme.ts";
+import {hextechTheme} from "./styles/theme.ts";
 
 import {GlobalStyle} from "./styles/GlobalStyle.ts";
 import {Toaster} from "./components/toast/Toast.tsx";
@@ -18,7 +18,7 @@ interface ToastPayload {
 }
 
 function App() {
-    const currentTheme = lightTheme;
+    const currentTheme = hextechTheme;
     
     // 首次启动弹窗状态
     const [showFirstLaunchModal, setShowFirstLaunchModal] = useState(false);

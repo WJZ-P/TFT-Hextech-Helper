@@ -36,7 +36,8 @@ const ToastContainer = styled.div<{ position: ToastPosition }>`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  ${({position}) => (position.includes('top') ? 'top: 1.5rem;' : 'bottom: 1.5rem;')}
+  /* 顶部的 Toast 避开自绘标题栏，不压住窗口按钮 */
+  ${({position, theme}) => (position.includes('top') ? `top: calc(${theme.titleBarHeight}px + 1rem);` : 'bottom: 1.5rem;')}
   ${({position}) => {
     if (position.includes('left')) return 'left: 1.5rem;';
     if (position.includes('right')) return 'right: 1.5rem;';
@@ -44,38 +45,46 @@ const ToastContainer = styled.div<{ position: ToastPosition }>`
   }}
 `;
 
+/** Toast 类型对应的强调色 */
+const typeColor = (type: ToastType, theme: ThemeType): string => {
+    switch (type) {
+        case 'success':
+            return theme.colors.success;
+        case 'warning':
+            return theme.colors.warning;
+        case 'error':
+            return theme.colors.error;
+        case 'info':
+        default:
+            return theme.colors.accentCyan;
+    }
+};
+
+/** 海克斯风格：深色底板 + 暗金边框，左侧一条类型色竖线 */
 const ToastWrapper = styled.div<{ type: ToastType, isVisible: boolean, theme: ThemeType }>`
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  padding: 0.7rem 1rem;
   border-radius: ${({theme}) => theme.borderRadius};
-  background-color: ${({theme}) => theme.colors.elementBg};
-  color: ${({theme}) => theme.colors.text};
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-left: 5px solid;
+  background: ${({theme}) => theme.colors.panelBg};
+  color: ${({theme}) => theme.colors.goldBright};
+  border: 1px solid ${({theme}) => theme.colors.goldDim};
+  border-left: 3px solid ${({type, theme}) => typeColor(type, theme)};
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.5);
   animation: ${({isVisible}) => isVisible ? fadeIn : fadeOut} 0.3s ease-in-out forwards;
   min-width: 300px;
   max-width: 400px;
   min-height: 25px;
-  border-color: ${({type, theme}) => {
-    switch (type) {
-      case 'success':
-        return theme.colors.success;
-      case 'warning':
-        return theme.colors.warning;
-      case 'error':
-        return theme.colors.error;
-      case 'info':
-      default:
-        return theme.colors.primary;
-    }
-  }};
 `;
 
-const IconContainer = styled.div`
+const IconContainer = styled.div<{ type: ToastType, theme: ThemeType }>`
   display: flex;
   align-items: center;
+
+  .MuiSvgIcon-root {
+    color: ${({type, theme}) => typeColor(type, theme)};
+  }
 `;
 
 //  创建一个自定义hook，用来连接react组件和store，只在Toast组件内部使用
@@ -99,14 +108,14 @@ const SingleToast = ({toast}: { toast: ToastMessage }) => {
     }, [toast.id]);
 
     const icons = {
-        info: <InfoIcon color="primary"/>,
-        success: <CheckCircleIcon style={{color: '#10B981'}}/>,
-        warning: <WarningIcon style={{color: '#F59E0B'}}/>,
-        error: <ErrorIcon color="error"/>,
+        info: <InfoIcon/>,
+        success: <CheckCircleIcon/>,
+        warning: <WarningIcon/>,
+        error: <ErrorIcon/>,
     }
     return(
         <ToastWrapper isVisible={toast.isVisible} type={toast.type}>
-            <IconContainer>{icons[toast.type]}</IconContainer>
+            <IconContainer type={toast.type}>{icons[toast.type]}</IconContainer>
             {toast.message}
         </ToastWrapper>
     )

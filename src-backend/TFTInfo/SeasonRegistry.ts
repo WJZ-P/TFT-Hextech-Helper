@@ -84,7 +84,6 @@ export const CURRENT_SEASON_DISPLAY_NAME = 'S17 星神';
 //      - TFTMode.NORMAL：当前主赛季的匹配模式
 //      - TFTMode.RANK：当前主赛季的排位模式
 //      - TFTMode.S4_RUISHOU：回归赛季，固定用 S4 数据
-//      - TFTMode.S17_XINGSHEN：回归赛季，固定用 S17 数据
 //      - TFTMode.CLOCKWORK_TRAILS：发条鸟试炼，用当前主赛季的棋子
 //    换主赛季时，NORMAL 和 RANK 应该跟着主赛季走，而回归赛季模式保持各自的赛季。
 //    所以我们把这个映射做成"当前主赛季"的函数，而不是写死。
@@ -97,7 +96,7 @@ export const CURRENT_SEASON_DISPLAY_NAME = 'S17 星神';
  * @returns 赛季 ID
  *
  * 实现细节喵：
- *   1. S4_RUISHOU 永远绑死 S4，S17_XINGSHEN 永远绑死 S17
+ *   1. S4_RUISHOU 永远绑死 S4
  *   2. 其他模式（NORMAL/RANK/CLOCKWORK_TRAILS/CLASSIC）都走当前主赛季
  *      未来如果发条鸟要单独用 S16 数据，可以在这里加 case
  */
@@ -105,8 +104,6 @@ export function getSeasonIdByMode(mode: TFTMode): SeasonId {
     switch (mode) {
         case TFTMode.S4_RUISHOU:
             return 'S4';
-        case TFTMode.S17_XINGSHEN:
-            return 'S17';
         default:
             return CURRENT_SEASON;
     }

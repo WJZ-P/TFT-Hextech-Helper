@@ -1,6 +1,7 @@
 import {ipcRenderer, contextBridge} from 'electron'
 import IpcRendererEvent = Electron.IpcRendererEvent;
 import {LobbyConfig, Queue, SummonerInfo} from "../src-backend/lcu/utils/LCUProtocols.ts";
+import type {TftWindowCaptureResult} from "../src-backend/utils/TftWindowCapture.ts";
 import {IpcChannel} from "./protocol.ts";
 
 // --------- Expose some API to the Renderer process ---------
@@ -115,6 +116,14 @@ contextBridge.exposeInMainWorld('hex', hexApi)
 
 //  TFTApi: 下棋控制器相关操作
 const tftApi = {
+    /**
+     * 获取云顶之弈窗口的显示模式（开始挂机前检查是否为窗口化）
+     * @returns found=false 时 error 说明原因（未启动、已最小化等）
+     */
+    getWindowMode: (): Promise<
+        | { found: true; windowed: boolean; clientWidth: number; clientHeight: number }
+        | { found: false; error: string }
+    > => ipcRenderer.invoke(IpcChannel.TFT_GET_WINDOW_MODE),
     buyAtSlot: (slot: number) => ipcRenderer.invoke(IpcChannel.TFT_BUY_AT_SLOT, slot),
     getShopInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_SHOP_INFO),
     getEquipInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_EQUIP_INFO),
@@ -198,6 +207,67 @@ const utilApi = {
 }
 export type UtilApi = typeof utilApi
 contextBridge.exposeInMainWorld('util', utilApi)
+
+/** TFT 窗口截图工具的状态 */
+export interface DebugScreenshotState {
+    /** 是否可用（只有开发版为 true） */
+    available: boolean;
+    /** 截图快捷键，如 "F3" */
+    hotkey: string;
+    /** 设置中是否开启了快捷键 */
+    hotkeyEnabled: boolean;
+    /** 快捷键当前是否真的注册成功（开启了但与其他快捷键冲突时为 false） */
+    hotkeyRegistered: boolean;
+    /** 截图保存目录 */
+    saveDir: string;
+}
+
+/** TFT 窗口截图结果 */
+export type DebugScreenshotResult = { data?: TftWindowCaptureResult; error?: string };
+
+// debugToolsApi: 调试工具（仅开发版可用）
+const debugToolsApi = {
+    /** 获取 TFT 窗口截图工具的状态 */
+    getScreenshotState: (): Promise<DebugScreenshotState> => ipcRenderer.invoke(IpcChannel.DEBUG_SCREENSHOT_GET_STATE),
+    /** 开关截图快捷键（返回是否成功，失败时附带原因） */
+    setScreenshotHotkeyEnabled: (enabled: boolean): Promise<{ success: boolean; error?: string }> =>
+        ipcRenderer.invoke(IpcChannel.DEBUG_SCREENSHOT_SET_HOTKEY_ENABLED, enabled),
+    /** 立即截取一张 TFT 窗口画面 */
+    captureTftWindow: (): Promise<DebugScreenshotResult> => ipcRenderer.invoke(IpcChannel.DEBUG_SCREENSHOT_CAPTURE),
+    /** 在资源管理器中打开截图保存目录 */
+    openScreenshotDir: (): Promise<{ data?: string; error?: string }> => ipcRenderer.invoke(IpcChannel.DEBUG_SCREENSHOT_OPEN_DIR),
+    /**
+     * 监听快捷键截图完成事件
+     * @param callback 回调函数，参数为截图结果
+     * @returns 清理函数，用于取消监听
+     */
+    onScreenshotTaken: (callback: (result: DebugScreenshotResult) => void): (() => void) => {
+        const listener = (_event: IpcRendererEvent, result: DebugScreenshotResult) => callback(result);
+        ipcRenderer.on(IpcChannel.DEBUG_SCREENSHOT_TAKEN, listener);
+        return () => ipcRenderer.removeListener(IpcChannel.DEBUG_SCREENSHOT_TAKEN, listener);
+    },
+}
+export type DebugToolsApi = typeof debugToolsApi
+contextBridge.exposeInMainWorld('debugTools', debugToolsApi)
+
+// windowControlsApi: 自绘标题栏的窗口控制（主窗口是无边框的）
+const windowControlsApi = {
+    minimize: (): Promise<void> => ipcRenderer.invoke(IpcChannel.WINDOW_MINIMIZE),
+    toggleMaximize: (): Promise<void> => ipcRenderer.invoke(IpcChannel.WINDOW_TOGGLE_MAXIMIZE),
+    close: (): Promise<void> => ipcRenderer.invoke(IpcChannel.WINDOW_CLOSE),
+    isMaximized: (): Promise<boolean> => ipcRenderer.invoke(IpcChannel.WINDOW_IS_MAXIMIZED),
+    /**
+     * 监听最大化状态变化（包括双击标题栏、Win+方向键等系统操作触发的变化）
+     * @returns 清理函数，用于取消监听
+     */
+    onMaximizedChange: (callback: (isMaximized: boolean) => void): (() => void) => {
+        const listener = (_event: IpcRendererEvent, isMaximized: boolean) => callback(isMaximized);
+        ipcRenderer.on(IpcChannel.WINDOW_MAXIMIZED_CHANGED, listener);
+        return () => ipcRenderer.removeListener(IpcChannel.WINDOW_MAXIMIZED_CHANGED, listener);
+    },
+}
+export type WindowControlsApi = typeof windowControlsApi
+contextBridge.exposeInMainWorld('windowControls', windowControlsApi)
 
 // statsApi: 统计数据 API（读取挂机统计信息）
 const statsApi = {

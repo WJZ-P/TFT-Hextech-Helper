@@ -37,7 +37,6 @@ export enum TFTMode {
     RANK = 'RANK',          //  主赛季排位模式（队列 1100，当前为「自然之力」BETA，尚未适配）
     CLOCKWORK_TRAILS = 'CLOCKWORK_TRAILS',       //  PVE，发条鸟的试炼
     S4_RUISHOU = 'S4_RUISHOU',                   //  S4 回归赛季: 瑞兽闹新春（仅匹配，已下线）
-    S17_XINGSHEN = 'S17_XINGSHEN',               //  S17 回归赛季: 星神（仅匹配，队列 6110）
 }
 
 //  左下角等级region
@@ -677,8 +676,7 @@ export interface LineupUnit {
  * 与之相对的是 CLOCKWORK_TRAILS（速通送死模式）
  */
 export function isStandardChessMode(mode: TFTMode): boolean {
-    return mode === TFTMode.NORMAL || mode === TFTMode.RANK || mode === TFTMode.S4_RUISHOU
-        || mode === TFTMode.S17_XINGSHEN;
+    return mode === TFTMode.NORMAL || mode === TFTMode.RANK || mode === TFTMode.S4_RUISHOU;
 }
 
 export interface TeamComposition {

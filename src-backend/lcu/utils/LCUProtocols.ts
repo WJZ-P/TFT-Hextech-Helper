@@ -83,7 +83,7 @@ export enum Queue {
     TFT_DOUBLE = 1160, //云顶之弈 (双人作战)
     TFT_TREASURE = 1170, //云顶之弈 (恭喜发财)
     TFT_FATIAO = 1220,  // 云顶之弈 - 发条鸟的试炼
-    TFT_SET_REVIVAL = 6110,  //  云顶之弈 - 回归赛季（SET_REVIVAL_TFT）：曾为 S4 瑞兽闹新春，现为 S17 星神
+    TFT_SET_REVIVAL = 6110,  //  云顶之弈 - 回归赛季（SET_REVIVAL_TFT），老客户端队列
     URF = 1900, // 无限火力
     DOU_HUN = 1700,// 斗魂竞技场
     MORIRENJI = 4210, //  末日人工智能

@@ -60,6 +60,17 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["OVERLAY_SHOW"] = "overlay-show";
   IpcChannel2["OVERLAY_CLOSE"] = "overlay-close";
   IpcChannel2["OVERLAY_UPDATE_PLAYERS"] = "overlay-update-players";
+  IpcChannel2["DEBUG_SCREENSHOT_GET_STATE"] = "debug-screenshot-get-state";
+  IpcChannel2["DEBUG_SCREENSHOT_SET_HOTKEY_ENABLED"] = "debug-screenshot-set-hotkey-enabled";
+  IpcChannel2["DEBUG_SCREENSHOT_CAPTURE"] = "debug-screenshot-capture";
+  IpcChannel2["DEBUG_SCREENSHOT_OPEN_DIR"] = "debug-screenshot-open-dir";
+  IpcChannel2["DEBUG_SCREENSHOT_TAKEN"] = "debug-screenshot-taken";
+  IpcChannel2["TFT_GET_WINDOW_MODE"] = "tft-get-window-mode";
+  IpcChannel2["WINDOW_MINIMIZE"] = "window-minimize";
+  IpcChannel2["WINDOW_TOGGLE_MAXIMIZE"] = "window-toggle-maximize";
+  IpcChannel2["WINDOW_CLOSE"] = "window-close";
+  IpcChannel2["WINDOW_IS_MAXIMIZED"] = "window-is-maximized";
+  IpcChannel2["WINDOW_MAXIMIZED_CHANGED"] = "window-maximized-changed";
   return IpcChannel2;
 })(IpcChannel || {});
 electron.contextBridge.exposeInMainWorld("ipcRenderer", {
@@ -161,6 +172,11 @@ const hexApi = {
 };
 electron.contextBridge.exposeInMainWorld("hex", hexApi);
 const tftApi = {
+  /**
+   * 获取云顶之弈窗口的显示模式（开始挂机前检查是否为窗口化）
+   * @returns found=false 时 error 说明原因（未启动、已最小化等）
+   */
+  getWindowMode: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_WINDOW_MODE),
   buyAtSlot: (slot) => electron.ipcRenderer.invoke(IpcChannel.TFT_BUY_AT_SLOT, slot),
   getShopInfo: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_SHOP_INFO),
   getEquipInfo: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_EQUIP_INFO),
@@ -230,6 +246,43 @@ const utilApi = {
   checkUpdate: () => electron.ipcRenderer.invoke(IpcChannel.APP_CHECK_UPDATE)
 };
 electron.contextBridge.exposeInMainWorld("util", utilApi);
+const debugToolsApi = {
+  /** 获取 TFT 窗口截图工具的状态 */
+  getScreenshotState: () => electron.ipcRenderer.invoke(IpcChannel.DEBUG_SCREENSHOT_GET_STATE),
+  /** 开关截图快捷键（返回是否成功，失败时附带原因） */
+  setScreenshotHotkeyEnabled: (enabled) => electron.ipcRenderer.invoke(IpcChannel.DEBUG_SCREENSHOT_SET_HOTKEY_ENABLED, enabled),
+  /** 立即截取一张 TFT 窗口画面 */
+  captureTftWindow: () => electron.ipcRenderer.invoke(IpcChannel.DEBUG_SCREENSHOT_CAPTURE),
+  /** 在资源管理器中打开截图保存目录 */
+  openScreenshotDir: () => electron.ipcRenderer.invoke(IpcChannel.DEBUG_SCREENSHOT_OPEN_DIR),
+  /**
+   * 监听快捷键截图完成事件
+   * @param callback 回调函数，参数为截图结果
+   * @returns 清理函数，用于取消监听
+   */
+  onScreenshotTaken: (callback) => {
+    const listener = (_event, result) => callback(result);
+    electron.ipcRenderer.on(IpcChannel.DEBUG_SCREENSHOT_TAKEN, listener);
+    return () => electron.ipcRenderer.removeListener(IpcChannel.DEBUG_SCREENSHOT_TAKEN, listener);
+  }
+};
+electron.contextBridge.exposeInMainWorld("debugTools", debugToolsApi);
+const windowControlsApi = {
+  minimize: () => electron.ipcRenderer.invoke(IpcChannel.WINDOW_MINIMIZE),
+  toggleMaximize: () => electron.ipcRenderer.invoke(IpcChannel.WINDOW_TOGGLE_MAXIMIZE),
+  close: () => electron.ipcRenderer.invoke(IpcChannel.WINDOW_CLOSE),
+  isMaximized: () => electron.ipcRenderer.invoke(IpcChannel.WINDOW_IS_MAXIMIZED),
+  /**
+   * 监听最大化状态变化（包括双击标题栏、Win+方向键等系统操作触发的变化）
+   * @returns 清理函数，用于取消监听
+   */
+  onMaximizedChange: (callback) => {
+    const listener = (_event, isMaximized) => callback(isMaximized);
+    electron.ipcRenderer.on(IpcChannel.WINDOW_MAXIMIZED_CHANGED, listener);
+    return () => electron.ipcRenderer.removeListener(IpcChannel.WINDOW_MAXIMIZED_CHANGED, listener);
+  }
+};
+electron.contextBridge.exposeInMainWorld("windowControls", windowControlsApi);
 const statsApi = {
   /** 获取完整的统计数据快照（包含运行时 + 持久化数据） */
   getStatistics: () => electron.ipcRenderer.invoke(IpcChannel.STATS_GET),

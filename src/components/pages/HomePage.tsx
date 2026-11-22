@@ -1,15 +1,23 @@
-import React, {useState, useEffect, useCallback, useRef} from 'react';
-import styled, { keyframes } from 'styled-components';
-import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
-import StopCircleOutlinedIcon from '@mui/icons-material/StopCircleOutlined';
+import {useState, useEffect, useCallback, type ReactNode} from 'react';
+import styled, { css, keyframes } from 'styled-components';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import StopIcon from '@mui/icons-material/Stop';
 import BlockIcon from '@mui/icons-material/Block';
+import LockIcon from '@mui/icons-material/Lock';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import TimerOffIcon from '@mui/icons-material/TimerOff';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import MilitaryTechIcon from '@mui/icons-material/MilitaryTech';
+import PaidIcon from '@mui/icons-material/Paid';
+import PeopleIcon from '@mui/icons-material/People';
+import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing';
+import type { SvgIconComponent } from '@mui/icons-material';
 import {ThemeType} from "../../styles/theme.ts";
+import {hextechPanel, hextechSectionTitle} from "../../styles/hextech.ts";
 import {LogPanel} from "../LogPanel.tsx";
+import {HextechDialog} from "../HextechDialog.tsx";
 import {toast} from "../toast/toast-core.ts";
 import {SummonerInfo} from "../../../src-backend/lcu/utils/LCUProtocols.ts";
 import {TFTMode} from "../../../src-backend/TFTProtocol.ts";
@@ -20,988 +28,276 @@ import {settingsStore, GameStatistics} from "../../stores/settingsStore.ts";
 import appIconUrl from '../../../public/icon.png';
 
 // ============================================
-// 样式组件定义
+// 动画
+// ============================================
+
+/** 雷达扫描圈旋转 */
+const radarSpin = keyframes`
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+`;
+
+/** APP 图标呼吸光晕 */
+const iconBreath = keyframes`
+  0%, 100% { box-shadow: 0 0 14px rgba(200, 170, 110, 0.25); }
+  50% { box-shadow: 0 0 28px rgba(91, 211, 255, 0.45); }
+`;
+
+/** 主按钮表面的流光 */
+const shimmer = keyframes`
+  0% { transform: translateX(-120%) skewX(-20deg); }
+  60%, 100% { transform: translateX(320%) skewX(-20deg); }
+`;
+
+/** 横幅滑入 */
+const slideIn = keyframes`
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+// ============================================
+// 页面骨架
 // ============================================
 
 const PageWrapper = styled.div<{ theme: ThemeType }>`
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: ${props => props.theme.spacing.large};
-  background-color: ${props => props.theme.colors.background};
-  color: ${props => props.theme.colors.text};
-  text-align: center;
+  gap: ${props => props.theme.spacing.medium};
+  padding: ${props => props.theme.spacing.medium} ${props => props.theme.spacing.large};
   height: 100%;
   overflow: hidden;
+  text-align: left;
+  color: ${props => props.theme.colors.text};
+  /* 顶部一团淡淡的蓝光，模拟客户端主界面的氛围光 */
+  background:
+    radial-gradient(ellipse 80% 45% at 50% 0%, rgba(47, 139, 255, 0.10) 0%, transparent 70%),
+    ${props => props.theme.colors.background};
 `;
 
-// ============================================
-// 召唤师信息区域样式
-// ============================================
-
-/** 召唤师信息容器 */
-/** 召唤师信息区域 - 三列布局：左侧控制 | 中间头像 | 右侧统计 */
-/** 使用 CSS Grid 三列布局，中间列固定居中，左右列各自贴边 */
-const SummonerSection = styled.div<{ theme: ThemeType }>`
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  width: 100%;
-  padding: 0 20px;
-`;
-
-/** 中间头像列 - 保持头像垂直居中 */
-const AvatarColumn = styled.div`
+/** 小节标题行：左边标题，右边说明文字 */
+const SectionHeader = styled.div`
   display: flex;
-  flex-direction: column;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: ${props => props.theme.spacing.medium};
+  margin-bottom: ${props => props.theme.spacing.small};
+`;
+
+const SectionTitle = styled.h2`
+  ${hextechSectionTitle};
+  font-size: 0.95rem;
+`;
+
+const SectionHint = styled.span`
+  font-size: 0.8rem;
+  color: ${props => props.theme.colors.textSecondary};
+`;
+
+// ============================================
+// 召唤师信息栏
+// ============================================
+
+const ProfileBar = styled.div`
+  ${hextechPanel};
+  display: flex;
   align-items: center;
+  gap: ${props => props.theme.spacing.large};
+  padding: 12px 20px;
   flex-shrink: 0;
 `;
 
-/** 详情浮窗容器 - hover 时显示在右侧（必须在 AvatarContainer 之前定义） */
-const InfoTooltip = styled.div<{ theme: ThemeType }>`
-  position: absolute;
-  top: 50%;
-  left: 100%;  /* 出现在头像右侧 */
-  transform: translateY(-50%);
-  margin-left: 12px;  /* 与头像的间距 */
-  padding: ${props => props.theme.spacing.medium};
-  background-color: ${props => props.theme.colors.elementBg};
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: ${props => props.theme.borderRadius};
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.2s ease, visibility 0.2s ease;
-  z-index: 10;
-  white-space: nowrap; /* 防止内容换行，让宽度自适应 */
-  
-  /* 小三角箭头 - 指向左侧 */
-  &::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: -6px;
-    transform: translateY(-50%);
-    border-top: 6px solid transparent;
-    border-bottom: 6px solid transparent;
-    border-right: 6px solid ${props => props.theme.colors.border};
-  }
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: -5px;
-    transform: translateY(-50%);
-    border-top: 5px solid transparent;
-    border-bottom: 5px solid transparent;
-    border-right: 5px solid ${props => props.theme.colors.elementBg};
-  }
-`;
-
-/** 详情项 */
-const InfoItem = styled.div<{ theme: ThemeType }>`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 0;
-  font-size: 0.85rem;
-  
-  &:not(:last-child) {
-    border-bottom: 1px solid ${props => props.theme.colors.border}20;
-  }
-`;
-
-/** 详情标签 */
-const InfoLabel = styled.span<{ theme: ThemeType }>`
-  color: ${props => props.theme.colors.textSecondary};
-  font-weight: 700;
-  margin-right: 20px;
-`;
-
-/** 详情值 */
-const InfoValue = styled.span<{ theme: ThemeType }>`
-  color: ${props => props.theme.colors.text};
-  font-weight: 500;
-  flex: 1;
-  text-align: right;
-`;
-
-/** 头像外层容器 - 包含经验条环，hover 时显示详情浮窗 */
-const AvatarContainer = styled.div<{ theme: ThemeType }>`
+/** 头像外框：金色双圈，和客户端左上角的头像框一致 */
+const AvatarFrame = styled.div`
   position: relative;
-  width: 100px;
-  height: 100px;
-  margin-bottom: ${props => props.theme.spacing.medium};
-  cursor: pointer;
-  
-  /* hover 时显示浮窗 */
-  &:hover ${InfoTooltip} {
-    opacity: 1;
-    visibility: visible;
-  }
-`;
-
-/**
- * 经验条环 - 使用 SVG 圆环实现
- * 通过 stroke-dasharray 和 stroke-dashoffset 控制进度
- * 起点从等级徽章左侧开始（约 7 点钟方向，即 120°）
- */
-const ExpRing = styled.svg`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  /* 旋转 120° 让起点在等级徽章左侧（7 点钟方向） */
-  transform: rotate(120deg);
-`;
-
-/** 经验条背景圆环 */
-const ExpRingBackground = styled.circle<{ theme: ThemeType }>`
-  fill: none;
-  stroke: ${props => props.theme.colors.border};
-  stroke-width: 4;
-`;
-
-/** 经验条进度圆环 */
-const ExpRingProgress = styled.circle<{ theme: ThemeType; $percent: number }>`
-  fill: none;
-  stroke: ${props => props.theme.colors.primary};
-  stroke-width: 4;
-  stroke-linecap: round;
-  /* 
-   * 经验条只覆盖圆环的 2/3（从等级徽章左侧到右侧，跳过底部）
-   * 完整圆周长 = 2 * π * 46 ≈ 289
-   * 2/3 圆周长 ≈ 193（这是经验条的最大长度）
-   */
-  stroke-dasharray: 289;
-  /* 
-   * dashoffset 计算：
-   * - 当 percent = 0 时，offset = 289（完全不显示）
-   * - 当 percent = 100 时，offset = 289 - 193 = 96（显示 2/3 圆弧）
-   */
-  stroke-dashoffset: ${props => 289 - (193 * props.$percent / 100)};
-  transition: stroke-dashoffset 0.5s ease;
-`;
-
-/** 头像图片容器 */
-const AvatarWrapper = styled.div<{ theme: ThemeType }>`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 84px;
-  height: 84px;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
   border-radius: 50%;
-  overflow: hidden;
-  border: 3px solid ${props => props.theme.colors.elementBg};
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 3px;
+  background: linear-gradient(160deg, ${props => props.theme.colors.goldBright} 0%, ${props => props.theme.colors.gold} 40%, ${props => props.theme.colors.goldDim} 100%);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
 `;
 
-/** 头像图片 */
 const AvatarImage = styled.img`
   width: 100%;
   height: 100%;
+  border-radius: 50%;
   object-fit: cover;
+  border: 2px solid ${props => props.theme.colors.sidebarBg};
+  display: block;
 `;
 
-/** 等级徽章 - 显示在头像底部 */
-const LevelBadge = styled.div<{ theme: ThemeType }>`
+/** 等级徽章：压在头像底部 */
+const LevelBadge = styled.div`
   position: absolute;
-  bottom: -4px;
+  bottom: -6px;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryHover} 100%);
-  color: ${props => props.theme.colors.textOnPrimary};
-  font-size: 0.7rem;
+  padding: 0 8px;
+  font-size: 0.68rem;
   font-weight: 700;
-  padding: 2px 10px;
-  border-radius: 10px;
-  border: 2px solid ${props => props.theme.colors.elementBg};
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-`;
-
-/** 召唤师名称容器 */
-const SummonerNameContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-/** 召唤师名称 */
-const SummonerName = styled.span<{ theme: ThemeType }>`
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: ${props => props.theme.colors.text};
-`;
-
-/** 加载状态占位 */
-const LoadingPlaceholder = styled.div<{ theme: ThemeType }>`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: ${props => props.theme.spacing.small};
-  color: ${props => props.theme.colors.textSecondary};
-  font-size: 0.9rem;
-  padding: ${props => props.theme.spacing.small};
-  grid-column: 1 / -1;        /* 横跨 grid 所有列，确保在整个区域中居中 */
-`;
-
-/** 管理员权限提示横幅 */
-const AdminWarningBanner = styled.div<{ theme: ThemeType }>`
-  background-color: ${props => props.theme.colors.warning}20;
-  border: 1px solid ${props => props.theme.colors.warning}60;
-  border-radius: ${props => props.theme.borderRadius};
-  padding: 6px 12px;
-  margin-top: 8px;
-  font-size: 1rem;
-  color: ${props => props.theme.colors.warning};
-  display: flex;
-  align-items: center;
-  gap: 6px;
-`;
-
-/** 横幅滑入动画 - 从上方滑入并淡入 */
-const slideInFromTop = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-    max-height: 0;
-    padding: 0 12px;
-    margin-bottom: 0;
-    margin-top: 0;
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-    max-height: 50px;
-    padding: 6px 12px;
-    margin-bottom: 32px;
-    margin-top: -16px;
-  }
-`;
-
-/** "本局结束后停止"信息横幅 */
-const StopAfterGameBanner = styled.div<{ theme: ThemeType }>`
-  background-color: ${props => props.theme.colors.primary}20;
-  border: 1px solid ${props => props.theme.colors.primary}60;
-  border-radius: ${props => props.theme.borderRadius};
-  padding: 6px 12px;
-  margin-bottom: 32px;
-  margin-top: -16px;
-  font-size: 1rem;
-  color: ${props => props.theme.colors.primary};
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  overflow: hidden;
-  
-  /* 入场动画 */
-  animation: ${slideInFromTop} 0.3s ease-out forwards;
-`;
-
-// ============================================
-// 游戏模式切换样式（两级选择器）
-// ============================================
-
-/** 模式选择区域 - 垂直排列，上方赛季选择，下方子模式选择 */
-const ModeToggleContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-`;
-
-/**
- * 通用多选一胶囊组件（竖向）
- * 每一行对应 MODE_OPTIONS 里的一个模式
- */
-const ModeTogglePill = styled.div<{ theme: ThemeType }>`
-  appearance: none;
-  border: 1px solid ${props => props.theme.colors.border};
-  background: ${props => props.theme.colors.elementBg};
-  border-radius: 20px;
-  padding: 4px;
-  width: 150px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  /* 不用 overflow:hidden，否则模式详情浮窗会被裁切 */
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
-  transition: border-color 0.25s ease, box-shadow 0.25s ease;
-
-  &:hover {
-    border-color: ${props => props.theme.colors.primary};
-    box-shadow: 0 5px 11px rgba(0, 0, 0, 0.22);
-  }
-`;
-
-/**
- * 模式选择滑块指示器（竖向滑动）
- * $modeIndex: 当前模式在 MODE_OPTIONS 中的下标
- * $modeCount: 模式总数（决定每一行的高度）
- * 通过 top 值变化实现上下滑动
- *
- * 实现细节喵：
- * - 胶囊有 4px 内边距，文本行平分剩下的高度，所以滑块按 (100% - 8px) / count 精确对齐每一行
- * - 行数多了以后，旧的 calc(index * 50% + 2px) 近似写法会逐行累积偏移，所以改成精确公式
- */
-const ModeToggleIndicator = styled.div<{ theme: ThemeType; $modeIndex: number; $modeCount: number }>`
-  position: absolute;
-  left: 2px;
-  top: ${props => `calc(4px + (100% - 8px) * ${props.$modeIndex} / ${props.$modeCount})`};
-  width: calc(100% - 4px);
-  height: ${props => `calc((100% - 8px) / ${props.$modeCount})`};
-  border-radius: 999px;
-  background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryHover} 100%);
-  transition: top 0.22s ease, background 0.22s ease;
-`;
-
-/** 文本层（在滑块之上），竖向 grid 布局，每个模式一行 */
-const ModeToggleTextRow = styled.div`
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  display: grid;
-  grid-auto-rows: 1fr;
-  align-items: center;
-`;
-
-/**
- * 单个文本标签（可点击切换）
- * $disabled: 未适配的模式，置灰 + 禁止光标（不用原生 disabled 属性，
- *            因为部分 Chromium 版本不会给 disabled 按钮派发鼠标事件，hover 浮窗就出不来了）
- */
-const ModeToggleLabel = styled.button<{ theme: ThemeType; $active: boolean; $disabled?: boolean }>`
-  width: 100%;
-  background: none;
-  border: none;
-  padding: 5px 0;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-align: center;
-  letter-spacing: 0.5px;
-  color: ${props => props.$active ? props.theme.colors.textOnPrimary : props.theme.colors.textSecondary};
-  opacity: ${props => props.$disabled ? 0.45 : 1};
-  transition: color 0.25s ease;
-  cursor: ${props => props.$disabled ? 'not-allowed' : 'pointer'};
-
-  &:hover {
-    color: ${props => props.$active
-      ? props.theme.colors.textOnPrimary
-      : (props.$disabled ? props.theme.colors.textSecondary : props.theme.colors.text)};
-  }
-
-  &:focus-visible {
-    outline: none;
-  }
-`;
-
-// ============================================
-// 模式详情浮窗样式（hover 时向右弹出）
-// ============================================
-
-/**
- * 模式详情浮窗 —— 通过 JS 动态定位，支持边界检测
- * 使用 fixed 定位（相对于视口），避免被父元素 overflow 裁切
- * $visible: 控制显示/隐藏
- * $arrowTop: 箭头在浮窗上的 Y 位置（百分比字符串，如 "50%"）
- */
-const ModeTooltip = styled.div<{ theme: ThemeType; $visible: boolean; $arrowTop?: string }>`
-  position: fixed;
-  padding: 12px 14px;
-  background-color: ${props => props.theme.colors.elementBg};
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: ${props => props.theme.borderRadius};
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  opacity: ${props => props.$visible ? 1 : 0};
-  visibility: ${props => props.$visible ? 'visible' : 'hidden'};
-  transition: opacity 0.2s ease, visibility 0.2s ease;
-  z-index: 100;
+  line-height: 16px;
   white-space: nowrap;
-  pointer-events: none;
-
-  /* 左侧小三角箭头，top 由 JS 通过 $arrowTop 动态控制 */
-  &::before {
-    content: '';
-    position: absolute;
-    top: ${props => props.$arrowTop || '50%'};
-    left: -6px;
-    transform: translateY(-50%);
-    border-top: 6px solid transparent;
-    border-bottom: 6px solid transparent;
-    border-right: 6px solid ${props => props.theme.colors.border};
-  }
-  &::after {
-    content: '';
-    position: absolute;
-    top: ${props => props.$arrowTop || '50%'};
-    left: -5px;
-    transform: translateY(-50%);
-    border-top: 5px solid transparent;
-    border-bottom: 5px solid transparent;
-    border-right: 5px solid ${props => props.theme.colors.elementBg};
-  }
+  color: ${props => props.theme.colors.goldBright};
+  background: ${props => props.theme.colors.sidebarBg};
+  border: 1px solid ${props => props.theme.colors.gold};
 `;
 
-/** 模式标签外层容器 —— 包裹每个 ModeToggleLabel，hover 通过 JS 事件控制 */
-const ModeLabelWrapper = styled.div`
-  position: relative;
-`;
-
-/** 浮窗标题（模式名称）；$danger 用于未适配模式的"不许选"提示 */
-const ModeTooltipTitle = styled.div<{ theme: ThemeType; $color?: string; $danger?: boolean }>`
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: ${props => props.$danger ? props.theme.colors.error : (props.$color || props.theme.colors.primary)};
-  margin-bottom: 6px;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-`;
-
-/** 浮窗描述文本 */
-const ModeTooltipDesc = styled.div<{ theme: ThemeType }>`
-  font-size: 0.78rem;
-  color: ${props => props.theme.colors.textSecondary};
-  line-height: 1.5;
-  white-space: normal;  /* 描述文本允许换行 */
-  max-width: 200px;
-`;
-
-/** 浮窗标签行（如"赛季: S16"） */
-const ModeTooltipTag = styled.div<{ theme: ThemeType }>`
-  display: inline-block;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: ${props => props.theme.colors.textOnPrimary};
-  background: ${props => props.theme.colors.primary}90;
-  border-radius: 4px;
-  padding: 1px 6px;
-  margin-bottom: 6px;
-`;
-
-// ============================================
-// 左侧控制面板样式（模式选择 + 日志模式）
-// ============================================
-
-/** 左侧控制面板 - 垂直排列模式选择和日志模式 */
-/** 左侧控制面板 - 贴左边，内部内容居中对齐 */
-const LeftControlPanel = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  align-self: start;           /* 在 grid 中顶部对齐，让标题和右侧 StatsPanel 对齐 */
-  gap: 10px;
-  min-width: 200px;
-  justify-self: start;
-`;
-
-/** 控制面板小节标题 */
-const PanelSectionTitle = styled.span<{ theme: ThemeType }>`
-  font-size: 1rem;
-  font-weight: 700;
-  color: ${props => props.theme.colors.textSecondary};
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: -4px;
-`;
-
-/** 日志模式切换开关 - 紧凑版 */
-const LogModeTogglePill = styled.button<{ theme: ThemeType; $isDetailed: boolean }>`
-  appearance: none;
-  border: 1px solid ${props => props.theme.colors.border};
-  background: ${props => props.theme.colors.elementBg};
-  border-radius: 32px;
-  padding: 4px;
-  height: 30px;
-  width: 120px;
-  display: inline-flex;
-  align-items: center;
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
-  transition: border-color 0.25s ease, box-shadow 0.25s ease;
-
-  &:hover {
-    border-color: ${props => props.theme.colors.primary};
-    box-shadow: 0 3px 9px rgba(0, 0, 0, 0.18);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-
-  &:focus-visible {
-    outline: 3px solid ${props => props.theme.colors.primary}80;
-    outline-offset: 2px;
-  }
-`;
-
-/** 日志模式滑块指示器 */
-const LogModeToggleIndicator = styled.div<{ theme: ThemeType; $isDetailed: boolean }>`
-  position: absolute;
-  top: 2px;
-  left: ${props => props.$isDetailed ? 'calc(50% + 2px)' : '2px'};
-  width: calc(50% - 4px);
-  height: calc(100% - 4px);
-  border-radius: 999px;
-  background: ${props => props.$isDetailed
-    ? `linear-gradient(135deg, ${props.theme.colors.warning} 0%, ${props.theme.colors.warning}cc 100%)`
-    : `linear-gradient(135deg, ${props.theme.colors.primary} 0%, ${props.theme.colors.primaryHover} 100%)`};
-  transition: left 0.22s ease, background 0.22s ease;
-`;
-
-/** 日志模式文本层 */
-const LogModeToggleTextRow = styled.div`
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: center;
-`;
-
-/** 日志模式单个文本 */
-const LogModeToggleLabel = styled.span<{ theme: ThemeType; $active: boolean }>`
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-align: center;
-  letter-spacing: 1px;
-  color: ${props => props.$active ? props.theme.colors.textOnPrimary : props.theme.colors.textSecondary};
-  transition: color 0.25s ease;
-`;
-
-// ============================================
-// 右侧统计面板样式
-// ============================================
-
-/** 右侧统计面板容器 - 贴右边 */
-const StatsPanel = styled.div<{ theme: ThemeType }>`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  align-self: start;           /* 在 grid 中顶部对齐，让标题和左侧 LeftControlPanel 对齐 */
-  gap: 8px;
-  min-width: 200px;
-  justify-self: end;
-`;
-
-/** 统计卡片 - 精致的数据展示卡 */
-const StatsCard = styled.div<{ theme: ThemeType }>`
+const ProfileInfo = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 10px 16px;
-  background: ${props => props.theme.colors.statsCardBg};
-  border: 1px solid ${props => props.theme.colors.statsCardBorder};
-  border-radius: ${props => props.theme.borderRadius};
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  width: 100%;
-  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  min-width: 0;
+`;
 
-  &:hover {
-    border-color: ${props => props.theme.colors.primary}40;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+const ProfileName = styled.div`
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: ${props => props.theme.colors.goldBright};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const ProfileTag = styled.span`
+  margin-left: 4px;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: ${props => props.theme.colors.textSecondary};
+`;
+
+/** 经验条：细长的蓝色进度条，外面一圈暗金边 */
+const ExpBar = styled.div`
+  width: 180px;
+  height: 6px;
+  background: ${props => props.theme.colors.sidebarBg};
+  border: 1px solid ${props => props.theme.colors.goldDeep};
+  overflow: hidden;
+`;
+
+const ExpFill = styled.div<{ $percent: number }>`
+  height: 100%;
+  width: ${props => Math.max(0, Math.min(100, props.$percent))}%;
+  background: linear-gradient(90deg, #1450B8 0%, ${props => props.theme.colors.accentCyan} 100%);
+  box-shadow: 0 0 6px ${props => props.theme.colors.accentCyan}99;
+  transition: width 0.5s ease;
+`;
+
+const ExpText = styled.span`
+  font-size: 0.72rem;
+  color: ${props => props.theme.colors.textSecondary};
+`;
+
+/** 右侧统计：三项横排，中间用暗金竖线分隔 */
+const StatsGroup = styled.div`
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+`;
+
+const StatItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px;
+
+  &:not(:first-child) {
+    border-left: 1px solid ${props => props.theme.colors.goldDeep};
   }
-`;
-
-/** 统计项 - 单行数据 */
-const StatsItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-/** 统计图标容器 */
-const StatsIcon = styled.div<{ theme: ThemeType; $color?: string }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  background: ${props => (props.$color || props.theme.colors.statsIconColor) + '18'};
-  color: ${props => props.$color || props.theme.colors.statsIconColor};
-  flex-shrink: 0;
 
   .MuiSvgIcon-root {
-    font-size: 1rem;
+    font-size: 1.3rem;
+    color: ${props => props.theme.colors.gold};
   }
 `;
 
-/** 统计文本容器 */
-const StatsTextGroup = styled.div`
+const StatText = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  flex: 1;
 `;
 
-/** 统计标签 */
-const StatsLabel = styled.span<{ theme: ThemeType }>`
-  font-size: 0.80rem;
-  font-weight: 600;
+const StatLabel = styled.span`
+  font-size: 0.72rem;
   color: ${props => props.theme.colors.statsLabelColor};
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 `;
 
-/** 统计数值 */
-const StatsValue = styled.span<{ theme: ThemeType }>`
+const StatValue = styled.span`
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 700;
   color: ${props => props.theme.colors.statsValueColor};
-  letter-spacing: 0.5px;
+  font-variant-numeric: tabular-nums;
 `;
-
-
 
 // ============================================
-// 控制按钮样式
+// 未连接 / 加载中
 // ============================================
 
-/**
- * 按钮动画定义
- * - pulse: 呼吸光晕效果
- * - shimmer: 光泽流动效果
- * - rippleFloat: 水纹漂浮效果
- */
-const buttonAnimations = `
-  @keyframes pulse {
-    0% {
-      box-shadow: 0 0 0 0 rgba(102, 204, 255, 0.6);
-    }
-    70% {
-      box-shadow: 0 0 0 12px rgba(102, 204, 255, 0);
-    }
-    100% {
-      box-shadow: 0 0 0 0 rgba(102, 204, 255, 0);
-    }
-  }
-  
-  @keyframes pulseRed {
-    0% {
-      box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.6);
-    }
-    70% {
-      box-shadow: 0 0 0 12px rgba(244, 67, 54, 0);
-    }
-    100% {
-      box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
-    }
-  }
-  
-  /* 光泽流动 - 从左到右的高光扫过 */
-  @keyframes shimmer {
-    0% {
-      transform: translateX(-100%) skewX(-15deg);
-    }
-    100% {
-      transform: translateX(200%) skewX(-15deg);
-    }
-  }
-  
-  /* 水纹漂浮 - 模拟水面波动 */
-  @keyframes rippleFloat {
-    0%, 100% {
-      transform: translate(-50%, -50%) scale(1);
-      opacity: 0.15;
-    }
-    50% {
-      transform: translate(-50%, -50%) scale(1.1);
-      opacity: 0.25;
-    }
-  }
-  
-  @keyframes rippleFloat2 {
-    0%, 100% {
-      transform: translate(-50%, -50%) scale(1.15);
-      opacity: 0.1;
-    }
-    50% {
-      transform: translate(-50%, -50%) scale(1.25);
-      opacity: 0.2;
-    }
-  }
-
-  @keyframes pulseGray {
-    0% {
-      box-shadow: 0 0 0 0 rgba(120, 144, 156, 0.6);
-    }
-    70% {
-      box-shadow: 0 0 0 12px rgba(120, 144, 156, 0);
-    }
-    100% {
-      box-shadow: 0 0 0 0 rgba(120, 144, 156, 0);
-    }
-  }
-
-  /* 标题流光特效 */
-  @keyframes titleFlow {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
-  }
-
-  /* 图标呼吸与旋转 */
-  @keyframes iconBreath {
-    0% {
-      box-shadow: 0 0 15px rgba(102, 204, 255, 0.3);
-      transform: translate(-50%, -50%) scale(1);
-    }
-    50% {
-      box-shadow: 0 0 30px rgba(102, 204, 255, 0.6);
-      transform: translate(-50%, -50%) scale(1.05);
-    }
-    100% {
-      box-shadow: 0 0 15px rgba(102, 204, 255, 0.3);
-      transform: translate(-50%, -50%) scale(1);
-    }
-  }
-
-  /* 雷达扫描圈 */
-  @keyframes radarSpin {
-    0% {
-      transform: translate(-50%, -50%) rotate(0deg);
-    }
-    100% {
-      transform: translate(-50%, -50%) rotate(360deg);
-    }
-  }
-`;
-
-const ControlButton = styled.button<{ $isRunning: boolean; $disabled: boolean; $isConnected: boolean; theme: ThemeType }>`
-  ${buttonAnimations}
-  /* 已连接时上方内容较多，用负 margin 收紧间距；未连接时内容少，保持默认间距 */
-  margin-top: ${props => props.$isConnected ? '-0.8rem' : '0'};
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: ${props => props.theme.spacing.small};
-  padding: 0.9rem 2.2rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-  border: none;
-  border-radius: ${props => props.theme.borderRadius};
-  cursor: ${props => props.$disabled ? 'not-allowed' : 'pointer'};
-  min-width: 160px;
-  color: ${props => props.theme.colors.textOnPrimary};
-  overflow: hidden;
-  
-  /* 渐变背景 - 根据状态切换 */
-  background: ${props => {
-    // 禁用/等待状态：使用科技灰/蓝灰渐变，保留高级感
-    if (props.$disabled) return 'linear-gradient(135deg, #78909c 0%, #455a64 100%)';
-    // 运行状态：红色
-    if (props.$isRunning) return 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)';
-    // 就绪状态：蓝色
-    return 'linear-gradient(135deg, #66ccff 0%, #3399dd 50%, #2277bb 100%)';
-  }};
-  
-  /* 基础光晕 */
-  box-shadow: ${props => {
-    if (props.$disabled) return '0 4px 15px rgba(120, 144, 156, 0.4)';
-    if (props.$isRunning) return '0 4px 15px rgba(244, 67, 54, 0.4)';
-    return '0 4px 15px rgba(102, 204, 255, 0.5)';
-  }};
-  
-  /* 脉冲动画 - 禁用状态也播放，使用灰色脉冲 */
-  animation: ${props => {
-    if (props.$disabled) return 'pulseGray 2s infinite';
-    return props.$isRunning ? 'pulseRed 2s infinite' : 'pulse 2s infinite';
-  }};
-  
-  transition: transform 0.2s ease, box-shadow 0.3s ease, background 0.3s ease;
-  
-  /* 流动光泽效果 - 始终显示 */
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 50%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.4) 50%,
-      transparent 100%
-    );
-    /* 禁用状态也播放动画 */
-    animation: shimmer 3s ease-in-out infinite;
-    pointer-events: none;
-  }
-  
-  /* 内部水纹效果 - 始终显示 */
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 150%;
-    height: 150%;
-    background: radial-gradient(
-      ellipse at center,
-      rgba(255, 255, 255, 0.3) 0%,
-      rgba(255, 255, 255, 0.1) 30%,
-      transparent 60%
-    );
-    border-radius: 50%;
-    /* 禁用状态也播放动画 */
-    animation: rippleFloat 2.5s ease-in-out infinite;
-    pointer-events: none;
-  }
-
-  &:hover {
-    /* 禁用状态下 Hover 不做位移，但保持光影 */
-    transform: ${props => props.$disabled ? 'none' : 'translateY(-3px) scale(1.02)'};
-    box-shadow: ${props => {
-      if (props.$disabled) return '0 4px 15px rgba(120, 144, 156, 0.4)';
-      if (props.$isRunning) return '0 8px 25px rgba(244, 67, 54, 0.5)';
-      return '0 8px 25px rgba(102, 204, 255, 0.6)';
-    }};
-  }
-
-  &:active {
-    transform: ${props => props.$disabled ? 'none' : 'translateY(-1px) scale(0.98)'};
-    box-shadow: ${props => {
-      if (props.$disabled) return '0 4px 15px rgba(120, 144, 156, 0.4)';
-      if (props.$isRunning) return '0 2px 10px rgba(244, 67, 54, 0.4)';
-      return '0 2px 10px rgba(102, 204, 255, 0.4)';
-    }};
-  }
-
-  .MuiSvgIcon-root {
-    font-size: 1.5rem;
-    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.15));
-    /* 图标相对于伪元素要在上层 */
-    position: relative;
-    z-index: 1;
-  }
-  
-  /* 文字也要在上层 */
-  & > span, & > * {
-    position: relative;
-    z-index: 1;
-  }
-`;
-
-/**
- * 控制区域容器 - 使用 Flexbox 水平排列
- * 左：日志模式 | 中：控制按钮 | 右：游戏模式
- * 
- * 布局策略：
- * - 中间按钮使用绝对定位，始终保持水平居中
- * - 仅包含中间的控制按钮
- */
-const ControlRow = styled.div`
+const WelcomePanel = styled.div`
+  ${hextechPanel};
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  padding: 0 20px;
+  gap: ${props => props.theme.spacing.large};
+  padding: 18px 24px;
+  flex-shrink: 0;
 `;
 
-/** 按钮水纹外层容器 - 居中显示 */
-const ButtonWrapper = styled.div`
-  position: relative;
-  
-  /* 外围水纹 - 始终显示 */
-  &::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(
-      ellipse at center,
-      rgba(102, 204, 255, 0.3) 0%,
-      rgba(102, 204, 255, 0.1) 40%,
-      transparent 70%
-    );
-    border-radius: 50%;
-    animation: rippleFloat2 3s ease-in-out infinite;
-    pointer-events: none;
-  }
+const WelcomeText = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 `;
 
-/** 项目名称大标题 */
-const ProjectTitle = styled.h1<{ theme: ThemeType }>`
-  font-size: 2rem;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-top: -10px;
-  margin-bottom: 10px;
-  
-  /* 酷炫流光渐变 */
-  background: linear-gradient(
-    -45deg,
-    #2196f3,
-    #00bcd4,
-    #3f51b5,
-    #2196f3
-  );
-  background-size: 300% 300%;
+/** 项目名称：金色渐变字 */
+const ProjectTitle = styled.h1`
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 3px;
+  background: linear-gradient(180deg, ${props => props.theme.colors.goldBright} 0%, ${props => props.theme.colors.gold} 55%, ${props => props.theme.colors.goldDim} 100%);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  
-  /* 发光阴影效果 */
-  filter: drop-shadow(0 0 10px rgba(33, 150, 243, 0.3));
-  
-  animation: titleFlow 6s ease infinite;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
 `;
 
-/** APP图标容器 */
-const AppIconContainer = styled.div<{ theme: ThemeType }>`
+const WelcomeHint = styled.span`
+  font-size: 0.9rem;
+  color: ${props => props.theme.colors.textSecondary};
+`;
+
+const AppIconContainer = styled.div`
   position: relative;
-  width: 130px;
-  height: 130px;
-  margin: 0 auto;
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
 `;
 
-/** APP图标图片 */
-const AppIconImage = styled.img<{ theme: ThemeType }>`
+const AppIconImage = styled.img`
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 110px;
-  height: 110px;
-  border-radius: 50%; /* 圆形（球形）图标 */
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
   z-index: 2;
-  border: 2px solid rgba(102, 204, 255, 0.3);
-  background-color: ${props => props.theme.colors.elementBg};
-  
-  /* 呼吸动画 */
-  animation: iconBreath 3s ease-in-out infinite;
+  border: 2px solid ${props => props.theme.colors.gold};
+  background-color: ${props => props.theme.colors.sidebarBg};
+  animation: ${iconBreath} 3s ease-in-out infinite;
 `;
 
-/** 雷达扫描圈 - 外圈 */
-const RadarCircle = styled.div<{ theme: ThemeType }>`
+/** 雷达扫描圈 - 外圈（金色虚线） */
+const RadarCircle = styled.div`
   position: absolute;
   top: 50%;
   left: 50%;
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 1px dashed ${props => props.theme.colors.primary}40;
-  
-  /* 旋转动画 */
-  animation: radarSpin 10s linear infinite;
-  
+  border: 1px dashed ${props => props.theme.colors.gold}66;
+  animation: ${radarSpin} 10s linear infinite;
+
   &::before {
     content: '';
     position: absolute;
@@ -1009,65 +305,401 @@ const RadarCircle = styled.div<{ theme: ThemeType }>`
     left: 50%;
     width: 4px;
     height: 4px;
-    background: ${props => props.theme.colors.primary};
+    background: ${props => props.theme.colors.accentCyan};
     border-radius: 50%;
-    box-shadow: 0 0 10px ${props => props.theme.colors.primary};
+    box-shadow: 0 0 10px ${props => props.theme.colors.accentCyan};
   }
 `;
 
-/** 雷达扫描圈 - 内圈 */
+/** 雷达扫描圈 - 内圈（青色弧线） */
 const RadarCircleInner = styled(RadarCircle)`
-  width: 100%;
-  height: 100%;
-  border: 1px solid ${props => props.theme.colors.primary}20;
-  border-left-color: ${props => props.theme.colors.primary}80;
-  animation: radarSpin 3s linear infinite;
+  border: 1px solid transparent;
+  border-left-color: ${props => props.theme.colors.accentCyan}aa;
+  animation-duration: 3s;
 `;
 
+/** 管理员权限提示横幅 */
+const AdminWarningBanner = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  color: ${props => props.theme.colors.warning};
+  background: ${props => props.theme.colors.warning}14;
+  border: 1px solid ${props => props.theme.colors.warning}66;
+`;
 
 // ============================================
-// 组件主体
+// 模式卡片
+// ============================================
+
+const ModeGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+`;
+
+/** 卡片右下角的"不许选"遮罩，hover 未适配的卡片时显示 */
+const ModeLockOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: ${props => props.theme.colors.goldBright};
+  background: rgba(1, 10, 19, 0.82);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+
+  .MuiSvgIcon-root {
+    font-size: 1.2rem;
+    color: ${props => props.theme.colors.error};
+  }
+`;
+
+const ModeCard = styled.button<{ $accent: string; $selected: boolean; $locked: boolean }>`
+  appearance: none;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-height: 104px;
+  padding: 12px;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  overflow: hidden;
+  cursor: ${props => props.$locked ? 'not-allowed' : 'pointer'};
+  border-radius: ${props => props.theme.borderRadius};
+  /* 每个模式带一点自己的色调，从左上角往右下渐隐 */
+  background:
+    radial-gradient(circle at 0% 0%, ${props => props.$accent}38 0%, transparent 65%),
+    ${props => props.theme.colors.panelBg};
+  border: 1px solid ${props => props.$selected ? props.theme.colors.accentCyan : props.theme.colors.goldDim};
+  box-shadow: ${props => props.$selected
+    ? `0 0 0 1px ${props.theme.colors.accentCyan}55, 0 0 18px ${props.theme.colors.accentCyan}40`
+    : `inset 0 0 0 1px rgba(0, 0, 0, 0.5)`};
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+
+  /* 顶部一条亮线，选中时变青色 */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 12px;
+    right: 12px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, ${props => props.$selected ? props.theme.colors.accentCyan : props.theme.colors.gold}, transparent);
+    opacity: ${props => props.$selected ? 1 : 0.5};
+  }
+
+  ${props => props.$locked ? css`
+    > :not(${ModeLockOverlay}) {
+      filter: saturate(0.55) brightness(0.8);
+    }
+    &:hover ${ModeLockOverlay} {
+      opacity: 1;
+    }
+  ` : css`
+    &:hover {
+      border-color: ${props.$selected ? props.theme.colors.accentCyan : props.theme.colors.gold};
+      transform: translateY(-2px);
+    }
+  `}
+
+  &:focus-visible {
+    outline: 1px solid ${props => props.theme.colors.goldBright};
+    outline-offset: 2px;
+  }
+`;
+
+/** 模式图标：金框小方块 */
+const ModeIconBadge = styled.div<{ $accent: string }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid ${props => props.theme.colors.gold};
+  background: ${props => props.$accent}26;
+  transform: rotate(45deg);
+  margin: 4px 0 4px 4px;
+
+  .MuiSvgIcon-root {
+    transform: rotate(-45deg);
+    font-size: 1.05rem;
+    color: ${props => props.theme.colors.goldBright};
+  }
+`;
+
+const ModeName = styled.div`
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: ${props => props.theme.colors.goldBright};
+`;
+
+const ModeMeta = styled.div`
+  font-size: 0.72rem;
+  color: ${props => props.theme.colors.textSecondary};
+`;
+
+/** 卡片右上角的状态角标 */
+const ModeStatus = styled.span<{ $ready: boolean }>`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 1px 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: ${props => props.$ready ? props.theme.colors.accentCyan : props.theme.colors.gold};
+  border: 1px solid ${props => props.$ready ? props.theme.colors.accentCyan : props.theme.colors.goldDim};
+  background: rgba(1, 10, 19, 0.6);
+`;
+
+// ============================================
+// 开始按钮行
+// ============================================
+
+/** 三栏：左当前模式说明 | 中开始按钮 | 右日志等级 */
+const ControlRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: ${props => props.theme.spacing.medium};
+  flex-shrink: 0;
+`;
+
+const ControlInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: ${props => props.theme.colors.textSecondary};
+
+  strong {
+    color: ${props => props.theme.colors.goldBright};
+    font-weight: 700;
+  }
+`;
+
+/** "本局结束后停止"提示 */
+const StopAfterGameBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  padding: 2px 8px;
+  color: ${props => props.theme.colors.accentCyan};
+  border: 1px solid ${props => props.theme.colors.accentCyan}66;
+  background: ${props => props.theme.colors.accentCyan}14;
+  animation: ${slideIn} 0.25s ease-out;
+
+  .MuiSvgIcon-root {
+    font-size: 0.95rem;
+  }
+`;
+
+type StartButtonVariant = 'ready' | 'running' | 'disabled';
+
+/** 按钮右侧的箭头形状（客户端"开始游戏"按钮的轮廓） */
+const ARROW_SHAPE = 'polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%)';
+
+/**
+ * 主按钮外层：负责发光
+ * 光晕要放在外层用 filter 做 —— 内层用了 clip-path，自己的 box-shadow 会被裁掉
+ */
+const StartButtonGlow = styled.div<{ $variant: StartButtonVariant }>`
+  filter: ${props => {
+    if (props.$variant === 'ready') return `drop-shadow(0 0 10px ${props.theme.colors.accentCyan}55)`;
+    if (props.$variant === 'running') return `drop-shadow(0 0 10px ${props.theme.colors.gold}55)`;
+    return 'none';
+  }};
+  transition: filter 0.2s ease;
+
+  &:hover {
+    filter: ${props => {
+      if (props.$variant === 'ready') return `drop-shadow(0 0 16px ${props.theme.colors.accentCyan}88)`;
+      if (props.$variant === 'running') return `drop-shadow(0 0 16px ${props.theme.colors.gold}88)`;
+      return 'none';
+    }};
+  }
+`;
+
+/** 主按钮：外层是金框（2px 的金色底透出来），内层是按钮本体 */
+const StartButton = styled.button<{ $variant: StartButtonVariant }>`
+  appearance: none;
+  border: none;
+  padding: 2px;
+  min-width: 240px;
+  cursor: ${props => props.$variant === 'disabled' ? 'not-allowed' : 'pointer'};
+  clip-path: ${ARROW_SHAPE};
+  background: ${props => props.$variant === 'disabled'
+    ? props.theme.colors.goldDim
+    : `linear-gradient(180deg, ${props.theme.colors.goldBright} 0%, ${props.theme.colors.gold} 50%, ${props.theme.colors.goldDim} 100%)`};
+  transition: transform 0.15s ease;
+
+  &:active {
+    transform: ${props => props.$variant === 'disabled' ? 'none' : 'scale(0.98)'};
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+`;
+
+const StartButtonInner = styled.span<{ $variant: StartButtonVariant }>`
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 50px;
+  padding: 0 40px 0 28px;
+  overflow: hidden;
+  clip-path: ${ARROW_SHAPE};
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: ${props => {
+    if (props.$variant === 'disabled') return props.theme.colors.textDisabled;
+    if (props.$variant === 'running') return props.theme.colors.goldBright;
+    return '#FFFFFF';
+  }};
+  text-shadow: ${props => props.$variant === 'disabled' ? 'none' : '0 1px 3px rgba(0, 0, 0, 0.5)'};
+  background: ${props => {
+    if (props.$variant === 'disabled') return props.theme.colors.buttonBg;
+    if (props.$variant === 'running') return 'linear-gradient(180deg, #7A5A30 0%, #3F2E17 100%)';
+    return 'linear-gradient(180deg, #3A8EF6 0%, #1A5BD0 55%, #0F3E9E 100%)';
+  }};
+  /* 内描边：就绪时是青色，跟客户端按钮一样 */
+  box-shadow: inset 0 0 0 1px ${props => {
+    if (props.$variant === 'ready') return props.theme.colors.accentCyan;
+    if (props.$variant === 'running') return props.theme.colors.gold;
+    return props.theme.colors.goldDeep;
+  }};
+
+  /* 表面流光，禁用时不播放 */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 30%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.28) 50%, transparent 100%);
+    animation: ${shimmer} 3.2s ease-in-out infinite;
+    display: ${props => props.$variant === 'disabled' ? 'none' : 'block'};
+    pointer-events: none;
+  }
+
+  .MuiSvgIcon-root {
+    font-size: 1.5rem;
+  }
+`;
+
+/** 日志等级切换：方角分段按钮 */
+const LogLevelGroup = styled.div`
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8rem;
+  color: ${props => props.theme.colors.textSecondary};
+`;
+
+const SegmentedControl = styled.div`
+  display: flex;
+  border: 1px solid ${props => props.theme.colors.goldDim};
+  background: ${props => props.theme.colors.sidebarBg};
+`;
+
+const SegmentButton = styled.button<{ $active: boolean }>`
+  appearance: none;
+  border: none;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  color: ${props => props.$active ? props.theme.colors.goldBright : props.theme.colors.textSecondary};
+  background: ${props => props.$active ? `${props.theme.colors.primary}33` : 'transparent'};
+  box-shadow: ${props => props.$active ? `inset 0 -2px 0 ${props.theme.colors.accentCyan}` : 'none'};
+  transition: color 0.2s ease, background 0.2s ease;
+
+  &:not(:first-child) {
+    border-left: 1px solid ${props => props.theme.colors.goldDeep};
+  }
+
+  &:hover {
+    color: ${props => props.theme.colors.goldBright};
+  }
+`;
+
+// ============================================
+// 模式配置
 // ============================================
 
 /** OP.GG 头像 CDN 基础 URL */
 const PROFILE_ICON_BASE_URL = 'https://opgg-static.akamaized.net/meta/images/profile_icons/profileIcon';
 
-/** 模式选择列表中的一项 */
+/** 模式卡片的配置 */
 interface ModeOption {
-    /** 唯一标识，用于 hover 浮窗 */
+    /** 唯一标识 */
     key: string;
-    /** 胶囊里显示的短名称 */
-    label: string;
-    /** 客户端里的完整模式名（浮窗里展示） */
-    fullName: string;
+    /** 卡片上显示的模式名 */
+    name: string;
+    /** 客户端里的队列 ID（仅展示用） */
+    queueId: number;
     /** 对应的后端模式；null 表示后端还没有这个模式 */
     mode: TFTMode | null;
+    /** 卡片图标 */
+    icon: SvgIconComponent;
+    /** 卡片的点缀色 */
+    accent: string;
     /** 是否已适配、允许选择 */
     enabled: boolean;
 }
 
 /**
- * 模式选择列表，和客户端当前开放的云顶队列一一对应（来自 /lol-game-queues/v1/queues）：
- *   自然之力 匹配 1090 / 排位 1100 / 双人作战 1160、发条鸟的试炼 1220、星神 匹配 6110、英雄联盟传奇 恭喜发财 1210
+ * 模式列表，和云顶之弈（虚幻客户端）当前开放的队列一一对应：
+ *   自然之力 匹配 1090 / 排位 1100 / 恭喜发财 6080 / 双人作战 1160、发条鸟的试炼 1220
  *
- * 目前只有「星神 匹配」已适配，其余模式 hover 时提示未适配、点击无效。
+ * S18「自然之力」的对局内识别还没有适配，所以目前全部是"适配中"状态，点击无效。
  * 以后适配了某个模式，把它的 enabled 改成 true（没有 mode 的还要先在后端加 TFTMode）即可。
  */
 const MODE_OPTIONS: ModeOption[] = [
-    { key: 'NATURE_NORMAL', label: '自然之力 匹配', fullName: '自然之力 匹配(BETA测试)', mode: TFTMode.NORMAL, enabled: false },
-    { key: 'NATURE_RANK', label: '自然之力 排位', fullName: '自然之力 排位(BETA测试)', mode: TFTMode.RANK, enabled: false },
-    { key: 'NATURE_DOUBLE', label: '自然之力 双人作战', fullName: '自然之力 双人作战(BETA测试)', mode: null, enabled: false },
-    { key: 'CLOCKWORK', label: '发条鸟的试炼', fullName: '发条鸟的试炼 (BETA测试)', mode: TFTMode.CLOCKWORK_TRAILS, enabled: false },
-    { key: 'XINGSHEN', label: '星神 匹配', fullName: '星神 匹配', mode: TFTMode.S17_XINGSHEN, enabled: true },
-    { key: 'TREASURE', label: '恭喜发财', fullName: '英雄联盟传奇 恭喜发财', mode: null, enabled: false },
+    { key: 'NATURE_NORMAL', name: '自然之力 匹配', queueId: 1090, mode: TFTMode.NORMAL, icon: SportsEsportsIcon, accent: '#2F8BFF', enabled: false },
+    { key: 'NATURE_RANK', name: '自然之力 排位', queueId: 1100, mode: TFTMode.RANK, icon: MilitaryTechIcon, accent: '#C8AA6E', enabled: false },
+    { key: 'NATURE_TREASURE', name: '自然之力 恭喜发财', queueId: 6080, mode: null, icon: PaidIcon, accent: '#E8A33D', enabled: false },
+    { key: 'NATURE_DOUBLE', name: '自然之力 双人作战', queueId: 1160, mode: null, icon: PeopleIcon, accent: '#B57BFF', enabled: false },
+    { key: 'CLOCKWORK', name: '发条鸟的试炼', queueId: 1220, mode: TFTMode.CLOCKWORK_TRAILS, icon: PrecisionManufacturingIcon, accent: '#0AC8B9', enabled: false },
 ];
 
 /** 默认模式：历史配置里的模式已下线/未适配时，兜底切到这里 */
-const DEFAULT_TFT_MODE = TFTMode.S17_XINGSHEN;
+const DEFAULT_TFT_MODE = TFTMode.NORMAL;
 
 /** 判断某个模式当前是否可选 */
 const isSelectableMode = (mode: string): boolean =>
     MODE_OPTIONS.some(option => option.enabled && option.mode === mode);
+
+/** 是否还没有任何模式适配完成 */
+const NO_MODE_READY = !MODE_OPTIONS.some(option => option.enabled);
+
+// ============================================
+// 组件主体
+// ============================================
 
 export const HomePage = () => {
     const [isRunning, setIsRunning] = useState(false);
@@ -1089,6 +721,8 @@ export const HomePage = () => {
     const [statistics, setStatistics] = useState<GameStatistics>(settingsStore.getStatistics());
     // 新增：格式化后的运行时长文本
     const [elapsedTime, setElapsedTime] = useState('00:00:00');
+    // 开始挂机前检查游戏窗口不通过时的提示弹窗（null 表示不显示）
+    const [windowAlert, setWindowAlert] = useState<{ title: string; content: ReactNode } | null>(null);
 
     /**
      * 检查指定模式对应的赛季是否有已选中的阵容
@@ -1102,18 +736,18 @@ export const HomePage = () => {
             // NORMAL / RANK / CLOCKWORK_TRAILS → 当前主赛季（S17 星神）
             // S4_RUISHOU → S4 回归赛季
             const season = (mode === TFTMode.S4_RUISHOU) ? 'S4' : 'S17';
-            
+
             // 并行获取该赛季的阵容列表和已选中的 ID
             const [seasonLineups, selectedIds] = await Promise.all([
                 window.lineup.getAll(season),
                 window.lineup.getSelectedIds(),
             ]);
-            
+
             if (!seasonLineups || !selectedIds || selectedIds.length === 0) {
                 setHasSelectedLineup(false);
                 return;
             }
-            
+
             // 检查是否有交集：selectedIds 中是否有属于当前赛季的阵容
             const seasonIds = new Set(seasonLineups.map((l: any) => l.id));
             const hasSelection = selectedIds.some((id: string) => seasonIds.has(id));
@@ -1132,7 +766,7 @@ export const HomePage = () => {
     const fetchSummonerInfo = async (retryCount = 0) => {
         const maxRetries = 3;
         const retryDelay = 1000; // 1秒后重试
-        
+
         setIsLoading(true);
         try {
             const result = await window.lcu.getSummonerInfo();
@@ -1171,21 +805,21 @@ export const HomePage = () => {
                 // getMonth() 返回 0-11，所以 8 月是 7
                 toast('Today is a special day!', { type: 'info' });
             }
-            
+
             // 检测管理员权限
             const elevated = await window.util.isElevated();
             setIsElevated(elevated);
-            
+
             // 获取 LCU 连接状态
             const connected = await window.lcu.getConnectionStatus();
             setIsLcuConnected(connected);
-            
+
             // 获取 HexService 运行状态（页面切换回来时恢复正确状态）
             const running = await window.hex.getStatus();
             setIsRunning(running);
 
             // 获取 TFT 游戏模式
-            // 历史配置里可能存着已下线/未适配的模式（如 NORMAL/RANK 现在指向「自然之力」队列），
+            // 历史配置里可能存着已下线/未适配的模式（如老版本的星神匹配），
             // 统一兜底到默认模式并写回，避免后端按旧模式去排队
             const mode = await window.lineup.getTftMode();
             const currentMode = isSelectableMode(mode) ? mode as TFTMode : DEFAULT_TFT_MODE;
@@ -1206,7 +840,7 @@ export const HomePage = () => {
             // 初始化统计数据
             await settingsStore.refreshStatistics();
             setStatistics(settingsStore.getStatistics());
-            
+
             if (connected) {
                 // 如果已经连接了，直接获取召唤师信息
                 fetchSummonerInfo();
@@ -1279,13 +913,13 @@ export const HomePage = () => {
 
         return () => clearInterval(timer);
     }, [isRunning, statistics.sessionElapsedSeconds, formatElapsed]);
-    
+
     // 监听快捷键触发的挂机切换事件（主进程已完成 start/stop，这里只同步 UI 状态）
     useEffect(() => {
         const cleanup = window.hex.onToggleTriggered((newRunningState: boolean) => {
             console.log('🎮 [HomePage] 收到快捷键切换事件，新状态:', newRunningState);
             setIsRunning(newRunningState);
-            
+
             // 显示提示
             if (newRunningState) {
                 toast.success('海克斯科技启动!');
@@ -1295,16 +929,16 @@ export const HomePage = () => {
                 setStopAfterGame(false);
             }
         });
-        
+
         return () => cleanup();
     }, []);
-    
+
     // 监听快捷键触发的"本局结束后停止"切换事件
     useEffect(() => {
         const cleanup = window.hex.onStopAfterGameTriggered((newState: boolean) => {
             console.log('🎮 [HomePage] 收到"本局结束后停止"切换事件，新状态:', newState);
             setStopAfterGame(newState);
-            
+
             // 显示提示
             if (newState) {
                 toast.info('对局结束后自动停止挂机');
@@ -1312,13 +946,32 @@ export const HomePage = () => {
                 toast.info('已取消对局结束后停止');
             }
         });
-        
+
         return () => cleanup();
     }, []);
+
+    /** 当前选中模式对应的卡片配置 */
+    const activeOption = MODE_OPTIONS.find(option => option.mode === tftMode);
+
+    /** 当前模式是否已适配（未适配时不允许开始挂机） */
+    const isModeReady = !!activeOption?.enabled;
+
+    /** 当前模式是否需要选择阵容（发条鸟不需要，其他都需要） */
+    const needsLineup = tftMode !== TFTMode.CLOCKWORK_TRAILS;
 
     const handleToggle = async () => {
         // 未连接客户端时禁止操作
         if (!isLcuConnected) {
+            return;
+        }
+
+        // 当前模式还没适配时禁止启动（运行中仍然允许停止）
+        if (!isRunning && !isModeReady) {
+            return;
+        }
+
+        // 开始挂机前检查游戏窗口：挂机需要把游戏画面调成固定尺寸，只有窗口化模式才能调整
+        if (!isRunning && !(await checkGameWindow())) {
             return;
         }
 
@@ -1336,7 +989,7 @@ export const HomePage = () => {
             ]);
             const seasonIds = new Set((seasonLineups || []).map((l: any) => l.id));
             const hasSelection = (selectedIds || []).some((id: string) => seasonIds.has(id));
-            
+
             if (!hasSelection) {
                 const seasonName = tftMode === TFTMode.S4_RUISHOU ? '瑞兽闹新春' : 'S17 星神';
                 toast.error(`请先在阵容页面选择至少一个【${seasonName}】阵容！`);
@@ -1344,7 +997,7 @@ export const HomePage = () => {
                 return;
             }
         }
-        
+
         if (!isRunning) {
             const success = await window.hex.start();
             if (success) {
@@ -1364,10 +1017,39 @@ export const HomePage = () => {
     };
 
     /**
+     * 检查云顶之弈窗口是否满足挂机条件（已启动、未最小化、窗口化）
+     * @returns 不满足时弹窗提醒用户并返回 false
+     */
+    const checkGameWindow = async (): Promise<boolean> => {
+        const state = await window.tft.getWindowMode();
+        if (!state.found) {
+            setWindowAlert({
+                title: '未检测到云顶之弈窗口',
+                content: <>{state.error}。<br/>请先打开云顶之弈客户端（不要最小化），再点击开始。</>,
+            });
+            return false;
+        }
+        if (!state.windowed) {
+            setWindowAlert({
+                title: '请先切换为窗口化模式',
+                content: (
+                    <>
+                        检测到云顶之弈当前是<strong>无边框</strong>或<strong>全屏</strong>模式。<br/>
+                        挂机时需要把游戏画面调整为固定尺寸，只有窗口化模式才能调整。<br/>
+                        请在云顶之弈的<strong>设置 → 显示模式</strong>里手动改为<strong>「窗口化」</strong>，再点击开始。
+                    </>
+                ),
+            });
+            return false;
+        }
+        return true;
+    };
+
+    /**
      * 切换游戏模式
      *
      * 交互说明喵：
-     * - 未适配的模式：hover 浮窗已经提示"不许选"，点击直接忽略
+     * - 未适配的模式：hover 时卡片上显示"不许选"，点击直接忽略
      * - 运行中禁止切换
      */
     const handleModeSelect = async (option: ModeOption) => {
@@ -1384,140 +1066,8 @@ export const HomePage = () => {
         await window.lineup.setTftMode(newMode);
         // 切换模式后重新检查对应赛季是否有选中阵容
         await checkHasSelectedLineup(newMode);
-        toast.success(`已切换到${option.fullName}`);
+        toast.success(`已切换到${option.name}`);
     };
-
-    /**
-     * 已适配模式的详情描述（hover 浮窗内容），key 对应 MODE_OPTIONS 的 key
-     * 每个模式包含：标签（赛季信息）、标题颜色、简短描述
-     * 未适配的模式统一显示"不许选"提示，不在这里配置
-     *
-     * 注：发条鸟目前未适配，描述先保留，重新开放时直接生效
-     */
-    const modeDescriptions: Record<string, { tag: string; title: string; titleColor?: string; desc: string }> = {
-        XINGSHEN: {
-            tag: '回归赛季 S17',
-            title: '星神 匹配',
-            desc: 'S17「星神」限时回归队列，仅支持匹配。包含完整的自动下棋、阵容推荐和海克斯选择功能。用于刷峡谷和云顶的宝典，云顶通行证。',
-        },
-        CLOCKWORK: {
-            tag: '特殊玩法',
-            title: '发条鸟的试炼',
-            titleColor: '#9c27b0',  // 紫色
-            desc: '无需选择阵容的特殊模式。开局卖掉所有棋子三回合速死，用于刷峡谷通行证。但国服已ban，无法再获取通行证经验，非常不建议该模式。',
-        },
-    };
-
-    // ============================================
-    // 模式浮窗：JS 动态定位 + 边界检测
-    // ============================================
-
-    /** 当前 hover 的模式 key（null 表示没有 hover） */
-    const [hoveredMode, setHoveredMode] = useState<string | null>(null);
-    /** 浮窗的 fixed 定位坐标 */
-    const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 });
-    /** 箭头在浮窗上的 Y 位置（百分比），默认 50% 居中 */
-    const [arrowTop, setArrowTop] = useState('50%');
-    /** 浮窗 DOM 引用，用于获取浮窗实际尺寸 */
-    const tooltipRef = useRef<HTMLDivElement>(null);
-
-    /**
-     * 鼠标进入模式标签时：计算浮窗位置并做边界检测
-     * @param modeKey - 模式标识（MODE_OPTIONS 的 key）
-     * @param e - 鼠标事件，用于获取触发元素的位置
-     * 
-     * 实现细节：
-     * 1. 通过 getBoundingClientRect() 获取 label 在视口中的位置
-     * 2. 浮窗默认出现在 label 右侧 8px 处，垂直居中对齐
-     * 3. 如果浮窗超出视口底部 → 上移浮窗，箭头下移以保持指向 label
-     * 4. 如果浮窗超出视口顶部 → 下移浮窗，箭头上移以保持指向 label
-     * 5. 如果浮窗超出视口右侧 → 目前不会发生（左侧面板），但预留了处理
-     */
-    const handleModeMouseEnter = useCallback((modeKey: string, e: React.MouseEvent<HTMLDivElement>) => {
-        // currentTarget 是绑定事件的 ModeLabelWrapper 元素
-        const labelRect = e.currentTarget.getBoundingClientRect();
-
-        /**
-         * 通用的浮窗定位计算函数喵：
-         * 传入"当前认为的浮窗尺寸"，返回 { top, left, arrowTop }。
-         *
-         * 为什么要单独抽出来？
-         * - 第一次调用时浮窗还没渲染，没法从 DOM 取真实尺寸 → 用估计值快速定位
-         * - 第二次调用（rAF 回调）时浮窗已经挂到 DOM，用 getBoundingClientRect 拿真实尺寸 → 精准修正
-         * 两次调用逻辑完全一样，只是尺寸参数不同，所以抽成闭包
-         */
-        const computePosition = (width: number, height: number) => {
-            // 浮窗默认位置：label 右侧 8px，垂直居中
-            let left = labelRect.right + 8;
-            // 浮窗顶部 = label 垂直中心 - 浮窗高度的一半
-            let top = labelRect.top + labelRect.height / 2 - height / 2;
-            // 默认箭头居中指向 label
-            let arrow = '50%';
-
-            const padding = 8; // 距离视口边缘的安全距离
-
-            // === 右边界检测：超出视口则改为出现在 label 左侧 ===
-            if (left + width > window.innerWidth - padding) {
-                left = labelRect.left - width - 8;
-            }
-
-            // === 下边界检测：超出底部则上移，箭头跟着 label 走 ===
-            if (top + height > window.innerHeight - padding) {
-                const overflow = (top + height) - (window.innerHeight - padding);
-                top -= overflow;
-                const labelCenterY = labelRect.top + labelRect.height / 2;
-                const arrowPercent = ((labelCenterY - top) / height) * 100;
-                arrow = `${Math.min(90, Math.max(10, arrowPercent))}%`;
-            }
-
-            // === 上边界检测：超出顶部则下移，箭头跟着 label 走 ===
-            if (top < padding) {
-                top = padding;
-                const labelCenterY = labelRect.top + labelRect.height / 2;
-                const arrowPercent = ((labelCenterY - top) / height) * 100;
-                arrow = `${Math.min(90, Math.max(10, arrowPercent))}%`;
-            }
-
-            return { top, left, arrowTop: arrow };
-        };
-
-        // ===== 第一步：用估计值快速定位，先把浮窗显示出来（避免渲染延迟导致的闪烁）=====
-        // 估计值只是"兜底"，真实值会在下一帧用 tooltipRef 修正
-        const estimated = computePosition(230, 100);
-        setTooltipPos({ top: estimated.top, left: estimated.left });
-        setArrowTop(estimated.arrowTop);
-        setHoveredMode(modeKey);
-
-        // ===== 第二步：下一帧等浮窗挂到 DOM 后，用真实尺寸二次修正 =====
-        // 为什么用 requestAnimationFrame：
-        // - setHoveredMode 触发 React 重渲染，浮窗此时才进 DOM
-        // - rAF 回调在浏览器下一次绘制前执行，此时 tooltipRef 已经拿到真实 DOM
-        // - 如果用 setTimeout(0) 也能工作，但 rAF 和浏览器帧同步，视觉上更稳
-        requestAnimationFrame(() => {
-            const el = tooltipRef.current;
-            if (!el) return; // 浮窗还没挂上或已经卸载（比如用户快速离开）
-            const rect = el.getBoundingClientRect();
-            // 用真实尺寸重新算一次
-            const real = computePosition(rect.width, rect.height);
-            setTooltipPos({ top: real.top, left: real.left });
-            setArrowTop(real.arrowTop);
-        });
-    }, []);
-
-    /** 鼠标离开模式标签时：隐藏浮窗 */
-    const handleModeMouseLeave = useCallback(() => {
-        setHoveredMode(null);
-    }, []);
-
-    /** 当前模式在 MODE_OPTIONS 中的下标（用于胶囊滑块位置），-1 表示不在列表里 */
-    const activeModeIndex = MODE_OPTIONS.findIndex(option => option.mode === tftMode);
-
-    /** 当前 hover 的模式，以及它的详情描述（未适配的模式没有描述） */
-    const hoveredOption = MODE_OPTIONS.find(option => option.key === hoveredMode);
-    const hoveredDescription = hoveredOption?.enabled ? modeDescriptions[hoveredOption.key] : undefined;
-
-    /** 当前模式是否需要选择阵容（发条鸟不需要，其他都需要） */
-    const needsLineup = tftMode !== TFTMode.CLOCKWORK_TRAILS;
 
     /**
      * 切换日志模式（简略/详细）
@@ -1526,8 +1076,8 @@ export const HomePage = () => {
      * - 简略模式：不打印 debug 级别日志，日志更简洁
      * - 详细模式：打印所有日志（包括 debug），方便调试
      */
-    const handleLogModeToggle = async () => {
-        const newMode = logMode === LogMode.SIMPLE ? LogMode.DETAILED : LogMode.SIMPLE;
+    const handleLogModeChange = async (newMode: LogMode) => {
+        if (newMode === logMode) return;
         setLogMode(newMode);
         await window.lineup.setLogMode(newMode);
         toast.success(newMode === LogMode.DETAILED ? '已切换到详细日志模式' : '已切换到简略日志模式');
@@ -1541,25 +1091,38 @@ export const HomePage = () => {
         return `${PROFILE_ICON_BASE_URL}${iconId}.jpg`;
     };
 
-    return (
-        <PageWrapper>
-            {/* 召唤师信息区域 - 三列布局：左侧控制 | 中间头像 | 右侧统计 */}
-            <SummonerSection>
-                {isLoading ? (
-                    <LoadingPlaceholder>
-                        <span>正在获取召唤师信息...</span>
-                    </LoadingPlaceholder>
-                ) : !isLcuConnected ? (
-                    // 未连接 LOL 客户端时的提示 - 海克斯科技风格
-                    <LoadingPlaceholder>
+    /** 主按钮的状态和文案（按优先级判断） */
+    const startButton: { variant: StartButtonVariant; icon: SvgIconComponent; label: string } =
+        !isLcuConnected ? { variant: 'disabled', icon: BlockIcon, label: '未检测到客户端' }
+        : isRunning ? { variant: 'running', icon: StopIcon, label: '停止挂机' }
+        : !isModeReady ? { variant: 'disabled', icon: LockIcon, label: '模式适配中' }
+        : (needsLineup && !hasSelectedLineup) ? { variant: 'disabled', icon: BlockIcon, label: '未选择阵容' }
+        : { variant: 'ready', icon: PlayArrowIcon, label: '开始挂机' };
+    const StartIcon = startButton.icon;
+
+    /** 顶部区域：已连接显示召唤师信息栏，否则显示欢迎面板 */
+    const renderTopSection = () => {
+        if (isLoading) {
+            return (
+                <WelcomePanel>
+                    <WelcomeHint>正在获取召唤师信息...</WelcomeHint>
+                </WelcomePanel>
+            );
+        }
+
+        if (!isLcuConnected || !summonerInfo) {
+            return (
+                <WelcomePanel>
+                    <AppIconContainer>
+                        <RadarCircle />
+                        <RadarCircleInner />
+                        <AppIconImage src={appIconUrl} alt="App Icon" />
+                    </AppIconContainer>
+                    <WelcomeText>
                         <ProjectTitle>TFT-Hextech-Helper</ProjectTitle>
-                        
-                        <AppIconContainer>
-                            <RadarCircle />
-                            <RadarCircleInner />
-                            <AppIconImage src={appIconUrl} alt="App Icon" />
-                        </AppIconContainer>
-                        
+                        <WelcomeHint>
+                            {isLcuConnected ? '未能获取召唤师信息，请确保已登录游戏客户端' : '等待英雄联盟客户端连接...'}
+                        </WelcomeHint>
                         {/* 未检测到管理员权限时显示警告 */}
                         {isElevated === false && (
                             <AdminWarningBanner>
@@ -1567,206 +1130,159 @@ export const HomePage = () => {
                                 请以管理员模式运行本软件！(╯°□°)╯︵ ┻━┻
                             </AdminWarningBanner>
                         )}
-                    </LoadingPlaceholder>
-                ) : summonerInfo ? (
-                    <>
-                        {/* ===== 左侧：控制面板（模式选择 + 日志等级） ===== */}
-                        <LeftControlPanel>
-                            <PanelSectionTitle>模式选择</PanelSectionTitle>
-                            <ModeToggleContainer>
-                                <ModeTogglePill>
-                                    {activeModeIndex >= 0 && (
-                                        <ModeToggleIndicator $modeIndex={activeModeIndex} $modeCount={MODE_OPTIONS.length} />
-                                    )}
-                                    <ModeToggleTextRow>
-                                        {MODE_OPTIONS.map(option => (
-                                            <ModeLabelWrapper
-                                                key={option.key}
-                                                onMouseEnter={(e) => handleModeMouseEnter(option.key, e)}
-                                                onMouseLeave={handleModeMouseLeave}
-                                            >
-                                                <ModeToggleLabel
-                                                    $active={option.mode === tftMode}
-                                                    $disabled={!option.enabled}
-                                                    aria-disabled={!option.enabled}
-                                                    onClick={() => handleModeSelect(option)}
-                                                >
-                                                    {option.label}
-                                                </ModeToggleLabel>
-                                            </ModeLabelWrapper>
-                                        ))}
-                                    </ModeToggleTextRow>
-                                </ModeTogglePill>
+                    </WelcomeText>
+                </WelcomePanel>
+            );
+        }
 
-                                {/* 模式详情浮窗 —— 使用 fixed 定位，渲染在胶囊外部避免被裁切 */}
-                                {hoveredOption && (
-                                    <ModeTooltip
-                                        ref={tooltipRef}
-                                        $visible={!!hoveredOption}
-                                        $arrowTop={arrowTop}
-                                        style={{ top: tooltipPos.top, left: tooltipPos.left }}
-                                    >
-                                        {hoveredDescription ? (
-                                            <>
-                                                <ModeTooltipTag>{hoveredDescription.tag}</ModeTooltipTag>
-                                                <ModeTooltipTitle $color={hoveredDescription.titleColor}>
-                                                    {hoveredDescription.title}
-                                                </ModeTooltipTitle>
-                                                <ModeTooltipDesc>{hoveredDescription.desc}</ModeTooltipDesc>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <ModeTooltipTag>{hoveredOption.fullName}</ModeTooltipTag>
-                                                <ModeTooltipTitle $danger>不许选，我还没适配呢！</ModeTooltipTitle>
-                                            </>
-                                        )}
-                                    </ModeTooltip>
-                                )}
-                            </ModeToggleContainer>
+        return (
+            <ProfileBar>
+                <AvatarFrame title={`${summonerInfo.gameName}#${summonerInfo.tagLine}`}>
+                    <AvatarImage
+                        src={getAvatarUrl(summonerInfo.profileIconId)}
+                        alt="召唤师头像"
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).src = getAvatarUrl(29);
+                        }}
+                    />
+                    <LevelBadge>Lv.{summonerInfo.summonerLevel}</LevelBadge>
+                </AvatarFrame>
+                <ProfileInfo>
+                    <ProfileName>
+                        {summonerInfo.gameName}
+                        <ProfileTag>#{summonerInfo.tagLine}</ProfileTag>
+                    </ProfileName>
+                    <ExpBar>
+                        <ExpFill $percent={summonerInfo.percentCompleteForNextLevel} />
+                    </ExpBar>
+                    <ExpText>经验 {summonerInfo.xpSinceLastLevel} / {summonerInfo.xpUntilNextLevel}</ExpText>
+                </ProfileInfo>
+                <StatsGroup>
+                    <StatItem>
+                        <SportsEsportsIcon />
+                        <StatText>
+                            <StatLabel>本次挂机</StatLabel>
+                            <StatValue>{statistics.sessionGamesPlayed} 局</StatValue>
+                        </StatText>
+                    </StatItem>
+                    <StatItem>
+                        <EmojiEventsIcon />
+                        <StatText>
+                            <StatLabel>累计挂机</StatLabel>
+                            <StatValue>{statistics.totalGamesPlayed} 局</StatValue>
+                        </StatText>
+                    </StatItem>
+                    <StatItem>
+                        <AccessTimeIcon />
+                        <StatText>
+                            <StatLabel>运行时长</StatLabel>
+                            <StatValue>{elapsedTime}</StatValue>
+                        </StatText>
+                    </StatItem>
+                </StatsGroup>
+            </ProfileBar>
+        );
+    };
 
-                            <PanelSectionTitle>日志等级</PanelSectionTitle>
-                            <LogModeTogglePill
+    return (
+        <PageWrapper>
+            {renderTopSection()}
+
+            {/* 模式选择 */}
+            <section>
+                <SectionHeader>
+                    <SectionTitle>游戏模式</SectionTitle>
+                    {NO_MODE_READY && <SectionHint>S18「自然之力」正在适配中，暂时只能看不能选</SectionHint>}
+                </SectionHeader>
+                <ModeGrid>
+                    {MODE_OPTIONS.map(option => {
+                        const Icon = option.icon;
+                        return (
+                            <ModeCard
+                                key={option.key}
                                 type="button"
-                                $isDetailed={logMode === LogMode.DETAILED}
-                                onClick={handleLogModeToggle}
-                                title={logMode === LogMode.DETAILED ? '当前：详细（点击切换到简略）' : '当前：简略（点击切换到详细）'}
+                                $accent={option.accent}
+                                $selected={option.enabled && option.mode === tftMode}
+                                $locked={!option.enabled}
+                                aria-disabled={!option.enabled}
+                                onClick={() => handleModeSelect(option)}
                             >
-                                <LogModeToggleIndicator $isDetailed={logMode === LogMode.DETAILED} />
-                                <LogModeToggleTextRow>
-                                    <LogModeToggleLabel $active={logMode === LogMode.SIMPLE} style={{ paddingRight: 4 }}>简略</LogModeToggleLabel>
-                                    <LogModeToggleLabel $active={logMode === LogMode.DETAILED} style={{ paddingLeft: 4 }}>详细</LogModeToggleLabel>
-                                </LogModeToggleTextRow>
-                            </LogModeTogglePill>
-                        </LeftControlPanel>
+                                <ModeIconBadge $accent={option.accent}>
+                                    <Icon />
+                                </ModeIconBadge>
+                                <ModeName>{option.name}</ModeName>
+                                <ModeMeta>BETA · 队列 {option.queueId}</ModeMeta>
+                                <ModeStatus $ready={option.enabled}>{option.enabled ? '可用' : '适配中'}</ModeStatus>
+                                {!option.enabled && (
+                                    <ModeLockOverlay>
+                                        <LockIcon />
+                                        不许选，我还没适配呢！
+                                    </ModeLockOverlay>
+                                )}
+                            </ModeCard>
+                        );
+                    })}
+                </ModeGrid>
+            </section>
 
-                        {/* ===== 中间：头像 + 名字 ===== */}
-                        <AvatarColumn>
-                            <AvatarContainer>
-                                {/* SVG 经验条环 */}
-                                <ExpRing viewBox="0 0 100 100">
-                                    <ExpRingBackground cx="50" cy="50" r="46" />
-                                    <ExpRingProgress cx="50" cy="50" r="46" $percent={summonerInfo.percentCompleteForNextLevel} />
-                                </ExpRing>
-                                {/* 头像图片 */}
-                                <AvatarWrapper>
-                                    <AvatarImage
-                                        src={getAvatarUrl(summonerInfo.profileIconId)}
-                                        alt="召唤师头像"
-                                        onError={(e) => {
-                                            (e.target as HTMLImageElement).src = getAvatarUrl(29);
-                                        }}
-                                    />
-                                </AvatarWrapper>
-                                {/* 等级徽章 */}
-                                <LevelBadge>Lv.{summonerInfo.summonerLevel}</LevelBadge>
-                                {/* hover 详情浮窗 */}
-                                <InfoTooltip>
-                                    <InfoItem>
-                                        <InfoLabel>游戏ID</InfoLabel>
-                                        <InfoValue>{summonerInfo.gameName}#{summonerInfo.tagLine}</InfoValue>
-                                    </InfoItem>
-                                    <InfoItem>
-                                        <InfoLabel>等级</InfoLabel>
-                                        <InfoValue>Lv.{summonerInfo.summonerLevel}</InfoValue>
-                                    </InfoItem>
-                                    <InfoItem>
-                                        <InfoLabel>经验进度</InfoLabel>
-                                        <InfoValue>{summonerInfo.xpSinceLastLevel} / {summonerInfo.xpUntilNextLevel}</InfoValue>
-                                    </InfoItem>
-                                </InfoTooltip>
-                            </AvatarContainer>
-                            <SummonerNameContainer>
-                                <SummonerName>{summonerInfo.gameName}</SummonerName>
-                            </SummonerNameContainer>
-                        </AvatarColumn>
-
-                        {/* ===== 右侧：统计面板 ===== */}
-                        <StatsPanel>
-                            <PanelSectionTitle>挂机统计</PanelSectionTitle>
-                            <StatsCard>
-                                <StatsItem>
-                                    <StatsIcon>
-                                        <SportsEsportsIcon />
-                                    </StatsIcon>
-                                    <StatsTextGroup>
-                                        <StatsLabel>本次挂机</StatsLabel>
-                                        <StatsValue>{statistics.sessionGamesPlayed} 局</StatsValue>
-                                    </StatsTextGroup>
-                                </StatsItem>
-                                <StatsItem>
-                                    <StatsIcon $color="#10B981">
-                                        <EmojiEventsIcon />
-                                    </StatsIcon>
-                                    <StatsTextGroup>
-                                        <StatsLabel>累计挂机</StatsLabel>
-                                        <StatsValue>{statistics.totalGamesPlayed} 局</StatsValue>
-                                    </StatsTextGroup>
-                                </StatsItem>
-                                <StatsItem>
-                                    <StatsIcon $color="#F59E0B">
-                                        <AccessTimeIcon />
-                                    </StatsIcon>
-                                    <StatsTextGroup>
-                                        <StatsLabel>运行时长</StatsLabel>
-                                        <StatsValue>{elapsedTime}</StatsValue>
-                                    </StatsTextGroup>
-                                </StatsItem>
-                            </StatsCard>
-                        </StatsPanel>
-                    </>
-                ) : (
-                    <LoadingPlaceholder>
-                        <span>未能获取召唤师信息</span>
-                        <span>请确保已登录游戏客户端</span>
-                    </LoadingPlaceholder>
-                )}
-            </SummonerSection>
-            
-            {/* "本局结束后停止"状态提示 */}
-            {stopAfterGame && (
-                <StopAfterGameBanner>
-                    <TimerOffIcon style={{ fontSize: '1rem' }} />
-                    对局结束后自动停止挂机
-                </StopAfterGameBanner>
-            )}
-
-            {/* 控制按钮区域 - 仅包含开始/停止按钮 */}
+            {/* 开始按钮行 */}
             <ControlRow>
-                <ButtonWrapper>
-                    <ControlButton 
-                        onClick={handleToggle} 
-                        $isRunning={isRunning}
-                        $disabled={!isLcuConnected || (needsLineup && !hasSelectedLineup)}
-                        $isConnected={isLcuConnected}
+                <ControlInfo>
+                    <span>当前模式：<strong>{activeOption?.name ?? '未选择'}</strong></span>
+                    {stopAfterGame && (
+                        <StopAfterGameBadge>
+                            <TimerOffIcon />
+                            对局结束后自动停止挂机
+                        </StopAfterGameBadge>
+                    )}
+                </ControlInfo>
+
+                <StartButtonGlow $variant={startButton.variant}>
+                    <StartButton
+                        type="button"
+                        $variant={startButton.variant}
+                        onClick={handleToggle}
+                        aria-disabled={startButton.variant === 'disabled'}
                     >
-                        {!isLcuConnected ? (
-                            <>
-                                <BlockIcon />
-                                未检测到客户端
-                            </>
-                        ) : (needsLineup && !hasSelectedLineup) ? (
-                            <>
-                                <BlockIcon />
-                                未选择云顶阵容
-                            </>
-                        ) : isRunning ? (
-                            <>
-                                <StopCircleOutlinedIcon />
-                                关闭
-                            </>
-                        ) : (
-                            <>
-                                <PlayCircleOutlineIcon />
-                                开始
-                            </>
-                        )}
-                    </ControlButton>
-                </ButtonWrapper>
+                        <StartButtonInner $variant={startButton.variant}>
+                            <StartIcon />
+                            {startButton.label}
+                        </StartButtonInner>
+                    </StartButton>
+                </StartButtonGlow>
+
+                <LogLevelGroup>
+                    日志等级
+                    <SegmentedControl>
+                        <SegmentButton
+                            type="button"
+                            $active={logMode === LogMode.SIMPLE}
+                            onClick={() => handleLogModeChange(LogMode.SIMPLE)}
+                        >
+                            简略
+                        </SegmentButton>
+                        <SegmentButton
+                            type="button"
+                            $active={logMode === LogMode.DETAILED}
+                            onClick={() => handleLogModeChange(LogMode.DETAILED)}
+                        >
+                            详细
+                        </SegmentButton>
+                    </SegmentedControl>
+                </LogLevelGroup>
             </ControlRow>
 
             {/* 日志面板 */}
             <LogPanel isVisible={true} />
+
+            {/* 开始挂机前游戏窗口检查不通过时的提醒 */}
+            <HextechDialog
+                open={!!windowAlert}
+                title={windowAlert?.title ?? ''}
+                onClose={() => setWindowAlert(null)}
+            >
+                {windowAlert?.content}
+            </HextechDialog>
         </PageWrapper>
     );
 };
-

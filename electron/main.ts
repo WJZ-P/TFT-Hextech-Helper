@@ -1,6 +1,7 @@
 import {app, BrowserWindow, ipcMain, shell, net, dialog} from 'electron'
 import 'source-map-support/register';
 import path from "path";
+import fs from "fs";
 import { exec } from 'child_process';  // 用于执行系统命令
 
 // ============================================================================
@@ -81,6 +82,8 @@ import {TFT_16_CHESS_DATA} from "../src-backend/TFTProtocol";  // 导入棋子�
 import {analyticsManager} from "../src-backend/utils/AnalyticsManager";  // Google Analytics 数据统计
 import {registerOverlayCallbacks} from "../src-backend/utils/OverlayBridge";  // 浮窗桥接（后端 → 主进程）
 // import {globalHotkeyManager} from "../src-backend/utils/GlobalHotkeyManager.ts";  // 移至动态导入
+// 仅导入类型，不会在运行时加载模块（模块本身依赖 nut.js，需要动态导入）
+import type {TftWindowCaptureResult} from "../src-backend/utils/TftWindowCapture.ts";
 
 // ============================================================================
 // 业务模块变量声明 (动态加载)
@@ -90,6 +93,8 @@ let hexService: any;
 let tftOperator: any;
 let lineupLoader: any;
 let globalHotkeyManager: any;
+let tftWindowCapture: any;
+let tftWindowLocator: any;
 
 /**
  * 下面这两行代码是历史原因，新版的ESM模式下需要CJS里面的require、__dirname来提供方便
@@ -213,6 +218,75 @@ function registerStopAfterGameHotkey(accelerator: string): boolean {
 }
 
 // ============================================================================
+// 调试工具：TFT 窗口截图（仅开发版可用）
+// ============================================================================
+
+/** TFT 窗口截图快捷键 */
+const DEBUG_SCREENSHOT_HOTKEY = 'F3';
+// 当前注册的截图快捷键（null 表示未注册）
+let currentDebugScreenshotHotkey: string | null = null;
+
+/** TFT 窗口截图的保存目录（和其他调试截图一样放在 public/resources/debug 下） */
+function getDebugScreenshotDir(): string {
+    return path.join(process.env.VITE_PUBLIC || ".", "resources/debug/tft_window_snapshots");
+}
+
+/**
+ * 截取 TFT 窗口并保存
+ * @returns 与 LCU 请求一致的 { data } / { error } 结构
+ */
+async function captureTftWindow(): Promise<{ data?: TftWindowCaptureResult; error?: string }> {
+    try {
+        const data = await tftWindowCapture.capture(getDebugScreenshotDir());
+        return { data };
+    } catch (e: any) {
+        logger.warn(`[Main] TFT 窗口截图失败: ${e.message}`);
+        return { error: e.message };
+    }
+}
+
+/**
+ * 开关 TFT 窗口截图快捷键
+ * @param enabled 是否启用
+ * @returns 是否操作成功，失败时 error 说明原因
+ */
+function setDebugScreenshotHotkey(enabled: boolean): { success: boolean; error?: string } {
+    // 先注销自己注册的那份。快捷键管理器按键名存回调，如果这个键之后被挂机 /
+    // "本局结束后停止"快捷键改绑覆盖了，就不能再注销，否则会把它们的快捷键一起删掉
+    if (currentDebugScreenshotHotkey) {
+        const takenByOthers = currentDebugScreenshotHotkey === currentToggleHotkey
+            || currentDebugScreenshotHotkey === currentStopAfterGameHotkey;
+        if (!takenByOthers) {
+            globalHotkeyManager.unregister(currentDebugScreenshotHotkey);
+        }
+        currentDebugScreenshotHotkey = null;
+    }
+
+    if (!enabled) {
+        return { success: true };
+    }
+    if (!is.dev) {
+        return { success: false, error: '截图快捷键仅在开发版可用' };
+    }
+    if (DEBUG_SCREENSHOT_HOTKEY === currentToggleHotkey || DEBUG_SCREENSHOT_HOTKEY === currentStopAfterGameHotkey) {
+        return { success: false, error: `${DEBUG_SCREENSHOT_HOTKEY} 已被其他快捷键占用，请先在设置页改绑` };
+    }
+
+    const success = globalHotkeyManager.register(DEBUG_SCREENSHOT_HOTKEY, async () => {
+        console.log(`🎮 [Main] 快捷键 ${DEBUG_SCREENSHOT_HOTKEY} 被触发，截取 TFT 窗口`);
+        const result = await captureTftWindow();
+        // 通知渲染进程显示结果（调试页面没打开时只会记日志）
+        win?.webContents.send(IpcChannel.DEBUG_SCREENSHOT_TAKEN, result);
+    });
+    if (!success) {
+        return { success: false, error: `${DEBUG_SCREENSHOT_HOTKEY} 注册失败` };
+    }
+
+    currentDebugScreenshotHotkey = DEBUG_SCREENSHOT_HOTKEY;
+    return { success: true };
+}
+
+// ============================================================================
 // 游戏浮窗窗口管理
 // ============================================================================
 
@@ -324,6 +398,8 @@ function createWindow() {
     win = new BrowserWindow({
         icon: path.join(process.env.VITE_PUBLIC, 'icon.png'),//  窗口左上角的图标
         autoHideMenuBar: true,
+        frame: false,                  //  无边框：标题栏由渲染进程自绘（src/components/TitleBar.tsx）
+        backgroundColor: '#121B27',    //  和主题背景色一致，避免启动时白屏闪烁
         webPreferences: {
             preload: path.join(__dirname, '../preload/preload.cjs'),// 指定preload文件
             sandbox: false,
@@ -342,6 +418,10 @@ function createWindow() {
             settingsStore.set('window.bounds', win?.getBounds());
         }
     }, 500)
+
+    //  最大化状态变化时通知自绘标题栏切换"最大化/还原"图标
+    win.on("maximize", () => win?.webContents.send(IpcChannel.WINDOW_MAXIMIZED_CHANGED, true))
+    win.on("unmaximize", () => win?.webContents.send(IpcChannel.WINDOW_MAXIMIZED_CHANGED, false))
 
     //  监听窗口变化事件
     win.on("resize", debouncedSaveBounds)
@@ -401,7 +481,7 @@ app.on('activate', () => {
     }
 })
 
-// 在应用退出前，停止全局快捷键管理器，并检查是否需要恢复设置
+// 在应用退出前，停止全局快捷键管理器，并检查是否需要还原游戏窗口大小
 app.on('will-quit', async (event) => {
     // 停止快捷键监听
     if (globalHotkeyManager) {
@@ -411,22 +491,18 @@ app.on('will-quit', async (event) => {
     // 关闭浮窗
     closeOverlayWindow();
 
-    // 如果自动下棋服务正在运行，需要恢复用户原本的游戏设置
-    // 注意：hexService 是动态加载的，可能为 undefined
-    if (hexService && hexService.isRunning) {
-        // 阻止默认的退出行为，等待异步恢复操作完成
+    // 如果自动下棋服务正在运行，挂机开始时调整过游戏窗口大小，需要还原成用户原来的大小
+    // 注意：hexService / tftWindowLocator 是动态加载的，可能为 undefined
+    if (hexService && hexService.isRunning && tftWindowLocator) {
+        // 阻止默认的退出行为，等待异步还原操作完成
         event.preventDefault();
-        console.log('🔄 [Main] 检测到程序正在运行，正在恢复游戏设置...');
-        
-        // 停止可能正在运行的配置守护，避免与 restore 冲突
-        GameConfigHelper.stopConfigGuard();
+        console.log('🔄 [Main] 检测到程序正在运行，正在还原游戏窗口大小...');
         
         try {
-            // 恢复设置
-            await GameConfigHelper.restore();
-            console.log('✅ [Main] 游戏设置已恢复');
+            await tftWindowLocator.restoreWindowSize();
+            console.log('✅ [Main] 游戏窗口大小已还原');
         } catch (error) {
-            console.error('❌ [Main] 恢复设置失败:', error);
+            console.error('❌ [Main] 还原游戏窗口大小失败:', error);
         } finally {
             // 恢复完成后（无论成功失败），强制退出应用
             // app.exit() 不会再次触发 will-quit 事件，避免无限循环
@@ -502,6 +578,14 @@ app.whenReady().then(async () => {
         const GlobalHotkeyManagerModule = await import("../src-backend/utils/GlobalHotkeyManager.ts");
         globalHotkeyManager = GlobalHotkeyManagerModule.globalHotkeyManager;
 
+        // 5. 加载 TftWindowCapture (依赖 nut.js，调试截图工具)
+        const TftWindowCaptureModule = await import("../src-backend/utils/TftWindowCapture.ts");
+        tftWindowCapture = TftWindowCaptureModule.tftWindowCapture;
+
+        // 6. 加载 TftWindowLocator (依赖 nut.js，挂机时调整/还原游戏窗口大小)
+        const TftWindowLocatorModule = await import("../src-backend/utils/TftWindowLocator.ts");
+        tftWindowLocator = TftWindowLocatorModule.tftWindowLocator;
+
         console.log('✅ [Main] 业务模块加载完成');
     } catch (error) {
         console.error('❌ [Main] 业务模块加载失败:', error);
@@ -546,9 +630,20 @@ app.whenReady().then(async () => {
     // 注册"本局结束后停止"快捷键（从设置中读取）
     const savedStopAfterGameHotkey = settingsStore.get('stopAfterGameHotkeyAccelerator');
     registerStopAfterGameHotkey(savedStopAfterGameHotkey);
+
+    // 开发版：注册 TFT 窗口截图快捷键（放在上面两个之后，才能检查是否和它们冲突）
+    if (is.dev && settingsStore.get('debugScreenshotHotkeyEnabled')) {
+        const result = setDebugScreenshotHotkey(true);
+        if (!result.success) {
+            console.warn(`⚠️ [Main] TFT 窗口截图快捷键未注册: ${result.error}`);
+        }
+    }
 })
 
 function init() {
+    //  云顶之弈设置的备份/恢复（设置文件在 %LOCALAPPDATA%TFTSaved，和 LOL 安装目录无关）
+    GameConfigHelper.init()
+
     //  初始化Logger
     logger.init(win)
     // 根据保存的设置初始化日志级别
@@ -565,9 +660,6 @@ function init() {
 
         // 喵~ 使用单例模式获取 LCUManager 实例，并把"钥匙"交给它
         const lcuManager = LCUManager.init(data);
-
-        //  注册configHelper
-        GameConfigHelper.init(data.installDirectory)
 
         // 连接 WebSocket
         lcuManager.start();
@@ -819,6 +911,66 @@ function registerHandler() {
         return true;
     });
     
+    // ========================================================================
+    // 调试工具：TFT 窗口截图（仅开发版可用）
+    // ========================================================================
+
+    ipcMain.handle(IpcChannel.DEBUG_SCREENSHOT_GET_STATE, async () => ({
+        available: is.dev,
+        hotkey: DEBUG_SCREENSHOT_HOTKEY,
+        hotkeyEnabled: settingsStore.get('debugScreenshotHotkeyEnabled'),
+        hotkeyRegistered: currentDebugScreenshotHotkey !== null,
+        saveDir: getDebugScreenshotDir(),
+    }));
+
+    ipcMain.handle(IpcChannel.DEBUG_SCREENSHOT_SET_HOTKEY_ENABLED, async (_event, enabled: boolean) => {
+        const result = setDebugScreenshotHotkey(enabled);
+        if (result.success) {
+            settingsStore.set('debugScreenshotHotkeyEnabled', enabled);
+        }
+        return result;
+    });
+
+    ipcMain.handle(IpcChannel.DEBUG_SCREENSHOT_CAPTURE, async () => {
+        if (!is.dev) {
+            return { error: 'TFT 窗口截图仅在开发版可用' };
+        }
+        return captureTftWindow();
+    });
+
+    ipcMain.handle(IpcChannel.DEBUG_SCREENSHOT_OPEN_DIR, async () => {
+        const dir = getDebugScreenshotDir();
+        fs.mkdirSync(dir, { recursive: true });
+        // shell.openPath 成功时返回空字符串，失败时返回错误信息
+        const error = await shell.openPath(dir);
+        return error ? { error } : { data: dir };
+    });
+
+    // 云顶之弈窗口的显示模式（开始挂机前检查是否为窗口化）
+    ipcMain.handle(IpcChannel.TFT_GET_WINDOW_MODE, async () => {
+        try {
+            return { found: true, ...(await tftWindowLocator.getWindowMode()) };
+        } catch (e: any) {
+            // 找不到窗口、窗口最小化等情况，把原因带回前端展示
+            return { found: false, error: e.message as string };
+        }
+    });
+
+    // ========================================================================
+    // 自绘标题栏的窗口控制
+    // ========================================================================
+    ipcMain.handle(IpcChannel.WINDOW_MINIMIZE, async () => win?.minimize());
+    ipcMain.handle(IpcChannel.WINDOW_TOGGLE_MAXIMIZE, async () => {
+        if (!win) return;
+        if (win.isMaximized()) {
+            win.unmaximize();
+        } else {
+            win.maximize();
+        }
+    });
+    ipcMain.handle(IpcChannel.WINDOW_CLOSE, async () => win?.close());
+    ipcMain.handle(IpcChannel.WINDOW_IS_MAXIMIZED, async () => win?.isMaximized() ?? false);
+
     // 系统工具：检测管理员权限
     // 原理：执行 `net session` 命令，该命令只有在管理员权限下才能成功执行
     ipcMain.handle(IpcChannel.UTIL_IS_ELEVATED, async () => {

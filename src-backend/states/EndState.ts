@@ -7,7 +7,7 @@
 import { IState } from "./IState";
 import { IdleState } from "./IdleState.ts";
 import { logger } from "../utils/Logger.ts";
-import GameConfigHelper from "../utils/GameConfigHelper.ts";
+import { tftWindowLocator } from "../utils/TftWindowLocator.ts";
 import { strategyService } from "../services/StrategyService.ts";
 
 /**
@@ -27,25 +27,8 @@ export class EndState implements IState {
         // 重置策略服务状态（如果 GameRunningState 没有正常清理的话，这里兜底）
         strategyService.reset();
 
-        logger.info("[EndState] 正在从临时备份恢复客户端设置...");
-        
-        // 使用临时恢复（从 TempConfig 目录），不影响用户手动备份（UserConfig）
-        const success = await GameConfigHelper.tempRestore(3, 1500);
-        
-        if (success) {
-            logger.info("[EndState] 客户端设置恢复完成");
-            // 启动长期配置守护：持续监听游戏配置目录
-            // 防止 LOL 客户端在游戏结束时又把配置改回下棋设置
-            // 守护会一直运行直到下次开始挂机或软件退出
-            GameConfigHelper.startConfigGuard();
-        } else {
-            // 恢复失败，打印醒目的警告和操作指引
-            logger.error("═══════════════════════════════════════════════════════════");
-            logger.error("[EndState] ⚠️ 客户端设置恢复失败！");
-            logger.error("[EndState] 您的游戏可能仍在使用 TFT 挂机专用设置（低分辨率/低画质）");
-            logger.error("[EndState] 请手动恢复：打开本软件「设置」页面 → 点击「恢复游戏设置」按钮");
-            logger.error("═══════════════════════════════════════════════════════════");
-        }
+        // 把游戏窗口还原成挂机开始前的大小（StartState 调整过才会有记录）
+        await tftWindowLocator.restoreWindowSize();
 
         logger.info("[EndState] 海克斯科技已关闭，回到空闲状态");
         return new IdleState();

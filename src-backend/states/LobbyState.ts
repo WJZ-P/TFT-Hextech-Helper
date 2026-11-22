@@ -69,9 +69,6 @@ export class LobbyState implements IState {
             case TFTMode.S4_RUISHOU:
                 logger.info("[LobbyState] 当前模式: S4 瑞兽闹新春");
                 return Queue.TFT_SET_REVIVAL; // 回归赛季队列ID = 6110
-            case TFTMode.S17_XINGSHEN:
-                logger.info("[LobbyState] 当前模式: S17 星神 匹配");
-                return Queue.TFT_SET_REVIVAL; // 回归赛季队列ID = 6110
             case TFTMode.NORMAL:
             default:
                 logger.info("[LobbyState] 当前模式: 主赛季匹配模式");

@@ -68,6 +68,7 @@ interface AppSettings {
     stopAfterGameHotkeyAccelerator: string,  //  "本局结束后停止"快捷键
     showOverlay: boolean,    //  对局中是否显示游戏浮窗（真人/人机信息）
     showDebugPage: boolean,  //  是否显示调试页面
+    debugScreenshotHotkeyEnabled: boolean,  //  是否启用 TFT 窗口截图快捷键（仅开发版生效）
     window: {
         bounds: WindowBounds | null, // 上次关闭时的窗口信息
         isMaximized: boolean,   //  上次关闭是否最大化
@@ -107,13 +108,14 @@ class SettingsStore {
         //  创建默认配置
         const defaults: AppSettings = {
             isFirstLaunch: true,        //  首次启动默认为 true，用户确认后设为 false
-            tftMode: TFTMode.S17_XINGSHEN,    //  默认是星神匹配（目前唯一已适配的模式）
+            tftMode: TFTMode.NORMAL,    //  默认是主赛季匹配模式
             logMode: LogMode.SIMPLE,    //  默认是简略日志模式
             logAutoCleanThreshold: 500, //  默认超过 500 条时自动清理
             toggleHotkeyAccelerator: 'F1',  //  默认快捷键是 F1
             stopAfterGameHotkeyAccelerator: 'F2',  //  默认快捷键是 F2
             showOverlay: true,              //  默认显示游戏浮窗
             showDebugPage: false,       //  默认隐藏调试页面
+            debugScreenshotHotkeyEnabled: true,  //  默认启用截图快捷键（只在开发版注册）
             window: {
                 bounds: null,           //  第一次启动，默认为null
                 isMaximized: false     //  默认不最大化窗口

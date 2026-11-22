@@ -36,3 +36,6 @@ test
 # 其他
 public/GameConfig/UserConfig/*
 public/GameConfig/TempConfig/*
+public/GameConfig/TFTUserConfig/*
+# 调试工具截的 TFT 窗口截图（开发版 F3 快捷键）
+public/resources/debug/tft_window_snapshots/

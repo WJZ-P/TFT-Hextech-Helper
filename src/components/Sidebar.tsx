@@ -12,6 +12,7 @@ import ExtensionIcon from '@mui/icons-material/Extension';
 import { settingsStore } from "../stores/settingsStore";
 import type { SvgIconComponent } from "@mui/icons-material";
 import { RoutePath } from "../constants/routes";
+import { hextechButtonGhost } from "../styles/hextech";
 
 // 导航项类型定义
 interface NavItem {
@@ -39,12 +40,14 @@ const LinkText = styled.span<{ $isCollapsed: boolean }>`
 `;
 
 const SidebarContainer = styled.aside<{ $isCollapsed: boolean }>`
-  background-color: ${props => props.theme.colors.sidebarBg};
+  background: ${props => props.theme.colors.sidebarBg};
   color: ${props => props.theme.colors.text};
   display: flex;
   flex-direction: column;
   padding: ${props => props.theme.spacing.medium};
-  border-right: 1.5px solid ${props => props.theme.colors.border};
+  /* 右侧金边 + 一条暗线，和客户端面板边框一致 */
+  border-right: 1px solid ${props => props.theme.colors.goldDim};
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.6), 4px 0 16px rgba(0, 0, 0, 0.35);
   flex-shrink: 0;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
@@ -55,19 +58,23 @@ const SidebarContainer = styled.aside<{ $isCollapsed: boolean }>`
 `;
 
 const Logo = styled.div`
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 1px;
   margin-bottom: 1rem;
-  color: ${props => props.theme.colors.text};
+  padding-bottom: 1rem;
+  color: ${props => props.theme.colors.goldBright};
   display: flex;
   align-items: center;
   justify-content: center;
+  border-bottom: 1px solid ${props => props.theme.colors.goldDeep};
 
   /* MUI的组件设置 */
 
   .MuiSvgIcon-root {
-    color: ${props => props.theme.colors.primaryHover};
+    color: ${props => props.theme.colors.gold};
     font-size: 2rem;
+    filter: drop-shadow(0 0 6px ${props => props.theme.colors.gold}88);
   }
 `;
 
@@ -89,6 +96,8 @@ const StyledNavLink = styled(NavLink)<{ $isCollapsed: boolean }>`
   border-radius: ${props => props.theme.borderRadius};
   color: ${props => props.theme.colors.textSecondary};
   overflow: hidden;
+  position: relative;
+  border: 1px solid transparent;
 
   .MuiSvgIcon-root {
     font-size: 1.5rem;
@@ -97,14 +106,27 @@ const StyledNavLink = styled(NavLink)<{ $isCollapsed: boolean }>`
 
   &:hover {
     background-color: ${props => props.theme.colors.elementHover};
-    color: ${props => props.theme.colors.text};
+    color: ${props => props.theme.colors.goldBright};
   }
 
+  /* 选中项：淡蓝底 + 金边 + 左侧青色竖条 */
   &.active {
-    background-color: ${props => props.theme.colors.navActiveBg};
+    background: linear-gradient(90deg, ${props => props.theme.colors.navActiveBg} 0%, transparent 100%);
+    border-color: ${props => props.theme.colors.goldDeep};
     color: ${props => props.theme.colors.navActiveText};
     .MuiSvgIcon-root {
-      color: ${props => props.theme.colors.navActiveText};
+      color: ${props => props.theme.colors.gold};
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 6px;
+      bottom: 6px;
+      width: 3px;
+      background: ${props => props.theme.colors.accentCyan};
+      box-shadow: 0 0 8px ${props => props.theme.colors.accentCyan};
     }
   }
 `;
@@ -117,22 +139,9 @@ const Version = styled.div`
 `;
 
 const ToggleButton = styled.button`
+  ${hextechButtonGhost};
   margin-top: auto;
-  background-color: ${props => props.theme.colors.elementHover};
-  color: ${props => props.theme.colors.textSecondary};
-  border: none;
-  border-radius: ${props => props.theme.borderRadius};
   padding: 0.5rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease-in-out;
-
-  &:hover {
-    color: ${props => props.theme.colors.text};
-    background-color: ${props => props.theme.colors.primary};
-  }
 `;
 
 // 导航项动画包装器 - 用于实现平滑的显示/隐藏动画

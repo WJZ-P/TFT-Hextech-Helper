@@ -1,6 +1,7 @@
 import React, {useState, useEffect, useRef} from 'react';
 import styled, {css} from 'styled-components';
 import {ThemeType} from '../styles/theme';
+import {hextechPanel} from '../styles/hextech';
 import {logStore, LogEntry, LogLevel} from '../stores/logStore';
 
 // 引入图标
@@ -19,8 +20,22 @@ export type {LogLevel, LogEntry} from '../stores/logStore';
 // 样式组件定义
 // -------------------------------------------------------------------
 
+/** 日志级别对应的颜色（info 用青蓝，和整体的海克斯配色呼应） */
+const levelColor = (level: LogLevel, theme: ThemeType): string => {
+  switch (level) {
+    case 'error':
+      return theme.colors.error;
+    case 'warn':
+      return theme.colors.warning;
+    case 'info':
+    default:
+      return theme.colors.accentCyan;
+  }
+};
+
 // 整个日志面板的外层容器
 const LogPanelWrapper = styled.div<{ $isVisible: boolean; theme: ThemeType }>`
+  ${hextechPanel};
   /* flex: 1 让面板自动占据父容器的剩余高度 */
   flex: 1;
   /* min-height 保证面板不会被压缩得太小 */
@@ -29,15 +44,9 @@ const LogPanelWrapper = styled.div<{ $isVisible: boolean; theme: ThemeType }>`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: ${props => props.theme.colors.elementBg};
-  border-radius: 12px;
-  border: 1px solid ${props => props.theme.colors.border};
   transition: opacity 0.3s ease;
   opacity: ${props => props.$isVisible ? 1 : 0};
   width: 100%;
-  margin-top: ${props => props.theme.spacing.large};
-  /* 添加微妙的阴影增加层次感 */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 `;
 
 // 日志面板标题栏
@@ -45,12 +54,9 @@ const LogPanelHeader = styled.div<{ theme: ThemeType }>`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: ${props => props.theme.spacing.small} ${props => props.theme.spacing.medium};
-  background: linear-gradient(135deg, 
-    ${props => props.theme.colors.primary}15 0%, 
-    ${props => props.theme.colors.elementBg} 100%
-  );
-  border-bottom: 1px solid ${props => props.theme.colors.border};
+  padding: 6px ${props => props.theme.spacing.medium};
+  background: linear-gradient(90deg, ${props => props.theme.colors.goldDeep}66 0%, transparent 70%);
+  border-bottom: 1px solid ${props => props.theme.colors.goldDeep};
 `;
 
 // 标题左侧（图标 + 文字）
@@ -60,22 +66,22 @@ const HeaderLeft = styled.div<{ theme: ThemeType }>`
   gap: ${props => props.theme.spacing.small};
   
   .header-icon {
-    color: ${props => props.theme.colors.primary};
-    font-size: 1.2rem;
+    color: ${props => props.theme.colors.gold};
+    font-size: 1.1rem;
   }
   
   .header-title {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: ${props => props.theme.colors.text};
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: ${props => props.theme.colors.goldBright};
   }
   
   .log-count {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     color: ${props => props.theme.colors.textSecondary};
-    background: ${props => props.theme.colors.background};
-    padding: 2px 8px;
-    border-radius: 10px;
+    padding: 0 6px;
+    border: 1px solid ${props => props.theme.colors.goldDeep};
     margin-left: 4px;
   }
 `;
@@ -85,19 +91,19 @@ const ClearButton = styled.button<{ theme: ThemeType }>`
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 10px;
+  padding: 2px 10px;
   font-size: 0.75rem;
   color: ${props => props.theme.colors.textSecondary};
   background: transparent;
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: 6px;
+  border: 1px solid ${props => props.theme.colors.goldDim};
+  border-radius: ${props => props.theme.borderRadius};
   cursor: pointer;
   transition: all 0.2s ease;
   
   &:hover {
     color: ${props => props.theme.colors.error};
     border-color: ${props => props.theme.colors.error};
-    background: ${props => props.theme.colors.error}10;
+    background: ${props => props.theme.colors.error}14;
   }
   
   .MuiSvgIcon-root {
@@ -116,223 +122,72 @@ const LogPanelContent = styled.div<{ theme: ThemeType }>`
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: ${props => props.theme.colors.background}80;
-
-  /* 自定义滚动条样式 */
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background-color: ${props => props.theme.colors.border};
-    border-radius: 3px;
-    
-    &:hover {
-      background-color: ${props => props.theme.colors.textSecondary};
-    }
-  }
+  background: rgba(1, 10, 19, 0.35);
 `;
 
-// 单条日志的样式
+// 单条日志的样式：左侧一条级别色竖线，背景从左往右淡出
 const LogEntryLine = styled.div<{ level: LogLevel; theme: ThemeType }>`
   display: flex;
   align-items: center;  /* 垂直居中对齐 */
-  gap: 12px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-  
-  /* 根据日志级别设置从左到右的渐变背景 */
-  background: ${({level, theme}) => {
-    switch (level) {
-      case 'error':
-        // 错误：红色渐变，从左边较深到右边透明
-        return `linear-gradient(to right, ${theme.colors.error}20 0%, ${theme.colors.error}08 80%, ${theme.colors.elementBg} 100%)`;
-      case 'warn':
-        // 警告：黄色渐变
-        return `linear-gradient(to right, ${theme.colors.warning}20 0%, ${theme.colors.warning}08 80%, ${theme.colors.elementBg} 100%)`;
-      case 'info':
-      default:
-        // 信息：主题色渐变
-        return `linear-gradient(to right, ${theme.colors.primary}20 0%, ${theme.colors.primary}08 80%, ${theme.colors.elementBg} 100%)`;
-    }
-  }};
+  gap: 10px;
+  padding: 6px 12px;
+  transition: background 0.2s ease;
+  border: 1px solid ${({level, theme}) => levelColor(level, theme)}1f;
+  border-left: 3px solid ${({level, theme}) => levelColor(level, theme)};
+  background: linear-gradient(to right, ${({level, theme}) => levelColor(level, theme)}1a 0%, transparent 85%);
 
-  /* 左侧边框 - 主色，较深 */
-  border-left: 4px solid ${({level, theme}) => {
-    switch (level) {
-      case 'error':
-        return theme.colors.error;
-      case 'warn':
-        return theme.colors.warning;
-      case 'info':
-      default:
-        return theme.colors.primary;
-    }
-  }};
-  
-  /* 上、右、下边框 - 使用较浅的颜色（通过 alpha 值降低透明度） */
-  border-top: 2px solid ${({level, theme}) => {
-    switch (level) {
-      case 'error':
-        return `${theme.colors.error}30`;  // 30% 透明度
-      case 'warn':
-        return `${theme.colors.warning}30`;
-      case 'info':
-      default:
-        return `${theme.colors.primary}25`;
-    }
-  }};
-  border-right: 2px solid ${({level, theme}) => {
-    switch (level) {
-      case 'error':
-        return `${theme.colors.error}30`;
-      case 'warn':
-        return `${theme.colors.warning}30`;
-      case 'info':
-      default:
-        return `${theme.colors.primary}25`;
-    }
-  }};
-  border-bottom: 2px solid ${({level, theme}) => {
-    switch (level) {
-      case 'error':
-        return `${theme.colors.error}30`;
-      case 'warn':
-        return `${theme.colors.warning}30`;
-      case 'info':
-      default:
-        return `${theme.colors.primary}25`;
-    }
-  }};
-  
   &:hover {
-    /* hover 时渐变更明显，中点位置与默认状态保持一致 (80%) */
-    background: ${({level, theme}) => {
-      switch (level) {
-        case 'error':
-          return `linear-gradient(to right, ${theme.colors.error}30 0%, ${theme.colors.error}12 80%, ${theme.colors.elementBg} 100%)`;
-        case 'warn':
-          return `linear-gradient(to right, ${theme.colors.warning}30 0%, ${theme.colors.warning}12 80%, ${theme.colors.elementBg} 100%)`;
-        case 'info':
-        default:
-          return `linear-gradient(to right, ${theme.colors.primary}30 0%, ${theme.colors.primary}12 80%, ${theme.colors.elementBg} 100%)`;
-      }
-    }};
-    
-    /* hover 时边框也稍微加深 */
-    border-top-color: ${({level, theme}) => {
-      switch (level) {
-        case 'error':
-          return `${theme.colors.error}45`;
-        case 'warn':
-          return `${theme.colors.warning}45`;
-        case 'info':
-        default:
-          return `${theme.colors.primary}40`;
-      }
-    }};
-    border-right-color: ${({level, theme}) => {
-      switch (level) {
-        case 'error':
-          return `${theme.colors.error}45`;
-        case 'warn':
-          return `${theme.colors.warning}45`;
-        case 'info':
-        default:
-          return `${theme.colors.primary}40`;
-      }
-    }};
-    border-bottom-color: ${({level, theme}) => {
-      switch (level) {
-        case 'error':
-          return `${theme.colors.error}45`;
-        case 'warn':
-          return `${theme.colors.warning}45`;
-        case 'info':
-        default:
-          return `${theme.colors.primary}40`;
-      }
-    }};
+    background: linear-gradient(to right, ${({level, theme}) => levelColor(level, theme)}2e 0%, ${({level, theme}) => levelColor(level, theme)}0a 85%);
   }
 `;
 
-// 日志图标容器 - 左侧垂直居中，图标更大
+// 日志图标容器 - 左侧垂直居中
 const LogIcon = styled.div<{ level: LogLevel; theme: ThemeType }>`
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   
   .MuiSvgIcon-root {
-    font-size: 1.5rem;  /* 图标更大 */
-    ${({level, theme}) => {
-      switch (level) {
-        case 'error':
-          return css`color: ${theme.colors.error};`;
-        case 'warn':
-          return css`color: ${theme.colors.warning};`;
-        case 'info':
-        default:
-          return css`color: ${theme.colors.primary};`;
-      }
-    }}
+    font-size: 1.2rem;
+    ${({level, theme}) => css`color: ${levelColor(level, theme)};`}
   }
 `;
 
-// 重复计数徽章 - 类似浏览器控制台的圆形计数器
+// 重复计数徽章 - 类似浏览器控制台的计数器
 const RepeatBadge = styled.span<{ level: LogLevel; theme: ThemeType }>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 22px;
-  height: 22px;
+  height: 18px;
   padding: 0 6px;
-  border-radius: 11px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   flex-shrink: 0;
-  
-  /* 根据日志级别设置背景色 */
-  background: ${({level, theme}) => {
-    switch (level) {
-      case 'error':
-        return theme.colors.error;
-      case 'warn':
-        return theme.colors.warning;
-      case 'info':
-      default:
-        return theme.colors.primary;
-    }
-  }};
-  
-  /* 文字颜色：警告用深色，其他用白色 */
-  color: ${({level}) => level === 'warn' ? '#333' : '#fff'};
+  background: ${({level, theme}) => levelColor(level, theme)};
+  /* 文字颜色：背景都是亮色，统一用深色字 */
+  color: #0A0F16;
 `;
 
-// 日志消息样式 - 字号大、字体粗
+// 日志消息样式
 const LogMessage = styled.span<{ theme: ThemeType }>`
   flex: 1;
   color: ${props => props.theme.colors.text};
   word-break: break-word;
   white-space: pre-wrap;
-  font-size: 16px;   /* 字号更大 */
-  font-weight: 600;  /* 字体加粗，600 比 bolder 更可控 */
+  font-size: 14px;
+  font-weight: 500;
   text-align: left;
 `;
 
 // 时间戳样式 - 放在最右边
 const LogTimestamp = styled.span<{ theme: ThemeType }>`
   flex-shrink: 0;
-  font-size: 1rem;
+  font-size: 0.8rem;
   color: ${props => props.theme.colors.textDisabled};
-  font-weight: bold;
   font-family: 'Consolas', 'Monaco', monospace;
 `;
 
@@ -349,6 +204,7 @@ const EmptyState = styled.div<{ theme: ThemeType }>`
     font-size: 2rem;
     margin-bottom: 8px;
     opacity: 0.5;
+    color: ${props => props.theme.colors.gold};
   }
   
   span {

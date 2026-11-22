@@ -1,6 +1,10 @@
+import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { ThemeType } from "../../styles/theme.ts";
+import { hextechPanel, hextechSectionTitle, hextechButtonGhost, hextechButtonPrimary, hextechButtonGold, hextechButtonDanger } from "../../styles/hextech.ts";
+import { ToggleSwitch, ToggleSlider } from "../HextechToggle.tsx";
 import { toast } from "../toast/toast-core.ts";
+import type { DebugScreenshotResult, DebugScreenshotState } from "../../../electron/preload.ts";
 
 // -------------------------------------------------------------------
 // ✨ 样式组件定义 (Styled Components Definitions) ✨
@@ -8,33 +12,28 @@ import { toast } from "../toast/toast-core.ts";
 
 // 整个页面的根容器
 const PageWrapper = styled.div<{ theme: ThemeType }>`
-  background-color: ${props => props.theme.colors.background};
+  background:
+    radial-gradient(ellipse 80% 35% at 50% 0%, rgba(47, 139, 255, 0.08) 0%, transparent 70%),
+    ${props => props.theme.colors.background};
   color: ${props => props.theme.colors.text};
-  padding: ${props => props.theme.spacing.small} ${props => props.theme.spacing.large};
-  height: 100vh;
+  padding: ${props => props.theme.spacing.medium} ${props => props.theme.spacing.large};
+  height: 100%;
   overflow-y: auto;
-  transition: background-color 0.3s, color 0.3s;
+  text-align: left;
 `;
 
 // 设置每一组设置的标头
 const SectionHeader = styled.h2`
-  margin: ${props => props.theme.spacing.small};
-  font-size: ${props => props.theme.fontSizes.large};
-  text-align: start;
-  margin-bottom: ${props => props.theme.spacing.medium};
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  ${hextechSectionTitle};
+  font-size: ${props => props.theme.fontSizes.medium};
+  margin: ${props => props.theme.spacing.medium} 4px ${props => props.theme.spacing.small};
 `;
 
 // 用来包裹按钮组的卡片
 const Card = styled.div`
-  background-color: ${props => props.theme.colors.elementBg};
-  border-radius: ${props => props.theme.borderRadius};
-  border: 1px solid ${props => props.theme.colors.border};
+  ${hextechPanel};
   padding: ${props => props.theme.spacing.medium};
-  transition: background-color 0.3s, border-color 0.3s;
-  margin-bottom: ${props => props.theme.spacing.medium};
+  margin-bottom: ${props => props.theme.spacing.small};
 `;
 
 // 按钮网格布局
@@ -46,57 +45,25 @@ const ButtonGrid = styled.div`
 
 // 美化后的调试按钮
 const DebugButton = styled.button<{ $variant?: 'primary' | 'secondary' | 'warning' | 'danger' }>`
-  background-color: ${props => {
+  ${props => {
     switch (props.$variant) {
-      case 'primary': return props.theme.colors.primary;
-      case 'warning': return '#f59e0b';
-      case 'danger': return '#ef4444';
-      default: return props.theme.colors.elementBg;
+      case 'primary': return hextechButtonPrimary;
+      case 'warning': return hextechButtonGold;
+      case 'danger': return hextechButtonDanger;
+      default: return hextechButtonGhost;
     }
   }};
-  color: ${props => props.$variant ? '#ffffff' : props.theme.colors.text};
-  border: 1px solid ${props => {
-    switch (props.$variant) {
-      case 'primary': return props.theme.colors.primary;
-      case 'warning': return '#f59e0b';
-      case 'danger': return '#ef4444';
-      default: return props.theme.colors.border;
-    }
-  }};
-  font-size: ${props => props.theme.fontSizes.small};
-  border-radius: ${props => props.theme.borderRadius};
-  padding: 0.6rem 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    background-color: ${props => {
-      switch (props.$variant) {
-        case 'primary': return props.theme.colors.primaryHover;
-        case 'warning': return '#d97706';
-        case 'danger': return '#dc2626';
-        default: return props.theme.colors.border;
-      }
-    }};
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
 `;
 
 // 页面标题
 const PageTitle = styled.h1`
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: ${props => props.theme.colors.text};
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: ${props => props.theme.colors.goldBright};
   margin: 0 0 0.25rem 0;
 `;
 
@@ -105,6 +72,44 @@ const PageSubtitle = styled.p`
   margin: 0 0 ${props => props.theme.spacing.medium} 0;
   color: ${props => props.theme.colors.textSecondary};
   font-size: ${props => props.theme.fontSizes.medium};
+`;
+
+// 工具行：左侧说明文字，右侧开关
+const ToolRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${props => props.theme.spacing.medium};
+  margin-bottom: ${props => props.theme.spacing.medium};
+  padding-bottom: ${props => props.theme.spacing.medium};
+  border-bottom: 1px solid ${props => props.theme.colors.goldDeep};
+`;
+
+const ToolText = styled.div`
+  text-align: start;
+
+  h3 {
+    margin: 0 0 0.25rem 0;
+    font-size: ${props => props.theme.fontSizes.medium};
+    font-weight: 600;
+    color: ${props => props.theme.colors.goldBright};
+  }
+
+  p {
+    margin: 0;
+    font-size: ${props => props.theme.fontSizes.small};
+    color: ${props => props.theme.colors.textSecondary};
+    word-break: break-all;
+  }
+`;
+
+// 卡片底部的提示文字
+const HintText = styled.p<{ $warning?: boolean }>`
+  margin: ${props => props.theme.spacing.small} 0 0 0;
+  font-size: ${props => props.theme.fontSizes.small};
+  color: ${props => props.$warning ? props.theme.colors.warning : props.theme.colors.textSecondary};
+  text-align: start;
+  word-break: break-all;
 `;
 
 // -------------------------------------------------------------------
@@ -161,11 +166,93 @@ const handleDebugClick = async (label: string, asyncFn: () => Promise<any>) => {
 // ✨ React 组件本体 ✨
 // -------------------------------------------------------------------
 
+/**
+ * TFT 窗口截图工具（仅开发版显示）
+ * @description 截取 TFT 虚幻客户端窗口所在的屏幕区域，并裁掉标题栏和边框，
+ *              用于采集识别模板。支持按钮截图和全局快捷键截图。
+ */
+const TftScreenshotTool = () => {
+    const [state, setState] = useState<DebugScreenshotState | null>(null);
+    const [lastFilePath, setLastFilePath] = useState<string | null>(null);
+
+    /** 统一处理截图结果（按钮截图和快捷键截图共用） */
+    const handleResult = useCallback((result: DebugScreenshotResult) => {
+        if (result.error || !result.data) {
+            toast.error(`TFT 窗口截图失败: ${result.error ?? '未知错误'}`);
+            return;
+        }
+        const { filePath, width, height, elapsedMs } = result.data;
+        setLastFilePath(filePath);
+        toast.success(`已截图 ${width}x${height}，耗时 ${elapsedMs}ms`);
+    }, []);
+
+    useEffect(() => {
+        window.debugTools.getScreenshotState().then(setState);
+        // 快捷键截图在主进程完成，结果通过事件推送过来
+        return window.debugTools.onScreenshotTaken(handleResult);
+    }, [handleResult]);
+
+    const handleToggleHotkey = async () => {
+        if (!state) return;
+        const enabled = !state.hotkeyEnabled;
+        const result = await window.debugTools.setScreenshotHotkeyEnabled(enabled);
+        if (!result.success) {
+            toast.error(result.error ?? '设置快捷键失败');
+            return;
+        }
+        setState(await window.debugTools.getScreenshotState());
+        toast.success(enabled ? `已开启 ${state.hotkey} 截图快捷键` : `已关闭 ${state.hotkey} 截图快捷键`);
+    };
+
+    const handleOpenDir = async () => {
+        const result = await window.debugTools.openScreenshotDir();
+        if (result.error) {
+            toast.error(`打开文件夹失败: ${result.error}`);
+        }
+    };
+
+    // 非开发版（release 包）不显示
+    if (!state?.available) return null;
+
+    return (
+        <>
+            <SectionHeader>🖼️ TFT 窗口截图（开发版）</SectionHeader>
+            <Card>
+                <ToolRow>
+                    <ToolText>
+                        <h3>{state.hotkey} 快捷键截图</h3>
+                        <p>截取 TFT 窗口当前所在的屏幕区域（拖动窗口也能截对，TFT 不在前台时会先切到前台），自动裁掉标题栏和边框，只保留游戏画面。</p>
+                    </ToolText>
+                    <ToggleSwitch onClick={handleToggleHotkey}>
+                        <ToggleSlider $isOn={state.hotkeyEnabled} />
+                    </ToggleSwitch>
+                </ToolRow>
+                <ButtonGrid>
+                    <DebugButton $variant="primary" onClick={async () => handleResult(await window.debugTools.captureTftWindow())}>
+                        截取 TFT 窗口
+                    </DebugButton>
+                    <DebugButton onClick={handleOpenDir}>
+                        打开截图文件夹
+                    </DebugButton>
+                </ButtonGrid>
+                {state.hotkeyEnabled && !state.hotkeyRegistered && (
+                    <HintText $warning>快捷键已开启但没有生效，可能和挂机快捷键冲突，详见日志</HintText>
+                )}
+                <HintText>保存目录：{state.saveDir}</HintText>
+                {lastFilePath && <HintText>最近一张：{lastFilePath}</HintText>}
+            </Card>
+        </>
+    );
+};
+
 const DebugPage = () => {
     return (
         <PageWrapper>
             <PageTitle>调试面板</PageTitle>
             <PageSubtitle>开发调试用，结果会通过弹窗显示（详细数据请查看控制台 F12）</PageSubtitle>
+
+            {/* TFT 窗口截图（仅开发版显示） */}
+            <TftScreenshotTool />
 
             {/* LCU 客户端操作 */}
             <SectionHeader>🎮 LCU 客户端</SectionHeader>

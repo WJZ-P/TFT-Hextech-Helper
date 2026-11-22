@@ -79,4 +79,18 @@ export enum IpcChannel {
     OVERLAY_SHOW = 'overlay-show',                        // 显示浮窗（传入游戏窗口坐标）
     OVERLAY_CLOSE = 'overlay-close',                      // 关闭浮窗
     OVERLAY_UPDATE_PLAYERS = 'overlay-update-players',    // 更新玩家列表数据（主进程 -> 浮窗渲染进程）
+    // 调试工具：TFT 窗口截图（仅开发版可用）
+    DEBUG_SCREENSHOT_GET_STATE = 'debug-screenshot-get-state',                      // 获取截图工具状态（是否可用、快捷键开关等）
+    DEBUG_SCREENSHOT_SET_HOTKEY_ENABLED = 'debug-screenshot-set-hotkey-enabled',    // 开关截图快捷键
+    DEBUG_SCREENSHOT_CAPTURE = 'debug-screenshot-capture',                          // 立即截一张 TFT 窗口
+    DEBUG_SCREENSHOT_OPEN_DIR = 'debug-screenshot-open-dir',                        // 打开截图保存目录
+    DEBUG_SCREENSHOT_TAKEN = 'debug-screenshot-taken',                              // 快捷键截图完成事件（主进程 -> 渲染进程）
+    // 云顶之弈窗口状态（开始挂机前检查是否为窗口化）
+    TFT_GET_WINDOW_MODE = 'tft-get-window-mode',
+    // 自绘标题栏的窗口控制
+    WINDOW_MINIMIZE = 'window-minimize',                    // 最小化
+    WINDOW_TOGGLE_MAXIMIZE = 'window-toggle-maximize',      // 最大化 / 还原
+    WINDOW_CLOSE = 'window-close',                          // 关闭（走原有的 close 流程，会保存窗口状态并退出）
+    WINDOW_IS_MAXIMIZED = 'window-is-maximized',            // 查询是否最大化
+    WINDOW_MAXIMIZED_CHANGED = 'window-maximized-changed',  // 最大化状态变化（主进程 -> 渲染进程）
 }

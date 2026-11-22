@@ -16,6 +16,8 @@ export const GlobalStyle = createGlobalStyle`
   html {
     // 更平滑的滚动体验
     scroll-behavior: smooth;
+    // 原生控件（下拉框、时间选择器等）也使用深色外观
+    color-scheme: dark;
   }
 
   /*
@@ -24,9 +26,8 @@ export const GlobalStyle = createGlobalStyle`
    * 最神奇的是，它能自动读取到我们通过 <ThemeProvider> 提供的 theme！
   */
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei UI', 'Microsoft YaHei',
+    'Roboto', 'Helvetica Neue', sans-serif;
 
     /* 喵~ 从我们的 theme 设计规范里，读取背景色和文字颜色！*/
     background-color: ${props => props.theme.colors.background};
@@ -38,5 +39,31 @@ export const GlobalStyle = createGlobalStyle`
 
     /* 确保应用在视口高度不足时，也能撑满整个屏幕 */
     min-height: 100vh;
+  }
+
+  /* 文字选中：金色底，和整体配色统一 */
+  ::selection {
+    background: ${props => props.theme.colors.gold}66;
+    color: ${props => props.theme.colors.goldBright};
+  }
+
+  /* 滚动条：细条、暗金滑块，深色背景上不刺眼 */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: ${props => props.theme.colors.goldDim};
+    border: 2px solid ${props => props.theme.colors.background};
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: ${props => props.theme.colors.gold};
+  }
+  ::-webkit-scrollbar-corner {
+    background: transparent;
   }
 `

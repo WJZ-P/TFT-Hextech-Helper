@@ -63,7 +63,7 @@ export const OverlayApp: React.FC = () => {
                     style={{
                         ...styles.closeButton,
                         // hover 时变亮 + 加背景
-                        ...(closeHover ? { color: '#e2e8f0', backgroundColor: 'rgba(255,255,255,0.1)' } : {}),
+                        ...(closeHover ? { color: '#F0E6D2', backgroundColor: 'rgba(200, 170, 110, 0.15)' } : {}),
                     }}
                     onClick={handleClose}
                     onMouseEnter={() => setCloseHover(true)}
@@ -107,7 +107,7 @@ export const OverlayApp: React.FC = () => {
                             <span
                                 style={{
                                     ...styles.playerDot,
-                                    backgroundColor: player.isBot ? '#F59E0B' : '#10B981',
+                                    backgroundColor: player.isBot ? '#E8A33D' : '#2BB673',
                                 }}
                             ></span>
                             {/* 玩家名称 */}
@@ -136,13 +136,14 @@ const styles: Record<string, React.CSSProperties> = {
     container: {
         width: '100%',
         height: '100%',
-        backgroundColor: 'rgba(15, 23, 42, 0.88)',  // 深色半透明背景
-        color: '#e2e8f0',
+        background: 'linear-gradient(180deg, rgba(18, 27, 39, 0.92) 0%, rgba(7, 11, 16, 0.92) 100%)',  // 海克斯深色半透明底
+        color: '#E6DFD1',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         fontSize: '12px',
         display: 'flex',
         flexDirection: 'column',
-        borderLeft: '1px solid rgba(102, 204, 255, 0.3)',  // 主题色边框
+        borderLeft: '1px solid #785A28',  // 暗金边框，和主应用一致
+        boxShadow: 'inset 1px 0 0 rgba(0, 0, 0, 0.6)',
         overflow: 'hidden',
         userSelect: 'none',  // 禁止选中文字
     },
@@ -158,13 +159,13 @@ const styles: Record<string, React.CSSProperties> = {
     headerText: {
         fontSize: '13px',
         fontWeight: 600,
-        color: '#66ccff',  // 主题色
+        color: '#F0E6D2',  // 亮米金标题
         letterSpacing: '0.5px',
         flex: 1,           // 占满剩余空间，把关闭按钮推到右边
     },
     closeButton: {
         fontSize: '12px',
-        color: '#64748b',
+        color: '#A09B8C',
         cursor: 'pointer',
         padding: '2px 4px',
         borderRadius: '3px',
@@ -177,7 +178,7 @@ const styles: Record<string, React.CSSProperties> = {
         gap: '12px',
         padding: '4px 12px 8px',
         fontSize: '11px',
-        color: '#94a3b8',
+        color: '#A09B8C',
     },
     summaryItem: {
         display: 'flex',
@@ -189,18 +190,18 @@ const styles: Record<string, React.CSSProperties> = {
         width: '6px',
         height: '6px',
         borderRadius: '50%',
-        backgroundColor: '#10B981',
+        backgroundColor: '#2BB673',
     },
     dotBot: {
         display: 'inline-block',
         width: '6px',
         height: '6px',
         borderRadius: '50%',
-        backgroundColor: '#F59E0B',
+        backgroundColor: '#E8A33D',
     },
     divider: {
         height: '1px',
-        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+        backgroundColor: '#463714',  // 深金分隔线
         margin: '0 8px',
     },
     playerList: {
@@ -228,21 +229,22 @@ const styles: Record<string, React.CSSProperties> = {
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
         fontSize: '12px',
-        color: '#e2e8f0',
+        color: '#E6DFD1',
     },
     botTag: {
         fontSize: '9px',
         fontWeight: 700,
-        color: '#F59E0B',
-        backgroundColor: 'rgba(245, 158, 11, 0.15)',
-        padding: '1px 4px',
-        borderRadius: '3px',
+        color: '#E8A33D',
+        backgroundColor: 'rgba(232, 163, 61, 0.15)',
+        border: '1px solid rgba(232, 163, 61, 0.5)',
+        padding: '0 4px',
+        borderRadius: '2px',
         letterSpacing: '0.5px',
         flexShrink: 0,
     },
     loading: {
         textAlign: 'center',
-        color: '#64748b',
+        color: '#A09B8C',
         padding: '20px 0',
         fontSize: '11px',
     },

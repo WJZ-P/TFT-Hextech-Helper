@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled, { keyframes } from 'styled-components';
 import {ThemeType} from "../../styles/theme.ts";
+import {hextechPanel, hextechSectionTitle, hextechButtonGhost} from "../../styles/hextech.ts";
+import {ToggleSwitch, ToggleSlider} from "../HextechToggle.tsx";
 import {toast} from "../toast/toast-core.ts";
 import { logStore, LogAutoCleanThreshold } from "../../stores/logStore.ts";
 import { settingsStore } from "../../stores/settingsStore.ts"; // 全局设置状态
@@ -11,29 +13,27 @@ import { settingsStore } from "../../stores/settingsStore.ts"; // 全局设置�
 
 // 整个页面的根容器
 const PageWrapper = styled.div<{ theme: ThemeType }>`
-  background-color: ${props => props.theme.colors.background};
+  background:
+    radial-gradient(ellipse 80% 35% at 50% 0%, rgba(47, 139, 255, 0.08) 0%, transparent 70%),
+    ${props => props.theme.colors.background};
   color: ${props => props.theme.colors.text};
-  padding: ${props => props.theme.spacing.small} ${props => props.theme.spacing.large};
-  height: 100vh;
+  padding: ${props => props.theme.spacing.small} ${props => props.theme.spacing.large} ${props => props.theme.spacing.large};
+  height: 100%;
   overflow-y: auto;
-  transition: background-color 0.3s, color 0.3s;
+  text-align: left;
 `;
 
 //  设置每一组设置的标头
 const SettingsHeader = styled.h2`
-  margin: ${props=>props.theme.spacing.small};
-  font-size: ${props=>props.theme.fontSizes.large};
-  text-align: start;
-  margin: ${props=>props.theme.spacing.medium} 8px 6px;
+  ${hextechSectionTitle};
+  font-size: ${props=>props.theme.fontSizes.medium};
+  margin: ${props=>props.theme.spacing.large} 4px ${props=>props.theme.spacing.small};
 `;
 
 // 用来包裹设置项的卡片
 const SettingsCard = styled.div`
-  background-color: ${props => props.theme.colors.elementBg};
-  border-radius: ${props => props.theme.borderRadius};
-  border: 1px solid ${props => props.theme.colors.border};
+  ${hextechPanel};
   padding: ${props => props.theme.spacing.medium};
-  transition: background-color 0.3s, border-color 0.3s;
 `;
 
 // 单个设置项的容器
@@ -58,7 +58,7 @@ const SettingInfo = styled.div`
 `;
 
 const IconWrapper = styled.div`
-  color: ${props => props.theme.colors.primary};
+  color: ${props => props.theme.colors.gold};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,7 +73,7 @@ const SettingText = styled.div`
   h3 {
     font-size: ${props => props.theme.fontSizes.medium};
     font-weight: 600;
-    color: ${props => props.theme.colors.text};
+    color: ${props => props.theme.colors.goldBright};
     text-align: start;
   }
 
@@ -86,31 +86,14 @@ const SettingText = styled.div`
 
 // 右侧的操作按钮
 const ActionButton = styled.button`
-  background-color: ${props => props.theme.colors.primary};
-  color: ${props => props.theme.colors.textOnPrimary};
-  border: none;
-  font-size: ${props => props.theme.fontSizes.small};
-  border-radius: ${props => props.theme.borderRadius};
-  padding: 0.6rem 1.2rem;
-  font-weight: bolder;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-
-  &:hover {
-    background-color: ${props => props.theme.colors.primaryHover};
-  }
-
-  &:disabled {
-    background-color: ${props => props.theme.colors.textDisabled};
-    cursor: not-allowed;
-  }
+  ${hextechButtonGhost};
 `;
 
 // 下拉选择框样式
 const SelectWrapper = styled.select<{ theme: ThemeType }>`
-  background-color: ${props => props.theme.colors.elementBg};
-  color: ${props => props.theme.colors.text};
-  border: 1px solid ${props => props.theme.colors.border};
+  background-color: ${props => props.theme.colors.sidebarBg};
+  color: ${props => props.theme.colors.goldBright};
+  border: 1px solid ${props => props.theme.colors.goldDim};
   border-radius: ${props => props.theme.borderRadius};
   padding: 0.5rem 1rem;
   font-size: ${props => props.theme.fontSizes.small};
@@ -119,29 +102,32 @@ const SelectWrapper = styled.select<{ theme: ThemeType }>`
   min-width: 120px;
 
   &:hover {
-    border-color: ${props => props.theme.colors.primary};
+    border-color: ${props => props.theme.colors.gold};
   }
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.primary};
-    box-shadow: 0 0 0 2px ${props => props.theme.colors.primary}30;
+    border-color: ${props => props.theme.colors.gold};
+    box-shadow: 0 0 8px ${props => props.theme.colors.gold}44;
   }
 
   option {
-    background-color: ${props => props.theme.colors.elementBg};
+    background-color: ${props => props.theme.colors.sidebarBg};
     color: ${props => props.theme.colors.text};
   }
 `;
 
 // 快捷键输入框样式
 const HotkeyInput = styled.div<{ $isRecording: boolean }>`
-  background-color: ${props => props.theme.colors.elementBg};
-  color: ${props => props.$isRecording ? props.theme.colors.primary : props.theme.colors.text};
-  border: 1px solid ${props => props.$isRecording ? props.theme.colors.primary : props.theme.colors.border};
+  background-color: ${props => props.theme.colors.sidebarBg};
+  color: ${props => props.$isRecording ? props.theme.colors.accentCyan : props.theme.colors.goldBright};
+  border: 1px solid ${props => props.$isRecording ? props.theme.colors.accentCyan : props.theme.colors.goldDim};
   border-radius: ${props => props.theme.borderRadius};
+  box-shadow: ${props => props.$isRecording ? `0 0 10px ${props.theme.colors.accentCyan}55` : 'none'};
   padding: 0.5rem 1rem;
   font-size: ${props => props.theme.fontSizes.small};
+  font-weight: 600;
+  letter-spacing: 1px;
   min-width: 120px;
   text-align: center;
   cursor: pointer;
@@ -149,70 +135,19 @@ const HotkeyInput = styled.div<{ $isRecording: boolean }>`
   user-select: none;
 
   &:hover {
-    border-color: ${props => props.theme.colors.primary};
+    border-color: ${props => props.$isRecording ? props.theme.colors.accentCyan : props.theme.colors.gold};
   }
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.primary};
-    box-shadow: 0 0 0 2px ${props => props.theme.colors.primary}30;
-  }
-`;
-
-// Toggle Switch 开关样式
-const ToggleSwitch = styled.label`
-  position: relative;
-  display: inline-block;
-  width: 48px;
-  height: 26px;
-  cursor: pointer;
-`;
-
-const ToggleSlider = styled.span<{ $isOn: boolean }>`
-  position: absolute;
-  top: 0;           /* ← 加上这个 */
-  left: 0;          /* ← 加上这个 */
-  width: 100%;
-  height: 100%;
-  background-color: ${props => props.$isOn ? props.theme.colors.primary : props.theme.colors.border};
-  border-radius: 26px;
-  transition: all 0.3s ease-in-out;
-
-  &::before {
-    content: '';
-    position: absolute;
-    height: 20px;
-    width: 20px;
-    left: ${props => props.$isOn ? '25px' : '3px'};
-    bottom: 3px;
-    background-color: white;
-    border-radius: 50%;
-    transition: all 0.3s ease-in-out;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
 `;
 
 /** GitHub 链接按钮 - 放在设置项右侧 */
 const GitHubButton = styled.a<{ theme: ThemeType }>`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0.6rem 1.2rem;
-  background: linear-gradient(135deg, #24292e 0%, #1a1e22 100%);
-  border-radius: ${props => props.theme.borderRadius};
+  ${hextechButtonGhost};
   text-decoration: none;
-  color: #ffffff;
-  font-weight: bold;
-  font-size: ${props => props.theme.fontSizes.small};
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-    background: linear-gradient(135deg, #2d333b 0%, #24292e 100%);
-  }
-  
+
   svg {
     width: 18px;
     height: 18px;
@@ -232,21 +167,15 @@ const shakeAnimation = keyframes`
 
 /** 作者 Banner - 显示在页面底部的酷酷卡片 */
 const AuthorBanner = styled.div<{ theme: ThemeType }>`
+  ${hextechPanel};
   text-align: center;
   padding: ${props => props.theme.spacing.large};
   margin-top: ${props => props.theme.spacing.large};
-  background: linear-gradient(135deg, 
-    ${props => props.theme.colors.elementBg} 0%, 
-    ${props => props.theme.colors.cardBg} 100%
-  );
-  border-radius: ${props => props.theme.borderRadius};
-  border: 1px solid ${props => props.theme.colors.border};
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   font-size: ${props => props.theme.fontSizes.medium};
   color: ${props => props.theme.colors.text};
-  
+
   a {
-    background: linear-gradient(135deg, ${props => props.theme.colors.primary}, #ff6b6b, #ffd93d);
+    background: linear-gradient(135deg, ${props => props.theme.colors.goldBright}, ${props => props.theme.colors.gold}, ${props => props.theme.colors.accentCyan});
     background-size: 200% 200%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -256,7 +185,7 @@ const AuthorBanner = styled.div<{ theme: ThemeType }>`
     text-decoration: none;
     cursor: pointer;
     display: inline-block;
-    
+
     &:hover {
       animation: ${shakeAnimation} 0.8s ease-in-out infinite;
     }
@@ -272,9 +201,9 @@ const ScheduledStopRow = styled.div`
 
 /** 数字输入框 - 用于排队随机间隔等场景 */
 const NumberInput = styled.input<{ theme: ThemeType; disabled?: boolean }>`
-  background-color: ${props => props.theme.colors.elementBg};
-  color: ${props => props.disabled ? props.theme.colors.textDisabled : props.theme.colors.text};
-  border: 1px solid ${props => props.theme.colors.border};
+  background-color: ${props => props.theme.colors.sidebarBg};
+  color: ${props => props.disabled ? props.theme.colors.textDisabled : props.theme.colors.goldBright};
+  border: 1px solid ${props => props.theme.colors.goldDim};
   border-radius: ${props => props.theme.borderRadius};
   padding: 0.4rem 0.6rem;
   font-size: ${props => props.theme.fontSizes.small};
@@ -285,13 +214,13 @@ const NumberInput = styled.input<{ theme: ThemeType; disabled?: boolean }>`
   text-align: center;
 
   &:hover:not(:disabled) {
-    border-color: ${props => props.theme.colors.primary};
+    border-color: ${props => props.theme.colors.gold};
   }
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.primary};
-    box-shadow: 0 0 0 2px ${props => props.theme.colors.primary}30;
+    border-color: ${props => props.theme.colors.gold};
+    box-shadow: 0 0 8px ${props => props.theme.colors.gold}44;
   }
 
   /* 隐藏数字输入框的上下箭头 */
@@ -315,9 +244,9 @@ const DelayRangeRow = styled.div`
 
 /** 时间选择输入框 */
 const TimeInput = styled.input<{ theme: ThemeType; disabled?: boolean }>`
-  background-color: ${props => props.theme.colors.elementBg};
-  color: ${props => props.disabled ? props.theme.colors.textDisabled : props.theme.colors.text};
-  border: 1px solid ${props => props.theme.colors.border};
+  background-color: ${props => props.theme.colors.sidebarBg};
+  color: ${props => props.disabled ? props.theme.colors.textDisabled : props.theme.colors.goldBright};
+  border: 1px solid ${props => props.theme.colors.goldDim};
   border-radius: ${props => props.theme.borderRadius};
   padding: 0.5rem 0.8rem;
   font-size: ${props => props.theme.fontSizes.small};
@@ -328,13 +257,13 @@ const TimeInput = styled.input<{ theme: ThemeType; disabled?: boolean }>`
   text-align: center;
 
   &:hover:not(:disabled) {
-    border-color: ${props => props.theme.colors.primary};
+    border-color: ${props => props.theme.colors.gold};
   }
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.primary};
-    box-shadow: 0 0 0 2px ${props => props.theme.colors.primary}30;
+    border-color: ${props => props.theme.colors.gold};
+    box-shadow: 0 0 8px ${props => props.theme.colors.gold}44;
   }
 
   /* 让时间选择器的点击区域覆盖整个输入框 */
@@ -356,75 +285,71 @@ const TimeInput = styled.input<{ theme: ThemeType; disabled?: boolean }>`
 
 /** 使用提示卡片 - 现代玻璃拟态风格 */
 const TipsCard = styled.div<{ theme: ThemeType }>`
+  ${hextechPanel};
   position: relative;
-  background: linear-gradient(135deg, 
-    ${props => props.theme.colors.primary}10 0%, 
-    ${props => props.theme.colors.primary}05 100%
-  );
-  border: 1px solid ${props => props.theme.colors.primary}30;
-  border-radius: 12px;
-  padding: 16px 20px;
-  margin-bottom: ${props => props.theme.spacing.large};
-  backdrop-filter: blur(10px);
+  padding: 16px 20px 16px 24px;
+  margin: ${props => props.theme.spacing.medium} 0 ${props => props.theme.spacing.small};
   overflow: hidden;
-  
-  /* 左侧装饰条 */
+
+  /* 左侧装饰条：金色到青色 */
   &::before {
     content: '';
     position: absolute;
     left: 0;
     top: 0;
     bottom: 0;
-    width: 4px;
-    background: linear-gradient(180deg, 
-      ${props => props.theme.colors.primary} 0%, 
-      #ff6b6b 100%
+    width: 3px;
+    background: linear-gradient(180deg,
+      ${props => props.theme.colors.gold} 0%,
+      ${props => props.theme.colors.accentCyan} 100%
     );
-    border-radius: 4px 0 0 4px;
   }
-  
+
   h3 {
-    color: ${props => props.theme.colors.text};
+    color: ${props => props.theme.colors.goldBright};
     font-size: ${props => props.theme.fontSizes.medium};
     font-weight: 600;
     margin: 0 0 12px 0;
     display: flex;
     align-items: center;
     gap: 8px;
-    
+
     span {
       font-size: 1.1em;
     }
   }
-  
+
   ul {
     margin: 0;
     padding: 0;
     list-style: none;
-    
+
     li {
       position: relative;
       padding-left: 20px;
       margin-bottom: 8px;
-      color: ${props => props.theme.colors.secondaryText};
+      color: ${props => props.theme.colors.textSecondary};
       font-size: ${props => props.theme.fontSizes.small};
       line-height: 1.6;
-      
-      /* 自定义列表符号 */
+
+      /* 自定义列表符号：金色小菱形 */
       &::before {
-        content: '→';
+        content: '';
         position: absolute;
-        left: 0;
-        color: ${props => props.theme.colors.primary};
-        font-weight: bold;
+        left: 4px;
+        top: 0.6em;
+        width: 6px;
+        height: 6px;
+        transform: rotate(45deg);
+        background: ${props => props.theme.colors.gold};
       }
-      
+
       &:last-child {
         margin-bottom: 0;
       }
-      
+
       strong {
-        color: ${props => props.theme.colors.text};
+        color: ${props => props.theme.colors.goldBright};
       }
     }
   }
@@ -708,7 +633,7 @@ const SettingsPage = () => {
         // 执行备份
         const success = await window.config.backup() // Boolean
         if (!success) {
-            toast.error("备份错误！请检查客户端是否启动！")
+            toast.error("备份失败！请确认云顶之弈客户端至少启动过一次（详见日志）")
         } else {
             toast.success("设置备份成功!")
         }
@@ -723,11 +648,10 @@ const SettingsPage = () => {
         //  执行恢复
         const success = await window.config.restore() // Boolean
         if (!success) {
-            toast.error("设置恢复错误！请检查客户端是否启动！")
+            toast.error("恢复失败！请先关闭云顶之弈客户端，并确认已经备份过（详见日志）")
         } else {
             toast.success("设置恢复成功!")
         }
-        await window.config.restore()
         setIsRestoring(false);
     };
     
@@ -1103,7 +1027,7 @@ const SettingsPage = () => {
                     <SettingInfo>
                         <SettingText>
                             <h3>备份游戏设置</h3>
-                            <p>将当前的游戏内设置（如键位、画质等）备份到本地。</p>
+                            <p>将云顶之弈客户端的设置（画面、窗口、音量、键位等）备份到本地。</p>
                         </SettingText>
                     </SettingInfo>
                     <ActionButton onClick={handleBackup} disabled={isBackingUp || isRestoring}>
@@ -1115,7 +1039,7 @@ const SettingsPage = () => {
                     <SettingInfo>
                         <SettingText>
                             <h3>恢复游戏设置</h3>
-                            <p>使用之前备份的设置，覆盖当前的游戏设置。</p>
+                            <p>使用之前备份的设置覆盖当前设置。需要先关闭云顶之弈客户端，否则客户端退出时会把恢复的设置覆盖掉。</p>
                         </SettingText>
                     </SettingInfo>
                     <ActionButton onClick={handleRestore} disabled={isBackingUp || isRestoring}>
