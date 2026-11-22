@@ -214,6 +214,9 @@ export class TemplateLoader {
         // 重新设置文件监听（指向新赛季目录）
         this.setupChampionTemplateWatcher();
 
+        // 战利品球模板也可能有赛季专属版本（如 S18）
+        await this.loadLootOrbTemplates();
+
         logger.info(`[TemplateLoader] 赛季模板切换完成: ${seasonDir} (${this.championTemplates.size} 个模板)`);
     }
 
@@ -537,7 +540,9 @@ export class TemplateLoader {
     /**
      * 加载战利品球模板
      * @description 加载 loot_normal.png, loot_blue.png, loot_gold.png
-     *              保留 RGB 彩色信息用于多目标模板匹配
+     *              保留 RGB 彩色信息用于多目标模板匹配。
+     *              当前赛季有专属目录（loot/{seasonDir}/，如 loot/s18/）时只用专属目录里的模板，
+     *              否则用 loot/ 下的通用模板。专属目录里没有的颜色视为该赛季没有（如 S18 没有银色球）。
      */
     private async loadLootOrbTemplates(): Promise<void> {
         // 清理旧模板
@@ -551,6 +556,13 @@ export class TemplateLoader {
             return;
         }
 
+        const seasonTemplatePath = path.join(this.lootOrbTemplatePath, this.currentSeasonDir);
+        const hasSeasonTemplates = fs.existsSync(seasonTemplatePath);
+        const templateDir = hasSeasonTemplates ? seasonTemplatePath : this.lootOrbTemplatePath;
+        if (hasSeasonTemplates) {
+            logger.info(`[TemplateLoader] 使用赛季专属战利品球模板: ${this.currentSeasonDir}`);
+        }
+
         // 定义模板文件名与类型的映射
         const templateFiles: { filename: string; type: LootOrbType }[] = [
             { filename: "loot_normal.png", type: "normal" },
@@ -559,10 +571,14 @@ export class TemplateLoader {
         ];
 
         for (const { filename, type } of templateFiles) {
-            const filePath = path.join(this.lootOrbTemplatePath, filename);
+            const filePath = path.join(templateDir, filename);
 
             if (!fs.existsSync(filePath)) {
-                logger.warn(`[TemplateLoader] 未找到战利品球模板: ${filename}`);
+                if (hasSeasonTemplates) {
+                    logger.debug(`[TemplateLoader] ${this.currentSeasonDir} 没有 ${type} 战利品球，跳过`);
+                } else {
+                    logger.warn(`[TemplateLoader] 未找到战利品球模板: ${filename}`);
+                }
                 continue;
             }
 
