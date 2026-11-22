@@ -87,3 +87,77 @@ export class StartState implements IState {
         }
     }
 }
+
+
+// ====================================================================================================
+// 历史代码：老客户端的配置准备与对局检测
+// 老客户端开始挂机时会临时备份 LOL 的游戏配置，再写入挂机专用的预设（分辨率 1024x768、低画质），
+// 结束时由 EndState 还原；是否已在对局中通过 2999 端口（Live Client Data API）能否访问来判断。
+// 虚幻客户端运行时改配置文件不会生效，改为直接调整窗口大小（prepareGameWindow）；
+// 它也不开 2999 端口，改为向服务端查询是否有进行中的对局（checkIfInGame）。
+// 以下代码取自改造前的版本（840efc7），已不再使用，注释保留作参考。
+// ====================================================================================================
+
+// // ---- 原 action() 中，检查是否在游戏中之前的两步 ----
+//         // 备份当前游戏配置（必须在应用 TFT 配置之前！）
+//         await this.backupGameConfig();
+//
+//         // 应用 TFT 专用配置（分辨率、画质等）- 必须成功才能继续
+//         await this.applyTFTConfig();
+//
+// // ---- 对应的方法 ----
+//     /**
+//      * 备份游戏配置（临时备份）
+//      * @description 使用临时备份目录（TempConfig），与用户手动备份（UserConfig）完全隔离。
+//      *              每次挂机启动都会覆盖上一次的临时备份，确保恢复的是最新的用户配置。
+//      */
+//     private async backupGameConfig(): Promise<void> {
+//         try {
+//             logger.info("[StartState] 正在临时备份游戏配置...");
+//             await GameConfigHelper.tempBackup();
+//             logger.info("[StartState] 游戏配置临时备份完成");
+//         } catch (error) {
+//             logger.warn("[StartState] 游戏配置临时备份失败，继续执行");
+//             if (error instanceof Error) {
+//                 logger.debug(error.message);
+//             }
+//         }
+//     }
+//
+//     /**
+//      * 应用 TFT 专用配置
+//      * @description 将预设的 TFT 配置（分辨率 1024x768、低画质等）应用到游戏
+//      *              这样可以确保截图识别的坐标准确，同时降低系统资源占用
+//      * @throws Error 如果配置应用失败，抛出错误阻止进入游戏
+//      */
+//     private async applyTFTConfig(): Promise<void> {
+//         logger.info("[StartState] 正在应用 TFT 专用配置...");
+//
+//         // 先停止上一轮可能残留的配置守护监听器
+//         GameConfigHelper.stopConfigGuard();
+//
+//         const success = await GameConfigHelper.applyTFTConfig();
+//
+//         if (!success) {
+//             // 配置应用失败，必须终止流程
+//             // 因为如果分辨率/画质不对，截图识别坐标会出错
+//             const errorMsg = "TFT 专用配置应用失败！请检查游戏配置文件是否被占用或设为只读。";
+//             logger.error(`[StartState] ${errorMsg}`);
+//             throw new Error(errorMsg);
+//         }
+//
+//         logger.info("[StartState] TFT 专用配置应用成功");
+//     }
+//
+//     /**
+//      * 检查是否已在游戏中
+//      * @returns true 表示已在游戏中
+//      */
+//     private async checkIfInGame(): Promise<boolean> {
+//         try {
+//             await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);
+//             return true;
+//         } catch {
+//             return false;
+//         }
+//     }

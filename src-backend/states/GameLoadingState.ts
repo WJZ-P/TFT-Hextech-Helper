@@ -152,3 +152,75 @@ export class GameLoadingState implements IState {
         });
     }
 }
+
+
+// ====================================================================================================
+// 历史代码：老客户端的加载完成判断
+// 老客户端每 500ms 请求一次 2999 端口的 /liveclientdata/allgamedata，请求成功即视为游戏加载完成。
+// 虚幻客户端不开 2999 端口，改为看客户端日志：InGame 之后出现 presentation_ready 即加载完成。
+// 以下代码取自改造前的版本（840efc7），已不再使用，注释保留作参考。
+// ====================================================================================================
+
+// /** 轮询间隔 (ms) */
+// const POLL_INTERVAL_MS = 500;
+//
+//     /**
+//      * 等待游戏加载完成
+//      * @param signal AbortSignal 用于取消轮询
+//      * @returns true 表示游戏已加载，false 表示被取消
+//      */
+//     private waitForGameToLoad(signal: AbortSignal): Promise<boolean> {
+//         return new Promise((resolve) => {
+//             let intervalId: NodeJS.Timeout | null = null;
+//
+//             /**
+//              * 清理函数：确保定时器被正确清除
+//              */
+//             const cleanup = () => {
+//                 if (intervalId) {
+//                     clearInterval(intervalId);
+//                     intervalId = null;
+//                 }
+//             };
+//
+//             /**
+//              * 处理 abort 事件
+//              */
+//             const onAbort = () => {
+//                 logger.info("[GameLoadingState] 收到取消信号，停止轮询");
+//                 cleanup();
+//                 resolve(false);
+//             };
+//
+//             // 监听 abort 事件，确保信号触发时能清理定时器
+//             signal.addEventListener("abort", onAbort, { once: true });
+//
+//             /**
+//              * 轮询检测游戏是否启动
+//              */
+//             const checkIfGameStart = async () => {
+//                 // 双重检查：如果已经 abort，直接返回
+//                 if (signal.aborted) {
+//                     cleanup();
+//                     return;
+//                 }
+//
+//                 try {
+//                     await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);
+//                     // 请求成功，游戏已加载
+//                     signal.removeEventListener("abort", onAbort);
+//                     cleanup();
+//                     resolve(true);
+//                 } catch {
+//                     // 请求失败，游戏仍在加载中
+//                     logger.debug("[GameLoadingState] 游戏仍在加载中...");
+//                 }
+//             };
+//
+//             // 启动轮询
+//             intervalId = setInterval(checkIfGameStart, POLL_INTERVAL_MS);
+//
+//             // 立即执行一次检测，不用等第一个间隔
+//             checkIfGameStart();
+//         });
+//     }
