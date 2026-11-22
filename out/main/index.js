@@ -13155,7 +13155,7 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-DlkIkCBc.js");
+    const ServicesModule = await import("./chunks/index-B5suJZgN.js");
     hexService = ServicesModule.hexService;
     const TftOperatorModule = await import("./chunks/TftOperator-dZ2q2E1G.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
@@ -13482,15 +13482,16 @@ export {
   UNSELLABLE_BOARD_UNITS as U,
   starGodSlot as V,
   VITE_DEV_SERVER_URL,
-  IpcChannel as W,
-  LCUManager as X,
+  LCUManager as W,
+  IpcChannel as X,
   isStandardChessMode as Y,
   LcuEventUri as Z,
   showOverlay as _,
   TFT_4_CHESS_DATA as a,
   closeOverlay as a0,
-  analyticsManager as a1,
-  AnalyticsEvent as a2,
+  GameConfigHelper as a1,
+  analyticsManager as a2,
+  AnalyticsEvent as a3,
   TFT_4_TRAIT_DATA as b,
   TFT_17_EQUIP_DATA as c,
   TFTMode as d,

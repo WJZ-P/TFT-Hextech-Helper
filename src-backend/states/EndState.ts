@@ -9,6 +9,7 @@ import { IdleState } from "./IdleState.ts";
 import { logger } from "../utils/Logger.ts";
 import { tftWindowLocator } from "../utils/TftWindowLocator.ts";
 import { strategyService } from "../services/StrategyService.ts";
+import { tftLogWatcher } from "../utils/TftLogWatcher.ts";
 
 /**
  * 结束状态类
@@ -26,6 +27,9 @@ export class EndState implements IState {
     async action(_signal: AbortSignal): Promise<IdleState> {
         // 重置策略服务状态（如果 GameRunningState 没有正常清理的话，这里兜底）
         strategyService.reset();
+
+        // 停止监听客户端日志
+        tftLogWatcher.stop();
 
         // 把游戏窗口还原成挂机开始前的大小（StartState 调整过才会有记录）
         await tftWindowLocator.restoreWindowSize();

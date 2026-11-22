@@ -7,9 +7,10 @@
 import { IState } from "./IState";
 import { logger } from "../utils/Logger.ts";
 import { LobbyState } from "./LobbyState.ts";
-import { inGameApi, InGameApiEndpoints } from "../lcu/InGameApi.ts";
+import { tftSgpApi } from "../lcu/TftSgpApi.ts";
 import { GameLoadingState } from "./GameLoadingState.ts";
 import { tftWindowLocator, TFT_TARGET_CLIENT_SIZE } from "../utils/TftWindowLocator.ts";
+import { tftLogWatcher, TftLobbyState } from "../utils/TftLogWatcher.ts";
 
 /**
  * 启动状态类
@@ -35,6 +36,9 @@ export class StartState implements IState {
 
         // 把游戏画面调整为挂机用的固定尺寸 - 必须成功才能继续
         await this.prepareGameWindow();
+
+        // 开始监听客户端日志（排队、进入对局、对局结束都靠它判断）
+        await tftLogWatcher.start();
 
         // 检查是否已经在游戏中
         const isInGame = await this.checkIfInGame();
@@ -69,14 +73,17 @@ export class StartState implements IState {
 
     /**
      * 检查是否已在游戏中
-     * @returns true 表示已在游戏中
+     * @returns true 表示有进行中的对局（包括掉线待重连）
+     * @description 虚幻客户端没有 2999 端口，改为问服务端（客户端启动时也是用这个接口决定是否重连）。
+     *              接口失败时退回到客户端日志里的大厅状态。
      */
     private async checkIfInGame(): Promise<boolean> {
         try {
-            await inGameApi.get(InGameApiEndpoints.ALL_GAME_DATA);
-            return true;
-        } catch {
-            return false;
+            return await tftSgpApi.isInGame();
+        } catch (error) {
+            const state = tftLogWatcher.lobbyState;
+            logger.warn(`[StartState] 查询对局状态失败，改用客户端日志判断（${state ?? '未知'}）: ${error instanceof Error ? error.message : error}`);
+            return state === TftLobbyState.IN_GAME || state === TftLobbyState.RECONNECT;
         }
     }
 }

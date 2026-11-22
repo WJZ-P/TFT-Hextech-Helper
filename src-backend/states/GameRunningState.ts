@@ -4,7 +4,7 @@
  * @description 游戏进行中的状态，负责：
  *              1. 启动 GameStageMonitor（阶段监视器）
  *              2. 启动 StrategyService（策略服务订阅事件）
- *              3. 监听 GAMEFLOW_PHASE 事件，等待游戏结束
+ *              3. 监听客户端日志（虚幻客户端）和 GAMEFLOW_PHASE 事件（老客户端），等待游戏结束
  *              4. 游戏结束后流转到 LobbyState 开始下一局
  * 
  * 与旧版 GameStageState 的区别：
@@ -37,6 +37,8 @@ import { ocrService } from "../tft/recognition/OcrService";
 import { tftOperator } from "../TftOperator";
 import { showOverlay, closeOverlay, sendOverlayPlayers } from "../utils/OverlayBridge";
 import { windowHelper } from "../utils/WindowHelper";
+import { tftLogWatcher, TftLobbyState } from "../utils/TftLogWatcher";
+import { StartState } from "./StartState";
 
 /** abort 信号轮询间隔 (ms)，作为事件监听的兜底 */
 const ABORT_CHECK_INTERVAL_MS = 2000;
@@ -145,6 +147,10 @@ export class GameRunningState implements IState {
             // 否则返回大厅开始下一局
             logger.info("[GameRunningState] 游戏结束，流转到 LobbyState 开始下一局");
             return new LobbyState();
+        } else if (waitResult === 'clientExit') {
+            // 对局中客户端退出（崩溃或被关闭），回到 StartState 重新检查窗口，客户端重启后会走重连
+            logger.warn("[GameRunningState] 云顶之弈客户端已退出，流转到 StartState");
+            return new StartState();
         } else if (waitResult === 'clockwork_timeout') {
             // 发条鸟模式：阶段变化超时，游戏可能卡住/无响应
             // 直接杀掉游戏进程，然后回到 LobbyState 重新开始排队
@@ -182,9 +188,15 @@ export class GameRunningState implements IState {
      * 等待游戏结束
      * @param signal AbortSignal 用于取消等待
      * @param isClockworkMode 是否为发条鸟模式（启用阶段超时机制 + isDead 轮询）
-     * @returns 'ended' 表示游戏正常结束，'interrupted' 表示被中断，'clockwork_timeout' 表示发条鸟模式超时
+     * @returns 'ended' 表示游戏正常结束，'interrupted' 表示被中断，'clockwork_timeout' 表示发条鸟模式超时，
+     *          'clientExit' 表示对局中客户端退出了
      * 
      * @description 游戏结束的完整链路：
+     * 
+     * 【虚幻客户端】
+     * LCU 看不到虚幻客户端的对局（gameflow 一直是 None），改为看客户端日志：
+     * 对局结束后客户端会离开 LobbyState[InGame]（进入结算过渡画面或直接回主界面），即视为游戏结束。
+     * 玩家阵亡本身不写日志，阵亡后点退出 / 对局打完才会离开 InGame。
      * 
      * 【普通下棋模式】
      * 1. 玩家死亡 → 触发 TFT_BATTLE_PASS 事件（此时游戏窗口还开着）
@@ -203,7 +215,7 @@ export class GameRunningState implements IState {
      * - 监听 stageChange 事件，每次收到事件重置超时计时器
      * - 如果超过 1 分钟没有收到 stageChange 事件，视为游戏卡住，返回 'clockwork_timeout'
      */
-    private waitForGameToEnd(signal: AbortSignal, isClockworkMode: boolean = false): Promise<'ended' | 'interrupted' | 'clockwork_timeout'> {
+    private waitForGameToEnd(signal: AbortSignal, isClockworkMode: boolean = false): Promise<'ended' | 'interrupted' | 'clockwork_timeout' | 'clientExit'> {
         return new Promise((resolve) => {
             let stopCheckInterval: NodeJS.Timeout | null = null;
             let stageTimeoutTimer: NodeJS.Timeout | null = null;
@@ -214,7 +226,7 @@ export class GameRunningState implements IState {
             /**
              * 安全的 resolve，防止重复调用
              */
-            const safeResolve = (value: 'ended' | 'interrupted' | 'clockwork_timeout') => {
+            const safeResolve = (value: 'ended' | 'interrupted' | 'clockwork_timeout' | 'clientExit') => {
                 if (isResolved) return;
                 isResolved = true;
                 cleanup();
@@ -227,6 +239,8 @@ export class GameRunningState implements IState {
             const cleanup = () => {
                 this.lcuManager?.off(LcuEventUri.GAMEFLOW_PHASE, onGameflowPhase);
                 this.lcuManager?.off(LcuEventUri.TFT_BATTLE_PASS, onBattlePass);
+                tftLogWatcher.off('lobbyState', onTftLobbyState);
+                tftLogWatcher.off('clientExit', onTftClientExit);
                 // 发条鸟模式：取消 stageChange 和 clockworkDead 监听
                 if (isClockworkMode) {
                     gameStageMonitor.off('stageChange', onStageChange);
@@ -351,8 +365,31 @@ export class GameRunningState implements IState {
                 }
             };
 
+            /**
+             * 虚幻客户端：大厅状态离开 InGame 即对局结束
+             */
+            const onTftLobbyState = (state: string) => {
+                if (state === TftLobbyState.IN_GAME) return;
+                logger.info(`[GameRunningState] 客户端离开对局 (${state})，准备流转到下一状态`);
+                strategyService.setGameEnded();
+                safeResolve('ended');
+            };
+
+            /**
+             * 虚幻客户端：对局中客户端退出
+             */
+            const onTftClientExit = () => {
+                logger.warn("[GameRunningState] 对局中云顶之弈客户端退出了");
+                strategyService.setGameEnded();
+                safeResolve('clientExit');
+            };
+
             // 监听 abort 事件
             signal.addEventListener("abort", onAbort, { once: true });
+
+            // 注册客户端日志监听器（虚幻客户端）
+            tftLogWatcher.on('lobbyState', onTftLobbyState);
+            tftLogWatcher.on('clientExit', onTftClientExit);
 
             // 注册 LCU 事件监听器
             this.lcuManager?.on(LcuEventUri.TFT_BATTLE_PASS, onBattlePass);
@@ -375,6 +412,12 @@ export class GameRunningState implements IState {
                     safeResolve('interrupted');
                 }
             }, ABORT_CHECK_INTERVAL_MS);
+
+            // 注册监听之前对局可能已经结束了（前面加载模板、检测人机要花几秒），补查一次当前状态
+            const currentLobbyState = tftLogWatcher.lobbyState;
+            if (currentLobbyState !== null && currentLobbyState !== TftLobbyState.IN_GAME) {
+                onTftLobbyState(currentLobbyState);
+            }
         });
     }
 
