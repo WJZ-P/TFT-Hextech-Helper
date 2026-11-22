@@ -13155,9 +13155,9 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-B5suJZgN.js");
+    const ServicesModule = await import("./chunks/index-Cb7NSw6O.js");
     hexService = ServicesModule.hexService;
-    const TftOperatorModule = await import("./chunks/TftOperator-dZ2q2E1G.js").then((n) => n.T);
+    const TftOperatorModule = await import("./chunks/TftOperator-9tvV29mj.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
     const LineupModule = await import("./chunks/index-bGCrXB73.js");
     lineupLoader = LineupModule.lineupLoader;

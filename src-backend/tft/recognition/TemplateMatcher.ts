@@ -33,6 +33,17 @@ const MATCH_THRESHOLDS = {
 } as const;
 
 /**
+ * 英雄名字模板与截图中文字宽度之比的允许范围
+ * @description 单字模板（洛、易、慎等）会在长文字里局部匹配上，比如 S18 商店里的"全1费商店"特殊卡
+ *              会被单字模板以 0.43 的分数认成"洛"。正确匹配时两者宽度基本一致（S18 实测 1.00~1.03），
+ *              局部匹配的宽度比很小（0.23~0.52），用宽度比把这类候选直接排除。
+ */
+const CHAMPION_TEXT_WIDTH_RATIO = { min: 0.8, max: 1.25 } as const;
+
+/** 二值化图像中视为"文字"的像素阈值 */
+const TEXT_PIXEL_THRESHOLD = 128;
+
+/**
  * 模板匹配器
  * @description 单例模式，提供各种模板匹配功能
  *
@@ -63,6 +74,39 @@ export class TemplateMatcher {
             TemplateMatcher.instance = new TemplateMatcher();
         }
         return TemplateMatcher.instance;
+    }
+
+    /** 英雄模板的文字宽度缓存（模板只在加载时创建，宽度不会变） */
+    private templateTextWidthCache = new WeakMap<cv.Mat, number>();
+
+    /**
+     * 计算单通道二值图中文字的水平宽度（最左到最右含文字像素的列）
+     * @returns 宽度像素数，没有文字时返回 0
+     */
+    private getTextWidth(mat: cv.Mat): number {
+        if (mat.channels() !== 1) return 0;
+        const { cols, rows, data } = mat;
+        let left = -1;
+        let right = -1;
+        for (let x = 0; x < cols; x++) {
+            for (let y = 0; y < rows; y++) {
+                if (data[y * cols + x] > TEXT_PIXEL_THRESHOLD) {
+                    if (left < 0) left = x;
+                    right = x;
+                    break;
+                }
+            }
+        }
+        return left < 0 ? 0 : right - left + 1;
+    }
+
+    private getCachedTextWidth(templateMat: cv.Mat): number {
+        let width = this.templateTextWidthCache.get(templateMat);
+        if (width === undefined) {
+            width = this.getTextWidth(templateMat);
+            this.templateTextWidthCache.set(templateMat, width);
+        }
+        return width;
     }
 
     // ========== 公共匹配方法 ==========
@@ -192,6 +236,9 @@ export class TemplateMatcher {
             return null;
         }
 
+        // 截图中文字的宽度，用来排除宽度对不上的模板
+        const targetTextWidth = this.getTextWidth(targetMat);
+
         const mask = new cv.Mat();
         const resultMat = new cv.Mat();
 
@@ -210,6 +257,14 @@ export class TemplateMatcher {
                 if (templateMat.type() !== targetMat.type()) {
                     logger.warn(`[TemplateMatcher] 通道类型不匹配: ${name} (${templateMat.type()}) vs 目标 (${targetMat.type()})`);
                     continue;
+                }
+
+                // 宽度检查：模板文字宽度和截图文字宽度差太多，说明只是局部匹配（如单字模板对长名字）
+                if (targetTextWidth > 0) {
+                    const ratio = this.getCachedTextWidth(templateMat) / targetTextWidth;
+                    if (ratio < CHAMPION_TEXT_WIDTH_RATIO.min || ratio > CHAMPION_TEXT_WIDTH_RATIO.max) {
+                        continue;
+                    }
                 }
 
                 cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
