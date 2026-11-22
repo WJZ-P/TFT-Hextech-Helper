@@ -1,4 +1,4 @@
-// S18（自然之力）棋子原始数据，由 scripts/generate_s18_champion_templates.cjs 生成，请勿手改
+// S18（自然之力）chess 原始数据，由 scripts/generate_s18_chess_data.cjs 生成，请勿手改
 // 来源: https://game.gtimg.cn/images/lol/act/img/tft/js/chess.js
 // season=2026.S18 version=16.22 数据时间=2026-11-04 16:57:45
 export const TEST_TFT_S18_CHESS = [

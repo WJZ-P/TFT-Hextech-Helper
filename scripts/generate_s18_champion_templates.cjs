@@ -3,7 +3,7 @@
  *
  * 数据来源：
  *   https://game.gtimg.cn/images/lol/act/img/tft/js/chess.js（腾讯官方云顶棋子数据，返回当前赛季）
- *   原始数据原样保存到 public/TFTInfo/S18/chess.ts
+ *   原始数据由 scripts/generate_s18_chess_data.cjs 保存到 public/TFTInfo/S18/chess.ts
  *
  * 产出：
  *   public/resources/assets/images/champion/s18/<英雄名>.png
@@ -37,7 +37,6 @@ const { createCanvas } = require('canvas');
 
 const ROOT = path.resolve(__dirname, '..');
 const CHESS_DATA_URL = 'https://game.gtimg.cn/images/lol/act/img/tft/js/chess.js';
-const RAW_DATA_FILE = path.join(ROOT, 'public/TFTInfo/S18/chess.ts');
 const OUTPUT_DIR = path.join(ROOT, 'public/resources/assets/images/champion/s18');
 
 // 校准得到的渲染参数（见文件头说明）
@@ -131,17 +130,6 @@ async function renderTemplate(text) {
 async function main() {
     const payload = JSON.parse((await download(CHESS_DATA_URL)).toString('utf8'));
     console.log(`棋子数据: season=${payload.season} version=${payload.version} time=${payload.time}，共 ${payload.data.length} 个`);
-
-    // 原始数据原样保存
-    fs.mkdirSync(path.dirname(RAW_DATA_FILE), { recursive: true });
-    const header = [
-        '// S18（自然之力）棋子原始数据，由 scripts/generate_s18_champion_templates.cjs 生成，请勿手改',
-        `// 来源: ${CHESS_DATA_URL}`,
-        `// season=${payload.season} version=${payload.version} 数据时间=${payload.time}`,
-        '',
-    ].join('\n');
-    const raw = `${header}export const TEST_TFT_S18_CHESS = ${JSON.stringify(payload.data, null, 4)}\n`;
-    fs.writeFileSync(RAW_DATA_FILE, raw.replace(/\r?\n/g, '\r\n'));
 
     // 可购买的英雄名（拉克丝各形态合并）
     const names = [...new Set(

@@ -11,12 +11,13 @@ import {TFTEquip, TraitData, TFTUnit, UNPURCHASABLE_CHESS} from "../../../src-ba
 // 赛季数据统一从 SeasonRegistry 取，不再直接用 TFTProtocol 的 switch 函数（已删除）
 import {getChessDataBySeasonId, getEquipDataBySeasonId, type SeasonId} from "../../../src-backend/TFTInfo/SeasonRegistry";
 // public 目录下的 chess.ts 仅用于获取 chessId（数字 ID）→ 用于腾讯 CDN 图片 URL
-// 注意：S16 的变量名已改成 TEST_TFT_S16_CHESS，S17 的是 TEST_TFT_S17_CHESS
+// 注意：S16 的变量名已改成 TEST_TFT_S16_CHESS，S17 的是 TEST_TFT_S17_CHESS，S18 的是 TEST_TFT_S18_CHESS
+import {TEST_TFT_S18_CHESS} from "../../../public/TFTInfo/S18/chess";
 import {TEST_TFT_S17_CHESS} from "../../../public/TFTInfo/S17/chess";
 import {TEST_TFT_S16_CHESS} from "../../../public/TFTInfo/S16/chess";
 import {TFT_4_CHESS} from "../../../public/TFTInfo/S4/chess";
-// 羁绊数据：S17 主赛季 + S4.5 回归 + S16 保留（用于历史阵容兼容）
-import {TFT_16_TRAIT_DATA, TFT_17_TRAIT_DATA, TFT_4_TRAIT_DATA} from "../../../src-backend/TFTInfo/trait.ts";
+// 羁绊数据：S18 主赛季 + S17 / S16 / S4.5（用于历史阵容兼容）
+import {TFT_16_TRAIT_DATA, TFT_17_TRAIT_DATA, TFT_18_TRAIT_DATA, TFT_4_TRAIT_DATA} from "../../../src-backend/TFTInfo/trait.ts";
 import {toast} from "../toast/toast-core.ts";
 
 // ==================== 类型定义 ====================
@@ -115,6 +116,8 @@ const TRAIT_ICON_BASE = 'https://game.gtimg.cn/images/lol/act/img/tft';
  * 英雄原画 API 基础 URL
  * 将 {chessId} 替换为英雄的 chessId 即可获取原画
  */
+// S18 在 tftstore 下还没有原画（s18/624x318 返回 404），先用头像代替
+const SPLASH_ART_BASE_S18 = AVATAR_URL_BASE;
 const SPLASH_ART_BASE_S17 = 'https://game.gtimg.cn/images/lol/tftstore/s17/624x318/{chessId}.jpg';
 const SPLASH_ART_BASE_S16 = 'https://game.gtimg.cn/images/lol/tftstore/s16/624x318/{chessId}.jpg';
 const SPLASH_ART_BASE_S4 = 'https://game.gtimg.cn/images/lol/tftstore/s4/624x318/{chessId}.jpg';
@@ -133,6 +136,8 @@ const SPLASH_ART_BASE_S4 = 'https://game.gtimg.cn/images/lol/tftstore/s4/624x318
  */
 const getPublicChessList = (season: SeasonTab): Array<{ chessId: string; displayName: string; [key: string]: any }> => {
     switch (season) {
+        case 'S18':
+            return TEST_TFT_S18_CHESS;
         case 'S17':
             return TEST_TFT_S17_CHESS;
         case 'S16':
@@ -149,6 +154,8 @@ const getPublicChessList = (season: SeasonTab): Array<{ chessId: string; display
  */
 const getSplashArtBase = (season: SeasonTab): string => {
     switch (season) {
+        case 'S18':
+            return SPLASH_ART_BASE_S18;
         case 'S17':
             return SPLASH_ART_BASE_S17;
         case 'S16':
@@ -163,6 +170,8 @@ const getSplashArtBase = (season: SeasonTab): string => {
  */
 const getTraitData = (season: SeasonTab): Record<string, TraitData> => {
     switch (season) {
+        case 'S18':
+            return TFT_18_TRAIT_DATA;
         case 'S17':
             return TFT_17_TRAIT_DATA;
         case 'S16':

@@ -319,3 +319,94 @@ export const TFT_17_TRAIT_DATA: Record<string, TraitData> = {
     "重装战士": { id: "10322", name: "重装战士", type: "classes", levels: [2, 4, 6] },
     "牧羊人": { id: "10333", name: "牧羊人", type: "classes", levels: [3, 5, 7] },
 };
+
+// <generated:S18-trait>
+// =====================================================================================
+// S18: 自然之力（虚幻客户端），由 scripts/generate_s18_chess_data.cjs 生成，请勿手改
+// 来源: https://game.gtimg.cn/images/lol/act/img/tft/js/{race,job}.js（season=2026.S18 version=16.22）
+// =====================================================================================
+export enum UnitOrigin_S18 {
+    ApexPredator = "顶级掠食者",                 // 10380 DA_18_ApexPredator
+    Battlemage = "魔岩巨兽",                    // 10381 DA_18_Battlemage
+    Blackthorn = "黑荆棘",                     // 10382 DA_18_Blackthorn
+    Blossom = "灵魂莲华",                       // 10383 DA_18_Blossom
+    Caustic = "帝王斑蝶",                       // 10385 DA_18_Caustic
+    Coven = "魔女",                           // 10386 DA_18_Coven
+    Eclipse = "日月双蚀",                       // 10388 DA_18_Eclipse
+    Elderwood = "永恒之森",                     // 10389 DA_18_Elderwood
+    Fae = "花仙子",                            // 10391 DA_18_Fae
+    Greenfather = "翠神",                     // 10392 DA_18_Greenfather
+    Inferno = "地狱火",                        // 10394 DA_18_Inferno
+    Lunar = "月蚀骑士",                         // 10396 DA_18_Lunar
+    LuxUniqueTrait = "自然之力！大元素使",           // 10397 DA_18_LuxUniqueTrait
+    MaokaiUniqueTrait = "远古树精",             // 10398 DA_18_Maokai_UniqueTrait
+    Rival = "宿敌",                           // 10400 DA_18_Rival
+    Solar = "日蚀骑士",                         // 10402 DA_18_Solar
+    Sprykin = "约德尔人和朋友",                    // 10404 DA_18_Sprykin
+    ZyraUniqueTrait = "荆棘之兴",               // 10407 DA_18_ZyraUniqueTrait
+    AluneUniqueTrait = "月华神女",              // 10408 DA_AluneUniqueTrait18
+    DravenUniqueTrait = "赏金猎人",             // 10409 DA_DravenUniqueTrait18
+    Emerald = "宝石骑士",                       // 10410 DA_Emerald18
+    FloraFatalis = "绝命花妖",                  // 10411 DA_FloraFatalis18
+    Primal = "野兽之灵",                        // 10413 DA_Primal18
+    Riftbeast = "峡谷野怪",                     // 10414 DA_Riftbeast18
+}
+
+export enum UnitClass_S18 {
+    Adaptor = "魔战士",                        // 10379 DA_18_Adaptor
+    Brawler = "斗士",                         // 10384 DA_18_Brawler
+    Defender = "护卫",                        // 10387 DA_18_Defender
+    Executioner = "裁决使",                    // 10390 DA_18_Executioner
+    Hunter = "猎人",                          // 10393 DA_18_Hunter
+    Invoker = "神谕",                         // 10395 DA_18_Invoker
+    Rapidfire = "迅捷射手",                     // 10399 DA_18_Rapidfire
+    Slayer = "狂战士",                         // 10401 DA_18_Slayer
+    Spellweaver = "法师",                     // 10403 DA_18_Spellweaver
+    Summoner = "召唤师",                       // 10405 DA_18_Summoner
+    Vanguard = "重装战士",                      // 10406 DA_18_Vanguard
+    Juggernaut = "主宰",                      // 10412 DA_Juggernaut18
+}
+
+/**
+ * S18 羁绊详细数据 Map（key 为中文名）
+ * @description levels 为空表示该羁绊没有激活节点（如"日月双蚀"）
+ */
+export const TFT_18_TRAIT_DATA: Record<string, TraitData> = {
+    "顶级掠食者": { id: "10380", name: "顶级掠食者", type: "origins", levels: [1] },
+    "魔岩巨兽": { id: "10381", name: "魔岩巨兽", type: "origins", levels: [1] },
+    "黑荆棘": { id: "10382", name: "黑荆棘", type: "origins", levels: [2, 4, 6] },
+    "灵魂莲华": { id: "10383", name: "灵魂莲华", type: "origins", levels: [3, 5, 7, 9, 11] },
+    "帝王斑蝶": { id: "10385", name: "帝王斑蝶", type: "origins", levels: [1] },
+    "魔女": { id: "10386", name: "魔女", type: "origins", levels: [3, 4, 5, 7] },
+    "日月双蚀": { id: "10388", name: "日月双蚀", type: "origins", levels: [] },
+    "永恒之森": { id: "10389", name: "永恒之森", type: "origins", levels: [3, 5, 7, 9, 11] },
+    "花仙子": { id: "10391", name: "花仙子", type: "origins", levels: [2, 4] },
+    "翠神": { id: "10392", name: "翠神", type: "origins", levels: [1] },
+    "地狱火": { id: "10394", name: "地狱火", type: "origins", levels: [2, 3, 5, 7] },
+    "月蚀骑士": { id: "10396", name: "月蚀骑士", type: "origins", levels: [2, 3, 4, 5] },
+    "自然之力！大元素使": { id: "10397", name: "自然之力！大元素使", type: "origins", levels: [1] },
+    "远古树精": { id: "10398", name: "远古树精", type: "origins", levels: [1] },
+    "宿敌": { id: "10400", name: "宿敌", type: "origins", levels: [1, 2] },
+    "日蚀骑士": { id: "10402", name: "日蚀骑士", type: "origins", levels: [3] },
+    "约德尔人和朋友": { id: "10404", name: "约德尔人和朋友", type: "origins", levels: [3, 5, 7] },
+    "荆棘之兴": { id: "10407", name: "荆棘之兴", type: "origins", levels: [1] },
+    "月华神女": { id: "10408", name: "月华神女", type: "origins", levels: [1] },
+    "赏金猎人": { id: "10409", name: "赏金猎人", type: "origins", levels: [1] },
+    "宝石骑士": { id: "10410", name: "宝石骑士", type: "origins", levels: [1] },
+    "绝命花妖": { id: "10411", name: "绝命花妖", type: "origins", levels: [1, 2] },
+    "野兽之灵": { id: "10413", name: "野兽之灵", type: "origins", levels: [2, 4] },
+    "峡谷野怪": { id: "10414", name: "峡谷野怪", type: "origins", levels: [3, 5, 7, 10] },
+    "魔战士": { id: "10379", name: "魔战士", type: "classes", levels: [2, 3, 4] },
+    "斗士": { id: "10384", name: "斗士", type: "classes", levels: [2, 4, 6] },
+    "护卫": { id: "10387", name: "护卫", type: "classes", levels: [2, 4, 6] },
+    "裁决使": { id: "10390", name: "裁决使", type: "classes", levels: [2, 3, 4] },
+    "猎人": { id: "10393", name: "猎人", type: "classes", levels: [2, 3, 4, 5] },
+    "神谕": { id: "10395", name: "神谕", type: "classes", levels: [2, 3, 4, 5] },
+    "迅捷射手": { id: "10399", name: "迅捷射手", type: "classes", levels: [2, 3, 4, 5] },
+    "狂战士": { id: "10401", name: "狂战士", type: "classes", levels: [2, 4, 6] },
+    "法师": { id: "10403", name: "法师", type: "classes", levels: [2, 4, 6] },
+    "召唤师": { id: "10405", name: "召唤师", type: "classes", levels: [2, 3] },
+    "重装战士": { id: "10406", name: "重装战士", type: "classes", levels: [2, 4, 6] },
+    "主宰": { id: "10412", name: "主宰", type: "classes", levels: [2, 4, 6] },
+};
+// </generated:S18-trait>

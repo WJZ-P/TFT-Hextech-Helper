@@ -1,4 +1,4 @@
-import {UnitClass_S16, UnitOrigin_S16, UnitClass_S4_5, UnitOrigin_S4_5, UnitClass_S17, UnitOrigin_S17} from "./trait.ts";
+import {UnitClass_S16, UnitOrigin_S16, UnitClass_S4_5, UnitOrigin_S4_5, UnitClass_S17, UnitOrigin_S17, UnitClass_S18, UnitOrigin_S18} from "./trait.ts";
 import {TFTUnit} from "../TFTProtocol.ts";
 
 export const TFT_SPECIAL_CHESS = {
@@ -2226,3 +2226,621 @@ export const _TFT_17_CHESS_DATA = {
     //     attackRange: 1
     // },
 } satisfies Record<string, TFTUnit>;
+
+// <generated:S18-chess>
+/**
+ * 云顶十八赛季（自然之力，虚幻客户端）的棋子数据
+ * @description 由 scripts/generate_s18_chess_data.cjs 生成，请勿手改（重跑会整段替换）。
+ *              来源：https://game.gtimg.cn/images/lol/act/img/tft/js/chess.js（season=2026.S18 version=16.22）
+ *              englishId 为 S18 资源名；拉克丝只收基础形态（羁绊形态在商店里同样显示为"拉克丝"）。
+ */
+export const _TFT_18_CHESS_DATA = {
+    //  特殊棋子（魔像、锻造器、训练假人等）跨赛季共用
+    ...TFT_SPECIAL_CHESS,
+
+    // ====================================================================
+    // 1 费棋子 (共 14 个)
+    // ====================================================================
+    "阿卡丽": {
+        displayName: "阿卡丽",
+        englishId: "DA_18_Akali_AD",
+        price: 1,
+        traits: [UnitOrigin_S18.Inferno, UnitClass_S18.Adaptor, UnitClass_S18.Slayer],
+        origins: [UnitOrigin_S18.Inferno],
+        classes: [UnitClass_S18.Adaptor, UnitClass_S18.Slayer],
+        attackRange: 1
+    },
+    "卡蜜尔": {
+        displayName: "卡蜜尔",
+        englishId: "DA_18_Camille",
+        price: 1,
+        traits: [UnitOrigin_S18.Coven, UnitClass_S18.Slayer],
+        origins: [UnitOrigin_S18.Coven],
+        classes: [UnitClass_S18.Slayer],
+        attackRange: 1
+    },
+    "可酷伯": {
+        displayName: "可酷伯",
+        englishId: "DA_18_Kobuko",
+        price: 1,
+        traits: [UnitOrigin_S18.Sprykin, UnitClass_S18.Brawler],
+        origins: [UnitOrigin_S18.Sprykin],
+        classes: [UnitClass_S18.Brawler],
+        attackRange: 1
+    },
+    "蕾欧娜": {
+        displayName: "蕾欧娜",
+        englishId: "DA_18_Leona",
+        price: 1,
+        traits: [UnitOrigin_S18.Solar, UnitClass_S18.Defender],
+        origins: [UnitOrigin_S18.Solar],
+        classes: [UnitClass_S18.Defender],
+        attackRange: 1
+    },
+    "奥恩": {
+        displayName: "奥恩",
+        englishId: "DA_18_Ornn",
+        price: 1,
+        traits: [UnitOrigin_S18.Elderwood, UnitClass_S18.Defender],
+        origins: [UnitOrigin_S18.Elderwood],
+        classes: [UnitClass_S18.Defender],
+        attackRange: 1
+    },
+    "洛": {
+        displayName: "洛",
+        englishId: "DA_18_Rakan",
+        price: 1,
+        traits: [UnitOrigin_S18.Fae, UnitClass_S18.Juggernaut, UnitClass_S18.Vanguard],
+        origins: [UnitOrigin_S18.Fae],
+        classes: [UnitClass_S18.Juggernaut, UnitClass_S18.Vanguard],
+        attackRange: 1
+    },
+    "雷克塞": {
+        displayName: "雷克塞",
+        englishId: "DA_18_RekSai",
+        price: 1,
+        traits: [UnitOrigin_S18.Blackthorn, UnitClass_S18.Brawler],
+        origins: [UnitOrigin_S18.Blackthorn],
+        classes: [UnitClass_S18.Brawler],
+        attackRange: 1
+    },
+    "苍蓝哨戒": {
+        displayName: "苍蓝哨戒",
+        englishId: "DA_18_Sentry",
+        price: 1,
+        traits: [UnitOrigin_S18.Riftbeast, UnitClass_S18.Invoker],
+        origins: [UnitOrigin_S18.Riftbeast],
+        classes: [UnitClass_S18.Invoker],
+        attackRange: 4
+    },
+    "韦鲁斯": {
+        displayName: "韦鲁斯",
+        englishId: "DA_18_Varus",
+        price: 1,
+        traits: [UnitOrigin_S18.Inferno, UnitClass_S18.Rapidfire],
+        origins: [UnitOrigin_S18.Inferno],
+        classes: [UnitClass_S18.Rapidfire],
+        attackRange: 4
+    },
+    "维迦": {
+        displayName: "维迦",
+        englishId: "DA_18_Veigar",
+        price: 1,
+        traits: [UnitOrigin_S18.Blackthorn, UnitOrigin_S18.Sprykin, UnitClass_S18.Spellweaver],
+        origins: [UnitOrigin_S18.Blackthorn, UnitOrigin_S18.Sprykin],
+        classes: [UnitClass_S18.Spellweaver],
+        attackRange: 4
+    },
+    "霞": {
+        displayName: "霞",
+        englishId: "DA_18_Xayah",
+        price: 1,
+        traits: [UnitOrigin_S18.Elderwood, UnitOrigin_S18.Fae, UnitClass_S18.Rapidfire],
+        origins: [UnitOrigin_S18.Elderwood, UnitOrigin_S18.Fae],
+        classes: [UnitClass_S18.Rapidfire],
+        attackRange: 4
+    },
+    "约里克": {
+        displayName: "约里克",
+        englishId: "DA_18_Yorick",
+        price: 1,
+        traits: [UnitOrigin_S18.Blossom, UnitClass_S18.Juggernaut, UnitClass_S18.Summoner],
+        origins: [UnitOrigin_S18.Blossom],
+        classes: [UnitClass_S18.Juggernaut, UnitClass_S18.Summoner],
+        attackRange: 1
+    },
+    "绯红树怪": {
+        displayName: "绯红树怪",
+        englishId: "DA_Cinderling18",
+        price: 1,
+        traits: [UnitOrigin_S18.Riftbeast, UnitClass_S18.Hunter],
+        origins: [UnitOrigin_S18.Riftbeast],
+        classes: [UnitClass_S18.Hunter],
+        attackRange: 4
+    },
+    "卡尔玛": {
+        displayName: "卡尔玛",
+        englishId: "DA_Karma18",
+        price: 1,
+        traits: [UnitOrigin_S18.Blossom, UnitClass_S18.Spellweaver],
+        origins: [UnitOrigin_S18.Blossom],
+        classes: [UnitClass_S18.Spellweaver],
+        attackRange: 4
+    },
+
+    // ====================================================================
+    // 2 费棋子 (共 13 个)
+    // ====================================================================
+    "阿利斯塔": {
+        displayName: "阿利斯塔",
+        englishId: "DA_18_Alistar",
+        price: 2,
+        traits: [UnitOrigin_S18.Elderwood, UnitClass_S18.Brawler],
+        origins: [UnitOrigin_S18.Elderwood],
+        classes: [UnitClass_S18.Brawler],
+        attackRange: 1
+    },
+    "凯特琳": {
+        displayName: "凯特琳",
+        englishId: "DA_18_Caitlyn",
+        price: 2,
+        traits: [UnitOrigin_S18.Coven, UnitClass_S18.Hunter],
+        origins: [UnitOrigin_S18.Coven],
+        classes: [UnitClass_S18.Hunter],
+        attackRange: 4
+    },
+    "伊莉丝": {
+        displayName: "伊莉丝",
+        englishId: "DA_18_Elise",
+        price: 2,
+        traits: [UnitOrigin_S18.Coven, UnitClass_S18.Vanguard],
+        origins: [UnitOrigin_S18.Coven],
+        classes: [UnitClass_S18.Vanguard],
+        attackRange: 1
+    },
+    "凯尔": {
+        displayName: "凯尔",
+        englishId: "DA_18_Kayle",
+        price: 2,
+        traits: [UnitOrigin_S18.Solar, UnitClass_S18.Rapidfire],
+        origins: [UnitOrigin_S18.Solar],
+        classes: [UnitClass_S18.Rapidfire],
+        attackRange: 4
+    },
+    "乐芙兰": {
+        displayName: "乐芙兰",
+        englishId: "DA_18_LeBlanc",
+        price: 2,
+        traits: [UnitOrigin_S18.Elderwood, UnitClass_S18.Spellweaver],
+        origins: [UnitOrigin_S18.Elderwood],
+        classes: [UnitClass_S18.Spellweaver],
+        attackRange: 4
+    },
+    "瑟庄妮": {
+        displayName: "瑟庄妮",
+        englishId: "DA_18_Sejuani",
+        price: 2,
+        traits: [UnitOrigin_S18.Solar, UnitClass_S18.Juggernaut],
+        origins: [UnitOrigin_S18.Solar],
+        classes: [UnitClass_S18.Juggernaut],
+        attackRange: 1
+    },
+    "慎": {
+        displayName: "慎",
+        englishId: "DA_18_Shen",
+        price: 2,
+        traits: [UnitOrigin_S18.Inferno, UnitClass_S18.Defender],
+        origins: [UnitOrigin_S18.Inferno],
+        classes: [UnitClass_S18.Defender],
+        attackRange: 1
+    },
+    "提莫": {
+        displayName: "提莫",
+        englishId: "DA_18_Teemo",
+        price: 2,
+        traits: [UnitOrigin_S18.Sprykin, UnitClass_S18.Invoker],
+        origins: [UnitOrigin_S18.Sprykin],
+        classes: [UnitClass_S18.Invoker],
+        attackRange: 4
+    },
+    "沃里克": {
+        displayName: "沃里克",
+        englishId: "DA_18_Warwick",
+        price: 2,
+        traits: [UnitOrigin_S18.Blackthorn, UnitClass_S18.Slayer],
+        origins: [UnitOrigin_S18.Blackthorn],
+        classes: [UnitClass_S18.Slayer],
+        attackRange: 1
+    },
+    "芸阿娜": {
+        displayName: "芸阿娜",
+        englishId: "DA_18_Yunara",
+        price: 2,
+        traits: [UnitOrigin_S18.Blossom, UnitClass_S18.Executioner],
+        origins: [UnitOrigin_S18.Blossom],
+        classes: [UnitClass_S18.Executioner],
+        attackRange: 4
+    },
+    "魔沼蛙": {
+        displayName: "魔沼蛙",
+        englishId: "DA_Gromp18_AP",
+        price: 2,
+        traits: [UnitOrigin_S18.Riftbeast, UnitClass_S18.Adaptor],
+        origins: [UnitOrigin_S18.Riftbeast],
+        classes: [UnitClass_S18.Adaptor],
+        attackRange: 4
+    },
+    "暗影狼": {
+        displayName: "暗影狼",
+        englishId: "DA_Murkwolf18",
+        price: 2,
+        traits: [UnitOrigin_S18.Riftbeast, UnitClass_S18.Slayer],
+        origins: [UnitOrigin_S18.Riftbeast],
+        classes: [UnitClass_S18.Slayer],
+        attackRange: 1
+    },
+    "峡谷迅捷蟹": {
+        displayName: "峡谷迅捷蟹",
+        englishId: "DA_Scuttlecrab18",
+        price: 2,
+        traits: [UnitOrigin_S18.Riftbeast, UnitClass_S18.Juggernaut],
+        origins: [UnitOrigin_S18.Riftbeast],
+        classes: [UnitClass_S18.Juggernaut],
+        attackRange: 1
+    },
+
+    // ====================================================================
+    // 3 费棋子 (共 14 个)
+    // ====================================================================
+    "阿兹尔": {
+        displayName: "阿兹尔",
+        englishId: "DA_18_Azir",
+        price: 3,
+        traits: [UnitOrigin_S18.Blackthorn, UnitClass_S18.Executioner, UnitClass_S18.Summoner],
+        origins: [UnitOrigin_S18.Blackthorn],
+        classes: [UnitClass_S18.Executioner, UnitClass_S18.Summoner],
+        attackRange: 4
+    },
+    "卡西奥佩娅": {
+        displayName: "卡西奥佩娅",
+        englishId: "DA_18_Cassiopeia",
+        price: 3,
+        traits: [UnitOrigin_S18.Coven, UnitClass_S18.Spellweaver],
+        origins: [UnitOrigin_S18.Coven],
+        classes: [UnitClass_S18.Spellweaver],
+        attackRange: 4
+    },
+    "黛安娜": {
+        displayName: "黛安娜",
+        englishId: "DA_18_Diana",
+        price: 3,
+        traits: [UnitOrigin_S18.Lunar, UnitClass_S18.Slayer, UnitClass_S18.Vanguard],
+        origins: [UnitOrigin_S18.Lunar],
+        classes: [UnitClass_S18.Slayer, UnitClass_S18.Vanguard],
+        attackRange: 1
+    },
+    "赫卡里姆": {
+        displayName: "赫卡里姆",
+        englishId: "DA_18_Hecarim",
+        price: 3,
+        traits: [UnitOrigin_S18.Elderwood, UnitClass_S18.Vanguard],
+        origins: [UnitOrigin_S18.Elderwood],
+        classes: [UnitClass_S18.Vanguard],
+        attackRange: 1
+    },
+    "卡兹克": {
+        displayName: "卡兹克",
+        englishId: "DA_18_KhaZix",
+        price: 3,
+        traits: [UnitOrigin_S18.Rival],
+        origins: [UnitOrigin_S18.Rival],
+        classes: [],
+        attackRange: 1
+    },
+    "易": {
+        displayName: "易",
+        englishId: "DA_18_MasterYi_AD",
+        price: 3,
+        traits: [UnitOrigin_S18.Blossom, UnitClass_S18.Adaptor],
+        origins: [UnitOrigin_S18.Blossom],
+        classes: [UnitClass_S18.Adaptor],
+        attackRange: 1
+    },
+    "拉莫斯": {
+        displayName: "拉莫斯",
+        englishId: "DA_18_Rammus",
+        price: 3,
+        traits: [UnitOrigin_S18.Sprykin, UnitClass_S18.Defender],
+        origins: [UnitOrigin_S18.Sprykin],
+        classes: [UnitClass_S18.Defender],
+        attackRange: 1
+    },
+    "雷恩加尔": {
+        displayName: "雷恩加尔",
+        englishId: "DA_18_Rengar",
+        price: 3,
+        traits: [UnitOrigin_S18.Rival],
+        origins: [UnitOrigin_S18.Rival],
+        classes: [],
+        attackRange: 1
+    },
+    "崔丝塔娜": {
+        displayName: "崔丝塔娜",
+        englishId: "DA_18_Tristana",
+        price: 3,
+        traits: [UnitOrigin_S18.Fae, UnitOrigin_S18.Sprykin, UnitClass_S18.Hunter],
+        origins: [UnitOrigin_S18.Fae, UnitOrigin_S18.Sprykin],
+        classes: [UnitClass_S18.Hunter],
+        attackRange: 4
+    },
+    "深红锋喙鸟": {
+        displayName: "深红锋喙鸟",
+        englishId: "DA_CrimsonRaptor18",
+        price: 3,
+        traits: [UnitOrigin_S18.Riftbeast, UnitClass_S18.Summoner, UnitClass_S18.Rapidfire],
+        origins: [UnitOrigin_S18.Riftbeast],
+        classes: [UnitClass_S18.Summoner, UnitClass_S18.Rapidfire],
+        attackRange: 4
+    },
+    "费德提克": {
+        displayName: "费德提克",
+        englishId: "DA_Fiddlesticks18",
+        price: 3,
+        traits: [UnitOrigin_S18.FloraFatalis, UnitClass_S18.Defender, UnitClass_S18.Spellweaver],
+        origins: [UnitOrigin_S18.FloraFatalis],
+        classes: [UnitClass_S18.Defender, UnitClass_S18.Spellweaver],
+        attackRange: 1
+    },
+    "克格莫": {
+        displayName: "克格莫",
+        englishId: "DA_KogMaw18_AD",
+        price: 3,
+        traits: [UnitOrigin_S18.Caustic, UnitClass_S18.Adaptor, UnitClass_S18.Invoker],
+        origins: [UnitOrigin_S18.Caustic],
+        classes: [UnitClass_S18.Adaptor, UnitClass_S18.Invoker],
+        attackRange: 4
+    },
+    "远古石甲虫": {
+        displayName: "远古石甲虫",
+        englishId: "DA_Krug18",
+        price: 3,
+        traits: [UnitOrigin_S18.Riftbeast, UnitClass_S18.Brawler],
+        origins: [UnitOrigin_S18.Riftbeast],
+        classes: [UnitClass_S18.Brawler],
+        attackRange: 1
+    },
+    "蔚": {
+        displayName: "蔚",
+        englishId: "DA_Vi18",
+        price: 3,
+        traits: [UnitOrigin_S18.Primal, UnitClass_S18.Juggernaut],
+        origins: [UnitOrigin_S18.Primal],
+        classes: [UnitClass_S18.Juggernaut],
+        attackRange: 1
+    },
+
+    // ====================================================================
+    // 4 费棋子 (共 14 个)
+    // ====================================================================
+    "阿狸": {
+        displayName: "阿狸",
+        englishId: "DA_18_Ahri",
+        price: 4,
+        traits: [UnitOrigin_S18.Blossom, UnitClass_S18.Spellweaver],
+        origins: [UnitOrigin_S18.Blossom],
+        classes: [UnitClass_S18.Spellweaver],
+        attackRange: 4
+    },
+    "厄斐琉斯": {
+        displayName: "厄斐琉斯",
+        englishId: "DA_18_Aphelios",
+        price: 4,
+        traits: [UnitOrigin_S18.Lunar, UnitClass_S18.Rapidfire],
+        origins: [UnitOrigin_S18.Lunar],
+        classes: [UnitClass_S18.Rapidfire],
+        attackRange: 4
+    },
+    "伊泽瑞尔": {
+        displayName: "伊泽瑞尔",
+        englishId: "DA_18_Ezreal",
+        price: 4,
+        traits: [UnitOrigin_S18.Elderwood, UnitClass_S18.Executioner],
+        origins: [UnitOrigin_S18.Elderwood],
+        classes: [UnitClass_S18.Executioner],
+        attackRange: 4
+    },
+    "莉莉娅": {
+        displayName: "莉莉娅",
+        englishId: "DA_18_Lillia",
+        price: 4,
+        traits: [UnitOrigin_S18.Fae, UnitClass_S18.Defender],
+        origins: [UnitOrigin_S18.Fae],
+        classes: [UnitClass_S18.Defender],
+        attackRange: 1
+    },
+    "墨菲特": {
+        displayName: "墨菲特",
+        englishId: "DA_18_Malphite",
+        price: 4,
+        traits: [UnitOrigin_S18.Blackthorn, UnitOrigin_S18.Battlemage],
+        origins: [UnitOrigin_S18.Blackthorn, UnitOrigin_S18.Battlemage],
+        classes: [],
+        attackRange: 1
+    },
+    "莫甘娜": {
+        displayName: "莫甘娜",
+        englishId: "DA_18_Morgana",
+        price: 4,
+        traits: [UnitOrigin_S18.Coven, UnitClass_S18.Invoker],
+        origins: [UnitOrigin_S18.Coven],
+        classes: [UnitClass_S18.Invoker],
+        attackRange: 2
+    },
+    "瑟提": {
+        displayName: "瑟提",
+        englishId: "DA_18_Sett",
+        price: 4,
+        traits: [UnitOrigin_S18.Blossom, UnitClass_S18.Brawler],
+        origins: [UnitOrigin_S18.Blossom],
+        classes: [UnitClass_S18.Brawler],
+        attackRange: 1
+    },
+    "希维尔": {
+        displayName: "希维尔",
+        englishId: "DA_18_Sivir",
+        price: 4,
+        traits: [UnitOrigin_S18.Primal, UnitClass_S18.Hunter],
+        origins: [UnitOrigin_S18.Primal],
+        classes: [UnitClass_S18.Hunter],
+        attackRange: 4
+    },
+    "索拉卡": {
+        displayName: "索拉卡",
+        englishId: "DA_18_Soraka",
+        price: 4,
+        traits: [UnitOrigin_S18.FloraFatalis, UnitClass_S18.Executioner],
+        origins: [UnitOrigin_S18.FloraFatalis],
+        classes: [UnitClass_S18.Executioner],
+        attackRange: 4
+    },
+    "婕拉": {
+        displayName: "婕拉",
+        englishId: "DA_18_Zyra",
+        price: 4,
+        traits: [UnitOrigin_S18.ZyraUniqueTrait, UnitClass_S18.Summoner],
+        origins: [UnitOrigin_S18.ZyraUniqueTrait],
+        classes: [UnitClass_S18.Summoner],
+        attackRange: 4
+    },
+    "阿木木": {
+        displayName: "阿木木",
+        englishId: "DA_Amumu18",
+        price: 4,
+        traits: [UnitOrigin_S18.Inferno, UnitClass_S18.Juggernaut],
+        origins: [UnitOrigin_S18.Inferno],
+        classes: [UnitClass_S18.Juggernaut],
+        attackRange: 1
+    },
+    "绯红印记树怪": {
+        displayName: "绯红印记树怪",
+        englishId: "DA_Brambleback18",
+        price: 4,
+        traits: [UnitOrigin_S18.Riftbeast, UnitClass_S18.Slayer],
+        origins: [UnitOrigin_S18.Riftbeast],
+        classes: [UnitClass_S18.Slayer],
+        attackRange: 1
+    },
+    "奈德丽": {
+        displayName: "奈德丽",
+        englishId: "DA_Nidalee18_AP",
+        price: 4,
+        traits: [UnitOrigin_S18.Primal, UnitClass_S18.Adaptor],
+        origins: [UnitOrigin_S18.Primal],
+        classes: [UnitClass_S18.Adaptor],
+        attackRange: 1
+    },
+    "苍蓝雕纹魔像": {
+        displayName: "苍蓝雕纹魔像",
+        englishId: "DA_Sentinel18",
+        price: 4,
+        traits: [UnitOrigin_S18.Riftbeast, UnitClass_S18.Vanguard, UnitClass_S18.Invoker],
+        origins: [UnitOrigin_S18.Riftbeast],
+        classes: [UnitClass_S18.Vanguard, UnitClass_S18.Invoker],
+        attackRange: 1
+    },
+
+    // ====================================================================
+    // 5 费棋子 (共 10 个)
+    // ====================================================================
+    "拉露恩": {
+        displayName: "拉露恩",
+        englishId: "DA_18_Alune",
+        price: 5,
+        traits: [UnitOrigin_S18.AluneUniqueTrait, UnitOrigin_S18.Lunar, UnitClass_S18.Spellweaver],
+        origins: [UnitOrigin_S18.AluneUniqueTrait, UnitOrigin_S18.Lunar],
+        classes: [UnitClass_S18.Spellweaver],
+        attackRange: 4
+    },
+    "艾希": {
+        displayName: "艾希",
+        englishId: "DA_18_Ashe",
+        price: 5,
+        traits: [UnitOrigin_S18.Blossom, UnitClass_S18.Hunter],
+        origins: [UnitOrigin_S18.Blossom],
+        classes: [UnitClass_S18.Hunter],
+        attackRange: 6
+    },
+    "远古巨龙": {
+        displayName: "远古巨龙",
+        englishId: "DA_18_ElderDragon",
+        price: 5,
+        traits: [UnitOrigin_S18.ApexPredator, UnitOrigin_S18.Riftbeast],
+        origins: [UnitOrigin_S18.ApexPredator, UnitOrigin_S18.Riftbeast],
+        classes: [],
+        attackRange: 2
+    },
+    "纳尔": {
+        displayName: "纳尔",
+        englishId: "DA_18_GnarSmall",
+        price: 5,
+        traits: [UnitOrigin_S18.Elderwood, UnitOrigin_S18.Sprykin, UnitClass_S18.Brawler],
+        origins: [UnitOrigin_S18.Elderwood, UnitOrigin_S18.Sprykin],
+        classes: [UnitClass_S18.Brawler],
+        attackRange: 2
+    },
+    "艾翁": {
+        displayName: "艾翁",
+        englishId: "DA_18_Ivern",
+        price: 5,
+        traits: [UnitOrigin_S18.Greenfather],
+        origins: [UnitOrigin_S18.Greenfather],
+        classes: [],
+        attackRange: 3
+    },
+    "凯南": {
+        displayName: "凯南",
+        englishId: "DA_18_Kennen",
+        price: 5,
+        traits: [UnitOrigin_S18.Inferno, UnitClass_S18.Executioner],
+        origins: [UnitOrigin_S18.Inferno],
+        classes: [UnitClass_S18.Executioner],
+        attackRange: 2
+    },
+    "茂凯": {
+        displayName: "茂凯",
+        englishId: "DA_18_Maokai",
+        price: 5,
+        traits: [UnitOrigin_S18.MaokaiUniqueTrait, UnitClass_S18.Juggernaut],
+        origins: [UnitOrigin_S18.MaokaiUniqueTrait],
+        classes: [UnitClass_S18.Juggernaut],
+        attackRange: 1
+    },
+    "德莱文": {
+        displayName: "德莱文",
+        englishId: "DA_Draven18",
+        price: 5,
+        traits: [UnitOrigin_S18.DravenUniqueTrait],
+        origins: [UnitOrigin_S18.DravenUniqueTrait],
+        classes: [],
+        attackRange: 6
+    },
+    "拉克丝": {
+        displayName: "拉克丝",
+        englishId: "DA_Lux18_Base",
+        price: 5,
+        traits: [UnitOrigin_S18.LuxUniqueTrait],
+        origins: [UnitOrigin_S18.LuxUniqueTrait],
+        classes: [],
+        attackRange: 6
+    },
+    "塔里克": {
+        displayName: "塔里克",
+        englishId: "DA_Taric18",
+        price: 5,
+        traits: [UnitOrigin_S18.Emerald, UnitClass_S18.Vanguard],
+        origins: [UnitOrigin_S18.Emerald],
+        classes: [UnitClass_S18.Vanguard],
+        attackRange: 1
+    },
+} satisfies Record<string, TFTUnit>;
+// </generated:S18-chess>

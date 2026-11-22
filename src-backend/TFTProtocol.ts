@@ -1,7 +1,7 @@
 //  定义一下棋子相关的一些协议，包含棋子单位信息，各种位置信息和约定各种枚举值
 
 import {_TFT_16_EQUIP_DATA, _TFT_4_EQUIP_DATA, _TFT_17_EQUIP_DATA, _TFT_18_EQUIP_DATA} from "./TFTInfo/equip.ts";
-import {_TFT_16_CHESS_DATA, _TFT_4_CHESS_DATA, _TFT_17_CHESS_DATA, UNPURCHASABLE_CHESS} from "./TFTInfo/chess.ts";
+import {_TFT_16_CHESS_DATA, _TFT_4_CHESS_DATA, _TFT_17_CHESS_DATA, _TFT_18_CHESS_DATA, UNPURCHASABLE_CHESS} from "./TFTInfo/chess.ts";
 
 /**
  * 游戏阶段的具体类型
@@ -567,6 +567,9 @@ export const TFT_16_CHESS_DATA: Record<keyof typeof _TFT_16_CHESS_DATA, TFTUnit>
 /** S17 星神赛季棋子数据（当前主赛季） */
 export const TFT_17_CHESS_DATA: Record<keyof typeof _TFT_17_CHESS_DATA, TFTUnit> = _TFT_17_CHESS_DATA;
 
+/** S18 自然之力赛季棋子数据（虚幻客户端，当前主赛季） */
+export const TFT_18_CHESS_DATA: Record<keyof typeof _TFT_18_CHESS_DATA, TFTUnit> = _TFT_18_CHESS_DATA;
+
 /** S4 瑞兽闹新春赛季棋子数据（含特殊棋子） */
 export const TFT_4_CHESS_DATA: Record<keyof typeof _TFT_4_CHESS_DATA, TFTUnit> = _TFT_4_CHESS_DATA;
 
@@ -601,9 +604,11 @@ export const TFT_4_EQUIP_DATA: Record<keyof typeof _TFT_4_EQUIP_DATA, TFTEquip> 
 // ==========================================
 
 // 合并所有赛季的棋子名称为联合类型，确保任何赛季的棋子名都能通过类型检查
-// 把 S17 放最前面——它是当前主赛季，TS 提示时会优先匹配
-export type ChampionKey = keyof typeof TFT_17_CHESS_DATA | keyof typeof TFT_16_CHESS_DATA | keyof typeof TFT_4_CHESS_DATA;
-export type ChampionEnglishId = typeof _TFT_17_CHESS_DATA[keyof typeof _TFT_17_CHESS_DATA]['englishId'];
+// 把 S18 放最前面——它是当前主赛季，TS 提示时会优先匹配
+export type ChampionKey = keyof typeof TFT_18_CHESS_DATA | keyof typeof TFT_17_CHESS_DATA | keyof typeof TFT_16_CHESS_DATA | keyof typeof TFT_4_CHESS_DATA;
+export type ChampionEnglishId =
+    | typeof _TFT_18_CHESS_DATA[keyof typeof _TFT_18_CHESS_DATA]['englishId']
+    | typeof _TFT_17_CHESS_DATA[keyof typeof _TFT_17_CHESS_DATA]['englishId'];
 export type EquipKey = keyof typeof TFT_17_EQUIP_DATA | keyof typeof TFT_18_EQUIP_DATA | keyof typeof TFT_16_EQUIP_DATA | keyof typeof TFT_4_EQUIP_DATA;
 
 // ==========================================
@@ -617,7 +622,7 @@ export type EquipKey = keyof typeof TFT_17_EQUIP_DATA | keyof typeof TFT_18_EQUI
 export const CHAMPION_EN_TO_CN = {} as Record<ChampionEnglishId, ChampionKey>;
 
 // 自动从所有赛季的棋子数据生成英文到中文的映射
-// 注：如果不同赛季有同英文 ID 的英雄（极少见），后注册的会覆盖前面的，因此把当前赛季 S17 放最后
+// 注：如果不同赛季有同英文 ID 的英雄（极少见），后注册的会覆盖前面的，因此把当前赛季 S18 放最后
 for (const [cnName, champion] of Object.entries(TFT_16_CHESS_DATA)) {
     if (champion.englishId) {
         CHAMPION_EN_TO_CN[champion.englishId as ChampionEnglishId] = cnName as ChampionKey;
@@ -633,6 +638,11 @@ for (const [cnName, champion] of Object.entries(TFT_17_CHESS_DATA)) {
         CHAMPION_EN_TO_CN[champion.englishId as ChampionEnglishId] = cnName as ChampionKey;
     }
 }
+for (const [cnName, champion] of Object.entries(TFT_18_CHESS_DATA)) {
+    if (champion.englishId) {
+        CHAMPION_EN_TO_CN[champion.englishId as ChampionEnglishId] = cnName as ChampionKey;
+    }
+}
 
 
 /**
@@ -644,11 +654,13 @@ for (const [cnName, champion] of Object.entries(TFT_17_CHESS_DATA)) {
  */
 export const EQUIP_EN_TO_CN: Record<string, EquipKey> = {};
 
-// 只写 S17 的装备，S16已经没有了。
-for (const [cnName, equip] of Object.entries(TFT_17_EQUIP_DATA)) {
-    const englishNames = equip.englishName.split(',');
-    for (const enName of englishNames) {
-        EQUIP_EN_TO_CN[enName.trim()] = cnName as EquipKey;
+// 只写 S17 和当前主赛季 S18 的装备（S18 后写，同名时以 S18 为准），S16 已经没有了。
+for (const equipData of [TFT_17_EQUIP_DATA, TFT_18_EQUIP_DATA]) {
+    for (const [cnName, equip] of Object.entries(equipData)) {
+        const englishNames = equip.englishName.split(',');
+        for (const enName of englishNames) {
+            EQUIP_EN_TO_CN[enName.trim()] = cnName as EquipKey;
+        }
     }
 }
 

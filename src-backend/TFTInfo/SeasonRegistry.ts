@@ -25,6 +25,7 @@ import {
     TFT_4_CHESS_DATA,
     TFT_16_CHESS_DATA,
     TFT_17_CHESS_DATA,
+    TFT_18_CHESS_DATA,
     TFT_4_EQUIP_DATA,
     TFT_16_EQUIP_DATA,
     TFT_17_EQUIP_DATA,
@@ -38,11 +39,13 @@ import {
     _TFT_4_CHESS_DATA,
     _TFT_16_CHESS_DATA,
     _TFT_17_CHESS_DATA,
+    _TFT_18_CHESS_DATA,
 } from "./chess.ts";
 import {
     TFT_4_TRAIT_DATA,
     TFT_16_TRAIT_DATA,
     TFT_17_TRAIT_DATA,
+    TFT_18_TRAIT_DATA,
 } from "./trait.ts";
 import { TFTMode } from "../TFTProtocol.ts";
 
@@ -57,25 +60,25 @@ import { TFTMode } from "../TFTProtocol.ts";
  *   - 每个 ID 对应 chess.ts / equip.ts / trait.ts 里的一组 _TFT_xx_XXX_DATA 常量
  *   - 也对应 public/resources/assets/images/champion/sxx 下的模板目录
  */
-export type SeasonId = 'S4' | 'S16' | 'S17';
+export type SeasonId = 'S4' | 'S16' | 'S17' | 'S18';
 
 /**
  * 🌟 当前主赛季标识
  *
  * 这是整个项目的"单一数据源"——换赛季时只改这一行：
- *   - 发版前把 'S17' 改成 'S18'
+ *   - S18（自然之力，虚幻客户端）起为当前主赛季
  *   - 所有 getCurrentXxx() 会自动跟随
  *
- * 用 `as const` 让 TS 把类型收窄成字面量 'S17' 而不是宽泛的 SeasonId，
+ * 用 `as const` 让 TS 把类型收窄成字面量 'S18' 而不是宽泛的 SeasonId，
  * 这样后续 switch(CURRENT_SEASON) 才能被 TS 认为是"已知分支"。
  */
-export const CURRENT_SEASON = 'S17' as const satisfies SeasonId;
+export const CURRENT_SEASON = 'S18' as const satisfies SeasonId;
 
 /**
  * 当前主赛季的人类可读名称
  * 用于 Toast / 日志 / 浮窗文案显示
  */
-export const CURRENT_SEASON_DISPLAY_NAME = 'S17 星神';
+export const CURRENT_SEASON_DISPLAY_NAME = 'S18 自然之力';
 
 // =====================================================================================
 //  ② 游戏模式 → 赛季的映射
@@ -137,6 +140,11 @@ export function getSeasonTemplateDirByMode(mode: TFTMode): string {
 //        使用方就拿不到"当前赛季有哪些棋子"的类型提示。
 // =====================================================================================
 
+/** 获取 S18 自然之力赛季的棋子数据（字面量类型精确） */
+export function getChessDataS18() {
+    return TFT_18_CHESS_DATA;
+}
+
 /** 获取 S17 星神赛季的棋子数据（字面量类型精确） */
 export function getChessDataS17() {
     return TFT_17_CHESS_DATA;
@@ -157,11 +165,7 @@ export function getEquipDataS17() {
     return TFT_17_EQUIP_DATA;
 }
 
-/**
- * 获取 S18 装备数据
- * 注：S18 的棋子、羁绊数据还没有接入，所以暂未注册为赛季；
- *     等 SeasonId 加上 'S18' 后，在 getCurrentEquipData() 里加 case 'S18': return getEquipDataS18();
- */
+/** 获取 S18 装备数据（字面量类型精确） */
 export function getEquipDataS18() {
     return TFT_18_EQUIP_DATA;
 }
@@ -174,6 +178,11 @@ export function getEquipDataS16() {
 /** 获取 S4 装备数据 */
 export function getEquipDataS4() {
     return TFT_4_EQUIP_DATA;
+}
+
+/** 获取 S18 羁绊数据（字面量类型精确） */
+export function getTraitDataS18() {
+    return TFT_18_TRAIT_DATA;
 }
 
 /** 获取 S17 羁绊数据（字面量类型精确） */
@@ -196,10 +205,9 @@ export function getTraitDataS4() {
 //
 //  这里用 switch(CURRENT_SEASON) + as const，让 TS 的控制流分析
 //  自动识别"只有第一个 case 会被执行"，从而把返回类型收窄成精确的
-//  TFT_17_CHESS_DATA 的字面量类型，而不是三个赛季的联合。
+//  TFT_18_CHESS_DATA 的字面量类型，而不是几个赛季的联合。
 //
-//  换赛季时，只改上面的 CURRENT_SEASON = 'S18'，这里不用动——
-//  switch 会自动走到 'S18' 的分支。
+//  换赛季时改上面的 CURRENT_SEASON，并把这里的 case 换成新赛季。
 // =====================================================================================
 
 /**
@@ -211,14 +219,13 @@ export function getTraitDataS4() {
  *   const unit = chess["烬"];   // TS 能精确知道 "烬" 是合法 key
  */
 export function getCurrentChessData() {
-    // 之所以写 switch 而不直接 return getChessDataS17()，
+    // 之所以写 switch 而不直接 return getChessDataS18()，
     // 是因为 switch + CURRENT_SEASON as const 能让 TS 的穷尽性检查生效：
-    // 如果未来 SeasonId 加了 'S18' 但忘了在这里加 case，TS 会报错
+    // 如果未来换了赛季但忘了在这里改 case，TS 会报错
     switch (CURRENT_SEASON) {
-        case 'S17':
-            return getChessDataS17();
-        // 注：未来 S18 来了就新增 case 'S18': return getChessDataS18();
-        // S16 / S4 永远不会是"当前主赛季"（它们只通过 getChessDataByMode 访问）
+        case 'S18':
+            return getChessDataS18();
+        // S17 / S16 / S4 不再是"当前主赛季"（它们只通过 getChessDataByMode / BySeasonId 访问）
     }
 }
 
@@ -227,8 +234,8 @@ export function getCurrentChessData() {
  */
 export function getCurrentEquipData() {
     switch (CURRENT_SEASON) {
-        case 'S17':
-            return getEquipDataS17();
+        case 'S18':
+            return getEquipDataS18();
     }
 }
 
@@ -237,14 +244,14 @@ export function getCurrentEquipData() {
  */
 export function getCurrentTraitData() {
     switch (CURRENT_SEASON) {
-        case 'S17':
-            return getTraitDataS17();
+        case 'S18':
+            return getTraitDataS18();
     }
 }
 
 /**
  * 🌟 获取当前主赛季对应的模板子目录名
- * @example getCurrentTemplateDir() → 's17'
+ * @example getCurrentTemplateDir() → 's18'
  */
 export function getCurrentTemplateDir(): string {
     return getSeasonTemplateDirById(CURRENT_SEASON);
@@ -268,6 +275,8 @@ export function getCurrentTemplateDir(): string {
 export function getChessDataByMode(mode: TFTMode) {
     const season = getSeasonIdByMode(mode);
     switch (season) {
+        case 'S18':
+            return getChessDataS18();
         case 'S17':
             return getChessDataS17();
         case 'S16':
@@ -284,6 +293,8 @@ export function getChessDataByMode(mode: TFTMode) {
 export function getEquipDataByMode(mode: TFTMode) {
     const season = getSeasonIdByMode(mode);
     switch (season) {
+        case 'S18':
+            return getEquipDataS18();
         case 'S17':
             return getEquipDataS17();
         case 'S16':
@@ -303,6 +314,8 @@ export function getEquipDataByMode(mode: TFTMode) {
 export function getTraitDataByMode(mode: TFTMode) {
     const season = getSeasonIdByMode(mode);
     switch (season) {
+        case 'S18':
+            return getTraitDataS18();
         case 'S17':
             return getTraitDataS17();
         case 'S16':
@@ -325,6 +338,8 @@ export function getTraitDataByMode(mode: TFTMode) {
  */
 export function getChessDataBySeasonId(season: SeasonId = CURRENT_SEASON) {
     switch (season) {
+        case 'S18':
+            return getChessDataS18();
         case 'S17':
             return getChessDataS17();
         case 'S16':
@@ -339,6 +354,8 @@ export function getChessDataBySeasonId(season: SeasonId = CURRENT_SEASON) {
  */
 export function getEquipDataBySeasonId(season: SeasonId = CURRENT_SEASON) {
     switch (season) {
+        case 'S18':
+            return getEquipDataS18();
         case 'S17':
             return getEquipDataS17();
         case 'S16':
@@ -369,18 +386,21 @@ export type CurrentEquipName = keyof CurrentEquipData;
 
 /** 跨赛季的英雄名联合类型（包含所有赛季，用于历史阵容兼容） */
 export type AnyChampionName =
+    | keyof typeof TFT_18_CHESS_DATA
     | keyof typeof TFT_17_CHESS_DATA
     | keyof typeof TFT_16_CHESS_DATA
     | keyof typeof TFT_4_CHESS_DATA;
 
 /** 跨赛季的英雄英文 ID 联合类型（用于 OP.GG 等外部数据解析） */
 export type AnyChampionEnglishId =
+    | typeof _TFT_18_CHESS_DATA[keyof typeof _TFT_18_CHESS_DATA]['englishId']
     | typeof _TFT_17_CHESS_DATA[keyof typeof _TFT_17_CHESS_DATA]['englishId']
     | typeof _TFT_16_CHESS_DATA[keyof typeof _TFT_16_CHESS_DATA]['englishId']
     | typeof _TFT_4_CHESS_DATA[keyof typeof _TFT_4_CHESS_DATA]['englishId'];
 
 /** 跨赛季的装备名联合类型 */
 export type AnyEquipName =
+    | keyof typeof TFT_18_EQUIP_DATA
     | keyof typeof TFT_17_EQUIP_DATA
     | keyof typeof TFT_16_EQUIP_DATA
     | keyof typeof TFT_4_EQUIP_DATA;
@@ -390,7 +410,7 @@ export type AnyEquipName =
 //
 //  这些函数需要"查找所有赛季"——因为历史阵容配置里可能有 S16 的棋子名，
 //  或者 TFT 偶尔也会在新赛季复用旧赛季的棋子名字。
-//  所以查询顺序：当前主赛季 → S16 → S4，任一赛季能查到就返回。
+//  所以查询顺序：当前主赛季 → S17 → S16 → S4，任一赛季能查到就返回。
 //
 //  之所以放在 SeasonRegistry 而不是 TFTProtocol，是为了避免 TFTProtocol
 //  反向依赖 SeasonRegistry 形成的循环 import 问题。
@@ -403,6 +423,7 @@ export type AnyEquipName =
  */
 export function isMeleeChampion(championName: ChampionKey): boolean {
     const champion = (getCurrentChessData() as Record<string, TFTUnit>)[championName]
+        ?? (TFT_17_CHESS_DATA as Record<string, TFTUnit>)[championName]
         ?? (TFT_16_CHESS_DATA as Record<string, TFTUnit>)[championName]
         ?? (TFT_4_CHESS_DATA as Record<string, TFTUnit>)[championName];
     // 射程 <= 2 视为近战（包括格雷福斯这种短程枪手）
@@ -416,6 +437,7 @@ export function isMeleeChampion(championName: ChampionKey): boolean {
  */
 export function isRangedChampion(championName: ChampionKey): boolean {
     const champion = (getCurrentChessData() as Record<string, TFTUnit>)[championName]
+        ?? (TFT_17_CHESS_DATA as Record<string, TFTUnit>)[championName]
         ?? (TFT_16_CHESS_DATA as Record<string, TFTUnit>)[championName]
         ?? (TFT_4_CHESS_DATA as Record<string, TFTUnit>)[championName];
     // 射程 >= 4 视为远程
@@ -429,6 +451,7 @@ export function isRangedChampion(championName: ChampionKey): boolean {
  */
 export function getChampionRange(championName: ChampionKey): number | undefined {
     return ((getCurrentChessData() as Record<string, TFTUnit>)[championName]
+        ?? (TFT_17_CHESS_DATA as Record<string, TFTUnit>)[championName]
         ?? (TFT_16_CHESS_DATA as Record<string, TFTUnit>)[championName]
         ?? (TFT_4_CHESS_DATA as Record<string, TFTUnit>)[championName])?.attackRange;
 }
