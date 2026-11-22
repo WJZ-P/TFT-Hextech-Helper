@@ -51,10 +51,11 @@ function shiftRegionsX<T extends Record<string, SimpleRegion>>(regions: T, dx: n
 // 底部 HUD：等级、金币、升级 / 刷新按钮
 // ============================================================================
 
-//  左下角等级 region（"5级"，文字 x 232-252, y 592-603；两位数等级会更宽）
+//  左下角等级 region，包含等级和经验（"5级" 文字 x 232-252，"4/20" 文字 x 317-335，y 592-603）
+//  getLevelInfo 按 "5级 4/20" 的格式解析，两段文字都要框进来
 export const levelRegion = {
     leftTop: { x: 229, y: 589 },
-    rightBottom: { x: 265, y: 606 }
+    rightBottom: { x: 345, y: 606 }
 }
 export const levelRegionClockwork = shiftRegionX(levelRegion, CLOCKWORK_HUD_OFFSET_X);
 

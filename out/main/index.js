@@ -9666,6 +9666,1121 @@ const _TFT_17_EQUIP_DATA = {
     formula: ""
   }
 };
+const _TFT_18_EQUIP_DATA = {
+  // ==========================================
+  // Type 1: 基础散件 (Base Items) (共 10 个)
+  // ==========================================
+  "暴风大剑": {
+    // S18 资源名 DA_Component_BFSword
+    name: "暴风大剑",
+    englishName: "TFT_Item_BFSword",
+    equipId: "93054",
+    formula: ""
+  },
+  "锁子甲": {
+    // S18 资源名 DA_Component_ChainVest
+    name: "锁子甲",
+    englishName: "TFT_Item_ChainVest",
+    equipId: "93055",
+    formula: ""
+  },
+  "金锅锅": {
+    // S18 资源名 DA_Component_FryingPan
+    name: "金锅锅",
+    englishName: "TFT_Item_Frying_pan",
+    equipId: "93056",
+    formula: ""
+  },
+  "巨人腰带": {
+    // S18 资源名 DA_Component_GiantsBelt
+    name: "巨人腰带",
+    englishName: "TFT_Item_GiantsBelt",
+    equipId: "93057",
+    formula: ""
+  },
+  "无用大棒": {
+    // S18 资源名 DA_Component_NeedlesslyLargeRod
+    name: "无用大棒",
+    englishName: "TFT_Item_NeedlesslyLargeRod",
+    equipId: "93058",
+    formula: ""
+  },
+  "负极斗篷": {
+    // S18 资源名 DA_Component_NegatronCloak
+    name: "负极斗篷",
+    englishName: "TFT_Item_NegatronCloak",
+    equipId: "93059",
+    formula: ""
+  },
+  "反曲之弓": {
+    // S18 资源名 DA_Component_RecurveBow
+    name: "反曲之弓",
+    englishName: "TFT_Item_RecurveBow",
+    equipId: "93060",
+    formula: ""
+  },
+  "拳套": {
+    // S18 资源名 DA_Component_SparringGloves
+    name: "拳套",
+    englishName: "TFT_Item_SparringGloves",
+    equipId: "93061",
+    formula: ""
+  },
+  "金铲铲": {
+    // S18 资源名 DA_Component_Spatula
+    name: "金铲铲",
+    englishName: "TFT_Item_Spatula",
+    equipId: "93062",
+    formula: ""
+  },
+  "女神之泪": {
+    // S18 资源名 DA_Component_TearOfTheGoddess
+    name: "女神之泪",
+    englishName: "TFT_Item_TearOfTheGoddess",
+    equipId: "93063",
+    formula: ""
+  },
+  // ==========================================
+  // Type 2: 标准合成装备 (Standard Completed Items) (共 39 个)
+  // ==========================================
+  "适应性头盔": {
+    // S18 资源名 DA_AdaptiveHelm
+    name: "适应性头盔",
+    englishName: "TFT_Item_AdaptiveHelm",
+    equipId: "92966",
+    formula: "DA_Component_TearOfTheGoddess,DA_Component_NegatronCloak"
+  },
+  "大天使之杖": {
+    // S18 资源名 DA_ArchangelsStaff
+    name: "大天使之杖",
+    englishName: "TFT_Item_ArchangelsStaff",
+    equipId: "92972",
+    formula: "DA_Component_NeedlesslyLargeRod,DA_Component_TearOfTheGoddess"
+  },
+  "饮血剑": {
+    // S18 资源名 DA_Bloodthirster
+    name: "饮血剑",
+    englishName: "TFT_Item_Bloodthirster",
+    equipId: "93030",
+    formula: "DA_Component_BFSword,DA_Component_NegatronCloak"
+  },
+  "蓝霸符": {
+    // S18 资源名 DA_BlueBuff
+    name: "蓝霸符",
+    englishName: "TFT_Item_BlueBuff",
+    equipId: "93032",
+    formula: "DA_Component_TearOfTheGoddess,DA_Component_TearOfTheGoddess"
+  },
+  "棘刺背心": {
+    // S18 资源名 DA_BrambleVest
+    name: "棘刺背心",
+    englishName: "TFT_Item_BrambleVest",
+    equipId: "93040",
+    formula: "DA_Component_ChainVest,DA_Component_ChainVest"
+  },
+  "冕卫": {
+    // S18 资源名 DA_Crownguard
+    name: "冕卫",
+    englishName: "TFT_Item_Crownguard",
+    equipId: "93068",
+    formula: "DA_Component_NeedlesslyLargeRod,DA_Component_ChainVest"
+  },
+  "死亡之刃": {
+    // S18 资源名 DA_Deathblade
+    name: "死亡之刃",
+    englishName: "TFT_Item_Deathblade",
+    equipId: "93074",
+    formula: "DA_Component_BFSword,DA_Component_BFSword"
+  },
+  "巨龙之爪": {
+    // S18 资源名 DA_DragonsClaw
+    name: "巨龙之爪",
+    englishName: "TFT_Item_DragonsClaw",
+    equipId: "93089",
+    formula: "DA_Component_NegatronCloak,DA_Component_NegatronCloak"
+  },
+  "夜之锋刃": {
+    // S18 资源名 DA_EdgeOfNight
+    name: "夜之锋刃",
+    englishName: "TFT_Item_GuardianAngel",
+    equipId: "93091",
+    formula: "DA_Component_BFSword,DA_Component_ChainVest"
+  },
+  "薄暮法袍": {
+    // S18 资源名 DA_Evenshroud
+    name: "薄暮法袍",
+    englishName: "TFT_Item_SpectralGauntlet",
+    equipId: "93095",
+    formula: "DA_Component_NegatronCloak,DA_Component_GiantsBelt"
+  },
+  "石像鬼石板甲": {
+    // S18 资源名 DA_GargoyleStoneplate
+    name: "石像鬼石板甲",
+    englishName: "TFT_Item_GargoyleStoneplate",
+    equipId: "93109",
+    formula: "DA_Component_ChainVest,DA_Component_NegatronCloak"
+  },
+  "巨人杀手": {
+    // S18 资源名 DA_GiantSlayer
+    name: "巨人杀手",
+    englishName: "TFT_Item_MadredsBloodrazor",
+    equipId: "93111",
+    formula: "DA_Component_RecurveBow,DA_Component_BFSword"
+  },
+  "鬼索的狂暴之刃": {
+    // S18 资源名 DA_GuinsoosRageblade
+    name: "鬼索的狂暴之刃",
+    englishName: "TFT_Item_GuinsoosRageblade",
+    equipId: "93124",
+    formula: "DA_Component_RecurveBow,DA_Component_NeedlesslyLargeRod"
+  },
+  "正义之手": {
+    // S18 资源名 DA_HandOfJustice
+    name: "正义之手",
+    englishName: "TFT_Item_UnstableConcoction",
+    equipId: "93128",
+    formula: "DA_Component_TearOfTheGoddess,DA_Component_SparringGloves"
+  },
+  "海克斯科技枪刃": {
+    // S18 资源名 DA_HextechGunblade
+    name: "海克斯科技枪刃",
+    englishName: "TFT_Item_HextechGunblade",
+    equipId: "93139",
+    formula: "DA_Component_BFSword,DA_Component_NeedlesslyLargeRod"
+  },
+  "无尽之刃": {
+    // S18 资源名 DA_InfinityEdge
+    name: "无尽之刃",
+    englishName: "TFT_Item_InfinityEdge",
+    equipId: "93153",
+    formula: "DA_Component_BFSword,DA_Component_SparringGloves"
+  },
+  "离子火花": {
+    // S18 资源名 DA_IonicSpark
+    name: "离子火花",
+    englishName: "TFT_Item_IonicSpark",
+    equipId: "93155",
+    formula: "DA_Component_NeedlesslyLargeRod,DA_Component_NegatronCloak"
+  },
+  "珠光护手": {
+    // S18 资源名 DA_JeweledGauntlet
+    name: "珠光护手",
+    englishName: "TFT_Item_JeweledGauntlet",
+    equipId: "93162",
+    formula: "DA_Component_SparringGloves,DA_Component_NeedlesslyLargeRod"
+  },
+  "海妖之怒": {
+    // S18 资源名 DA_KrakensFury
+    name: "海妖之怒",
+    englishName: "TFT_Item_RunaansHurricane",
+    equipId: "93176",
+    formula: "DA_Component_RecurveBow,DA_Component_NegatronCloak"
+  },
+  "最后的轻语": {
+    // S18 资源名 DA_LastWhisper
+    name: "最后的轻语",
+    englishName: "TFT_Item_LastWhisper",
+    equipId: "93178",
+    formula: "DA_Component_RecurveBow,DA_Component_SparringGloves"
+  },
+  "莫雷洛秘典": {
+    // S18 资源名 DA_Morellonomicon
+    name: "莫雷洛秘典",
+    englishName: "TFT_Item_Morellonomicon",
+    equipId: "93209",
+    formula: "DA_Component_GiantsBelt,DA_Component_NeedlesslyLargeRod"
+  },
+  "纳什之牙": {
+    // S18 资源名 DA_NashorsTooth
+    name: "纳什之牙",
+    englishName: "TFT_Item_Leviathan",
+    equipId: "93211",
+    formula: "DA_Component_RecurveBow,DA_Component_GiantsBelt"
+  },
+  "圣盾使的誓约": {
+    // S18 资源名 DA_ProtectorsVow
+    name: "圣盾使的誓约",
+    englishName: "TFT_Item_FrozenHeart",
+    equipId: "93242",
+    formula: "DA_Component_ChainVest,DA_Component_TearOfTheGoddess"
+  },
+  "水银": {
+    // S18 资源名 DA_Quicksilver
+    name: "水银",
+    englishName: "TFT_Item_Quicksilver",
+    equipId: "93246",
+    formula: "DA_Component_NegatronCloak,DA_Component_SparringGloves"
+  },
+  "灭世者的死亡之帽": {
+    // S18 资源名 DA_RabadonsDeathcap
+    name: "灭世者的死亡之帽",
+    englishName: "TFT_Item_RabadonsDeathcap",
+    equipId: "93248",
+    formula: "DA_Component_NeedlesslyLargeRod,DA_Component_NeedlesslyLargeRod"
+  },
+  "红霸符": {
+    // S18 资源名 DA_RedBuff
+    name: "红霸符",
+    englishName: "TFT_Item_RapidFireCannon",
+    equipId: "93253",
+    formula: "DA_Component_RecurveBow,DA_Component_RecurveBow"
+  },
+  "朔极之矛": {
+    // S18 资源名 DA_SpearOfShojin
+    name: "朔极之矛",
+    englishName: "TFT_Item_SpearOfShojin",
+    equipId: "93284",
+    formula: "DA_Component_TearOfTheGoddess,DA_Component_BFSword"
+  },
+  "振奋盔甲": {
+    // S18 资源名 DA_SpiritVisage
+    name: "振奋盔甲",
+    englishName: "TFT_Item_Redemption",
+    equipId: "93287",
+    formula: "DA_Component_GiantsBelt,DA_Component_TearOfTheGoddess"
+  },
+  "坚定之心": {
+    // S18 资源名 DA_SteadfastHeart
+    name: "坚定之心",
+    englishName: "TFT_Item_NightHarvester",
+    equipId: "93294",
+    formula: "DA_Component_ChainVest,DA_Component_SparringGloves"
+  },
+  "斯特拉克的挑战护手": {
+    // S18 资源名 DA_SteraksGage
+    name: "斯特拉克的挑战护手",
+    englishName: "TFT_Item_SteraksGage",
+    equipId: "93298",
+    formula: "DA_Component_BFSword,DA_Component_GiantsBelt"
+  },
+  "强袭者的链枷": {
+    // S18 资源名 DA_StrikersFlail
+    name: "强袭者的链枷",
+    englishName: "TFT_Item_PowerGauntlet",
+    equipId: "93300",
+    formula: "DA_Component_GiantsBelt,DA_Component_SparringGloves"
+  },
+  "日炎斗篷": {
+    // S18 资源名 DA_SunfireCape
+    name: "日炎斗篷",
+    englishName: "TFT_Item_RedBuff",
+    equipId: "93302",
+    formula: "DA_Component_ChainVest,DA_Component_GiantsBelt"
+  },
+  "金锅铲冠冕": {
+    // S18 资源名 DA_TacticiansCape
+    name: "金锅铲冠冕",
+    englishName: "TFT_Item_TacticiansRing",
+    equipId: "93304",
+    formula: "DA_Component_Spatula,DA_Component_FryingPan"
+  },
+  "金铲铲冠冕": {
+    // S18 资源名 DA_TacticiansCrown
+    name: "金铲铲冠冕",
+    englishName: "TFT_Item_ForceOfNature",
+    equipId: "93305",
+    formula: "DA_Component_Spatula,DA_Component_Spatula"
+  },
+  "金锅锅冠冕": {
+    // S18 资源名 DA_TacticiansShield
+    name: "金锅锅冠冕",
+    englishName: "TFT_Item_TacticiansScepter",
+    equipId: "93306",
+    formula: "DA_Component_FryingPan,DA_Component_FryingPan"
+  },
+  "窃贼手套": {
+    // S18 资源名 DA_ThiefsGloves
+    name: "窃贼手套",
+    englishName: "TFT_Item_ThiefsGloves",
+    equipId: "93309",
+    formula: "DA_Component_SparringGloves,DA_Component_SparringGloves"
+  },
+  "泰坦的坚决": {
+    // S18 资源名 DA_TitansResolve
+    name: "泰坦的坚决",
+    englishName: "TFT_Item_TitansResolve",
+    equipId: "93321",
+    formula: "DA_Component_RecurveBow,DA_Component_ChainVest"
+  },
+  "虚空之杖": {
+    // S18 资源名 DA_VoidStaff
+    name: "虚空之杖",
+    englishName: "TFT_Item_StatikkShiv",
+    equipId: "93332",
+    formula: "DA_Component_RecurveBow,DA_Component_TearOfTheGoddess"
+  },
+  "狂徒铠甲": {
+    // S18 资源名 DA_WarmogsArmor
+    name: "狂徒铠甲",
+    englishName: "TFT_Item_WarmogsArmor",
+    equipId: "93334",
+    formula: "DA_Component_GiantsBelt,DA_Component_GiantsBelt"
+  },
+  // ==========================================
+  // Type 2 / 5: 羁绊纹章 (Emblems) (共 23 个)
+  // ==========================================
+  "黑荆棘纹章": {
+    name: "黑荆棘纹章",
+    englishName: "DA_18_EmblemBlackthorn",
+    equipId: "92863",
+    formula: "DA_Component_Spatula,DA_Component_GiantsBelt"
+  },
+  "灵魂莲华纹章": {
+    name: "灵魂莲华纹章",
+    englishName: "DA_18_EmblemBlossom",
+    equipId: "92864",
+    formula: "DA_Component_Spatula,DA_Component_NeedlesslyLargeRod"
+  },
+  "斗士纹章": {
+    // S18 资源名 DA_18_EmblemBrawler
+    name: "斗士纹章",
+    englishName: "TFT17_Item_HPTankEmblemItem",
+    equipId: "92865",
+    formula: "DA_Component_FryingPan,DA_Component_GiantsBelt"
+  },
+  "魔女纹章": {
+    name: "魔女纹章",
+    englishName: "DA_18_EmblemCoven",
+    equipId: "92866",
+    formula: ""
+  },
+  "护卫纹章": {
+    name: "护卫纹章",
+    englishName: "DA_18_EmblemDefender",
+    equipId: "92867",
+    formula: ""
+  },
+  "永恒之森纹章": {
+    name: "永恒之森纹章",
+    englishName: "DA_18_EmblemElderwood",
+    equipId: "92868",
+    formula: "DA_Component_Spatula,DA_Component_ChainVest"
+  },
+  "裁决使纹章": {
+    name: "裁决使纹章",
+    englishName: "DA_18_EmblemExecutioner",
+    equipId: "92869",
+    formula: "DA_Component_FryingPan,DA_Component_SparringGloves"
+  },
+  "花仙子纹章": {
+    name: "花仙子纹章",
+    englishName: "DA_18_EmblemFae",
+    equipId: "92870",
+    formula: "DA_Component_Spatula,DA_Component_BFSword"
+  },
+  "绝命花妖纹章": {
+    name: "绝命花妖纹章",
+    englishName: "DA_18_EmblemFloraFatalis",
+    equipId: "92871",
+    formula: ""
+  },
+  "绝命花妖纹章_92872": {
+    // S18 资源名 DA_18_EmblemFloraFatalisAugment
+    name: "绝命花妖纹章",
+    englishName: "DA_18_EmblemFloraFatalis",
+    equipId: "92872",
+    formula: ""
+  },
+  "猎人纹章": {
+    name: "猎人纹章",
+    englishName: "DA_18_EmblemHunter",
+    equipId: "92873",
+    formula: "DA_Component_FryingPan,DA_Component_BFSword"
+  },
+  "地狱火纹章": {
+    name: "地狱火纹章",
+    englishName: "DA_18_EmblemInferno",
+    equipId: "92874",
+    formula: "DA_Component_Spatula,DA_Component_RecurveBow"
+  },
+  "神谕纹章": {
+    name: "神谕纹章",
+    englishName: "DA_18_EmblemInvoker",
+    equipId: "92875",
+    formula: "DA_Component_FryingPan,DA_Component_TearOfTheGoddess"
+  },
+  "主宰纹章": {
+    name: "主宰纹章",
+    englishName: "DA_18_EmblemJuggernaut",
+    equipId: "92876",
+    formula: ""
+  },
+  "月蚀骑士纹章": {
+    name: "月蚀骑士纹章",
+    englishName: "DA_18_EmblemLunar",
+    equipId: "92877",
+    formula: "DA_Component_Spatula,DA_Component_TearOfTheGoddess"
+  },
+  "野兽之灵纹章": {
+    name: "野兽之灵纹章",
+    englishName: "DA_18_EmblemPrimal",
+    equipId: "92878",
+    formula: "DA_Component_Spatula,DA_Component_SparringGloves"
+  },
+  "迅捷射手纹章": {
+    name: "迅捷射手纹章",
+    englishName: "DA_18_EmblemRapidfire",
+    equipId: "92879",
+    formula: "DA_Component_FryingPan,DA_Component_RecurveBow"
+  },
+  "狂战士纹章": {
+    name: "狂战士纹章",
+    englishName: "DA_18_EmblemSlayer",
+    equipId: "92880",
+    formula: "DA_Component_FryingPan,DA_Component_NegatronCloak"
+  },
+  "法师纹章": {
+    name: "法师纹章",
+    englishName: "DA_18_EmblemSpellweaver",
+    equipId: "92881",
+    formula: "DA_Component_FryingPan,DA_Component_NeedlesslyLargeRod"
+  },
+  "约德尔人和朋友纹章": {
+    name: "约德尔人和朋友纹章",
+    englishName: "DA_18_EmblemSprykin",
+    equipId: "92882",
+    formula: "DA_Component_Spatula,DA_Component_NegatronCloak"
+  },
+  "重装战士纹章": {
+    // S18 资源名 DA_18_EmblemVanguard
+    name: "重装战士纹章",
+    englishName: "TFT17_Item_ShieldTankEmblemItem",
+    equipId: "92883",
+    formula: "DA_Component_FryingPan,DA_Component_ChainVest"
+  },
+  "幻影纹章": {
+    name: "幻影纹章",
+    englishName: "DA_PhantomEmblem18",
+    equipId: "93226",
+    formula: ""
+  },
+  "幻影纹章_93227": {
+    // S18 资源名 DA_PhantomEmblemUpgrade18
+    name: "幻影纹章",
+    englishName: "DA_PhantomEmblem18",
+    equipId: "93227",
+    formula: ""
+  },
+  // ==========================================
+  // Type 3: 光明装备 (Radiant Items) (共 42 个)
+  // ==========================================
+  "光明化": {
+    name: "光明化",
+    englishName: "DA_18_Radiantize",
+    equipId: "92940",
+    formula: ""
+  },
+  "光明化_92941": {
+    // S18 资源名 DA_18_Radiantize_Upgrade
+    name: "光明化",
+    englishName: "DA_18_Radiantize",
+    equipId: "92941",
+    formula: ""
+  },
+  "光明版适应性头盔": {
+    // S18 资源名 DA_AdaptiveHelm_Radiant
+    name: "光明版适应性头盔",
+    englishName: "TFT5_Item_AdaptiveHelmRadiant",
+    equipId: "92967",
+    formula: ""
+  },
+  "光明版大天使之杖": {
+    // S18 资源名 DA_ArchangelsStaffRadiant
+    name: "光明版大天使之杖",
+    englishName: "TFT5_Item_ArchangelsStaffRadiant",
+    equipId: "92973",
+    formula: ""
+  },
+  "光明版爆炸药水": {
+    name: "光明版爆炸药水",
+    englishName: "DA_BlastPotion18_Radiant",
+    equipId: "93023",
+    formula: ""
+  },
+  "光明版饮血剑": {
+    // S18 资源名 DA_BloodthirsterRadiant
+    name: "光明版饮血剑",
+    englishName: "TFT5_Item_BloodthirsterRadiant",
+    equipId: "93031",
+    formula: ""
+  },
+  "光明版蓝霸符": {
+    // S18 资源名 DA_BlueBuffRadiant
+    name: "光明版蓝霸符",
+    englishName: "TFT5_Item_BlueBuffRadiant",
+    equipId: "93033",
+    formula: ""
+  },
+  "光明版棘刺背心": {
+    // S18 资源名 DA_BrambleVestRadiant
+    name: "光明版棘刺背心",
+    englishName: "TFT5_Item_BrambleVestRadiant",
+    equipId: "93041",
+    formula: ""
+  },
+  "光明版冕卫": {
+    // S18 资源名 DA_CrownguardRadiant
+    name: "光明版冕卫",
+    englishName: "TFT5_Item_CrownguardRadiant",
+    equipId: "93069",
+    formula: ""
+  },
+  "光明版死亡之刃": {
+    // S18 资源名 DA_DeathbladeRadiant
+    name: "光明版死亡之刃",
+    englishName: "TFT5_Item_DeathbladeRadiant",
+    equipId: "93075",
+    formula: ""
+  },
+  "光明版巨龙之爪": {
+    // S18 资源名 DA_DragonsClawRadiant
+    name: "光明版巨龙之爪",
+    englishName: "TFT5_Item_DragonsClawRadiant",
+    equipId: "93090",
+    formula: ""
+  },
+  "光明版夜之锋刃": {
+    // S18 资源名 DA_EdgeOfNightRadiant
+    name: "光明版夜之锋刃",
+    englishName: "TFT5_Item_GuardianAngelRadiant",
+    equipId: "93092",
+    formula: ""
+  },
+  "光明版薄暮法袍": {
+    // S18 资源名 DA_EvenshroudRadiant
+    name: "光明版薄暮法袍",
+    englishName: "TFT5_Item_SpectralGauntletRadiant",
+    equipId: "93096",
+    formula: ""
+  },
+  "光明版石像鬼石板甲": {
+    // S18 资源名 DA_GargoyleStoneplate_Radiant
+    name: "光明版石像鬼石板甲",
+    englishName: "TFT5_Item_GargoyleStoneplateRadiant",
+    equipId: "93110",
+    formula: ""
+  },
+  "光明版巨人杀手": {
+    // S18 资源名 DA_GiantSlayer_Radiant
+    name: "光明版巨人杀手",
+    englishName: "TFT5_Item_GiantSlayerRadiant",
+    equipId: "93112",
+    formula: ""
+  },
+  "光明版鬼索的狂暴之刃": {
+    // S18 资源名 DA_GuinsoosRagebladeRadiant
+    name: "光明版鬼索的狂暴之刃",
+    englishName: "TFT5_Item_GuinsoosRagebladeRadiant",
+    equipId: "93125",
+    formula: ""
+  },
+  "光明版正义之手": {
+    // S18 资源名 DA_HandOfJusticeRadiant
+    name: "光明版正义之手",
+    englishName: "TFT5_Item_HandOfJusticeRadiant",
+    equipId: "93129",
+    formula: ""
+  },
+  "光明版生命药水": {
+    name: "光明版生命药水",
+    englishName: "DA_HealthPotion18_Radiant",
+    equipId: "93133",
+    formula: ""
+  },
+  "光明版海克斯科技枪刃": {
+    // S18 资源名 DA_HextechGunbladeRadiant
+    name: "光明版海克斯科技枪刃",
+    englishName: "TFT5_Item_HextechGunbladeRadiant",
+    equipId: "93140",
+    formula: ""
+  },
+  "光明版无尽之刃": {
+    // S18 资源名 DA_InfinityEdgeRadiant
+    name: "光明版无尽之刃",
+    englishName: "TFT5_Item_InfinityEdgeRadiant",
+    equipId: "93154",
+    formula: ""
+  },
+  "光明版离子火花": {
+    // S18 资源名 DA_IonicSparkRadiant
+    name: "光明版离子火花",
+    englishName: "TFT5_Item_IonicSparkRadiant",
+    equipId: "93156",
+    formula: ""
+  },
+  "光明版珠光护手": {
+    // S18 资源名 DA_JeweledGauntletRadiant
+    name: "光明版珠光护手",
+    englishName: "TFT5_Item_JeweledGauntletRadiant",
+    equipId: "93163",
+    formula: ""
+  },
+  "光明版海妖之怒": {
+    // S18 资源名 DA_KrakensFury_Radiant
+    name: "光明版海妖之怒",
+    englishName: "TFT5_Item_RunaansHurricaneRadiant",
+    equipId: "93177",
+    formula: ""
+  },
+  "光明版最后的轻语": {
+    // S18 资源名 DA_LastWhisperRadiant
+    name: "光明版最后的轻语",
+    englishName: "TFT5_Item_LastWhisperRadiant",
+    equipId: "93179",
+    formula: ""
+  },
+  "光明版法力药水": {
+    name: "光明版法力药水",
+    englishName: "DA_ManaPotion18_Radiant",
+    equipId: "93193",
+    formula: ""
+  },
+  "光明版莫雷洛秘典": {
+    // S18 资源名 DA_MorellonomiconRadiant
+    name: "光明版莫雷洛秘典",
+    englishName: "TFT5_Item_MorellonomiconRadiant",
+    equipId: "93210",
+    formula: ""
+  },
+  "光明版纳什之牙": {
+    // S18 资源名 DA_NashorsToothRadiant
+    name: "光明版纳什之牙",
+    englishName: "TFT5_Item_LeviathanRadiant",
+    equipId: "93212",
+    formula: ""
+  },
+  "光明版圣盾使的誓约": {
+    // S18 资源名 DA_ProtectorsVowRadiant
+    name: "光明版圣盾使的誓约",
+    englishName: "TFT5_Item_FrozenHeartRadiant",
+    equipId: "93243",
+    formula: ""
+  },
+  "光明版水银": {
+    // S18 资源名 DA_QuicksilverRadiant
+    name: "光明版水银",
+    englishName: "TFT5_Item_QuicksilverRadiant",
+    equipId: "93247",
+    formula: ""
+  },
+  "光明版灭世者的死亡之帽": {
+    // S18 资源名 DA_RabadonsDeathcap_Radiant
+    name: "光明版灭世者的死亡之帽",
+    englishName: "TFT5_Item_RabadonsDeathcapRadiant",
+    equipId: "93249",
+    formula: ""
+  },
+  "光明版幸运装备宝箱": {
+    name: "光明版幸运装备宝箱",
+    englishName: "DA_RadiantLuckyItemChest",
+    equipId: "93250",
+    formula: ""
+  },
+  "光明版红霸符": {
+    // S18 资源名 DA_RedBuffRadiant
+    name: "光明版红霸符",
+    englishName: "TFT5_Item_RapidFirecannonRadiant",
+    equipId: "93254",
+    formula: ""
+  },
+  "光明版朔极之矛": {
+    // S18 资源名 DA_SpearOfShojinRadiant
+    name: "光明版朔极之矛",
+    englishName: "TFT5_Item_SpearOfShojinRadiant",
+    equipId: "93285",
+    formula: ""
+  },
+  "光明版振奋盔甲": {
+    // S18 资源名 DA_SpiritVisage_Radiant
+    name: "光明版振奋盔甲",
+    englishName: "TFT5_Item_RedemptionRadiant",
+    equipId: "93288",
+    formula: ""
+  },
+  "光明版坚定之心": {
+    // S18 资源名 DA_SteadfastHeartRadiant
+    name: "光明版坚定之心",
+    englishName: "TFT5_Item_NightHarvesterRadiant",
+    equipId: "93295",
+    formula: ""
+  },
+  "光明版斯特拉克的挑战护手": {
+    // S18 资源名 DA_SteraksGageRadiant
+    name: "光明版斯特拉克的挑战护手",
+    englishName: "TFT5_Item_SteraksGageRadiant",
+    equipId: "93299",
+    formula: ""
+  },
+  "光明版强袭者的链枷": {
+    // S18 资源名 DA_StrikersFlailRadiant
+    name: "光明版强袭者的链枷",
+    englishName: "TFT5_Item_TrapClawRadiant",
+    equipId: "93301",
+    formula: ""
+  },
+  "光明版日炎斗篷": {
+    // S18 资源名 DA_SunfireCape_Radiant
+    name: "光明版日炎斗篷",
+    englishName: "TFT5_Item_SunfireCapeRadiant",
+    equipId: "93303",
+    formula: ""
+  },
+  "光明版窃贼手套": {
+    // S18 资源名 DA_ThiefsGlovesRadiant
+    name: "光明版窃贼手套",
+    englishName: "TFT5_Item_ThiefsGlovesRadiant",
+    equipId: "93310",
+    formula: ""
+  },
+  "光明版泰坦的坚决": {
+    // S18 资源名 DA_TitansResolve_Radiant
+    name: "光明版泰坦的坚决",
+    englishName: "TFT5_Item_TitansResolveRadiant",
+    equipId: "93322",
+    formula: ""
+  },
+  "光明版虚空之杖": {
+    name: "光明版虚空之杖",
+    englishName: "DA_VoidStaffRadiant",
+    equipId: "93333",
+    formula: ""
+  },
+  "光明版狂徒铠甲": {
+    // S18 资源名 DA_WarmogsArmorRadiant
+    name: "光明版狂徒铠甲",
+    englishName: "TFT5_Item_WarmogsArmorRadiant",
+    equipId: "93335",
+    formula: ""
+  },
+  // ==========================================
+  // Type 6 / 7: 奥恩神器 / 金鳞龙装备 (Artifacts) (共 31 个)
+  // ==========================================
+  "黎明圣盾": {
+    name: "黎明圣盾",
+    englishName: "DA_Artifact_AegisOfDawn",
+    equipId: "92975",
+    formula: ""
+  },
+  "黄昏圣盾": {
+    name: "黄昏圣盾",
+    englishName: "DA_Artifact_AegisOfDusk",
+    equipId: "92976",
+    formula: ""
+  },
+  "枯萎珠宝": {
+    // S18 资源名 DA_Artifact_BlightingJewel
+    name: "枯萎珠宝",
+    englishName: "TFT_Item_Artifact_BlightingJewel",
+    equipId: "92977",
+    formula: ""
+  },
+  "黎明核心": {
+    // S18 资源名 DA_Artifact_Dawncore
+    name: "黎明核心",
+    englishName: "TFT_Item_Artifact_Dawncore",
+    equipId: "92978",
+    formula: ""
+  },
+  "死亡之蔑": {
+    // S18 资源名 DA_Artifact_DeathsDefiance
+    name: "死亡之蔑",
+    englishName: "TFT4_Item_OrnnDeathsDefiance",
+    equipId: "92979",
+    formula: ""
+  },
+  "永恒契约": {
+    name: "永恒契约",
+    englishName: "DA_Artifact_EternalPact",
+    equipId: "92980",
+    formula: ""
+  },
+  "鱼骨头": {
+    // S18 资源名 DA_Artifact_Fishbones
+    name: "鱼骨头",
+    englishName: "TFT_Item_Artifact_Fishbones",
+    equipId: "92981",
+    formula: ""
+  },
+  "禁忌雕像": {
+    name: "禁忌雕像",
+    englishName: "DA_Artifact_ForbiddenIdol",
+    equipId: "92982",
+    formula: ""
+  },
+  "投机者之刃": {
+    // S18 资源名 DA_Artifact_GamblersBlade
+    name: "投机者之刃",
+    englishName: "TFT7_Item_ShimmerscaleGamblersBlade",
+    equipId: "92983",
+    formula: ""
+  },
+  "金币收集者": {
+    // S18 资源名 DA_Artifact_GoldCollector
+    name: "金币收集者",
+    englishName: "TFT4_Item_OrnnTheCollector",
+    equipId: "92984",
+    formula: ""
+  },
+  "恶火小斧": {
+    name: "恶火小斧",
+    englishName: "DA_Artifact_HellfireHatchet",
+    equipId: "92985",
+    formula: ""
+  },
+  "视界专注": {
+    // S18 资源名 DA_Artifact_HorizonFocus
+    name: "视界专注",
+    englishName: "TFT_Item_Artifact_HorizonFocus",
+    equipId: "92986",
+    formula: ""
+  },
+  "碎舰者": {
+    // S18 资源名 DA_Artifact_Hullcrusher
+    name: "碎舰者",
+    englishName: "TFT9_Item_OrnnHullbreaker",
+    equipId: "92987",
+    formula: ""
+  },
+  "三相之力": {
+    // S18 资源名 DA_Artifact_InfinityForce
+    name: "三相之力",
+    englishName: "TFT4_Item_OrnnInfinityForce",
+    equipId: "92988",
+    formula: ""
+  },
+  "巫妖之祸": {
+    // S18 资源名 DA_Artifact_LichBane
+    name: "巫妖之祸",
+    englishName: "TFT_Item_Artifact_LichBane",
+    equipId: "92989",
+    formula: ""
+  },
+  "光盾徽章": {
+    // S18 资源名 DA_Artifact_LightshieldCrest
+    name: "光盾徽章",
+    englishName: "TFT_Item_Artifact_LightshieldCrest",
+    equipId: "92990",
+    formula: ""
+  },
+  "卢登的激荡": {
+    name: "卢登的激荡",
+    englishName: "DA_Artifact_LudensTempest",
+    equipId: "92991",
+    formula: ""
+  },
+  "魔蕴": {
+    // S18 资源名 DA_Artifact_Manazane
+    name: "魔蕴",
+    englishName: "TFT4_Item_OrnnMuramana",
+    equipId: "92992",
+    formula: ""
+  },
+  "连指手套": {
+    // S18 资源名 DA_Artifact_Mittens
+    name: "连指手套",
+    englishName: "TFT_Item_Artifact_Mittens",
+    equipId: "92993",
+    formula: ""
+  },
+  "大亨之铠": {
+    // S18 资源名 DA_Artifact_MogulsMail
+    name: "大亨之铠",
+    englishName: "TFT7_Item_ShimmerscaleMogulsMail",
+    equipId: "92994",
+    formula: ""
+  },
+  "烁刃": {
+    // S18 资源名 DA_Artifact_NavoriFlickerblade
+    name: "烁刃",
+    englishName: "TFT_Item_Artifact_NavoriFlickerblades",
+    equipId: "92995",
+    formula: ""
+  },
+  "疾射火炮": {
+    // S18 资源名 DA_Artifact_RapidFireCannon
+    name: "疾射火炮",
+    englishName: "TFT_Item_Artifact_RapidFirecannon",
+    equipId: "92996",
+    formula: ""
+  },
+  "探索者的护臂": {
+    // S18 资源名 DA_Artifact_SeekersArmguard
+    name: "探索者的护臂",
+    englishName: "TFT_Item_Artifact_SeekersArmguard",
+    equipId: "92997",
+    formula: ""
+  },
+  "密银黎明": {
+    // S18 资源名 DA_Artifact_SilvermereDawn
+    name: "密银黎明",
+    englishName: "TFT_Item_Artifact_SilvermereDawn",
+    equipId: "92998",
+    formula: ""
+  },
+  "斯塔缇克电刃": {
+    // S18 资源名 DA_Artifact_StatikkShiv
+    name: "斯塔缇克电刃",
+    englishName: "TFT_Item_Artifact_StatikkShiv",
+    equipId: "92999",
+    formula: ""
+  },
+  "顽强不屈": {
+    // S18 资源名 DA_Artifact_TheIndomitable
+    name: "顽强不屈",
+    englishName: "TFT_Item_Artifact_TheIndomitable",
+    equipId: "93000",
+    formula: ""
+  },
+  "巨型九头蛇": {
+    // S18 资源名 DA_Artifact_TitanicHydra
+    name: "巨型九头蛇",
+    englishName: "TFT_Item_Artifact_TitanicHydra",
+    equipId: "93001",
+    formula: ""
+  },
+  "虚空护手": {
+    name: "虚空护手",
+    englishName: "DA_Artifact_VoidGauntlet",
+    equipId: "93002",
+    formula: ""
+  },
+  "智慧末刃": {
+    // S18 资源名 DA_Artifact_WitsEnd
+    name: "智慧末刃",
+    englishName: "TFT_Item_Artifact_WitsEnd",
+    equipId: "93003",
+    formula: ""
+  },
+  "中娅悖论": {
+    // S18 资源名 DA_Artifact_ZhonyasParadox
+    name: "中娅悖论",
+    englishName: "TFT4_Item_OrnnZhonyasParadox",
+    equipId: "93004",
+    formula: ""
+  },
+  "飞升护符": {
+    // S18 资源名 DA_Item_Artifact_TalismanOfAscension
+    name: "飞升护符",
+    englishName: "TFT_Item_Artifact_TalismanOfAscension",
+    equipId: "93161",
+    formula: ""
+  },
+  // ==========================================
+  // Type 9: 特殊道具 (拆卸器 / 复制器 / 药水 / 补剂等消耗品，equipId 记为 -1) (共 16 个)
+  // ==========================================
+  "法术加成补剂": {
+    // 真实 equipId 92965
+    name: "法术加成补剂",
+    englishName: "DA_AbilityBooster18",
+    equipId: "-1",
+    formula: ""
+  },
+  "护甲和魔抗补剂": {
+    // 真实 equipId 92974
+    name: "护甲和魔抗补剂",
+    englishName: "DA_ArmorMRBooster18",
+    equipId: "-1",
+    formula: ""
+  },
+  "物理加成补剂": {
+    // 真实 equipId 93007
+    name: "物理加成补剂",
+    englishName: "DA_AttackBooster18",
+    equipId: "-1",
+    formula: ""
+  },
+  "爆炸药水": {
+    // 真实 equipId 93021
+    name: "爆炸药水",
+    englishName: "DA_BlastPotion18",
+    equipId: "-1",
+    formula: ""
+  },
+  "英雄复制器": {
+    // 真实 equipId 93064
+    name: "英雄复制器",
+    englishName: "DA_Consumable_ChampionDuplicator",
+    equipId: "-1",
+    formula: ""
+  },
+  "金制拆卸器": {
+    // S18 资源名 DA_Consumable_GoldenItemRemover，真实 equipId 93065
+    name: "金制拆卸器",
+    englishName: "TFT_Item_GoldenItemRemover",
+    equipId: "-1",
+    formula: ""
+  },
+  "装备拆卸器": {
+    // 真实 equipId 93066
+    name: "装备拆卸器",
+    englishName: "DA_Consumable_ItemRemover",
+    equipId: "-1",
+    formula: ""
+  },
+  "次级英雄复制器": {
+    // 真实 equipId 93067
+    name: "次级英雄复制器",
+    englishName: "DA_Consumable_LesserChampionDuplicator",
+    equipId: "-1",
+    formula: ""
+  },
+  "生命值补剂": {
+    // 真实 equipId 93130
+    name: "生命值补剂",
+    englishName: "DA_HealthBooster18",
+    equipId: "-1",
+    formula: ""
+  },
+  "生命药水": {
+    // 真实 equipId 93131
+    name: "生命药水",
+    englishName: "DA_HealthPotion18",
+    equipId: "-1",
+    formula: ""
+  },
+  "幸运装备宝箱": {
+    // 真实 equipId 93190
+    name: "幸运装备宝箱",
+    englishName: "DA_LuckyItemChest",
+    equipId: "-1",
+    formula: ""
+  },
+  "法力药水": {
+    // 真实 equipId 93191
+    name: "法力药水",
+    englishName: "DA_ManaPotion18",
+    equipId: "-1",
+    formula: ""
+  },
+  "法力回复补剂": {
+    // 真实 equipId 93195
+    name: "法力回复补剂",
+    englishName: "DA_ManaRegenBooster18",
+    equipId: "-1",
+    formula: ""
+  },
+  "杰作升级": {
+    // 真实 equipId 93202
+    name: "杰作升级",
+    englishName: "DA_MasterworkUpgrade",
+    equipId: "-1",
+    formula: ""
+  },
+  "装备重铸器": {
+    // S18 资源名 DA_Reforger，真实 equipId 93255
+    name: "装备重铸器",
+    englishName: "TFT_Item_Reforger",
+    equipId: "-1",
+    formula: ""
+  },
+  "攻击速度补剂": {
+    // 真实 equipId 93286
+    name: "攻击速度补剂",
+    englishName: "DA_SpeedBooster18",
+    equipId: "-1",
+    formula: ""
+  }
+};
 var UnitOrigin_S16 = /* @__PURE__ */ ((UnitOrigin_S162) => {
   UnitOrigin_S162["Bilgewater"] = "比尔吉沃特";
   UnitOrigin_S162["Darkin"] = "暗裔";
@@ -9835,54 +10950,85 @@ var UnitClass_S17 = /* @__PURE__ */ ((UnitClass_S172) => {
   UnitClass_S172["Summon"] = "牧羊人";
   return UnitClass_S172;
 })(UnitClass_S17 || {});
-const TFT_17_TRAIT_DATA = {
-  // === Origins (origins) ===
-  // 主力大型羁绊
-  "法官": { id: "10296", name: "法官", type: "origins", levels: [2, 3] },
-  "幻灵战队": { id: "10299", name: "幻灵战队", type: "origins", levels: [3, 6] },
-  "木灵族": { id: "10301", name: "木灵族", type: "origins", levels: [3, 5, 7, 10] },
-  "新星特攻队": { id: "10303", name: "新星特攻队", type: "origins", levels: [2, 5] },
-  "暗星": { id: "10304", name: "暗星", type: "origins", levels: [2, 4, 6, 9] },
-  "霸天机甲": { id: "10312", name: "霸天机甲", type: "origins", levels: [3, 4, 6] },
-  "海魔人": { id: "10316", name: "海魔人", type: "origins", levels: [2, 3] },
-  "灵能特工": { id: "10317", name: "灵能特工", type: "origins", levels: [2, 4] },
-  "太空律动": { id: "10324", name: "太空律动", type: "origins", levels: [1, 3, 5, 7, 10] },
-  "未来战士": { id: "10335", name: "未来战士", type: "origins", levels: [2, 3, 4] },
-  // 观星者系（主羁绊 + 7 个星座分支）
-  "观星者": { id: "10325", name: "观星者", type: "origins", levels: [3, 5, 7] },
-  "观星者:泉水": { id: "10326", name: "观星者:泉水", type: "origins", levels: [3, 5] },
-  "观星者:女猎手": { id: "10327", name: "观星者:女猎手", type: "origins", levels: [3, 5, 7] },
-  "观星者:勋章": { id: "10328", name: "观星者:勋章", type: "origins", levels: [3] },
-  "观星者:秀山": { id: "10329", name: "观星者:秀山", type: "origins", levels: [3, 4, 5, 6, 7, 8] },
-  "观星者:蝰蛇": { id: "10330", name: "观星者:蝰蛇", type: "origins", levels: [3, 5, 7] },
-  "观星者:圣坛": { id: "10331", name: "观星者:圣坛", type: "origins", levels: [3] },
-  "观星者:野猪": { id: "10332", name: "观星者:野猪", type: "origins", levels: [3, 4, 5, 6] },
-  // 5费独有羁绊（全部只有 1 级激活）
-  "汪星机器人": { id: "10302", name: "汪星机器人", type: "origins", levels: [1] },
-  "斗神": { id: "10306", name: "斗神", type: "origins", levels: [1] },
-  "军工1号": { id: "10308", name: "军工1号", type: "origins", levels: [1] },
-  "灭星尊": { id: "10310", name: "灭星尊", type: "origins", levels: [1] },
-  "武装战姬": { id: "10314", name: "武装战姬", type: "origins", levels: [1] },
-  "黑暗魔女": { id: "10315", name: "黑暗魔女", type: "origins", levels: [1] },
-  "救世主": { id: "10320", name: "救世主", type: "origins", levels: [1] },
-  "暮光铁壁": { id: "10321", name: "暮光铁壁", type: "origins", levels: [1] },
-  "最高指挥官": { id: "10323", name: "最高指挥官", type: "origins", levels: [1] },
-  "命运祭司": { id: "10334", name: "命运祭司", type: "origins", levels: [1] },
-  "末日使者": { id: "10336", name: "末日使者", type: "origins", levels: [1] },
-  "天煞": { id: "10337", name: "天煞", type: "origins", levels: [1] },
-  // === Classes (classes) ===
-  "魔术师": { id: "10297", name: "魔术师", type: "classes", levels: [2, 4] },
-  "挑战者": { id: "10298", name: "挑战者", type: "classes", levels: [2, 3, 4, 5] },
-  "游侠": { id: "10300", name: "游侠", type: "classes", levels: [2, 3, 4, 5] },
-  "织命人": { id: "10305", name: "织命人", type: "classes", levels: [2, 4] },
-  "旅人": { id: "10307", name: "旅人", type: "classes", levels: [2, 3, 4, 5, 6] },
-  "斗士": { id: "10309", name: "斗士", type: "classes", levels: [2, 4, 6] },
-  "神谕": { id: "10311", name: "神谕", type: "classes", levels: [2, 3, 4, 5] },
-  "狂战士": { id: "10313", name: "狂战士", type: "classes", levels: [2, 4, 6] },
-  "狙神": { id: "10318", name: "狙神", type: "classes", levels: [2, 3, 4] },
-  "堡垒卫士": { id: "10319", name: "堡垒卫士", type: "classes", levels: [2, 4, 6] },
-  "重装战士": { id: "10322", name: "重装战士", type: "classes", levels: [2, 4, 6] },
-  "牧羊人": { id: "10333", name: "牧羊人", type: "classes", levels: [3, 5, 7] }
+var UnitOrigin_S18 = /* @__PURE__ */ ((UnitOrigin_S182) => {
+  UnitOrigin_S182["ApexPredator"] = "顶级掠食者";
+  UnitOrigin_S182["Battlemage"] = "魔岩巨兽";
+  UnitOrigin_S182["Blackthorn"] = "黑荆棘";
+  UnitOrigin_S182["Blossom"] = "灵魂莲华";
+  UnitOrigin_S182["Caustic"] = "帝王斑蝶";
+  UnitOrigin_S182["Coven"] = "魔女";
+  UnitOrigin_S182["Eclipse"] = "日月双蚀";
+  UnitOrigin_S182["Elderwood"] = "永恒之森";
+  UnitOrigin_S182["Fae"] = "花仙子";
+  UnitOrigin_S182["Greenfather"] = "翠神";
+  UnitOrigin_S182["Inferno"] = "地狱火";
+  UnitOrigin_S182["Lunar"] = "月蚀骑士";
+  UnitOrigin_S182["LuxUniqueTrait"] = "自然之力！大元素使";
+  UnitOrigin_S182["MaokaiUniqueTrait"] = "远古树精";
+  UnitOrigin_S182["Rival"] = "宿敌";
+  UnitOrigin_S182["Solar"] = "日蚀骑士";
+  UnitOrigin_S182["Sprykin"] = "约德尔人和朋友";
+  UnitOrigin_S182["ZyraUniqueTrait"] = "荆棘之兴";
+  UnitOrigin_S182["AluneUniqueTrait"] = "月华神女";
+  UnitOrigin_S182["DravenUniqueTrait"] = "赏金猎人";
+  UnitOrigin_S182["Emerald"] = "宝石骑士";
+  UnitOrigin_S182["FloraFatalis"] = "绝命花妖";
+  UnitOrigin_S182["Primal"] = "野兽之灵";
+  UnitOrigin_S182["Riftbeast"] = "峡谷野怪";
+  return UnitOrigin_S182;
+})(UnitOrigin_S18 || {});
+var UnitClass_S18 = /* @__PURE__ */ ((UnitClass_S182) => {
+  UnitClass_S182["Adaptor"] = "魔战士";
+  UnitClass_S182["Brawler"] = "斗士";
+  UnitClass_S182["Defender"] = "护卫";
+  UnitClass_S182["Executioner"] = "裁决使";
+  UnitClass_S182["Hunter"] = "猎人";
+  UnitClass_S182["Invoker"] = "神谕";
+  UnitClass_S182["Rapidfire"] = "迅捷射手";
+  UnitClass_S182["Slayer"] = "狂战士";
+  UnitClass_S182["Spellweaver"] = "法师";
+  UnitClass_S182["Summoner"] = "召唤师";
+  UnitClass_S182["Vanguard"] = "重装战士";
+  UnitClass_S182["Juggernaut"] = "主宰";
+  return UnitClass_S182;
+})(UnitClass_S18 || {});
+const TFT_18_TRAIT_DATA = {
+  "顶级掠食者": { id: "10380", name: "顶级掠食者", type: "origins", levels: [1] },
+  "魔岩巨兽": { id: "10381", name: "魔岩巨兽", type: "origins", levels: [1] },
+  "黑荆棘": { id: "10382", name: "黑荆棘", type: "origins", levels: [2, 4, 6] },
+  "灵魂莲华": { id: "10383", name: "灵魂莲华", type: "origins", levels: [3, 5, 7, 9, 11] },
+  "帝王斑蝶": { id: "10385", name: "帝王斑蝶", type: "origins", levels: [1] },
+  "魔女": { id: "10386", name: "魔女", type: "origins", levels: [3, 4, 5, 7] },
+  "日月双蚀": { id: "10388", name: "日月双蚀", type: "origins", levels: [] },
+  "永恒之森": { id: "10389", name: "永恒之森", type: "origins", levels: [3, 5, 7, 9, 11] },
+  "花仙子": { id: "10391", name: "花仙子", type: "origins", levels: [2, 4] },
+  "翠神": { id: "10392", name: "翠神", type: "origins", levels: [1] },
+  "地狱火": { id: "10394", name: "地狱火", type: "origins", levels: [2, 3, 5, 7] },
+  "月蚀骑士": { id: "10396", name: "月蚀骑士", type: "origins", levels: [2, 3, 4, 5] },
+  "自然之力！大元素使": { id: "10397", name: "自然之力！大元素使", type: "origins", levels: [1] },
+  "远古树精": { id: "10398", name: "远古树精", type: "origins", levels: [1] },
+  "宿敌": { id: "10400", name: "宿敌", type: "origins", levels: [1, 2] },
+  "日蚀骑士": { id: "10402", name: "日蚀骑士", type: "origins", levels: [3] },
+  "约德尔人和朋友": { id: "10404", name: "约德尔人和朋友", type: "origins", levels: [3, 5, 7] },
+  "荆棘之兴": { id: "10407", name: "荆棘之兴", type: "origins", levels: [1] },
+  "月华神女": { id: "10408", name: "月华神女", type: "origins", levels: [1] },
+  "赏金猎人": { id: "10409", name: "赏金猎人", type: "origins", levels: [1] },
+  "宝石骑士": { id: "10410", name: "宝石骑士", type: "origins", levels: [1] },
+  "绝命花妖": { id: "10411", name: "绝命花妖", type: "origins", levels: [1, 2] },
+  "野兽之灵": { id: "10413", name: "野兽之灵", type: "origins", levels: [2, 4] },
+  "峡谷野怪": { id: "10414", name: "峡谷野怪", type: "origins", levels: [3, 5, 7, 10] },
+  "魔战士": { id: "10379", name: "魔战士", type: "classes", levels: [2, 3, 4] },
+  "斗士": { id: "10384", name: "斗士", type: "classes", levels: [2, 4, 6] },
+  "护卫": { id: "10387", name: "护卫", type: "classes", levels: [2, 4, 6] },
+  "裁决使": { id: "10390", name: "裁决使", type: "classes", levels: [2, 3, 4] },
+  "猎人": { id: "10393", name: "猎人", type: "classes", levels: [2, 3, 4, 5] },
+  "神谕": { id: "10395", name: "神谕", type: "classes", levels: [2, 3, 4, 5] },
+  "迅捷射手": { id: "10399", name: "迅捷射手", type: "classes", levels: [2, 3, 4, 5] },
+  "狂战士": { id: "10401", name: "狂战士", type: "classes", levels: [2, 4, 6] },
+  "法师": { id: "10403", name: "法师", type: "classes", levels: [2, 4, 6] },
+  "召唤师": { id: "10405", name: "召唤师", type: "classes", levels: [2, 3] },
+  "重装战士": { id: "10406", name: "重装战士", type: "classes", levels: [2, 4, 6] },
+  "主宰": { id: "10412", name: "主宰", type: "classes", levels: [2, 4, 6] }
 };
 const TFT_SPECIAL_CHESS = {
   //  特殊的棋子，比如基础装备锻造器，这种不属于英雄
@@ -12051,6 +13197,610 @@ const _TFT_17_CHESS_DATA = {
   //     attackRange: 1
   // },
 };
+const _TFT_18_CHESS_DATA = {
+  //  特殊棋子（魔像、锻造器、训练假人等）跨赛季共用
+  ...TFT_SPECIAL_CHESS,
+  // ====================================================================
+  // 1 费棋子 (共 14 个)
+  // ====================================================================
+  "阿卡丽": {
+    displayName: "阿卡丽",
+    englishId: "DA_18_Akali_AD",
+    price: 1,
+    traits: [UnitOrigin_S18.Inferno, UnitClass_S18.Adaptor, UnitClass_S18.Slayer],
+    origins: [UnitOrigin_S18.Inferno],
+    classes: [UnitClass_S18.Adaptor, UnitClass_S18.Slayer],
+    attackRange: 1
+  },
+  "卡蜜尔": {
+    displayName: "卡蜜尔",
+    englishId: "DA_18_Camille",
+    price: 1,
+    traits: [UnitOrigin_S18.Coven, UnitClass_S18.Slayer],
+    origins: [UnitOrigin_S18.Coven],
+    classes: [UnitClass_S18.Slayer],
+    attackRange: 1
+  },
+  "可酷伯": {
+    displayName: "可酷伯",
+    englishId: "DA_18_Kobuko",
+    price: 1,
+    traits: [UnitOrigin_S18.Sprykin, UnitClass_S18.Brawler],
+    origins: [UnitOrigin_S18.Sprykin],
+    classes: [UnitClass_S18.Brawler],
+    attackRange: 1
+  },
+  "蕾欧娜": {
+    displayName: "蕾欧娜",
+    englishId: "DA_18_Leona",
+    price: 1,
+    traits: [UnitOrigin_S18.Solar, UnitClass_S18.Defender],
+    origins: [UnitOrigin_S18.Solar],
+    classes: [UnitClass_S18.Defender],
+    attackRange: 1
+  },
+  "奥恩": {
+    displayName: "奥恩",
+    englishId: "DA_18_Ornn",
+    price: 1,
+    traits: [UnitOrigin_S18.Elderwood, UnitClass_S18.Defender],
+    origins: [UnitOrigin_S18.Elderwood],
+    classes: [UnitClass_S18.Defender],
+    attackRange: 1
+  },
+  "洛": {
+    displayName: "洛",
+    englishId: "DA_18_Rakan",
+    price: 1,
+    traits: [UnitOrigin_S18.Fae, UnitClass_S18.Juggernaut, UnitClass_S18.Vanguard],
+    origins: [UnitOrigin_S18.Fae],
+    classes: [UnitClass_S18.Juggernaut, UnitClass_S18.Vanguard],
+    attackRange: 1
+  },
+  "雷克塞": {
+    displayName: "雷克塞",
+    englishId: "DA_18_RekSai",
+    price: 1,
+    traits: [UnitOrigin_S18.Blackthorn, UnitClass_S18.Brawler],
+    origins: [UnitOrigin_S18.Blackthorn],
+    classes: [UnitClass_S18.Brawler],
+    attackRange: 1
+  },
+  "苍蓝哨戒": {
+    displayName: "苍蓝哨戒",
+    englishId: "DA_18_Sentry",
+    price: 1,
+    traits: [UnitOrigin_S18.Riftbeast, UnitClass_S18.Invoker],
+    origins: [UnitOrigin_S18.Riftbeast],
+    classes: [UnitClass_S18.Invoker],
+    attackRange: 4
+  },
+  "韦鲁斯": {
+    displayName: "韦鲁斯",
+    englishId: "DA_18_Varus",
+    price: 1,
+    traits: [UnitOrigin_S18.Inferno, UnitClass_S18.Rapidfire],
+    origins: [UnitOrigin_S18.Inferno],
+    classes: [UnitClass_S18.Rapidfire],
+    attackRange: 4
+  },
+  "维迦": {
+    displayName: "维迦",
+    englishId: "DA_18_Veigar",
+    price: 1,
+    traits: [UnitOrigin_S18.Blackthorn, UnitOrigin_S18.Sprykin, UnitClass_S18.Spellweaver],
+    origins: [UnitOrigin_S18.Blackthorn, UnitOrigin_S18.Sprykin],
+    classes: [UnitClass_S18.Spellweaver],
+    attackRange: 4
+  },
+  "霞": {
+    displayName: "霞",
+    englishId: "DA_18_Xayah",
+    price: 1,
+    traits: [UnitOrigin_S18.Elderwood, UnitOrigin_S18.Fae, UnitClass_S18.Rapidfire],
+    origins: [UnitOrigin_S18.Elderwood, UnitOrigin_S18.Fae],
+    classes: [UnitClass_S18.Rapidfire],
+    attackRange: 4
+  },
+  "约里克": {
+    displayName: "约里克",
+    englishId: "DA_18_Yorick",
+    price: 1,
+    traits: [UnitOrigin_S18.Blossom, UnitClass_S18.Juggernaut, UnitClass_S18.Summoner],
+    origins: [UnitOrigin_S18.Blossom],
+    classes: [UnitClass_S18.Juggernaut, UnitClass_S18.Summoner],
+    attackRange: 1
+  },
+  "绯红树怪": {
+    displayName: "绯红树怪",
+    englishId: "DA_Cinderling18",
+    price: 1,
+    traits: [UnitOrigin_S18.Riftbeast, UnitClass_S18.Hunter],
+    origins: [UnitOrigin_S18.Riftbeast],
+    classes: [UnitClass_S18.Hunter],
+    attackRange: 4
+  },
+  "卡尔玛": {
+    displayName: "卡尔玛",
+    englishId: "DA_Karma18",
+    price: 1,
+    traits: [UnitOrigin_S18.Blossom, UnitClass_S18.Spellweaver],
+    origins: [UnitOrigin_S18.Blossom],
+    classes: [UnitClass_S18.Spellweaver],
+    attackRange: 4
+  },
+  // ====================================================================
+  // 2 费棋子 (共 13 个)
+  // ====================================================================
+  "阿利斯塔": {
+    displayName: "阿利斯塔",
+    englishId: "DA_18_Alistar",
+    price: 2,
+    traits: [UnitOrigin_S18.Elderwood, UnitClass_S18.Brawler],
+    origins: [UnitOrigin_S18.Elderwood],
+    classes: [UnitClass_S18.Brawler],
+    attackRange: 1
+  },
+  "凯特琳": {
+    displayName: "凯特琳",
+    englishId: "DA_18_Caitlyn",
+    price: 2,
+    traits: [UnitOrigin_S18.Coven, UnitClass_S18.Hunter],
+    origins: [UnitOrigin_S18.Coven],
+    classes: [UnitClass_S18.Hunter],
+    attackRange: 4
+  },
+  "伊莉丝": {
+    displayName: "伊莉丝",
+    englishId: "DA_18_Elise",
+    price: 2,
+    traits: [UnitOrigin_S18.Coven, UnitClass_S18.Vanguard],
+    origins: [UnitOrigin_S18.Coven],
+    classes: [UnitClass_S18.Vanguard],
+    attackRange: 1
+  },
+  "凯尔": {
+    displayName: "凯尔",
+    englishId: "DA_18_Kayle",
+    price: 2,
+    traits: [UnitOrigin_S18.Solar, UnitClass_S18.Rapidfire],
+    origins: [UnitOrigin_S18.Solar],
+    classes: [UnitClass_S18.Rapidfire],
+    attackRange: 4
+  },
+  "乐芙兰": {
+    displayName: "乐芙兰",
+    englishId: "DA_18_LeBlanc",
+    price: 2,
+    traits: [UnitOrigin_S18.Elderwood, UnitClass_S18.Spellweaver],
+    origins: [UnitOrigin_S18.Elderwood],
+    classes: [UnitClass_S18.Spellweaver],
+    attackRange: 4
+  },
+  "瑟庄妮": {
+    displayName: "瑟庄妮",
+    englishId: "DA_18_Sejuani",
+    price: 2,
+    traits: [UnitOrigin_S18.Solar, UnitClass_S18.Juggernaut],
+    origins: [UnitOrigin_S18.Solar],
+    classes: [UnitClass_S18.Juggernaut],
+    attackRange: 1
+  },
+  "慎": {
+    displayName: "慎",
+    englishId: "DA_18_Shen",
+    price: 2,
+    traits: [UnitOrigin_S18.Inferno, UnitClass_S18.Defender],
+    origins: [UnitOrigin_S18.Inferno],
+    classes: [UnitClass_S18.Defender],
+    attackRange: 1
+  },
+  "提莫": {
+    displayName: "提莫",
+    englishId: "DA_18_Teemo",
+    price: 2,
+    traits: [UnitOrigin_S18.Sprykin, UnitClass_S18.Invoker],
+    origins: [UnitOrigin_S18.Sprykin],
+    classes: [UnitClass_S18.Invoker],
+    attackRange: 4
+  },
+  "沃里克": {
+    displayName: "沃里克",
+    englishId: "DA_18_Warwick",
+    price: 2,
+    traits: [UnitOrigin_S18.Blackthorn, UnitClass_S18.Slayer],
+    origins: [UnitOrigin_S18.Blackthorn],
+    classes: [UnitClass_S18.Slayer],
+    attackRange: 1
+  },
+  "芸阿娜": {
+    displayName: "芸阿娜",
+    englishId: "DA_18_Yunara",
+    price: 2,
+    traits: [UnitOrigin_S18.Blossom, UnitClass_S18.Executioner],
+    origins: [UnitOrigin_S18.Blossom],
+    classes: [UnitClass_S18.Executioner],
+    attackRange: 4
+  },
+  "魔沼蛙": {
+    displayName: "魔沼蛙",
+    englishId: "DA_Gromp18_AP",
+    price: 2,
+    traits: [UnitOrigin_S18.Riftbeast, UnitClass_S18.Adaptor],
+    origins: [UnitOrigin_S18.Riftbeast],
+    classes: [UnitClass_S18.Adaptor],
+    attackRange: 4
+  },
+  "暗影狼": {
+    displayName: "暗影狼",
+    englishId: "DA_Murkwolf18",
+    price: 2,
+    traits: [UnitOrigin_S18.Riftbeast, UnitClass_S18.Slayer],
+    origins: [UnitOrigin_S18.Riftbeast],
+    classes: [UnitClass_S18.Slayer],
+    attackRange: 1
+  },
+  "峡谷迅捷蟹": {
+    displayName: "峡谷迅捷蟹",
+    englishId: "DA_Scuttlecrab18",
+    price: 2,
+    traits: [UnitOrigin_S18.Riftbeast, UnitClass_S18.Juggernaut],
+    origins: [UnitOrigin_S18.Riftbeast],
+    classes: [UnitClass_S18.Juggernaut],
+    attackRange: 1
+  },
+  // ====================================================================
+  // 3 费棋子 (共 14 个)
+  // ====================================================================
+  "阿兹尔": {
+    displayName: "阿兹尔",
+    englishId: "DA_18_Azir",
+    price: 3,
+    traits: [UnitOrigin_S18.Blackthorn, UnitClass_S18.Executioner, UnitClass_S18.Summoner],
+    origins: [UnitOrigin_S18.Blackthorn],
+    classes: [UnitClass_S18.Executioner, UnitClass_S18.Summoner],
+    attackRange: 4
+  },
+  "卡西奥佩娅": {
+    displayName: "卡西奥佩娅",
+    englishId: "DA_18_Cassiopeia",
+    price: 3,
+    traits: [UnitOrigin_S18.Coven, UnitClass_S18.Spellweaver],
+    origins: [UnitOrigin_S18.Coven],
+    classes: [UnitClass_S18.Spellweaver],
+    attackRange: 4
+  },
+  "黛安娜": {
+    displayName: "黛安娜",
+    englishId: "DA_18_Diana",
+    price: 3,
+    traits: [UnitOrigin_S18.Lunar, UnitClass_S18.Slayer, UnitClass_S18.Vanguard],
+    origins: [UnitOrigin_S18.Lunar],
+    classes: [UnitClass_S18.Slayer, UnitClass_S18.Vanguard],
+    attackRange: 1
+  },
+  "赫卡里姆": {
+    displayName: "赫卡里姆",
+    englishId: "DA_18_Hecarim",
+    price: 3,
+    traits: [UnitOrigin_S18.Elderwood, UnitClass_S18.Vanguard],
+    origins: [UnitOrigin_S18.Elderwood],
+    classes: [UnitClass_S18.Vanguard],
+    attackRange: 1
+  },
+  "卡兹克": {
+    displayName: "卡兹克",
+    englishId: "DA_18_KhaZix",
+    price: 3,
+    traits: [UnitOrigin_S18.Rival],
+    origins: [UnitOrigin_S18.Rival],
+    classes: [],
+    attackRange: 1
+  },
+  "易": {
+    displayName: "易",
+    englishId: "DA_18_MasterYi_AD",
+    price: 3,
+    traits: [UnitOrigin_S18.Blossom, UnitClass_S18.Adaptor],
+    origins: [UnitOrigin_S18.Blossom],
+    classes: [UnitClass_S18.Adaptor],
+    attackRange: 1
+  },
+  "拉莫斯": {
+    displayName: "拉莫斯",
+    englishId: "DA_18_Rammus",
+    price: 3,
+    traits: [UnitOrigin_S18.Sprykin, UnitClass_S18.Defender],
+    origins: [UnitOrigin_S18.Sprykin],
+    classes: [UnitClass_S18.Defender],
+    attackRange: 1
+  },
+  "雷恩加尔": {
+    displayName: "雷恩加尔",
+    englishId: "DA_18_Rengar",
+    price: 3,
+    traits: [UnitOrigin_S18.Rival],
+    origins: [UnitOrigin_S18.Rival],
+    classes: [],
+    attackRange: 1
+  },
+  "崔丝塔娜": {
+    displayName: "崔丝塔娜",
+    englishId: "DA_18_Tristana",
+    price: 3,
+    traits: [UnitOrigin_S18.Fae, UnitOrigin_S18.Sprykin, UnitClass_S18.Hunter],
+    origins: [UnitOrigin_S18.Fae, UnitOrigin_S18.Sprykin],
+    classes: [UnitClass_S18.Hunter],
+    attackRange: 4
+  },
+  "深红锋喙鸟": {
+    displayName: "深红锋喙鸟",
+    englishId: "DA_CrimsonRaptor18",
+    price: 3,
+    traits: [UnitOrigin_S18.Riftbeast, UnitClass_S18.Summoner, UnitClass_S18.Rapidfire],
+    origins: [UnitOrigin_S18.Riftbeast],
+    classes: [UnitClass_S18.Summoner, UnitClass_S18.Rapidfire],
+    attackRange: 4
+  },
+  "费德提克": {
+    displayName: "费德提克",
+    englishId: "DA_Fiddlesticks18",
+    price: 3,
+    traits: [UnitOrigin_S18.FloraFatalis, UnitClass_S18.Defender, UnitClass_S18.Spellweaver],
+    origins: [UnitOrigin_S18.FloraFatalis],
+    classes: [UnitClass_S18.Defender, UnitClass_S18.Spellweaver],
+    attackRange: 1
+  },
+  "克格莫": {
+    displayName: "克格莫",
+    englishId: "DA_KogMaw18_AD",
+    price: 3,
+    traits: [UnitOrigin_S18.Caustic, UnitClass_S18.Adaptor, UnitClass_S18.Invoker],
+    origins: [UnitOrigin_S18.Caustic],
+    classes: [UnitClass_S18.Adaptor, UnitClass_S18.Invoker],
+    attackRange: 4
+  },
+  "远古石甲虫": {
+    displayName: "远古石甲虫",
+    englishId: "DA_Krug18",
+    price: 3,
+    traits: [UnitOrigin_S18.Riftbeast, UnitClass_S18.Brawler],
+    origins: [UnitOrigin_S18.Riftbeast],
+    classes: [UnitClass_S18.Brawler],
+    attackRange: 1
+  },
+  "蔚": {
+    displayName: "蔚",
+    englishId: "DA_Vi18",
+    price: 3,
+    traits: [UnitOrigin_S18.Primal, UnitClass_S18.Juggernaut],
+    origins: [UnitOrigin_S18.Primal],
+    classes: [UnitClass_S18.Juggernaut],
+    attackRange: 1
+  },
+  // ====================================================================
+  // 4 费棋子 (共 14 个)
+  // ====================================================================
+  "阿狸": {
+    displayName: "阿狸",
+    englishId: "DA_18_Ahri",
+    price: 4,
+    traits: [UnitOrigin_S18.Blossom, UnitClass_S18.Spellweaver],
+    origins: [UnitOrigin_S18.Blossom],
+    classes: [UnitClass_S18.Spellweaver],
+    attackRange: 4
+  },
+  "厄斐琉斯": {
+    displayName: "厄斐琉斯",
+    englishId: "DA_18_Aphelios",
+    price: 4,
+    traits: [UnitOrigin_S18.Lunar, UnitClass_S18.Rapidfire],
+    origins: [UnitOrigin_S18.Lunar],
+    classes: [UnitClass_S18.Rapidfire],
+    attackRange: 4
+  },
+  "伊泽瑞尔": {
+    displayName: "伊泽瑞尔",
+    englishId: "DA_18_Ezreal",
+    price: 4,
+    traits: [UnitOrigin_S18.Elderwood, UnitClass_S18.Executioner],
+    origins: [UnitOrigin_S18.Elderwood],
+    classes: [UnitClass_S18.Executioner],
+    attackRange: 4
+  },
+  "莉莉娅": {
+    displayName: "莉莉娅",
+    englishId: "DA_18_Lillia",
+    price: 4,
+    traits: [UnitOrigin_S18.Fae, UnitClass_S18.Defender],
+    origins: [UnitOrigin_S18.Fae],
+    classes: [UnitClass_S18.Defender],
+    attackRange: 1
+  },
+  "墨菲特": {
+    displayName: "墨菲特",
+    englishId: "DA_18_Malphite",
+    price: 4,
+    traits: [UnitOrigin_S18.Blackthorn, UnitOrigin_S18.Battlemage],
+    origins: [UnitOrigin_S18.Blackthorn, UnitOrigin_S18.Battlemage],
+    classes: [],
+    attackRange: 1
+  },
+  "莫甘娜": {
+    displayName: "莫甘娜",
+    englishId: "DA_18_Morgana",
+    price: 4,
+    traits: [UnitOrigin_S18.Coven, UnitClass_S18.Invoker],
+    origins: [UnitOrigin_S18.Coven],
+    classes: [UnitClass_S18.Invoker],
+    attackRange: 2
+  },
+  "瑟提": {
+    displayName: "瑟提",
+    englishId: "DA_18_Sett",
+    price: 4,
+    traits: [UnitOrigin_S18.Blossom, UnitClass_S18.Brawler],
+    origins: [UnitOrigin_S18.Blossom],
+    classes: [UnitClass_S18.Brawler],
+    attackRange: 1
+  },
+  "希维尔": {
+    displayName: "希维尔",
+    englishId: "DA_18_Sivir",
+    price: 4,
+    traits: [UnitOrigin_S18.Primal, UnitClass_S18.Hunter],
+    origins: [UnitOrigin_S18.Primal],
+    classes: [UnitClass_S18.Hunter],
+    attackRange: 4
+  },
+  "索拉卡": {
+    displayName: "索拉卡",
+    englishId: "DA_18_Soraka",
+    price: 4,
+    traits: [UnitOrigin_S18.FloraFatalis, UnitClass_S18.Executioner],
+    origins: [UnitOrigin_S18.FloraFatalis],
+    classes: [UnitClass_S18.Executioner],
+    attackRange: 4
+  },
+  "婕拉": {
+    displayName: "婕拉",
+    englishId: "DA_18_Zyra",
+    price: 4,
+    traits: [UnitOrigin_S18.ZyraUniqueTrait, UnitClass_S18.Summoner],
+    origins: [UnitOrigin_S18.ZyraUniqueTrait],
+    classes: [UnitClass_S18.Summoner],
+    attackRange: 4
+  },
+  "阿木木": {
+    displayName: "阿木木",
+    englishId: "DA_Amumu18",
+    price: 4,
+    traits: [UnitOrigin_S18.Inferno, UnitClass_S18.Juggernaut],
+    origins: [UnitOrigin_S18.Inferno],
+    classes: [UnitClass_S18.Juggernaut],
+    attackRange: 1
+  },
+  "绯红印记树怪": {
+    displayName: "绯红印记树怪",
+    englishId: "DA_Brambleback18",
+    price: 4,
+    traits: [UnitOrigin_S18.Riftbeast, UnitClass_S18.Slayer],
+    origins: [UnitOrigin_S18.Riftbeast],
+    classes: [UnitClass_S18.Slayer],
+    attackRange: 1
+  },
+  "奈德丽": {
+    displayName: "奈德丽",
+    englishId: "DA_Nidalee18_AP",
+    price: 4,
+    traits: [UnitOrigin_S18.Primal, UnitClass_S18.Adaptor],
+    origins: [UnitOrigin_S18.Primal],
+    classes: [UnitClass_S18.Adaptor],
+    attackRange: 1
+  },
+  "苍蓝雕纹魔像": {
+    displayName: "苍蓝雕纹魔像",
+    englishId: "DA_Sentinel18",
+    price: 4,
+    traits: [UnitOrigin_S18.Riftbeast, UnitClass_S18.Vanguard, UnitClass_S18.Invoker],
+    origins: [UnitOrigin_S18.Riftbeast],
+    classes: [UnitClass_S18.Vanguard, UnitClass_S18.Invoker],
+    attackRange: 1
+  },
+  // ====================================================================
+  // 5 费棋子 (共 10 个)
+  // ====================================================================
+  "拉露恩": {
+    displayName: "拉露恩",
+    englishId: "DA_18_Alune",
+    price: 5,
+    traits: [UnitOrigin_S18.AluneUniqueTrait, UnitOrigin_S18.Lunar, UnitClass_S18.Spellweaver],
+    origins: [UnitOrigin_S18.AluneUniqueTrait, UnitOrigin_S18.Lunar],
+    classes: [UnitClass_S18.Spellweaver],
+    attackRange: 4
+  },
+  "艾希": {
+    displayName: "艾希",
+    englishId: "DA_18_Ashe",
+    price: 5,
+    traits: [UnitOrigin_S18.Blossom, UnitClass_S18.Hunter],
+    origins: [UnitOrigin_S18.Blossom],
+    classes: [UnitClass_S18.Hunter],
+    attackRange: 6
+  },
+  "远古巨龙": {
+    displayName: "远古巨龙",
+    englishId: "DA_18_ElderDragon",
+    price: 5,
+    traits: [UnitOrigin_S18.ApexPredator, UnitOrigin_S18.Riftbeast],
+    origins: [UnitOrigin_S18.ApexPredator, UnitOrigin_S18.Riftbeast],
+    classes: [],
+    attackRange: 2
+  },
+  "纳尔": {
+    displayName: "纳尔",
+    englishId: "DA_18_GnarSmall",
+    price: 5,
+    traits: [UnitOrigin_S18.Elderwood, UnitOrigin_S18.Sprykin, UnitClass_S18.Brawler],
+    origins: [UnitOrigin_S18.Elderwood, UnitOrigin_S18.Sprykin],
+    classes: [UnitClass_S18.Brawler],
+    attackRange: 2
+  },
+  "艾翁": {
+    displayName: "艾翁",
+    englishId: "DA_18_Ivern",
+    price: 5,
+    traits: [UnitOrigin_S18.Greenfather],
+    origins: [UnitOrigin_S18.Greenfather],
+    classes: [],
+    attackRange: 3
+  },
+  "凯南": {
+    displayName: "凯南",
+    englishId: "DA_18_Kennen",
+    price: 5,
+    traits: [UnitOrigin_S18.Inferno, UnitClass_S18.Executioner],
+    origins: [UnitOrigin_S18.Inferno],
+    classes: [UnitClass_S18.Executioner],
+    attackRange: 2
+  },
+  "茂凯": {
+    displayName: "茂凯",
+    englishId: "DA_18_Maokai",
+    price: 5,
+    traits: [UnitOrigin_S18.MaokaiUniqueTrait, UnitClass_S18.Juggernaut],
+    origins: [UnitOrigin_S18.MaokaiUniqueTrait],
+    classes: [UnitClass_S18.Juggernaut],
+    attackRange: 1
+  },
+  "德莱文": {
+    displayName: "德莱文",
+    englishId: "DA_Draven18",
+    price: 5,
+    traits: [UnitOrigin_S18.DravenUniqueTrait],
+    origins: [UnitOrigin_S18.DravenUniqueTrait],
+    classes: [],
+    attackRange: 6
+  },
+  "拉克丝": {
+    displayName: "拉克丝",
+    englishId: "DA_Lux18_Base",
+    price: 5,
+    traits: [UnitOrigin_S18.LuxUniqueTrait],
+    origins: [UnitOrigin_S18.LuxUniqueTrait],
+    classes: [],
+    attackRange: 6
+  },
+  "塔里克": {
+    displayName: "塔里克",
+    englishId: "DA_Taric18",
+    price: 5,
+    traits: [UnitOrigin_S18.Emerald, UnitClass_S18.Vanguard],
+    origins: [UnitOrigin_S18.Emerald],
+    classes: [UnitClass_S18.Vanguard],
+    attackRange: 1
+  }
+};
 var GameStageType = /* @__PURE__ */ ((GameStageType2) => {
   GameStageType2["EARLY_PVE"] = "EARLY_PVE";
   GameStageType2["PVE"] = "PVE";
@@ -12468,9 +14218,11 @@ var ItemForgeType = /* @__PURE__ */ ((ItemForgeType2) => {
 })(ItemForgeType || {});
 const TFT_16_CHESS_DATA = _TFT_16_CHESS_DATA;
 const TFT_17_CHESS_DATA = _TFT_17_CHESS_DATA;
+const TFT_18_CHESS_DATA = _TFT_18_CHESS_DATA;
 const TFT_4_CHESS_DATA = _TFT_4_CHESS_DATA;
 const TFT_16_EQUIP_DATA = _TFT_16_EQUIP_DATA;
 const TFT_17_EQUIP_DATA = _TFT_17_EQUIP_DATA;
+const TFT_18_EQUIP_DATA = _TFT_18_EQUIP_DATA;
 const TFT_4_EQUIP_DATA = _TFT_4_EQUIP_DATA;
 const CHAMPION_EN_TO_CN = {};
 for (const [cnName, champion] of Object.entries(TFT_16_CHESS_DATA)) {
@@ -12488,11 +14240,18 @@ for (const [cnName, champion] of Object.entries(TFT_17_CHESS_DATA)) {
     CHAMPION_EN_TO_CN[champion.englishId] = cnName;
   }
 }
+for (const [cnName, champion] of Object.entries(TFT_18_CHESS_DATA)) {
+  if (champion.englishId) {
+    CHAMPION_EN_TO_CN[champion.englishId] = cnName;
+  }
+}
 const EQUIP_EN_TO_CN = {};
-for (const [cnName, equip] of Object.entries(TFT_17_EQUIP_DATA)) {
-  const englishNames = equip.englishName.split(",");
-  for (const enName of englishNames) {
-    EQUIP_EN_TO_CN[enName.trim()] = cnName;
+for (const equipData of [TFT_17_EQUIP_DATA, TFT_18_EQUIP_DATA]) {
+  for (const [cnName, equip] of Object.entries(equipData)) {
+    const englishNames = equip.englishName.split(",");
+    for (const enName of englishNames) {
+      EQUIP_EN_TO_CN[enName.trim()] = cnName;
+    }
   }
 }
 const EQUIP_ALIASES = {
@@ -13155,15 +14914,15 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-Cb7NSw6O.js");
+    const ServicesModule = await import("./chunks/index-ChTsdUAE.js");
     hexService = ServicesModule.hexService;
-    const TftOperatorModule = await import("./chunks/TftOperator-9tvV29mj.js").then((n) => n.T);
+    const TftOperatorModule = await import("./chunks/TftOperator-2Vitfk6g.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
-    const LineupModule = await import("./chunks/index-bGCrXB73.js");
+    const LineupModule = await import("./chunks/index-maGobXkq.js");
     lineupLoader = LineupModule.lineupLoader;
     const GlobalHotkeyManagerModule = await import("./chunks/GlobalHotkeyManager-Cbcy0EP4.js");
     globalHotkeyManager = GlobalHotkeyManagerModule.globalHotkeyManager;
-    const TftWindowCaptureModule = await import("./chunks/TftWindowCapture-C10K6JbC.js");
+    const TftWindowCaptureModule = await import("./chunks/TftWindowCapture-CHUn5M70.js");
     tftWindowCapture = TftWindowCaptureModule.tftWindowCapture;
     const TftWindowLocatorModule = await import("./chunks/TftWindowLocator-EOZPzjkt.js");
     tftWindowLocator = TftWindowLocatorModule.tftWindowLocator;
@@ -13456,65 +15215,67 @@ function registerHandler() {
   });
 }
 export {
-  sendOverlayPlayers as $,
-  itemForgeTooltipRegion as A,
-  gameStageDisplayStageOne as B,
-  gameStageDisplayNormal as C,
-  gameStageDisplayTheClockworkTrails as D,
-  clockworkTrailsQuitNowButtonPoint as E,
-  levelRegion as F,
+  LcuEventUri as $,
+  clockworkTrailsQuitNowButtonRegion as A,
+  itemForgeTooltipRegionEdge as B,
+  itemForgeTooltipRegion as C,
+  gameStageDisplayStageOne as D,
+  gameStageDisplayNormal as E,
+  gameStageDisplayTheClockworkTrails as F,
   GameStageType as G,
-  coinRegion as H,
+  clockworkTrailsQuitNowButtonPoint as H,
   ItemForgeType as I,
-  hexSlot as J,
-  lootRegion as K,
-  littleLegendDefaultPoint as L,
-  selfWalkAroundPoints as M,
+  levelRegion as J,
+  coinRegion as K,
+  hexSlot as L,
+  lootRegion as M,
   MAIN_DIST,
-  equipmentSlot as N,
-  combatPhaseTextRegion as O,
-  clockworkTrailsFightButtonPoint as P,
-  sharedDraftPoint as Q,
-  minorBlessingSlot as R,
+  littleLegendDefaultPoint as N,
+  selfWalkAroundPoints as O,
+  equipmentSlot as P,
+  combatPhaseTextRegion as Q,
+  clockworkTrailsFightButtonPoint as R,
   RENDERER_DIST,
-  grandBlessingPoint as S,
-  TFT_16_CHESS_DATA as T,
+  sharedDraftPoint as S,
+  TFT_17_CHESS_DATA as T,
   UNSELLABLE_BOARD_UNITS as U,
-  starGodSlot as V,
+  minorBlessingSlot as V,
   VITE_DEV_SERVER_URL,
-  LCUManager as W,
-  IpcChannel as X,
-  isStandardChessMode as Y,
-  LcuEventUri as Z,
-  showOverlay as _,
-  TFT_4_CHESS_DATA as a,
-  closeOverlay as a0,
-  GameConfigHelper as a1,
-  analyticsManager as a2,
-  AnalyticsEvent as a3,
-  TFT_4_TRAIT_DATA as b,
-  TFT_17_EQUIP_DATA as c,
-  TFTMode as d,
-  TFT_17_CHESS_DATA as e,
-  TFT_17_TRAIT_DATA as f,
-  TFT_4_EQUIP_DATA as g,
-  TFT_16_EQUIP_DATA as h,
-  fs as i,
-  settingsStore as j,
-  shopSlotNameRegions as k,
+  grandBlessingPoint as W,
+  starGodSlot as X,
+  LCUManager as Y,
+  IpcChannel as Z,
+  isStandardChessMode as _,
+  TFT_16_CHESS_DATA as a,
+  showOverlay as a0,
+  sendOverlayPlayers as a1,
+  closeOverlay as a2,
+  GameConfigHelper as a3,
+  analyticsManager as a4,
+  AnalyticsEvent as a5,
+  TFT_4_CHESS_DATA as b,
+  TFT_4_TRAIT_DATA as c,
+  TFT_18_EQUIP_DATA as d,
+  TFTMode as e,
+  TFT_18_CHESS_DATA as f,
+  TFT_18_TRAIT_DATA as g,
+  TFT_4_EQUIP_DATA as h,
+  TFT_16_EQUIP_DATA as i,
+  TFT_17_EQUIP_DATA as j,
+  fs as k,
   logger as l,
-  equipmentRegion as m,
-  detailEquipRegion as n,
-  shopSlot as o,
-  buyExpPoint as p,
-  benchSlotPoints as q,
+  settingsStore as m,
+  shopSlotNameRegions as n,
+  equipmentRegion as o,
+  detailEquipRegion as p,
+  shopSlot as q,
   refreshShopPoint as r,
   sleep as s,
-  benchSlotRegion as t,
-  detailChampionNameRegion as u,
-  detailChampionStarRegion as v,
-  fightBoardSlotPoint as w,
-  fightBoardSlotRegion as x,
-  clockworkTrailsQuitNowButtonRegion as y,
-  itemForgeTooltipRegionEdge as z
+  buyExpPoint as t,
+  benchSlotPoints as u,
+  benchSlotRegion as v,
+  detailChampionNameRegion as w,
+  detailChampionStarRegion as x,
+  fightBoardSlotPoint as y,
+  fightBoardSlotRegion as z
 };

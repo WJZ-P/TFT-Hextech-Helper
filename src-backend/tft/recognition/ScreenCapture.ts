@@ -12,6 +12,25 @@ import { SimpleRegion } from "../types";
 import { SimplePoint } from "../../TFTProtocol";
 
 /**
+ * OCR 预处理选项
+ * @description 不传时使用默认流程：亮度灰度 + 阈值 160
+ */
+export interface OcrPreprocessOptions {
+    /**
+     * 灰度方式
+     * - luminance：普通亮度灰度（默认）
+     * - minChannel：取 RGB 三个通道的最小值。白色文字保持亮，彩色图标 / 背景会变暗，
+     *   用于去掉紧挨着数字的彩色图标（如 S18 金币数字左边的金币图标，会被识别成 "7"）
+     */
+    grayscale?: 'luminance' | 'minChannel';
+    /** 二值化阈值，默认 160；文字较暗时（如 S18 的经验值 "4/20"）需要调低 */
+    threshold?: number;
+}
+
+/** 默认二值化阈值 */
+const DEFAULT_OCR_THRESHOLD = 160;
+
+/**
  * 截图服务
  * @description 单例模式，提供屏幕截图和图像处理功能
  * 
@@ -88,9 +107,10 @@ export class ScreenCapture {
      * 截取指定区域并输出为 PNG Buffer
      * @param region nut-js Region 对象 (屏幕绝对坐标)
      * @param forOCR 是否针对 OCR 进行预处理
+     * @param ocrOptions OCR 预处理选项（仅 forOCR=true 时生效），不传时与原流程一致
      * @returns PNG 格式的 Buffer
      */
-    public async captureRegionAsPng(region: Region, forOCR: boolean = true): Promise<Buffer> {
+    public async captureRegionAsPng(region: Region, forOCR: boolean = true, ocrOptions: OcrPreprocessOptions = {}): Promise<Buffer> {
         const screenshot = await nutScreen.grabRegion(region);
 
         // nut-js 返回 BGRA，需要先转换为 RGBA，否则颜色会偏/颠倒
@@ -111,15 +131,32 @@ export class ScreenCapture {
 
         if (forOCR) {
             // OCR 专用流程：放大 + 灰度 + 二值化 + 锐化
+            const threshold = ocrOptions.threshold ?? DEFAULT_OCR_THRESHOLD;
+
+            if (ocrOptions.grayscale === 'minChannel') {
+                // 先按 RGB 最小值转成单通道，再走同样的放大和二值化
+                const pixelCount = screenshot.width * screenshot.height;
+                const minChannel = Buffer.alloc(pixelCount);
+                for (let i = 0; i < pixelCount; i++) {
+                    const offset = i * 4;
+                    minChannel[i] = Math.min(rgbaBuffer[offset], rgbaBuffer[offset + 1], rgbaBuffer[offset + 2]);
+                }
+                pipeline = sharp(minChannel, {
+                    raw: { width: screenshot.width, height: screenshot.height, channels: 1 },
+                });
+            }
+
+            pipeline = pipeline.resize({
+                width: Math.round(screenshot.width * 3),
+                height: Math.round(screenshot.height * 3),
+                kernel: "lanczos3",
+            });
+            if (ocrOptions.grayscale !== 'minChannel') {
+                pipeline = pipeline.grayscale();
+            }
             pipeline = pipeline
-                .resize({
-                    width: Math.round(screenshot.width * 3),
-                    height: Math.round(screenshot.height * 3),
-                    kernel: "lanczos3",
-                })
-                .grayscale()
                 .normalize()
-                .threshold(160)
+                .threshold(threshold)
                 .sharpen();
         }
         // 非 OCR 场景保持原图，不做任何处理
@@ -136,11 +173,12 @@ export class ScreenCapture {
      * 截取游戏内相对区域并输出为 PNG Buffer
      * @param simpleRegion 游戏内相对区域定义
      * @param forOCR 是否针对 OCR 进行预处理
+     * @param ocrOptions OCR 预处理选项（仅 forOCR=true 时生效）
      * @returns PNG 格式的 Buffer
      */
-    public async captureGameRegionAsPng(simpleRegion: SimpleRegion, forOCR: boolean = true): Promise<Buffer> {
+    public async captureGameRegionAsPng(simpleRegion: SimpleRegion, forOCR: boolean = true, ocrOptions: OcrPreprocessOptions = {}): Promise<Buffer> {
         const absoluteRegion = this.toAbsoluteRegion(simpleRegion);
-        return this.captureRegionAsPng(absoluteRegion, forOCR);
+        return this.captureRegionAsPng(absoluteRegion, forOCR, ocrOptions);
     }
 
     /**

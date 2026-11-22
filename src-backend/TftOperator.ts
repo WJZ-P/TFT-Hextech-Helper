@@ -88,6 +88,13 @@ import type {
     LootOrb,
 } from "./tft";
 import { sleep } from "./utils/HelperTools";
+import type { OcrPreprocessOptions } from "./tft/recognition/ScreenCapture";
+
+/** 等级 / 经验 OCR 预处理：经验值文字偏暗，阈值调低（S18 截图实测 120 时三个样本全部能解析） */
+const LEVEL_OCR_OPTIONS: OcrPreprocessOptions = { threshold: 120 };
+
+/** 金币 OCR 预处理：用 RGB 最小值灰度去掉左侧的金币图标（S18 截图实测三个样本全部正确） */
+const COIN_OCR_OPTIONS: OcrPreprocessOptions = { grayscale: 'minChannel' };
 
 // ============================================================================
 // 类型重导出 (保持向后兼容)
@@ -1462,7 +1469,8 @@ class TftOperator {
             );
 
             // 2. 截图并 OCR 识别
-            const pngBuffer = await screenCapture.captureRegionAsPng(absoluteRegion);
+            // S18 的经验值（"4/20"）字小且偏暗，默认阈值 160 会把笔画抹掉，调低到 120
+            const pngBuffer = await screenCapture.captureRegionAsPng(absoluteRegion, true, LEVEL_OCR_OPTIONS);
             const text = await ocrService.recognize(pngBuffer, OcrWorkerType.LEVEL);
             
             // logger.info(`[TftOperator] 等级区域 OCR 结果: "${text}"`);
@@ -1597,7 +1605,8 @@ class TftOperator {
 
             // 2. 截图并 OCR 识别
             // 复用 GAME_STAGE worker，因为金币只会是 0-9 的数字
-            const pngBuffer = await screenCapture.captureRegionAsPng(absoluteRegion);
+            // S18 的金币图标紧挨着数字、随数字位数一起移动，没法靠裁剪排除，用 RGB 最小值灰度把它压暗
+            const pngBuffer = await screenCapture.captureRegionAsPng(absoluteRegion, true, COIN_OCR_OPTIONS);
             const text = await ocrService.recognize(pngBuffer, OcrWorkerType.GAME_STAGE);
 
             // 3. 解析数字（去除空格和非数字字符）
@@ -1621,7 +1630,7 @@ class TftOperator {
             await sleep(100);  // 等待弹窗关闭动画
 
             // 5. 重新尝试识别一次
-            const retryBuffer = await screenCapture.captureRegionAsPng(absoluteRegion);
+            const retryBuffer = await screenCapture.captureRegionAsPng(absoluteRegion, true, COIN_OCR_OPTIONS);
             const retryText = await ocrService.recognize(retryBuffer, OcrWorkerType.GAME_STAGE);
             const retryClean = retryText.replace(/\D/g, "");
 
