@@ -1117,8 +1117,11 @@ export const HomePage = () => {
             try {
                 const open = await window.tft.isClientOpen();
                 if (!cancelled) setIsTftClientOpen(open);
-            } catch {
-                // 忽略，下次再试
+            } catch (error) {
+                // 检测本身失败（例如主进程还是旧版本，没有这个接口）时不能把按钮卡在禁用状态，
+                // 先放行，点击开始时 checkGameWindow 还会再检查一次窗口
+                console.error('检测云顶之弈客户端失败:', error);
+                if (!cancelled) setIsTftClientOpen(true);
             }
         };
         check();
@@ -1491,7 +1494,7 @@ export const HomePage = () => {
                         type="button"
                         $variant={startButton.variant}
                         onClick={handleToggle}
-                        aria-disabled={startButton.variant === 'disabled'}
+                        disabled={startButton.variant === 'disabled'}
                     >
                         <StartButtonGap>
                             <StartButtonBorder $variant={startButton.variant}>
