@@ -52,22 +52,22 @@ export class GameLoadingState implements IState {
             logger.info("[GameLoadingState] 对局已开始！");
             
             // ============================================================
-            // 游戏加载完成后，初始化 TftOperator（查找游戏窗口位置）
-            // 此时游戏窗口 "League of Legends (TM) Client" 已经创建且分辨率固定
+            // 游戏加载完成后，初始化 TftOperator（定位 TFT 窗口的游戏画面）
+            // 画面尺寸由 StartState 调整为固定的 1280x720
             // ============================================================
             const initResult = await tftOperator.init();
-            
+
             if (!initResult.success) {
                 // 初始化失败（可能游戏窗口未找到），记录警告但继续运行
                 logger.error("[GameLoadingState] TftOperator 初始化失败!");
             } else if (initResult.windowInfo) {
-                // 检查窗口分辨率是否符合要求
+                // 检查画面尺寸是否符合要求（识别坐标都基于这个尺寸）
                 const { width, height } = initResult.windowInfo;
                 if (width !== GAME_WIDTH || height !== GAME_HEIGHT) {
                     logger.error(
-                        `[GameLoadingState] ❌ 游戏分辨率不正确！` +
+                        `[GameLoadingState] ❌ 游戏画面尺寸不正确！` +
                         `当前: ${width}x${height}, 需要: ${GAME_WIDTH}x${GAME_HEIGHT}。` +
-                        `请在游戏设置中将分辨率修改为 ${GAME_WIDTH}x${GAME_HEIGHT}！`
+                        `请不要在挂机期间手动调整云顶之弈窗口大小`
                     );
                 }
             }

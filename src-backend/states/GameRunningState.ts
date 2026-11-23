@@ -266,8 +266,10 @@ export class GameRunningState implements IState {
                     clearTimeout(stageTimeoutTimer);
                 }
                 stageTimeoutTimer = setTimeout(() => {
-                    logger.warn(`[GameRunningState] 发条鸟模式：${CLOCKWORK_STAGE_TIMEOUT_MS / 1000}秒内未收到阶段变化事件，判定为游戏卡住`);
-                    safeResolve('clockwork_timeout');
+                    // 虚幻客户端的大厅和对局是同一个进程，不能像老客户端那样杀进程重开（会把整个客户端关掉），
+                    // 只记录警告并继续等待，对局结束由客户端日志判断
+                    logger.warn(`[GameRunningState] 发条鸟模式：${CLOCKWORK_STAGE_TIMEOUT_MS / 1000}秒内未收到阶段变化事件，可能卡住了，继续等待`);
+                    resetStageTimeout();
                 }, CLOCKWORK_STAGE_TIMEOUT_MS);
             };
 
@@ -403,7 +405,9 @@ export class GameRunningState implements IState {
                 resetStageTimeout();  // 立即启动第一个超时计时器
 
                 // 启动 isDead 轮询（由 GameStageMonitor 管理）
-                gameStageMonitor.startClockworkDeadPoll();
+                // 老客户端靠 2999 端口轮询 isDead，虚幻客户端没有这个端口，不再启动。
+                // S18 发条鸟打完后会自动回到主菜单，对局结束由客户端日志判断（见 onTftLobbyState）
+                // gameStageMonitor.startClockworkDeadPoll();
             }
 
             // 定期检查 signal 状态 (作为 abort 事件的兜底)
@@ -494,6 +498,9 @@ export class GameRunningState implements IState {
      * @description 游戏结束时调用，停止 Monitor 并重置相关服务
      */
     private cleanup(): void {
+        // 停止跟随游戏窗口位置
+        tftOperator.stopWindowSync();
+
         // 0. 关闭游戏浮窗
         closeOverlay();
         logger.debug("[GameRunningState] 游戏浮窗已关闭");

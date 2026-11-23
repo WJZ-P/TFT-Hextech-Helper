@@ -15,11 +15,11 @@ import {
 // 游戏常量
 // ============================================================================
 
-/** 游戏窗口宽度 (固定分辨率) */
-export const GAME_WIDTH = 1024;
+/** 游戏画面（客户区）宽度：S18 虚幻客户端挂机时固定为 1280x720，见 TftWindowLocator.TFT_TARGET_CLIENT_SIZE */
+export const GAME_WIDTH = 1280;
 
 /** 游戏窗口高度 (固定分辨率) */
-export const GAME_HEIGHT = 768;
+export const GAME_HEIGHT = 720;
 
 /**
  * 装备资源路径优先级排序

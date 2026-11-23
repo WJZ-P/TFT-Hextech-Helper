@@ -12,52 +12,61 @@
  */
 
 import { logger } from "./utils/Logger";
-import { windowHelper } from "./utils/WindowHelper";
+import { tftWindowLocator, type ScreenRect } from "./utils/TftWindowLocator";
 import { Region } from "@nut-tree-fork/nut-js";
-import { screen } from "electron";
 import path from "path";
 import fs from "fs-extra";
 import sharp from "sharp";
 import cv from "@techstark/opencv-js";
 
 // 协议层导入
+// 类型、枚举，以及 S18 还没有截图测量的点位（阵亡后的"现在退出"按钮、装备锻造器浮窗）仍来自老协议
+import {
+    clockworkTrailsQuitNowButtonPoint,
+    clockworkTrailsQuitNowButtonRegion,
+    GameStageResult,
+    GameStageType,
+    ItemForgeType,
+    itemForgeTooltipRegion,
+    itemForgeTooltipRegionEdge,
+    ShopSlotIndex,
+    TFTEquip,
+    TFTMode,
+    TFTUnit,
+    SimplePoint,
+} from "./TFTProtocol";
+// 界面点位：S18 虚幻客户端（1280x720 客户区）
+// 底部 HUD（商店、等级、金币、升级/刷新按钮）发条鸟模式整体左移，通过 this.hud 按模式选取
 import {
     benchSlotPoints,
     benchSlotRegion,
-    clockworkTrailsQuitNowButtonPoint,
-    clockworkTrailsQuitNowButtonRegion,
-    coinRegion,
     detailChampionNameRegion,
     detailChampionStarRegion,
     detailEquipRegion,
     equipmentRegion,
     equipmentSlot,
     fightBoardSlotPoint,
-
     fightBoardSlotRegion,
     gameStageDisplayNormal,
     gameStageDisplayStageOne,
     gameStageDisplayTheClockworkTrails,
-    GameStageResult,
-    GameStageType,
     hexSlot,
-    ItemForgeType,
-    itemForgeTooltipRegion,
-    itemForgeTooltipRegionEdge,
-    levelRegion,
     littleLegendDefaultPoint,
     lootRegion,
     selfWalkAroundPoints,
     shopSlot,
     shopSlotNameRegions,
-    ShopSlotIndex,
+    shopSlotClockwork,
+    shopSlotNameRegionsClockwork,
+    levelRegion,
+    levelRegionClockwork,
+    coinRegion,
+    coinRegionClockwork,
     refreshShopPoint,
+    refreshShopPointClockwork,
     buyExpPoint,
-    TFTEquip,
-    TFTMode,
-    TFTUnit,
-    SimplePoint,
-} from "./TFTProtocol";
+    buyExpPointClockwork,
+} from "./TFTProtocolS18";
 // 赛季数据通过统一管理接口访问
 import { getCurrentChessData, getChessDataByMode } from "./TFTInfo/SeasonRegistry";
 
@@ -158,6 +167,30 @@ class TftOperator {
         return this.currentChessData;
     }
 
+    /**
+     * 当前模式的底部 HUD 点位
+     * @description 发条鸟模式的商店、等级、金币、升级/刷新按钮整体左移 69px，其余模式用常规布局
+     */
+    private get hud() {
+        const isClockwork = settingsStore.get('tftMode') === TFTMode.CLOCKWORK_TRAILS;
+        return isClockwork
+            ? {
+                shopSlot: shopSlotClockwork,
+                shopSlotNameRegions: shopSlotNameRegionsClockwork,
+                levelRegion: levelRegionClockwork,
+                coinRegion: coinRegionClockwork,
+                refreshShopPoint: refreshShopPointClockwork,
+                buyExpPoint: buyExpPointClockwork,
+            }
+            : { shopSlot, shopSlotNameRegions, levelRegion, coinRegion, refreshShopPoint, buyExpPoint };
+    }
+
+    /** 同步游戏窗口位置的定时器（虚幻客户端窗口可以拖动，需要持续跟随） */
+    private windowSyncTimer: NodeJS.Timeout | null = null;
+
+    /** 同步游戏窗口位置的间隔 (ms)，读一次窗口位置只要几微秒 */
+    private static readonly WINDOW_SYNC_INTERVAL_MS = 500;
+
     /** 空槽匹配阈值：平均像素差值大于此值视为"有棋子占用" */
     private readonly benchEmptyDiffThreshold = 6;
 
@@ -233,10 +266,47 @@ class TftOperator {
     // ============================================================================
 
     /**
+     * 读取 TFT 客户区当前位置，更新截图和点击的基准点
+     * @throws 找不到窗口或窗口最小化时抛出错误
+     */
+    public async syncWindowOrigin(): Promise<ScreenRect> {
+        const rect = await tftWindowLocator.getClientRect();
+        const previous = this.gameWindowRegion;
+        if (!previous || previous.x !== rect.left || previous.y !== rect.top) {
+            if (previous) {
+                logger.info(`[TftOperator] 游戏窗口位置变化: (${previous.x}, ${previous.y}) → (${rect.left}, ${rect.top})`);
+            }
+            this.gameWindowRegion = { x: rect.left, y: rect.top };
+            screenCapture.setGameWindowOrigin(this.gameWindowRegion);
+            mouseController.setGameWindowOrigin(this.gameWindowRegion);
+        }
+        return rect;
+    }
+
+    /** 开始定时同步窗口位置（重复调用没有副作用） */
+    private startWindowSync(): void {
+        if (this.windowSyncTimer) return;
+        this.windowSyncTimer = setInterval(() => {
+            this.syncWindowOrigin().catch((e: any) => {
+                logger.debug(`[TftOperator] 同步游戏窗口位置失败: ${e.message}`);
+            });
+        }, TftOperator.WINDOW_SYNC_INTERVAL_MS);
+    }
+
+    /** 停止定时同步窗口位置（对局结束时调用） */
+    public stopWindowSync(): void {
+        if (this.windowSyncTimer) {
+            clearInterval(this.windowSyncTimer);
+            this.windowSyncTimer = null;
+        }
+    }
+
+    /**
      * 初始化操作器
-     * @description 查找游戏窗口位置，优先使用 nut-js 窗口 API 精确定位，
-     *              如果查找失败则 fallback 到"居中假设"方案
-     * @returns 初始化结果，包含成功状态和窗口信息
+     * @description 通过 TftWindowLocator 找到 TFT 窗口的游戏画面（客户区）位置，作为截图和点击的基准点，
+     *              并把窗口切到前台（点击必须落在游戏窗口上）。
+     *              虚幻客户端的窗口可以拖动，初始化后会定时同步位置，对局结束时调用 stopWindowSync() 停止。
+     * @returns 初始化结果，包含成功状态和客户区信息
      */
     public async init(): Promise<{
         success: boolean;
@@ -244,72 +314,16 @@ class TftOperator {
         usedFallback: boolean;
     }> {
         try {
-            // ============================================================
-            // 方案 1：使用 nut-js 窗口 API 精确查找 LOL 窗口位置
-            // ============================================================
-            const windowInfo = await windowHelper.findLOLWindow();
-            
-            if (windowInfo) {
-                // 找到了 LOL 窗口，使用精确位置
-                const originX = windowInfo.left;
-                const originY = windowInfo.top;
+            const rect = await this.syncWindowOrigin();
+            await tftWindowLocator.ensureForeground();
+            this.startWindowSync();
 
-                this.gameWindowRegion = { x: originX, y: originY };
-
-                // 同步到子模块
-                screenCapture.setGameWindowOrigin(this.gameWindowRegion);
-                mouseController.setGameWindowOrigin(this.gameWindowRegion);
-
-                logger.info(`[TftOperator] ✅ 通过窗口 API 找到游戏窗口`);
-                logger.info(`[TftOperator] 窗口位置: (${originX}, ${originY})`);
-                logger.info(`[TftOperator] 窗口大小: ${windowInfo.width}x${windowInfo.height}`);
-
-                return {
-                    success: true,
-                    windowInfo: {
-                        left: windowInfo.left,
-                        top: windowInfo.top,
-                        width: windowInfo.width,
-                        height: windowInfo.height,
-                    },
-                    usedFallback: false,
-                };
-            }
-
-            // ============================================================
-            // 方案 2：Fallback - 假设窗口居中（兼容老版本行为）
-            // ============================================================
-            logger.warn(`[TftOperator] ⚠️ 未找到 LOL 窗口，使用"居中假设"方案`);
-
-            const primaryDisplay = screen.getPrimaryDisplay();
-            const scaleFactor = primaryDisplay.scaleFactor;
-            const { width: logicalWidth, height: logicalHeight } = primaryDisplay.size;
-
-            // 还原为物理像素
-            const screenWidth = Math.round(logicalWidth * scaleFactor);
-            const screenHeight = Math.round(logicalHeight * scaleFactor);
-
-            // 计算屏幕中心
-            const screenCenterX = screenWidth / 2;
-            const screenCenterY = screenHeight / 2;
-
-            // 计算游戏窗口左上角（假设居中）
-            const originX = screenCenterX - GAME_WIDTH / 2;
-            const originY = screenCenterY - GAME_HEIGHT / 2;
-
-            this.gameWindowRegion = { x: originX, y: originY };
-
-            // 同步到子模块
-            screenCapture.setGameWindowOrigin(this.gameWindowRegion);
-            mouseController.setGameWindowOrigin(this.gameWindowRegion);
-
-            logger.info(`[TftOperator] 屏幕尺寸: ${screenWidth}x${screenHeight}`);
-            logger.info(`[TftOperator] 游戏基准点 (居中假设): (${originX}, ${originY})`);
+            logger.info(`[TftOperator] ✅ 已定位 TFT 游戏画面: (${rect.left}, ${rect.top}) ${rect.width}x${rect.height}`);
 
             return {
                 success: true,
-                windowInfo: undefined,  // fallback 方案没有实际窗口信息
-                usedFallback: true,
+                windowInfo: { left: rect.left, top: rect.top, width: rect.width, height: rect.height },
+                usedFallback: false,
             };
         } catch (e: any) {
             logger.error(`[TftOperator] 初始化失败: ${e.message}`);
@@ -362,8 +376,8 @@ class TftOperator {
                 }
 
                 // 发条鸟区域 OCR 识别失败，可能是过渡帧等临时情况
-                // 玩家死亡检测已由 GameStageMonitor 的 isDead 轮询负责，这里不做处理
-                logger.warn(`[TftOperator] 发条鸟模式阶段识别失败: "${clockText ?? "null"}"。请检查：1. 系统屏幕缩放是否为100%；2. 游戏分辨率是否为1024x768；3. 游戏窗口是否无边框居中且未被遮挡。`);
+                // 对局结束由客户端日志判断（见 GameRunningState），这里不做处理
+                logger.warn(`[TftOperator] 发条鸟模式阶段识别失败: "${clockText ?? "null"}"。请检查：1. 云顶之弈是否为窗口化；2. 挂机期间是否手动改过窗口大小；3. 游戏窗口是否被其他窗口遮挡。`);
                 return { type: GameStageType.UNKNOWN, stageText: "" };
             }
 
@@ -390,7 +404,7 @@ class TftOperator {
                 // logger.info(`[TftOperator] 识别阶段: [${stageText}] -> ${stageType}`);
                 this.tftMode = TFTMode.CLASSIC;
             } else {
-                logger.warn(`[TftOperator] 无法识别当前阶段: "${stageText ?? "null"}。请检查：1. 系统屏幕缩放是否为100%；2. 游戏分辨率是否为1024x768；3. 游戏窗口是否无边框居中且未被遮挡。"`);
+                logger.warn(`[TftOperator] 无法识别当前阶段: "${stageText ?? "null"}。请检查：1. 云顶之弈是否为窗口化；2. 挂机期间是否手动改过窗口大小；3. 游戏窗口是否被其他窗口遮挡。"`);
             }
 
             return { type: stageType, stageText: stageText || "" };
@@ -413,7 +427,7 @@ class TftOperator {
 
         for (let i = 1; i <= 5; i++) {
             const slotKey = `SLOT_${i}` as keyof typeof shopSlotNameRegions;
-            const region = screenCapture.toAbsoluteRegion(shopSlotNameRegions[slotKey]);
+            const region = screenCapture.toAbsoluteRegion(this.hud.shopSlotNameRegions[slotKey]);
 
             // 截图并 OCR 识别
             const processedPng = await screenCapture.captureRegionAsPng(region);
@@ -587,7 +601,7 @@ class TftOperator {
     public async isShopSlotEmpty(slotIndex: ShopSlotIndex): Promise<boolean> {
         // 槽位索引 0-4 对应 SLOT_1 到 SLOT_5
         const slotKey = `SLOT_${slotIndex + 1}` as keyof typeof shopSlotNameRegions;
-        const region = screenCapture.toAbsoluteRegion(shopSlotNameRegions[slotKey]);
+        const region = screenCapture.toAbsoluteRegion(this.hud.shopSlotNameRegions[slotKey]);
 
         // 截图并转为灰度图
         const processedPng = await screenCapture.captureRegionAsPng(region);
@@ -610,7 +624,7 @@ class TftOperator {
      */
     public async buyAtSlot(slot: number): Promise<void> {
         const slotKey = `SHOP_SLOT_${slot}` as keyof typeof shopSlot;
-        const targetPoint = shopSlot[slotKey];
+        const targetPoint = this.hud.shopSlot[slotKey];
 
         if (!targetPoint) {
             logger.error(`[TftOperator] 无效的槽位: ${slot}，只接受 1-5`);
@@ -632,7 +646,7 @@ class TftOperator {
     public async refreshShop(): Promise<void> {
         this.ensureInitialized();
         logger.info("[TftOperator] 刷新商店");
-        await mouseController.clickAt(refreshShopPoint, MouseButtonType.LEFT);
+        await mouseController.clickAt(this.hud.refreshShopPoint, MouseButtonType.LEFT);
         // 刷新后需要一点时间让新棋子出现
         await sleep(20);
     }
@@ -643,7 +657,7 @@ class TftOperator {
     public async buyExperience(): Promise<void> {
         this.ensureInitialized();
         logger.info("[TftOperator] 购买经验值");
-        await mouseController.clickAt(buyExpPoint, MouseButtonType.LEFT);
+        await mouseController.clickAt(this.hud.buyExpPoint, MouseButtonType.LEFT);
         await sleep(10);
     }
 
@@ -1461,6 +1475,7 @@ class TftOperator {
 
         try {
             // 1. 计算等级区域的绝对坐标
+            const levelRegion = this.hud.levelRegion;
             const absoluteRegion = new Region(
                 Math.round(this.gameWindowRegion!.x + levelRegion.leftTop.x),
                 Math.round(this.gameWindowRegion!.y + levelRegion.leftTop.y),
@@ -1596,6 +1611,7 @@ class TftOperator {
 
         try {
             // 1. 计算金币区域的绝对坐标
+            const coinRegion = this.hud.coinRegion;
             const absoluteRegion = new Region(
                 Math.round(this.gameWindowRegion!.x + coinRegion.leftTop.x),
                 Math.round(this.gameWindowRegion!.y + coinRegion.leftTop.y),
@@ -1807,7 +1823,7 @@ class TftOperator {
 
         // 卖出点：商店中间位置 (SLOT_3)
         // 也可以是屏幕左右下角的卖出区域，但拖到商店最通用
-        const sellPoint = shopSlot.SHOP_SLOT_3;
+        const sellPoint = this.hud.shopSlot.SHOP_SLOT_3;
 
         logger.info(`[TftOperator] 卖出棋子: ${location}`);
 
@@ -1966,7 +1982,7 @@ class TftOperator {
 
         // 3. 将锻造器拖拽到商店位置（SHOP_SLOT_3，商店中间位置）
         //    锻造器不能像普通棋子那样双击打开，需要先拖到商店再点击
-        const shopPoint = shopSlot.SHOP_SLOT_3;
+        const shopPoint = this.hud.shopSlot.SHOP_SLOT_3;
         await mouseController.drag(forgePoint, shopPoint);
 
         // 4. 等待锻造器选择页面刷新

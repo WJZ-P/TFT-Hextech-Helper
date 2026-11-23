@@ -20,18 +20,22 @@ import {logger} from "../utils/Logger";
 import {
     TFTUnit,
     GameStageType,
-    fightBoardSlotPoint,
     ChampionKey,
     ShopSlotIndex,
     EquipKey,
-    sharedDraftPoint,
-    hexSlot,
+    // S17 星神赛季专属点位（S18 不会走到星神 / 恩赐分支）
     starGodSlot,
     grandBlessingPoint,
     minorBlessingSlot,
     TFTMode,
-    clockworkTrailsFightButtonPoint,
 } from "../TFTProtocol";
+// 界面点位：S18 虚幻客户端
+import {
+    fightBoardSlotPoint,
+    sharedDraftPoint,
+    hexSlot,
+    clockworkTrailsFightButtonPoint,
+} from "../TFTProtocolS18";
 // 使用统一的赛季管理接口：业务代码不再直接依赖具体赛季常量
 import {
     getCurrentEquipData,

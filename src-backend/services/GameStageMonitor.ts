@@ -24,7 +24,8 @@
 
 import { EventEmitter } from 'events';
 import { tftOperator } from '../TftOperator';
-import { GameStageType, GameStageResult, combatPhaseTextRegion } from '../TFTProtocol';
+import { GameStageType, GameStageResult } from '../TFTProtocol';
+import { combatPhaseTextRegion } from '../TFTProtocolS18';
 import { logger } from '../utils/Logger';
 import { ocrService, OcrWorkerType, screenCapture } from '../tft';
 import { inGameApi, InGameApiEndpoints } from '../lcu/InGameApi';
