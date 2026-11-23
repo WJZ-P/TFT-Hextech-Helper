@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled, { keyframes } from 'styled-components';
 import {ThemeType} from "../../styles/theme.ts";
-import {hextechPanel, hextechSectionTitle, hextechButtonGhost} from "../../styles/hextech.ts";
+import {hextechPanel, hextechPanelSeeThrough, hextechSectionTitle, hextechButtonGhost} from "../../styles/hextech.ts";
 import {ToggleSwitch, ToggleSlider} from "../HextechToggle.tsx";
 import {toast} from "../toast/toast-core.ts";
 import { logStore, LogAutoCleanThreshold } from "../../stores/logStore.ts";
@@ -33,6 +33,7 @@ const SettingsHeader = styled.h2`
 // 用来包裹设置项的卡片
 const SettingsCard = styled.div`
   ${hextechPanel};
+  ${hextechPanelSeeThrough};
   padding: ${props => props.theme.spacing.medium};
 `;
 
@@ -168,6 +169,7 @@ const shakeAnimation = keyframes`
 /** 作者 Banner - 显示在页面底部的酷酷卡片 */
 const AuthorBanner = styled.div<{ theme: ThemeType }>`
   ${hextechPanel};
+  ${hextechPanelSeeThrough};
   text-align: center;
   padding: ${props => props.theme.spacing.large};
   margin-top: ${props => props.theme.spacing.large};
@@ -286,6 +288,7 @@ const TimeInput = styled.input<{ theme: ThemeType; disabled?: boolean }>`
 /** 使用提示卡片 - 现代玻璃拟态风格 */
 const TipsCard = styled.div<{ theme: ThemeType }>`
   ${hextechPanel};
+  ${hextechPanelSeeThrough};
   position: relative;
   padding: 16px 20px 16px 24px;
   margin: ${props => props.theme.spacing.medium} 0 ${props => props.theme.spacing.small};

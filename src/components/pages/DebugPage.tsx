@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { ThemeType } from "../../styles/theme.ts";
-import { hextechPanel, hextechSectionTitle, hextechButtonGhost, hextechButtonPrimary, hextechButtonGold, hextechButtonDanger } from "../../styles/hextech.ts";
+import { hextechPanel, hextechPanelSeeThrough, hextechSectionTitle, hextechButtonGhost, hextechButtonPrimary, hextechButtonGold, hextechButtonDanger } from "../../styles/hextech.ts";
 import { ToggleSwitch, ToggleSlider } from "../HextechToggle.tsx";
 import { toast } from "../toast/toast-core.ts";
 import type { DebugScreenshotResult, DebugScreenshotState } from "../../../electron/preload.ts";
@@ -32,6 +32,7 @@ const SectionHeader = styled.h2`
 // 用来包裹按钮组的卡片
 const Card = styled.div`
   ${hextechPanel};
+  ${hextechPanelSeeThrough};
   padding: ${props => props.theme.spacing.medium};
   margin-bottom: ${props => props.theme.spacing.small};
 `;

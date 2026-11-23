@@ -16,7 +16,7 @@ const LayoutContainer = styled.div`
 
   /* 背景图上叠一层深色渐变，保证文字对比度；原图是竖版，取中下部的湖面和浮岛 */
   background:
-    linear-gradient(180deg, rgba(9, 14, 22, 0.80) 0%, rgba(9, 14, 22, 0.60) 45%, rgba(9, 14, 22, 0.82) 100%),
+    linear-gradient(180deg, rgba(9, 14, 22, 0.55) 0%, rgba(9, 14, 22, 0.45) 45%, rgba(9, 14, 22, 0.55) 100%),
     url(${lobbyBackgroundUrl}) center 62% / cover no-repeat,
     ${props => props.theme.colors.background};
 

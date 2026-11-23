@@ -20,6 +20,7 @@ const hextechPalette = {
     dialogBg: 'linear-gradient(180deg, #1E2B3C 0%, #131D2A 100%)',  // 弹窗底板
     buttonBg: 'linear-gradient(180deg, #243245 0%, #19232F 100%)',  // 次要按钮底
     buttonBgHover: 'linear-gradient(180deg, #2C3D54 0%, #1E2A39 100%)',
+    panelSeeThroughBg: 'linear-gradient(180deg, rgba(27, 40, 57, 0.6) 0%, rgba(20, 32, 48, 0.6) 100%)',   // 轻透明面板底（60%，透出背景图）
     titleBarBg: 'rgba(11, 17, 25, 0.88)', // 自绘标题栏（半透明，透出背景图）
     overlayBg: 'rgba(6, 12, 20, 0.72)',   // 弹窗遮罩
 

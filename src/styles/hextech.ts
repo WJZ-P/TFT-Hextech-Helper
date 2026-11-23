@@ -26,11 +26,11 @@ export const hextechPanel = css`
 `;
 
 /**
- * 轻透明的面板底：80% 不透明度、轻微模糊，能透出后面的背景图
- * 用在大块面板上（首页召唤师信息栏、运行日志），叠在 hextechPanel 之后覆盖它的底色
+ * 轻透明的面板底：60% 不透明度、轻微模糊，能透出后面的背景图
+ * 用在大块面板上（首页信息栏、运行日志、阵容 / 设置 / 调试页的卡片），叠在 hextechPanel 之后覆盖它的底色
  */
 export const hextechPanelSeeThrough = css`
-  background: linear-gradient(180deg, rgba(27, 40, 57, 0.8) 0%, rgba(20, 32, 48, 0.8) 100%);
+  background: ${props => props.theme.colors.panelSeeThroughBg};
   backdrop-filter: blur(2px);
 `;
 

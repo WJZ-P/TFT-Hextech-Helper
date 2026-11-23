@@ -123,7 +123,7 @@ const LogPanelContent = styled.div<{ theme: ThemeType }>`
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: rgba(1, 10, 19, 0.15);
+  background: transparent;  /* 不再叠底色，否则实际不透明度会高于面板的 60% */
 `;
 
 // 单条日志的样式：左侧一条级别色竖线，背景从左往右淡出

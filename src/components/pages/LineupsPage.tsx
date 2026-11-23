@@ -6,7 +6,7 @@
 import React, {useEffect, useState, useCallback, useMemo, useRef} from 'react';
 import styled from 'styled-components';
 import {ThemeType} from '../../styles/theme';
-import {hextechPanel, hextechSectionTitle, hextechButtonGhost, hextechButtonPrimary, hextechButtonDanger} from "../../styles/hextech.ts";
+import {hextechPanel, hextechPanelSeeThrough, hextechSectionTitle, hextechButtonGhost, hextechButtonPrimary, hextechButtonDanger} from "../../styles/hextech.ts";
 import {TFTEquip, TraitData, TFTUnit, UNPURCHASABLE_CHESS} from "../../../src-backend/TFTProtocol";
 // 赛季数据统一从 SeasonRegistry 取，不再直接用 TFTProtocol 的 switch 函数（已删除）
 import {getChessDataBySeasonId, getEquipDataBySeasonId, type SeasonId} from "../../../src-backend/TFTInfo/SeasonRegistry";
@@ -241,7 +241,8 @@ const LineupCard = styled.div<{ theme: ThemeType; $expanded?: boolean; $selected
     ${props => props.$selected
       ? `linear-gradient(90deg, ${props.theme.colors.primary}26 0%, transparent 60%),`
       : ''}
-    ${props => props.theme.colors.panelBg};
+    ${props => props.theme.colors.panelSeeThroughBg};
+  /* 这里不加 backdrop-filter：它会产生层叠上下文，英雄原画浮层会被下一张卡片盖住 */
   border: 1px solid ${props => props.$selected
     ? props.theme.colors.accentCyan
     : props.theme.colors.goldDim};
@@ -417,6 +418,7 @@ const SeasonTabContainer = styled.div`
   flex-direction: row ;
   margin-bottom: ${props => props.theme.spacing.medium};
   ${hextechPanel};
+  ${hextechPanelSeeThrough};
   overflow: hidden;
   min-height: 42px;
 `;
@@ -464,7 +466,7 @@ const SelectionInfo = styled.div<{ $hasSelection: boolean; theme: ThemeType }>`
   display: flex;
   align-items: center;
   padding: 8px 12px;
-  background: ${props => props.theme.colors.panelBg};
+  background: ${props => props.theme.colors.panelSeeThroughBg};
   border: 1px solid ${props => props.$hasSelection
     ? props.theme.colors.accentCyan
     : props.theme.colors.goldDim};
@@ -785,7 +787,7 @@ const ExpandPanel = styled.div<{ $expanded: boolean; theme: ThemeType }>`
   max-height: ${props => props.$expanded ? '1000px' : '0'};
   opacity: ${props => props.$expanded ? 1 : 0};
   transition: all 0.3s ease-in-out;
-  background-color: ${props => props.theme.colors.cardBg};
+  background: ${props => props.theme.colors.panelSeeThroughBg};
   border: 1.5px solid ${props => props.theme.colors.border};
   border-top: none;
   border-radius: 0 0 ${props => props.theme.borderRadius} ${props => props.theme.borderRadius};
