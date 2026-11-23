@@ -1,7 +1,7 @@
 import React, {useState, useEffect, useRef} from 'react';
 import styled, {css} from 'styled-components';
 import {ThemeType} from '../styles/theme';
-import {hextechPanel} from '../styles/hextech';
+import {hextechPanel, hextechPanelSeeThrough} from '../styles/hextech';
 import {logStore, LogEntry, LogLevel} from '../stores/logStore';
 
 // 引入图标
@@ -36,6 +36,7 @@ const levelColor = (level: LogLevel, theme: ThemeType): string => {
 // 整个日志面板的外层容器
 const LogPanelWrapper = styled.div<{ $isVisible: boolean; theme: ThemeType }>`
   ${hextechPanel};
+  ${hextechPanelSeeThrough};
   /* flex: 1 让面板自动占据父容器的剩余高度 */
   flex: 1;
   /* min-height 保证面板不会被压缩得太小 */
@@ -122,7 +123,7 @@ const LogPanelContent = styled.div<{ theme: ThemeType }>`
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: rgba(1, 10, 19, 0.35);
+  background: rgba(1, 10, 19, 0.15);
 `;
 
 // 单条日志的样式：左侧一条级别色竖线，背景从左往右淡出

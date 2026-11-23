@@ -16,11 +16,11 @@ const hextechPalette = {
     goldDim: '#785A28',         // 暗金：常规边框
     goldDeep: '#463714',        // 深金：分隔线、弱边框
     accentCyan: '#5BD3FF',      // 青蓝：主按钮描边、选中发光
-    panelBg: 'linear-gradient(180deg, #1B2839 0%, #142030 100%)',   // 面板渐变底
+    panelBg: 'linear-gradient(180deg, rgba(27, 40, 57, 0.78) 0%, rgba(20, 32, 48, 0.84) 100%)',   // 面板渐变底（半透明，透出背景图）
     dialogBg: 'linear-gradient(180deg, #1E2B3C 0%, #131D2A 100%)',  // 弹窗底板
     buttonBg: 'linear-gradient(180deg, #243245 0%, #19232F 100%)',  // 次要按钮底
     buttonBgHover: 'linear-gradient(180deg, #2C3D54 0%, #1E2A39 100%)',
-    titleBarBg: '#0B1119',                // 自绘标题栏
+    titleBarBg: 'rgba(11, 17, 25, 0.88)', // 自绘标题栏（半透明，透出背景图）
     overlayBg: 'rgba(6, 12, 20, 0.72)',   // 弹窗遮罩
 
     // ---------- 通用语义色（各页面通过这些 token 取色） ----------
@@ -30,6 +30,7 @@ const hextechPalette = {
     navActiveText: '#F0E6D2',
     background: '#121B27',
     sidebarBg: '#0D141E',
+    sidebarGlassBg: 'rgba(13, 20, 30, 0.80)',  // 侧边栏本体（半透明，透出背景图）；sidebarBg 仍用于输入框等元素的实底
     cardBg: '#192535',          // 卡片背景色（比背景稍亮，形成层次）
     elementBg: '#1E2B3C',
     elementHover: '#26364A',

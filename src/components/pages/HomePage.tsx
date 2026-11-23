@@ -7,15 +7,12 @@ import LockIcon from '@mui/icons-material/Lock';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import TimerOffIcon from '@mui/icons-material/TimerOff';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import type { SvgIconComponent } from '@mui/icons-material';
+import TftIcon from '../TftIcon';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import MilitaryTechIcon from '@mui/icons-material/MilitaryTech';
-import PaidIcon from '@mui/icons-material/Paid';
-import PeopleIcon from '@mui/icons-material/People';
-import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing';
-import type { SvgIconComponent } from '@mui/icons-material';
 import {ThemeType} from "../../styles/theme.ts";
-import {hextechPanel, hextechSectionTitle} from "../../styles/hextech.ts";
+import {hextechPanel, hextechPanelSeeThrough} from "../../styles/hextech.ts";
 import {LogPanel} from "../LogPanel.tsx";
 import {HextechDialog} from "../HextechDialog.tsx";
 import {toast} from "../toast/toast-core.ts";
@@ -26,6 +23,20 @@ import {settingsStore, GameStatistics} from "../../stores/settingsStore.ts";
 
 // 导入 APP 图标（让 Vite 正确处理资源路径）
 import appIconUrl from '../../../public/icon.png';
+
+// 模式卡片的官方素材：云顶之弈手游的模式选择卡片图和模式图标
+// 来源：CommunityDragon 解包资源 game/assets/ux/tftmobile/modeselect/
+//   （modeselect_cardimage_*.png 转成 webp，tftm_modeicon_*.png 原样保留）
+import modeArtNormal from '../../assets/modes/card-normal.webp';
+import modeArtRanked from '../../assets/modes/card-ranked.webp';
+import modeArtTreasure from '../../assets/modes/card-treasure.webp';
+import modeArtDoubleUp from '../../assets/modes/card-doubleup.webp';
+import modeArtClockwork from '../../assets/modes/card-clockwork.webp';
+import modeIconNormal from '../../assets/modes/icon-normal.png';
+import modeIconRanked from '../../assets/modes/icon-ranked.png';
+import modeIconTreasure from '../../assets/modes/icon-treasure.png';
+import modeIconDoubleUp from '../../assets/modes/icon-doubleup.png';
+import modeIconClockwork from '../../assets/modes/icon-clockwork.png';
 
 // ============================================
 // 动画
@@ -41,12 +52,6 @@ const radarSpin = keyframes`
 const iconBreath = keyframes`
   0%, 100% { box-shadow: 0 0 14px rgba(200, 170, 110, 0.25); }
   50% { box-shadow: 0 0 28px rgba(91, 211, 255, 0.45); }
-`;
-
-/** 主按钮表面的流光 */
-const shimmer = keyframes`
-  0% { transform: translateX(-120%) skewX(-20deg); }
-  60%, 100% { transform: translateX(320%) skewX(-20deg); }
 `;
 
 /** 横幅滑入 */
@@ -71,26 +76,7 @@ const PageWrapper = styled.div<{ theme: ThemeType }>`
   /* 顶部一团淡淡的蓝光，模拟客户端主界面的氛围光 */
   background:
     radial-gradient(ellipse 80% 45% at 50% 0%, rgba(47, 139, 255, 0.10) 0%, transparent 70%),
-    ${props => props.theme.colors.background};
-`;
-
-/** 小节标题行：左边标题，右边说明文字 */
-const SectionHeader = styled.div`
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: ${props => props.theme.spacing.medium};
-  margin-bottom: ${props => props.theme.spacing.small};
-`;
-
-const SectionTitle = styled.h2`
-  ${hextechSectionTitle};
-  font-size: 0.95rem;
-`;
-
-const SectionHint = styled.span`
-  font-size: 0.8rem;
-  color: ${props => props.theme.colors.textSecondary};
+    transparent;  /* 底色透明，透出全局背景图 */
 `;
 
 // ============================================
@@ -99,6 +85,7 @@ const SectionHint = styled.span`
 
 const ProfileBar = styled.div`
   ${hextechPanel};
+  ${hextechPanelSeeThrough};
   display: flex;
   align-items: center;
   gap: ${props => props.theme.spacing.large};
@@ -335,137 +322,265 @@ const AdminWarningBanner = styled.div`
 // 模式卡片
 // ============================================
 
-const ModeGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
+/** 确认切换模式时卡片弹一下：从按下的状态弹过头，再回到选中的放大状态 */
+const modeCardPop = keyframes`
+  0% { transform: scale(1.05); }
+  55% { transform: scale(1.14); }
+  100% { transform: scale(1.08); }
 `;
 
-/** 卡片右下角的"不许选"遮罩，hover 未适配的卡片时显示 */
-const ModeLockOverlay = styled.div`
+/** 确认切换模式时角色图亮一下 */
+const modeArtFlash = keyframes`
+  0% { filter: brightness(1.7) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.55)); }
+  100% { filter: brightness(1) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.55)); }
+`;
+
+/** 模式卡片的高度；宽度按官方卡片图 1:2 的比例计算 */
+const MODE_CARD_HEIGHT = 232;
+
+/**
+ * 官方卡片图里，透明的"探头区"占顶部 24%（角色从这里探出），往下才是不透明的卡面。
+ * 边框、角标、遮罩都只覆盖卡面部分
+ */
+const MODE_CARD_BODY_TOP = '24%';
+
+/**
+ * 悬停 / 选中时整张卡片（图、边框、文字）一起放大，以卡面中心为原点
+ * 卡面从 24% 高度开始，所以卡面中心在 62% 处
+ */
+const MODE_CARD_HIGHLIGHT_SCALE = 'scale(1.08)';
+const MODE_CARD_BODY_CENTER = '50% 62%';
+
+/**
+ * 卡片顶部的透明探头区会让卡面离上方面板很远，整行上移一些，让探头区落进面板之间的空隙。
+ * 上移量保证最高的角色（发条鸟，选中放大后）不会压到上方的召唤师信息栏
+ */
+const MODE_GRID_PULL_UP = 24;
+
+const ModeGrid = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-top: -${MODE_GRID_PULL_UP}px;
+`;
+
+/** 官方模式卡片图（256x512 竖版，原比例显示） */
+const ModeArt = styled.div<{ $src: string }>`
   position: absolute;
   inset: 0;
+  background: url(${props => props.$src}) center bottom / 100% 100% no-repeat;
+  opacity: 0.88;
+  transition: opacity 0.25s ease, filter 0.25s ease;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.55));
+  pointer-events: none;
+`;
+
+/** 卡面边框（不含顶部透明的探头区） */
+/** 边框层向外扩出的距离，用来容纳选中时的外发光（mask 会裁掉元素范围以外的部分） */
+const MODE_FRAME_GLOW_SPACE = 14;
+
+/**
+ * 卡面边框：不画顶边；两侧从下往上 75% 以内保持不透明，再往上迅速淡出，让角色和背景自然衔接。
+ * 渐隐用 mask 实现，作用在整个边框层上（包括选中时的外发光）；真正的边框画在 ::before 上
+ */
+const ModeFrame = styled.div`
+  position: absolute;
+  top: calc(${MODE_CARD_BODY_TOP} - ${MODE_FRAME_GLOW_SPACE}px);
+  left: -${MODE_FRAME_GLOW_SPACE}px;
+  right: -${MODE_FRAME_GLOW_SPACE}px;
+  bottom: -${MODE_FRAME_GLOW_SPACE}px;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to top, #000 0%, #000 75%, transparent 90%);
+  mask-image: linear-gradient(to top, #000 0%, #000 75%, transparent 90%);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: ${MODE_FRAME_GLOW_SPACE}px;
+    border: 1px solid ${props => props.theme.colors.goldDim};
+    border-top: none;
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.45);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+`;
+
+/** 卡面右上角的状态角标 */
+const ModeStatus = styled.span<{ $ready: boolean }>`
+  position: absolute;
+  top: calc(${MODE_CARD_BODY_TOP} + 6px);
+  right: 6px;
+  padding: 0 5px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: ${props => props.$ready ? props.theme.colors.accentCyan : props.theme.colors.gold};
+  border: 1px solid ${props => props.$ready ? props.theme.colors.accentCyan : props.theme.colors.goldDim};
+  background: rgba(1, 10, 19, 0.65);
+  transition: opacity 0.2s ease;
+`;
+
+/** 底部磨砂玻璃信息区：图标 + 模式名 + 队列号 */
+const ModeInfo = styled.div`
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  bottom: 1px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 18px 6px 8px;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(8, 14, 22, 0) 0%, rgba(8, 14, 22, 0.72) 32%, rgba(8, 14, 22, 0.86) 100%);
+  backdrop-filter: blur(3px);
+  transition: opacity 0.2s ease;
+`;
+
+/** 模式图标：金框小菱形 */
+const ModeIconBadge = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-bottom: 3px;
+  border: 1px solid ${props => props.theme.colors.gold};
+  background: rgba(1, 10, 19, 0.6);
+  transform: rotate(45deg);
+`;
+
+/** 官方模式图标（白色剪影），用 mask 染成主题金色 */
+const ModeIconGlyph = styled.span<{ $src: string }>`
+  width: 14px;
+  height: 14px;
+  transform: rotate(-45deg);
+  background: ${props => props.theme.colors.goldBright};
+  -webkit-mask: url(${props => props.$src}) center / contain no-repeat;
+  mask: url(${props => props.$src}) center / contain no-repeat;
+`;
+
+/** 模式名的系列前缀（如"自然之力"），小字单独一行，避免长名字在窄卡片里断行 */
+const ModeSeries = styled.div`
+  font-size: 0.62rem;
+  letter-spacing: 2px;
+  color: ${props => props.theme.colors.gold};
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+`;
+
+const ModeName = styled.div`
+  white-space: nowrap;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: ${props => props.theme.colors.goldBright};
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+`;
+
+const ModeMeta = styled.div`
+  font-size: 0.64rem;
+  color: ${props => props.theme.colors.textSecondary};
+`;
+
+/** 未适配的模式悬停时显示的提示（盖住卡面，原有的文字同时淡出） */
+const ModeLockOverlay = styled.div`
+  position: absolute;
+  top: ${MODE_CARD_BODY_TOP};
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 8px;
+  gap: 6px;
+  padding: 10px;
   text-align: center;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
+  line-height: 1.4;
   color: ${props => props.theme.colors.goldBright};
-  background: rgba(1, 10, 19, 0.82);
+  background: rgba(1, 10, 19, 0.78);
   opacity: 0;
   transition: opacity 0.2s ease;
   pointer-events: none;
 
   .MuiSvgIcon-root {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     color: ${props => props.theme.colors.error};
   }
 `;
 
-const ModeCard = styled.button<{ $accent: string; $selected: boolean; $locked: boolean }>`
+const ModeCard = styled.button<{ $selected: boolean; $locked: boolean; $justSelected: boolean }>`
   appearance: none;
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  min-height: 104px;
-  padding: 12px;
-  text-align: left;
+  flex: 0 0 auto;
+  height: ${MODE_CARD_HEIGHT}px;
+  aspect-ratio: 1 / 2;
+  padding: 0;
+  border: none;
+  background: none;
   color: inherit;
   font: inherit;
-  overflow: hidden;
   cursor: ${props => props.$locked ? 'not-allowed' : 'pointer'};
-  border-radius: ${props => props.theme.borderRadius};
-  /* 每个模式带一点自己的色调，从左上角往右下渐隐 */
-  background:
-    radial-gradient(circle at 0% 0%, ${props => props.$accent}38 0%, transparent 65%),
-    ${props => props.theme.colors.panelBg};
-  border: 1px solid ${props => props.$selected ? props.theme.colors.accentCyan : props.theme.colors.goldDim};
-  box-shadow: ${props => props.$selected
-    ? `0 0 0 1px ${props.theme.colors.accentCyan}55, 0 0 18px ${props.theme.colors.accentCyan}40`
-    : `inset 0 0 0 1px rgba(0, 0, 0, 0.5)`};
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transform-origin: ${MODE_CARD_BODY_CENTER};
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1.2);
 
-  /* 顶部一条亮线，选中时变青色 */
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 12px;
-    right: 12px;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, ${props => props.$selected ? props.theme.colors.accentCyan : props.theme.colors.gold}, transparent);
-    opacity: ${props => props.$selected ? 1 : 0.5};
-  }
+  ${props => props.$selected && css`
+    z-index: 1;
+    transform: ${MODE_CARD_HIGHLIGHT_SCALE};
+    ${ModeArt} {
+      opacity: 1;
+    }
+    ${ModeFrame}::before {
+      border-color: ${props.theme.colors.accentCyan};
+      box-shadow:
+        inset 0 -1px 0 rgba(0, 0, 0, 0.45),
+        0 0 0 1px ${props.theme.colors.accentCyan}66,
+        0 0 18px ${props.theme.colors.accentCyan}55;
+    }
+  `}
 
   ${props => props.$locked ? css`
-    > :not(${ModeLockOverlay}) {
-      filter: saturate(0.55) brightness(0.8);
+    ${ModeArt} {
+      filter: grayscale(0.75) brightness(0.6) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.55));
     }
     &:hover ${ModeLockOverlay} {
       opacity: 1;
     }
+    &:hover ${ModeInfo}, &:hover ${ModeStatus} {
+      opacity: 0;
+    }
   ` : css`
     &:hover {
+      z-index: 1;
+      transform: ${MODE_CARD_HIGHLIGHT_SCALE};
+    }
+    &:hover ${ModeArt} {
+      opacity: 1;
+    }
+    &:hover ${ModeFrame}::before {
       border-color: ${props.$selected ? props.theme.colors.accentCyan : props.theme.colors.gold};
-      transform: translateY(-2px);
+    }
+    /* 按下时从放大状态回缩，给出"按到了"的反馈 */
+    &:active {
+      transform: scale(1.05);
+      transition-duration: 0.2s;
+    }
+  `}
+
+  ${props => props.$justSelected && css`
+    animation: ${modeCardPop} 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    ${ModeArt} {
+      animation: ${modeArtFlash} 0.5s ease-out both;
     }
   `}
 
   &:focus-visible {
-    outline: 1px solid ${props => props.theme.colors.goldBright};
-    outline-offset: 2px;
+    outline: none;
   }
-`;
-
-/** 模式图标：金框小方块 */
-const ModeIconBadge = styled.div<{ $accent: string }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border: 1px solid ${props => props.theme.colors.gold};
-  background: ${props => props.$accent}26;
-  transform: rotate(45deg);
-  margin: 4px 0 4px 4px;
-
-  .MuiSvgIcon-root {
-    transform: rotate(-45deg);
-    font-size: 1.05rem;
-    color: ${props => props.theme.colors.goldBright};
+  &:focus-visible ${ModeFrame}::before {
+    border-color: ${props => props.theme.colors.goldBright};
   }
-`;
-
-const ModeName = styled.div`
-  font-size: 0.92rem;
-  font-weight: 700;
-  line-height: 1.3;
-  color: ${props => props.theme.colors.goldBright};
-`;
-
-const ModeMeta = styled.div`
-  font-size: 0.72rem;
-  color: ${props => props.theme.colors.textSecondary};
-`;
-
-/** 卡片右上角的状态角标 */
-const ModeStatus = styled.span<{ $ready: boolean }>`
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 1px 6px;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: ${props => props.$ready ? props.theme.colors.accentCyan : props.theme.colors.gold};
-  border: 1px solid ${props => props.$ready ? props.theme.colors.accentCyan : props.theme.colors.goldDim};
-  background: rgba(1, 10, 19, 0.6);
 `;
 
 // ============================================
@@ -513,49 +628,132 @@ const StopAfterGameBadge = styled.span`
 
 type StartButtonVariant = 'ready' | 'running' | 'disabled';
 
-/** 按钮右侧的箭头形状（客户端"开始游戏"按钮的轮廓） */
-const ARROW_SHAPE = 'polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%)';
+/**
+ * 箭头形按钮轮廓（仿客户端 PLAY 按钮）
+ * @param tip 右侧箭头的水平长度。各层的高度不同，tip 按高度等比缩放（约 0.3 × 高度），
+ *            这样每一层的斜边互相平行，描边粗细才一致
+ */
+const arrowShape = (tip: number) =>
+    `polygon(0 0, calc(100% - ${tip}px) 0, 100% 50%, calc(100% - ${tip}px) 100%, 0 100%)`;
+
+/**
+ * 主按钮各状态的配色（取色自客户端 PLAY 按钮截图）
+ * - border / borderHover：描边上下两端的颜色（上亮下暗，形成立体感）
+ * - body / bodyHover：按钮本体；hover 时上下两端各有一圈内发光
+ * - sweep：hover 时从右往左流动的高光
+ */
+const START_BUTTON_PALETTE: Record<StartButtonVariant, {
+    border: [string, string];
+    borderHover: [string, string];
+    body: string;
+    bodyHover: string;
+    text: string;
+    glow: string;
+    glowSoft: string;
+    sweep: string;
+}> = {
+    ready: {
+        border: ['#09C0B6', '#016A8C'],
+        borderHover: ['#9CFAFF', '#48D3EA'],
+        body: 'linear-gradient(180deg, #1E2328 0%, #1E2328 80%, #1A2A33 100%)',
+        bodyHover: 'linear-gradient(180deg, #245761 0%, #1E353E 12%, #172F3C 45%, #143545 70%, #185B70 92%, #227181 100%)',
+        text: '#F0E6D2',
+        glow: 'rgba(10, 200, 185, 0.55)',
+        glowSoft: 'rgba(10, 200, 185, 0.25)',
+        sweep: 'rgba(156, 250, 255, 0.30)',
+    },
+    running: {
+        border: ['#C8AA6E', '#785A28'],
+        borderHover: ['#F0E6D2', '#C89B3C'],
+        body: 'linear-gradient(180deg, #1E2328 0%, #1E2328 80%, #2A2418 100%)',
+        bodyHover: 'linear-gradient(180deg, #5A4626 0%, #3A2F1C 12%, #2A2419 45%, #3A2F1C 70%, #6B5228 92%, #7C5E2C 100%)',
+        text: '#F0E6D2',
+        glow: 'rgba(200, 155, 60, 0.5)',
+        glowSoft: 'rgba(200, 155, 60, 0.22)',
+        sweep: 'rgba(240, 230, 210, 0.26)',
+    },
+    disabled: {
+        border: ['#463714', '#3C3C41'],
+        borderHover: ['#463714', '#3C3C41'],
+        body: '#1E2328',
+        bodyHover: '#1E2328',
+        text: '#5B5A56',
+        glow: 'transparent',
+        glowSoft: 'transparent',
+        sweep: 'transparent',
+    },
+};
+
+/** hover 时的流光：高光带从右边进、往左流出，循环播放 */
+const startButtonSweep = keyframes`
+  from { transform: translateX(330%) skewX(-24deg); }
+  to { transform: translateX(-130%) skewX(-24deg); }
+`;
 
 /**
  * 主按钮外层：负责发光
- * 光晕要放在外层用 filter 做 —— 内层用了 clip-path，自己的 box-shadow 会被裁掉
+ * 光晕要放在外层用 filter 做 —— 里面几层都用了 clip-path，自己的 box-shadow 会被裁掉
  */
 const StartButtonGlow = styled.div<{ $variant: StartButtonVariant }>`
-  filter: ${props => {
-    if (props.$variant === 'ready') return `drop-shadow(0 0 10px ${props.theme.colors.accentCyan}55)`;
-    if (props.$variant === 'running') return `drop-shadow(0 0 10px ${props.theme.colors.gold}55)`;
-    return 'none';
-  }};
-  transition: filter 0.2s ease;
+  filter: ${props => props.$variant === 'disabled'
+    ? 'none'
+    : `drop-shadow(0 0 4px ${START_BUTTON_PALETTE[props.$variant].glowSoft})`};
+  transition: filter 0.25s ease;
 
   &:hover {
-    filter: ${props => {
-      if (props.$variant === 'ready') return `drop-shadow(0 0 16px ${props.theme.colors.accentCyan}88)`;
-      if (props.$variant === 'running') return `drop-shadow(0 0 16px ${props.theme.colors.gold}88)`;
-      return 'none';
-    }};
+    filter: ${props => props.$variant === 'disabled'
+      ? 'none'
+      : `drop-shadow(0 0 10px ${START_BUTTON_PALETTE[props.$variant].glow})`};
   }
 `;
 
-/** 主按钮：外层是金框（2px 的金色底透出来），内层是按钮本体 */
+/**
+ * 主按钮最外层：一圈 1px 的暗金细线（客户端按钮外面那道金边）
+ * 结构由外到内：暗金细线 → 深色间隙 → 渐变描边 → 按钮本体
+ */
 const StartButton = styled.button<{ $variant: StartButtonVariant }>`
   appearance: none;
   border: none;
-  padding: 2px;
-  min-width: 240px;
+  padding: 1px;
+  /* 各状态文案长短不一，固定宽度避免切换状态时按钮跳动 */
+  min-width: 270px;
   cursor: ${props => props.$variant === 'disabled' ? 'not-allowed' : 'pointer'};
-  clip-path: ${ARROW_SHAPE};
-  background: ${props => props.$variant === 'disabled'
-    ? props.theme.colors.goldDim
-    : `linear-gradient(180deg, ${props.theme.colors.goldBright} 0%, ${props.theme.colors.gold} 50%, ${props.theme.colors.goldDim} 100%)`};
-  transition: transform 0.15s ease;
+  clip-path: ${arrowShape(18)};
+  background: ${props => props.theme.colors.goldDeep};
+  transition: transform 0.12s ease;
 
   &:active {
-    transform: ${props => props.$variant === 'disabled' ? 'none' : 'scale(0.98)'};
+    transform: ${props => props.$variant === 'disabled' ? 'none' : 'translateY(1px)'};
   }
 
   &:focus-visible {
     outline: none;
+  }
+`;
+
+/** 细金线和描边之间的深色间隙 */
+const StartButtonGap = styled.span`
+  display: block;
+  padding: 2px;
+  clip-path: ${arrowShape(17)};
+  background: #010A13;
+`;
+
+/** 渐变描边：上亮下暗；hover 时整体提亮 */
+const StartButtonBorder = styled.span<{ $variant: StartButtonVariant }>`
+  display: block;
+  padding: 2px;
+  clip-path: ${arrowShape(16)};
+  background: ${props => {
+    const [top, bottom] = START_BUTTON_PALETTE[props.$variant].border;
+    return `linear-gradient(180deg, ${top} 0%, ${bottom} 100%)`;
+  }};
+
+  ${StartButton}:hover & {
+    background: ${props => {
+      const [top, bottom] = START_BUTTON_PALETTE[props.$variant].borderHover;
+      return `linear-gradient(180deg, ${top} 0%, ${bottom} 100%)`;
+    }};
   }
 `;
 
@@ -565,47 +763,57 @@ const StartButtonInner = styled.span<{ $variant: StartButtonVariant }>`
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 50px;
-  padding: 0 40px 0 28px;
+  height: 46px;
+  padding: 0 34px 0 24px;
   overflow: hidden;
-  clip-path: ${ARROW_SHAPE};
-  font-size: 1.15rem;
+  clip-path: ${arrowShape(15)};
+  font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: 4px;
-  color: ${props => {
-    if (props.$variant === 'disabled') return props.theme.colors.textDisabled;
-    if (props.$variant === 'running') return props.theme.colors.goldBright;
-    return '#FFFFFF';
-  }};
-  text-shadow: ${props => props.$variant === 'disabled' ? 'none' : '0 1px 3px rgba(0, 0, 0, 0.5)'};
-  background: ${props => {
-    if (props.$variant === 'disabled') return props.theme.colors.buttonBg;
-    if (props.$variant === 'running') return 'linear-gradient(180deg, #7A5A30 0%, #3F2E17 100%)';
-    return 'linear-gradient(180deg, #3A8EF6 0%, #1A5BD0 55%, #0F3E9E 100%)';
-  }};
-  /* 内描边：就绪时是青色，跟客户端按钮一样 */
-  box-shadow: inset 0 0 0 1px ${props => {
-    if (props.$variant === 'ready') return props.theme.colors.accentCyan;
-    if (props.$variant === 'running') return props.theme.colors.gold;
-    return props.theme.colors.goldDeep;
-  }};
+  color: ${props => START_BUTTON_PALETTE[props.$variant].text};
+  text-shadow: ${props => props.$variant === 'disabled' ? 'none' : '0 1px 2px rgba(0, 0, 0, 0.6)'};
+  background: ${props => START_BUTTON_PALETTE[props.$variant].body};
+  /* 顶部一道极淡的高光、底部一道暗边，让本体有一点厚度 */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 -1px 0 rgba(0, 0, 0, 0.35);
 
-  /* 表面流光，禁用时不播放 */
+  /* 文字和图标要压在流光上面 */
+  & > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  ${StartButton}:hover & {
+    background: ${props => START_BUTTON_PALETTE[props.$variant].bodyHover};
+  }
+
+  ${StartButton}:active & {
+    filter: ${props => props.$variant === 'disabled' ? 'none' : 'brightness(0.85)'};
+  }
+
+  /* 流光：只在 hover 时出现，一段斜向高光从右往左持续流动 */
   &::after {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
-    width: 30%;
+    width: 32%;
     height: 100%;
-    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.28) 50%, transparent 100%);
-    animation: ${shimmer} 3.2s ease-in-out infinite;
-    display: ${props => props.$variant === 'disabled' ? 'none' : 'block'};
+    background: linear-gradient(90deg,
+      transparent 0%,
+      ${props => START_BUTTON_PALETTE[props.$variant].sweep} 45%,
+      ${props => START_BUTTON_PALETTE[props.$variant].sweep} 55%,
+      transparent 100%);
+    opacity: 0;
     pointer-events: none;
   }
 
+  ${StartButton}:hover &::after {
+    opacity: ${props => props.$variant === 'disabled' ? 0 : 1};
+    animation: ${startButtonSweep} 1.8s linear infinite;
+  }
+
   .MuiSvgIcon-root {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
   }
 `;
 
@@ -664,38 +872,40 @@ interface ModeOption {
     queueId: number;
     /** 对应的后端模式；null 表示后端还没有这个模式 */
     mode: TFTMode | null;
-    /** 卡片图标 */
-    icon: SvgIconComponent;
+    /** 卡片背景图（官方模式卡片图） */
+    art: string;
+    /** 卡片图标（官方模式图标） */
+    iconUrl: string;
     /** 卡片的点缀色 */
     accent: string;
     /** 是否已适配、允许选择 */
     enabled: boolean;
+    /** 只在开发版开放（用来调试），卡片角标显示"调试" */
+    debugOnly?: boolean;
 }
 
 /**
  * 模式列表，和云顶之弈（虚幻客户端）当前开放的队列一一对应：
  *   自然之力 匹配 1090 / 排位 1100 / 恭喜发财 6080 / 双人作战 1160、发条鸟的试炼 1220
  *
- * S18「自然之力」的对局内识别还没有适配，所以目前全部是"适配中"状态，点击无效。
+ * 目前只开放了发条鸟的试炼，其他模式是"适配中"状态，点击无效。
  * 以后适配了某个模式，把它的 enabled 改成 true（没有 mode 的还要先在后端加 TFTMode）即可。
  */
 const MODE_OPTIONS: ModeOption[] = [
-    { key: 'NATURE_NORMAL', name: '自然之力 匹配', queueId: 1090, mode: TFTMode.NORMAL, icon: SportsEsportsIcon, accent: '#2F8BFF', enabled: false },
-    { key: 'NATURE_RANK', name: '自然之力 排位', queueId: 1100, mode: TFTMode.RANK, icon: MilitaryTechIcon, accent: '#C8AA6E', enabled: false },
-    { key: 'NATURE_TREASURE', name: '自然之力 恭喜发财', queueId: 6080, mode: null, icon: PaidIcon, accent: '#E8A33D', enabled: false },
-    { key: 'NATURE_DOUBLE', name: '自然之力 双人作战', queueId: 1160, mode: null, icon: PeopleIcon, accent: '#B57BFF', enabled: false },
-    { key: 'CLOCKWORK', name: '发条鸟的试炼', queueId: 1220, mode: TFTMode.CLOCKWORK_TRAILS, icon: PrecisionManufacturingIcon, accent: '#0AC8B9', enabled: false },
+    { key: 'NATURE_NORMAL', name: '自然之力 匹配', queueId: 1090, mode: TFTMode.NORMAL, art: modeArtNormal, iconUrl: modeIconNormal, accent: '#2F8BFF', enabled: import.meta.env.DEV, debugOnly: true },
+    { key: 'NATURE_RANK', name: '自然之力 排位', queueId: 1100, mode: TFTMode.RANK, art: modeArtRanked, iconUrl: modeIconRanked, accent: '#C8AA6E', enabled: false },
+    { key: 'NATURE_TREASURE', name: '自然之力 恭喜发财', queueId: 6080, mode: null, art: modeArtTreasure, iconUrl: modeIconTreasure, accent: '#E8A33D', enabled: false },
+    { key: 'NATURE_DOUBLE', name: '自然之力 双人作战', queueId: 1160, mode: null, art: modeArtDoubleUp, iconUrl: modeIconDoubleUp, accent: '#B57BFF', enabled: false },
+    { key: 'CLOCKWORK', name: '发条鸟的试炼', queueId: 1220, mode: TFTMode.CLOCKWORK_TRAILS, art: modeArtClockwork, iconUrl: modeIconClockwork, accent: '#0AC8B9', enabled: true },
 ];
 
-/** 默认模式：历史配置里的模式已下线/未适配时，兜底切到这里 */
-const DEFAULT_TFT_MODE = TFTMode.NORMAL;
+/** 默认模式：历史配置里的模式已下线/未适配时，兜底切到第一个已开放的模式 */
+const DEFAULT_TFT_MODE: TFTMode =
+    MODE_OPTIONS.find(option => option.enabled && option.mode !== null)?.mode ?? TFTMode.NORMAL;
 
 /** 判断某个模式当前是否可选 */
 const isSelectableMode = (mode: string): boolean =>
     MODE_OPTIONS.some(option => option.enabled && option.mode === mode);
-
-/** 是否还没有任何模式适配完成 */
-const NO_MODE_READY = !MODE_OPTIONS.some(option => option.enabled);
 
 // ============================================
 // 组件主体
@@ -709,6 +919,8 @@ export const HomePage = () => {
     const [isLcuConnected, setIsLcuConnected] = useState(false);
     // 新增：TFT 游戏模式
     const [tftMode, setTftMode] = useState<TFTMode>(DEFAULT_TFT_MODE);
+    // 刚被用户切换到的模式卡片，用来播放一次确认动画（页面加载时的默认选中不播放）
+    const [justSelectedKey, setJustSelectedKey] = useState<string | null>(null);
     // 新增：日志模式（简略/详细）
     const [logMode, setLogMode] = useState<LogMode>(LogMode.SIMPLE);
     // 新增：管理员权限状态（null 表示还在检测中）
@@ -717,6 +929,8 @@ export const HomePage = () => {
     const [stopAfterGame, setStopAfterGame] = useState(false);
     // 新增：是否有选中的阵容（针对当前赛季）
     const [hasSelectedLineup, setHasSelectedLineup] = useState(false);
+    // 云顶之弈独立客户端是否已打开（新版云顶之弈和 LOL 客户端是两个程序，要分开检查）
+    const [isTftClientOpen, setIsTftClientOpen] = useState(false);
     // 新增：统计数据（本次会话局数、历史总局数、运行时长）
     const [statistics, setStatistics] = useState<GameStatistics>(settingsStore.getStatistics());
     // 新增：格式化后的运行时长文本
@@ -894,6 +1108,27 @@ export const HomePage = () => {
         return `${h}:${m}:${s}`;
     }, []);
 
+    // 轮询云顶之弈独立客户端是否已打开（只在已连上 LOL 客户端、且没在挂机时检查；挂机中由状态机自己处理）
+    useEffect(() => {
+        if (!isLcuConnected || isRunning) return;
+
+        let cancelled = false;
+        const check = async () => {
+            try {
+                const open = await window.tft.isClientOpen();
+                if (!cancelled) setIsTftClientOpen(open);
+            } catch {
+                // 忽略，下次再试
+            }
+        };
+        check();
+        const timer = setInterval(check, 2000);
+        return () => {
+            cancelled = true;
+            clearInterval(timer);
+        };
+    }, [isLcuConnected, isRunning]);
+
     // 每秒更新运行时长显示
     useEffect(() => {
         // 立即用 store 中的快照更新一次
@@ -1063,10 +1298,11 @@ export const HomePage = () => {
 
         const newMode = option.mode;
         setTftMode(newMode);
+        // 播放一次确认切换的动画（卡片本身就是反馈，不再弹 toast）
+        setJustSelectedKey(option.key);
         await window.lineup.setTftMode(newMode);
         // 切换模式后重新检查对应赛季是否有选中阵容
         await checkHasSelectedLineup(newMode);
-        toast.success(`已切换到${option.name}`);
     };
 
     /**
@@ -1080,7 +1316,6 @@ export const HomePage = () => {
         if (newMode === logMode) return;
         setLogMode(newMode);
         await window.lineup.setLogMode(newMode);
-        toast.success(newMode === LogMode.DETAILED ? '已切换到详细日志模式' : '已切换到简略日志模式');
     };
 
     /**
@@ -1091,10 +1326,15 @@ export const HomePage = () => {
         return `${PROFILE_ICON_BASE_URL}${iconId}.jpg`;
     };
 
-    /** 主按钮的状态和文案（按优先级判断） */
+    /**
+     * 主按钮的状态和文案，按顺序检查：
+     * LOL 客户端 → 云顶之弈独立客户端 → 模式是否已适配 → 是否选择了阵容 → 可以开始
+     * 运行中一律显示"停止挂机"（对局加载时云顶之弈窗口可能短暂消失，不能因此禁用停止）
+     */
     const startButton: { variant: StartButtonVariant; icon: SvgIconComponent; label: string } =
-        !isLcuConnected ? { variant: 'disabled', icon: BlockIcon, label: '未检测到客户端' }
+        !isLcuConnected ? { variant: 'disabled', icon: BlockIcon, label: '未打开LOL客户端' }
         : isRunning ? { variant: 'running', icon: StopIcon, label: '停止挂机' }
+        : !isTftClientOpen ? { variant: 'disabled', icon: TftIcon, label: '未打开云顶之弈' }
         : !isModeReady ? { variant: 'disabled', icon: LockIcon, label: '模式适配中' }
         : (needsLineup && !hasSelectedLineup) ? { variant: 'disabled', icon: BlockIcon, label: '未选择阵容' }
         : { variant: 'ready', icon: PlayArrowIcon, label: '开始挂机' };
@@ -1190,29 +1430,38 @@ export const HomePage = () => {
 
             {/* 模式选择 */}
             <section>
-                <SectionHeader>
-                    <SectionTitle>游戏模式</SectionTitle>
-                    {NO_MODE_READY && <SectionHint>S18「自然之力」正在适配中，暂时只能看不能选</SectionHint>}
-                </SectionHeader>
                 <ModeGrid>
                     {MODE_OPTIONS.map(option => {
-                        const Icon = option.icon;
+                        // "自然之力 恭喜发财" 拆成系列名 + 模式名两行显示
+                        const [series, title] = option.name.includes(' ')
+                            ? option.name.split(' ', 2)
+                            : [null, option.name];
                         return (
                             <ModeCard
                                 key={option.key}
                                 type="button"
-                                $accent={option.accent}
+                                title={option.name}
                                 $selected={option.enabled && option.mode === tftMode}
                                 $locked={!option.enabled}
+                                $justSelected={justSelectedKey === option.key}
                                 aria-disabled={!option.enabled}
                                 onClick={() => handleModeSelect(option)}
+                                onAnimationEnd={(e) => {
+                                    // 子元素的动画结束也会冒泡上来，只认卡片自己的
+                                    if (e.target === e.currentTarget) setJustSelectedKey(null);
+                                }}
                             >
-                                <ModeIconBadge $accent={option.accent}>
-                                    <Icon />
-                                </ModeIconBadge>
-                                <ModeName>{option.name}</ModeName>
-                                <ModeMeta>BETA · 队列 {option.queueId}</ModeMeta>
-                                <ModeStatus $ready={option.enabled}>{option.enabled ? '可用' : '适配中'}</ModeStatus>
+                                <ModeArt $src={option.art} />
+                                <ModeFrame />
+                                <ModeStatus $ready={option.enabled}>{option.enabled ? (option.debugOnly ? '调试' : '可用') : '适配中'}</ModeStatus>
+                                <ModeInfo>
+                                    <ModeIconBadge>
+                                        <ModeIconGlyph $src={option.iconUrl} />
+                                    </ModeIconBadge>
+                                    {series && <ModeSeries>{series}</ModeSeries>}
+                                    <ModeName>{title}</ModeName>
+                                    <ModeMeta>BETA · 队列 {option.queueId}</ModeMeta>
+                                </ModeInfo>
                                 {!option.enabled && (
                                     <ModeLockOverlay>
                                         <LockIcon />
@@ -1244,10 +1493,14 @@ export const HomePage = () => {
                         onClick={handleToggle}
                         aria-disabled={startButton.variant === 'disabled'}
                     >
-                        <StartButtonInner $variant={startButton.variant}>
-                            <StartIcon />
-                            {startButton.label}
-                        </StartButtonInner>
+                        <StartButtonGap>
+                            <StartButtonBorder $variant={startButton.variant}>
+                                <StartButtonInner $variant={startButton.variant}>
+                                    <StartIcon />
+                                    <span>{startButton.label}</span>
+                                </StartButtonInner>
+                            </StartButtonBorder>
+                        </StartButtonGap>
                     </StartButton>
                 </StartButtonGlow>
 

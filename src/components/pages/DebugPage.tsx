@@ -14,7 +14,7 @@ import type { DebugScreenshotResult, DebugScreenshotState } from "../../../elect
 const PageWrapper = styled.div<{ theme: ThemeType }>`
   background:
     radial-gradient(ellipse 80% 35% at 50% 0%, rgba(47, 139, 255, 0.08) 0%, transparent 70%),
-    ${props => props.theme.colors.background};
+    transparent;  /* 底色透明，透出全局背景图 */
   color: ${props => props.theme.colors.text};
   padding: ${props => props.theme.spacing.medium} ${props => props.theme.spacing.large};
   height: 100%;

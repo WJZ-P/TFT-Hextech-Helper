@@ -15,12 +15,23 @@ import {css} from "styled-components";
  */
 export const hextechPanel = css`
   background: ${props => props.theme.colors.panelBg};
+  /* 面板是半透明的，模糊身后的背景图，形成毛玻璃效果 */
+  backdrop-filter: blur(8px);
   border: 1px solid ${props => props.theme.colors.goldDim};
   border-radius: ${props => props.theme.borderRadius};
   box-shadow:
     inset 0 0 0 1px rgba(0, 0, 0, 0.6),
     inset 0 0 0 2px ${props => props.theme.colors.goldDeep}66,
     0 8px 24px rgba(0, 0, 0, 0.45);
+`;
+
+/**
+ * 轻透明的面板底：80% 不透明度、轻微模糊，能透出后面的背景图
+ * 用在大块面板上（首页召唤师信息栏、运行日志），叠在 hextechPanel 之后覆盖它的底色
+ */
+export const hextechPanelSeeThrough = css`
+  background: linear-gradient(180deg, rgba(27, 40, 57, 0.8) 0%, rgba(20, 32, 48, 0.8) 100%);
+  backdrop-filter: blur(2px);
 `;
 
 /** 小节标题：金色、字距拉开，左侧带一个小菱形装饰 */

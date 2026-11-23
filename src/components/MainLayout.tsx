@@ -2,6 +2,8 @@ import {Outlet} from "react-router-dom";
 import Sidebar from "./Sidebar.tsx";
 import {TitleBar} from "./TitleBar.tsx";
 import styled from "styled-components";
+// 全局背景：S18「自然之力」客户端大厅背景图（CommunityDragon: assets/ux/tft/outofgame/backgrounds/lobby.tft_set18.jpg）
+import lobbyBackgroundUrl from "../assets/backgrounds/lobby-set18.jpg";
 
 const LayoutContainer = styled.div`
   /* 对应 h-screen 和 w-screen，让布局撑满整个视口 */
@@ -12,8 +14,11 @@ const LayoutContainer = styled.div`
   display: flex;
   flex-direction: column;
 
-  /* 对应 bg-gray-800，一个舒适的深灰色背景 */
-  background-color: ${props => props.theme.colors.background};
+  /* 背景图上叠一层深色渐变，保证文字对比度；原图是竖版，取中下部的湖面和浮岛 */
+  background:
+    linear-gradient(180deg, rgba(9, 14, 22, 0.80) 0%, rgba(9, 14, 22, 0.60) 45%, rgba(9, 14, 22, 0.82) 100%),
+    url(${lobbyBackgroundUrl}) center 62% / cover no-repeat,
+    ${props => props.theme.colors.background};
 
   /* 对应 antialiased，让字体渲染更平滑 */
   -webkit-font-smoothing: antialiased;

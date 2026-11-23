@@ -15,7 +15,7 @@ import { settingsStore } from "../../stores/settingsStore.ts"; // 全局设置�
 const PageWrapper = styled.div<{ theme: ThemeType }>`
   background:
     radial-gradient(ellipse 80% 35% at 50% 0%, rgba(47, 139, 255, 0.08) 0%, transparent 70%),
-    ${props => props.theme.colors.background};
+    transparent;  /* 底色透明，透出全局背景图 */
   color: ${props => props.theme.colors.text};
   padding: ${props => props.theme.spacing.small} ${props => props.theme.spacing.large} ${props => props.theme.spacing.large};
   height: 100%;
@@ -426,8 +426,8 @@ const SettingsPage = () => {
     // 调试页面显示设置
     const [showDebugPage, setShowDebugPage] = useState(false);
     
-    // 游戏浮窗显示设置
-    const [showOverlay, setShowOverlay] = useState(true);
+    // 游戏浮窗显示设置（虚幻客户端不开 2999 端口（Live Client Data API），拿不到对局玩家信息，游戏浮窗暂时无法实现，先注释掉）
+    // const [showOverlay, setShowOverlay] = useState(true);
     
     // 版本与更新
     const [currentVersion, setCurrentVersion] = useState<string>('');
@@ -465,9 +465,9 @@ const SettingsPage = () => {
             await settingsStore.init();
             setShowDebugPage(settingsStore.getShowDebugPage());
             
-            // 加载游戏浮窗显示设置
-            const overlayEnabled = await window.settings.get<boolean>('showOverlay');
-            setShowOverlay(overlayEnabled);
+            // 加载游戏浮窗显示设置（虚幻客户端不开 2999 端口（Live Client Data API），拿不到对局玩家信息，游戏浮窗暂时无法实现，先注释掉）
+            // const overlayEnabled = await window.settings.get<boolean>('showOverlay');
+            // setShowOverlay(overlayEnabled);
             
             // 加载当前版本号
             const version = await window.util.getAppVersion();
@@ -675,14 +675,14 @@ const SettingsPage = () => {
         toast.success(newValue ? '调试页面已显示' : '调试页面已隐藏');
     };
     
-    // 切换游戏浮窗显示
-    const handleToggleOverlay = async () => {
-        const newValue = !showOverlay;
-        setShowOverlay(newValue);
-        // 通过通用 settings API 持久化到后端 SettingsStore
-        await window.settings.set('showOverlay', newValue);
-        toast.success(newValue ? '游戏浮窗已开启' : '游戏浮窗已关闭');
-    };
+    // 切换游戏浮窗显示（虚幻客户端不开 2999 端口（Live Client Data API），拿不到对局玩家信息，游戏浮窗暂时无法实现，先注释掉）
+    // const handleToggleOverlay = async () => {
+    //     const newValue = !showOverlay;
+    //     setShowOverlay(newValue);
+    //     // 通过通用 settings API 持久化到后端 SettingsStore
+    //     await window.settings.set('showOverlay', newValue);
+    //     toast.success(newValue ? '游戏浮窗已开启' : '游戏浮窗已关闭');
+    // };
     
     /**
      * 切换定时停止开关
@@ -889,7 +889,7 @@ const SettingsPage = () => {
                 </SettingItem>
             </SettingsCard>
 
-            {/* 对局设置 */}
+            {/* 对局设置（虚幻客户端不开 2999 端口（Live Client Data API），拿不到对局玩家信息，游戏浮窗暂时无法实现，先注释掉）
             <SettingsHeader>
                 对局
             </SettingsHeader>
@@ -906,6 +906,7 @@ const SettingsPage = () => {
                     </ToggleSwitch>
                 </SettingItem>
             </SettingsCard>
+            */}
 
             {/* 定时停止设置 */}
             <SettingsHeader>
@@ -972,7 +973,7 @@ const SettingsPage = () => {
                     <SettingInfo>
                         <SettingText>
                             <h3>排队超时自动重排</h3>
-                            <p>排队超过指定分钟数未匹配成功时，自动退出房间并重新排队（发条鸟模式为固定3秒）。</p>
+                            <p>排队超过指定分钟数未匹配成功时，自动退出房间并重新排队（发条鸟模式为固定10秒）。</p>
                         </SettingText>
                     </SettingInfo>
                     <DelayRangeRow>

@@ -40,7 +40,8 @@ const LinkText = styled.span<{ $isCollapsed: boolean }>`
 `;
 
 const SidebarContainer = styled.aside<{ $isCollapsed: boolean }>`
-  background: ${props => props.theme.colors.sidebarBg};
+  background: ${props => props.theme.colors.sidebarGlassBg};
+  backdrop-filter: blur(8px);
   color: ${props => props.theme.colors.text};
   display: flex;
   flex-direction: column;
