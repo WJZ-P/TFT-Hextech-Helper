@@ -167,6 +167,19 @@ class TftWindowLocator {
     }
 
     /**
+     * 云顶之弈独立客户端是否已打开（窗口存在即可，最小化也算打开）
+     * @description 主页按钮轮询用：找到过窗口后只读一次标题，开销很小
+     */
+    public async isWindowOpen(): Promise<boolean> {
+        try {
+            await this.findWindow();
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    /**
      * 确保 TFT 是前台窗口
      * @description 截屏幕像素、模拟鼠标点击都要求 TFT 在最前面，否则会截到/点到挡在上面的窗口
      */

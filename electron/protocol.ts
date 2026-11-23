@@ -87,6 +87,7 @@ export enum IpcChannel {
     DEBUG_SCREENSHOT_TAKEN = 'debug-screenshot-taken',                              // 快捷键截图完成事件（主进程 -> 渲染进程）
     // 云顶之弈窗口状态（开始挂机前检查是否为窗口化）
     TFT_GET_WINDOW_MODE = 'tft-get-window-mode',
+    TFT_IS_CLIENT_OPEN = 'tft-is-client-open',              // 云顶之弈独立客户端是否已打开（主页按钮轮询）
     // 自绘标题栏的窗口控制
     WINDOW_MINIMIZE = 'window-minimize',                    // 最小化
     WINDOW_TOGGLE_MAXIMIZE = 'window-toggle-maximize',      // 最大化 / 还原

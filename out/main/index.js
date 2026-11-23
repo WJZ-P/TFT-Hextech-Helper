@@ -5887,6 +5887,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["DEBUG_SCREENSHOT_OPEN_DIR"] = "debug-screenshot-open-dir";
   IpcChannel2["DEBUG_SCREENSHOT_TAKEN"] = "debug-screenshot-taken";
   IpcChannel2["TFT_GET_WINDOW_MODE"] = "tft-get-window-mode";
+  IpcChannel2["TFT_IS_CLIENT_OPEN"] = "tft-is-client-open";
   IpcChannel2["WINDOW_MINIMIZE"] = "window-minimize";
   IpcChannel2["WINDOW_TOGGLE_MAXIMIZE"] = "window-toggle-maximize";
   IpcChannel2["WINDOW_CLOSE"] = "window-close";
@@ -13821,71 +13822,6 @@ var TFTMode = /* @__PURE__ */ ((TFTMode2) => {
   TFTMode2["S4_RUISHOU"] = "S4_RUISHOU";
   return TFTMode2;
 })(TFTMode || {});
-const levelRegion = {
-  leftTop: { x: 25, y: 625 },
-  rightBottom: { x: 145, y: 645 }
-};
-const lootRegion = {
-  leftTop: { x: 200, y: 125 },
-  rightBottom: { x: 855, y: 585 }
-};
-const littleLegendDefaultPoint = { x: 120, y: 430 };
-const selfWalkAroundPoints = {
-  left: [{ x: 156, y: 400 }, { x: 165, y: 355 }, { x: 175, y: 315 }, { x: 185, y: 185 }, { x: 195, y: 150 }],
-  right: [{ x: 840, y: 495 }, { x: 830, y: 450 }, { x: 830, y: 420 }, { x: 800, y: 280 }, { x: 805, y: 295 }, { x: 790, y: 215 }, { x: 790, y: 215 }, { x: 785, y: 180 }, { x: 785, y: 150 }]
-};
-const coinRegion = {
-  leftTop: { x: 505, y: 626 },
-  rightBottom: { x: 545, y: 642 }
-};
-const shopSlot = {
-  SHOP_SLOT_1: { x: 240, y: 700 },
-  SHOP_SLOT_2: { x: 380, y: 700 },
-  SHOP_SLOT_3: { x: 520, y: 700 },
-  SHOP_SLOT_4: { x: 660, y: 700 },
-  SHOP_SLOT_5: { x: 800, y: 700 }
-};
-const shopSlotNameRegions = {
-  SLOT_1: {
-    // width: 108 height:18
-    leftTop: { x: 173, y: 740 },
-    rightBottom: { x: 281, y: 758 }
-  },
-  SLOT_2: {
-    leftTop: { x: 315, y: 740 },
-    rightBottom: { x: 423, y: 758 }
-  },
-  SLOT_3: {
-    leftTop: { x: 459, y: 740 },
-    rightBottom: { x: 567, y: 758 }
-  },
-  SLOT_4: {
-    leftTop: { x: 602, y: 740 },
-    rightBottom: { x: 710, y: 758 }
-  },
-  SLOT_5: {
-    leftTop: { x: 746, y: 740 },
-    rightBottom: { x: 854, y: 758 }
-  }
-};
-const detailChampionNameRegion = {
-  leftTop: { x: 870, y: 226 },
-  rightBottom: { x: 978, y: 244 }
-};
-const detailEquipRegion = {
-  SLOT_1: {
-    leftTop: { x: 881, y: 347 },
-    rightBottom: { x: 919, y: 385 }
-  },
-  SLOT_2: {
-    leftTop: { x: 927, y: 347 },
-    rightBottom: { x: 965, y: 385 }
-  },
-  SLOT_3: {
-    leftTop: { x: 973, y: 347 },
-    rightBottom: { x: 1011, y: 385 }
-  }
-};
 const itemForgeTooltipRegion = {
   leftTop: { x: 56, y: 7 },
   rightBottom: { x: 176, y: 27 }
@@ -13893,70 +13829,6 @@ const itemForgeTooltipRegion = {
 const itemForgeTooltipRegionEdge = {
   leftTop: { x: 585, y: 7 },
   rightBottom: { x: 695, y: 27 }
-};
-const detailChampionStarRegion = {
-  leftTop: { x: 919, y: 122 },
-  rightBottom: { x: 974, y: 132 }
-};
-const refreshShopPoint = { x: 135, y: 730 };
-const buyExpPoint = { x: 135, y: 680 };
-const equipmentSlot = {
-  EQ_SLOT_1: { x: 20, y: 210 },
-  //+35
-  EQ_SLOT_2: { x: 20, y: 245 },
-  EQ_SLOT_3: { x: 20, y: 280 },
-  EQ_SLOT_4: { x: 20, y: 315 },
-  EQ_SLOT_5: { x: 20, y: 350 },
-  EQ_SLOT_6: { x: 20, y: 385 },
-  EQ_SLOT_7: { x: 20, y: 430 },
-  //   这里重置下准确位置
-  EQ_SLOT_8: { x: 20, y: 465 },
-  EQ_SLOT_9: { x: 20, y: 500 },
-  EQ_SLOT_10: { x: 20, y: 535 }
-};
-const equipmentRegion = {
-  //  宽24，高25
-  SLOT_1: {
-    //  y+=36
-    leftTop: { x: 9, y: 198 },
-    rightBottom: { x: 32, y: 222 }
-  },
-  SLOT_2: {
-    leftTop: { x: 9, y: 234 },
-    rightBottom: { x: 32, y: 258 }
-  },
-  SLOT_3: {
-    leftTop: { x: 9, y: 271 },
-    rightBottom: { x: 32, y: 295 }
-  },
-  SLOT_4: {
-    leftTop: { x: 9, y: 307 },
-    rightBottom: { x: 32, y: 331 }
-  },
-  SLOT_5: {
-    leftTop: { x: 9, y: 344 },
-    rightBottom: { x: 32, y: 368 }
-  },
-  SLOT_6: {
-    leftTop: { x: 9, y: 380 },
-    rightBottom: { x: 32, y: 404 }
-  },
-  SLOT_7: {
-    leftTop: { x: 9, y: 417 },
-    rightBottom: { x: 32, y: 441 }
-  },
-  SLOT_8: {
-    leftTop: { x: 9, y: 453 },
-    rightBottom: { x: 32, y: 477 }
-  },
-  SLOT_9: {
-    leftTop: { x: 9, y: 490 },
-    rightBottom: { x: 32, y: 514 }
-  },
-  SLOT_10: {
-    leftTop: { x: 9, y: 526 },
-    rightBottom: { x: 32, y: 550 }
-  }
 };
 const fightBoardSlotPoint = {
   // x+=80
@@ -13993,180 +13865,6 @@ const fightBoardSlotPoint = {
   R4_C6: { x: 690, y: 460 },
   R4_C7: { x: 780, y: 460 }
 };
-const fightBoardSlotRegion = {
-  // x+=80
-  //  第一行的棋子位置
-  R1_C1: {
-    leftTop: { x: 210 + 5, y: 300 - 10 },
-    rightBottom: { x: 255 - 5, y: 330 }
-  },
-  R1_C2: {
-    leftTop: { x: 290 + 5, y: 300 - 10 },
-    rightBottom: { x: 340 - 5, y: 330 }
-  },
-  R1_C3: {
-    leftTop: { x: 370 + 5, y: 300 - 10 },
-    rightBottom: { x: 420 - 5, y: 330 }
-  },
-  R1_C4: {
-    leftTop: { x: 450 + 5, y: 300 - 10 },
-    rightBottom: { x: 500 - 5, y: 330 }
-  },
-  R1_C5: {
-    leftTop: { x: 530 + 5, y: 300 - 10 },
-    rightBottom: { x: 585 - 5, y: 330 }
-  },
-  R1_C6: {
-    leftTop: { x: 615 + 5, y: 300 - 10 },
-    rightBottom: { x: 665 - 5, y: 330 }
-  },
-  R1_C7: {
-    leftTop: { x: 695 + 5, y: 300 - 10 },
-    rightBottom: { x: 750 - 5, y: 330 }
-  },
-  //  第二行的棋子位置        //  x+=85
-  R2_C1: {
-    leftTop: { x: 240 + 5, y: 350 - 10 },
-    rightBottom: { x: 285 - 5, y: 385 }
-  },
-  R2_C2: {
-    leftTop: { x: 325 + 5, y: 350 - 10 },
-    rightBottom: { x: 370 - 5, y: 385 }
-  },
-  R2_C3: {
-    leftTop: { x: 410 + 5, y: 350 - 10 },
-    rightBottom: { x: 455 - 5, y: 385 }
-  },
-  R2_C4: {
-    leftTop: { x: 495 + 5, y: 350 - 10 },
-    rightBottom: { x: 540 - 5, y: 385 }
-  },
-  R2_C5: {
-    leftTop: { x: 575 + 5, y: 350 - 10 },
-    rightBottom: { x: 625 - 5, y: 385 }
-  },
-  R2_C6: {
-    leftTop: { x: 660 + 5, y: 350 - 10 },
-    rightBottom: { x: 710 - 5, y: 385 }
-  },
-  R2_C7: {
-    leftTop: { x: 745 + 5, y: 350 - 10 },
-    rightBottom: { x: 795 - 5, y: 385 }
-  },
-  //  第三行棋子的位置        //  x+=90
-  R3_C1: {
-    leftTop: { x: 185 + 5, y: 405 - 10 },
-    rightBottom: { x: 230 - 5, y: 440 }
-  },
-  R3_C2: {
-    leftTop: { x: 275 + 5, y: 405 - 10 },
-    rightBottom: { x: 320 - 5, y: 440 }
-  },
-  R3_C3: {
-    leftTop: { x: 360 + 5, y: 405 - 10 },
-    rightBottom: { x: 410 - 5, y: 440 }
-  },
-  R3_C4: {
-    leftTop: { x: 445 + 5, y: 405 - 10 },
-    rightBottom: { x: 495 - 5, y: 440 }
-  },
-  R3_C5: {
-    leftTop: { x: 535 + 5, y: 405 - 10 },
-    rightBottom: { x: 585 - 5, y: 440 }
-  },
-  R3_C6: {
-    leftTop: { x: 620 + 5, y: 405 - 10 },
-    rightBottom: { x: 675 - 5, y: 440 }
-  },
-  R3_C7: {
-    leftTop: { x: 705 + 5, y: 405 - 10 },
-    rightBottom: { x: 760 - 5, y: 440 }
-  },
-  //  第四行棋子的位置        //  x+=90
-  R4_C1: {
-    leftTop: { x: 215 + 5, y: 465 - 10 },
-    rightBottom: { x: 265 - 5, y: 500 }
-  },
-  R4_C2: {
-    leftTop: { x: 310 + 5, y: 465 - 10 },
-    rightBottom: { x: 355 - 5, y: 500 }
-  },
-  R4_C3: {
-    leftTop: { x: 395 + 5, y: 465 - 10 },
-    rightBottom: { x: 450 - 5, y: 500 }
-  },
-  R4_C4: {
-    leftTop: { x: 490 + 5, y: 465 - 10 },
-    rightBottom: { x: 540 - 5, y: 500 }
-  },
-  R4_C5: {
-    leftTop: { x: 580 + 5, y: 465 - 10 },
-    rightBottom: { x: 635 - 5, y: 500 }
-  },
-  R4_C6: {
-    leftTop: { x: 670 + 5, y: 465 - 10 },
-    rightBottom: { x: 725 - 5, y: 500 }
-  },
-  R4_C7: {
-    leftTop: { x: 760 + 5, y: 465 - 10 },
-    rightBottom: { x: 815 - 5, y: 500 }
-  }
-};
-const benchSlotRegion = {
-  SLOT_1: {
-    leftTop: { x: 105 + 5, y: 530 - 15 },
-    rightBottom: { x: 155 - 5, y: 585 }
-  },
-  SLOT_2: {
-    leftTop: { x: 190 + 5, y: 530 - 15 },
-    rightBottom: { x: 245 - 5, y: 585 }
-  },
-  SLOT_3: {
-    leftTop: { x: 270 + 5, y: 530 - 15 },
-    rightBottom: { x: 325 - 5, y: 585 }
-  },
-  SLOT_4: {
-    leftTop: { x: 355 + 5, y: 530 - 15 },
-    rightBottom: { x: 410 - 5, y: 585 }
-  },
-  SLOT_5: {
-    leftTop: { x: 435 + 5, y: 530 - 15 },
-    rightBottom: { x: 495 - 5, y: 585 }
-  },
-  SLOT_6: {
-    leftTop: { x: 520 + 5, y: 530 - 15 },
-    rightBottom: { x: 580 - 5, y: 585 }
-  },
-  SLOT_7: {
-    leftTop: { x: 600 + 5, y: 530 - 15 },
-    rightBottom: { x: 665 - 5, y: 585 }
-  },
-  SLOT_8: {
-    leftTop: { x: 680 + 5, y: 530 - 15 },
-    rightBottom: { x: 750 - 5, y: 585 }
-  },
-  SLOT_9: {
-    leftTop: { x: 765 + 5, y: 530 - 15 },
-    rightBottom: { x: 830 - 5, y: 585 }
-  }
-};
-const benchSlotPoints = {
-  SLOT_1: { x: 130, y: 555 },
-  SLOT_2: { x: 210, y: 555 },
-  SLOT_3: { x: 295, y: 555 },
-  SLOT_4: { x: 385, y: 555 },
-  SLOT_5: { x: 465, y: 555 },
-  SLOT_6: { x: 550, y: 555 },
-  SLOT_7: { x: 630, y: 555 },
-  SLOT_8: { x: 720, y: 555 },
-  SLOT_9: { x: 800, y: 555 }
-};
-const hexSlot = {
-  //  x+=295
-  SLOT_1: { x: 215, y: 410 },
-  SLOT_2: { x: 510, y: 410 },
-  SLOT_3: { x: 805, y: 410 }
-};
 const starGodSlot = {
   SLOT_1: { x: 370, y: 440 },
   SLOT_2: { x: 650, y: 440 }
@@ -14178,23 +13876,6 @@ const minorBlessingSlot = {
   SLOT_3: { x: 540, y: 700 },
   SLOT_4: { x: 700, y: 700 }
 };
-const sharedDraftPoint = { x: 530, y: 400 };
-const gameStageDisplayStageOne = {
-  leftTop: { x: 411, y: 6 },
-  rightBottom: { x: 442, y: 22 }
-};
-const gameStageDisplayNormal = {
-  leftTop: { x: 374, y: 6 },
-  rightBottom: { x: 403, y: 22 }
-};
-const gameStageDisplayTheClockworkTrails = {
-  leftTop: { x: 324, y: 6 },
-  rightBottom: { x: 354, y: 22 }
-};
-const clockworkTrailsFightButtonPoint = {
-  x: 955,
-  y: 705
-};
 const clockworkTrailsQuitNowButtonRegion = {
   leftTop: { x: 780, y: 555 },
   rightBottom: { x: 845, y: 570 }
@@ -14202,10 +13883,6 @@ const clockworkTrailsQuitNowButtonRegion = {
 const clockworkTrailsQuitNowButtonPoint = {
   x: 815,
   y: 560
-};
-const combatPhaseTextRegion = {
-  leftTop: { x: 465, y: 110 },
-  rightBottom: { x: 560, y: 135 }
 };
 var ItemForgeType = /* @__PURE__ */ ((ItemForgeType2) => {
   ItemForgeType2["NONE"] = "NONE";
@@ -14914,17 +14591,17 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-ChTsdUAE.js");
+    const ServicesModule = await import("./chunks/index-CgEcvb-t.js");
     hexService = ServicesModule.hexService;
-    const TftOperatorModule = await import("./chunks/TftOperator-2Vitfk6g.js").then((n) => n.T);
+    const TftOperatorModule = await import("./chunks/TftOperator-ixJkvl5j.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
     const LineupModule = await import("./chunks/index-maGobXkq.js");
     lineupLoader = LineupModule.lineupLoader;
     const GlobalHotkeyManagerModule = await import("./chunks/GlobalHotkeyManager-Cbcy0EP4.js");
     globalHotkeyManager = GlobalHotkeyManagerModule.globalHotkeyManager;
-    const TftWindowCaptureModule = await import("./chunks/TftWindowCapture-CHUn5M70.js");
+    const TftWindowCaptureModule = await import("./chunks/TftWindowCapture-9ZJPvEY8.js");
     tftWindowCapture = TftWindowCaptureModule.tftWindowCapture;
-    const TftWindowLocatorModule = await import("./chunks/TftWindowLocator-EOZPzjkt.js");
+    const TftWindowLocatorModule = await import("./chunks/TftWindowLocator-fZ4xlHgg.js");
     tftWindowLocator = TftWindowLocatorModule.tftWindowLocator;
     console.log("✅ [Main] 业务模块加载完成");
   } catch (error) {
@@ -15163,6 +14840,7 @@ function registerHandler() {
       return { found: false, error: e.message };
     }
   });
+  ipcMain.handle(IpcChannel.TFT_IS_CLIENT_OPEN, async () => tftWindowLocator.isWindowOpen());
   ipcMain.handle(IpcChannel.WINDOW_MINIMIZE, async () => win?.minimize());
   ipcMain.handle(IpcChannel.WINDOW_TOGGLE_MAXIMIZE, async () => {
     if (!win) return;
@@ -15215,44 +14893,20 @@ function registerHandler() {
   });
 }
 export {
-  LcuEventUri as $,
-  clockworkTrailsQuitNowButtonRegion as A,
-  itemForgeTooltipRegionEdge as B,
-  itemForgeTooltipRegion as C,
-  gameStageDisplayStageOne as D,
-  gameStageDisplayNormal as E,
-  gameStageDisplayTheClockworkTrails as F,
+  sendOverlayPlayers as A,
+  closeOverlay as B,
+  GameConfigHelper as C,
+  analyticsManager as D,
+  AnalyticsEvent as E,
   GameStageType as G,
-  clockworkTrailsQuitNowButtonPoint as H,
   ItemForgeType as I,
-  levelRegion as J,
-  coinRegion as K,
-  hexSlot as L,
-  lootRegion as M,
+  LCUManager as L,
   MAIN_DIST,
-  littleLegendDefaultPoint as N,
-  selfWalkAroundPoints as O,
-  equipmentSlot as P,
-  combatPhaseTextRegion as Q,
-  clockworkTrailsFightButtonPoint as R,
   RENDERER_DIST,
-  sharedDraftPoint as S,
   TFT_17_CHESS_DATA as T,
   UNSELLABLE_BOARD_UNITS as U,
-  minorBlessingSlot as V,
   VITE_DEV_SERVER_URL,
-  grandBlessingPoint as W,
-  starGodSlot as X,
-  LCUManager as Y,
-  IpcChannel as Z,
-  isStandardChessMode as _,
   TFT_16_CHESS_DATA as a,
-  showOverlay as a0,
-  sendOverlayPlayers as a1,
-  closeOverlay as a2,
-  GameConfigHelper as a3,
-  analyticsManager as a4,
-  AnalyticsEvent as a5,
   TFT_4_CHESS_DATA as b,
   TFT_4_TRAIT_DATA as c,
   TFT_18_EQUIP_DATA as d,
@@ -15265,17 +14919,17 @@ export {
   fs as k,
   logger as l,
   settingsStore as m,
-  shopSlotNameRegions as n,
-  equipmentRegion as o,
-  detailEquipRegion as p,
-  shopSlot as q,
-  refreshShopPoint as r,
+  clockworkTrailsQuitNowButtonRegion as n,
+  itemForgeTooltipRegionEdge as o,
+  itemForgeTooltipRegion as p,
+  clockworkTrailsQuitNowButtonPoint as q,
+  fightBoardSlotPoint as r,
   sleep as s,
-  buyExpPoint as t,
-  benchSlotPoints as u,
-  benchSlotRegion as v,
-  detailChampionNameRegion as w,
-  detailChampionStarRegion as x,
-  fightBoardSlotPoint as y,
-  fightBoardSlotRegion as z
+  minorBlessingSlot as t,
+  grandBlessingPoint as u,
+  starGodSlot as v,
+  IpcChannel as w,
+  isStandardChessMode as x,
+  LcuEventUri as y,
+  showOverlay as z
 };

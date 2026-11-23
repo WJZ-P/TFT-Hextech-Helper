@@ -66,6 +66,7 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["DEBUG_SCREENSHOT_OPEN_DIR"] = "debug-screenshot-open-dir";
   IpcChannel2["DEBUG_SCREENSHOT_TAKEN"] = "debug-screenshot-taken";
   IpcChannel2["TFT_GET_WINDOW_MODE"] = "tft-get-window-mode";
+  IpcChannel2["TFT_IS_CLIENT_OPEN"] = "tft-is-client-open";
   IpcChannel2["WINDOW_MINIMIZE"] = "window-minimize";
   IpcChannel2["WINDOW_TOGGLE_MAXIMIZE"] = "window-toggle-maximize";
   IpcChannel2["WINDOW_CLOSE"] = "window-close";
@@ -177,6 +178,8 @@ const tftApi = {
    * @returns found=false 时 error 说明原因（未启动、已最小化等）
    */
   getWindowMode: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_WINDOW_MODE),
+  /** 云顶之弈独立客户端是否已打开（窗口存在即可，最小化也算） */
+  isClientOpen: () => electron.ipcRenderer.invoke(IpcChannel.TFT_IS_CLIENT_OPEN),
   buyAtSlot: (slot) => electron.ipcRenderer.invoke(IpcChannel.TFT_BUY_AT_SLOT, slot),
   getShopInfo: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_SHOP_INFO),
   getEquipInfo: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_EQUIP_INFO),

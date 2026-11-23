@@ -124,6 +124,8 @@ const tftApi = {
         | { found: true; windowed: boolean; clientWidth: number; clientHeight: number }
         | { found: false; error: string }
     > => ipcRenderer.invoke(IpcChannel.TFT_GET_WINDOW_MODE),
+    /** 云顶之弈独立客户端是否已打开（窗口存在即可，最小化也算） */
+    isClientOpen: (): Promise<boolean> => ipcRenderer.invoke(IpcChannel.TFT_IS_CLIENT_OPEN),
     buyAtSlot: (slot: number) => ipcRenderer.invoke(IpcChannel.TFT_BUY_AT_SLOT, slot),
     getShopInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_SHOP_INFO),
     getEquipInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_EQUIP_INFO),
