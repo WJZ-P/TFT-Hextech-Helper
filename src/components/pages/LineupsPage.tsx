@@ -82,15 +82,16 @@ interface LineupConfig {
 
 /** 赛季选项卡类型 */
 // 阵容页面支持的赛季 Tab
-// - S17 星神：当前主赛季（默认选中）
+// - S18 自然之力：当前主赛季（默认选中）
+// - S17 星神：保留用于加载老阵容
 // - S16：保留用于加载老阵容（HomePage 的赛季 Tab 已下线，但数据和查表仍保留）
 // - S4 瑞兽闹新春：已从 HomePage 下线，这里也对应不显示 Tab
 // 直接复用 SeasonRegistry 的 SeasonId 类型，避免两套字面量不一致
 type SeasonTab = SeasonId;
 
-/** 赛季 Tab 配置：目前只展示 S17 星神（和 HomePage 的模式选择保持一致） */
+/** 赛季 Tab 配置：目前只展示当前主赛季 S18 自然之力（和 HomePage 的模式选择保持一致） */
 const SEASON_TABS: { key: SeasonTab; label: string }[] = [
-    { key: 'S17', label: 'S17 星神' },
+    { key: 'S18', label: 'S18 自然之力' },
 ];
 
 /**
@@ -116,8 +117,19 @@ const TRAIT_ICON_BASE = 'https://game.gtimg.cn/images/lol/act/img/tft';
  * 英雄原画 API 基础 URL
  * 将 {chessId} 替换为英雄的 chessId 即可获取原画
  */
-// S18 在 tftstore 下还没有原画（s18/624x318 返回 404），先用头像代替
+// S18 在 tftstore 下没有原画（s18/624x318 返回 404），原画打包在本地，见 S18_SPLASH_ART；
+// 这里的头像地址只在本地缺图时兜底
 const SPLASH_ART_BASE_S18 = AVATAR_URL_BASE;
+
+/**
+ * S18 英雄原画（key 为 chessId）
+ * 由 scripts/generate_s18_splash_art.cjs 从 CommunityDragon 解包原画生成，624x312 webp
+ */
+const S18_SPLASH_ART: Record<string, string> = Object.fromEntries(
+    Object.entries(
+        import.meta.glob('../../assets/splash/s18/*.webp', { eager: true, import: 'default' }) as Record<string, string>
+    ).map(([file, url]) => [file.replace(/^.*\/(\d+)\.webp$/, '$1'), url])
+);
 const SPLASH_ART_BASE_S17 = 'https://game.gtimg.cn/images/lol/tftstore/s17/624x318/{chessId}.jpg';
 const SPLASH_ART_BASE_S16 = 'https://game.gtimg.cn/images/lol/tftstore/s16/624x318/{chessId}.jpg';
 const SPLASH_ART_BASE_S4 = 'https://game.gtimg.cn/images/lol/tftstore/s4/624x318/{chessId}.jpg';
@@ -197,7 +209,7 @@ const PageWrapper = styled.div<{ theme: ThemeType }>`
   padding: ${props => props.theme.spacing.large};
   background:
     radial-gradient(ellipse 80% 35% at 50% 0%, rgba(47, 139, 255, 0.08) 0%, transparent 70%),
-    ${props => props.theme.colors.background};
+    transparent;  /* 底色透明，透出全局背景图 */
   color: ${props => props.theme.colors.text};
   height: 100%;
   overflow-y: auto;
@@ -1547,8 +1559,36 @@ const getSplashArtUrl = (cnName: string, season: SeasonTab): string => {
         console.warn(`未找到英雄 "${cnName}" 的原画数据 (${season})`);
         return '';
     }
+    // S18 的原画打包在本地（见 S18_SPLASH_ART），缺图时才退回到按 chessId 拼的地址
+    if (season === 'S18' && S18_SPLASH_ART[chessItem.chessId]) {
+        return S18_SPLASH_ART[chessItem.chessId];
+    }
     const baseUrl = getSplashArtBase(season);
     return baseUrl.replace('{chessId}', chessItem.chessId);
+};
+
+/**
+ * 阵容里棋子的展示顺序
+ * @description 带装备的棋子排在最前（核心棋子优先），其余按费用从高到低；同费用保持原顺序。
+ *              只影响页面展示，不改阵容数据（策略层按数据里的顺序处理）
+ */
+const sortChampionsForDisplay = (champions: ChampionConfig[], season: SeasonTab): ChampionConfig[] => {
+    const chessData = getChessDataBySeasonId(season) as Record<string, TFTUnit>;
+    const costOf = (c: ChampionConfig) => chessData[c.name]?.price ?? 0;
+    // 阵容 JSON 里 items 是装备名数组；页面里的类型声明是旧的 { core, alternatives } 结构，两种都兼容
+    const hasItems = (c: ChampionConfig) => {
+        const items = c.items as unknown;
+        return Array.isArray(items) ? items.length > 0 : ((items as { core?: unknown[] } | undefined)?.core?.length ?? 0) > 0;
+    };
+    return champions
+        .map((champion, index) => ({ champion, index }))
+        .sort((a, b) =>
+            Number(hasItems(b.champion)) - Number(hasItems(a.champion))
+            || Number(b.champion.isCore) - Number(a.champion.isCore)
+            || costOf(b.champion) - costOf(a.champion)
+            || a.index - b.index
+        )
+        .map(({ champion }) => champion);
 };
 
 /**
@@ -1825,8 +1865,8 @@ const LineupsPage: React.FC = () => {
     const [allLineups, setAllLineups] = useState<LineupConfig[]>([]);
     // 加载状态
     const [loading, setLoading] = useState(true);
-    // 当前选中的赛季 Tab —— 默认 S17 星神（当前主赛季）
-    const [activeTab, setActiveTab] = useState<SeasonTab>('S17');
+    // 当前选中的赛季 Tab —— 默认 S18 自然之力（当前主赛季）
+    const [activeTab, setActiveTab] = useState<SeasonTab>('S18');
     // 展开状态：记录每个阵容的展开状态，key 是阵容 id
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
     // 已选中的阵容 ID 集合（所有赛季统一存储）
@@ -2478,7 +2518,7 @@ const LineupsPage: React.FC = () => {
      */
     const getDisplayChampions = (lineup: LineupConfig): ChampionConfig[] => {
         if (lineup.finalComp) {
-            return lineup.finalComp.champions;
+            return sortChampionsForDisplay(lineup.finalComp.champions, activeTab);
         }
         
         const stage =
@@ -2504,7 +2544,7 @@ const LineupsPage: React.FC = () => {
             const stage = lineup.stages[key];
             if (stage && stage.champions.length > 0) {
                 const level = parseInt(key.replace('level', ''), 10);
-                levels.push([level, stage.champions]);
+                levels.push([level, sortChampionsForDisplay(stage.champions, activeTab)]);
             }
         });
         
@@ -2659,6 +2699,7 @@ const LineupsPage: React.FC = () => {
                                             </CheckboxWrapper>
                                             
                                             <ContentWrapper>
+                                                <CardTitle>{lineup.name}</CardTitle>
                                                 <TraitsListContainer>
                                                     {activeTraits.map((trait, idx) => {
                                                         const isActive = trait.count >= trait.data.levels[0];
@@ -2684,7 +2725,6 @@ const LineupsPage: React.FC = () => {
                                             </ContentWrapper>
 
                                             <CardHeader>
-                                                <CardTitle>{lineup.name}</CardTitle>
                                                 <DeleteLineupBtn
                                                     onClick={(e) => {
                                                         e.stopPropagation();
@@ -2753,6 +2793,7 @@ const LineupsPage: React.FC = () => {
                                     </CheckboxWrapper>
                                     
                                     <ContentWrapper>
+                                        <CardTitle>{lineup.name}</CardTitle>
                                         <TraitsListContainer>
                                             {activeTraits.map((trait, idx) => {
                                                 const isActive = trait.count >= trait.data.levels[0];
@@ -2778,7 +2819,6 @@ const LineupsPage: React.FC = () => {
                                     </ContentWrapper>
 
                                     <CardHeader>
-                                        <CardTitle>{lineup.name}</CardTitle>
                                         <Arrow $expanded={isExpanded}>▼</Arrow>
                                     </CardHeader>
                                 </LineupCard>

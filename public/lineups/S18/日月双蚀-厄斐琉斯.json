@@ -1,0 +1,648 @@
+{
+  "id": "aae576316e0b3baff15d398c8fc658e8",
+  "name": "日月双蚀 厄斐琉斯",
+  "season": "S18",
+  "finalComp": {
+    "champions": [
+      {
+        "name": "厄斐琉斯",
+        "isCore": true,
+        "items": [
+          "鬼索的狂暴之刃",
+          "无尽之刃",
+          "海妖之怒"
+        ],
+        "position": "R4_C2",
+        "starTarget": 2
+      },
+      {
+        "name": "瑟庄妮",
+        "isCore": false,
+        "items": [
+          "石像鬼石板甲",
+          "狂徒铠甲",
+          "振奋盔甲"
+        ],
+        "position": "R1_C4",
+        "starTarget": 2
+      },
+      {
+        "name": "拉露恩",
+        "isCore": false,
+        "items": [
+          "朔极之矛",
+          "珠光护手",
+          "蓝霸符"
+        ],
+        "position": "R4_C1",
+        "starTarget": 1
+      },
+      {
+        "name": "黛安娜",
+        "isCore": false,
+        "position": "R2_C4",
+        "starTarget": 2
+      },
+      {
+        "name": "凯尔",
+        "isCore": false,
+        "position": "R4_C7",
+        "starTarget": 2
+      },
+      {
+        "name": "蕾欧娜",
+        "isCore": false,
+        "position": "R2_C3",
+        "starTarget": 2
+      },
+      {
+        "name": "苍蓝雕纹魔像",
+        "isCore": false,
+        "items": [
+          "月蚀骑士纹章"
+        ],
+        "position": "R1_C3",
+        "starTarget": 2
+      },
+      {
+        "name": "莉莉娅",
+        "isCore": false,
+        "position": "R1_C2",
+        "starTarget": 2
+      },
+      {
+        "name": "阿木木",
+        "isCore": false,
+        "position": "R1_C1",
+        "starTarget": 2
+      }
+    ],
+    "traits": [
+      {
+        "key": "DA_18_Solar",
+        "style": 4,
+        "numUnits": 3
+      },
+      {
+        "key": "DA_AluneUniqueTrait18",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "DA_18_Lunar",
+        "style": 3,
+        "numUnits": 3
+      },
+      {
+        "key": "DA_18_Rapidfire",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "DA_Juggernaut18",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "DA_18_Vanguard",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "DA_18_Defender",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "DA_18_Spellweaver",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "DA_18_Slayer",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "DA_18_Invoker",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "DA_Riftbeast18",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "DA_18_Fae",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "DA_18_Inferno",
+        "style": 0,
+        "numUnits": 1
+      }
+    ]
+  },
+  "stages": {
+    "level4": {
+      "champions": [
+        {
+          "name": "凯尔",
+          "isCore": false,
+          "position": "R4_C7"
+        },
+        {
+          "name": "蕾欧娜",
+          "isCore": false,
+          "position": "R2_C3"
+        },
+        {
+          "name": "瑟庄妮",
+          "isCore": false,
+          "position": "R1_C4"
+        },
+        {
+          "name": "慎",
+          "isCore": false
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_18_Solar",
+          "style": 4,
+          "numUnits": 3
+        },
+        {
+          "key": "DA_18_Defender",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Rapidfire",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Juggernaut18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Inferno",
+          "style": 0,
+          "numUnits": 1
+        }
+      ],
+      "tips": "OP.GG 没有该阵容的前期数据，由 7 级阵容推算（优先保留低费和核心棋子）"
+    },
+    "level5": {
+      "champions": [
+        {
+          "name": "黛安娜",
+          "isCore": false,
+          "position": "R2_C4"
+        },
+        {
+          "name": "凯尔",
+          "isCore": false,
+          "position": "R4_C7"
+        },
+        {
+          "name": "蕾欧娜",
+          "isCore": false,
+          "position": "R2_C3"
+        },
+        {
+          "name": "瑟庄妮",
+          "isCore": false,
+          "position": "R1_C4"
+        },
+        {
+          "name": "慎",
+          "isCore": false
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_18_Solar",
+          "style": 4,
+          "numUnits": 3
+        },
+        {
+          "key": "DA_18_Defender",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Lunar",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Slayer",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Vanguard",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Rapidfire",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Juggernaut18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Inferno",
+          "style": 0,
+          "numUnits": 1
+        }
+      ],
+      "tips": "OP.GG 没有该阵容的前期数据，由 7 级阵容推算（优先保留低费和核心棋子）"
+    },
+    "level6": {
+      "champions": [
+        {
+          "name": "厄斐琉斯",
+          "isCore": true,
+          "position": "R4_C2"
+        },
+        {
+          "name": "黛安娜",
+          "isCore": false,
+          "position": "R2_C4"
+        },
+        {
+          "name": "凯尔",
+          "isCore": false,
+          "position": "R4_C7"
+        },
+        {
+          "name": "蕾欧娜",
+          "isCore": false,
+          "position": "R2_C3"
+        },
+        {
+          "name": "瑟庄妮",
+          "isCore": false,
+          "position": "R1_C4"
+        },
+        {
+          "name": "慎",
+          "isCore": false
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_18_Solar",
+          "style": 4,
+          "numUnits": 3
+        },
+        {
+          "key": "DA_18_Lunar",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Rapidfire",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Defender",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Slayer",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Vanguard",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Juggernaut18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Inferno",
+          "style": 0,
+          "numUnits": 1
+        }
+      ],
+      "tips": "OP.GG 没有该阵容的前期数据，由 7 级阵容推算（优先保留低费和核心棋子）"
+    },
+    "level7": {
+      "champions": [
+        {
+          "name": "拉露恩",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "厄斐琉斯",
+          "isCore": true,
+          "position": "R4_C2"
+        },
+        {
+          "name": "黛安娜",
+          "isCore": false,
+          "position": "R2_C4"
+        },
+        {
+          "name": "凯尔",
+          "isCore": false,
+          "position": "R4_C7"
+        },
+        {
+          "name": "蕾欧娜",
+          "isCore": false,
+          "position": "R2_C3"
+        },
+        {
+          "name": "瑟庄妮",
+          "isCore": false,
+          "position": "R1_C4"
+        },
+        {
+          "name": "慎",
+          "isCore": false
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_18_Solar",
+          "style": 4,
+          "numUnits": 3
+        },
+        {
+          "key": "DA_AluneUniqueTrait18",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Lunar",
+          "style": 3,
+          "numUnits": 3
+        },
+        {
+          "key": "DA_18_Rapidfire",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Defender",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Spellweaver",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Slayer",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Vanguard",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Juggernaut18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Inferno",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level8": {
+      "champions": [
+        {
+          "name": "厄斐琉斯",
+          "isCore": true,
+          "position": "R4_C2"
+        },
+        {
+          "name": "黛安娜",
+          "isCore": false,
+          "position": "R2_C4"
+        },
+        {
+          "name": "凯尔",
+          "isCore": false,
+          "position": "R4_C7"
+        },
+        {
+          "name": "蕾欧娜",
+          "isCore": false,
+          "position": "R2_C3"
+        },
+        {
+          "name": "瑟庄妮",
+          "isCore": false,
+          "position": "R1_C4"
+        },
+        {
+          "name": "苍蓝雕纹魔像",
+          "isCore": false,
+          "position": "R1_C3"
+        },
+        {
+          "name": "莉莉娅",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "阿木木",
+          "isCore": false,
+          "position": "R1_C1"
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_18_Solar",
+          "style": 4,
+          "numUnits": 3
+        },
+        {
+          "key": "DA_18_Lunar",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Rapidfire",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Vanguard",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Defender",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_Juggernaut18",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Slayer",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Invoker",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Riftbeast18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Fae",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Inferno",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level9": {
+      "champions": [
+        {
+          "name": "厄斐琉斯",
+          "isCore": true,
+          "position": "R4_C2"
+        },
+        {
+          "name": "瑟庄妮",
+          "isCore": false,
+          "position": "R1_C4"
+        },
+        {
+          "name": "拉露恩",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "凯尔",
+          "isCore": false,
+          "position": "R4_C7"
+        },
+        {
+          "name": "蕾欧娜",
+          "isCore": false,
+          "position": "R2_C3"
+        },
+        {
+          "name": "黛安娜",
+          "isCore": false,
+          "position": "R2_C4"
+        },
+        {
+          "name": "莉莉娅",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "塔里克",
+          "isCore": false
+        },
+        {
+          "name": "茂凯",
+          "isCore": false
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_18_Solar",
+          "style": 4,
+          "numUnits": 3
+        },
+        {
+          "key": "DA_AluneUniqueTrait18",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Emerald18",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Maokai_UniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Lunar",
+          "style": 3,
+          "numUnits": 3
+        },
+        {
+          "key": "DA_18_Rapidfire",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_Juggernaut18",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Defender",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Vanguard",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Spellweaver",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Slayer",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Fae",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    }
+  }
+}

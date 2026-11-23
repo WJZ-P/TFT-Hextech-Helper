@@ -1,0 +1,694 @@
+{
+  "id": "b365c37e09da743e255f748634b2b234",
+  "name": "重装战士 莫甘娜",
+  "season": "S18",
+  "finalComp": {
+    "champions": [
+      {
+        "name": "莫甘娜",
+        "isCore": true,
+        "items": [
+          "莫雷洛秘典",
+          "虚空之杖",
+          "适应性头盔"
+        ],
+        "position": "R3_C4",
+        "starTarget": 2
+      },
+      {
+        "name": "苍蓝雕纹魔像",
+        "isCore": true,
+        "items": [
+          "石像鬼石板甲",
+          "圣盾使的誓约",
+          "狂徒铠甲"
+        ],
+        "position": "R1_C4",
+        "starTarget": 2
+      },
+      {
+        "name": "拉露恩",
+        "isCore": true,
+        "items": [
+          "珠光护手",
+          "朔极之矛",
+          "纳什之牙"
+        ],
+        "position": "R4_C2",
+        "starTarget": 2
+      },
+      {
+        "name": "远古巨龙",
+        "isCore": true,
+        "position": "R3_C1",
+        "starTarget": 2
+      },
+      {
+        "name": "塔里克",
+        "isCore": false,
+        "position": "R1_C3",
+        "starTarget": 1
+      },
+      {
+        "name": "黛安娜",
+        "isCore": false,
+        "position": "R2_C4",
+        "starTarget": 2
+      },
+      {
+        "name": "卡西奥佩娅",
+        "isCore": false,
+        "position": "R4_C1",
+        "starTarget": 2
+      },
+      {
+        "name": "伊莉丝",
+        "isCore": false,
+        "position": "R1_C1",
+        "starTarget": 2
+      }
+    ],
+    "traits": [
+      {
+        "key": "DA_AluneUniqueTrait18",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "DA_18_ApexPredator",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "DA_Emerald18",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "DA_18_Vanguard",
+        "style": 3,
+        "numUnits": 4
+      },
+      {
+        "key": "DA_18_Coven",
+        "style": 1,
+        "numUnits": 3
+      },
+      {
+        "key": "DA_18_Invoker",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "DA_18_Lunar",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "DA_18_Spellweaver",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "DA_Riftbeast18",
+        "style": 0,
+        "numUnits": 2
+      },
+      {
+        "key": "DA_18_Slayer",
+        "style": 0,
+        "numUnits": 1
+      }
+    ]
+  },
+  "stages": {
+    "level4": {
+      "champions": [
+        {
+          "name": "卡蜜尔",
+          "isCore": false
+        },
+        {
+          "name": "伊莉丝",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "凯特琳",
+          "isCore": false
+        },
+        {
+          "name": "卡西奥佩娅",
+          "isCore": false,
+          "position": "R4_C1"
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_18_Coven",
+          "style": 3,
+          "numUnits": 4
+        },
+        {
+          "key": "DA_18_Slayer",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Vanguard",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Hunter",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Spellweaver",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level5": {
+      "champions": [
+        {
+          "name": "卡蜜尔",
+          "isCore": false
+        },
+        {
+          "name": "伊莉丝",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "凯特琳",
+          "isCore": false
+        },
+        {
+          "name": "卡西奥佩娅",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "黛安娜",
+          "isCore": false,
+          "position": "R2_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_18_Coven",
+          "style": 3,
+          "numUnits": 4
+        },
+        {
+          "key": "DA_18_Slayer",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Vanguard",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Hunter",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Spellweaver",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Lunar",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level6": {
+      "champions": [
+        {
+          "name": "伊莉丝",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "卡蜜尔",
+          "isCore": false
+        },
+        {
+          "name": "凯特琳",
+          "isCore": false
+        },
+        {
+          "name": "卡西奥佩娅",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "黛安娜",
+          "isCore": false,
+          "position": "R2_C4"
+        },
+        {
+          "name": "洛",
+          "isCore": false
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_18_Coven",
+          "style": 3,
+          "numUnits": 4
+        },
+        {
+          "key": "DA_18_Vanguard",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "DA_18_Slayer",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Hunter",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Spellweaver",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Lunar",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Fae",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Juggernaut18",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level7": {
+      "champions": [
+        {
+          "name": "伊莉丝",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "卡蜜尔",
+          "isCore": false
+        },
+        {
+          "name": "卡西奥佩娅",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "凯特琳",
+          "isCore": false
+        },
+        {
+          "name": "黛安娜",
+          "isCore": false,
+          "position": "R2_C4"
+        },
+        {
+          "name": "莫甘娜",
+          "isCore": true,
+          "position": "R3_C4"
+        },
+        {
+          "name": "苍蓝雕纹魔像",
+          "isCore": true,
+          "position": "R1_C4"
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_18_Coven",
+          "style": 3,
+          "numUnits": 5
+        },
+        {
+          "key": "DA_18_Vanguard",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "DA_18_Slayer",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Invoker",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Spellweaver",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Hunter",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Lunar",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Riftbeast18",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level8": {
+      "champions": [
+        {
+          "name": "伊莉丝",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "卡西奥佩娅",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "莫甘娜",
+          "isCore": true,
+          "position": "R3_C4"
+        },
+        {
+          "name": "黛安娜",
+          "isCore": false,
+          "position": "R2_C4"
+        },
+        {
+          "name": "卡蜜尔",
+          "isCore": false
+        },
+        {
+          "name": "苍蓝雕纹魔像",
+          "isCore": true,
+          "position": "R1_C4"
+        },
+        {
+          "name": "凯特琳",
+          "isCore": false
+        },
+        {
+          "name": "拉露恩",
+          "isCore": true,
+          "position": "R4_C2"
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_AluneUniqueTrait18",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Coven",
+          "style": 3,
+          "numUnits": 5
+        },
+        {
+          "key": "DA_18_Vanguard",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "DA_18_Spellweaver",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Invoker",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Lunar",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Slayer",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_Riftbeast18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Hunter",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level9": {
+      "champions": [
+        {
+          "name": "卡西奥佩娅",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "莫甘娜",
+          "isCore": true,
+          "position": "R3_C4"
+        },
+        {
+          "name": "黛安娜",
+          "isCore": false,
+          "position": "R2_C4"
+        },
+        {
+          "name": "伊莉丝",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "苍蓝雕纹魔像",
+          "isCore": true,
+          "position": "R1_C4"
+        },
+        {
+          "name": "拉露恩",
+          "isCore": true,
+          "position": "R4_C2"
+        },
+        {
+          "name": "远古巨龙",
+          "isCore": true,
+          "position": "R3_C1"
+        },
+        {
+          "name": "塔里克",
+          "isCore": false,
+          "position": "R1_C3"
+        },
+        {
+          "name": "卡蜜尔",
+          "isCore": false
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_AluneUniqueTrait18",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_ApexPredator",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Emerald18",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Coven",
+          "style": 3,
+          "numUnits": 4
+        },
+        {
+          "key": "DA_18_Vanguard",
+          "style": 3,
+          "numUnits": 4
+        },
+        {
+          "key": "DA_18_Spellweaver",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Invoker",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Lunar",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Slayer",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_Riftbeast18",
+          "style": 0,
+          "numUnits": 2
+        }
+      ]
+    },
+    "level10": {
+      "champions": [
+        {
+          "name": "塔里克",
+          "isCore": false,
+          "position": "R1_C3"
+        },
+        {
+          "name": "远古巨龙",
+          "isCore": true,
+          "position": "R3_C1"
+        },
+        {
+          "name": "苍蓝雕纹魔像",
+          "isCore": true,
+          "position": "R1_C4"
+        },
+        {
+          "name": "黛安娜",
+          "isCore": false,
+          "position": "R2_C4"
+        },
+        {
+          "name": "莫甘娜",
+          "isCore": true,
+          "position": "R3_C4"
+        },
+        {
+          "name": "拉露恩",
+          "isCore": true,
+          "position": "R4_C2"
+        },
+        {
+          "name": "卡西奥佩娅",
+          "isCore": false,
+          "position": "R4_C1"
+        },
+        {
+          "name": "伊莉丝",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "拉克丝",
+          "isCore": false
+        },
+        {
+          "name": "艾翁",
+          "isCore": false
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_Emerald18",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_ApexPredator",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_AluneUniqueTrait18",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_LuxUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Greenfather",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Vanguard",
+          "style": 3,
+          "numUnits": 4
+        },
+        {
+          "key": "DA_18_Coven",
+          "style": 1,
+          "numUnits": 3
+        },
+        {
+          "key": "DA_18_Invoker",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Lunar",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Spellweaver",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_Riftbeast18",
+          "style": 0,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Slayer",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Elderwood",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    }
+  }
+}

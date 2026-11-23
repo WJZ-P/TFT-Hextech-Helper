@@ -1,0 +1,804 @@
+{
+  "id": "2291cf8d46f7d0b414fda66c077e814c",
+  "name": "魔战士 希维尔",
+  "season": "S18",
+  "finalComp": {
+    "champions": [
+      {
+        "name": "希维尔",
+        "isCore": true,
+        "items": [
+          "无尽之刃",
+          "蓝霸符",
+          "死亡之刃"
+        ],
+        "position": "R4_C1",
+        "starTarget": 2
+      },
+      {
+        "name": "奈德丽",
+        "isCore": true,
+        "items": [
+          "斯特拉克的挑战护手",
+          "夜之锋刃",
+          "饮血剑"
+        ],
+        "position": "R4_C2",
+        "starTarget": 2
+      },
+      {
+        "name": "阿木木",
+        "isCore": true,
+        "items": [
+          "石像鬼石板甲",
+          "狂徒铠甲",
+          "振奋盔甲"
+        ],
+        "position": "R1_C4",
+        "starTarget": 2
+      },
+      {
+        "name": "苍蓝雕纹魔像",
+        "isCore": false,
+        "position": "R1_C5",
+        "starTarget": 2
+      },
+      {
+        "name": "莉莉娅",
+        "isCore": false,
+        "position": "R1_C1",
+        "starTarget": 2
+      },
+      {
+        "name": "克格莫",
+        "isCore": false,
+        "position": "R4_C3",
+        "starTarget": 2
+      },
+      {
+        "name": "慎",
+        "isCore": false,
+        "position": "R1_C3",
+        "starTarget": 2
+      },
+      {
+        "name": "洛",
+        "isCore": false,
+        "position": "R1_C2",
+        "starTarget": 2
+      }
+    ],
+    "traits": [
+      {
+        "key": "DA_18_Caustic",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "DA_Primal18",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "DA_18_Adaptor",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "DA_18_Inferno",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "DA_Juggernaut18",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "DA_18_Invoker",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "DA_18_Vanguard",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "DA_18_Defender",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "DA_18_Fae",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "DA_18_Hunter",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "DA_Riftbeast18",
+        "style": 0,
+        "numUnits": 1
+      }
+    ]
+  },
+  "stages": {
+    "level4": {
+      "champions": [
+        {
+          "name": "希维尔",
+          "isCore": true,
+          "position": "R4_C1"
+        },
+        {
+          "name": "洛",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "克格莫",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "慎",
+          "isCore": false,
+          "position": "R1_C3"
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_18_Caustic",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Hunter",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Primal18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Fae",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Juggernaut18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Vanguard",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Adaptor",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Invoker",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Defender",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Inferno",
+          "style": 0,
+          "numUnits": 1
+        }
+      ],
+      "tips": "OP.GG 没有该阵容的前期数据，由 8 级阵容推算（优先保留低费和核心棋子）"
+    },
+    "level5": {
+      "champions": [
+        {
+          "name": "希维尔",
+          "isCore": true,
+          "position": "R4_C1"
+        },
+        {
+          "name": "奈德丽",
+          "isCore": true,
+          "position": "R4_C2"
+        },
+        {
+          "name": "洛",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "克格莫",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "慎",
+          "isCore": false,
+          "position": "R1_C3"
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_18_Caustic",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Primal18",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Adaptor",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Hunter",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Fae",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Juggernaut18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Vanguard",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Invoker",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Defender",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Inferno",
+          "style": 0,
+          "numUnits": 1
+        }
+      ],
+      "tips": "OP.GG 没有该阵容的前期数据，由 8 级阵容推算（优先保留低费和核心棋子）"
+    },
+    "level6": {
+      "champions": [
+        {
+          "name": "希维尔",
+          "isCore": true,
+          "position": "R4_C1"
+        },
+        {
+          "name": "奈德丽",
+          "isCore": true,
+          "position": "R4_C2"
+        },
+        {
+          "name": "阿木木",
+          "isCore": true,
+          "position": "R1_C4"
+        },
+        {
+          "name": "洛",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "克格莫",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "慎",
+          "isCore": false,
+          "position": "R1_C3"
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_18_Caustic",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Primal18",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Adaptor",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Inferno",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_Juggernaut18",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Hunter",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Fae",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Vanguard",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Invoker",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Defender",
+          "style": 0,
+          "numUnits": 1
+        }
+      ],
+      "tips": "OP.GG 没有该阵容的前期数据，由 8 级阵容推算（优先保留低费和核心棋子）"
+    },
+    "level7": {
+      "champions": [
+        {
+          "name": "希维尔",
+          "isCore": true,
+          "position": "R4_C1"
+        },
+        {
+          "name": "奈德丽",
+          "isCore": true,
+          "position": "R4_C2"
+        },
+        {
+          "name": "阿木木",
+          "isCore": true,
+          "position": "R1_C4"
+        },
+        {
+          "name": "苍蓝雕纹魔像",
+          "isCore": false,
+          "position": "R1_C5"
+        },
+        {
+          "name": "洛",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "克格莫",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "慎",
+          "isCore": false,
+          "position": "R1_C3"
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_18_Caustic",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Primal18",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Adaptor",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Inferno",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_Juggernaut18",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Invoker",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Vanguard",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Hunter",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Riftbeast18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Fae",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Defender",
+          "style": 0,
+          "numUnits": 1
+        }
+      ],
+      "tips": "OP.GG 没有该阵容的前期数据，由 8 级阵容推算（优先保留低费和核心棋子）"
+    },
+    "level8": {
+      "champions": [
+        {
+          "name": "希维尔",
+          "isCore": true,
+          "position": "R4_C1"
+        },
+        {
+          "name": "奈德丽",
+          "isCore": true,
+          "position": "R4_C2"
+        },
+        {
+          "name": "阿木木",
+          "isCore": true,
+          "position": "R1_C4"
+        },
+        {
+          "name": "苍蓝雕纹魔像",
+          "isCore": false,
+          "position": "R1_C5"
+        },
+        {
+          "name": "洛",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "克格莫",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "莉莉娅",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "慎",
+          "isCore": false,
+          "position": "R1_C3"
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_18_Caustic",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Primal18",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Adaptor",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Inferno",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_Juggernaut18",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Invoker",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Vanguard",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Fae",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Defender",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Hunter",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Riftbeast18",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level9": {
+      "champions": [
+        {
+          "name": "奈德丽",
+          "isCore": true,
+          "position": "R4_C2"
+        },
+        {
+          "name": "苍蓝雕纹魔像",
+          "isCore": false,
+          "position": "R1_C5"
+        },
+        {
+          "name": "洛",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "希维尔",
+          "isCore": true,
+          "position": "R4_C1"
+        },
+        {
+          "name": "莉莉娅",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "阿木木",
+          "isCore": true,
+          "position": "R1_C4"
+        },
+        {
+          "name": "慎",
+          "isCore": false,
+          "position": "R1_C3"
+        },
+        {
+          "name": "克格莫",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "艾希",
+          "isCore": false
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_18_Caustic",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Adaptor",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_Primal18",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Invoker",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Vanguard",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Fae",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_Juggernaut18",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Hunter",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Defender",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Inferno",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_Riftbeast18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Blossom",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level10": {
+      "champions": [
+        {
+          "name": "希维尔",
+          "isCore": true,
+          "position": "R4_C1"
+        },
+        {
+          "name": "莉莉娅",
+          "isCore": false,
+          "position": "R1_C1"
+        },
+        {
+          "name": "阿木木",
+          "isCore": true,
+          "position": "R1_C4"
+        },
+        {
+          "name": "苍蓝雕纹魔像",
+          "isCore": false,
+          "position": "R1_C5"
+        },
+        {
+          "name": "洛",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "克格莫",
+          "isCore": false,
+          "position": "R4_C3"
+        },
+        {
+          "name": "奈德丽",
+          "isCore": true,
+          "position": "R4_C2"
+        },
+        {
+          "name": "慎",
+          "isCore": false,
+          "position": "R1_C3"
+        },
+        {
+          "name": "艾希",
+          "isCore": false
+        },
+        {
+          "name": "拉克丝",
+          "isCore": false
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_18_Caustic",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_LuxUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Hunter",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_Primal18",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Defender",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Fae",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Inferno",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_Juggernaut18",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Invoker",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Vanguard",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Adaptor",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_Riftbeast18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Blossom",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    }
+  }
+}

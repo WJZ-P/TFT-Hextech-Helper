@@ -1,0 +1,732 @@
+{
+  "id": "1851265b1a9b7fe8336e8cbf79d824e3",
+  "name": "主宰 婕拉",
+  "season": "S18",
+  "finalComp": {
+    "champions": [
+      {
+        "name": "婕拉",
+        "isCore": true,
+        "items": [
+          "大天使之杖",
+          "海克斯科技枪刃",
+          "朔极之矛"
+        ],
+        "position": "R4_C7",
+        "starTarget": 2
+      },
+      {
+        "name": "希维尔",
+        "isCore": true,
+        "items": [
+          "无尽之刃",
+          "最后的轻语",
+          "朔极之矛"
+        ],
+        "position": "R4_C1",
+        "starTarget": 2
+      },
+      {
+        "name": "阿木木",
+        "isCore": true,
+        "items": [
+          "石像鬼石板甲",
+          "狂徒铠甲",
+          "振奋盔甲"
+        ],
+        "position": "R1_C1",
+        "starTarget": 2
+      },
+      {
+        "name": "茂凯",
+        "isCore": false,
+        "position": "R1_C3",
+        "starTarget": 1
+      },
+      {
+        "name": "艾希",
+        "isCore": false,
+        "position": "R4_C2",
+        "starTarget": 1
+      },
+      {
+        "name": "蔚",
+        "isCore": false,
+        "position": "R1_C4",
+        "starTarget": 2
+      },
+      {
+        "name": "峡谷迅捷蟹",
+        "isCore": false,
+        "position": "R1_C2",
+        "starTarget": 2
+      },
+      {
+        "name": "瑟庄妮",
+        "isCore": false,
+        "position": "R1_C5",
+        "starTarget": 2
+      },
+      {
+        "name": "约里克",
+        "isCore": false,
+        "position": "R3_C3",
+        "starTarget": 2
+      }
+    ],
+    "traits": [
+      {
+        "key": "DA_Juggernaut18",
+        "style": 4,
+        "numUnits": 6
+      },
+      {
+        "key": "DA_18_ZyraUniqueTrait",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "DA_18_Maokai_UniqueTrait",
+        "style": 4,
+        "numUnits": 1
+      },
+      {
+        "key": "DA_18_Summoner",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "DA_18_Hunter",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "DA_Primal18",
+        "style": 1,
+        "numUnits": 2
+      },
+      {
+        "key": "DA_18_Blossom",
+        "style": 0,
+        "numUnits": 2
+      },
+      {
+        "key": "DA_18_Inferno",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "DA_Riftbeast18",
+        "style": 0,
+        "numUnits": 1
+      },
+      {
+        "key": "DA_18_Solar",
+        "style": 0,
+        "numUnits": 1
+      }
+    ]
+  },
+  "stages": {
+    "level4": {
+      "champions": [
+        {
+          "name": "约里克",
+          "isCore": false,
+          "position": "R3_C3"
+        },
+        {
+          "name": "蔚",
+          "isCore": false,
+          "position": "R1_C4"
+        },
+        {
+          "name": "峡谷迅捷蟹",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "瑟庄妮",
+          "isCore": false,
+          "position": "R1_C5"
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_Juggernaut18",
+          "style": 3,
+          "numUnits": 4
+        },
+        {
+          "key": "DA_18_Blossom",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Summoner",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Primal18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Riftbeast18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Solar",
+          "style": 0,
+          "numUnits": 1
+        }
+      ],
+      "tips": "OP.GG 没有该阵容的前期数据，由 8 级阵容推算（优先保留低费和核心棋子）"
+    },
+    "level5": {
+      "champions": [
+        {
+          "name": "婕拉",
+          "isCore": true,
+          "position": "R4_C7"
+        },
+        {
+          "name": "约里克",
+          "isCore": false,
+          "position": "R3_C3"
+        },
+        {
+          "name": "蔚",
+          "isCore": false,
+          "position": "R1_C4"
+        },
+        {
+          "name": "峡谷迅捷蟹",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "瑟庄妮",
+          "isCore": false,
+          "position": "R1_C5"
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_18_ZyraUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Juggernaut18",
+          "style": 3,
+          "numUnits": 4
+        },
+        {
+          "key": "DA_18_Summoner",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Blossom",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Primal18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Riftbeast18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Solar",
+          "style": 0,
+          "numUnits": 1
+        }
+      ],
+      "tips": "OP.GG 没有该阵容的前期数据，由 8 级阵容推算（优先保留低费和核心棋子）"
+    },
+    "level6": {
+      "champions": [
+        {
+          "name": "婕拉",
+          "isCore": true,
+          "position": "R4_C7"
+        },
+        {
+          "name": "约里克",
+          "isCore": false,
+          "position": "R3_C3"
+        },
+        {
+          "name": "蔚",
+          "isCore": false,
+          "position": "R1_C4"
+        },
+        {
+          "name": "希维尔",
+          "isCore": true,
+          "position": "R4_C1"
+        },
+        {
+          "name": "峡谷迅捷蟹",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "瑟庄妮",
+          "isCore": false,
+          "position": "R1_C5"
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_18_ZyraUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Juggernaut18",
+          "style": 3,
+          "numUnits": 4
+        },
+        {
+          "key": "DA_18_Summoner",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_Primal18",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Blossom",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Hunter",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Riftbeast18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Solar",
+          "style": 0,
+          "numUnits": 1
+        }
+      ],
+      "tips": "OP.GG 没有该阵容的前期数据，由 8 级阵容推算（优先保留低费和核心棋子）"
+    },
+    "level7": {
+      "champions": [
+        {
+          "name": "婕拉",
+          "isCore": true,
+          "position": "R4_C7"
+        },
+        {
+          "name": "约里克",
+          "isCore": false,
+          "position": "R3_C3"
+        },
+        {
+          "name": "蔚",
+          "isCore": false,
+          "position": "R1_C4"
+        },
+        {
+          "name": "希维尔",
+          "isCore": true,
+          "position": "R4_C1"
+        },
+        {
+          "name": "阿木木",
+          "isCore": true,
+          "position": "R1_C1"
+        },
+        {
+          "name": "峡谷迅捷蟹",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "瑟庄妮",
+          "isCore": false,
+          "position": "R1_C5"
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_18_ZyraUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Juggernaut18",
+          "style": 3,
+          "numUnits": 5
+        },
+        {
+          "key": "DA_18_Summoner",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_Primal18",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Blossom",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Hunter",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Inferno",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Riftbeast18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Solar",
+          "style": 0,
+          "numUnits": 1
+        }
+      ],
+      "tips": "OP.GG 没有该阵容的前期数据，由 8 级阵容推算（优先保留低费和核心棋子）"
+    },
+    "level8": {
+      "champions": [
+        {
+          "name": "婕拉",
+          "isCore": true,
+          "position": "R4_C7"
+        },
+        {
+          "name": "约里克",
+          "isCore": false,
+          "position": "R3_C3"
+        },
+        {
+          "name": "蔚",
+          "isCore": false,
+          "position": "R1_C4"
+        },
+        {
+          "name": "希维尔",
+          "isCore": true,
+          "position": "R4_C1"
+        },
+        {
+          "name": "阿木木",
+          "isCore": true,
+          "position": "R1_C1"
+        },
+        {
+          "name": "峡谷迅捷蟹",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "瑟庄妮",
+          "isCore": false,
+          "position": "R1_C5"
+        },
+        {
+          "name": "茂凯",
+          "isCore": false,
+          "position": "R1_C3"
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_Juggernaut18",
+          "style": 4,
+          "numUnits": 6
+        },
+        {
+          "key": "DA_18_ZyraUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Maokai_UniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Summoner",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_Primal18",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Blossom",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Hunter",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Inferno",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Riftbeast18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Solar",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level9": {
+      "champions": [
+        {
+          "name": "希维尔",
+          "isCore": true,
+          "position": "R4_C1"
+        },
+        {
+          "name": "婕拉",
+          "isCore": true,
+          "position": "R4_C7"
+        },
+        {
+          "name": "蔚",
+          "isCore": false,
+          "position": "R1_C4"
+        },
+        {
+          "name": "约里克",
+          "isCore": false,
+          "position": "R3_C3"
+        },
+        {
+          "name": "阿木木",
+          "isCore": true,
+          "position": "R1_C1"
+        },
+        {
+          "name": "艾希",
+          "isCore": false,
+          "position": "R4_C2"
+        },
+        {
+          "name": "峡谷迅捷蟹",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "茂凯",
+          "isCore": false,
+          "position": "R1_C3"
+        },
+        {
+          "name": "瑟庄妮",
+          "isCore": false,
+          "position": "R1_C5"
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_Juggernaut18",
+          "style": 4,
+          "numUnits": 6
+        },
+        {
+          "key": "DA_18_ZyraUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Maokai_UniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Hunter",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_Primal18",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Summoner",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Blossom",
+          "style": 0,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Inferno",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Riftbeast18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Solar",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    },
+    "level10": {
+      "champions": [
+        {
+          "name": "茂凯",
+          "isCore": false,
+          "position": "R1_C3"
+        },
+        {
+          "name": "婕拉",
+          "isCore": true,
+          "position": "R4_C7"
+        },
+        {
+          "name": "希维尔",
+          "isCore": true,
+          "position": "R4_C1"
+        },
+        {
+          "name": "约里克",
+          "isCore": false,
+          "position": "R3_C3"
+        },
+        {
+          "name": "阿木木",
+          "isCore": true,
+          "position": "R1_C1"
+        },
+        {
+          "name": "艾希",
+          "isCore": false,
+          "position": "R4_C2"
+        },
+        {
+          "name": "蔚",
+          "isCore": false,
+          "position": "R1_C4"
+        },
+        {
+          "name": "峡谷迅捷蟹",
+          "isCore": false,
+          "position": "R1_C2"
+        },
+        {
+          "name": "瑟庄妮",
+          "isCore": false,
+          "position": "R1_C5"
+        },
+        {
+          "name": "艾翁",
+          "isCore": false
+        }
+      ],
+      "traits": [
+        {
+          "key": "DA_Juggernaut18",
+          "style": 4,
+          "numUnits": 6
+        },
+        {
+          "key": "DA_18_Maokai_UniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_ZyraUniqueTrait",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Greenfather",
+          "style": 4,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Summoner",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Hunter",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_Primal18",
+          "style": 1,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Blossom",
+          "style": 0,
+          "numUnits": 2
+        },
+        {
+          "key": "DA_18_Inferno",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_Riftbeast18",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Solar",
+          "style": 0,
+          "numUnits": 1
+        },
+        {
+          "key": "DA_18_Elderwood",
+          "style": 0,
+          "numUnits": 1
+        }
+      ]
+    }
+  }
+}
