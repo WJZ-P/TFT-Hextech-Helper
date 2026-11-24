@@ -14,11 +14,14 @@ initGlobalCrashHandler();
 
 // ============================================================================
 // GPU 兼容性设置
-// 解决部分用户因显卡驱动不兼容导致的启动闪退问题
+// 默认开启 GPU 渲染（界面有大量半透明、模糊和动画，全靠 CPU 会比较吃力）。
+// 部分用户的显卡驱动不兼容会导致启动闪退（1.1.0 因此关闭过 GPU），
+// 所以启动时 GPU 崩溃会被记录下来，下次启动自动关闭，见 GpuFallback
 // ============================================================================
-app.disableHardwareAcceleration();
-app.commandLine.appendSwitch('disable-gpu');
-app.commandLine.appendSwitch('disable-software-rasterizer');
+import { gpuFallback } from "../src-backend/utils/GpuFallback.ts";
+
+gpuFallback.init();
+// GPU 沙箱属于同一批兼容设置，和渲染效果无关，保持原样（关闭）
 app.commandLine.appendSwitch('disable-gpu-sandbox');
 
 // ============================================================================
@@ -439,6 +442,13 @@ function createWindow() {
     // Test active push message to Renderer-process.
     win.webContents.on('did-finish-load', () => {
         win?.webContents.send('main-process-message', (new Date).toLocaleString())
+    })
+
+    win.webContents.once('did-finish-load', () => {
+        gpuFallback.markWindowLoaded();
+        // 等前端的日志面板就绪后再提示
+        const notice = gpuFallback.getNotice();
+        if (notice) setTimeout(() => logger.warn(`[GpuFallback] ${notice}`), 1500);
     })
     
     // 拦截所有外部链接，使用系统默认浏览器打开

@@ -2443,6 +2443,104 @@ function initGlobalCrashHandler() {
     writeCrashLog(reason, "Main Process Unhandled Rejection (主进程未处理 Promise)");
   });
 }
+const STATE_FILE_NAME = "gpu-fallback.json";
+const STARTUP_GRACE_MS = 15e3;
+const CRASH_REASONS = /* @__PURE__ */ new Set([
+  "crashed",
+  "abnormal-exit",
+  "launch-failed",
+  "integrity-failure"
+]);
+class GpuFallback {
+  static instance = null;
+  /** 本次启动是否因为之前的崩溃而关闭了 GPU */
+  disabledState = null;
+  /** 是否仍处于启动阶段 */
+  watching = false;
+  constructor() {
+  }
+  static getInstance() {
+    if (!GpuFallback.instance) {
+      GpuFallback.instance = new GpuFallback();
+    }
+    return GpuFallback.instance;
+  }
+  /**
+   * 应用 GPU 设置并开始监听启动阶段的 GPU 崩溃
+   * @description 必须在 app ready 之前调用
+   */
+  init() {
+    this.disabledState = this.readState();
+    if (this.disabledState) {
+      app.disableHardwareAcceleration();
+      app.commandLine.appendSwitch("disable-gpu");
+      app.commandLine.appendSwitch("disable-software-rasterizer");
+      console.warn(`⚠️ [GpuFallback] 之前启动时 GPU 崩溃过，本次已自动关闭 GPU 渲染`);
+      return;
+    }
+    this.watching = true;
+    app.on("child-process-gone", (_event, details) => this.handleProcessGone(details));
+    app.on("before-quit", () => {
+      this.watching = false;
+    });
+  }
+  /** 主窗口加载完成后调用，观察一段时间没有崩溃就结束监听 */
+  markWindowLoaded() {
+    if (!this.watching) return;
+    setTimeout(() => {
+      this.watching = false;
+    }, STARTUP_GRACE_MS);
+  }
+  /**
+   * 本次启动关闭了 GPU 时，返回给用户看的说明；没有关闭则返回 null
+   */
+  getNotice() {
+    if (!this.disabledState) return null;
+    const { reason, exitCode, crashedAt } = this.disabledState;
+    return `之前启动时 GPU 崩溃过（${new Date(crashedAt).toLocaleString("zh-CN")}，${reason}，退出码 ${exitCode}），已自动关闭 GPU 渲染。更新显卡驱动后如需重新开启，请删除 ${this.getStatePath()} 再重启软件`;
+  }
+  handleProcessGone(details) {
+    if (!this.watching || details.type !== "GPU" || !CRASH_REASONS.has(details.reason)) return;
+    this.watching = false;
+    const state = {
+      electronVersion: process.versions.electron,
+      reason: details.reason,
+      exitCode: details.exitCode,
+      crashedAt: (/* @__PURE__ */ new Date()).toISOString()
+    };
+    try {
+      const file2 = this.getStatePath();
+      fs$2.mkdirSync(path.dirname(file2), { recursive: true });
+      fs$2.writeFileSync(file2, JSON.stringify(state, null, 2), "utf-8");
+      console.error(`❌ [GpuFallback] 启动时 GPU 崩溃（${details.reason}，退出码 ${details.exitCode}），下次启动将自动关闭 GPU 渲染`);
+    } catch (error) {
+      console.error("❌ [GpuFallback] 记录 GPU 崩溃失败:", error);
+    }
+    writeCrashLog(
+      `GPU 进程退出: ${details.reason}，退出码 ${details.exitCode}`,
+      "启动时 GPU 崩溃（下次启动将自动关闭 GPU 渲染）"
+    );
+  }
+  /** 读取崩溃记录；没有记录、文件损坏或 Electron 已升级时返回 null */
+  readState() {
+    const file2 = this.getStatePath();
+    try {
+      if (!fs$2.existsSync(file2)) return null;
+      const state = JSON.parse(fs$2.readFileSync(file2, "utf-8"));
+      if (state.electronVersion === process.versions.electron) return state;
+      console.log(`[GpuFallback] Electron 已从 ${state.electronVersion} 升级到 ${process.versions.electron}，重新尝试开启 GPU 渲染`);
+      fs$2.unlinkSync(file2);
+      return null;
+    } catch (error) {
+      console.error("❌ [GpuFallback] 读取 GPU 崩溃记录失败:", error);
+      return null;
+    }
+  }
+  getStatePath() {
+    return path.join(app.getPath("userData"), STATE_FILE_NAME);
+  }
+}
+const gpuFallback = GpuFallback.getInstance();
 var lib = { exports: {} };
 var fs$1 = {};
 var universalify = {};
@@ -14282,9 +14380,7 @@ function sendOverlayPlayers(players) {
   }
 }
 initGlobalCrashHandler();
-app.disableHardwareAcceleration();
-app.commandLine.appendSwitch("disable-gpu");
-app.commandLine.appendSwitch("disable-software-rasterizer");
+gpuFallback.init();
 app.commandLine.appendSwitch("disable-gpu-sandbox");
 function checkNativeModules() {
   const failedModules = [];
@@ -14515,6 +14611,11 @@ function createWindow() {
   });
   win.webContents.on("did-finish-load", () => {
     win?.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
+  });
+  win.webContents.once("did-finish-load", () => {
+    gpuFallback.markWindowLoaded();
+    const notice = gpuFallback.getNotice();
+    if (notice) setTimeout(() => logger.warn(`[GpuFallback] ${notice}`), 1500);
   });
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith("http://") || url.startsWith("https://")) {
