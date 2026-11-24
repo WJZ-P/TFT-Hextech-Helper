@@ -2,6 +2,7 @@ import {keyframes} from "@mui/material";
 import styled from "styled-components";
 import store, {toast, ToastMessage, ToastPosition, ToastType} from "./toast-core.ts";
 import {ThemeType} from "../../styles/theme.ts";
+import {hextechButtonGhost, hextechButtonPrimary} from "../../styles/hextech.ts";
 import {useEffect, useMemo, useState} from "react";
 import InfoIcon from '@mui/icons-material/InfoOutlined';
 import CheckCircleIcon from '@mui/icons-material/CheckCircleOutline';
@@ -87,6 +88,25 @@ const IconContainer = styled.div<{ type: ToastType, theme: ThemeType }>`
   }
 `;
 
+/** 文字 + 按钮，纵向排列 */
+const ToastBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  line-height: 1.5;
+`;
+
+const ToastActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+`;
+
+const ToastButton = styled.button<{ $primary?: boolean }>`
+  ${({$primary}) => $primary ? hextechButtonPrimary : hextechButtonGhost};
+  padding: 0.3rem 0.9rem;
+`;
+
 //  创建一个自定义hook，用来连接react组件和store，只在Toast组件内部使用
 function useStore() {
     const [toasts, setToasts] = useState(() => store.getSnapshot())
@@ -101,11 +121,12 @@ function useStore() {
 
 const SingleToast = ({toast}: { toast: ToastMessage }) => {
     useEffect(() => {
+        if (toast.persistent) return;
         const timer = setTimeout(() => {
             store.dismissToast(toast.id)
         }, toastDuration);
         return () => clearTimeout(timer)
-    }, [toast.id]);
+    }, [toast.id, toast.persistent]);
 
     const icons = {
         info: <InfoIcon/>,
@@ -116,7 +137,26 @@ const SingleToast = ({toast}: { toast: ToastMessage }) => {
     return(
         <ToastWrapper isVisible={toast.isVisible} type={toast.type}>
             <IconContainer type={toast.type}>{icons[toast.type]}</IconContainer>
-            {toast.message}
+            {toast.actions?.length ? (
+                <ToastBody>
+                    {toast.message}
+                    <ToastActions>
+                        {toast.actions.map(action => (
+                            <ToastButton
+                                key={action.label}
+                                type="button"
+                                $primary={action.primary}
+                                onClick={() => {
+                                    action.onClick?.();
+                                    store.dismissToast(toast.id);
+                                }}
+                            >
+                                {action.label}
+                            </ToastButton>
+                        ))}
+                    </ToastActions>
+                </ToastBody>
+            ) : toast.message}
         </ToastWrapper>
     )
 }

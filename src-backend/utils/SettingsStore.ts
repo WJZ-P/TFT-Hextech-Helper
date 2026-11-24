@@ -67,6 +67,7 @@ interface AppSettings {
     toggleHotkeyAccelerator: string,  //  挂机开关快捷键（Electron Accelerator 格式，如 "F1", "Ctrl+Shift+F1"）
     stopAfterGameHotkeyAccelerator: string,  //  "本局结束后停止"快捷键
     showOverlay: boolean,    //  对局中是否显示游戏浮窗（真人/人机信息）
+    hideGraphicsTip: boolean,    //  开启挂机时不再提醒调整画质和棋盘
     showDebugPage: boolean,  //  是否显示调试页面
     debugScreenshotHotkeyEnabled: boolean,  //  是否启用 TFT 窗口截图快捷键（仅开发版生效）
     window: {
@@ -114,6 +115,7 @@ class SettingsStore {
             toggleHotkeyAccelerator: 'F1',  //  默认快捷键是 F1
             stopAfterGameHotkeyAccelerator: 'F2',  //  默认快捷键是 F2
             showOverlay: true,              //  默认显示游戏浮窗
+            hideGraphicsTip: false,         //  默认会提醒，用户点"不再显示"后设为 true
             showDebugPage: false,       //  默认隐藏调试页面
             debugScreenshotHotkeyEnabled: true,  //  默认启用截图快捷键（只在开发版注册）
             window: {

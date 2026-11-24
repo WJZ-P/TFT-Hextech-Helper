@@ -1,12 +1,24 @@
 export type ToastType = 'info' | 'success' | 'warning' | 'error';
 export type ToastPosition = 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
 
+/** Toast 里的按钮，点击后执行 onClick 并关闭 Toast */
+export interface ToastAction {
+    label: string;
+    onClick?: () => void;
+    /** 主按钮样式 */
+    primary?: boolean;
+}
+
 export interface ToastMessage {
     id: string; // 使用 string 类型的 ID 更健壮
     message: string;
     type: ToastType;
     position: ToastPosition;
     isVisible: boolean;
+    /** 按钮，显示在文字下方 */
+    actions?: ToastAction[];
+    /** 不自动消失，只能通过按钮关闭 */
+    persistent?: boolean;
 }
 
 //  创建一个事件中心，一个简单的发布/订阅实现
@@ -53,10 +65,10 @@ function publish() {
 }
 
 //  创建暴露给全局的toast函数
-export const toast = (message: string, options: { type?: ToastType, position?: ToastPosition }) => {
-    const {type = 'info', position = 'top-right'} = options;
+export const toast = (message: string, options: { type?: ToastType, position?: ToastPosition, actions?: ToastAction[], persistent?: boolean }) => {
+    const {type = 'info', position = 'top-right', actions, persistent} = options;
     // 调用 store 的方法来添加 toast
-    store.addToast({message, type, position});
+    store.addToast({message, type, position, actions, persistent});
 
 }
 

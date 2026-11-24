@@ -13920,14 +13920,6 @@ var TFTMode = /* @__PURE__ */ ((TFTMode2) => {
   TFTMode2["S4_RUISHOU"] = "S4_RUISHOU";
   return TFTMode2;
 })(TFTMode || {});
-const itemForgeTooltipRegion = {
-  leftTop: { x: 56, y: 7 },
-  rightBottom: { x: 176, y: 27 }
-};
-const itemForgeTooltipRegionEdge = {
-  leftTop: { x: 585, y: 7 },
-  rightBottom: { x: 695, y: 27 }
-};
 const fightBoardSlotPoint = {
   // x+=80
   //  第一行的棋子位置
@@ -14068,6 +14060,8 @@ class SettingsStore {
       //  默认快捷键是 F2
       showOverlay: true,
       //  默认显示游戏浮窗
+      hideGraphicsTip: false,
+      //  默认会提醒，用户点"不再显示"后设为 true
       showDebugPage: false,
       //  默认隐藏调试页面
       debugScreenshotHotkeyEnabled: true,
@@ -14692,9 +14686,9 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-CgEcvb-t.js");
+    const ServicesModule = await import("./chunks/index-BpUJUKPQ.js");
     hexService = ServicesModule.hexService;
-    const TftOperatorModule = await import("./chunks/TftOperator-ixJkvl5j.js").then((n) => n.T);
+    const TftOperatorModule = await import("./chunks/TftOperator-Sig6c5zj.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
     const LineupModule = await import("./chunks/index-maGobXkq.js");
     lineupLoader = LineupModule.lineupLoader;
@@ -14994,11 +14988,9 @@ function registerHandler() {
   });
 }
 export {
-  sendOverlayPlayers as A,
-  closeOverlay as B,
-  GameConfigHelper as C,
-  analyticsManager as D,
-  AnalyticsEvent as E,
+  GameConfigHelper as A,
+  analyticsManager as B,
+  AnalyticsEvent as C,
   GameStageType as G,
   ItemForgeType as I,
   LCUManager as L,
@@ -15021,16 +15013,16 @@ export {
   logger as l,
   settingsStore as m,
   clockworkTrailsQuitNowButtonRegion as n,
-  itemForgeTooltipRegionEdge as o,
-  itemForgeTooltipRegion as p,
-  clockworkTrailsQuitNowButtonPoint as q,
-  fightBoardSlotPoint as r,
+  clockworkTrailsQuitNowButtonPoint as o,
+  fightBoardSlotPoint as p,
+  minorBlessingSlot as q,
+  grandBlessingPoint as r,
   sleep as s,
-  minorBlessingSlot as t,
-  grandBlessingPoint as u,
-  starGodSlot as v,
-  IpcChannel as w,
-  isStandardChessMode as x,
-  LcuEventUri as y,
-  showOverlay as z
+  starGodSlot as t,
+  IpcChannel as u,
+  isStandardChessMode as v,
+  LcuEventUri as w,
+  showOverlay as x,
+  sendOverlayPlayers as y,
+  closeOverlay as z
 };
