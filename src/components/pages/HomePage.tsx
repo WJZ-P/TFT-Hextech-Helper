@@ -1,6 +1,5 @@
 import {useState, useEffect, useCallback, useRef, type ReactNode} from 'react';
 import styled, { css, keyframes } from 'styled-components';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
 import BlockIcon from '@mui/icons-material/Block';
 import LockIcon from '@mui/icons-material/Lock';
@@ -9,6 +8,7 @@ import TimerOffIcon from '@mui/icons-material/TimerOff';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import type { SvgIconComponent } from '@mui/icons-material';
 import TftIcon from '../TftIcon';
+import {StartButton, type StartButtonVariant} from '../StartButton';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import {ThemeType} from "../../styles/theme.ts";
@@ -19,7 +19,6 @@ import {HextechDialog} from "../HextechDialog.tsx";
 import {toast} from "../toast/toast-core.ts";
 import {SummonerInfo} from "../../../src-backend/lcu/utils/LCUProtocols.ts";
 import {TFTMode} from "../../../src-backend/TFTProtocol.ts";
-import {LogMode} from "../../../src-backend/types/AppTypes.ts";
 import {settingsStore, GameStatistics} from "../../stores/settingsStore.ts";
 
 // 导入 APP 图标（让 Vite 正确处理资源路径）
@@ -336,8 +335,14 @@ const modeArtFlash = keyframes`
   100% { filter: brightness(1) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.55)); }
 `;
 
-/** 模式卡片的高度；宽度按官方卡片图 1:2 的比例计算 */
-const MODE_CARD_HEIGHT = 232;
+/** 模式卡片之间的间距 */
+const MODE_CARD_GAP = 16;
+
+/**
+ * 模式卡片的宽度，高度按官方卡片图 1:2 的比例计算
+ * 跟随窗口高度变化（把空间留给日志），同时保证五张卡片一行放得下（多留 14px 给两端卡片选中放大）
+ */
+const MODE_CARD_WIDTH = `min(clamp(116px, 19vh, 168px), calc((100cqw - ${MODE_CARD_GAP * 4 + 14}px) / 5))`;
 
 /**
  * 官方卡片图里，透明的"探头区"占顶部 24%（角色从这里探出），往下才是不透明的卡面。
@@ -354,14 +359,20 @@ const MODE_CARD_BODY_CENTER = '50% 62%';
 
 /**
  * 卡片顶部的透明探头区会让卡面离上方面板很远，整行上移一些，让探头区落进面板之间的空隙。
- * 上移量保证最高的角色（发条鸟，选中放大后）不会压到上方的召唤师信息栏
+ * 最高的角色（发条鸟）选中放大后会稍微盖住上方的召唤师信息栏，这是允许的
  */
-const MODE_GRID_PULL_UP = 24;
+const MODE_GRID_PULL_UP = 54;
+
+/** 作为尺寸容器，卡片用 cqw 按这里的宽度计算 */
+const ModeSection = styled.section`
+  container-type: inline-size;
+  flex-shrink: 0;
+`;
 
 const ModeGrid = styled.div`
   display: flex;
   justify-content: center;
-  gap: 18px;
+  gap: ${MODE_CARD_GAP}px;
   margin-top: -${MODE_GRID_PULL_UP}px;
 `;
 
@@ -411,7 +422,7 @@ const ModeStatus = styled.span<{ $ready: boolean }>`
   top: calc(${MODE_CARD_BODY_TOP} + 6px);
   right: 6px;
   padding: 0 5px;
-  font-size: 0.62rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 1px;
   color: ${props => props.$ready ? props.theme.colors.accentCyan : props.theme.colors.gold};
@@ -442,9 +453,9 @@ const ModeIconBadge = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
-  margin-bottom: 3px;
+  width: 26px;
+  height: 26px;
+  margin-bottom: 5px;
   border: 1px solid ${props => props.theme.colors.gold};
   background: rgba(1, 10, 19, 0.6);
   transform: rotate(45deg);
@@ -452,8 +463,8 @@ const ModeIconBadge = styled.div`
 
 /** 官方模式图标（白色剪影），用 mask 染成主题金色 */
 const ModeIconGlyph = styled.span<{ $src: string }>`
-  width: 14px;
-  height: 14px;
+  width: 17px;
+  height: 17px;
   transform: rotate(-45deg);
   background: ${props => props.theme.colors.goldBright};
   -webkit-mask: url(${props => props.$src}) center / contain no-repeat;
@@ -462,7 +473,7 @@ const ModeIconGlyph = styled.span<{ $src: string }>`
 
 /** 模式名的系列前缀（如"自然之力"），小字单独一行，避免长名字在窄卡片里断行 */
 const ModeSeries = styled.div`
-  font-size: 0.62rem;
+  font-size: 0.72rem;
   letter-spacing: 2px;
   color: ${props => props.theme.colors.gold};
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
@@ -470,7 +481,7 @@ const ModeSeries = styled.div`
 
 const ModeName = styled.div`
   white-space: nowrap;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   font-weight: 700;
   line-height: 1.25;
   color: ${props => props.theme.colors.goldBright};
@@ -478,7 +489,7 @@ const ModeName = styled.div`
 `;
 
 const ModeMeta = styled.div`
-  font-size: 0.64rem;
+  font-size: 0.68rem;
   color: ${props => props.theme.colors.textSecondary};
 `;
 
@@ -496,7 +507,7 @@ const ModeLockOverlay = styled.div`
   gap: 6px;
   padding: 10px;
   text-align: center;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 700;
   line-height: 1.4;
   color: ${props => props.theme.colors.goldBright};
@@ -515,7 +526,7 @@ const ModeCard = styled.button<{ $selected: boolean; $locked: boolean; $justSele
   appearance: none;
   position: relative;
   flex: 0 0 auto;
-  height: ${MODE_CARD_HEIGHT}px;
+  width: ${MODE_CARD_WIDTH};
   aspect-ratio: 1 / 2;
   padding: 0;
   border: none;
@@ -585,38 +596,17 @@ const ModeCard = styled.button<{ $selected: boolean; $locked: boolean; $justSele
 `;
 
 // ============================================
-// 开始按钮行
+// 运行日志标题栏里的提示（开始按钮见 StartButton.tsx）
 // ============================================
 
-/** 三栏：左当前模式说明 | 中开始按钮 | 右日志等级 */
-const ControlRow = styled.div`
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: ${props => props.theme.spacing.medium};
-  flex-shrink: 0;
-`;
-
-const ControlInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.8rem;
-  color: ${props => props.theme.colors.textSecondary};
-
-  strong {
-    color: ${props => props.theme.colors.goldBright};
-    font-weight: 700;
-  }
-`;
-
-/** "本局结束后停止"提示 */
+/** "本局结束后停止"提示；日志标题栏不够宽时只显示图标，完整说明在 title 里 */
 const StopAfterGameBadge = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  align-self: flex-start;
-  padding: 2px 8px;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
   color: ${props => props.theme.colors.accentCyan};
   border: 1px solid ${props => props.theme.colors.accentCyan}66;
   background: ${props => props.theme.colors.accentCyan}14;
@@ -625,234 +615,11 @@ const StopAfterGameBadge = styled.span`
   .MuiSvgIcon-root {
     font-size: 0.95rem;
   }
-`;
 
-type StartButtonVariant = 'ready' | 'running' | 'disabled';
-
-/**
- * 箭头形按钮轮廓（仿客户端 PLAY 按钮）
- * @param tip 右侧箭头的水平长度。各层的高度不同，tip 按高度等比缩放（约 0.3 × 高度），
- *            这样每一层的斜边互相平行，描边粗细才一致
- */
-const arrowShape = (tip: number) =>
-    `polygon(0 0, calc(100% - ${tip}px) 0, 100% 50%, calc(100% - ${tip}px) 100%, 0 100%)`;
-
-/**
- * 主按钮各状态的配色（取色自客户端 PLAY 按钮截图）
- * - border / borderHover：描边上下两端的颜色（上亮下暗，形成立体感）
- * - body / bodyHover：按钮本体；hover 时上下两端各有一圈内发光
- * - sweep：hover 时从右往左流动的高光
- */
-const START_BUTTON_PALETTE: Record<StartButtonVariant, {
-    border: [string, string];
-    borderHover: [string, string];
-    body: string;
-    bodyHover: string;
-    text: string;
-    glow: string;
-    glowSoft: string;
-    sweep: string;
-}> = {
-    ready: {
-        border: ['#09C0B6', '#016A8C'],
-        borderHover: ['#9CFAFF', '#48D3EA'],
-        body: 'linear-gradient(180deg, #1E2328 0%, #1E2328 80%, #1A2A33 100%)',
-        bodyHover: 'linear-gradient(180deg, #245761 0%, #1E353E 12%, #172F3C 45%, #143545 70%, #185B70 92%, #227181 100%)',
-        text: '#F0E6D2',
-        glow: 'rgba(10, 200, 185, 0.55)',
-        glowSoft: 'rgba(10, 200, 185, 0.25)',
-        sweep: 'rgba(156, 250, 255, 0.30)',
-    },
-    running: {
-        border: ['#C8AA6E', '#785A28'],
-        borderHover: ['#F0E6D2', '#C89B3C'],
-        body: 'linear-gradient(180deg, #1E2328 0%, #1E2328 80%, #2A2418 100%)',
-        bodyHover: 'linear-gradient(180deg, #5A4626 0%, #3A2F1C 12%, #2A2419 45%, #3A2F1C 70%, #6B5228 92%, #7C5E2C 100%)',
-        text: '#F0E6D2',
-        glow: 'rgba(200, 155, 60, 0.5)',
-        glowSoft: 'rgba(200, 155, 60, 0.22)',
-        sweep: 'rgba(240, 230, 210, 0.26)',
-    },
-    disabled: {
-        border: ['#463714', '#3C3C41'],
-        borderHover: ['#463714', '#3C3C41'],
-        body: '#1E2328',
-        bodyHover: '#1E2328',
-        text: '#5B5A56',
-        glow: 'transparent',
-        glowSoft: 'transparent',
-        sweep: 'transparent',
-    },
-};
-
-/** hover 时的流光：高光带从右边进、往左流出，循环播放 */
-const startButtonSweep = keyframes`
-  from { transform: translateX(330%) skewX(-24deg); }
-  to { transform: translateX(-130%) skewX(-24deg); }
-`;
-
-/**
- * 主按钮外层：负责发光
- * 光晕要放在外层用 filter 做 —— 里面几层都用了 clip-path，自己的 box-shadow 会被裁掉
- */
-const StartButtonGlow = styled.div<{ $variant: StartButtonVariant }>`
-  filter: ${props => props.$variant === 'disabled'
-    ? 'none'
-    : `drop-shadow(0 0 4px ${START_BUTTON_PALETTE[props.$variant].glowSoft})`};
-  transition: filter 0.25s ease;
-
-  &:hover {
-    filter: ${props => props.$variant === 'disabled'
-      ? 'none'
-      : `drop-shadow(0 0 10px ${START_BUTTON_PALETTE[props.$variant].glow})`};
-  }
-`;
-
-/**
- * 主按钮最外层：一圈 1px 的暗金细线（客户端按钮外面那道金边）
- * 结构由外到内：暗金细线 → 深色间隙 → 渐变描边 → 按钮本体
- */
-const StartButton = styled.button<{ $variant: StartButtonVariant }>`
-  appearance: none;
-  border: none;
-  padding: 1px;
-  /* 各状态文案长短不一，固定宽度避免切换状态时按钮跳动 */
-  min-width: 270px;
-  cursor: ${props => props.$variant === 'disabled' ? 'not-allowed' : 'pointer'};
-  clip-path: ${arrowShape(18)};
-  background: ${props => props.theme.colors.goldDeep};
-  transition: transform 0.12s ease;
-
-  &:active {
-    transform: ${props => props.$variant === 'disabled' ? 'none' : 'translateY(1px)'};
-  }
-
-  &:focus-visible {
-    outline: none;
-  }
-`;
-
-/** 细金线和描边之间的深色间隙 */
-const StartButtonGap = styled.span`
-  display: block;
-  padding: 2px;
-  clip-path: ${arrowShape(17)};
-  background: #010A13;
-`;
-
-/** 渐变描边：上亮下暗；hover 时整体提亮 */
-const StartButtonBorder = styled.span<{ $variant: StartButtonVariant }>`
-  display: block;
-  padding: 2px;
-  clip-path: ${arrowShape(16)};
-  background: ${props => {
-    const [top, bottom] = START_BUTTON_PALETTE[props.$variant].border;
-    return `linear-gradient(180deg, ${top} 0%, ${bottom} 100%)`;
-  }};
-
-  ${StartButton}:hover & {
-    background: ${props => {
-      const [top, bottom] = START_BUTTON_PALETTE[props.$variant].borderHover;
-      return `linear-gradient(180deg, ${top} 0%, ${bottom} 100%)`;
-    }};
-  }
-`;
-
-const StartButtonInner = styled.span<{ $variant: StartButtonVariant }>`
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 46px;
-  padding: 0 34px 0 24px;
-  overflow: hidden;
-  clip-path: ${arrowShape(15)};
-  font-size: 1.1rem;
-  font-weight: 700;
-  letter-spacing: 4px;
-  color: ${props => START_BUTTON_PALETTE[props.$variant].text};
-  text-shadow: ${props => props.$variant === 'disabled' ? 'none' : '0 1px 2px rgba(0, 0, 0, 0.6)'};
-  background: ${props => START_BUTTON_PALETTE[props.$variant].body};
-  /* 顶部一道极淡的高光、底部一道暗边，让本体有一点厚度 */
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 -1px 0 rgba(0, 0, 0, 0.35);
-
-  /* 文字和图标要压在流光上面 */
-  & > * {
-    position: relative;
-    z-index: 1;
-  }
-
-  ${StartButton}:hover & {
-    background: ${props => START_BUTTON_PALETTE[props.$variant].bodyHover};
-  }
-
-  ${StartButton}:active & {
-    filter: ${props => props.$variant === 'disabled' ? 'none' : 'brightness(0.85)'};
-  }
-
-  /* 流光：只在 hover 时出现，一段斜向高光从右往左持续流动 */
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 32%;
-    height: 100%;
-    background: linear-gradient(90deg,
-      transparent 0%,
-      ${props => START_BUTTON_PALETTE[props.$variant].sweep} 45%,
-      ${props => START_BUTTON_PALETTE[props.$variant].sweep} 55%,
-      transparent 100%);
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  ${StartButton}:hover &::after {
-    opacity: ${props => props.$variant === 'disabled' ? 0 : 1};
-    animation: ${startButtonSweep} 1.8s linear infinite;
-  }
-
-  .MuiSvgIcon-root {
-    font-size: 1.35rem;
-  }
-`;
-
-/** 日志等级切换：方角分段按钮 */
-const LogLevelGroup = styled.div`
-  justify-self: end;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.8rem;
-  color: ${props => props.theme.colors.textSecondary};
-`;
-
-const SegmentedControl = styled.div`
-  display: flex;
-  border: 1px solid ${props => props.theme.colors.goldDim};
-  background: ${props => props.theme.colors.sidebarBg};
-`;
-
-const SegmentButton = styled.button<{ $active: boolean }>`
-  appearance: none;
-  border: none;
-  padding: 4px 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 1px;
-  cursor: pointer;
-  color: ${props => props.$active ? props.theme.colors.goldBright : props.theme.colors.textSecondary};
-  background: ${props => props.$active ? `${props.theme.colors.primary}33` : 'transparent'};
-  box-shadow: ${props => props.$active ? `inset 0 -2px 0 ${props.theme.colors.accentCyan}` : 'none'};
-  transition: color 0.2s ease, background 0.2s ease;
-
-  &:not(:first-child) {
-    border-left: 1px solid ${props => props.theme.colors.goldDeep};
-  }
-
-  &:hover {
-    color: ${props => props.theme.colors.goldBright};
+  @container (max-width: 900px) {
+    span {
+      display: none;
+    }
   }
 `;
 
@@ -923,8 +690,6 @@ export const HomePage = () => {
     const [tftMode, setTftMode] = useState<TFTMode>(DEFAULT_TFT_MODE);
     // 刚被用户切换到的模式卡片，用来播放一次确认动画（页面加载时的默认选中不播放）
     const [justSelectedKey, setJustSelectedKey] = useState<string | null>(null);
-    // 新增：日志模式（简略/详细）
-    const [logMode, setLogMode] = useState<LogMode>(LogMode.SIMPLE);
     // 新增：管理员权限状态（null 表示还在检测中）
     const [isElevated, setIsElevated] = useState<boolean | null>(null);
     // 新增："本局结束后停止"状态
@@ -1043,12 +808,6 @@ export const HomePage = () => {
                 await window.lineup.setTftMode(currentMode);
             }
             setTftMode(currentMode);
-
-            // 获取日志模式
-            const savedLogMode = await window.lineup.getLogMode();
-            if (savedLogMode === LogMode.SIMPLE || savedLogMode === LogMode.DETAILED) {
-                setLogMode(savedLogMode as LogMode);
-            }
 
             // 检查当前赛季是否有选中的阵容
             await checkHasSelectedLineup(currentMode);
@@ -1345,19 +1104,6 @@ export const HomePage = () => {
     };
 
     /**
-     * 切换日志模式（简略/详细）
-     *
-     * 交互说明：
-     * - 简略模式：不打印 debug 级别日志，日志更简洁
-     * - 详细模式：打印所有日志（包括 debug），方便调试
-     */
-    const handleLogModeChange = async (newMode: LogMode) => {
-        if (newMode === logMode) return;
-        setLogMode(newMode);
-        await window.lineup.setLogMode(newMode);
-    };
-
-    /**
      * 根据 profileIconId 生成头像 URL
      * @param iconId - 头像图标 ID
      */
@@ -1376,8 +1122,7 @@ export const HomePage = () => {
         : !isTftClientOpen ? { variant: 'disabled', icon: TftIcon, label: '未打开云顶之弈' }
         : !isModeReady ? { variant: 'disabled', icon: LockIcon, label: '模式适配中' }
         : (needsLineup && !hasSelectedLineup) ? { variant: 'disabled', icon: BlockIcon, label: '未选择阵容' }
-        : { variant: 'ready', icon: PlayArrowIcon, label: '开始挂机' };
-    const StartIcon = startButton.icon;
+        : { variant: 'ready', icon: TftIcon, label: '开始挂机' };
 
     /** 顶部区域：已连接显示召唤师信息栏，否则显示欢迎面板 */
     const renderTopSection = () => {
@@ -1468,7 +1213,7 @@ export const HomePage = () => {
             {renderTopSection()}
 
             {/* 模式选择 */}
-            <section>
+            <ModeSection>
                 <ModeGrid>
                     {MODE_OPTIONS.map(option => {
                         // "自然之力 恭喜发财" 拆成系列名 + 模式名两行显示
@@ -1511,61 +1256,19 @@ export const HomePage = () => {
                         );
                     })}
                 </ModeGrid>
-            </section>
+            </ModeSection>
 
-            {/* 开始按钮行 */}
-            <ControlRow>
-                <ControlInfo>
-                    <span>当前模式：<strong>{activeOption?.name ?? '未选择'}</strong></span>
-                    {stopAfterGame && (
-                        <StopAfterGameBadge>
-                            <TimerOffIcon />
-                            对局结束后自动停止挂机
-                        </StopAfterGameBadge>
-                    )}
-                </ControlInfo>
-
-                <StartButtonGlow $variant={startButton.variant}>
-                    <StartButton
-                        type="button"
-                        $variant={startButton.variant}
-                        onClick={handleToggle}
-                        disabled={startButton.variant === 'disabled'}
-                    >
-                        <StartButtonGap>
-                            <StartButtonBorder $variant={startButton.variant}>
-                                <StartButtonInner $variant={startButton.variant}>
-                                    <StartIcon />
-                                    <span>{startButton.label}</span>
-                                </StartButtonInner>
-                            </StartButtonBorder>
-                        </StartButtonGap>
-                    </StartButton>
-                </StartButtonGlow>
-
-                <LogLevelGroup>
-                    日志等级
-                    <SegmentedControl>
-                        <SegmentButton
-                            type="button"
-                            $active={logMode === LogMode.SIMPLE}
-                            onClick={() => handleLogModeChange(LogMode.SIMPLE)}
-                        >
-                            简略
-                        </SegmentButton>
-                        <SegmentButton
-                            type="button"
-                            $active={logMode === LogMode.DETAILED}
-                            onClick={() => handleLogModeChange(LogMode.DETAILED)}
-                        >
-                            详细
-                        </SegmentButton>
-                    </SegmentedControl>
-                </LogLevelGroup>
-            </ControlRow>
-
-            {/* 日志面板 */}
-            <LogPanel isVisible={true} />
+            {/* 日志面板：标题栏中间是开始按钮 */}
+            <LogPanel
+                isVisible={true}
+                headerBadge={stopAfterGame && (
+                    <StopAfterGameBadge title="对局结束后自动停止挂机">
+                        <TimerOffIcon />
+                        <span>本局后停止</span>
+                    </StopAfterGameBadge>
+                )}
+                headerCenter={<StartButton {...startButton} onClick={handleToggle}/>}
+            />
 
             {/* 开始挂机前游戏窗口检查不通过时的提醒 */}
             <HextechDialog

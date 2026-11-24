@@ -3,6 +3,7 @@ import styled, {css} from 'styled-components';
 import {ThemeType} from '../styles/theme';
 import {hextechPanel, hextechPanelSeeThrough} from '../styles/hextech';
 import {logStore, LogEntry, LogLevel} from '../stores/logStore';
+import {LogMode} from '../../src-backend/types/AppTypes';
 import {usePageActive} from '../hooks/usePageActive';
 
 // 引入图标
@@ -49,14 +50,23 @@ const LogPanelWrapper = styled.div<{ $isVisible: boolean; theme: ThemeType }>`
   transition: opacity 0.3s ease;
   opacity: ${props => props.$isVisible ? 1 : 0};
   width: 100%;
+  /* 标题栏里的内容按面板宽度自适应（@container） */
+  container-type: inline-size;
 `;
+
+/** 标题栏右侧控件（日志等级、清空）的统一高度 */
+const HEADER_CONTROL_HEIGHT = 30;
 
 // 日志面板标题栏
 const LogPanelHeader = styled.div<{ theme: ThemeType }>`
-  display: flex;
+  /* 三栏：左标题 | 中开始按钮（始终居中）| 右日志等级和清空 */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
-  padding: 6px ${props => props.theme.spacing.medium};
+  gap: 12px;
+  flex-shrink: 0;
+  /* 上下只留一点空隙，高度由中间的开始按钮撑起来 */
+  padding: 3px ${props => props.theme.spacing.medium};
   background: linear-gradient(90deg, ${props => props.theme.colors.goldDeep}66 0%, transparent 70%);
   border-bottom: 1px solid ${props => props.theme.colors.goldDeep};
 `;
@@ -76,6 +86,7 @@ const HeaderLeft = styled.div<{ theme: ThemeType }>`
     font-size: 0.85rem;
     font-weight: 700;
     letter-spacing: 2px;
+    white-space: nowrap;
     color: ${props => props.theme.colors.goldBright};
   }
   
@@ -85,6 +96,47 @@ const HeaderLeft = styled.div<{ theme: ThemeType }>`
     padding: 0 6px;
     border: 1px solid ${props => props.theme.colors.goldDeep};
     margin-left: 4px;
+    white-space: nowrap;
+  }
+`;
+
+/** 标题右侧：日志等级 + 清空 */
+const HeaderRight = styled.div`
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+/** 日志等级切换：方角分段按钮 */
+const SegmentedControl = styled.div`
+  display: flex;
+  box-sizing: border-box;
+  height: ${HEADER_CONTROL_HEIGHT}px;
+  border: 1px solid ${props => props.theme.colors.goldDim};
+  background: ${props => props.theme.colors.sidebarBg};
+`;
+
+const SegmentButton = styled.button<{ $active: boolean }>`
+  appearance: none;
+  border: none;
+  padding: 0 12px;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  color: ${props => props.$active ? props.theme.colors.goldBright : props.theme.colors.textSecondary};
+  background: ${props => props.$active ? `${props.theme.colors.primary}33` : 'transparent'};
+  box-shadow: ${props => props.$active ? `inset 0 -2px 0 ${props.theme.colors.accentCyan}` : 'none'};
+  transition: color 0.2s ease, background 0.2s ease;
+
+  &:not(:first-child) {
+    border-left: 1px solid ${props => props.theme.colors.goldDeep};
+  }
+
+  &:hover {
+    color: ${props => props.theme.colors.goldBright};
   }
 `;
 
@@ -93,8 +145,11 @@ const ClearButton = styled.button<{ theme: ThemeType }>`
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 10px;
-  font-size: 0.75rem;
+  box-sizing: border-box;
+  height: ${HEADER_CONTROL_HEIGHT}px;
+  padding: 0 12px;
+  white-space: nowrap;
+  font-size: 0.8rem;
   color: ${props => props.theme.colors.textSecondary};
   background: transparent;
   border: 1px solid ${props => props.theme.colors.goldDim};
@@ -216,6 +271,8 @@ const EmptyState = styled.div<{ theme: ThemeType }>`
 
 interface LogPanelProps {
     isVisible: boolean; // 控制整个组件的显隐逻辑
+    headerBadge?: React.ReactNode; // 标题右侧的提示
+    headerCenter?: React.ReactNode; // 标题栏中间的内容
 }
 
 /**
@@ -234,10 +291,12 @@ const getLogIcon = (level: LogLevel) => {
     }
 };
 
-export const LogPanel: React.FC<LogPanelProps> = ({isVisible}) => {
+export const LogPanel: React.FC<LogPanelProps> = ({isVisible, headerBadge, headerCenter}) => {
     const [logs, setLogs] = useState<LogEntry[]>(logStore.getLogs())
     const logPanelRef = useRef<HTMLDivElement | null>(null)
     const [isUserScrollUp, setIsUserScrollUp] = useState(false)
+    // 日志模式（简略/详细）
+    const [logMode, setLogMode] = useState<LogMode>(LogMode.SIMPLE)
 
     const isPageActive = usePageActive()
 
@@ -258,6 +317,28 @@ export const LogPanel: React.FC<LogPanelProps> = ({isVisible}) => {
         
         return unsubscribe;
     }, [isPageActive]);
+
+    // 读取已保存的日志模式
+    useEffect(() => {
+        window.lineup.getLogMode()
+            .then((savedLogMode) => {
+                if (savedLogMode === LogMode.SIMPLE || savedLogMode === LogMode.DETAILED) {
+                    setLogMode(savedLogMode as LogMode);
+                }
+            })
+            .catch((error) => console.error('读取日志模式失败:', error));
+    }, []);
+
+    /**
+     * 切换日志模式
+     * - 简略模式：不打印 debug 级别日志，日志更简洁
+     * - 详细模式：打印所有日志（包括 debug），方便调试
+     */
+    const handleLogModeChange = async (newMode: LogMode) => {
+        if (newMode === logMode) return;
+        setLogMode(newMode);
+        await window.lineup.setLogMode(newMode);
+    };
 
     // 清空所有日志
     const clearLogs = () => {
@@ -325,11 +406,32 @@ export const LogPanel: React.FC<LogPanelProps> = ({isVisible}) => {
                     <TerminalIcon className="header-icon" />
                     <span className="header-title">运行日志</span>
                     <span className="log-count">{logs.length} 条</span>
+                    {headerBadge}
                 </HeaderLeft>
-                <ClearButton onClick={clearLogs} title="清空日志">
-                    <DeleteSweepIcon />
-                    清空
-                </ClearButton>
+                {/* 没有内容时也要占住中间一列 */}
+                <div>{headerCenter}</div>
+                <HeaderRight>
+                    <SegmentedControl title="日志等级">
+                        <SegmentButton
+                            type="button"
+                            $active={logMode === LogMode.SIMPLE}
+                            onClick={() => handleLogModeChange(LogMode.SIMPLE)}
+                        >
+                            简略
+                        </SegmentButton>
+                        <SegmentButton
+                            type="button"
+                            $active={logMode === LogMode.DETAILED}
+                            onClick={() => handleLogModeChange(LogMode.DETAILED)}
+                        >
+                            详细
+                        </SegmentButton>
+                    </SegmentedControl>
+                    <ClearButton onClick={clearLogs} title="清空日志">
+                        <DeleteSweepIcon />
+                        清空
+                    </ClearButton>
+                </HeaderRight>
             </LogPanelHeader>
             
             {/* 日志内容区 */}
