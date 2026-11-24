@@ -1,4 +1,4 @@
-import {Outlet} from "react-router-dom";
+import {KeepAlivePages} from "./KeepAlivePages.tsx";
 import Sidebar from "./Sidebar.tsx";
 import {TitleBar} from "./TitleBar.tsx";
 import styled from "styled-components";
@@ -37,8 +37,8 @@ const MainContent = styled.main`
   /* 对应 flex-1，让主内容区占据所有剩余空间 */
   flex: 1;
 
-  /* 对应 overflow-y-auto，当内容超长时显示垂直滚动条 */
-  overflow-y: auto;
+  /* 滚动由各页面自己负责，切换 tab 时各自的滚动位置互不影响 */
+  overflow: hidden;
 `;
 
 const MainLayout = () => {
@@ -48,8 +48,8 @@ const MainLayout = () => {
             <LayoutBody>
                 <Sidebar/>
                 <MainContent>
-                    {/* 路由匹配到的页面组件，将会在这里显示 */}
-                    <Outlet/>
+                    {/* 路由对应的页面，切换 tab 时不卸载 */}
+                    <KeepAlivePages/>
                 </MainContent>
             </LayoutBody>
         </LayoutContainer>

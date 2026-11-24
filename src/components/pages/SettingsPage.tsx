@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import styled, { keyframes } from 'styled-components';
 import {ThemeType} from "../../styles/theme.ts";
 import {hextechPanel, hextechPanelSeeThrough, hextechSectionTitle, hextechButtonGhost} from "../../styles/hextech.ts";
+import {usePageActive} from "../../hooks/usePageActive";
 import {ToggleSwitch, ToggleSlider} from "../HextechToggle.tsx";
 import {toast} from "../toast/toast-core.ts";
 import { logStore, LogAutoCleanThreshold } from "../../stores/logStore.ts";
@@ -610,6 +611,15 @@ const SettingsPage = () => {
         setIsRecordingStopAfterGameHotkey(false);
     }, [toggleHotkey, stopAfterGameHotkey]);
     
+    // 录入快捷键时切到别的页面，自动取消录入（页面不会卸载，不取消的话会继续拦截按键）
+    const isPageActive = usePageActive();
+    useEffect(() => {
+        if (!isPageActive) {
+            setIsRecordingHotkey(false);
+            setIsRecordingStopAfterGameHotkey(false);
+        }
+    }, [isPageActive]);
+
     // 监听快捷键录入（统一处理两个快捷键的录入）
     useEffect(() => {
         if (isRecordingHotkey) {

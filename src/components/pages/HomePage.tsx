@@ -1,4 +1,4 @@
-import {useState, useEffect, useCallback, type ReactNode} from 'react';
+import {useState, useEffect, useCallback, useRef, type ReactNode} from 'react';
 import styled, { css, keyframes } from 'styled-components';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
@@ -14,6 +14,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import {ThemeType} from "../../styles/theme.ts";
 import {hextechPanel, hextechPanelSeeThrough} from "../../styles/hextech.ts";
 import {LogPanel} from "../LogPanel.tsx";
+import {usePageActive} from "../../hooks/usePageActive";
 import {HextechDialog} from "../HextechDialog.tsx";
 import {toast} from "../toast/toast-core.ts";
 import {SummonerInfo} from "../../../src-backend/lcu/utils/LCUProtocols.ts";
@@ -912,6 +913,7 @@ const isSelectableMode = (mode: string): boolean =>
 // ============================================
 
 export const HomePage = () => {
+    const isPageActive = usePageActive();
     const [isRunning, setIsRunning] = useState(false);
     const [summonerInfo, setSummonerInfo] = useState<SummonerInfo | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -1087,6 +1089,40 @@ export const HomePage = () => {
         };
     }, []);
 
+    // 从别的页面切回来时，静默同步在别处可能变化的状态（页面没有卸载，不会重新走上面的初始化）
+    const wasHiddenRef = useRef(false);
+    useEffect(() => {
+        if (!isPageActive) {
+            wasHiddenRef.current = true;
+            return;
+        }
+        if (!wasHiddenRef.current) return;
+        wasHiddenRef.current = false;
+
+        const syncState = async () => {
+            try {
+                // 阵容可能刚在阵容页改过；挂机可能被定时停止等后端逻辑停掉
+                const [connected, running] = await Promise.all([
+                    window.lcu.getConnectionStatus(),
+                    window.hex.getStatus(),
+                    checkHasSelectedLineup(tftMode),
+                    settingsStore.refreshStatistics(),
+                ]);
+                setIsLcuConnected(connected);
+                setIsRunning(running);
+
+                // 刷新召唤师经验等信息，失败就保留原来的显示
+                if (connected) {
+                    const result = await window.lcu.getSummonerInfo();
+                    if (result.data) setSummonerInfo(result.data);
+                }
+            } catch (error) {
+                console.error('同步主页状态失败:', error);
+            }
+        };
+        syncState();
+    }, [isPageActive]);
+
     // 订阅统计数据变化 + 运行时长计时器
     useEffect(() => {
         // 订阅 settingsStore 的变化，实时更新统计数据
@@ -1108,9 +1144,9 @@ export const HomePage = () => {
         return `${h}:${m}:${s}`;
     }, []);
 
-    // 轮询云顶之弈独立客户端是否已打开（只在已连上 LOL 客户端、且没在挂机时检查；挂机中由状态机自己处理）
+    // 轮询云顶之弈独立客户端是否已打开（只在页面显示、已连上 LOL 客户端、且没在挂机时检查；挂机中由状态机自己处理）
     useEffect(() => {
-        if (!isLcuConnected || isRunning) return;
+        if (!isPageActive || !isLcuConnected || isRunning) return;
 
         let cancelled = false;
         const check = async () => {
@@ -1130,15 +1166,15 @@ export const HomePage = () => {
             cancelled = true;
             clearInterval(timer);
         };
-    }, [isLcuConnected, isRunning]);
+    }, [isPageActive, isLcuConnected, isRunning]);
 
     // 每秒更新运行时长显示
     useEffect(() => {
         // 立即用 store 中的快照更新一次
         setElapsedTime(formatElapsed(statistics.sessionElapsedSeconds));
 
-        // 只有正在运行时才启动计时器（轮询后端获取实时秒数）
-        if (!isRunning) return;
+        // 只有页面显示且正在运行时才启动计时器（轮询后端获取实时秒数）
+        if (!isPageActive || !isRunning) return;
 
         const timer = setInterval(async () => {
             try {
@@ -1150,7 +1186,7 @@ export const HomePage = () => {
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [isRunning, statistics.sessionElapsedSeconds, formatElapsed]);
+    }, [isPageActive, isRunning, statistics.sessionElapsedSeconds, formatElapsed]);
 
     // 监听快捷键触发的挂机切换事件（主进程已完成 start/stop，这里只同步 UI 状态）
     useEffect(() => {

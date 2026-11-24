@@ -3,6 +3,7 @@ import styled, {css} from 'styled-components';
 import {ThemeType} from '../styles/theme';
 import {hextechPanel, hextechPanelSeeThrough} from '../styles/hextech';
 import {logStore, LogEntry, LogLevel} from '../stores/logStore';
+import {usePageActive} from '../hooks/usePageActive';
 
 // 引入图标
 import InfoIcon from '@mui/icons-material/InfoOutlined';
@@ -238,10 +239,17 @@ export const LogPanel: React.FC<LogPanelProps> = ({isVisible}) => {
     const logPanelRef = useRef<HTMLDivElement | null>(null)
     const [isUserScrollUp, setIsUserScrollUp] = useState(false)
 
-    // 初始化全局日志存储 + 订阅变化
+    const isPageActive = usePageActive()
+
+    // 初始化 IPC 监听（只会执行一次）
     useEffect(() => {
-        // 初始化 IPC 监听（只会执行一次）
         logStore.init();
+    }, []);
+
+    // 订阅日志变化；页面切走时停止订阅，避免后台反复渲染几百条日志，切回来再一次性补上
+    useEffect(() => {
+        if (!isPageActive) return;
+        setLogs([...logStore.getLogs()]);
         
         // 订阅日志变化
         const unsubscribe = logStore.subscribe((newLogs) => {
@@ -249,7 +257,7 @@ export const LogPanel: React.FC<LogPanelProps> = ({isVisible}) => {
         });
         
         return unsubscribe;
-    }, []);
+    }, [isPageActive]);
 
     // 清空所有日志
     const clearLogs = () => {
