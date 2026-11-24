@@ -248,6 +248,8 @@ export const fightBoardSlotPoint = {
 //  棋子在战场上的 region，用来判断是否有棋子
 //  由六边形内部的包围盒得出：leftTop.y 使用 -10 偏移，兼容 3D 飞行棋子的高度；
 //  leftTop.x +5, rightBottom.x -5，避免宽体棋子占据邻居位置导致误判（与老客户端一致）
+//  第四行的六边形到 y 478，但备战席棋子的头和血条会伸到 y 456 左右，所以只取到 450，避免把空格子误判成有棋子
+//  改了这里要重新运行 scripts/generate_s18_slot_templates.cjs
 export const fightBoardSlotRegion = {
     //  第一行（六边形 y 275-320）
     R1_C1: {
@@ -339,31 +341,31 @@ export const fightBoardSlotRegion = {
     //  第四行（六边形 y 422-478）
     R4_C1: {
         leftTop: { x: 351 + 5, y: 422 - 10 },
-        rightBottom: { x: 422 - 5, y: 478 }
+        rightBottom: { x: 422 - 5, y: 450 }
     },
     R4_C2: {
         leftTop: { x: 437 + 5, y: 422 - 10 },
-        rightBottom: { x: 506 - 5, y: 478 }
+        rightBottom: { x: 506 - 5, y: 450 }
     },
     R4_C3: {
         leftTop: { x: 523 + 5, y: 422 - 10 },
-        rightBottom: { x: 591 - 5, y: 478 }
+        rightBottom: { x: 591 - 5, y: 450 }
     },
     R4_C4: {
         leftTop: { x: 608 + 5, y: 422 - 10 },
-        rightBottom: { x: 676 - 5, y: 478 }
+        rightBottom: { x: 676 - 5, y: 450 }
     },
     R4_C5: {
         leftTop: { x: 693 + 5, y: 422 - 10 },
-        rightBottom: { x: 762 - 5, y: 478 }
+        rightBottom: { x: 762 - 5, y: 450 }
     },
     R4_C6: {
         leftTop: { x: 778 + 5, y: 422 - 10 },
-        rightBottom: { x: 848 - 5, y: 478 }
+        rightBottom: { x: 848 - 5, y: 450 }
     },
     R4_C7: {
         leftTop: { x: 863 + 5, y: 422 - 10 },
-        rightBottom: { x: 933 - 5, y: 478 }
+        rightBottom: { x: 933 - 5, y: 450 }
     },
 }
 
@@ -425,6 +427,30 @@ export const benchSlotPoints = {
     SLOT_8: { x: 829, y: 526 },
     SLOT_9: { x: 906, y: 526 },
 }
+
+// ============================================================================
+// 装备锻造器
+// ============================================================================
+
+//  右键锻造器弹出的浮窗里，名称文字的识别区域（相对备战席格子中心 benchSlotPoints）
+//  虚幻客户端的浮窗不跟随鼠标，固定显示在格子右侧，右侧的格子也不会翻到左边。
+//  实测（格子 1 / 2 / 9）：文字左边缘相对格子中心 +110 / +109 / +124，宽 91，y 固定 476-489；
+//  浮窗里的图标在文字左边 13px。区域按三者的并集留余量，9 个格子通用
+export const itemForgeTooltipRegion = {
+    leftTop: { x: 103, y: -55 },
+    rightBottom: { x: 225, y: -31 },
+}
+
+//  锻造器选择界面（四选一）的卡片中心：卡片 149x96，间距 160.5，y 607-703，整排以 x 640 居中
+export const forgeCardSlot = {
+    SLOT_1: { x: 399, y: 670 },
+    SLOT_2: { x: 559, y: 670 },
+    SLOT_3: { x: 720, y: 670 },
+    SLOT_4: { x: 880, y: 670 },
+}
+//  不区分装备时的默认点击位置：四选一时落在第 2 张（485-634）。
+//  五选一没有截图，按同样的卡片尺寸和间距推算，会落在正中间那张（566-715）
+export const forgePickPoint = { x: 600, y: 670 }
 
 // ============================================================================
 // 选择环节

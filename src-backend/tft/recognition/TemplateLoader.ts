@@ -214,8 +214,10 @@ export class TemplateLoader {
         // 重新设置文件监听（指向新赛季目录）
         this.setupChampionTemplateWatcher();
 
-        // 战利品球模板也可能有赛季专属版本（如 S18）
+        // 战利品球、空槽位模板也可能有赛季专属版本（如 S18）
         await this.loadLootOrbTemplates();
+        await this.loadBenchSlotTemplates();
+        await this.loadFightBoardSlotTemplates();
 
         logger.info(`[TemplateLoader] 赛季模板切换完成: ${seasonDir} (${this.championTemplates.size} 个模板)`);
     }
@@ -447,6 +449,14 @@ export class TemplateLoader {
     }
 
     /**
+     * 当前赛季有专属目录（如 benchSlot/s18/）时用专属目录，否则用通用目录
+     */
+    private getSeasonTemplateDir(baseDir: string): string {
+        const seasonDir = path.join(baseDir, this.currentSeasonDir);
+        return fs.existsSync(seasonDir) ? seasonDir : baseDir;
+    }
+
+    /**
      * 加载备战席槽位模板
      * @description 用于判断备战席槽位是否有棋子占用
      * 文件命名格式：SLOT_1.png ~ SLOT_9.png，保留 RGBA 彩色信息
@@ -463,10 +473,12 @@ export class TemplateLoader {
             return;
         }
 
+        const templateDir = this.getSeasonTemplateDir(this.benchEmptySlotTemplatePath);
+
         // 备战席共 9 个槽位：SLOT_1 ~ SLOT_9
         for (let i = 1; i <= 9; i++) {
             const slotKey = `SLOT_${i}`;
-            const filePath = path.join(this.benchEmptySlotTemplatePath, `${slotKey}.png`);
+            const filePath = path.join(templateDir, `${slotKey}.png`);
 
             if (!fs.existsSync(filePath)) {
                 logger.warn(`[TemplateLoader] 未找到槽位模板: ${slotKey}.png`);
@@ -507,11 +519,13 @@ export class TemplateLoader {
             return;
         }
 
+        const templateDir = this.getSeasonTemplateDir(this.fightBoardSlotTemplatePath);
+
         // 棋盘共 4 行 7 列：R1_C1 ~ R4_C7
         for (let row = 1; row <= 4; row++) {
             for (let col = 1; col <= 7; col++) {
                 const slotKey = `R${row}_C${col}`;
-                const filePath = path.join(this.fightBoardSlotTemplatePath, `${slotKey}.png`);
+                const filePath = path.join(templateDir, `${slotKey}.png`);
 
                 if (!fs.existsSync(filePath)) {
                     logger.warn(`[TemplateLoader] 未找到棋盘槽位模板: ${slotKey}.png`);

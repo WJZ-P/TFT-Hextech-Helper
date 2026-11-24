@@ -320,7 +320,7 @@ export class StrategyService {
                 await this.handlePVP();
                 break;
             case GameStageType.CAROUSEL:
-                // 【已废弃】S17 已下线选秀，保留分支仅为向后兼容旧存档/异常识别
+                // S17 曾下线选秀，S18 恢复（2-4 截图确认）
                 await this.handleCarousel();
                 break;
             case GameStageType.AUGMENT:
@@ -519,7 +519,8 @@ export class StrategyService {
         };
 
         const isBacklineComponent = (name: string): boolean => {
-            return name === '反曲之弓' || name === '暴风之剑' || name === '无用大棒' || name === '女神之泪';
+            // S18 把"暴风之剑"改名为"暴风大剑"，老赛季仍是旧名
+            return name === '反曲之弓' || name === '暴风之剑' || name === '暴风大剑' || name === '无用大棒' || name === '女神之泪';
         };
 
         const isNeutralComponent = (name: string): boolean => {

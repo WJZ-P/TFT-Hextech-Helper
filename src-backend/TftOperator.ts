@@ -27,8 +27,6 @@ import {
     GameStageResult,
     GameStageType,
     ItemForgeType,
-    itemForgeTooltipRegion,
-    itemForgeTooltipRegionEdge,
     ShopSlotIndex,
     TFTEquip,
     TFTMode,
@@ -66,6 +64,8 @@ import {
     refreshShopPointClockwork,
     buyExpPoint,
     buyExpPointClockwork,
+    itemForgeTooltipRegion,
+    forgePickPoint,
 } from "./TFTProtocolS18";
 // 赛季数据通过统一管理接口访问
 import { getCurrentChessData, getChessDataByMode } from "./TFTInfo/SeasonRegistry";
@@ -104,6 +104,18 @@ const LEVEL_OCR_OPTIONS: OcrPreprocessOptions = { threshold: 120 };
 
 /** 金币 OCR 预处理：用 RGB 最小值灰度去掉左侧的金币图标（S18 截图实测三个样本全部正确） */
 const COIN_OCR_OPTIONS: OcrPreprocessOptions = { grayscale: 'minChannel' };
+
+/** 装备栏里认不出来的装备的占位名 */
+const UNKNOWN_EQUIP_NAME = "未识别装备";
+
+/**
+ * 右键棋子后等待详情面板刷新的时间 (ms)
+ * 老客户端 10ms 就够；虚幻客户端的刷新时间还没有实测，先留足余量，避免读到上一个棋子的信息
+ */
+const DETAIL_PANEL_SETTLE_MS = 100;
+
+/** 锻造器浮窗名称：文字偏暗，默认阈值 160 会丢笔画，原图（不放大）会漏字 */
+const FORGE_TOOLTIP_OCR_OPTIONS: OcrPreprocessOptions = { threshold: 110 };
 
 // ============================================================================
 // 类型重导出 (保持向后兼容)
@@ -505,6 +517,18 @@ class TftOperator {
                     logger.error(`[TftOperator] ${slotName} 槽位识别失败`);
                     // 【已注释】保存装备栏识别失败的截图到本地，用于排查问题
                     // await this.saveFailedImage("equip", slotName, targetMat, 3);
+
+                    // 有装备但认不出来，用占位补上。装备栏是紧凑排列的，直接跳过会让后面的装备序号前移，
+                    // 拖装备时就会拖到前一格。占位不在装备数据里，策略层会当成不可穿戴的道具跳过
+                    resultEquips.push({
+                        name: UNKNOWN_EQUIP_NAME,
+                        englishName: "",
+                        equipId: "-1",
+                        formula: "",
+                        slot: `SLOT_${resultEquips.length + 1}`,
+                        confidence: 0,
+                        category: "unknown",
+                    });
                     continue;
                 }
 
@@ -535,6 +559,26 @@ class TftOperator {
 
 
         return resultEquips;
+    }
+
+    /**
+     * 识别详情面板中棋子的星级
+     * @description 识别不出来时按 1 星处理。不能返回 -1：策略层用 -1 表示锻造器之类的特殊单位，
+     *              会把正常棋子排除在上场、替换之外。
+     *              S18 的星级模板还没有（老客户端的模板比 S18 的识别区域还大，会被直接跳过），目前都会走到这里
+     */
+    private async getDetailPanelStarLevel(): Promise<1 | 2 | 3 | 4> {
+        const starRegion = screenCapture.toAbsoluteRegion(detailChampionStarRegion);
+        const starPng = await screenCapture.captureRegionAsPng(starRegion, false);
+        const starMat = await screenCapture.pngBufferToMat(starPng);
+        const starLevel = templateMatcher.matchStarLevel(starMat);
+        starMat.delete();
+
+        if (starLevel === -1) {
+            logger.debug("[TftOperator] 星级识别失败，按 1 星处理");
+            return 1;
+        }
+        return starLevel;
     }
 
     /**
@@ -686,7 +730,7 @@ class TftOperator {
             // 右键点击槽位显示详细信息
             await mouseController.clickAt(benchSlotPoints[benchSlot], MouseButtonType.RIGHT);
 
-            await sleep(10); // 等待 UI 渲染完成（右键后游戏会立即刷新 UI，10ms 足够）
+            await sleep(DETAIL_PANEL_SETTLE_MS); // 等待 UI 渲染完成
 
             // 识别英雄名称
             const nameRegion = screenCapture.toAbsoluteRegion(detailChampionNameRegion);
@@ -716,11 +760,7 @@ class TftOperator {
 
             if (tftUnit) {
                 // 识别星级
-                const starRegion = screenCapture.toAbsoluteRegion(detailChampionStarRegion);
-                const starPng = await screenCapture.captureRegionAsPng(starRegion, false);
-                const starMat = await screenCapture.pngBufferToMat(starPng);
-                const starLevel = templateMatcher.matchStarLevel(starMat);
-                starMat.delete();
+                const starLevel = await this.getDetailPanelStarLevel();
 
                 // 识别棋子携带的装备（详情面板右键后已显示，直接读取即可）
                 const equips = await this.getDetailPanelEquips();
@@ -746,7 +786,7 @@ class TftOperator {
 
                 // 关闭浮窗：再次右键点击同一位置，避免浮窗遮挡后续槽位的检测
                 await mouseController.clickAt(benchSlotPoints[benchSlot], MouseButtonType.RIGHT);
-                await sleep(10); // 等待 UI 渲染完成（右键后游戏会立即刷新 UI，10ms 足够）
+                await sleep(DETAIL_PANEL_SETTLE_MS); // 等待 UI 渲染完成
                 
                 if (forgeType !== ItemForgeType.NONE) {
                     // 根据特殊单位类型选择对应的 chessData 中的单位定义
@@ -813,7 +853,7 @@ class TftOperator {
             const clickPoint = fightBoardSlotPoint[boardSlot as keyof typeof fightBoardSlotPoint];
             await mouseController.clickAt(clickPoint, MouseButtonType.RIGHT);
 
-            await sleep(10); // 等待 UI 渲染完成（右键后游戏会立即刷新 UI，10ms 足够）
+            await sleep(DETAIL_PANEL_SETTLE_MS); // 等待 UI 渲染完成
 
             // 识别英雄名称
             const nameRegion = screenCapture.toAbsoluteRegion(detailChampionNameRegion);
@@ -840,11 +880,7 @@ class TftOperator {
 
             if (tftUnit) {
                 // 识别星级
-                const starRegion = screenCapture.toAbsoluteRegion(detailChampionStarRegion);
-                const starPng = await screenCapture.captureRegionAsPng(starRegion, false);
-                const starMat = await screenCapture.pngBufferToMat(starPng);
-                const starLevel = templateMatcher.matchStarLevel(starMat);
-                starMat.delete();
+                const starLevel = await this.getDetailPanelStarLevel();
 
                 // 识别棋子携带的装备（详情面板右键后已显示，直接读取即可）
                 const equips = await this.getDetailPanelEquips();
@@ -1124,49 +1160,29 @@ class TftOperator {
 
     /**
      * 检测当前是否显示锻造器的浮窗，并识别锻造器类型
-     * @description 锻造器右键后不会在固定位置显示详情，
-     *              而是在鼠标点击位置附近弹出浮窗，需要用相对偏移量计算实际区域
+     * @description 锻造器右键后不显示右侧详情面板，而是在格子右侧弹出浮窗，
+     *              浮窗相对格子的位置固定（老客户端是跟随鼠标，且靠右的格子会向左弹出）
      *              支持识别：基础装备锻造器、成装锻造器、神器装备锻造器、辅助装锻造器
-     * @param clickPoint 右键点击的位置 (游戏内相对坐标)
-     * @param slotIndex 备战席槽位索引 (1-9)，用于判断是否为边缘情况
+     * @param slotPoint 备战席格子中心 (游戏内相对坐标)
+     * @param slotIndex 备战席槽位索引 (1-9)，用于日志
      * @returns 锻造器类型 (NONE 表示不是锻造器)
      */
-    private async checkItemForgeTooltip(clickPoint: SimplePoint, slotIndex: number): Promise<ItemForgeType> {
+    private async checkItemForgeTooltip(slotPoint: SimplePoint, slotIndex: number): Promise<ItemForgeType> {
         this.ensureInitialized();
 
-        // 判断是否为边缘情况 (槽位 6-9 靠近屏幕右边缘，浮窗会向左弹出)
-        const isEdgeCase = slotIndex >= 6;
-        const tooltipRegion = isEdgeCase ? itemForgeTooltipRegionEdge : itemForgeTooltipRegion;
+        const absoluteRegion = screenCapture.toAbsoluteRegion({
+            leftTop: {
+                x: slotPoint.x + itemForgeTooltipRegion.leftTop.x,
+                y: slotPoint.y + itemForgeTooltipRegion.leftTop.y,
+            },
+            rightBottom: {
+                x: slotPoint.x + itemForgeTooltipRegion.rightBottom.x,
+                y: slotPoint.y + itemForgeTooltipRegion.rightBottom.y,
+            },
+        });
 
-        // 计算浮窗名称区域的绝对坐标
-        let absoluteRegion: Region;
-        if (isEdgeCase) {
-            // 边缘情况（槽位 6-9）：
-            // - X 坐标：基于游戏窗口的绝对坐标（tooltipRegion.leftTop.x 已经是相对游戏窗口的）
-            // - Y 坐标：基于鼠标点击位置的偏移量（需要加上 clickPoint.y）
-            absoluteRegion = new Region(
-                Math.round(this.gameWindowRegion!.x + tooltipRegion.leftTop.x),
-                Math.round(this.gameWindowRegion!.y + clickPoint.y + tooltipRegion.leftTop.y),
-                Math.round(tooltipRegion.rightBottom.x - tooltipRegion.leftTop.x),
-                Math.round(tooltipRegion.rightBottom.y - tooltipRegion.leftTop.y)
-            );
-            logger.debug(`[TftOperator] 边缘槽位 ${slotIndex}，X坐标固定=${tooltipRegion.leftTop.x}，Y偏移=${tooltipRegion.leftTop.y}`);
-        } else {
-            // 正常情况（槽位 1-5）：X、Y 坐标都相对于鼠标点击位置计算
-            absoluteRegion = new Region(
-                Math.round(this.gameWindowRegion!.x + clickPoint.x + tooltipRegion.leftTop.x),
-                Math.round(this.gameWindowRegion!.y + clickPoint.y + tooltipRegion.leftTop.y),
-                Math.round(tooltipRegion.rightBottom.x - tooltipRegion.leftTop.x),
-                Math.round(tooltipRegion.rightBottom.y - tooltipRegion.leftTop.y)
-            );
-        }
-
-        // 截图时不做任何预处理 (forOCR = false)
-        // 锻造器浮窗的文字在二值化/灰度化后会变得细碎，直接用原图 OCR
-        const rawPngBuffer = await screenCapture.captureRegionAsPng(absoluteRegion, false);
-
-        // 直接用原图进行 OCR，不做任何图像处理
-        const text = await ocrService.recognize(rawPngBuffer, OcrWorkerType.CHESS);
+        const pngBuffer = await screenCapture.captureRegionAsPng(absoluteRegion, true, FORGE_TOOLTIP_OCR_OPTIONS);
+        const text = await ocrService.recognize(pngBuffer, OcrWorkerType.CHESS);
         const cleanText = text.replace(/\s/g, "");
 
         logger.debug(`[TftOperator] 锻造器浮窗 OCR 结果: "${cleanText}"`);
@@ -1231,7 +1247,7 @@ class TftOperator {
         // fs.ensureDirSync(saveDir);
         // const filename = `itemForge_slot${slotIndex}_${Date.now()}.png`;
         // const savePath = path.join(saveDir, filename);
-        // fs.writeFileSync(savePath, rawPngBuffer);  // 保存原图，方便排查
+        // fs.writeFileSync(savePath, pngBuffer);  // 保存识别用的图，方便排查
         logger.warn(`[TftOperator] 锻造器识别失败(槽位${slotIndex})`, true);
 
         return ItemForgeType.NONE;
@@ -1987,8 +2003,8 @@ class TftOperator {
 
         // 4. 等待锻造器选择页面刷新
         await sleep(500);
-        //  选择装备,先固定选中中间的装备
-        await mouseController.clickAt(shopPoint, MouseButtonType.LEFT);
+        // 5. 选择装备，先固定选中间的装备（选择界面在屏幕中间，不再和商店卡片重合）
+        await mouseController.clickAt(forgePickPoint, MouseButtonType.LEFT);
         // TODO: 识别装备并精准选择（根据阵容需求选择最优装备）
     }
 
