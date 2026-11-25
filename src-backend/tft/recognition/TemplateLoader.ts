@@ -558,7 +558,7 @@ export class TemplateLoader {
      * @description 加载 loot_normal.png, loot_blue.png, loot_gold.png
      *              保留 RGB 彩色信息用于多目标模板匹配。
      *              当前赛季有专属目录（loot/{seasonDir}/，如 loot/s18/）时只用专属目录里的模板，
-     *              否则用 loot/ 下的通用模板。专属目录里没有的颜色视为该赛季没有（如 S18 没有银色球）。
+     *              否则用 loot/ 下的通用模板。专属目录里没有的颜色视为该赛季没有（按颜色各自判断）。
      */
     private async loadLootOrbTemplates(): Promise<void> {
         // 清理旧模板

@@ -16,6 +16,10 @@
  *   来源：经典结算界面.png
  *   输出：button/exit_game_button.png，比检测区域 exitGameButtonRegion 四周各小几个像素
  *
+ * 【战利品球】银色、蓝色球中间的"?"，截自 y 330 附近的球（大小随高度变化，见 TFTProtocolS18.lootOrbScaleAt）
+ *   来源：基础战利品.png（右侧玩家名已涂掉）；金球没有完整截图，模板单独裁自 战利品_金色.png
+ *   输出：loot/s18/loot_normal.png、loot/s18/loot_blue.png
+ *
  * 用法（在项目根目录）：node scripts/generate_s18_screenshot_templates.cjs
  */
 
@@ -39,6 +43,13 @@ const EXIT_BUTTON_SOURCE = '经典结算界面.png';
 
 const PROTOCOL = path.join(ROOT, 'src-backend/TFTProtocolS18.ts');
 const IMAGES = path.join(ROOT, 'public/resources/assets/images');
+
+/** 战利品球"?"的裁剪区域，都在球的轮廓以内，不含地面 */
+const LOOT_SOURCE = '基础战利品.png';
+const LOOT_BOXES = {
+    loot_normal: { left: 576, top: 310, width: 20, height: 26 },
+    loot_blue: { left: 648, top: 317, width: 22, height: 34 },
+};
 
 /** 直接读取 TFTProtocolS18.ts 里的区域，避免两处各写一份 */
 function loadProtocol() {
@@ -81,6 +92,11 @@ async function main() {
         await crop(photo, STAR_BOX, path.join(IMAGES, `starLevel/s18/${level}.png`));
     }
     console.log(`${Object.keys(STAR_SOURCES).length} 个 → ${path.relative(ROOT, path.join(IMAGES, 'starLevel/s18'))}`);
+
+    for (const [name, box] of Object.entries(LOOT_BOXES)) {
+        await crop(LOOT_SOURCE, box, path.join(IMAGES, `loot/s18/${name}.png`));
+    }
+    console.log(`${Object.keys(LOOT_BOXES).length} 个 → ${path.relative(ROOT, path.join(IMAGES, 'loot/s18'))}`);
 
     await crop(EXIT_BUTTON_SOURCE, EXIT_BUTTON_BOX, path.join(IMAGES, 'button/exit_game_button.png'));
     console.log('1 个 → ' + path.relative(ROOT, path.join(IMAGES, 'button/exit_game_button.png')));

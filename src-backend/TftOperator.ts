@@ -52,6 +52,7 @@ import {
     hexSlot,
     littleLegendDefaultPoint,
     lootRegion,
+    lootOrbScaleAt,
     selfWalkAroundPoints,
     shopSlot,
     shopSlotNameRegions,
@@ -1805,7 +1806,7 @@ class TftOperator {
             const targetMat = await screenCapture.captureRegionAsMat(absoluteRegion);
 
             // 3. 执行多目标模板匹配
-            const relativeOrbs = templateMatcher.matchLootOrbs(targetMat);
+            const relativeOrbs = templateMatcher.matchLootOrbs(targetMat, y => lootOrbScaleAt(y + lootRegion.leftTop.y));
 
             // 4. 将相对坐标转换为游戏窗口内的坐标
             const absoluteOrbs: LootOrb[] = relativeOrbs.map((orb) => {

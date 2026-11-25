@@ -26,8 +26,12 @@ const MATCH_THRESHOLDS = {
     STAR_LEVEL: 0.85,
     /** 空槽位标准差阈值 (低于此值判定为空) */
     EMPTY_SLOT_STDDEV: 10,
-    /** 战利品球匹配阈值 */
-    LOOT_ORB: 0.75,
+    /**
+     * 战利品球匹配阈值
+     * S18 截图实测：没有球的画面里银色最高 0.59、蓝色和金色最高 0.45；
+     * 银球 0.93 以上，蓝球 0.86 以上、被血条挡住一部分的 0.66，金球只有一张样本
+     */
+    LOOT_ORB: { normal: 0.75, blue: 0.62, gold: 0.65 } satisfies Record<LootOrbType, number>,
     /** 按钮匹配阈值 (按钮有明显文字特征，阈值设较高) */
     BUTTON: 0.80,
 } as const;
@@ -39,6 +43,9 @@ const MATCH_THRESHOLDS = {
  *              局部匹配的宽度比很小（0.23~0.52），用宽度比把这类候选直接排除。
  */
 const CHAMPION_TEXT_WIDTH_RATIO = { min: 0.8, max: 1.25 } as const;
+
+/** 匹配战利品球时每条横带的高度：带内的球按同一个尺度匹配（带内尺度差约 ±3%） */
+const LOOT_BAND_HEIGHT = 80;
 
 /** 二值化图像中视为"文字"的像素阈值 */
 const TEXT_PIXEL_THRESHOLD = 128;
@@ -406,11 +413,13 @@ export class TemplateMatcher {
     /**
      * 多目标匹配战利品球
      * @description 在目标图像中查找所有战利品球，支持多种类型 (normal/blue/gold)
-     *              使用非极大值抑制 (NMS) 避免重复检测
+     *              使用非极大值抑制 (NMS) 避免重复检测。
+     *              棋盘是透视的，球的大小随高度变化，所以把图像分成几条横带，每条带用对应的尺度匹配
      * @param targetMat 目标图像 (需要是 RGB 3 通道)
+     * @param scaleAt 图像中某个 y 处，球相对模板的缩放
      * @returns 检测到的战利品球数组
      */
-    public matchLootOrbs(targetMat: cv.Mat): LootOrb[] {
+    public matchLootOrbs(targetMat: cv.Mat, scaleAt: (y: number) => number): LootOrb[] {
         const lootOrbTemplates = templateLoader.getLootOrbTemplates();
         if (lootOrbTemplates.size === 0) {
             logger.warn("[TemplateMatcher] 战利品球模板为空，跳过匹配");
@@ -418,18 +427,10 @@ export class TemplateMatcher {
         }
 
         const results: LootOrb[] = [];
-        const mask = new cv.Mat();
-        const resultMat = new cv.Mat();
 
         try {
             // 遍历每种类型的模板
             for (const [orbType, templateMat] of lootOrbTemplates) {
-                // 尺寸检查
-                if (templateMat.rows > targetMat.rows || templateMat.cols > targetMat.cols) {
-                    logger.debug(`[TemplateMatcher] 战利品模板尺寸过大: ${orbType}`);
-                    continue;
-                }
-
                 // 通道检查
                 if (templateMat.type() !== targetMat.type()) {
                     logger.warn(
@@ -439,50 +440,9 @@ export class TemplateMatcher {
                     continue;
                 }
 
-                // 执行模板匹配
-                cv.matchTemplate(targetMat, templateMat, resultMat, cv.TM_CCOEFF_NORMED, mask);
-
-                // 多目标检测：循环查找所有超过阈值的匹配点
-                const templateWidth = templateMat.cols;
-                const templateHeight = templateMat.rows;
-
-                // 使用循环查找所有匹配点
-                while (true) {
-                    const minMax = cv.minMaxLoc(resultMat, mask);
-                    
-                    if (minMax.maxVal < MATCH_THRESHOLDS.LOOT_ORB) {
-                        break; // 没有更多匹配点了
-                    }
-
-                    const matchX = minMax.maxLoc.x;
-                    const matchY = minMax.maxLoc.y;
-
-                    // 计算球心坐标 (模板左上角 + 模板尺寸的一半)
-                    const centerX = matchX + Math.floor(templateWidth / 2);
-                    const centerY = matchY + Math.floor(templateHeight / 2);
-
-                    results.push({
-                        x: centerX,
-                        y: centerY,
-                        type: orbType,
-                        confidence: minMax.maxVal,
-                    });
-
-                    // 抑制当前匹配区域，避免重复检测
-                    // 将匹配点周围区域的值设为 -1 (低于任何阈值)
-                    cv.rectangle(
-                        resultMat,
-                        new cv.Point(
-                            Math.max(0, matchX - templateWidth / 2),
-                            Math.max(0, matchY - templateHeight / 2)
-                        ),
-                        new cv.Point(
-                            Math.min(resultMat.cols - 1, matchX + templateWidth / 2),
-                            Math.min(resultMat.rows - 1, matchY + templateHeight / 2)
-                        ),
-                        new cv.Scalar(-1),
-                        -1 // 填充矩形
-                    );
+                for (let bandTop = 0; bandTop < targetMat.rows; bandTop += LOOT_BAND_HEIGHT) {
+                    const bandBottom = Math.min(targetMat.rows, bandTop + LOOT_BAND_HEIGHT);
+                    this.matchLootOrbsInBand(targetMat, templateMat, orbType, bandTop, bandBottom, scaleAt((bandTop + bandBottom) / 2), results);
                 }
             }
 
@@ -494,9 +454,73 @@ export class TemplateMatcher {
         } catch (e) {
             logger.error(`[TemplateMatcher] 战利品球匹配出错: ${e}`);
             return [];
+        }
+    }
+
+    /**
+     * 在一条横带里匹配一种战利品球
+     * @param bandTop 横带上边（含）：球心落在 [bandTop, bandBottom) 内的才归这条带
+     * @param bandBottom 横带下边（不含）
+     * @param scale 模板在这条带里的缩放
+     * @param results 匹配结果追加到这里
+     */
+    private matchLootOrbsInBand(
+        targetMat: cv.Mat,
+        templateMat: cv.Mat,
+        orbType: LootOrbType,
+        bandTop: number,
+        bandBottom: number,
+        scale: number,
+        results: LootOrb[]
+    ): void {
+        const templateWidth = Math.round(templateMat.cols * scale);
+        const templateHeight = Math.round(templateMat.rows * scale);
+
+        // 搜索范围上下各多出半个模板，球心才能取到横带的边缘
+        const halfHeight = Math.floor(templateHeight / 2);
+        const searchTop = Math.max(0, bandTop - halfHeight);
+        const searchBottom = Math.min(targetMat.rows, bandBottom + templateHeight - halfHeight - 1);
+        if (templateHeight > searchBottom - searchTop || templateWidth > targetMat.cols) return;
+
+        const scaledTemplate = new cv.Mat();
+        const searchMat = targetMat.roi(new cv.Rect(0, searchTop, targetMat.cols, searchBottom - searchTop));
+        const resultMat = new cv.Mat();
+        const mask = new cv.Mat();
+
+        try {
+            cv.resize(templateMat, scaledTemplate, new cv.Size(templateWidth, templateHeight), 0, 0, scale < 1 ? cv.INTER_AREA : cv.INTER_LINEAR);
+            cv.matchTemplate(searchMat, scaledTemplate, resultMat, cv.TM_CCOEFF_NORMED, mask);
+
+            // 循环查找所有超过阈值的匹配点
+            while (true) {
+                const { maxVal, maxLoc } = cv.minMaxLoc(resultMat, mask);
+                if (maxVal < MATCH_THRESHOLDS.LOOT_ORB[orbType]) break;
+
+                // 球心坐标 (模板左上角 + 模板尺寸的一半)
+                results.push({
+                    x: maxLoc.x + Math.floor(templateWidth / 2),
+                    y: searchTop + maxLoc.y + halfHeight,
+                    type: orbType,
+                    confidence: maxVal,
+                });
+
+                // 抑制当前匹配区域，避免重复检测：将匹配点周围的值设为 -1 (低于任何阈值)
+                cv.rectangle(
+                    resultMat,
+                    new cv.Point(Math.max(0, maxLoc.x - templateWidth / 2), Math.max(0, maxLoc.y - templateHeight / 2)),
+                    new cv.Point(
+                        Math.min(resultMat.cols - 1, maxLoc.x + templateWidth / 2),
+                        Math.min(resultMat.rows - 1, maxLoc.y + templateHeight / 2)
+                    ),
+                    new cv.Scalar(-1),
+                    -1 // 填充矩形
+                );
+            }
         } finally {
-            mask.delete();
+            scaledTemplate.delete();
+            searchMat.delete();
             resultMat.delete();
+            mask.delete();
         }
     }
 

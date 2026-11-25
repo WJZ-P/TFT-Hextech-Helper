@@ -548,3 +548,11 @@ export const lootRegion = {
     leftTop: { x: 300, y: 100 },
     rightBottom: { x: 980, y: 490 }
 }
+
+/**
+ * 战利品球在某个高度上相对模板的缩放
+ * @description 棋盘是透视的，越远（y 越小）球越小。模板截自 y 330 附近的球。
+ *              实测银球直径 y 124 → 28、y 166 → 30、y 323 → 33.5，蓝球 y 221 → 41.5、y 288 → 44、y 337 → 46，
+ *              两者都是每往上 100px 缩小约 8.5%
+ */
+export const lootOrbScaleAt = (y: number) => 1 - (330 - y) * 0.00085;
