@@ -180,15 +180,11 @@ TFT Hextech Helper 是一款基于 Electron + React + TypeScript 开发的云顶
 
 - [x] **支持自定义阵容**
 
-- [x] **对局显示人机信息**
-
-- [ ] **战绩统计**
-
 ## 如果您喜欢本项目，请给我点个⭐吧(๑>◡<๑)！
 
 ## ⭐ Star 历史
 
-[![Stargazers over time](https://starchart.cc/WJZ-P/TFT-Hextech-Helper.svg?variant=adaptive)](https://starchart.cc/WJZ-P/TFT-Hextech-Helper)
+[![Star History Chart](https://api.star-history.com/svg?repos=wjz-p/TFT-Hextech-Helper&type=Date)](https://star-history.com/#wjz-p/TFT-Hextech-Helper&Date)
 
 ---
 
