@@ -81,7 +81,7 @@ import {debounce} from "../src-backend/utils/HelperTools.ts";
 // import {tftOperator} from "../src-backend/TftOperator.ts"; // 移至动态导入
 import {is, optimizer} from "@electron-toolkit/utils";
 // import {lineupLoader} from "../src-backend/lineup";  // 移至动态导入
-import {TFT_16_CHESS_DATA} from "../src-backend/TFTProtocol";  // 导入棋子数据
+import {TFT_16_CHESS_DATA, TFTMode} from "../src-backend/TFTProtocol";  // 导入棋子数据
 import {analyticsManager} from "../src-backend/utils/AnalyticsManager";  // Google Analytics 数据统计
 import {registerOverlayCallbacks} from "../src-backend/utils/OverlayBridge";  // 浮窗桥接（后端 → 主进程）
 // import {globalHotkeyManager} from "../src-backend/utils/GlobalHotkeyManager.ts";  // 移至动态导入
@@ -760,20 +760,37 @@ function registerHandler() {
     ipcMain.handle(IpcChannel.HEX_STOP, async (event) => hexService.stop())
     ipcMain.handle(IpcChannel.HEX_GET_STATUS, async (event) => hexService.isRunning)
     //  TFT相关操作
+    /** 调试面板选的是不是发条鸟模式，null 表示没选过，跟随主页的模式 */
+    let debugClockwork: boolean | null = null;
+    /** 调试面板要用的模式，null 表示用设置里的模式 */
+    const getDebugMode = (): TFTMode | null => {
+        // 挂机中点位必须和挂机的模式一致
+        if (debugClockwork === null || hexService.isRunning) return null;
+        if (debugClockwork) return TFTMode.CLOCKWORK_TRAILS;
+        return settingsStore.get('tftMode') === TFTMode.CLOCKWORK_TRAILS ? TFTMode.NORMAL : null;
+    };
+    ipcMain.handle(IpcChannel.TFT_SET_DEBUG_CLOCKWORK, async (_event, enabled: boolean) => {
+        debugClockwork = enabled;
+    });
     /**
      * 调试面板直接调用 TftOperator 的入口
      * 截图截的是屏幕像素，点击也落在屏幕上，所以先定位游戏窗口并切到前台，做完再切回本软件方便看结果
      */
     const withTftWindow = async <T>(action: () => Promise<T>): Promise<T> => {
-        await tftOperator.prepareForDebug();
+        tftOperator.setDebugMode(getDebugMode());
         try {
-            return await action();
-        } finally {
-            // 挂机中要让游戏保持在前台
-            if (!hexService.isRunning) {
-                win?.moveTop();
-                win?.focus();
+            await tftOperator.prepareForDebug();
+            try {
+                return await action();
+            } finally {
+                // 挂机中要让游戏保持在前台
+                if (!hexService.isRunning) {
+                    win?.moveTop();
+                    win?.focus();
+                }
             }
+        } finally {
+            tftOperator.setDebugMode(null);
         }
     };
     ipcMain.handle(IpcChannel.TFT_BUY_AT_SLOT, async (event, slot: number) => withTftWindow(() => tftOperator.buyAtSlot(slot)))
@@ -781,6 +798,7 @@ function registerHandler() {
     ipcMain.handle(IpcChannel.TFT_GET_EQUIP_INFO, async (event) => withTftWindow(() => tftOperator.getEquipInfo()))
     ipcMain.handle(IpcChannel.TFT_GET_BENCH_INFO, async (event) => withTftWindow(() => tftOperator.getBenchInfo()))
     ipcMain.handle(IpcChannel.TFT_GET_FIGHT_BOARD_INFO, async (event) => withTftWindow(() => tftOperator.getFightBoardInfo()))
+    ipcMain.handle(IpcChannel.TFT_EQUIP_RANDOM_FOR_DEBUG, async () => withTftWindow(() => tftOperator.equipRandomForDebug()))
     ipcMain.handle(IpcChannel.TFT_GET_LEVEL_INFO, async (event) => withTftWindow(() => tftOperator.getLevelInfo()))
     ipcMain.handle(IpcChannel.TFT_GET_COIN_COUNT, async (event) => withTftWindow(() => tftOperator.getCoinCount()))
     ipcMain.handle(IpcChannel.TFT_GET_LOOT_ORBS, async (event) => withTftWindow(() => tftOperator.getLootOrbs()))

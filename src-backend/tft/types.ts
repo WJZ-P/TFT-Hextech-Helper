@@ -70,6 +70,20 @@ export interface IdentifiedEquip extends TFTEquip {
     category: string;
 }
 
+/** 调试面板"随机穿装备"的结果 */
+export interface DebugEquipResult {
+    /** 棋盘上识别到的棋子 */
+    units: BoardUnit[];
+    /** 穿之前的装备栏 */
+    equips: IdentifiedEquip[];
+    /** 选中的装备 */
+    equip: IdentifiedEquip;
+    /** 选中的棋子 */
+    target: BoardUnit;
+    /** 穿完后装备栏里这件装备有没有变少 */
+    success: boolean;
+}
+
 /**
  * 商店中的单个棋子信息
  * @description 用于表示商店 5 个槽位中的棋子

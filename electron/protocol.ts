@@ -18,6 +18,8 @@ export enum IpcChannel {
     TFT_GET_EQUIP_INFO = 'tft-get-equip-info',
     TFT_GET_BENCH_INFO = 'tft-get-bench-info',
     TFT_GET_FIGHT_BOARD_INFO = 'tft-get-fight-board-info',
+    TFT_SET_DEBUG_CLOCKWORK = 'tft-set-debug-clockwork',  // 调试面板按发条鸟还是普通模式的点位识别
+    TFT_EQUIP_RANDOM_FOR_DEBUG = 'tft-equip-random-for-debug',  // 随机给棋盘上的棋子穿一件装备（用于调试）
     TFT_GET_LEVEL_INFO = 'tft-get-level-info',
     TFT_GET_COIN_COUNT = 'tft-get-coin-count',
     TFT_GET_LOOT_ORBS = 'tft-get-loot-orbs',

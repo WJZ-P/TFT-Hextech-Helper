@@ -113,6 +113,7 @@ import type {
     BoardLocation,
     ShopUnit,
     LootOrb,
+    DebugEquipResult,
     SimpleRegion,
 } from "./tft";
 import { sleep } from "./utils/HelperTools";
@@ -231,13 +232,26 @@ class TftOperator {
      */
     private currentChessData: Record<string, TFTUnit> = getCurrentChessData();
 
+    /** 调试面板临时指定的模式，null 表示用设置里的模式 */
+    private debugMode: TFTMode | null = null;
+
+    /** 当前使用的模式 */
+    private get activeMode(): TFTMode {
+        return this.debugMode ?? (settingsStore.get('tftMode') as TFTMode || TFTMode.NORMAL);
+    }
+
+    /** 【调试用】临时指定模式，操作做完要传 null 恢复 */
+    public setDebugMode(mode: TFTMode | null): void {
+        this.debugMode = mode;
+    }
+
     /**
      * 获取当前模式对应的棋子数据集
      * 从 settingsStore 读取当前模式，返回对应赛季的棋子数据
      * 同时更新内部缓存（避免每次都重新创建引用）
      */
     private getActiveChessData(): Record<string, TFTUnit> {
-        const mode = settingsStore.get('tftMode') as TFTMode || TFTMode.NORMAL;
+        const mode = this.activeMode;
         this.currentChessData = getChessDataByMode(mode);
         return this.currentChessData;
     }
@@ -247,7 +261,7 @@ class TftOperator {
      * @description 发条鸟模式的商店、等级、金币、升级/刷新按钮整体左移 69px，装备栏左移 3px，其余模式用常规布局
      */
     private get hud() {
-        const isClockwork = settingsStore.get('tftMode') === TFTMode.CLOCKWORK_TRAILS;
+        const isClockwork = this.activeMode === TFTMode.CLOCKWORK_TRAILS;
         return isClockwork
             ? {
                 shopSlot: shopSlotClockwork,
@@ -301,7 +315,7 @@ class TftOperator {
 
     /** 当前模式对应的赛季模板目录名（如 s18），空槽位模板按赛季存放 */
     private get seasonTemplateDir(): string {
-        return getSeasonTemplateDirByMode(settingsStore.get('tftMode') as TFTMode || TFTMode.NORMAL);
+        return getSeasonTemplateDirByMode(this.activeMode);
     }
 
     private get benchSlotSnapshotPath(): string {
@@ -436,7 +450,7 @@ class TftOperator {
             throw new Error("识别模板还在加载，请稍后再试");
         }
 
-        const mode = settingsStore.get('tftMode') as TFTMode || TFTMode.NORMAL;
+        const mode = this.activeMode;
         await templateLoader.switchSeason(getSeasonTemplateDirByMode(mode));
         await ocrService.switchChessWorker(mode);
 
@@ -464,7 +478,7 @@ class TftOperator {
             };
 
             // 从设置中获取当前游戏模式，根据模式选择识别策略
-            const currentMode = settingsStore.get('tftMode');
+            const currentMode = this.activeMode;
 
             // ============================================================
             // 发条鸟试炼模式：直接读取固定区域
@@ -2386,6 +2400,44 @@ class TftOperator {
 
         // 3. 执行拖拽操作
         await mouseController.drag(fromPoint, toPoint, EQUIP_DRAG_OPTIONS);
+    }
+
+    /**
+     * 【调试用】扫描棋盘和装备栏，随机挑一件装备穿给一个随机棋子，并检查有没有穿上
+     * @description 装备穿上后拿不下来，所以一次只穿一件
+     */
+    public async equipRandomForDebug(): Promise<DebugEquipResult> {
+        const units = (await this.getFightBoardInfo()).filter((unit): unit is BoardUnit => unit !== null);
+        const candidates = units.filter(unit => unit.equips.length < 3);
+        if (candidates.length === 0) {
+            throw new Error(units.length === 0 ? "棋盘上没有识别到棋子" : "棋盘上的棋子都已经有 3 件装备");
+        }
+
+        const equips = await this.getEquipInfo();
+        if (equips.length > 0 && equips.every(e => e.name === UNKNOWN_EQUIP_NAME)) {
+            throw new Error("装备栏全部没认出来，请检查「发条鸟模式」开关和当前对局是否一致");
+        }
+        // equipId 为 "-1" 的是拆卸器、重铸器等道具，以及没认出来的装备，不能穿
+        const wearableIndexes = equips.flatMap((equip, index) => equip.equipId === "-1" ? [] : [index]);
+        if (wearableIndexes.length === 0) {
+            throw new Error(equips.length === 0 ? "装备栏为空" : `装备栏里没有能穿的装备：${equips.map(e => e.name).join("、")}`);
+        }
+
+        const pick = <T>(list: T[]): T => list[Math.floor(Math.random() * list.length)];
+        const target = pick(candidates);
+        const equipIndex = pick(wearableIndexes);
+        const equip = equips[equipIndex];
+
+        logger.info(`[TftOperator] 随机穿装备: ${equip.name}(${equip.slot}) -> ${target.location} ${target.tftUnit.displayName}`);
+        await this.equipToBoardUnit(equipIndex, target.location);
+
+        // 等装备飞到棋子身上、装备栏重新排列
+        await sleep(800);
+        const countOf = (list: IdentifiedEquip[]) => list.filter(e => e.name === equip.name).length;
+        const success = countOf(await this.getEquipInfo()) < countOf(equips);
+
+        logger.info(`[TftOperator] 随机穿装备: ${success ? "已穿上" : "没有穿上，装备栏没有变化"}`);
+        return { units, equips, equip, target, success };
     }
 }
 

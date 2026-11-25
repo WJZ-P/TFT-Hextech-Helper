@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { ThemeType } from "../../styles/theme.ts";
 import { hextechPanel, hextechPanelSeeThrough, hextechSectionTitle, hextechButtonGhost, hextechButtonPrimary, hextechButtonGold, hextechButtonDanger } from "../../styles/hextech.ts";
 import { ToggleSwitch, ToggleSlider } from "../HextechToggle.tsx";
 import { toast } from "../toast/toast-core.ts";
+import { usePageActive } from "../../hooks/usePageActive";
+import { TFTMode } from "../../../src-backend/TFTProtocol.ts";
 import type { DebugScreenshotResult, DebugScreenshotState } from "../../../electron/preload.ts";
 
 // -------------------------------------------------------------------
@@ -84,6 +86,13 @@ const ToolRow = styled.div`
   margin-bottom: ${props => props.theme.spacing.medium};
   padding-bottom: ${props => props.theme.spacing.medium};
   border-bottom: 1px solid ${props => props.theme.colors.goldDeep};
+
+  /* 卡片里只有这一行时不需要分隔线 */
+  &:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
 `;
 
 const ToolText = styled.div`
@@ -168,6 +177,12 @@ const formatUnits = (units: any[]): string[] => {
 
 const formatEquips = (equips: any[]): string[] =>
     equips.length === 0 ? ['装备栏为空'] : equips.map(e => `${e.slot} ${e.name}（${Math.round(e.confidence * 100)}%）`);
+
+const formatDebugEquip = ({ units, equips, equip, target, success }: any): string[] => [
+    `棋盘：${units.length} 个棋子，装备栏：${equips.map((e: any) => e.name).join('、')}`,
+    `${equip.slot} ${equip.name} → ${target.location} ${target.tftUnit.displayName}`,
+    success ? '已穿上' : '没有穿上（装备栏没有变化）',
+];
 
 const formatLootOrbs = (orbs: any[]): string[] =>
     orbs.length === 0 ? ['没有检测到战利品球'] : orbs.map(o => `${o.type} (${o.x}, ${o.y})（${Math.round(o.confidence * 100)}%）`);
@@ -307,6 +322,41 @@ const TftScreenshotTool = () => {
     );
 };
 
+/**
+ * 调试用的模式开关
+ * @description 发条鸟的商店、等级、金币、装备栏位置和普通模式不同，选错了会识别不出来。
+ *              只影响调试面板，不改主页选的模式；没动过时跟随主页
+ */
+const DebugModeToggle = () => {
+    const isPageActive = usePageActive();
+    const [isClockwork, setIsClockwork] = useState(false);
+    const isChosen = useRef(false);
+
+    useEffect(() => {
+        if (!isPageActive || isChosen.current) return;
+        window.lineup.getTftMode().then(mode => setIsClockwork(mode === TFTMode.CLOCKWORK_TRAILS));
+    }, [isPageActive]);
+
+    const handleToggle = async () => {
+        const next = !isClockwork;
+        await window.tft.setDebugClockwork(next);
+        isChosen.current = true;
+        setIsClockwork(next);
+    };
+
+    return (
+        <ToolRow>
+            <ToolText>
+                <h3>发条鸟模式</h3>
+                <p>当前按{isClockwork ? '发条鸟' : '普通模式'}的位置识别，要和正在打的对局一致。只影响调试面板，挂机中以挂机的模式为准。</p>
+            </ToolText>
+            <ToggleSwitch onClick={handleToggle}>
+                <ToggleSlider $isOn={isClockwork} />
+            </ToggleSwitch>
+        </ToolRow>
+    );
+};
+
 const DebugPage = () => {
     return (
         <PageWrapper>
@@ -403,6 +453,12 @@ const DebugPage = () => {
                 </ButtonGrid>
             </Card>
 
+            {/* 下面的 TFT 识别按哪个模式的位置 */}
+            <SectionHeader>🎮 TFT 识别模式</SectionHeader>
+            <Card>
+                <DebugModeToggle />
+            </Card>
+
             {/* TFT 商店操作 */}
             <SectionHeader>🛒 TFT 商店</SectionHeader>
             <Card>
@@ -461,6 +517,10 @@ const DebugPage = () => {
                     
                     <DebugButton onClick={() => handleRecognize('装备信息', window.tft.getEquipInfo, formatEquips)}>
                         装备信息
+                    </DebugButton>
+
+                    <DebugButton $variant="warning" onClick={() => handleRecognize('随机穿装备', window.tft.equipRandomForDebug, formatDebugEquip)}>
+                        随机穿一件装备
                     </DebugButton>
                     
                     <DebugButton onClick={async () => {

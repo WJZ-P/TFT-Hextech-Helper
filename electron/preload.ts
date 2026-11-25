@@ -131,6 +131,10 @@ const tftApi = {
     getEquipInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_EQUIP_INFO),
     getBenchInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_BENCH_INFO),
     getFightBoardInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_FIGHT_BOARD_INFO),
+    /** 调试面板按发条鸟（true）还是普通模式（false）的点位识别，不影响主页选的模式 */
+    setDebugClockwork: (enabled: boolean): Promise<void> => ipcRenderer.invoke(IpcChannel.TFT_SET_DEBUG_CLOCKWORK, enabled),
+    /** 随机给棋盘上的棋子穿一件装备（用于调试） */
+    equipRandomForDebug: () => ipcRenderer.invoke(IpcChannel.TFT_EQUIP_RANDOM_FOR_DEBUG),
     getLevelInfo: () => ipcRenderer.invoke(IpcChannel.TFT_GET_LEVEL_INFO),
     getCoinCount: () => ipcRenderer.invoke(IpcChannel.TFT_GET_COIN_COUNT),
     getLootOrbs: () => ipcRenderer.invoke(IpcChannel.TFT_GET_LOOT_ORBS),
