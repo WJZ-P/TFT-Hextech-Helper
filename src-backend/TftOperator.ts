@@ -99,6 +99,7 @@ import {
     screenCapture,
     mouseController,
     MouseButtonType,
+    EQUIP_DRAG_OPTIONS,
     FRAME_MS,
     parseStageStringToEnum,
     isValidStageFormat,
@@ -2384,7 +2385,7 @@ class TftOperator {
         logger.info(`[TftOperator] 穿装备: 槽位${equipSlotIndex}(${equipSlotKey}) -> ${boardLocation}`);
 
         // 3. 执行拖拽操作
-        await mouseController.drag(fromPoint, toPoint);
+        await mouseController.drag(fromPoint, toPoint, EQUIP_DRAG_OPTIONS);
     }
 }
 

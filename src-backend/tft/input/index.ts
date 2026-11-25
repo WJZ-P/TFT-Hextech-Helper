@@ -3,4 +3,4 @@
  * @description 导出所有输入控制相关的服务
  */
 
-export { MouseController, mouseController, MouseButtonType, FRAME_MS } from "./MouseController";
+export { MouseController, mouseController, MouseButtonType, EQUIP_DRAG_OPTIONS, FRAME_MS } from "./MouseController";

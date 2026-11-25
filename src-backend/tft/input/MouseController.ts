@@ -49,6 +49,29 @@ const MOUSE_CONFIG = {
 /** 游戏的一帧 (ms)，按 30 帧算 */
 export const FRAME_MS = 34;
 
+/** 拖拽的节奏 */
+export interface DragOptions {
+    /** 按下之前在起点悬停的时间 (ms) */
+    hoverDelay?: number;
+    /** 按下之后、开始移动之前按住的时间 (ms)，确保游戏识别到拖拽开始 */
+    holdDelay?: number;
+    /** 从起点移动到终点分成几步，每步约 1ms；1 表示直接跳过去 */
+    moveSteps?: number;
+    /** 到达终点之后、松开之前等待的时间 (ms) */
+    moveDelay?: number;
+}
+
+/**
+ * 拖装备用的节奏
+ * @description 虚幻客户端的装备要悬停、按住一会儿才会被拿起来
+ */
+export const EQUIP_DRAG_OPTIONS: DragOptions = {
+    hoverDelay: 300,
+    holdDelay: 300,
+    moveSteps: 10,
+    moveDelay: 150,
+};
+
 /**
  * 鼠标控制器
  * @description 单例模式，封装所有鼠标操作
@@ -271,15 +294,15 @@ export class MouseController {
      * 
      * @param from 起点坐标（相对于游戏窗口）
      * @param to 终点坐标（相对于游戏窗口）
-     * @param holdDelay 按下鼠标后等待的时间（ms），确保游戏识别到拖拽开始
-     * @param moveDelay 移动过程中的延迟（ms），模拟人类拖拽速度
+     * @param options 拖拽的节奏，默认适合拖棋子
      */
     public async drag(
         from: SimplePoint,
         to: SimplePoint,
-        holdDelay: number = 50,
-        moveDelay: number = 100
+        options: DragOptions = {}
     ): Promise<void> {
+        const { hoverDelay = MOUSE_CONFIG.PRE_DRAG_DELAY, holdDelay = 50, moveSteps = 1, moveDelay = 100 } = options;
+
         if (!this.gameWindowOrigin) {
             throw new Error("[MouseController] 尚未设置游戏窗口基准点，请先调用 setGameWindowOrigin()");
         }
@@ -301,14 +324,21 @@ export class MouseController {
         try {
             await mouse.move([fromAbs]);
             // 等待游戏识别鼠标位置（游戏25帧，需要足够时间识别棋子悬停）
-            await sleep(MOUSE_CONFIG.PRE_DRAG_DELAY);
+            await sleep(hoverDelay);
 
             // 2. 按下左键（不释放）
             await mouse.pressButton(Button.LEFT);
             await sleep(holdDelay);
 
             // 3. 移动到终点
-            await mouse.move([toAbs]);
+            // 每个点之间由 nut-js 等待约 1ms（mouseSpeed 默认 1000）。不用 sleep，Windows 上它最短约 15ms
+            await mouse.move(Array.from({ length: moveSteps }, (_, i) => {
+                const progress = (i + 1) / moveSteps;
+                return new Point(
+                    Math.round(fromAbs.x + (toAbs.x - fromAbs.x) * progress),
+                    Math.round(fromAbs.y + (toAbs.y - fromAbs.y) * progress)
+                );
+            }));
             await sleep(moveDelay);
 
             // 4. 释放左键
