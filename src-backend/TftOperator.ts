@@ -66,6 +66,8 @@ import {
     buyExpPointClockwork,
     itemForgeTooltipRegion,
     forgePickPoint,
+    exitGameButtonPoint,
+    exitGameButtonRegion,
 } from "./TFTProtocolS18";
 // 赛季数据通过统一管理接口访问
 import { getCurrentChessData, getChessDataByMode } from "./TFTInfo/SeasonRegistry";
@@ -564,8 +566,7 @@ class TftOperator {
     /**
      * 识别详情面板中棋子的星级
      * @description 识别不出来时按 1 星处理。不能返回 -1：策略层用 -1 表示锻造器之类的特殊单位，
-     *              会把正常棋子排除在上场、替换之外。
-     *              S18 的星级模板还没有（老客户端的模板比 S18 的识别区域还大，会被直接跳过），目前都会走到这里
+     *              会把正常棋子排除在上场、替换之外
      */
     private async getDetailPanelStarLevel(): Promise<1 | 2 | 3 | 4> {
         const starRegion = screenCapture.toAbsoluteRegion(detailChampionStarRegion);
@@ -1403,6 +1404,29 @@ class TftOperator {
         } catch (e: any) {
             logger.error(`[TftOperator] 点击发条鸟退出按钮异常: ${e.message}`);
         }
+    }
+
+    /**
+     * 阵亡后的结算界面（"你获得了 第 x 名"）是否正在显示
+     * @description 检测"现在退出"按钮的文字；窗口未初始化或截图失败时视为没有显示
+     */
+    public async isExitGameButtonVisible(): Promise<boolean> {
+        if (!this.gameWindowRegion || !templateLoader.isReady()) return false;
+
+        const mat = await screenCapture.captureGameRegionAsMat(exitGameButtonRegion);
+        try {
+            return templateMatcher.matchButton(mat, "exit_game_button").matched;
+        } finally {
+            mat.delete();
+        }
+    }
+
+    /**
+     * 点击阵亡后结算界面的"现在退出"
+     */
+    public async clickExitGameButton(): Promise<void> {
+        this.ensureInitialized();
+        await mouseController.clickAt(exitGameButtonPoint, MouseButtonType.LEFT);
     }
 
     /**

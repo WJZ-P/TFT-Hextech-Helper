@@ -8,6 +8,7 @@
  *              - "TFTPartiesService_...: Event[AFK_CHECK] received"           服务端推送的排队事件，AFK_CHECK = 找到对局
  *              - "Joining game server at Host[...]"                           对局已分配，开始连接游戏服务器
  *              - "GameMode[Match] TerminalEdge[presentation_ready]"           对局场景加载完、画面可以操作了
+ *              - "Received RMS message ... resource 'cap/missions/v1/notifications'"  自己的对局已打完，服务端结算任务进度
  *              - "LogExit: Exiting."                                          客户端正常退出
  *
  *              一局完整的日志顺序：
@@ -15,6 +16,11 @@
  *                → Joining game server → InGame → presentation_ready
  *                → （对局结束）EndOfGameInterstitial → EndOfGameSummary → SoloMode / Frontend
  *              掉线后重启客户端时是 Reconnect → InGame → presentation_ready。
+ *
+ *              普通对局里阵亡后客户端仍停在 InGame（显示"现在退出 / 继续观看"），要点了退出才会离开。
+ *              阵亡本身不写日志，但服务端会在几秒内推送任务结算（cap/missions）。
+ *              翻过 17 局的日志，这条消息只出现在对局结束前 5~10 秒，从没在中途出现过；
+ *              但没有任务进度可结算时（如开局就投降）不会推送，所以只能当作提示，不能作为唯一依据
  *
  * 实现细节：
  *   - 每 250ms 检查一次文件大小，只读新增部分；按字节切行，避免把中文字符切成两半
@@ -58,6 +64,7 @@ const LOBBY_STATE_PATTERN = /Entering LobbyState\[ETFTLobbyState::(\w+)\]/;
 const PARTY_EVENT_PATTERN = /TFTPartiesService_\d+: Event\[(\w+)\] received/;
 const JOINING_SERVER_PATTERN = /Joining game server at Host\[/;
 const PRESENTATION_READY_PATTERN = /GameMode\[Match\] TerminalEdge\[presentation_ready\]/;
+const MATCH_FINISHED_PATTERN = /RGIOPRms: Received RMS message ID '[^']*' for resource 'cap\/missions\/v1\/notifications'/;
 const CLIENT_EXIT_PATTERN = /LogExit: Exiting\./;
 
 /** 监听器发出的事件 */
@@ -70,6 +77,8 @@ interface TftLogWatcherEvents {
     joiningGameServer: () => void;
     /** 对局加载完成，可以操作 */
     gameLoaded: () => void;
+    /** 对局中收到任务结算，说明自己的对局已经打完（阵亡或整局结束），此时可能还停留在对局画面 */
+    matchFinished: () => void;
     /** 客户端退出（正常退出写了 LogExit，或日志被轮转说明客户端重启了） */
     clientExit: () => void;
 }
@@ -263,6 +272,9 @@ class TftLogWatcher extends EventEmitter {
             this.emit('partyEvent', partyMatch[1]);
         } else if (JOINING_SERVER_PATTERN.test(line)) {
             this.emit('joiningGameServer');
+        } else if (this.isGameLoaded && MATCH_FINISHED_PATTERN.test(line)) {
+            logger.debug('[TftLogWatcher] 收到任务结算，对局已打完');
+            this.emit('matchFinished');
         }
     }
 }

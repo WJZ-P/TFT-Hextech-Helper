@@ -12,9 +12,7 @@
  *   常规模式和发条鸟模式的底部 HUD（等级、金币、商店、升级/刷新按钮）位置不同，发条鸟整体左移 69px，
  *   这些点位提供了 xxx（常规）和 xxxClockwork（发条鸟）两套；棋盘、备战席、装备栏两种模式相同。
  *
- * 待补充（缺截图）：
- *   - 玩家阵亡后结算界面的"现在退出"按钮（老客户端的 exitGameButtonPoint）
- *   - 发条鸟阵亡后的"现在退出"按钮（clockworkTrailsQuitNowButtonRegion / Point）
+ * 不需要的点位：发条鸟阵亡后的"现在退出"按钮（打完会自动回到主菜单）
  */
 
 import type { SimplePoint } from "./TFTProtocol.ts";
@@ -138,7 +136,8 @@ export const detailEquipRegion = {
         rightBottom: { x: 1268, y: 400 },
     },
 }
-//  星级 region（面板顶部居中的星星，1 星约在 (1199, 130)；2、3 星时更宽）
+//  星级 region（面板顶部居中的星星，以 x 1200 居中，y 126-133）：
+//  1 星铜色 x 1196-1203，2 星银色 x 1192-1207，3 星金色 x 1187-1212。下边到 137 为止，再往下是棋子原画
 export const detailChampionStarRegion = {
     leftTop: { x: 1180, y: 124 },
     rightBottom: { x: 1220, y: 137 }
@@ -249,7 +248,7 @@ export const fightBoardSlotPoint = {
 //  由六边形内部的包围盒得出：leftTop.y 使用 -10 偏移，兼容 3D 飞行棋子的高度；
 //  leftTop.x +5, rightBottom.x -5，避免宽体棋子占据邻居位置导致误判（与老客户端一致）
 //  第四行的六边形到 y 478，但备战席棋子的头和血条会伸到 y 456 左右，所以只取到 450，避免把空格子误判成有棋子
-//  改了这里要重新运行 scripts/generate_s18_slot_templates.cjs
+//  改了这里要重新运行 scripts/generate_s18_screenshot_templates.cjs
 export const fightBoardSlotRegion = {
     //  第一行（六边形 y 275-320）
     R1_C1: {
@@ -503,6 +502,18 @@ export const combatPhaseTextRegion = {
 export const clockworkTrailsFightButtonPoint = {
     x: 1047,
     y: 660
+}
+
+// ============================================================================
+// 阵亡后的结算界面（"你获得了 第 x 名"，下方是"现在退出"和"继续观看"）
+// ============================================================================
+
+//  "现在退出"按钮（边框 x 566-713, y 321-351，文字 x 615-664, y 330-342）
+export const exitGameButtonPoint = { x: 640, y: 336 }
+//  按钮文字的检测区域，比模板（74x20）四周各大几个像素
+export const exitGameButtonRegion = {
+    leftTop: { x: 590, y: 322 },
+    rightBottom: { x: 690, y: 350 },
 }
 
 // ============================================================================

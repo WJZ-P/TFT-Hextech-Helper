@@ -214,7 +214,8 @@ export class TemplateLoader {
         // 重新设置文件监听（指向新赛季目录）
         this.setupChampionTemplateWatcher();
 
-        // 战利品球、空槽位模板也可能有赛季专属版本（如 S18）
+        // 星级、战利品球、空槽位模板也可能有赛季专属版本（如 S18）
+        await this.loadStarLevelTemplates();
         await this.loadLootOrbTemplates();
         await this.loadBenchSlotTemplates();
         await this.loadFightBoardSlotTemplates();
@@ -425,14 +426,15 @@ export class TemplateLoader {
             return;
         }
 
-        const files = fs.readdirSync(this.starLevelTemplatePath);
+        const templateDir = this.getSeasonTemplateDir(this.starLevelTemplatePath);
+        const files = fs.readdirSync(templateDir);
 
         for (const file of files) {
             const ext = path.extname(file).toLowerCase();
             if (!VALID_IMAGE_EXTENSIONS.includes(ext)) continue;
 
             const starLevel = path.parse(file).name;
-            const filePath = path.join(this.starLevelTemplatePath, file);
+            const filePath = path.join(templateDir, file);
 
             try {
                 const mat = await this.loadImageAsMat(filePath, { ensureAlpha: true });
@@ -619,7 +621,8 @@ export class TemplateLoader {
     /**
      * 加载按钮模板
      * @description 加载 button 目录下的按钮模板，用于 UI 按钮检测
-     *              目前支持：clockwork_quit_button.png (发条鸟退出按钮)
+     *              目前支持：clockwork_quit_button.png (老客户端的发条鸟退出按钮)、
+     *              exit_game_button.png (S18 阵亡后结算界面的"现在退出")
      *              保留 RGB 彩色信息用于模板匹配
      */
     private async loadButtonTemplates(): Promise<void> {
@@ -638,6 +641,7 @@ export class TemplateLoader {
         // key: 模板名称（用于代码中引用），filename: 实际文件名
         const buttonFiles: { key: string; filename: string }[] = [
             { key: "clockwork_quit_button", filename: "clockwork_quit_button.png" },
+            { key: "exit_game_button", filename: "exit_game_button.png" },
         ];
 
         for (const { key, filename } of buttonFiles) {

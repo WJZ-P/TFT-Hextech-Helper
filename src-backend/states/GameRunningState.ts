@@ -46,6 +46,12 @@ const ABORT_CHECK_INTERVAL_MS = 2000;
 /** 发条鸟模式：阶段变化超时时间 (ms)，超过此时间未收到阶段事件则视为卡住 */
 const CLOCKWORK_STAGE_TIMEOUT_MS = 60000;  // 1 分钟
 
+/** 普通下棋模式：检查阵亡结算界面的间隔 (ms) */
+const EXIT_BUTTON_CHECK_INTERVAL_MS = 5000;
+
+/** 日志提示对局已打完后，检查阵亡结算界面的间隔 (ms) */
+const EXIT_BUTTON_FAST_CHECK_INTERVAL_MS = 1000;
+
 /**
  * 游戏运行状态类
  * @description 游戏进行中的主状态，启动 Monitor 后挂起等待游戏结束
@@ -197,6 +203,10 @@ export class GameRunningState implements IState {
      * LCU 看不到虚幻客户端的对局（gameflow 一直是 None），改为看客户端日志：
      * 对局结束后客户端会离开 LobbyState[InGame]（进入结算过渡画面或直接回主界面），即视为游戏结束。
      * 玩家阵亡本身不写日志，阵亡后点退出 / 对局打完才会离开 InGame。
+     * 普通下棋模式阵亡后要自己点"现在退出"：平时每 5 秒看一眼结算界面出现没有，
+     * 日志提示对局已打完（matchFinished）后改为每秒看一次，看到按钮才点，一直点到离开对局为止。
+     * 发条鸟打完会自动回到主菜单，不需要点。
+     * （以下【普通下棋模式】【发条鸟模式】是老客户端的流程）
      * 
      * 【普通下棋模式】
      * 1. 玩家死亡 → 触发 TFT_BATTLE_PASS 事件（此时游戏窗口还开着）
@@ -219,6 +229,7 @@ export class GameRunningState implements IState {
         return new Promise((resolve) => {
             let stopCheckInterval: NodeJS.Timeout | null = null;
             let stageTimeoutTimer: NodeJS.Timeout | null = null;
+            let exitCheckTimer: NodeJS.Timeout | null = null;
             let isResolved = false;
             /** 标记是否已经尝试过退出游戏，避免重复调用 */
             let hasTriedQuit = false;
@@ -241,6 +252,7 @@ export class GameRunningState implements IState {
                 this.lcuManager?.off(LcuEventUri.TFT_BATTLE_PASS, onBattlePass);
                 tftLogWatcher.off('lobbyState', onTftLobbyState);
                 tftLogWatcher.off('clientExit', onTftClientExit);
+                tftLogWatcher.off('matchFinished', onMatchFinished);
                 // 发条鸟模式：取消 stageChange 和 clockworkDead 监听
                 if (isClockworkMode) {
                     gameStageMonitor.off('stageChange', onStageChange);
@@ -254,6 +266,10 @@ export class GameRunningState implements IState {
                 if (stageTimeoutTimer) {
                     clearTimeout(stageTimeoutTimer);
                     stageTimeoutTimer = null;
+                }
+                if (exitCheckTimer) {
+                    clearInterval(exitCheckTimer);
+                    exitCheckTimer = null;
                 }
             };
 
@@ -386,16 +402,65 @@ export class GameRunningState implements IState {
                 safeResolve('clientExit');
             };
 
+            /**
+             * 普通下棋模式：阵亡后的结算界面出现时，点击"现在退出"
+             * @description 点完客户端会离开 InGame，由 onTftLobbyState 结束等待；没点上的话下一次检查会再点
+             */
+            let isCheckingExit = false;
+            let hasSeenExitButton = false;
+            const checkExitButton = async () => {
+                // 识别和点击需要时间，上一次还没结束就跳过这一次
+                if (isCheckingExit || isResolved) return;
+                isCheckingExit = true;
+                try {
+                    if (!(await tftOperator.isExitGameButtonVisible()) || isResolved) return;
+                    if (!hasSeenExitButton) {
+                        hasSeenExitButton = true;
+                        logger.info("[GameRunningState] 检测到结算界面，自己的对局已打完，点击【现在退出】");
+                        // 阻止 StrategyService 响应后续阶段事件，避免乱点到"继续观看"
+                        strategyService.setGameEnded();
+                    }
+                    await tftOperator.clickExitGameButton();
+                } catch (error: any) {
+                    logger.warn(`[GameRunningState] 检查结算界面失败: ${error?.message ?? error}`);
+                } finally {
+                    isCheckingExit = false;
+                }
+            };
+
+            /**
+             * 普通下棋模式：设置检查结算界面的间隔
+             */
+            const scheduleExitCheck = (intervalMs: number) => {
+                if (exitCheckTimer) clearInterval(exitCheckTimer);
+                exitCheckTimer = setInterval(checkExitButton, intervalMs);
+            };
+
+            /**
+             * 虚幻客户端：日志提示自己的对局已打完，加快检查结算界面
+             */
+            const onMatchFinished = () => {
+                if (isResolved || isClockworkMode) return;
+                logger.info("[GameRunningState] 客户端日志提示对局已打完，等待结算界面出现");
+                scheduleExitCheck(EXIT_BUTTON_FAST_CHECK_INTERVAL_MS);
+            };
+
             // 监听 abort 事件
             signal.addEventListener("abort", onAbort, { once: true });
 
             // 注册客户端日志监听器（虚幻客户端）
             tftLogWatcher.on('lobbyState', onTftLobbyState);
             tftLogWatcher.on('clientExit', onTftClientExit);
+            tftLogWatcher.on('matchFinished', onMatchFinished);
 
             // 注册 LCU 事件监听器
             this.lcuManager?.on(LcuEventUri.TFT_BATTLE_PASS, onBattlePass);
             this.lcuManager?.on(LcuEventUri.GAMEFLOW_PHASE, onGameflowPhase);
+
+            // 普通下棋模式：定期检查阵亡后的结算界面（日志没有提示时的兜底）
+            if (!isClockworkMode) {
+                scheduleExitCheck(EXIT_BUTTON_CHECK_INTERVAL_MS);
+            }
 
             // 发条鸟模式：监听 stageChange + clockworkDead 事件，启动超时计时器 + isDead 轮询
             if (isClockworkMode) {
