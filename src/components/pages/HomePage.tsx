@@ -657,11 +657,11 @@ interface ModeOption {
  * 模式列表，和云顶之弈（虚幻客户端）当前开放的队列一一对应：
  *   自然之力 匹配 1090 / 排位 1100 / 恭喜发财 6080 / 双人作战 1160、发条鸟的试炼 1220
  *
- * 目前只开放了发条鸟的试炼，其他模式是"适配中"状态，点击无效。
+ * 目前开放了自然之力 匹配和发条鸟的试炼，其他模式是"适配中"状态，点击无效。
  * 以后适配了某个模式，把它的 enabled 改成 true（没有 mode 的还要先在后端加 TFTMode）即可。
  */
 const MODE_OPTIONS: ModeOption[] = [
-    { key: 'NATURE_NORMAL', name: '自然之力 匹配', queueId: 1090, mode: TFTMode.NORMAL, art: modeArtNormal, iconUrl: modeIconNormal, accent: '#2F8BFF', enabled: import.meta.env.DEV, debugOnly: true },
+    { key: 'NATURE_NORMAL', name: '自然之力 匹配', queueId: 1090, mode: TFTMode.NORMAL, art: modeArtNormal, iconUrl: modeIconNormal, accent: '#2F8BFF', enabled: true },
     { key: 'NATURE_RANK', name: '自然之力 排位', queueId: 1100, mode: TFTMode.RANK, art: modeArtRanked, iconUrl: modeIconRanked, accent: '#C8AA6E', enabled: false },
     { key: 'NATURE_TREASURE', name: '自然之力 恭喜发财', queueId: 6080, mode: null, art: modeArtTreasure, iconUrl: modeIconTreasure, accent: '#E8A33D', enabled: false },
     { key: 'NATURE_DOUBLE', name: '自然之力 双人作战', queueId: 1160, mode: null, art: modeArtDoubleUp, iconUrl: modeIconDoubleUp, accent: '#B57BFF', enabled: false },
