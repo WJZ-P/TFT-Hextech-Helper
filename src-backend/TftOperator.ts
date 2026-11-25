@@ -67,6 +67,10 @@ import {
     levelRegionClockwork,
     coinRegion,
     coinRegionClockwork,
+    streakIconRegion,
+    streakIconRegionClockwork,
+    streakCountRegion,
+    streakCountRegionClockwork,
     refreshShopPoint,
     refreshShopPointClockwork,
     buyExpPoint,
@@ -114,6 +118,7 @@ import type {
     ShopUnit,
     LootOrb,
     DebugEquipResult,
+    StreakInfo,
     SimpleRegion,
 } from "./tft";
 import { sleep } from "./utils/HelperTools";
@@ -130,6 +135,12 @@ const COIN_OCR_OPTIONS: OcrPreprocessOptions = { grayscale: 'minChannel' };
  * 截图实测：仙灵卡差 1 以内，其他商店卡片和空格子最少差 23
  */
 const SHOP_FAIRY_COLOR_TOLERANCE = 8;
+
+/** 连胜 / 连败图标里，红蓝通道相差超过这个值的像素才算有颜色（灰色火焰相差 15 左右） */
+const STREAK_COLOR_DIFF = 60;
+
+/** 图标里至少这么多个有颜色的像素，才算连胜 / 连败（实测橙色 70 多个、蓝色 230 多个，灰色 0 个） */
+const STREAK_MIN_COLORED_PIXELS = 25;
 
 /** 装备栏里认不出来的装备的占位名 */
 const UNKNOWN_EQUIP_NAME = "未识别装备";
@@ -268,6 +279,8 @@ class TftOperator {
                 shopSlotNameRegions: shopSlotNameRegionsClockwork,
                 levelRegion: levelRegionClockwork,
                 coinRegion: coinRegionClockwork,
+                streakIconRegion: streakIconRegionClockwork,
+                streakCountRegion: streakCountRegionClockwork,
                 refreshShopPoint: refreshShopPointClockwork,
                 buyExpPoint: buyExpPointClockwork,
                 buyExpIconRegion: buyExpIconRegionClockwork,
@@ -275,7 +288,7 @@ class TftOperator {
                 shopFairyProbeRegion: shopFairyProbeRegionClockwork,
                 equipmentRegion: equipmentRegionClockwork,
             }
-            : { shopSlot, shopSlotNameRegions, levelRegion, coinRegion, refreshShopPoint, buyExpPoint, buyExpIconRegion, heldHintRegion, shopFairyProbeRegion, equipmentRegion };
+            : { shopSlot, shopSlotNameRegions, levelRegion, coinRegion, streakIconRegion, streakCountRegion, refreshShopPoint, buyExpPoint, buyExpIconRegion, heldHintRegion, shopFairyProbeRegion, equipmentRegion };
     }
 
     /** 同步游戏窗口位置的定时器（虚幻客户端窗口可以拖动，需要持续跟随） */
@@ -2358,6 +2371,43 @@ class TftOperator {
         // 5. 选择装备，先固定选中间的装备（选择界面在屏幕中间，不再和商店卡片重合）
         await mouseController.clickAt(forgePickPoint, MouseButtonType.LEFT);
         // TODO: 识别装备并精准选择（根据阵容需求选择最优装备）
+    }
+
+    /**
+     * 识别当前的连胜 / 连败
+     * @description 看金币右边火焰图标的颜色（蓝色连败、橙色连胜、灰色没有），再识别旁边的次数
+     * @returns 认不出来为 null
+     */
+    public async getStreak(): Promise<StreakInfo | null> {
+        this.ensureInitialized();
+
+        const mat = await screenCapture.captureGameRegionAsMat(this.hud.streakIconRegion);
+        let bluePixels = 0;
+        let orangePixels = 0;
+        try {
+            const channels = mat.channels();
+            for (let i = 0; i < mat.data.length; i += channels) {
+                const redMinusBlue = mat.data[i] - mat.data[i + 2];
+                if (redMinusBlue < -STREAK_COLOR_DIFF) bluePixels++;
+                if (redMinusBlue > STREAK_COLOR_DIFF) orangePixels++;
+            }
+        } finally {
+            mat.delete();
+        }
+
+        if (Math.max(bluePixels, orangePixels) < STREAK_MIN_COLORED_PIXELS) {
+            return { type: 'none', count: 0 };
+        }
+
+        const countRegion = screenCapture.toAbsoluteRegion(this.hud.streakCountRegion);
+        const text = await ocrService.recognize(await screenCapture.captureRegionAsPng(countRegion, true), OcrWorkerType.GAME_STAGE);
+        const count = parseInt(text.replace(/\D/g, ""), 10);
+
+        if (Number.isNaN(count)) {
+            logger.warn(`[TftOperator] 连胜 / 连败次数识别失败: "${text.trim()}"`, true);
+            return null;
+        }
+        return { type: bluePixels > orangePixels ? 'loss' : 'win', count };
     }
 
     /**

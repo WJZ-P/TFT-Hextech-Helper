@@ -109,6 +109,19 @@ enum SingleBuyResult {
     FAILED = "FAILED",
 }
 
+/** 连败达到这个次数才会为了止血 D 牌 */
+const LOSS_STREAK_ROLL_MIN_COUNT = 3;
+
+/** 连败时金币超过这个数才会 D 牌 */
+const LOSS_STREAK_ROLL_MIN_GOLD = 50;
+
+/** 连败 D 牌的几种力度，每回合按概率选一种。floor 是最多 D 到剩多少金币 */
+const LOSS_STREAK_ROLL_PLANS = [
+    { probability: 0.6, floor: 50, description: "保住利息" },
+    { probability: 0.3, floor: 30, description: "多 D 一些" },
+    { probability: 0.1, floor: 10, description: "大幅 D 牌" },
+];
+
 /**
  * 策略服务类 (单例)
  * @description 负责根据选中的阵容配置，执行自动下棋的决策逻辑
@@ -166,6 +179,9 @@ export class StrategyService {
      *              - CLOCKWORK_TRAILS：发条鸟模式，执行速通刷经验策略
      */
     private gameMode: TFTMode = TFTMode.NORMAL;
+
+    /** 这一回合因为连败要 D 牌的安排，null 表示不用 */
+    private lossStreakRoll: { stageRound: string; floor: number; reason: string } | null = null;
 
     /**
      * 事件处理器引用（⚠️ 必须缓存同一个函数引用，才能在 unsubscribe 时成功 off）
@@ -2377,6 +2393,7 @@ export class StrategyService {
             await this.optimizeBoard(targetChampions);
 
             // 4. 升级策略 (先决定是否升级，因为升级会消耗大量金币，影响后续 D 牌)
+            await this.planLossStreakRoll();
             await this.executeLevelUpStrategy();
 
             // 5. D 牌前清理：为了防止 D 牌时爆仓，先清理掉无用的杂鱼
@@ -2532,11 +2549,36 @@ export class StrategyService {
     }
 
     /**
+     * 决定这一回合要不要因为连败 D 牌
+     * @description 连败 >= 3 且金币超过 50 时，按概率选一种力度；同一回合只选一次。
+     *              要在升级策略之前调用：卡利息买经验会先把超过 50 的金币花光
+     */
+    private async planLossStreakRoll(): Promise<void> {
+        const stageRound = `${this.currentStage}-${this.currentRound}`;
+        if (this.lossStreakRoll?.stageRound === stageRound) return;
+        this.lossStreakRoll = null;
+
+        const gold = gameStateManager.getGold();
+        if (gold <= LOSS_STREAK_ROLL_MIN_GOLD) return;
+
+        const streak = await tftOperator.getStreak();
+        if (streak?.type !== 'loss' || streak.count < LOSS_STREAK_ROLL_MIN_COUNT) return;
+
+        let remaining = Math.random();
+        const plan = LOSS_STREAK_ROLL_PLANS.find(p => (remaining -= p.probability) < 0) ?? LOSS_STREAK_ROLL_PLANS[0];
+
+        this.lossStreakRoll = { stageRound, floor: plan.floor, reason: `${streak.count} 连败止血（${plan.description}）` };
+        logger.info(
+            `[StrategyService] ${streak.count} 连败，金币 ${gold}：${plan.description}，最多 D 到剩 ${plan.floor} 金币，这回合不卡利息买经验`
+        );
+    }
+
+    /**
      * 升级策略 (F键)
      * @description 决定是否购买经验值
      *              策略优先级：
      *              1. 关键回合抢人口 (2-1升4, 2-5升5, 3-2升6, 4-1升7, 5-1升8) - 无视利息强制升
-     *              2. 卡利息买经验 - 只要金币 > 50，就一直买经验直到剩余金币 < 50
+     *              2. 卡利息买经验 - 只要金币 > 50，就一直买经验直到剩余金币 < 50（连败要 D 牌的回合不买，钱留给 D 牌）
      */
     private async executeLevelUpStrategy(): Promise<void> {
         // 安全保护：在真正开始按 F 买经验之前，先从屏幕刷新一次等级/经验。
@@ -2579,6 +2621,9 @@ export class StrategyService {
             }
             return;
         }
+
+        // 连败要 D 牌的回合，超过 50 的金币留给 D 牌
+        if (this.lossStreakRoll) return;
 
         // 2. 卡利息买经验 - 只要金币 > 50，就一直买经验直到剩余金币 < 50
         // 计算可以买多少次经验（保持 50 利息）
@@ -2647,6 +2692,11 @@ export class StrategyService {
         // 注意：备战席满导致的无法购买不计入空转次数，会直接退出循环
         const maxConsecutiveNoBuyRolls = 10;
         let consecutiveNoBuyRolls = 0;
+
+        // 关键回合拉人口会先花钱，花完不超过 50 就不再因为连败 D 牌
+        if (gameStateManager.getGold() <= LOSS_STREAK_ROLL_MIN_GOLD) {
+            this.lossStreakRoll = null;
+        }
 
         while (rollCount < maxRolls) {
             // 1. 判断是否需要/可以 D 牌
@@ -2738,7 +2788,7 @@ export class StrategyService {
             reason = "决赛圈（强度优先，允许打干）";
         }
 
-        if (!shouldRollThisRound) {
+        if (!shouldRollThisRound && !this.lossStreakRoll) {
             return false;
         }
 
@@ -2751,9 +2801,15 @@ export class StrategyService {
             }
         }
 
-        if (pairCount >= 2) {
+        if (shouldRollThisRound && pairCount >= 2) {
             threshold = Math.max(0, threshold - 10);
             reason += ` + 对子(${pairCount})`;
+        }
+
+        // 连败止血：不是关键节点就按连败的力度来，是关键节点就取两者中更激进的
+        if (this.lossStreakRoll) {
+            threshold = shouldRollThisRound ? Math.min(threshold, this.lossStreakRoll.floor) : this.lossStreakRoll.floor;
+            reason = reason ? `${reason} + ${this.lossStreakRoll.reason}` : this.lossStreakRoll.reason;
         }
 
         const currentGold = gameStateManager.getGold();
@@ -3822,6 +3878,7 @@ export class StrategyService {
 
         // 重置游戏模式为默认值
         this.gameMode = TFTMode.NORMAL;
+        this.lossStreakRoll = null;
 
         // 同时重置 GameStateManager
         gameStateManager.reset();

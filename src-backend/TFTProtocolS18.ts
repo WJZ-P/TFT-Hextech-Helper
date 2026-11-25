@@ -67,6 +67,18 @@ export const coinRegion = {
 }
 export const coinRegionClockwork = shiftRegionX(coinRegion, CLOCKWORK_HUD_OFFSET_X);
 
+//  金币右边的连胜 / 连败：火焰图标（蓝色是连败，橙色是连胜，灰色是没有），右边是次数
+export const streakIconRegion = {
+    leftTop: { x: 735, y: 585 },
+    rightBottom: { x: 753, y: 603 }
+}
+export const streakCountRegion = {
+    leftTop: { x: 758, y: 585 },
+    rightBottom: { x: 784, y: 604 }
+}
+export const streakIconRegionClockwork = shiftRegionX(streakIconRegion, CLOCKWORK_HUD_OFFSET_X);
+export const streakCountRegionClockwork = shiftRegionX(streakCountRegion, CLOCKWORK_HUD_OFFSET_X);
+
 //  购买经验 Point（"购买经验值"按钮，x 232-355, y 620-662）
 export const buyExpPoint = { x: 293, y: 641 }
 //  "购买经验值"按钮右边的箭头图标。拿起备战席上的东西时商店会变成出售提示，这里变成纯色底

@@ -70,6 +70,14 @@ export interface IdentifiedEquip extends TFTEquip {
     category: string;
 }
 
+/** 连胜 / 连败 */
+export interface StreakInfo {
+    /** win 连胜，loss 连败，none 都不是 */
+    type: 'win' | 'loss' | 'none';
+    /** 连胜 / 连败的次数 */
+    count: number;
+}
+
 /** 调试面板"随机穿装备"的结果 */
 export interface DebugEquipResult {
     /** 棋盘上识别到的棋子 */
