@@ -860,7 +860,6 @@ const SettingsPage = () => {
             <TipsCard>
                 <ul>
                     <li><strong>游戏语言必须设置为中文</strong>，否则无法正确识别棋子</li>
-                    <li><strong>推荐使用默认棋盘皮肤</strong>，已针对默认棋盘优化，能加快棋子识别速度</li>
                 </ul>
             </TipsCard>
 
