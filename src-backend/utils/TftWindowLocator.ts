@@ -15,7 +15,7 @@
  */
 
 import { execFile } from "child_process";
-import { getWindows, getActiveWindow, Region, Size } from "@nut-tree-fork/nut-js";
+import { getWindows, getActiveWindow, providerRegistry, Region, Size } from "@nut-tree-fork/nut-js";
 import { logger } from "./Logger";
 import { sleep } from "./HelperTools";
 
@@ -64,7 +64,7 @@ export interface ScreenRect {
  * 客户区度量信息（全部是物理像素），只和窗口尺寸有关
  */
 interface ClientMetrics {
-    /** 窗口矩形尺寸（GetWindowRect，含标题栏和不可见边框），用作缓存键 */
+    /** 窗口矩形尺寸（GetWindowRect，含标题栏和不可见边框） */
     windowWidth: number;
     windowHeight: number;
     /** 客户区左上角相对窗口矩形左上角的偏移 */
@@ -112,8 +112,11 @@ class TftWindowLocator {
     /** 缓存的 TFT 窗口对象（窗口关闭或标题变化时重新查找） */
     private cachedWindow: NutWindow | null = null;
 
-    /** 缓存的客户区度量信息（窗口尺寸变化时失效） */
-    private cachedMetrics: ClientMetrics | null = null;
+    /** 缓存的客户区度量信息，以及查询时的窗口尺寸（尺寸变化时失效） */
+    private cachedMetrics: { windowWidth: number; windowHeight: number; metrics: ClientMetrics } | null = null;
+
+    /** 正在进行的客户区查询，避免同时启动多个 PowerShell */
+    private pendingMetrics: Promise<ClientMetrics> | null = null;
 
     /** 挂机开始前用户原来的窗口尺寸（调整过窗口大小时才有值），结束时用来还原 */
     private savedWindowSize: { width: number; height: number } | null = null;
@@ -294,9 +297,15 @@ class TftWindowLocator {
         return metrics.offsetX !== 0 || metrics.offsetY !== 0;
     }
 
-    /** 读取窗口矩形，窗口最小化时抛出错误 */
+    /**
+     * 读取窗口矩形，窗口最小化时抛出错误
+     * @description 不能用 window.region：nut-js 会把矩形裁到屏幕范围内。窗口贴着屏幕边缘时（窗口化的窗口
+     *              四周有 8px 左右的不可见边框，很容易超出屏幕），左上角和尺寸都会偏，
+     *              导致截图、点击整体错位，客户区缓存也会一直失效。这里直接读未裁剪的原始矩形
+     */
     private async readWindowRegion(window: NutWindow): Promise<Region> {
-        const region = await window.region;
+        const { windowHandle } = window as unknown as { windowHandle: number };
+        const region = await providerRegistry.getWindow().getWindowRegion(windowHandle);
         if (region.left <= MINIMIZED_COORD || region.width <= 0 || region.height <= 0) {
             throw new Error('TFT 窗口已最小化，请先还原窗口');
         }
@@ -310,13 +319,18 @@ class TftWindowLocator {
     private async getClientMetrics(windowWidth: number, windowHeight: number): Promise<ClientMetrics> {
         const cached = this.cachedMetrics;
         if (cached && cached.windowWidth === windowWidth && cached.windowHeight === windowHeight) {
-            return cached;
+            return cached.metrics;
         }
-        const metrics = await this.queryClientMetrics();
+
+        this.pendingMetrics ??= this.queryClientMetrics().finally(() => {
+            this.pendingMetrics = null;
+        });
+        const metrics = await this.pendingMetrics;
         if (metrics.windowWidth !== windowWidth || metrics.windowHeight !== windowHeight) {
             logger.warn(`[TftWindowLocator] 窗口尺寸不一致 (nut-js ${windowWidth}x${windowHeight}, Win32 ${metrics.windowWidth}x${metrics.windowHeight})，可能正在调整窗口大小`);
         }
-        this.cachedMetrics = metrics;
+        // 以查询时读到的窗口尺寸为键：查询期间窗口又变了的话，下次读到新尺寸会重新查
+        this.cachedMetrics = { windowWidth, windowHeight, metrics };
         return metrics;
     }
 
