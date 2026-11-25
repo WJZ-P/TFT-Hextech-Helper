@@ -33,8 +33,8 @@ export interface GameStageResult {
 
 export enum TFTMode {
     CLASSIC = 'CLASSIC',    //  经典模式，包括匹配和排位。
-    NORMAL = 'NORMAL',      //  主赛季匹配模式（队列 1090，当前为「自然之力」BETA，尚未适配）
-    RANK = 'RANK',          //  主赛季排位模式（队列 1100，当前为「自然之力」BETA，尚未适配）
+    NORMAL = 'NORMAL',      //  主赛季匹配模式（队列 1090，当前为「自然之力」BETA）
+    RANK = 'RANK',          //  主赛季排位模式（队列 1100，当前为「自然之力」BETA）
     CLOCKWORK_TRAILS = 'CLOCKWORK_TRAILS',       //  PVE，发条鸟的试炼
     S4_RUISHOU = 'S4_RUISHOU',                   //  S4 回归赛季: 瑞兽闹新春（仅匹配，已下线）
 }
