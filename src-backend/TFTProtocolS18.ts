@@ -10,7 +10,7 @@
  *
  * 布局差异：
  *   常规模式和发条鸟模式的底部 HUD（等级、金币、商店、升级/刷新按钮）位置不同，发条鸟整体左移 69px，
- *   这些点位提供了 xxx（常规）和 xxxClockwork（发条鸟）两套；棋盘、备战席、装备栏两种模式相同。
+ *   这些点位提供了 xxx（常规）和 xxxClockwork（发条鸟）两套；左侧装备栏发条鸟偏左 3px；棋盘、备战席两种模式相同。
  *
  * 不需要的点位：发条鸟阵亡后的"现在退出"按钮（打完会自动回到主菜单）
  */
@@ -25,6 +25,9 @@ interface SimpleRegion {
 
 /** 发条鸟模式底部 HUD 相对常规模式的水平偏移 */
 const CLOCKWORK_HUD_OFFSET_X = -69;
+
+/** 发条鸟模式左侧装备栏相对常规模式的水平偏移（格子边框 x：常规 7-35，发条鸟 4-33） */
+const CLOCKWORK_EQUIP_OFFSET_X = -3;
 
 function shiftPointX<T extends Record<string, SimplePoint>>(points: T, dx: number): T {
     return Object.fromEntries(
@@ -85,6 +88,16 @@ export const shopSlot = {
     SHOP_SLOT_5: { x: 968, y: 656 },
 }
 export const shopSlotClockwork = shiftPointX(shopSlot, CLOCKWORK_HUD_OFFSET_X);
+
+//  自然仙灵卡（商店最右边隔一次刷新出现一次的特殊卡，如"学徒""抛硬币"）的底色探测区域：
+//  第 5 格名字栏里名字和价格之间的空白处。仙灵卡的底色固定，和各费用的卡、空格子都不同，比认名字快也更可靠
+export const shopFairyProbeRegion = {
+    leftTop: { x: 976, y: 706 },
+    rightBottom: { x: 998, y: 714 },
+};
+export const shopFairyProbeRegionClockwork = shiftRegionX(shopFairyProbeRegion, CLOCKWORK_HUD_OFFSET_X);
+//  仙灵卡名字栏的底色 (RGB)
+export const SHOP_FAIRY_COLOR = [21, 26, 13] as const;
 
 //  商店卡片底部的英雄名字 region（名字栏 y 694-716，文字从卡片左边 +5 开始、y 698-709，右侧 +106 起是价格）
 //  宽 96 高 16，与 detailChampionNameRegion 尺寸相同，两处共用一套名字模板
@@ -203,6 +216,7 @@ export const equipmentRegion = {
         rightBottom: { x: 34, y: 524 }
     },
 }
+export const equipmentRegionClockwork = shiftRegionsX(equipmentRegion, CLOCKWORK_EQUIP_OFFSET_X);
 
 // ============================================================================
 // 棋盘（4 行 x 7 列六边形，R1 是离自己最远的一行；透视下越往下格子越大）

@@ -42,6 +42,7 @@ import {
     detailChampionStarRegion,
     detailEquipRegion,
     equipmentRegion,
+    equipmentRegionClockwork,
     equipmentSlot,
     fightBoardSlotPoint,
     fightBoardSlotRegion,
@@ -68,9 +69,12 @@ import {
     forgePickPoint,
     exitGameButtonPoint,
     exitGameButtonRegion,
+    shopFairyProbeRegion,
+    shopFairyProbeRegionClockwork,
+    SHOP_FAIRY_COLOR,
 } from "./TFTProtocolS18";
 // 赛季数据通过统一管理接口访问
-import { getCurrentChessData, getChessDataByMode } from "./TFTInfo/SeasonRegistry";
+import { getCurrentChessData, getChessDataByMode, getSeasonTemplateDirByMode } from "./TFTInfo/SeasonRegistry";
 
 
 
@@ -106,6 +110,12 @@ const LEVEL_OCR_OPTIONS: OcrPreprocessOptions = { threshold: 120 };
 
 /** 金币 OCR 预处理：用 RGB 最小值灰度去掉左侧的金币图标（S18 截图实测三个样本全部正确） */
 const COIN_OCR_OPTIONS: OcrPreprocessOptions = { grayscale: 'minChannel' };
+
+/**
+ * 自然仙灵卡底色的容差（每个通道的最大差值）
+ * 截图实测：仙灵卡差 1 以内，其他商店卡片和空格子最少差 23
+ */
+const SHOP_FAIRY_COLOR_TOLERANCE = 8;
 
 /** 装备栏里认不出来的装备的占位名 */
 const UNKNOWN_EQUIP_NAME = "未识别装备";
@@ -182,8 +192,8 @@ class TftOperator {
     }
 
     /**
-     * 当前模式的底部 HUD 点位
-     * @description 发条鸟模式的商店、等级、金币、升级/刷新按钮整体左移 69px，其余模式用常规布局
+     * 当前模式的 HUD 点位
+     * @description 发条鸟模式的商店、等级、金币、升级/刷新按钮整体左移 69px，装备栏左移 3px，其余模式用常规布局
      */
     private get hud() {
         const isClockwork = settingsStore.get('tftMode') === TFTMode.CLOCKWORK_TRAILS;
@@ -195,8 +205,10 @@ class TftOperator {
                 coinRegion: coinRegionClockwork,
                 refreshShopPoint: refreshShopPointClockwork,
                 buyExpPoint: buyExpPointClockwork,
+                shopFairyProbeRegion: shopFairyProbeRegionClockwork,
+                equipmentRegion: equipmentRegionClockwork,
             }
-            : { shopSlot, shopSlotNameRegions, levelRegion, coinRegion, refreshShopPoint, buyExpPoint };
+            : { shopSlot, shopSlotNameRegions, levelRegion, coinRegion, refreshShopPoint, buyExpPoint, shopFairyProbeRegion, equipmentRegion };
     }
 
     /** 同步游戏窗口位置的定时器（虚幻客户端窗口可以拖动，需要持续跟随） */
@@ -234,12 +246,17 @@ class TftOperator {
         return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/starLevel");
     }
 
+    /** 当前模式对应的赛季模板目录名（如 s18），空槽位模板按赛季存放 */
+    private get seasonTemplateDir(): string {
+        return getSeasonTemplateDirByMode(settingsStore.get('tftMode') as TFTMode || TFTMode.NORMAL);
+    }
+
     private get benchSlotSnapshotPath(): string {
-        return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/benchSlot");
+        return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/benchSlot", this.seasonTemplateDir);
     }
 
     private get fightBoardSlotSnapshotPath(): string {
-        return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/fightBoardSlot");
+        return path.join(process.env.VITE_PUBLIC || ".", "resources/assets/images/fightBoardSlot", this.seasonTemplateDir);
     }
 
 
@@ -351,6 +368,30 @@ class TftOperator {
     }
 
     /**
+     * 为调试面板做准备：定位游戏窗口、切到前台、加载当前模式的识别资源
+     * @description 挂机时这些由 GameLoadingState / GameRunningState 完成，调试时可能还没开过挂机
+     * @throws 找不到窗口、窗口尺寸不对或模板没加载完时抛出错误，错误信息会直接显示给用户
+     */
+    public async prepareForDebug(): Promise<void> {
+        const rect = await this.syncWindowOrigin();
+        if (rect.width !== GAME_WIDTH || rect.height !== GAME_HEIGHT) {
+            throw new Error(
+                `游戏画面是 ${rect.width}x${rect.height}，识别点位按 ${GAME_WIDTH}x${GAME_HEIGHT} 设置，请先把云顶之弈调成这个尺寸的窗口化（开启挂机时会自动调整）`
+            );
+        }
+        if (!templateLoader.isReady()) {
+            throw new Error("识别模板还在加载，请稍后再试");
+        }
+
+        const mode = settingsStore.get('tftMode') as TFTMode || TFTMode.NORMAL;
+        await templateLoader.switchSeason(getSeasonTemplateDirByMode(mode));
+        await ocrService.switchChessWorker(mode);
+
+        // 截的是屏幕像素，游戏窗口必须在最前面
+        await tftWindowLocator.ensureForeground();
+    }
+
+    /**
      * 获取当前游戏阶段
      * @description 通过 OCR 识别游戏阶段 (如 "2-1", "3-5")
      *              根据用户设置的游戏模式，直接读取对应区域，避免逐个试错
@@ -440,6 +481,13 @@ class TftOperator {
         const chessData = this.getActiveChessData();
 
         for (let i = 1; i <= 5; i++) {
+            // 最右边可能是自然仙灵卡，不是棋子，直接跳过
+            if (i === 5 && (await this.isShopFairyCard())) {
+                logger.debug(`[商店槽位 ${i}] 自然仙灵卡，跳过`);
+                shopUnits.push(null);
+                continue;
+            }
+
             const slotKey = `SLOT_${i}` as keyof typeof shopSlotNameRegions;
             const region = screenCapture.toAbsoluteRegion(this.hud.shopSlotNameRegions[slotKey]);
 
@@ -483,6 +531,21 @@ class TftOperator {
     }
 
     /**
+     * 商店最右边一格是不是自然仙灵卡
+     * @description 看名字栏的底色。不靠"认不出名字"来推断：仙灵卡的名字可能凑巧和某个棋子的模板比较像
+     *              （实测"抛硬币"对"奥恩"有 0.35 分，阈值是 0.40），而真正的棋子也有认不出来的时候
+     */
+    private async isShopFairyCard(): Promise<boolean> {
+        const mat = await screenCapture.captureGameRegionAsMat(this.hud.shopFairyProbeRegion);
+        try {
+            const mean = cv.mean(mat); // [R, G, B, _]
+            return SHOP_FAIRY_COLOR.every((value, channel) => Math.abs(mean[channel] - value) <= SHOP_FAIRY_COLOR_TOLERANCE);
+        } finally {
+            mat.delete();
+        }
+    }
+
+    /**
      * 获取当前装备栏信息
      * @description 扫描装备栏所有槽位，通过模板匹配识别装备
      * @returns 识别到的装备数组
@@ -501,7 +564,7 @@ class TftOperator {
         const resultEquips: IdentifiedEquip[] = [];
         logger.info("[TftOperator] 开始扫描装备栏...");
 
-        for (const [slotName, regionDef] of Object.entries(equipmentRegion)) {
+        for (const [slotName, regionDef] of Object.entries(this.hud.equipmentRegion)) {
             const targetRegion = new Region(
                 this.gameWindowRegion.x + regionDef.leftTop.x,
                 this.gameWindowRegion.y + regionDef.leftTop.y,
@@ -1577,9 +1640,12 @@ class TftOperator {
      * - "4/6" → "416" 或 "476" 或 "406"
      * - "16/76" → "16176" 或 "16776" 或 "16076"
      * 
+     * "/" 也可能整个丢失：
+     * - "0/10" → "010"
+     *
      * 修复策略：
      * 1. 匹配 "X级 数字串" 格式
-     * 2. 遍历数字串的所有可能切分点（"1" 或 "7" 的位置）
+     * 2. 先假设 "/" 被误识别，遍历数字串里可能是 "/" 的字符；都不合法再假设 "/" 丢失，遍历所有切分位置
      * 3. 检查切分后的 currentXp 和 totalXp 是否符合规则
      */
     private tryFixMisrecognizedXp(text: string): { level: number; currentXp: number; totalXp: number } | null {
@@ -1597,39 +1663,43 @@ class TftOperator {
         const level = parseInt(match[1], 10);
         const xpDigits = match[2]; // 例如 "416" 或 "576"
 
-        // 遍历所有可能的切分点
-        for (let i = 1; i < xpDigits.length; i++) {
-            // 检查切分点是否是可能被误识别的字符（"1" 或 "7"）
-            if (!SLASH_MISRECOGNIZED_CHARS.includes(xpDigits[i])) continue;
-
-            const currentXpStr = xpDigits.substring(0, i);
-            const totalXpStr = xpDigits.substring(i + 1);
-
+        // 校验切分结果，不合法返回 null
+        const parseXp = (currentXpStr: string, totalXpStr: string) => {
             // 跳过空字符串或以 0 开头的多位数（如 "06"）
-            if (!currentXpStr || !totalXpStr) continue;
-            if (currentXpStr.length > 1 && currentXpStr[0] === '0') continue;
-            if (totalXpStr.length > 1 && totalXpStr[0] === '0') continue;
+            if (!currentXpStr || !totalXpStr) return null;
+            if (currentXpStr.length > 1 && currentXpStr[0] === '0') return null;
+            if (totalXpStr.length > 1 && totalXpStr[0] === '0') return null;
 
             const currentXp = parseInt(currentXpStr, 10);
             const totalXp = parseInt(totalXpStr, 10);
 
-            // 验证规则：
-            // 1. totalXp 必须是合法值（这是最严格的约束）
-            // 2. currentXp < totalXp（当前经验不能超过升级所需）
-            // 3. currentXp >= 0（当前经验不能为负）
-            // 4. currentXp 和 totalXp 都最多两位数
-            if (
-                VALID_TOTAL_XP.has(totalXp) &&
-                currentXp >= 0 &&
-                currentXp < totalXp &&
-                currentXp <= 99 &&
-                totalXp <= 99
-            ) {
+            // totalXp 必须是合法值（这是最严格的约束），且当前经验不能超过升级所需
+            if (!VALID_TOTAL_XP.has(totalXp) || currentXp >= totalXp) return null;
+            return { level, currentXp, totalXp };
+        };
+
+        // 1. "/" 被误识别成了别的字符
+        for (let i = 1; i < xpDigits.length; i++) {
+            if (!SLASH_MISRECOGNIZED_CHARS.includes(xpDigits[i])) continue;
+
+            const result = parseXp(xpDigits.substring(0, i), xpDigits.substring(i + 1));
+            if (result) {
                 logger.debug(
-                    `[TftOperator] 兜底修复: "${xpDigits}" → "${currentXp}/${totalXp}" ` +
+                    `[TftOperator] 兜底修复: "${xpDigits}" → "${result.currentXp}/${result.totalXp}" ` +
                     `(在位置 ${i} 处将 "${xpDigits[i]}" 还原为 "/")`
                 );
-                return { level, currentXp, totalXp };
+                return result;
+            }
+        }
+
+        // 2. "/" 整个丢失
+        for (let i = 1; i < xpDigits.length; i++) {
+            const result = parseXp(xpDigits.substring(0, i), xpDigits.substring(i));
+            if (result) {
+                logger.debug(
+                    `[TftOperator] 兜底修复: "${xpDigits}" → "${result.currentXp}/${result.totalXp}" (在位置 ${i} 处补上 "/")`
+                );
+                return result;
             }
         }
 
