@@ -101,9 +101,6 @@ TFT Hextech Helper 是一款基于 Electron + React + TypeScript 开发的云顶
 - **安装版** (.exe setup) - 不推荐，走正常软件安装流程，会留注册表
 - **便携版** (.zip) - 推荐，解压即用，无需安装
 
-**或点击右侧高速下载**：[TFT-Hextech-Helper-1.0.0-win.zip](https://static1.keepcdn.com/user-avatar/2026/01/17/22/6943f6affbbe480001c744e2/ciallo/82672950ad9b996250910d6919e85631_TFT-Hextech-Helper-1.0.0-win.zip)
-
-
 ### 2. 启动软件
 
 > ⚠️ **重要**：本软件需要**以管理员身份运行**才能正常工作！目前只支持Windows系统运行。
