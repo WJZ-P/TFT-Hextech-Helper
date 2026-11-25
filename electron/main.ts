@@ -760,19 +760,35 @@ function registerHandler() {
     ipcMain.handle(IpcChannel.HEX_STOP, async (event) => hexService.stop())
     ipcMain.handle(IpcChannel.HEX_GET_STATUS, async (event) => hexService.isRunning)
     //  TFT相关操作
-    ipcMain.handle(IpcChannel.TFT_BUY_AT_SLOT, async (event, slot: number) => tftOperator.buyAtSlot(slot))
-    ipcMain.handle(IpcChannel.TFT_GET_SHOP_INFO, async (event) => tftOperator.getShopInfo())
-    ipcMain.handle(IpcChannel.TFT_GET_EQUIP_INFO, async (event) => tftOperator.getEquipInfo())
-    ipcMain.handle(IpcChannel.TFT_GET_BENCH_INFO, async (event) => tftOperator.getBenchInfo())
-    ipcMain.handle(IpcChannel.TFT_GET_FIGHT_BOARD_INFO, async (event) => tftOperator.getFightBoardInfo())
-    ipcMain.handle(IpcChannel.TFT_GET_LEVEL_INFO, async (event) => tftOperator.getLevelInfo())
-    ipcMain.handle(IpcChannel.TFT_GET_COIN_COUNT, async (event) => tftOperator.getCoinCount())
-    ipcMain.handle(IpcChannel.TFT_GET_LOOT_ORBS, async (event) => tftOperator.getLootOrbs())
-    ipcMain.handle(IpcChannel.TFT_GET_STAGE_INFO, async (event) => tftOperator.getGameStage())
-    ipcMain.handle(IpcChannel.TFT_SAVE_STAGE_SNAPSHOTS, async (event) => tftOperator.saveStageSnapshots())
-    ipcMain.handle(IpcChannel.TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT, async (event) => tftOperator.saveBenchSlotSnapshots())
-    ipcMain.handle(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT, async (event) => tftOperator.saveFightBoardSlotSnapshots())
-    ipcMain.handle(IpcChannel.TFT_TEST_SAVE_QUIT_BUTTON_SNAPSHOT, async (event) => tftOperator.saveQuitButtonSnapshot())
+    /**
+     * 调试面板直接调用 TftOperator 的入口
+     * 截图截的是屏幕像素，点击也落在屏幕上，所以先定位游戏窗口并切到前台，做完再切回本软件方便看结果
+     */
+    const withTftWindow = async <T>(action: () => Promise<T>): Promise<T> => {
+        await tftOperator.prepareForDebug();
+        try {
+            return await action();
+        } finally {
+            // 挂机中要让游戏保持在前台
+            if (!hexService.isRunning) {
+                win?.moveTop();
+                win?.focus();
+            }
+        }
+    };
+    ipcMain.handle(IpcChannel.TFT_BUY_AT_SLOT, async (event, slot: number) => withTftWindow(() => tftOperator.buyAtSlot(slot)))
+    ipcMain.handle(IpcChannel.TFT_GET_SHOP_INFO, async (event) => withTftWindow(() => tftOperator.getShopInfo()))
+    ipcMain.handle(IpcChannel.TFT_GET_EQUIP_INFO, async (event) => withTftWindow(() => tftOperator.getEquipInfo()))
+    ipcMain.handle(IpcChannel.TFT_GET_BENCH_INFO, async (event) => withTftWindow(() => tftOperator.getBenchInfo()))
+    ipcMain.handle(IpcChannel.TFT_GET_FIGHT_BOARD_INFO, async (event) => withTftWindow(() => tftOperator.getFightBoardInfo()))
+    ipcMain.handle(IpcChannel.TFT_GET_LEVEL_INFO, async (event) => withTftWindow(() => tftOperator.getLevelInfo()))
+    ipcMain.handle(IpcChannel.TFT_GET_COIN_COUNT, async (event) => withTftWindow(() => tftOperator.getCoinCount()))
+    ipcMain.handle(IpcChannel.TFT_GET_LOOT_ORBS, async (event) => withTftWindow(() => tftOperator.getLootOrbs()))
+    ipcMain.handle(IpcChannel.TFT_GET_STAGE_INFO, async (event) => withTftWindow(() => tftOperator.getGameStage()))
+    ipcMain.handle(IpcChannel.TFT_SAVE_STAGE_SNAPSHOTS, async (event) => withTftWindow(() => tftOperator.saveStageSnapshots()))
+    ipcMain.handle(IpcChannel.TFT_TEST_SAVE_BENCH_SLOT_SNAPSHOT, async (event) => withTftWindow(() => tftOperator.saveBenchSlotSnapshots()))
+    ipcMain.handle(IpcChannel.TFT_TEST_SAVE_FIGHT_BOARD_SLOT_SNAPSHOT, async (event) => withTftWindow(() => tftOperator.saveFightBoardSlotSnapshots()))
+    ipcMain.handle(IpcChannel.TFT_TEST_SAVE_QUIT_BUTTON_SNAPSHOT, async (event) => withTftWindow(() => tftOperator.saveQuitButtonSnapshot()))
     
     // 阵容相关
     ipcMain.handle(IpcChannel.LINEUP_GET_ALL, async (_event, season?: string) => {

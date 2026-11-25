@@ -94,6 +94,7 @@ const ToastBody = styled.div`
   flex-direction: column;
   gap: 0.7rem;
   line-height: 1.5;
+  white-space: pre-line;
 `;
 
 const ToastActions = styled.div`

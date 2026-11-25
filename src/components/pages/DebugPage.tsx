@@ -138,6 +138,67 @@ const formatResult = (data: any, maxLength: number = 2000): string => {
     }
 };
 
+/** 去掉 Electron 给 IPC 错误加的前缀，只留原因 */
+const getErrorMessage = (error: any): string =>
+    String(error?.message ?? error).replace(/^Error invoking remote method '[^']+': (Error: )?/, '');
+
+/** 识别结果通常有好几行，留在屏幕上直到点确认 */
+const showResult = (label: string, lines: string[]) => {
+    toast([`【${label}】`, ...lines].join('\n'), {
+        type: 'success',
+        persistent: true,
+        actions: [{ label: '确认', primary: true }],
+    });
+};
+
+/** 商店：固定 5 格 */
+const formatShop = (units: any[]): string[] =>
+    units.map((unit, i) => `${i + 1}. ${unit ? `${unit.displayName}（${unit.price} 费）` : '无（空格、自然仙灵或未识别）'}`);
+
+/** 备战席 / 棋盘：只列出有棋子的格子 */
+const formatUnits = (units: any[]): string[] => {
+    const found = units.filter(Boolean);
+    if (found.length === 0) return ['没有识别到棋子'];
+    return found.map(unit => {
+        const star = unit.starLevel > 0 ? ` ${unit.starLevel}星` : '';
+        const equips = unit.equips?.length ? `：${unit.equips.map((e: any) => e.name).join('、')}` : '';
+        return `${unit.location} ${unit.tftUnit.displayName}${star}${equips}`;
+    });
+};
+
+const formatEquips = (equips: any[]): string[] =>
+    equips.length === 0 ? ['装备栏为空'] : equips.map(e => `${e.slot} ${e.name}（${Math.round(e.confidence * 100)}%）`);
+
+const formatLootOrbs = (orbs: any[]): string[] =>
+    orbs.length === 0 ? ['没有检测到战利品球'] : orbs.map(o => `${o.type} (${o.x}, ${o.y})（${Math.round(o.confidence * 100)}%）`);
+
+/**
+ * TFT 识别类按钮的点击处理：执行识别，把结果整理成多行文字显示
+ */
+const handleRecognize = async <T,>(label: string, asyncFn: () => Promise<T>, format: (result: T) => string[]) => {
+    try {
+        const result = await asyncFn();
+        console.log(`[${label}]`, result);
+        showResult(label, format(result));
+    } catch (e: any) {
+        console.error(`[${label}] 错误:`, e);
+        toast.error(`${label}失败: ${getErrorMessage(e)}`);
+    }
+};
+
+/**
+ * TFT 操作类按钮的点击处理：执行操作，成功后提示一句
+ */
+const handleTftAction = async (asyncFn: () => Promise<any>, successMessage: string) => {
+    try {
+        await asyncFn();
+        toast.success(successMessage);
+    } catch (e: any) {
+        console.error('[调试操作] 错误:', e);
+        toast.error(getErrorMessage(e));
+    }
+};
+
 /**
  * 通用的调试按钮点击处理函数
  * @param label 按钮标签（用于日志和提示）
@@ -159,7 +220,7 @@ const handleDebugClick = async (label: string, asyncFn: () => Promise<any>) => {
         toast.success(`${label}: ${formatResult(displayData)}`);
     } catch (e: any) {
         console.error(`[${label}] 错误:`, e);
-        toast.error(`${label} 失败: ${e.message}`);
+        toast.error(`${label} 失败: ${getErrorMessage(e)}`);
     }
 };
 
@@ -346,32 +407,27 @@ const DebugPage = () => {
             <SectionHeader>🛒 TFT 商店</SectionHeader>
             <Card>
                 <ButtonGrid>
-                    <DebugButton $variant="primary" onClick={() => {
-                        window.tft.buyAtSlot(1);
-                        toast.success('已点击槽位 1');
-                    }}>购买槽位 1</DebugButton>
+                    <DebugButton $variant="primary" onClick={() => handleTftAction(() => window.tft.buyAtSlot(1), '已点击槽位 1')}>
+                        购买槽位 1
+                    </DebugButton>
                     
-                    <DebugButton $variant="primary" onClick={() => {
-                        window.tft.buyAtSlot(2);
-                        toast.success('已点击槽位 2');
-                    }}>购买槽位 2</DebugButton>
+                    <DebugButton $variant="primary" onClick={() => handleTftAction(() => window.tft.buyAtSlot(2), '已点击槽位 2')}>
+                        购买槽位 2
+                    </DebugButton>
                     
-                    <DebugButton $variant="primary" onClick={() => {
-                        window.tft.buyAtSlot(3);
-                        toast.success('已点击槽位 3');
-                    }}>购买槽位 3</DebugButton>
+                    <DebugButton $variant="primary" onClick={() => handleTftAction(() => window.tft.buyAtSlot(3), '已点击槽位 3')}>
+                        购买槽位 3
+                    </DebugButton>
                     
-                    <DebugButton $variant="primary" onClick={() => {
-                        window.tft.buyAtSlot(4);
-                        toast.success('已点击槽位 4');
-                    }}>购买槽位 4</DebugButton>
+                    <DebugButton $variant="primary" onClick={() => handleTftAction(() => window.tft.buyAtSlot(4), '已点击槽位 4')}>
+                        购买槽位 4
+                    </DebugButton>
                     
-                    <DebugButton $variant="primary" onClick={() => {
-                        window.tft.buyAtSlot(5);
-                        toast.success('已点击槽位 5');
-                    }}>购买槽位 5</DebugButton>
+                    <DebugButton $variant="primary" onClick={() => handleTftAction(() => window.tft.buyAtSlot(5), '已点击槽位 5')}>
+                        购买槽位 5
+                    </DebugButton>
                     
-                    <DebugButton onClick={() => handleDebugClick('商店信息', window.tft.getShopInfo)}>
+                    <DebugButton onClick={() => handleRecognize('商店信息', window.tft.getShopInfo, formatShop)}>
                         查看商店信息
                     </DebugButton>
                 </ButtonGrid>
@@ -391,19 +447,19 @@ const DebugPage = () => {
                                 toast.warning('未检测到阶段信息');
                             }
                         } catch (e: any) {
-                            toast.error(`获取阶段失败: ${e.message}`);
+                            toast.error(`获取阶段失败: ${getErrorMessage(e)}`);
                         }
                     }}>当前阶段</DebugButton>
                     
-                    <DebugButton onClick={() => handleDebugClick('备战席信息', window.tft.getBenchInfo)}>
+                    <DebugButton onClick={() => handleRecognize('备战席信息', window.tft.getBenchInfo, formatUnits)}>
                         备战席信息
                     </DebugButton>
                     
-                    <DebugButton onClick={() => handleDebugClick('棋盘信息', window.tft.getFightBoardInfo)}>
+                    <DebugButton onClick={() => handleRecognize('棋盘信息', window.tft.getFightBoardInfo, formatUnits)}>
                         棋盘信息
                     </DebugButton>
                     
-                    <DebugButton onClick={() => handleDebugClick('装备信息', window.tft.getEquipInfo)}>
+                    <DebugButton onClick={() => handleRecognize('装备信息', window.tft.getEquipInfo, formatEquips)}>
                         装备信息
                     </DebugButton>
                     
@@ -412,12 +468,12 @@ const DebugPage = () => {
                             const result = await window.tft.getLevelInfo();
                             console.log('[等级信息]', result);
                             if (result && result.level !== undefined) {
-                                toast.success(`等级: ${result.level}, 经验: ${result.exp || 0}/${result.expToNextLevel || '?'}`);
+                                toast.success(`等级: ${result.level}, 经验: ${result.currentXp}/${result.totalXp}`);
                             } else {
                                 toast.warning('未检测到等级信息');
                             }
                         } catch (e: any) {
-                            toast.error(`获取等级失败: ${e.message}`);
+                            toast.error(`获取等级失败: ${getErrorMessage(e)}`);
                         }
                     }}>等级信息</DebugButton>
                     
@@ -427,11 +483,11 @@ const DebugPage = () => {
                             console.log('[金币数量]', result);
                             toast.success(`当前金币: ${result ?? '未知'}`);
                         } catch (e: any) {
-                            toast.error(`获取金币失败: ${e.message}`);
+                            toast.error(`获取金币失败: ${getErrorMessage(e)}`);
                         }
                     }}>金币数量</DebugButton>
                     
-                    <DebugButton onClick={() => handleDebugClick('战利品球', window.tft.getLootOrbs)}>
+                    <DebugButton onClick={() => handleRecognize('战利品球', window.tft.getLootOrbs, formatLootOrbs)}>
                         检测战利品球
                     </DebugButton>
                 </ButtonGrid>
@@ -452,24 +508,21 @@ const DebugPage = () => {
                                 toast.error(`部分截图失败: ${result.failed.join(', ')}`);
                             }
                         } catch (e: any) {
-                            toast.error(`保存阶段截图失败: ${e.message}`);
+                            toast.error(`保存阶段截图失败: ${getErrorMessage(e)}`);
                         }
                     }}>保存阶段区域截图</DebugButton>
                     
-                    <DebugButton $variant="warning" onClick={async () => {
-                        await window.tft.saveBenchSlotSnapshots();
-                        toast.success('备战席截图已保存');
-                    }}>保存备战席截图</DebugButton>
+                    <DebugButton $variant="warning" onClick={() => handleTftAction(window.tft.saveBenchSlotSnapshots, '备战席截图已保存')}>
+                        保存备战席截图
+                    </DebugButton>
                     
-                    <DebugButton $variant="warning" onClick={async () => {
-                        await window.tft.saveFightBoardSlotSnapshots();
-                        toast.success('棋盘截图已保存');
-                    }}>保存棋盘截图</DebugButton>
+                    <DebugButton $variant="warning" onClick={() => handleTftAction(window.tft.saveFightBoardSlotSnapshots, '棋盘截图已保存')}>
+                        保存棋盘截图
+                    </DebugButton>
                     
-                    <DebugButton $variant="warning" onClick={async () => {
-                        await window.tft.saveQuitButtonSnapshot();
-                        toast.success('发条鸟退出按钮截图已保存');
-                    }}>发条鸟退出按钮截图</DebugButton>
+                    <DebugButton $variant="warning" onClick={() => handleTftAction(window.tft.saveQuitButtonSnapshot, '发条鸟退出按钮截图已保存')}>
+                        发条鸟退出按钮截图
+                    </DebugButton>
                     
                     <DebugButton onClick={() => {
                         toast("这是一个测试弹窗！", { type: "success" });
