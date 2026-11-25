@@ -16,6 +16,8 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["TFT_GET_EQUIP_INFO"] = "tft-get-equip-info";
   IpcChannel2["TFT_GET_BENCH_INFO"] = "tft-get-bench-info";
   IpcChannel2["TFT_GET_FIGHT_BOARD_INFO"] = "tft-get-fight-board-info";
+  IpcChannel2["TFT_SET_DEBUG_CLOCKWORK"] = "tft-set-debug-clockwork";
+  IpcChannel2["TFT_EQUIP_RANDOM_FOR_DEBUG"] = "tft-equip-random-for-debug";
   IpcChannel2["TFT_GET_LEVEL_INFO"] = "tft-get-level-info";
   IpcChannel2["TFT_GET_COIN_COUNT"] = "tft-get-coin-count";
   IpcChannel2["TFT_GET_LOOT_ORBS"] = "tft-get-loot-orbs";
@@ -185,6 +187,10 @@ const tftApi = {
   getEquipInfo: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_EQUIP_INFO),
   getBenchInfo: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_BENCH_INFO),
   getFightBoardInfo: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_FIGHT_BOARD_INFO),
+  /** 调试面板按发条鸟（true）还是普通模式（false）的点位识别，不影响主页选的模式 */
+  setDebugClockwork: (enabled) => electron.ipcRenderer.invoke(IpcChannel.TFT_SET_DEBUG_CLOCKWORK, enabled),
+  /** 随机给棋盘上的棋子穿一件装备（用于调试） */
+  equipRandomForDebug: () => electron.ipcRenderer.invoke(IpcChannel.TFT_EQUIP_RANDOM_FOR_DEBUG),
   getLevelInfo: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_LEVEL_INFO),
   getCoinCount: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_COIN_COUNT),
   getLootOrbs: () => electron.ipcRenderer.invoke(IpcChannel.TFT_GET_LOOT_ORBS),

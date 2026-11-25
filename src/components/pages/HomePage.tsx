@@ -17,7 +17,7 @@ import {LogPanel} from "../LogPanel.tsx";
 import {usePageActive} from "../../hooks/usePageActive";
 import {HextechDialog} from "../HextechDialog.tsx";
 import {toast} from "../toast/toast-core.ts";
-import {showGraphicsTip} from "../toast/graphicsTip.ts";
+import {showQueueTip} from "../toast/queueTip.ts";
 import {SummonerInfo} from "../../../src-backend/lcu/utils/LCUProtocols.ts";
 import {TFTMode} from "../../../src-backend/TFTProtocol.ts";
 import {settingsStore, GameStatistics} from "../../stores/settingsStore.ts";
@@ -957,7 +957,7 @@ export const HomePage = () => {
             // 显示提示
             if (newRunningState) {
                 toast.success('海克斯科技启动!');
-                showGraphicsTip();
+                showQueueTip();
             } else {
                 toast.success('海克斯科技已关闭!');
                 // 停止时清除"本局结束后停止"状态
@@ -1037,7 +1037,7 @@ export const HomePage = () => {
             const success = await window.hex.start();
             if (success) {
                 toast.success('海克斯科技启动!');
-                showGraphicsTip();
+                showQueueTip();
             } else {
                 return toast.error('海克斯科技启动失败!');
             }

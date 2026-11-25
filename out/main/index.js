@@ -5935,6 +5935,8 @@ var IpcChannel = /* @__PURE__ */ ((IpcChannel2) => {
   IpcChannel2["TFT_GET_EQUIP_INFO"] = "tft-get-equip-info";
   IpcChannel2["TFT_GET_BENCH_INFO"] = "tft-get-bench-info";
   IpcChannel2["TFT_GET_FIGHT_BOARD_INFO"] = "tft-get-fight-board-info";
+  IpcChannel2["TFT_SET_DEBUG_CLOCKWORK"] = "tft-set-debug-clockwork";
+  IpcChannel2["TFT_EQUIP_RANDOM_FOR_DEBUG"] = "tft-equip-random-for-debug";
   IpcChannel2["TFT_GET_LEVEL_INFO"] = "tft-get-level-info";
   IpcChannel2["TFT_GET_COIN_COUNT"] = "tft-get-coin-count";
   IpcChannel2["TFT_GET_LOOT_ORBS"] = "tft-get-loot-orbs";
@@ -14060,7 +14062,7 @@ class SettingsStore {
       //  默认快捷键是 F2
       showOverlay: true,
       //  默认显示游戏浮窗
-      hideGraphicsTip: false,
+      hideQueueTip: false,
       //  默认会提醒，用户点"不再显示"后设为 true
       showDebugPage: false,
       //  默认隐藏调试页面
@@ -14686,17 +14688,17 @@ app.whenReady().then(async () => {
   console.log("✅ [Main] 原生模块检查通过");
   console.log("🚀 [Main] 正在加载业务模块...");
   try {
-    const ServicesModule = await import("./chunks/index-CWni4BCY.js");
+    const ServicesModule = await import("./chunks/index-BGZ4mBJy.js");
     hexService = ServicesModule.hexService;
-    const TftOperatorModule = await import("./chunks/TftOperator-BiEwz07t.js").then((n) => n.T);
+    const TftOperatorModule = await import("./chunks/TftOperator-dMLAlvVy.js").then((n) => n.T);
     tftOperator = TftOperatorModule.tftOperator;
     const LineupModule = await import("./chunks/index-Xb_DAm_n.js");
     lineupLoader = LineupModule.lineupLoader;
     const GlobalHotkeyManagerModule = await import("./chunks/GlobalHotkeyManager-Cbcy0EP4.js");
     globalHotkeyManager = GlobalHotkeyManagerModule.globalHotkeyManager;
-    const TftWindowCaptureModule = await import("./chunks/TftWindowCapture-9ZJPvEY8.js");
+    const TftWindowCaptureModule = await import("./chunks/TftWindowCapture-BxpbEKAq.js");
     tftWindowCapture = TftWindowCaptureModule.tftWindowCapture;
-    const TftWindowLocatorModule = await import("./chunks/TftWindowLocator-fZ4xlHgg.js");
+    const TftWindowLocatorModule = await import("./chunks/TftWindowLocator-BLMFn8yS.js");
     tftWindowLocator = TftWindowLocatorModule.tftWindowLocator;
     console.log("✅ [Main] 业务模块加载完成");
   } catch (error) {
@@ -14790,15 +14792,29 @@ function registerHandler() {
   ipcMain.handle(IpcChannel.HEX_START, async (event) => hexService.start());
   ipcMain.handle(IpcChannel.HEX_STOP, async (event) => hexService.stop());
   ipcMain.handle(IpcChannel.HEX_GET_STATUS, async (event) => hexService.isRunning);
+  let debugClockwork = null;
+  const getDebugMode = () => {
+    if (debugClockwork === null || hexService.isRunning) return null;
+    if (debugClockwork) return TFTMode.CLOCKWORK_TRAILS;
+    return settingsStore.get("tftMode") === TFTMode.CLOCKWORK_TRAILS ? TFTMode.NORMAL : null;
+  };
+  ipcMain.handle(IpcChannel.TFT_SET_DEBUG_CLOCKWORK, async (_event, enabled) => {
+    debugClockwork = enabled;
+  });
   const withTftWindow = async (action) => {
-    await tftOperator.prepareForDebug();
+    tftOperator.setDebugMode(getDebugMode());
     try {
-      return await action();
-    } finally {
-      if (!hexService.isRunning) {
-        win?.moveTop();
-        win?.focus();
+      await tftOperator.prepareForDebug();
+      try {
+        return await action();
+      } finally {
+        if (!hexService.isRunning) {
+          win?.moveTop();
+          win?.focus();
+        }
       }
+    } finally {
+      tftOperator.setDebugMode(null);
     }
   };
   ipcMain.handle(IpcChannel.TFT_BUY_AT_SLOT, async (event, slot) => withTftWindow(() => tftOperator.buyAtSlot(slot)));
@@ -14806,6 +14822,7 @@ function registerHandler() {
   ipcMain.handle(IpcChannel.TFT_GET_EQUIP_INFO, async (event) => withTftWindow(() => tftOperator.getEquipInfo()));
   ipcMain.handle(IpcChannel.TFT_GET_BENCH_INFO, async (event) => withTftWindow(() => tftOperator.getBenchInfo()));
   ipcMain.handle(IpcChannel.TFT_GET_FIGHT_BOARD_INFO, async (event) => withTftWindow(() => tftOperator.getFightBoardInfo()));
+  ipcMain.handle(IpcChannel.TFT_EQUIP_RANDOM_FOR_DEBUG, async () => withTftWindow(() => tftOperator.equipRandomForDebug()));
   ipcMain.handle(IpcChannel.TFT_GET_LEVEL_INFO, async (event) => withTftWindow(() => tftOperator.getLevelInfo()));
   ipcMain.handle(IpcChannel.TFT_GET_COIN_COUNT, async (event) => withTftWindow(() => tftOperator.getCoinCount()));
   ipcMain.handle(IpcChannel.TFT_GET_LOOT_ORBS, async (event) => withTftWindow(() => tftOperator.getLootOrbs()));
