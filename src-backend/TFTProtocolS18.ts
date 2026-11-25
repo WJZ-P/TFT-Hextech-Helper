@@ -69,6 +69,18 @@ export const coinRegionClockwork = shiftRegionX(coinRegion, CLOCKWORK_HUD_OFFSET
 
 //  购买经验 Point（"购买经验值"按钮，x 232-355, y 620-662）
 export const buyExpPoint = { x: 293, y: 641 }
+//  "购买经验值"按钮右边的箭头图标。拿起备战席上的东西时商店会变成出售提示，这里变成纯色底
+export const buyExpIconRegion = {
+    leftTop: { x: 319, y: 628 },
+    rightBottom: { x: 347, y: 656 },
+}
+export const buyExpIconRegionClockwork = shiftRegionX(buyExpIconRegion, CLOCKWORK_HUD_OFFSET_X);
+//  拿起备战席上的东西时，商店中间的提示文字（如"开启一个由成装组成的武器库"、"以1金出售"）
+export const heldHintRegion = {
+    leftTop: { x: 499, y: 652 },
+    rightBottom: { x: 769, y: 684 },
+}
+export const heldHintRegionClockwork = shiftRegionX(heldHintRegion, CLOCKWORK_HUD_OFFSET_X);
 //  刷新商店 Point（"刷新"按钮，在购买经验下方）
 export const refreshShopPoint = { x: 293, y: 691 }
 export const buyExpPointClockwork = { x: buyExpPoint.x + CLOCKWORK_HUD_OFFSET_X, y: buyExpPoint.y }
@@ -129,6 +141,11 @@ export const shopSlotNameRegionsClockwork = shiftRegionsX(shopSlotNameRegions, C
 // 右侧棋子详情面板（选中棋子时出现，测量自发条鸟截图）
 // ============================================================================
 
+//  面板上会随棋子变化的部分（星级、原画、名字、血量、装备），用来判断面板有没有刷新
+export const detailPanelRegion = {
+    leftTop: { x: 1120, y: 124 },
+    rightBottom: { x: 1272, y: 404 },
+}
 //  英雄名字 region（"洛" 文字 x 1128-1137, y 235-245），尺寸必须与 shopSlotNameRegions 一致以复用名字模板
 export const detailChampionNameRegion = {
     leftTop: { x: 1126, y: 233 },
@@ -222,8 +239,8 @@ export const equipmentRegionClockwork = shiftRegionsX(equipmentRegion, CLOCKWORK
 // 棋盘（4 行 x 7 列六边形，R1 是离自己最远的一行；透视下越往下格子越大）
 // ============================================================================
 
-//  棋子在战场上的点位，用于鼠标点击选择英雄
-//  取六边形中心，Y 往上偏移 5 像素（与老客户端一致），避免点击时误触到下一行的棋子
+//  棋盘格子的点位，用于放置棋子（落点要在格子的地面上）
+//  取六边形中心，Y 往上偏移 5 像素（与老客户端一致）。要点到棋子身上时用 fightBoardUnitPoint
 export const fightBoardSlotPoint = {
     //  第一行的棋子位置        //  x+=77
     R1_C1: { x: 374, y: 292 },
@@ -258,7 +275,43 @@ export const fightBoardSlotPoint = {
     R4_C6: { x: 813, y: 445 },
     R4_C7: { x: 898, y: 445 },
 }
-//  棋子在战场上的 region，用来判断是否有棋子
+//  棋子身体中间的点位，用于右键查看、抓取、穿装备
+//  棋子有高度，下一行棋子的头会伸到上一行的 fightBoardSlotPoint，点上去会点到下一行的棋子。
+//  实测（截图里 R1 / R3 / R4 的 10 来个棋子）：棋子占 fightBoardSlotPoint 往上 25-52、往下 17 左右，
+//  往上 15 像素正好是身体中间（最矮的棋子也点得到），离下一行的头和上一行的脚都约 15 像素
+const UNIT_BODY_OFFSET_Y = 15;
+export const fightBoardUnitPoint = Object.fromEntries(
+    Object.entries(fightBoardSlotPoint).map(([slot, point]) => [slot, { x: point.x, y: point.y - UNIT_BODY_OFFSET_Y }])
+) as Record<keyof typeof fightBoardSlotPoint, { x: number; y: number }>;
+//  己方棋子头顶的血条，用来判断棋盘、备战席的格子上有没有棋子
+//  不能比对格子的画面：高的棋子（如人马）会盖住上一排的格子，空格子会被当成有棋子。
+//  血条固定 42x3、纯绿色（实测 R 9-11 / G 189-211 / B 9-11），与棋子、星级、棋盘皮肤无关；小小英雄的血条宽 68、颜色不同，敌方是红色。
+//  实测血条在自己格子的点位（fightBoardSlotPoint / benchSlotPoints）上方 46-85 像素；
+//  透视会让靠边的血条往外偏，偏移约为 (x - 640) * 0.045。
+//  按水平位置找对应的格子，不能用固定的纵向偏移：棋子高矮相差近 40 像素，行距只有 50；上下排错开半格，下一排的血条横向差 30 像素左右，不会落进来
+export const unitHealthBar = {
+    width: 42,
+    /** 血条相对格子点位的纵向范围，比实测值各留了余量 */
+    offsetYMin: -120,
+    offsetYMax: -28,
+    /** 透视偏移：(x - centerX) * lean */
+    centerX: 640,
+    lean: 0.045,
+}
+//  第四排和备战席的血条以这条线为界。带装备的棋子血条会再往上约 23 像素，
+//  所以按第四排最低的血条定（实测到 y 400），给备战席又高又带装备的棋子留余量（实测最高 y 446）
+const BENCH_BAR_TOP = 408;
+//  能包住所有格子血条的区域，一次截图判断所有格子
+export const boardHealthBarRegion = {
+    leftTop: { x: 310, y: 165 },
+    rightBottom: { x: 945, y: BENCH_BAR_TOP - 1 },
+}
+export const benchHealthBarRegion = {
+    leftTop: { x: 245, y: BENCH_BAR_TOP },
+    rightBottom: { x: 950, y: 500 },
+}
+
+//  棋子在战场上的 region（现在只用于生成和保存空格模板，判断有没有棋子用 unitHealthBar）
 //  由六边形内部的包围盒得出：leftTop.y 使用 -10 偏移，兼容 3D 飞行棋子的高度；
 //  leftTop.x +5, rightBottom.x -5，避免宽体棋子占据邻居位置导致误判（与老客户端一致）
 //  第四行的六边形到 y 478，但备战席棋子的头和血条会伸到 y 456 左右，所以只取到 450，避免把空格子误判成有棋子

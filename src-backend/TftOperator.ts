@@ -41,11 +41,16 @@ import {
     detailChampionNameRegion,
     detailChampionStarRegion,
     detailEquipRegion,
+    detailPanelRegion,
     equipmentRegion,
     equipmentRegionClockwork,
     equipmentSlot,
     fightBoardSlotPoint,
     fightBoardSlotRegion,
+    fightBoardUnitPoint,
+    unitHealthBar,
+    boardHealthBarRegion,
+    benchHealthBarRegion,
     gameStageDisplayNormal,
     gameStageDisplayStageOne,
     gameStageDisplayTheClockworkTrails,
@@ -66,6 +71,10 @@ import {
     refreshShopPointClockwork,
     buyExpPoint,
     buyExpPointClockwork,
+    buyExpIconRegion,
+    buyExpIconRegionClockwork,
+    heldHintRegion,
+    heldHintRegionClockwork,
     itemForgeTooltipRegion,
     forgePickPoint,
     exitGameButtonPoint,
@@ -90,6 +99,7 @@ import {
     screenCapture,
     mouseController,
     MouseButtonType,
+    FRAME_MS,
     parseStageStringToEnum,
     isValidStageFormat,
 } from "./tft";
@@ -102,6 +112,7 @@ import type {
     BoardLocation,
     ShopUnit,
     LootOrb,
+    SimpleRegion,
 } from "./tft";
 import { sleep } from "./utils/HelperTools";
 import type { OcrPreprocessOptions } from "./tft/recognition/ScreenCapture";
@@ -121,11 +132,49 @@ const SHOP_FAIRY_COLOR_TOLERANCE = 8;
 /** 装备栏里认不出来的装备的占位名 */
 const UNKNOWN_EQUIP_NAME = "未识别装备";
 
-/**
- * 右键棋子后等待详情面板刷新的时间 (ms)
- * 老客户端 10ms 就够；虚幻客户端的刷新时间还没有实测，先留足余量，避免读到上一个棋子的信息
- */
-const DETAIL_PANEL_SETTLE_MS = 100;
+/** 关闭锻造器浮窗后等待界面刷新的时间 (ms) */
+const TOOLTIP_CLOSE_SETTLE_MS = 100;
+
+/** 有血条、确定是棋子的格子，等待详情面板打开的最长时间 (ms)。认出棋子后会立刻继续 */
+const DETAIL_PANEL_TIMEOUT_MS = 500;
+
+/** 没有血条的格子，等待详情面板或浮窗的最长时间 (ms)。左键已经确认格子上有东西，所以等久一点；认出锻造器后会立刻继续 */
+const NO_BAR_TIMEOUT_MS = 600;
+
+/** 详情面板检查几次还没认出棋子，就开始看是不是锻造器的浮窗 */
+const FORGE_CHECK_AFTER_POLLS = 3;
+
+/** 左键按住备战席格子，等东西被拿起来的最长时间 (ms)，约 5 帧 */
+const PICK_UP_HOLD_MS = 170;
+
+/** 松开左键后，再等东西被拿起来的最长时间 (ms)，约 5 帧 */
+const PICK_UP_AFTER_RELEASE_MS = 170;
+
+/** 等拿起的东西放回原位的最长时间 (ms) */
+const PUT_DOWN_TIMEOUT_MS = 300;
+
+/** 等待详情面板刷新时的检查间隔 (ms) */
+const DETAIL_PANEL_POLL_MS = 15;
+
+/** 两张面板截图的同一个像素，任一通道差值超过这个值才算不同 */
+const PANEL_PIXEL_DIFF_THRESHOLD = 24;
+
+/** 不同的像素达到这个数量，才算面板有变化（星级不同约 60 个像素，名字、血量不同会更多） */
+const PANEL_CHANGED_PIXELS = 10;
+
+/** 一行里至少这么多个绿色像素才算血条（血条宽 42；实测有棋子的格子不低于 32，空格子不高于 6） */
+const HEALTH_BAR_MIN_PIXELS = 24;
+
+/** 右键查看一个格子的结果 */
+interface InspectResult {
+    /** 认出的棋子，没认出来为 null */
+    tftUnit: TFTUnit | null;
+    /** 锻造器类型，不是锻造器为 NONE */
+    forgeType: ItemForgeType;
+    /** 识别过程的中间结果，识别失败时用于排查 */
+    cleanName: string;
+    namePng: Buffer;
+}
 
 /** 锻造器浮窗名称：文字偏暗，默认阈值 160 会丢笔画，原图（不放大）会漏字 */
 const FORGE_TOOLTIP_OCR_OPTIONS: OcrPreprocessOptions = { threshold: 110 };
@@ -206,10 +255,12 @@ class TftOperator {
                 coinRegion: coinRegionClockwork,
                 refreshShopPoint: refreshShopPointClockwork,
                 buyExpPoint: buyExpPointClockwork,
+                buyExpIconRegion: buyExpIconRegionClockwork,
+                heldHintRegion: heldHintRegionClockwork,
                 shopFairyProbeRegion: shopFairyProbeRegionClockwork,
                 equipmentRegion: equipmentRegionClockwork,
             }
-            : { shopSlot, shopSlotNameRegions, levelRegion, coinRegion, refreshShopPoint, buyExpPoint, shopFairyProbeRegion, equipmentRegion };
+            : { shopSlot, shopSlotNameRegions, levelRegion, coinRegion, refreshShopPoint, buyExpPoint, buyExpIconRegion, heldHintRegion, shopFairyProbeRegion, equipmentRegion };
     }
 
     /** 同步游戏窗口位置的定时器（虚幻客户端窗口可以拖动，需要持续跟随） */
@@ -628,6 +679,123 @@ class TftOperator {
     }
 
     /**
+     * 右键一个格子，等详情面板打开后识别棋子或锻造器
+     * @description 不固定等待：面板变了、画面稳定下来、认出棋子就立刻返回，锻造器则是认出浮窗就返回。
+     *              看完一个棋子要调用 closeDetailPanel：
+     *              右键锻造器不会关掉已经打开的面板，面板上留着上一个棋子的话，会把锻造器认成上一个棋子
+     * @param point 格子坐标
+     * @param label 日志里的格子名称
+     * @param chessData 当前赛季的棋子数据
+     * @param forgeSlotIndex 备战席槽位索引 (1-9)，没有血条的备战席格子才传，会检测锻造器
+     */
+    private async inspectUnit(
+        point: SimplePoint,
+        label: string,
+        chessData: Record<string, TFTUnit>,
+        forgeSlotIndex?: number,
+    ): Promise<InspectResult> {
+        const checkForge = async () => forgeSlotIndex === undefined
+            ? ItemForgeType.NONE
+            : this.checkItemForgeTooltip(point, forgeSlotIndex);
+
+        const before = await this.captureDetailPanel();
+        await mouseController.clickInFrames(point, MouseButtonType.RIGHT);
+
+        const deadline = Date.now() + (forgeSlotIndex === undefined ? DETAIL_PANEL_TIMEOUT_MS : NO_BAR_TIMEOUT_MS);
+        let previous = before;
+
+        for (let polls = 1; Date.now() < deadline; polls++) {
+            const current = await this.captureDetailPanel();
+
+            // 变了，而且和上一次检查相比已经稳定（不在过渡动画里）
+            if (this.isPanelDifferent(before, current) && !this.isPanelDifferent(previous, current)) {
+                const result = await this.recognizeDetailPanelUnit(chessData);
+                if (result.tftUnit) return { ...result, forgeType: ItemForgeType.NONE };
+            }
+
+            // 面板一直没打开，看一下是不是锻造器
+            if (polls >= FORGE_CHECK_AFTER_POLLS) {
+                const forgeType = await checkForge();
+                if (forgeType !== ItemForgeType.NONE) {
+                    return { tftUnit: null, forgeType, cleanName: '', namePng: Buffer.alloc(0) };
+                }
+            }
+
+            previous = current;
+            await sleep(DETAIL_PANEL_POLL_MS);
+        }
+
+        // 等满了：点的不是棋子，或者一直认不出来
+        const forgeType = await checkForge();
+        const result = await this.recognizeDetailPanelUnit(chessData);
+        if (forgeType !== ItemForgeType.NONE) return { ...result, tftUnit: null, forgeType };
+
+        if (!result.tftUnit) {
+            logger.warn(`[${label}] 没有认出棋子`, true);
+        }
+        return { ...result, forgeType };
+    }
+
+    /**
+     * 右键小小英雄的默认站位，关掉详情面板
+     * @description 看完一个棋子后调用，这样右键下一个格子时，面板上不会留着上一个棋子。
+     *              点完只等一帧就继续，不等面板消失：点下一个格子还要花几帧，面板会在这期间关掉
+     */
+    private async closeDetailPanel(): Promise<void> {
+        await mouseController.clickInFrames(littleLegendDefaultPoint, MouseButtonType.RIGHT);
+        await sleep(FRAME_MS);
+    }
+
+    /** 截取详情面板上会变化的部分 (RGB 像素) */
+    private async captureDetailPanel(): Promise<Uint8Array> {
+        const mat = await screenCapture.captureGameRegionAsMat(detailPanelRegion);
+        try {
+            return Uint8Array.from(mat.data);
+        } finally {
+            mat.delete();
+        }
+    }
+
+    /** 两张详情面板截图是否不同 */
+    private isPanelDifferent(a: Uint8Array, b: Uint8Array): boolean {
+        let changedPixels = 0;
+        for (let i = 0; i < a.length; i += 3) {
+            if (
+                Math.abs(a[i] - b[i]) > PANEL_PIXEL_DIFF_THRESHOLD ||
+                Math.abs(a[i + 1] - b[i + 1]) > PANEL_PIXEL_DIFF_THRESHOLD ||
+                Math.abs(a[i + 2] - b[i + 2]) > PANEL_PIXEL_DIFF_THRESHOLD
+            ) {
+                if (++changedPixels >= PANEL_CHANGED_PIXELS) return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 识别详情面板当前显示的棋子
+     * @description 先 OCR 名字，失败时用名字模板兜底
+     */
+    private async recognizeDetailPanelUnit(chessData: Record<string, TFTUnit>): Promise<Omit<InspectResult, 'forgeType'>> {
+        const nameRegion = screenCapture.toAbsoluteRegion(detailChampionNameRegion);
+        const namePng = await screenCapture.captureRegionAsPng(nameRegion);
+        const text = await ocrService.recognize(namePng, OcrWorkerType.CHESS);
+        let cleanName = text.replace(/\s/g, "");
+
+        // OCR 失败时使用模板匹配兜底
+        if (!chessData[cleanName]) {
+            // 复用 namePng (3x 放大后的图片)，模板是灰度的，所以转灰度
+            const mat = await screenCapture.pngBufferToMat(namePng);
+            if (mat.channels() > 1) {
+                cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
+            }
+            cleanName = templateMatcher.matchChampion(mat) || "";
+            mat.delete();
+        }
+
+        return { tftUnit: chessData[cleanName] ?? null, cleanName, namePng };
+    }
+
+    /**
      * 识别详情面板中棋子的星级
      * @description 识别不出来时按 1 星处理。不能返回 -1：策略层用 -1 表示锻造器之类的特殊单位，
      *              会把正常棋子排除在上场、替换之外
@@ -780,48 +948,39 @@ class TftOperator {
         // 获取当前赛季对应的棋子数据集
         const chessData = this.getActiveChessData();
 
+        const occupiedSlots = await this.findSlotsWithUnit(benchSlotPoints, benchHealthBarRegion);
+
         for (const benchSlot of Object.keys(benchSlotPoints)) {
-            // 右键点击槽位显示详细信息
-            // 先检测该槽位是否为空：对比空槽模板
-            const benchRegion = screenCapture.toAbsoluteRegion(benchSlotRegion[benchSlot as keyof typeof benchSlotRegion]);
-            const isEmpty = await this.isBenchSlotEmpty(benchSlot, benchRegion);
+            // 有血条的一定是棋子；没有血条的可能是空格子，也可能是锻造器（没有血条）。
+            // 和默认棋盘的空格模板一样就是空的，不用点；不一样再用左键拿起来试
+            const hasUnit = occupiedSlots.has(benchSlot);
+            const clickPoint = benchSlotPoints[benchSlot as keyof typeof benchSlotPoints];
 
-            if (isEmpty) {
-                logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 检测为空，跳过点击`);
-                benchUnits.push(null);
-                continue;
-            }
+            if (!hasUnit) {
+                const benchRegion = screenCapture.toAbsoluteRegion(benchSlotRegion[benchSlot as keyof typeof benchSlotRegion]);
+                const heldForgeType = await this.isBenchSlotEmpty(benchSlot, benchRegion)
+                    ? null
+                    : await this.identifyByPickingUp(clickPoint, benchSlot);
 
-            // 右键点击槽位显示详细信息
-            await mouseController.clickAt(benchSlotPoints[benchSlot], MouseButtonType.RIGHT);
-
-            await sleep(DETAIL_PANEL_SETTLE_MS); // 等待 UI 渲染完成
-
-            // 识别英雄名称
-            const nameRegion = screenCapture.toAbsoluteRegion(detailChampionNameRegion);
-            const namePng = await screenCapture.captureRegionAsPng(nameRegion);
-            const text = await ocrService.recognize(namePng, OcrWorkerType.CHESS);
-            let cleanName = text.replace(/\s/g, "");
-
-
-            // 尝试从 OCR 结果中找到匹配的英雄
-            let tftUnit: TFTUnit | null = chessData[cleanName] || null;
-
-            // OCR 失败时使用模板匹配兜底
-            if (!tftUnit) {
-                logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] OCR 识别失败，尝试模板匹配...`, true);
-                // 复用 namePng (3x 放大后的图片)
-                const mat = await screenCapture.pngBufferToMat(namePng);
-                // 转灰度
-                if (mat.channels() > 1) {
-                    cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
+                if (heldForgeType === null) {
+                    logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 检测为空，跳过点击`);
+                    benchUnits.push(null);
+                    continue;
                 }
-
-                cleanName = templateMatcher.matchChampion(mat) || "";
-                mat.delete();
+                if (heldForgeType !== ItemForgeType.NONE) {
+                    benchUnits.push(this.createForgeBenchUnit(benchSlot, heldForgeType, chessData));
+                    continue;
+                }
             }
 
-            tftUnit = chessData[cleanName] || null;
+            // 右键点击槽位显示详细信息
+            const { tftUnit, forgeType, cleanName, namePng } = await this.inspectUnit(
+                clickPoint,
+                `备战席槽位 ${benchSlot.slice(-1)}`,
+                chessData,
+                // 只有没血条的才可能是锻造器。从槽位名称中提取槽位索引 (SLOT_1 -> 1, SLOT_9 -> 9)
+                hasUnit ? undefined : parseInt(benchSlot.slice(-1))
+            );
 
             if (tftUnit) {
                 // 识别星级
@@ -829,6 +988,8 @@ class TftOperator {
 
                 // 识别棋子携带的装备（详情面板右键后已显示，直接读取即可）
                 const equips = await this.getDetailPanelEquips();
+
+                await this.closeDetailPanel();
 
                 logger.debug(
                     `[备战席槽位 ${benchSlot.slice(-1)}] 识别成功 -> ` +
@@ -843,37 +1004,12 @@ class TftOperator {
                     equips,
                 });
             } else {
-                // 英雄识别失败，尝试检测是否为锻造器（基础装备锻造器 或 成装锻造器）
-                const clickPoint = benchSlotPoints[benchSlot as keyof typeof benchSlotPoints];
-                // 从槽位名称中提取槽位索引 (SLOT_1 -> 1, SLOT_9 -> 9)
-                const slotIndex = parseInt(benchSlot.slice(-1));
-                const forgeType = await this.checkItemForgeTooltip(clickPoint, slotIndex);
-
                 // 关闭浮窗：再次右键点击同一位置，避免浮窗遮挡后续槽位的检测
-                await mouseController.clickAt(benchSlotPoints[benchSlot], MouseButtonType.RIGHT);
-                await sleep(DETAIL_PANEL_SETTLE_MS); // 等待 UI 渲染完成
+                await mouseController.clickAt(clickPoint, MouseButtonType.RIGHT);
+                await sleep(TOOLTIP_CLOSE_SETTLE_MS); // 等待 UI 渲染完成
                 
                 if (forgeType !== ItemForgeType.NONE) {
-                    // 根据特殊单位类型选择对应的 chessData 中的单位定义
-                    // 注意：未来战士核心也走这个分支（它和锻造器一样都是"右键弹浮窗"特殊单位）
-                    const forgeUnit = this.resolveSpecialUnitByForgeType(forgeType, chessData);
-                    const forgeName = forgeUnit?.displayName ?? `未知(${forgeType})`;
-
-                    if (!forgeUnit) {
-                        // 理论不会到这里：除非 chess.ts 里没有对应的特殊单位定义
-                        logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] 识别为 ${forgeType} 但 chessData 中无对应定义`);
-                        benchUnits.push(null);
-                        continue;
-                    }
-
-                    logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别为${forgeName}`);
-                    // 锻造器/时空核心 作为特殊单位处理
-                    benchUnits.push({
-                        location: benchSlot as BenchLocation,
-                        tftUnit: forgeUnit,
-                        starLevel: -1,  // 特殊单位无星级
-                        equips: [],
-                    });
+                    benchUnits.push(this.createForgeBenchUnit(benchSlot, forgeType, chessData));
                 } else {
                     // 英雄和锻造器都识别失败，说明是误识别（空槽位被误判为有棋子）
                     this.handleRecognitionFailure("bench", benchSlot.slice(-1), cleanName, namePng);
@@ -889,6 +1025,31 @@ class TftOperator {
     }
 
     /**
+     * 把锻造器 / 时空核心转换成备战席单位
+     * @returns chess.ts 里没有对应定义时为 null
+     */
+    private createForgeBenchUnit(benchSlot: string, forgeType: ItemForgeType, chessData: Record<string, TFTUnit>): BenchUnit | null {
+        // 根据特殊单位类型选择对应的 chessData 中的单位定义
+        // 注意：未来战士核心也走这个分支（它和锻造器一样都是"右键弹浮窗"特殊单位）
+        const forgeUnit = this.resolveSpecialUnitByForgeType(forgeType, chessData);
+
+        if (!forgeUnit) {
+            // 理论不会到这里：除非 chess.ts 里没有对应的特殊单位定义
+            logger.warn(`[备战席槽位 ${benchSlot.slice(-1)}] 识别为 ${forgeType} 但 chessData 中无对应定义`);
+            return null;
+        }
+
+        logger.info(`[备战席槽位 ${benchSlot.slice(-1)}] 识别为${forgeUnit.displayName}`);
+        // 锻造器/时空核心 作为特殊单位处理
+        return {
+            location: benchSlot as BenchLocation,
+            tftUnit: forgeUnit,
+            starLevel: -1,  // 特殊单位无星级
+            equips: [],
+        };
+    }
+
+    /**
      * 获取当前棋盘上的棋子信息
      * @description 通过右键点击棋子，识别详情面板中的英雄名和星级
      *              棋盘为 4 行 7 列，共 28 个槽位
@@ -900,48 +1061,20 @@ class TftOperator {
         // 获取当前赛季对应的棋子数据集
         const chessData = this.getActiveChessData();
 
+        const occupiedSlots = await this.findSlotsWithUnit(fightBoardSlotPoint, boardHealthBarRegion);
+
         // 遍历所有棋盘槽位 (R1_C1 ~ R4_C7)
         for (const boardSlot of Object.keys(fightBoardSlotPoint)) {
-            // 先检测该槽位是否为空：对比空槽模板
-            const boardRegion = screenCapture.toAbsoluteRegion(
-                fightBoardSlotRegion[boardSlot as keyof typeof fightBoardSlotRegion]
-            );
-            const isEmpty = await this.isFightBoardSlotEmpty(boardSlot, boardRegion);
-
-            if (isEmpty) {
+            // 头顶没有血条的是空格子
+            if (!occupiedSlots.has(boardSlot)) {
                 logger.debug(`[棋盘槽位 ${boardSlot}] 检测为空，跳过点击`);
                 boardUnits.push(null);
                 continue;
             }
 
             // 右键点击槽位显示详细信息
-            const clickPoint = fightBoardSlotPoint[boardSlot as keyof typeof fightBoardSlotPoint];
-            await mouseController.clickAt(clickPoint, MouseButtonType.RIGHT);
-
-            await sleep(DETAIL_PANEL_SETTLE_MS); // 等待 UI 渲染完成
-
-            // 识别英雄名称
-            const nameRegion = screenCapture.toAbsoluteRegion(detailChampionNameRegion);
-            const namePng = await screenCapture.captureRegionAsPng(nameRegion);
-            const text = await ocrService.recognize(namePng, OcrWorkerType.CHESS);
-            let cleanName = text.replace(/\s/g, "");
-
-            // 尝试从 OCR 结果中找到匹配的英雄
-            let tftUnit: TFTUnit | null = chessData[cleanName] || null;
-
-            // OCR 失败时使用模板匹配兜底
-            if (!tftUnit) {
-                logger.warn(`[棋盘槽位 ${boardSlot}] OCR 识别失败，尝试模板匹配...`, true);
-                const mat = await screenCapture.pngBufferToMat(namePng);
-                // 转灰度
-                if (mat.channels() > 1) {
-                    cv.cvtColor(mat, mat, cv.COLOR_RGBA2GRAY);
-                }
-                cleanName = templateMatcher.matchChampion(mat) || "";
-                mat.delete();
-            }
-
-            tftUnit = chessData[cleanName] || null;
+            const clickPoint = fightBoardUnitPoint[boardSlot as keyof typeof fightBoardUnitPoint];
+            const { tftUnit, cleanName, namePng } = await this.inspectUnit(clickPoint, `棋盘槽位 ${boardSlot}`, chessData);
 
             if (tftUnit) {
                 // 识别星级
@@ -949,6 +1082,8 @@ class TftOperator {
 
                 // 识别棋子携带的装备（详情面板右键后已显示，直接读取即可）
                 const equips = await this.getDetailPanelEquips();
+
+                await this.closeDetailPanel();
 
                 logger.debug(
                     `[棋盘槽位 ${boardSlot}] 识别成功 -> ` +
@@ -966,6 +1101,9 @@ class TftOperator {
                 // 识别失败
                 this.handleRecognitionFailure("board", boardSlot, cleanName, namePng);
                 boardUnits.push(null);
+
+                // 归位小小英雄：右键点击空格子会导致小小英雄走上棋盘，影响后续识别
+                await this.selfResetPosition();
             }
         }
 
@@ -974,35 +1112,54 @@ class TftOperator {
     }
 
     /**
-     * 判断棋盘槽位是否为空
-     * @description 通过 templateLoader 获取空槽模板，比较当前截图的 RGBA 均值差异
-     * @param slotKey 槽位 key，例如 R1_C1
-     * @param region nut-js Region (绝对坐标)
+     * 找出有棋子的格子
+     * @description 看格子上方有没有己方棋子的血条，一次截图判断所有格子。
+     *              不比对格子的画面，所以不受高大的棋子遮挡和棋盘皮肤影响。锻造器没有血条
+     * @param points 格子的点位
+     * @param region 能包住这些格子血条的区域
+     * @returns 有棋子的格子 key，例如 R1_C1、SLOT_1
      */
-    private async isFightBoardSlotEmpty(slotKey: string, region: Region): Promise<boolean> {
-        if (!templateLoader.isReady()) {
-            logger.warn("[TftOperator] 模板未加载完成，空槽检测暂时跳过");
-            return false; // 无法判断时，默认继续点击以保证功能
+    private async findSlotsWithUnit(points: Record<string, SimplePoint>, region: SimpleRegion): Promise<Set<string>> {
+        const mat = await screenCapture.captureGameRegionAsMat(region);
+        const occupied = new Set<string>();
+
+        try {
+            const { data, cols, rows } = mat;
+            const channels = mat.channels();
+            const { leftTop } = region;
+            const { width, offsetYMin, offsetYMax, centerX, lean } = unitHealthBar;
+
+            const isBarPixel = (x: number, y: number): boolean => {
+                const i = ((y - leftTop.y) * cols + (x - leftTop.x)) * channels;
+                return data[i] < 60 && data[i + 1] > 150 && data[i + 2] < 60;
+            };
+
+            for (const [slot, point] of Object.entries(points)) {
+                const left = Math.round(point.x + (point.x - centerX) * lean) - width / 2;
+                const top = Math.max(point.y + offsetYMin, leftTop.y);
+                const bottom = Math.min(point.y + offsetYMax, leftTop.y + rows - 1);
+
+                let matchedRows = 0;
+                for (let y = top; y <= bottom; y++) {
+                    let barPixels = 0;
+                    for (let x = left; x < left + width; x++) {
+                        if (isBarPixel(x, y)) barPixels++;
+                    }
+
+                    // 血条高 3 像素，连续两行都够才算，排除零星的绿色特效
+                    matchedRows = barPixels >= HEALTH_BAR_MIN_PIXELS ? matchedRows + 1 : 0;
+                    if (matchedRows === 2) {
+                        occupied.add(slot);
+                        break;
+                    }
+                }
+            }
+        } finally {
+            mat.delete();
         }
 
-        // 从 templateLoader 获取槽位模板 (RGBA)
-        const tmpl = templateLoader.getFightBoardSlotTemplate(slotKey);
-        if (!tmpl) {
-            logger.warn(`[TftOperator] 未找到棋盘槽位模板: ${slotKey}，跳过空槽检测`);
-            return false;
-        }
-
-        // 计算与模板的差异
-        const meanDiff = await this.calculateSlotDifference(region, tmpl);
-
-        // 棋盘槽位的阈值可能需要调整，暂时复用备战席的阈值
-        const isEmpty = meanDiff < this.benchEmptyDiffThreshold;
-
-        if (!isEmpty) {
-            logger.debug(`[TftOperator] 棋盘槽位 ${slotKey} 判定为占用, meanDiff=${meanDiff.toFixed(2)}`);
-        }
-
-        return isEmpty;
+        logger.debug(`[TftOperator] 有棋子的格子: ${[...occupied].join(', ') || '无'}`);
+        return occupied;
     }
 
     /**
@@ -1224,6 +1381,86 @@ class TftOperator {
     }
 
     /**
+     * 用左键拿起备战席格子上的东西，看有没有、是哪种锻造器，然后放回去。给没有血条的格子用（空格子或锻造器）
+     * @description 左键拿起格子上的东西时，商店会变成出售 / 开启武器库的提示，"购买经验值"的箭头会消失；
+     *              点到空格子则没有反应。不看格子的画面，所以和棋盘皮肤、画质无关
+     * @param point 格子坐标
+     * @param slotKey 槽位 key，用于日志
+     * @returns 空格子为 null；有东西但不知道是什么为 NONE，需要再右键看
+     */
+    private async identifyByPickingUp(point: SimplePoint, slotKey: string): Promise<ItemForgeType | null> {
+        // 商店本来就没显示，没法判断，交给右键去看
+        if (!await this.isBuyExpIconVisible()) return ItemForgeType.NONE;
+
+        const startedAt = Date.now();
+        const identifyHeld = async (timeoutMs: number): Promise<ItemForgeType | null> => {
+            if (!await this.waitForBuyExpIcon(false, timeoutMs)) return null;
+            logger.debug(`[TftOperator] 槽位 ${slotKey} 左键拿起了东西，用时 ${Date.now() - startedAt}ms`);
+            return this.recognizeHeldForge();
+        };
+
+        const forgeType =
+            await mouseController.holdAt(point, MouseButtonType.LEFT, () => identifyHeld(PICK_UP_HOLD_MS))
+            // 也可能松开后才拿起来
+            ?? await identifyHeld(PICK_UP_AFTER_RELEASE_MS);
+
+        if (forgeType === null) {
+            logger.debug(`[TftOperator] 槽位 ${slotKey} 左键没有拿起东西，是空格子`);
+            return null;
+        }
+
+        // 松开后会放回原位；如果还拿着，原地再点一下放下
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            if (await this.waitForBuyExpIcon(true, PUT_DOWN_TIMEOUT_MS)) return forgeType;
+            await mouseController.clickInFrames(point, MouseButtonType.LEFT);
+        }
+        logger.warn(`[TftOperator] 槽位 ${slotKey} 拿起的东西没有放下`);
+        return forgeType;
+    }
+
+    /**
+     * 拿着锻造器时，从商店的提示文字识别是哪种锻造器
+     * @returns 不是锻造器或认不出来为 NONE
+     */
+    private async recognizeHeldForge(): Promise<ItemForgeType> {
+        const hintRegion = screenCapture.toAbsoluteRegion(this.hud.heldHintRegion);
+
+        // 提示文字可能比箭头消失晚一点出来，认不出来再试一次
+        for (let attempt = 1; attempt <= 2; attempt++) {
+            const pngBuffer = await screenCapture.captureRegionAsPng(hintRegion, true, FORGE_TOOLTIP_OCR_OPTIONS);
+            const text = (await ocrService.recognize(pngBuffer, OcrWorkerType.CHESS)).replace(/\s/g, "");
+            logger.debug(`[TftOperator] 拿起时的提示 OCR 结果: "${text}"`);
+
+            const forgeType = this.parseForgeType(text);
+            if (forgeType !== ItemForgeType.NONE) return forgeType;
+        }
+        return ItemForgeType.NONE;
+    }
+
+    /** "购买经验值"的箭头是否显示着（被出售提示盖住时是纯色底） */
+    private async isBuyExpIconVisible(): Promise<boolean> {
+        const mat = await screenCapture.captureGameRegionAsMat(this.hud.buyExpIconRegion);
+        try {
+            return !templateMatcher.isEmptySlot(mat);
+        } finally {
+            mat.delete();
+        }
+    }
+
+    /**
+     * 等"购买经验值"的箭头出现或消失
+     * @returns 超时前有没有等到
+     */
+    private async waitForBuyExpIcon(visible: boolean, timeoutMs: number): Promise<boolean> {
+        const deadline = Date.now() + timeoutMs;
+        for (;;) {
+            if (await this.isBuyExpIconVisible() === visible) return true;
+            if (Date.now() >= deadline) return false;
+            await sleep(DETAIL_PANEL_POLL_MS);
+        }
+    }
+
+    /**
      * 检测当前是否显示锻造器的浮窗，并识别锻造器类型
      * @description 锻造器右键后不显示右侧详情面板，而是在格子右侧弹出浮窗，
      *              浮窗相对格子的位置固定（老客户端是跟随鼠标，且靠右的格子会向左弹出）
@@ -1252,6 +1489,18 @@ class TftOperator {
 
         logger.debug(`[TftOperator] 锻造器浮窗 OCR 结果: "${cleanText}"`);
 
+        const forgeType = this.parseForgeType(cleanText);
+        if (forgeType === ItemForgeType.NONE) {
+            logger.debug(`[TftOperator] 槽位${slotIndex} 没有锻造器浮窗`);
+        }
+        return forgeType;
+    }
+
+    /**
+     * 从文字判断锻造器类型（右键浮窗的名称，或拿起时商店的提示）
+     * @returns 不是锻造器为 NONE
+     */
+    private parseForgeType(cleanText: string): ItemForgeType {
         // 判断特殊单位类型
         // 注意：判断顺序很重要，更具体的关键词要放在前面
         // 使用模糊匹配，因为 OCR 可能有误差
@@ -1300,20 +1549,13 @@ class TftOperator {
         // 4. 基础装备锻造器判断（放最后，因为"锻造器"是通用关键词）
         const isBasicForge = cleanText.includes("基础装备锻造器") ||
                             cleanText.includes("基础装备") ||
+                            cleanText.includes("基础") ||
                             cleanText.includes("锻造器");
         
         if (isBasicForge) {
             logger.debug(`[TftOperator] 识别为基础装备锻造器`);
             return ItemForgeType.BASIC;
         }
-
-        // 【已注释】锻造器识别失败时保存截图到本地，用于排查问题
-        // const saveDir = this.failChampionTemplatePath;
-        // fs.ensureDirSync(saveDir);
-        // const filename = `itemForge_slot${slotIndex}_${Date.now()}.png`;
-        // const savePath = path.join(saveDir, filename);
-        // fs.writeFileSync(savePath, pngBuffer);  // 保存识别用的图，方便排查
-        logger.warn(`[TftOperator] 锻造器识别失败(槽位${slotIndex})`, true);
 
         return ItemForgeType.NONE;
     }
@@ -1855,7 +2097,7 @@ class TftOperator {
     public async selfResetPosition(): Promise<void> {
         this.ensureInitialized();
 
-        logger.info(`[TftOperator] 小小英雄归位中... 目标坐标: (${littleLegendDefaultPoint.x}, ${littleLegendDefaultPoint.y})`);
+        logger.debug(`[TftOperator] 小小英雄归位中... 目标坐标: (${littleLegendDefaultPoint.x}, ${littleLegendDefaultPoint.y})`);
 
         // 右键点击默认站位，让小小英雄移动到目标位置
         await mouseController.clickAt(littleLegendDefaultPoint, MouseButtonType.RIGHT);
@@ -1924,7 +2166,7 @@ class TftOperator {
         if (location.startsWith('SLOT_')) {
             fromPoint = benchSlotPoints[location as keyof typeof benchSlotPoints];
         } else if (location.startsWith('R')) {
-            fromPoint = fightBoardSlotPoint[location as keyof typeof fightBoardSlotPoint];
+            fromPoint = fightBoardUnitPoint[location as keyof typeof fightBoardUnitPoint];
         }
 
         if (!fromPoint) {
@@ -1998,7 +2240,7 @@ class TftOperator {
     ): Promise<void> {
         this.ensureInitialized();
 
-        const fromPoint = fightBoardSlotPoint[fromLocation];
+        const fromPoint = fightBoardUnitPoint[fromLocation];
         const toPoint = fightBoardSlotPoint[toLocation];
 
         if (!fromPoint || !toPoint) {
@@ -2028,7 +2270,7 @@ class TftOperator {
     ): Promise<void> {
         this.ensureInitialized();
 
-        const fromPoint = fightBoardSlotPoint[boardLocation];
+        const fromPoint = fightBoardUnitPoint[boardLocation];
         const benchSlotKey = `SLOT_${benchSlotIndex + 1}` as keyof typeof benchSlotPoints;
         const toPoint = benchSlotPoints[benchSlotKey];
 
@@ -2132,7 +2374,7 @@ class TftOperator {
         }
 
         // 2. 获取棋盘目标位置坐标
-        const toPoint = fightBoardSlotPoint[boardLocation];
+        const toPoint = fightBoardUnitPoint[boardLocation];
 
         if (!toPoint) {
             logger.error(`[TftOperator] 无效的棋盘位置: ${boardLocation}`);

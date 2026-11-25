@@ -4,7 +4,7 @@
  * @author TFT-Hextech-Helper
  */
 
-import { Button, mouse, Point } from "@nut-tree-fork/nut-js";
+import { Button, mouse, Point, providerRegistry } from "@nut-tree-fork/nut-js";
 import { logger } from "../../utils/Logger";
 import { sleep } from "../../utils/HelperTools";
 import { SimplePoint } from "../../TFTProtocol";
@@ -45,6 +45,9 @@ const MOUSE_CONFIG = {
     /** 拖拽前等待时间 (ms) - 确保游戏识别到鼠标在棋子上，游戏25帧约40ms/帧 */
     PRE_DRAG_DELAY: 100,
 } as const;
+
+/** 游戏的一帧 (ms)，按 30 帧算 */
+export const FRAME_MS = 34;
 
 /**
  * 鼠标控制器
@@ -124,10 +127,72 @@ export class MouseController {
             await mouse.move([target]);
 
             await sleep(MOUSE_CONFIG.MOVE_DELAY);
-            await mouse.click(toNutButton(button));
+            await this.pressAndRelease(toNutButton(button));
             await sleep(MOUSE_CONFIG.CLICK_DELAY);
         } catch (e: any) {
             logger.error(`[MouseController] 鼠标点击失败: ${e.message}`);
+            throw e;
+        }
+    }
+
+    /**
+     * 在游戏窗口内快速点击指定位置，按游戏的帧来计时
+     * @description 悬停 1 帧、按住 2 帧就抬起，抬起后不等待，适合连续点很多个位置。
+     *              直接用底层的按键接口，跳过 nut-js 每次按下、抬起前的 autoDelayMs（默认 100ms）
+     * @param offset 相对于游戏窗口左上角的偏移坐标
+     * @param button 鼠标按键类型
+     */
+    public async clickInFrames(offset: SimplePoint, button: MouseButtonType): Promise<void> {
+        await this.holdAt(offset, button, () => sleep(FRAME_MS * 2));
+    }
+
+    /**
+     * 在游戏窗口内指定位置按住鼠标，做完 action 再抬起
+     * @param offset 相对于游戏窗口左上角的偏移坐标
+     * @param button 鼠标按键类型
+     * @param action 按住期间要做的事
+     * @returns action 的结果
+     */
+    public async holdAt<T>(offset: SimplePoint, button: MouseButtonType, action: () => Promise<T>): Promise<T> {
+        if (!this.gameWindowOrigin) {
+            throw new Error("[MouseController] 尚未设置游戏窗口基准点，请先调用 setGameWindowOrigin()");
+        }
+
+        const nutButton = toNutButton(button);
+        const mouseProvider = providerRegistry.getMouse();
+
+        try {
+            await mouse.move([new Point(this.gameWindowOrigin.x + offset.x, this.gameWindowOrigin.y + offset.y)]);
+            await sleep(FRAME_MS);
+
+            await mouseProvider.pressButton(nutButton);
+            try {
+                return await action();
+            } finally {
+                // 抬起失败再试一次，避免按键一直卡在按下状态
+                await mouseProvider.releaseButton(nutButton).catch(() => mouseProvider.releaseButton(nutButton));
+            }
+        } catch (e: any) {
+            logger.error(`[MouseController] 鼠标点击失败: ${e.message}`);
+            throw e;
+        }
+    }
+
+    /**
+     * 按下并抬起鼠标按键
+     * @description 不用 mouse.click()：它把按下和抬起连着发出去，中间没有间隔。虚幻客户端的界面按钮能响应，
+     *              但场景里的操作（右键查看棋子、右键移动小小英雄）要在某一帧看到键是按着的，
+     *              两个事件落在同一帧里就会被漏掉。
+     *              nut-js 的 pressButton / releaseButton 各自会先等 autoDelayMs（默认 100ms），
+     *              所以按住的时间约 100ms，不需要再额外等待
+     */
+    private async pressAndRelease(button: Button): Promise<void> {
+        await mouse.pressButton(button);
+        try {
+            await mouse.releaseButton(button);
+        } catch (e) {
+            // 抬起失败再试一次，避免按键一直卡在按下状态
+            await mouse.releaseButton(button);
             throw e;
         }
     }
@@ -187,7 +252,7 @@ export class MouseController {
             await mouse.move([target]);
 
             await sleep(MOUSE_CONFIG.MOVE_DELAY);
-            await mouse.click(toNutButton(button));
+            await this.pressAndRelease(toNutButton(button));
             await sleep(MOUSE_CONFIG.CLICK_DELAY);
         } catch (e: any) {
             logger.error(`[MouseController] 鼠标点击失败: ${e.message}`);
