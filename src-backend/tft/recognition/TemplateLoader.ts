@@ -622,7 +622,8 @@ export class TemplateLoader {
      * 加载按钮模板
      * @description 加载 button 目录下的按钮模板，用于 UI 按钮检测
      *              目前支持：clockwork_quit_button.png (老客户端的发条鸟退出按钮)、
-     *              exit_game_button.png (S18 阵亡后结算界面的"现在退出")
+     *              exit_game_button.png (S18 阵亡后结算界面的"现在退出")、
+     *              play_again_button.png (S18 对局结束后结算界面的"再玩一次")
      *              保留 RGB 彩色信息用于模板匹配
      */
     private async loadButtonTemplates(): Promise<void> {
@@ -642,6 +643,7 @@ export class TemplateLoader {
         const buttonFiles: { key: string; filename: string }[] = [
             { key: "clockwork_quit_button", filename: "clockwork_quit_button.png" },
             { key: "exit_game_button", filename: "exit_game_button.png" },
+            { key: "play_again_button", filename: "play_again_button.png" },
         ];
 
         for (const { key, filename } of buttonFiles) {

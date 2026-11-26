@@ -83,6 +83,8 @@ import {
     forgePickPoint,
     exitGameButtonPoint,
     exitGameButtonRegion,
+    playAgainButtonPoint,
+    playAgainButtonRegion,
     shopFairyProbeRegion,
     shopFairyProbeRegionClockwork,
     SHOP_FAIRY_COLOR,
@@ -1761,6 +1763,45 @@ class TftOperator {
     public async clickExitGameButton(): Promise<void> {
         this.ensureInitialized();
         await mouseController.clickAt(exitGameButtonPoint, MouseButtonType.LEFT);
+    }
+
+    /**
+     * 对局结束后结算界面的"再玩一次"是否正在显示
+     * @description 还没定位过游戏窗口时（比如停在结算界面时才开启挂机）先定位；找不到窗口、截图失败时视为没有显示
+     */
+    public async isPlayAgainButtonVisible(): Promise<boolean> {
+        if (!templateLoader.isReady()) return false;
+
+        try {
+            if (!this.gameWindowRegion) await this.syncWindowOrigin();
+
+            const mat = await screenCapture.captureGameRegionAsMat(playAgainButtonRegion);
+            try {
+                return templateMatcher.matchPlayAgainButton(mat);
+            } finally {
+                mat.delete();
+            }
+        } catch (error: any) {
+            logger.debug(`[TftOperator] 检查"再玩一次"失败: ${error?.message ?? error}`);
+            return false;
+        }
+    }
+
+    /**
+     * 把游戏窗口切到前台，并更新窗口位置
+     * @description 截图截的是屏幕像素，游戏窗口被挡住时识别不到界面
+     */
+    public async bringGameWindowToFront(): Promise<void> {
+        await this.syncWindowOrigin();
+        await tftWindowLocator.ensureForeground();
+    }
+
+    /**
+     * 点击结算界面的"再玩一次"
+     */
+    public async clickPlayAgainButton(): Promise<void> {
+        this.ensureInitialized();
+        await mouseController.clickAt(playAgainButtonPoint, MouseButtonType.LEFT);
     }
 
     /**

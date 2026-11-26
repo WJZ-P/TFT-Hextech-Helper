@@ -23,6 +23,7 @@ import { settingsStore } from "../utils/SettingsStore.ts";
 import { TFTMode } from "../TFTProtocol.ts";
 import { tftLogWatcher, TftLobbyState } from "../utils/TftLogWatcher.ts";
 import GameConfigHelper from "../utils/GameConfigHelper.ts";
+import { tftOperator } from "../TftOperator.ts";
 
 /** 流程中断后重试前的等待时间 (ms) */
 const RETRY_DELAY_MS = 1000;
@@ -67,6 +68,18 @@ const POST_GAME_SETTLE_TIMEOUT_MS = 30000;
  *              这段时间回到空闲状态是正常的；超过这个时间还没连上，才视为对局没开成
  */
 const MATCH_JOIN_GRACE_MS = 30000;
+
+/**
+ * 点"再玩一次"离开结算界面的最长时间 (ms)
+ * @description 结算界面刚出来时可能还在播段位变化的动画，按钮晚一点才出现；超时后照常排队
+ */
+const PLAY_AGAIN_TIMEOUT_MS = 60000;
+
+/** 结算界面上检查"再玩一次"的间隔 (ms) */
+const PLAY_AGAIN_POLL_MS = 1000;
+
+/** 点了"再玩一次"后等客户端回到房间的时间 (ms)，之后再检查一次 */
+const PLAY_AGAIN_SETTLE_MS = 2000;
 
 /** 客户端还在对局 / 结算过渡中的大厅状态，此时不排队 */
 const BUSY_LOBBY_STATES: ReadonlySet<string> = new Set([
@@ -137,6 +150,8 @@ export class LobbyState implements IState {
 
         // 上一局刚结束时客户端还在结算过渡画面，等它回到房间或主界面
         await this.waitForClientIdle(signal);
+        // 结算界面要点"再玩一次"才会回到房间，否则选队列会失败
+        await this.leaveEndOfGameSummary(signal);
 
         // 选择队列（带重试机制）
         const partyId = await this.setGameModeWithRetry(queueId, signal);
@@ -248,6 +263,43 @@ export class LobbyState implements IState {
     }
 
     /**
+     * 离开上一局的结算界面
+     * @param signal AbortSignal 用于取消等待
+     * @description 结算界面（名次列表）不会自己消失，要点右下角的"再玩一次"，客户端才会回到房间；
+     *              停在结算界面时选队列的接口会返回 400。
+     *              日志显示在结算界面、或者屏幕上看得到"再玩一次"时，一直点到它消失为止
+     */
+    private async leaveEndOfGameSummary(signal: AbortSignal): Promise<void> {
+        const isInSummary = () => tftLogWatcher.lobbyState === TftLobbyState.END_OF_GAME_SUMMARY;
+
+        // 日志没说在结算界面也看一眼按钮：比如停在结算界面时才开启挂机，日志里还没有状态
+        if (!isInSummary() && !(await tftOperator.isPlayAgainButtonVisible())) return;
+
+        logger.info("[LobbyState] 上一局还停在结算界面，点击【再玩一次】回到房间");
+        await tftOperator.bringGameWindowToFront().catch(e => logger.warn(`[LobbyState] 切换到游戏窗口失败: ${e?.message ?? e}`));
+
+        const deadline = Date.now() + PLAY_AGAIN_TIMEOUT_MS;
+        while (Date.now() < deadline) {
+            signal.throwIfAborted();
+
+            if (await tftOperator.isPlayAgainButtonVisible()) {
+                await tftOperator.clickPlayAgainButton();
+                await sleep(PLAY_AGAIN_SETTLE_MS);
+                continue;
+            }
+            // 按钮不见了，日志也不在结算界面了，说明已经回到房间
+            if (!isInSummary()) {
+                logger.info("[LobbyState] 已离开结算界面");
+                return;
+            }
+            // 还在结算界面但没看到按钮：可能还在播动画，等一会儿再看
+            await sleep(PLAY_AGAIN_POLL_MS);
+        }
+
+        logger.warn(`[LobbyState] 结算界面 ${PLAY_AGAIN_TIMEOUT_MS / 1000} 秒还没离开，继续尝试排队`);
+    }
+
+    /**
      * 选择队列（带重试机制）
      * @param queueId 队列 ID
      * @param signal AbortSignal 用于取消操作
@@ -271,6 +323,8 @@ export class LobbyState implements IState {
 
                 if (attempt < MAX_SET_GAME_MODE_RETRIES) {
                     await sleep(SET_GAME_MODE_RETRY_DELAY_MS);
+                    // 客户端可能停在结算界面，点掉再试
+                    await this.leaveEndOfGameSummary(signal);
                 }
             }
         }

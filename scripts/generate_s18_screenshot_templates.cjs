@@ -16,6 +16,10 @@
  *   来源：经典结算界面.png
  *   输出：button/exit_game_button.png，比检测区域 exitGameButtonRegion 四周各小几个像素
  *
+ * 【再玩一次】对局结束后结算界面右下角的按钮文字。按钮上有流光，只取文字和紧挨着的一小块
+ *   来源：对局结算.png（玩家名已涂掉）
+ *   输出：button/play_again_button.png，比检测区域 playAgainButtonRegion 四周各小 10 像素
+ *
  * 【战利品球】银色、蓝色球中间的"?"，截自 y 330 附近的球（大小随高度变化，见 TFTProtocolS18.lootOrbScaleAt）
  *   来源：基础战利品.png（右侧玩家名已涂掉）；金球没有完整截图，模板单独裁自 战利品_金色.png
  *   输出：loot/s18/loot_normal.png、loot/s18/loot_blue.png
@@ -40,6 +44,10 @@ const STAR_SOURCES = { 1: '基本布局.png', 2: '二星棋子.png', 3: '三星�
 /** "现在退出"文字的裁剪区域 */
 const EXIT_BUTTON_BOX = { left: 603, top: 326, width: 74, height: 20 };
 const EXIT_BUTTON_SOURCE = '经典结算界面.png';
+
+/** "再玩一次"文字的裁剪区域 */
+const PLAY_AGAIN_BOX = { left: 1080, top: 642, width: 80, height: 24 };
+const PLAY_AGAIN_SOURCE = '对局结算.png';
 
 const PROTOCOL = path.join(ROOT, 'src-backend/TFTProtocolS18.ts');
 const IMAGES = path.join(ROOT, 'public/resources/assets/images');
@@ -100,6 +108,9 @@ async function main() {
 
     await crop(EXIT_BUTTON_SOURCE, EXIT_BUTTON_BOX, path.join(IMAGES, 'button/exit_game_button.png'));
     console.log('1 个 → ' + path.relative(ROOT, path.join(IMAGES, 'button/exit_game_button.png')));
+
+    await crop(PLAY_AGAIN_SOURCE, PLAY_AGAIN_BOX, path.join(IMAGES, 'button/play_again_button.png'));
+    console.log('1 个 → ' + path.relative(ROOT, path.join(IMAGES, 'button/play_again_button.png')));
 }
 
 main().catch(error => {

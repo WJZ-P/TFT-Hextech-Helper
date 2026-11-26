@@ -34,6 +34,11 @@ const MATCH_THRESHOLDS = {
     LOOT_ORB: { normal: 0.75, blue: 0.62, gold: 0.65 } satisfies Record<LootOrbType, number>,
     /** 按钮匹配阈值 (按钮有明显文字特征，阈值设较高) */
     BUTTON: 0.80,
+    /**
+     * "再玩一次"按钮的匹配阈值：按钮上有来回扫过的流光，阈值放低一些。
+     * 实测流光在不同位置的两张截图互相匹配 0.98，其他截图最高 0.33
+     */
+    PLAY_AGAIN_BUTTON: 0.65,
 } as const;
 
 /**
@@ -525,13 +530,26 @@ export class TemplateMatcher {
     }
 
     /**
+     * 结算界面的"再玩一次"按钮是否在目标图像中
+     * @param targetMat 目标图像 (需要是 RGB 3 通道)
+     */
+    public matchPlayAgainButton(targetMat: cv.Mat): boolean {
+        return this.matchButton(targetMat, "play_again_button", MATCH_THRESHOLDS.PLAY_AGAIN_BUTTON).matched;
+    }
+
+    /**
      * 匹配按钮模板
      * @description 在目标图像中查找指定按钮，返回是否匹配成功及置信度
      * @param targetMat 目标图像 (需要是 RGB 3 通道)
      * @param buttonName 按钮名称，例如 "clockwork_quit_button"
+     * @param threshold 匹配阈值，默认 MATCH_THRESHOLDS.BUTTON
      * @returns 匹配结果对象，包含 matched (是否匹配) 和 confidence (置信度)
      */
-    public matchButton(targetMat: cv.Mat, buttonName: string): { matched: boolean; confidence: number } {
+    public matchButton(
+        targetMat: cv.Mat,
+        buttonName: string,
+        threshold: number = MATCH_THRESHOLDS.BUTTON
+    ): { matched: boolean; confidence: number } {
         const templateMat = templateLoader.getButtonTemplate(buttonName);
         
         if (!templateMat) {
@@ -568,7 +586,7 @@ export class TemplateMatcher {
             const minMax = cv.minMaxLoc(resultMat, mask);
             const confidence = minMax.maxVal;
 
-            const matched = confidence >= MATCH_THRESHOLDS.BUTTON;
+            const matched = confidence >= threshold;
 
             if (matched) {
                 logger.info(
@@ -578,7 +596,7 @@ export class TemplateMatcher {
             } else {
                 logger.debug(
                     `[TemplateMatcher] 按钮匹配失败: ${buttonName} ` +
-                    `(置信度: ${(confidence * 100).toFixed(1)}%, 阈值: ${MATCH_THRESHOLDS.BUTTON * 100}%)`
+                    `(置信度: ${(confidence * 100).toFixed(1)}%, 阈值: ${threshold * 100}%)`
                 );
             }
 
