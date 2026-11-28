@@ -183,6 +183,10 @@ TFT Hextech Helper 是一款基于 Electron + React + TypeScript 开发的云顶
 
 [![Star History Chart](https://api.star-history.com/svg?repos=wjz-p/TFT-Hextech-Helper&type=Date)](https://star-history.com/#wjz-p/TFT-Hextech-Helper&Date)
 
+## 🔗 友情链接
+
+- [LINUX DO](https://linux.do/) - 新的理想型社区
+
 ---
 
 <details>
